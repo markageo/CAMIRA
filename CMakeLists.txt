@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.15)
 project(Coupled-Sweep-NS VERSION 1.0)
 
 # Default executable location
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 # specify the C++ standard
 add_library(compiler_flags INTERFACE)

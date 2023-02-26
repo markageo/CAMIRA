@@ -2,7 +2,7 @@
 
 #define NDEBUG
 
-#include "boost/property_tree/ptree.hpp"
+#include "ptree.hpp"
 #include <string>
 #include <fstream>
 #include <iostream>
