@@ -6,6 +6,6 @@
 #include <optional>
 
 // Parsing function declaration
-std::optional<boost::property_tree::ptree> ReadInput(const std::string &inputFileName);
+std::optional<boost::property_tree::ptree> ParseFile(const std::string &inputFileName);
 
 #endif  // INPUT_PARSER

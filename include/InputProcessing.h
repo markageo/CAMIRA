@@ -19,6 +19,6 @@ struct InputData
 
 };
 
-std::optional<InputData> ReadInputData(const std::string &inputFileName);
+std::optional<InputData> ReadInputData(const std::string &);
 
 #endif  // INPUT_PROCESSING
