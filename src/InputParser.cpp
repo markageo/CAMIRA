@@ -187,7 +187,7 @@ void ParseStream(ReaderStream &readerStream, pt::ptree &tree) {
     ParserState parserState = expectingKey;
 
     // Pointer to last created ptree
-    pt::ptree *ptLast = NULL;
+    pt::ptree *ptLast = nullptr;
 
     // ptree stack to handle nesting
     std::stack<pt::ptree *> ptStack;
@@ -233,7 +233,7 @@ void ProcessExpectingKeyState(ReaderStream &readerStream, std::stack<pt::ptree *
                 throw unmatchedBlockError;
             }
             ptStack.push(ptLast);
-            ptLast = NULL;
+            ptLast = nullptr;
             readerStream.GoToNextCharacter();
             break;
 
@@ -242,7 +242,7 @@ void ProcessExpectingKeyState(ReaderStream &readerStream, std::stack<pt::ptree *
                 throw unbalancedBraceError;
             }
             ptStack.pop();
-            ptLast = NULL;
+            ptLast = nullptr;
             readerStream.GoToNextCharacter();
             break;
 
@@ -266,7 +266,7 @@ void ProcessExpectingDataState(ReaderStream &readerStream, std::stack<pt::ptree 
     {
         case BLOCK_OPEN_CHAR:
             ptStack.push(ptLast);
-            ptLast = NULL;
+            ptLast = nullptr;
             readerStream.GoToNextCharacter();
             parserState = expectingKey;
             break;
@@ -276,7 +276,7 @@ void ProcessExpectingDataState(ReaderStream &readerStream, std::stack<pt::ptree 
                 throw unbalancedBraceError;
             }
             ptStack.pop();
-            ptLast = NULL;
+            ptLast = nullptr;
             readerStream.GoToNextCharacter();
             parserState = expectingKey;
             break;
@@ -344,13 +344,12 @@ void DisplayErrorCode(ErrorType error, ReaderStream &readerStream)
                                   User Functions
 \*-------------------------------------------------------------------------------------*/
 
-// Read input from file and store in SimData object
-// return 0 for success
-// return -1 for failure
-int ReadInput(pt::ptree &pt, const std::string &inputFileName) 
+// Read input from file and store in returned property tree
+std::optional<pt::ptree> ReadInput(const std::string &inputFileName) 
 {
 
     ReaderStream readerStream(inputFileName);
+    pt::ptree pt;
 
     try {
 
@@ -362,14 +361,13 @@ int ReadInput(pt::ptree &pt, const std::string &inputFileName)
         ParseStream(readerStream, pt);
 
         // Success
-        return 0;
+        return pt;
 
     } catch (ErrorType err) {
 
         // Display appropriate error message
         DisplayErrorCode(err, readerStream);
-        return -1;
-
+        return {};
     }
     
 }

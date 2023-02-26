@@ -3,9 +3,10 @@
 
 #include "boost/property_tree/ptree.hpp"
 #include <string>
+#include <optional>
 
 // Parsing function declaration
-int ReadInput(boost::property_tree::ptree &, const std::string &); 
+std::optional<boost::property_tree::ptree> ReadInput(const std::string &inputFileName) ;
 
 
 #endif  // INPUT_PARSER
