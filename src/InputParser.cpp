@@ -345,7 +345,7 @@ void DisplayErrorCode(ErrorType error, ReaderStream &readerStream)
 \*-------------------------------------------------------------------------------------*/
 
 // Read input from file and store in returned property tree
-std::optional<pt::ptree> ReadInput(const std::string &inputFileName) 
+std::optional<pt::ptree> ParseInput(const std::string &inputFileName) 
 {
 
     ReaderStream readerStream(inputFileName);
