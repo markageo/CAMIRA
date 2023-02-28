@@ -10,6 +10,9 @@
 
 struct InputData
 {
+
+    SIM::floatType domainSizeX, domainSizeY, domainSizeZ;
+
     // mesh
     struct {
         std::vector<std::pair<SIM::floatType, SIM::floatType>> xSegmentBounds, ySegmentBounds, zSegmentBounds;

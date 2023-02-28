@@ -1,0 +1,26 @@
+# Input file
+Mesh {
+
+    domain = (10, 10, 10)
+
+    Grid X {
+        Segment {
+            bounds = (0, 4)
+            nCells = 10
+            biasFactor = -2
+        }
+
+        Segment {
+            bounds = (4, 6)
+            nCells = 10
+            biasFactor = 1
+        }
+
+        Segment {
+            bounds = (6, 10)
+            nCells = 10
+            biasFactor = 2
+        }
+    }
+
+}
