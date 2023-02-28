@@ -2,7 +2,7 @@
 
 #define NDEBUG
 
-#include "ptree.hpp"
+#include "boost/property_tree/ptree.hpp"
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -90,11 +90,16 @@ class ReaderStream
         { return m_inputFileName; }
 
 
-        // Read key, which cannot have whitespace
+        // Read key, whitespace is removed
         std::string ReadKey() {
             std::string key;
             SkipWhitespace();
-            while (!SeperatorChar(*m_linePos) && m_linePos != m_inputLine.end() && !std::isspace(*m_linePos)) {
+            while (1) {
+                SkipWhitespace();
+                if (SeperatorChar(*m_linePos))
+                    break;
+                if (m_linePos == m_inputLine.end())
+                    break;
                 key += *m_linePos;
                 ++m_linePos;
             }
@@ -345,7 +350,7 @@ void DisplayErrorCode(ErrorType error, ReaderStream &readerStream)
 \*-------------------------------------------------------------------------------------*/
 
 // Read input from file and store in returned property tree
-std::optional<pt::ptree> ParseInput(const std::string &inputFileName) 
+std::optional<pt::ptree> ParseFile(const std::string &inputFileName) 
 {
 
     ReaderStream readerStream(inputFileName);
