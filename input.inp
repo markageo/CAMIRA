@@ -1,7 +1,7 @@
 # Input file
 Mesh {
 
-    domain = (3, 4, 5)
+    domain = (10, 4, 5)
 
     Grid X {
         Segment {
@@ -20,6 +20,24 @@ Mesh {
             bounds = (6, 10)
             nCells = 10
             biasFactor = 2
+        }
+    }
+
+
+    Grid Y {
+        Segment {
+            bounds = (0, 4)
+            nCells = 10
+            biasFactor = 1
+        }
+    }
+
+
+    Grid Z {
+        Segment {
+            bounds = (0, 5)
+            nCells = 10
+            biasFactor = 1
         }
     }
 
