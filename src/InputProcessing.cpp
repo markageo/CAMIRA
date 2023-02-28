@@ -36,7 +36,7 @@ namespace
     // Parse vector string into an std::vector
     std::vector<SIM::floatType> ParseVectorString(const std::string &vecString, const int &dim)
     {
-        std::vector<SIM::floatType> vec(dim);
+        std::vector<SIM::floatType> vec;
         std::string::const_iterator stringIterator = vecString.begin();
         std::string valueString;
         int dimCount = 0;
@@ -46,7 +46,12 @@ namespace
         }
         ++stringIterator;
         
-        while(stringIterator != vecString.end() && *stringIterator != VECTOR_END_CHAR) {
+        while(stringIterator != vecString.end()) {
+            if (*stringIterator == VECTOR_END_CHAR) {
+                vec.push_back( String2Type<SIM::floatType>(valueString) );
+                break;
+            }
+
             if (*stringIterator == VECTOR_DELIMITER_CHAR) {
                 vec.push_back( String2Type<SIM::floatType>(valueString) );
                 valueString.clear();
