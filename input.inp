@@ -1,7 +1,7 @@
 # Input file
 Mesh {
 
-    domain = (10, 10, 10)
+    domain = (3, 4, 5)
 
     Grid X {
         Segment {
