@@ -14,11 +14,6 @@
 
 namespace pt = boost::property_tree;
 
-
-/*-------------------------------------------------------------------------------------*\
-                                     InputData
-\*-------------------------------------------------------------------------------------*/
-
 namespace
 {
 
@@ -74,26 +69,58 @@ namespace
 
     }
 
+    /*-------------------------------------------------------------------------------------*\
+                                                Mesh
+    \*-------------------------------------------------------------------------------------*/
+
+    void ReadGrid(const pt::ptree &meshTree, std::vector<SIM::floatType> &nCells, std::vector<SIM::floatType> &biasFactors, 
+        std::vector<std::pair<SIM::floatType, SIM::floatType>> &segmentBounds, const std::string &gridString)
+    {
+        const pt::ptree &gridTree = meshTree.get_child(gridString);
+        std::string boundsString, nCellsString, biasFactorString;
+        std::pair<SIM::floatType, SIM::floatType> boundsPair;
+        std::vector<SIM::floatType> tempBoundsVector;
+        for (auto segment : gridTree) {
+            if (segment.first != "Segment") {
+                // throw ERROR invalid child name
+            }
+            nCellsString     = segment.second.get<std::string>("nCells");
+            boundsString     = segment.second.get<std::string>("bounds");
+            biasFactorString = segment.second.get<std::string>("biasFactor");
+
+            nCells.push_back( String2Type<SIM::floatType>(nCellsString) );
+            biasFactors.push_back( String2Type<SIM::floatType>(biasFactorString) );
+
+            tempBoundsVector = ParseVectorString(boundsString, 2);
+            boundsPair.first = tempBoundsVector[0];
+            boundsPair.second = tempBoundsVector[1];
+            segmentBounds.push_back( boundsPair );
+        }
+    }
+
+
     void ReadMesh(InputData &inputData, const pt::ptree &tree)
     {
-        pt::ptree meshTree = tree.get_child("Mesh");
+        const pt::ptree &meshTree = tree.get_child("Mesh");
 
         // Domain
-        std::string domainSizeString = meshTree.get<std::string>("domain");
+        const std::string &domainSizeString = meshTree.get<std::string>("domain");
         std::vector<SIM::floatType> domainSize = ParseVectorString(domainSizeString, 3);
         inputData.domainSizeX = domainSize[0];
         inputData.domainSizeY = domainSize[1];
         inputData.domainSizeZ = domainSize[2];
 
         // Grid X
-
+        ReadGrid(meshTree, inputData.mesh.xCells, inputData.mesh.xBiasFactors, inputData.mesh.xSegmentBounds, "GridX");
 
         // Grid Y
-
+        ReadGrid(meshTree, inputData.mesh.yCells, inputData.mesh.yBiasFactors, inputData.mesh.ySegmentBounds, "GridY");
 
         // Grid Z
+        ReadGrid(meshTree, inputData.mesh.zCells, inputData.mesh.zBiasFactors, inputData.mesh.zSegmentBounds, "GridZ");
         
     }
+
 
 }   // end anonymous namepsace
 
