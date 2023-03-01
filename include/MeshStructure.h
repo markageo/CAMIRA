@@ -13,13 +13,11 @@ class MeshStructure
 
         MeshStructure(const InputData &);
 
-        
-        Eigen::Tensor<SIM::floatType, 1, Eigen::RowMajor> cellCenters_x, cellCenters_y, cellCenters_z;
+        Eigen::Tensor<SIM::floatType, 1> cellCenters_x, cellCenters_y, cellCenters_z;
 
     private:
 
         
-
         void CreateMesh(const InputData &);
 
 };

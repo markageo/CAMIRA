@@ -7,19 +7,19 @@ Mesh {
         Segment {
             bounds = (0, 4)
             nCells = 10
-            biasFactor = -2
+            biasFactor = -10
         }
 
         Segment {
             bounds = (4, 6)
-            nCells = 10
+            nCells = 15
             biasFactor = 1
         }
 
         Segment {
             bounds = (6, 10)
             nCells = 10
-            biasFactor = 2
+            biasFactor = 10
         }
     }
 
@@ -28,7 +28,7 @@ Mesh {
         Segment {
             bounds = (0, 4)
             nCells = 10
-            biasFactor = 1
+            biasFactor = 4
         }
     }
 
