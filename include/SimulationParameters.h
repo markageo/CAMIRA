@@ -4,6 +4,7 @@
 namespace SIM 
 {
     using floatType = double;
+    using intType = int;
 }
 
 
