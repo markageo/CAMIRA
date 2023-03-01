@@ -31,7 +31,7 @@ namespace
                                     Constructors
 \*-------------------------------------------------------------------------------------*/
 
-FieldWriter::FieldWriter(const gridVectorType &gridVector, const scalarMapType &scalarMap, const vectorMapType &vectorMap, const FieldWriterConfig &config) : 
+VTKWriter::VTKWriter(const gridVectorType &gridVector, const scalarMapType &scalarMap, const vectorMapType &vectorMap, const VTKWriterConfig &config) : 
     m_config(config),
     m_gridVector(gridVector), 
     m_scalarMap(scalarMap),
@@ -64,11 +64,11 @@ FieldWriter::FieldWriter(const gridVectorType &gridVector, const scalarMapType &
         } 
     }
 
-FieldWriter::FieldWriter(const gridVectorType &gridVector, const scalarMapType &scalarMap, const FieldWriterConfig &config) : 
-    FieldWriter(gridVector, scalarMap, {}, config) {}
+VTKWriter::VTKWriter(const gridVectorType &gridVector, const scalarMapType &scalarMap, const VTKWriterConfig &config) : 
+    VTKWriter(gridVector, scalarMap, {}, config) {}
 
-FieldWriter::FieldWriter(const gridVectorType &gridVector, const vectorMapType &vectorMap, const FieldWriterConfig &config) : 
-    FieldWriter(gridVector, {}, vectorMap, config) {}
+VTKWriter::VTKWriter(const gridVectorType &gridVector, const vectorMapType &vectorMap, const VTKWriterConfig &config) : 
+    VTKWriter(gridVector, {}, vectorMap, config) {}
 
 
 /*-------------------------------------------------------------------------------------*\
@@ -79,7 +79,7 @@ FieldWriter::FieldWriter(const gridVectorType &gridVector, const vectorMapType &
 // Writes fields to file
 // return 0 for success
 // return -1 for failure
-int FieldWriter::WriteData(const std::string &filename, const std::string &title)
+int VTKWriter::WriteData(const std::string &filename, const std::string &title)
 {
 
 
@@ -141,7 +141,7 @@ int FieldWriter::WriteData(const std::string &filename, const std::string &title
 
 
 // Iterate raw data pointer and write 1 dimension of data
-void FieldWriter::WriteDataArray(const void *voidDataPtr, const sizeType &iterLength) const {
+void VTKWriter::WriteDataArray(const void *voidDataPtr, const sizeType &iterLength) const {
     if (m_config.DataType() == DOUBLE) {
         auto dataPtr = reinterpret_cast<const double *>(voidDataPtr);
         for (sizeType i = 0; i != iterLength; i++) {
@@ -155,7 +155,7 @@ void FieldWriter::WriteDataArray(const void *voidDataPtr, const sizeType &iterLe
     }
 }
 
-void FieldWriter::WriteDataArray(const std::vector<void *> voidDataPtrVec, const sizeType &iterLength) const {
+void VTKWriter::WriteDataArray(const std::vector<void *> voidDataPtrVec, const sizeType &iterLength) const {
     if (m_config.DataType() == DOUBLE) {
         auto dataPtr1 = reinterpret_cast<const double *>(voidDataPtrVec[0]);
         auto dataPtr2 = reinterpret_cast<const double *>(voidDataPtrVec[1]);
@@ -179,7 +179,7 @@ void FieldWriter::WriteDataArray(const std::vector<void *> voidDataPtrVec, const
 
 
 // Write rectilinear grid data to file
-void FieldWriter::WriteDatasetRectilinearGrid()
+void VTKWriter::WriteDatasetRectilinearGrid()
 {
 
     m_outputFileStream << "DATASET RECTILINEAR_GRID" << "\n";
@@ -213,7 +213,7 @@ void FieldWriter::WriteDatasetRectilinearGrid()
 
 
 // Write scalar data attribute to file
-void FieldWriter::WriteDataAttributeScalar(const std::string &scalarFieldName, const void *pScalarField)
+void VTKWriter::WriteDataAttributeScalar(const std::string &scalarFieldName, const void *pScalarField)
 {
     m_outputFileStream << "SCALARS" 
                            << " " << scalarFieldName
@@ -227,7 +227,7 @@ void FieldWriter::WriteDataAttributeScalar(const std::string &scalarFieldName, c
 
 
 // Write vector data attribute to file
-void FieldWriter::WriteDataAttributeVector(const std::string &vectorFieldName, const std::vector<void *> &vectorField)
+void VTKWriter::WriteDataAttributeVector(const std::string &vectorFieldName, const std::vector<void *> &vectorField)
 {
     m_outputFileStream << "VECTORS" 
                            << " " << vectorFieldName
@@ -241,7 +241,7 @@ void FieldWriter::WriteDataAttributeVector(const std::string &vectorFieldName, c
 // Credit to: Michael Klimenko
 // https://mklimenko.github.io/english/2018/08/22/robust-endian-swap/
 template <typename T>
-T FieldWriter::SwapEndian(const T &val) {
+T VTKWriter::SwapEndian(const T &val) {
     union U {
         T val;
         std::array<std::uint8_t, sizeof(T)> raw;
@@ -259,7 +259,7 @@ T FieldWriter::SwapEndian(const T &val) {
 \*-------------------------------------------------------------------------------------*/
 
 // Constructor sets default values
-FieldWriterConfig::FieldWriterConfig(const sizeType &dimX, const sizeType &dimY, const sizeType &dimZ, dataType type) :
+VTKWriterConfig::VTKWriterConfig(const sizeType &dimX, const sizeType &dimY, const sizeType &dimZ, dataType type) :
     m_dims{dimX, dimY, dimZ},
     m_writeMode(DEFAULT_WRITE_MODE), 
     m_ASCIIPrecision(DEFAULT_ASCII_PRECISION),
@@ -267,15 +267,15 @@ FieldWriterConfig::FieldWriterConfig(const sizeType &dimX, const sizeType &dimY,
     {};
 
 // Data type get
-const dataType &FieldWriterConfig::DataType() const
+const dataType &VTKWriterConfig::DataType() const
 { return m_dataType; }
 
 // Dimensions
-const sizeType &FieldWriterConfig::dim(const sizeType &i) const
+const sizeType &VTKWriterConfig::dim(const sizeType &i) const
 { return m_dims[i]; }
 
 // Write mode set
-void FieldWriterConfig::SetWriteMode(const std::string &writeMode) 
+void VTKWriterConfig::SetWriteMode(const std::string &writeMode) 
 {
     std::string writeModeLower = StringLower(writeMode);
     if (writeModeLower != MODE_ASCII && writeModeLower != MODE_BINARY) {
@@ -287,13 +287,13 @@ void FieldWriterConfig::SetWriteMode(const std::string &writeMode)
 }
 
 // Write mode get
-const std::string &FieldWriterConfig::WriteMode() const
+const std::string &VTKWriterConfig::WriteMode() const
 { return m_writeMode; }
 
 // ASCII precision set
-void FieldWriterConfig::SetASCIIPrecision(const unsigned &ASCIIPrecision) 
+void VTKWriterConfig::SetASCIIPrecision(const unsigned &ASCIIPrecision) 
 { m_ASCIIPrecision = ASCIIPrecision; }
 
 // ASCII precision get
-const int &FieldWriterConfig::ASCIIPrecision() const
+const int &VTKWriterConfig::ASCIIPrecision() const
 { return m_ASCIIPrecision; }

@@ -23,11 +23,11 @@ typedef enum {
 
 
 // Configuration parameters for FieldWriter class
-class FieldWriterConfig
+class VTKWriterConfig
 {
     public:
 
-        FieldWriterConfig(const sizeType &, const sizeType &, const sizeType &, dataType);
+        VTKWriterConfig(const sizeType &, const sizeType &, const sizeType &, dataType);
 
         void SetWriteMode(const std::string &);
         void SetASCIIPrecision(const unsigned &);
@@ -49,20 +49,20 @@ class FieldWriterConfig
 
 
 // Write vector and scalar fields to file in legacy .vtk format
-class FieldWriter
+class VTKWriter
 {
     public:
 
-        FieldWriter(const gridVectorType &, const scalarMapType &, const vectorMapType &, const FieldWriterConfig &);
-        FieldWriter(const gridVectorType &, const scalarMapType &, const FieldWriterConfig &);
-        FieldWriter(const gridVectorType &, const vectorMapType &, const FieldWriterConfig &);
+        VTKWriter(const gridVectorType &, const scalarMapType &, const vectorMapType &, const VTKWriterConfig &);
+        VTKWriter(const gridVectorType &, const scalarMapType &, const VTKWriterConfig &);
+        VTKWriter(const gridVectorType &, const vectorMapType &, const VTKWriterConfig &);
 
 
         int WriteData(const std::string &, const std::string &);
 
     private:
 
-        FieldWriterConfig m_config;
+        VTKWriterConfig m_config;
         std::ofstream m_outputFileStream;
         std::string m_outputDataType;
         std::string m_fileExtension = ".vtk"; 
