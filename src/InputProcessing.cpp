@@ -17,6 +17,10 @@ namespace pt = boost::property_tree;
 namespace
 {
 
+    /*-------------------------------------------------------------------------------------*\
+                                         Helper Functions
+    \*-------------------------------------------------------------------------------------*/
+
     // Convert string to given numeric type T.
     template <typename T> T 
     String2Type(const std::string &str)
@@ -73,7 +77,7 @@ namespace
                                                 Mesh
     \*-------------------------------------------------------------------------------------*/
 
-    void ReadGrid(const pt::ptree &meshTree, std::vector<SIM::floatType> &nCells, std::vector<SIM::floatType> &biasFactors, 
+    void ReadGrid(const pt::ptree &meshTree, std::vector<SIM::intType> &nCells, std::vector<SIM::floatType> &biasFactors, 
         std::vector<std::pair<SIM::floatType, SIM::floatType>> &segmentBounds, const std::string &gridString)
     {
         const pt::ptree &gridTree = meshTree.get_child(gridString);
@@ -106,18 +110,18 @@ namespace
         // Domain
         const std::string &domainSizeString = meshTree.get<std::string>("domain");
         std::vector<SIM::floatType> domainSize = ParseVectorString(domainSizeString, 3);
-        inputData.domainSizeX = domainSize[0];
-        inputData.domainSizeY = domainSize[1];
-        inputData.domainSizeZ = domainSize[2];
+        inputData.domainSize_x = domainSize[0];
+        inputData.domainSize_y = domainSize[1];
+        inputData.domainSize_z = domainSize[2];
 
         // Grid X
-        ReadGrid(meshTree, inputData.mesh.xCells, inputData.mesh.xBiasFactors, inputData.mesh.xSegmentBounds, "GridX");
+        ReadGrid(meshTree, inputData.mesh.nCells_x, inputData.mesh.biasFactors_x, inputData.mesh.segmentBounds_x, "GridX");
 
         // Grid Y
-        ReadGrid(meshTree, inputData.mesh.yCells, inputData.mesh.yBiasFactors, inputData.mesh.ySegmentBounds, "GridY");
+        ReadGrid(meshTree, inputData.mesh.nCells_y, inputData.mesh.biasFactors_y, inputData.mesh.segmentBounds_y, "GridY");
 
         // Grid Z
-        ReadGrid(meshTree, inputData.mesh.zCells, inputData.mesh.zBiasFactors, inputData.mesh.zSegmentBounds, "GridZ");
+        ReadGrid(meshTree, inputData.mesh.nCells_z, inputData.mesh.biasFactors_z, inputData.mesh.segmentBounds_z, "GridZ");
         
     }
 

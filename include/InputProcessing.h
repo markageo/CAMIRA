@@ -11,13 +11,13 @@
 struct InputData
 {
 
-    SIM::floatType domainSizeX, domainSizeY, domainSizeZ;
+    SIM::floatType domainSize_x, domainSize_y, domainSize_z;
 
     // mesh
-    struct {
-        std::vector<std::pair<SIM::floatType, SIM::floatType>> xSegmentBounds, ySegmentBounds, zSegmentBounds;
-        std::vector<SIM::floatType> xBiasFactors, yBiasFactors, zBiasFactors;
-        std::vector<SIM::floatType> xCells, yCells, zCells;
+    struct Mesh{
+        std::vector<std::pair<SIM::floatType, SIM::floatType>> segmentBounds_x, segmentBounds_y, segmentBounds_z;
+        std::vector<SIM::floatType> biasFactors_x, biasFactors_y, biasFactors_z;
+        std::vector<SIM::intType> nCells_x, nCells_y, nCells_z;
     } mesh;
 
 };
