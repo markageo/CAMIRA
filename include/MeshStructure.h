@@ -13,11 +13,11 @@ class MeshStructure
 
         MeshStructure(const InputData &);
 
+        // TODO: These should maybe be encapsulated in getters so that they cannot be changed from the outside
         Eigen::Tensor<SIM::floatType, 1> cellCenters_x, cellCenters_y, cellCenters_z;
 
     private:
 
-        
         void CreateMesh(const InputData &);
 
 };
