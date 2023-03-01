@@ -76,7 +76,7 @@ int main(int argc, char const *argv[])
     \*-------------------------------------------------------------------------------------*/
 
     // Data to pass to writer
-    VTK::FieldWriterConfig config( meshStructure.cellCenters_x.size(), meshStructure.cellCenters_y.size(), meshStructure.cellCenters_z.size(), VTK::DOUBLE);
+    VTK::VTKWriterConfig config( meshStructure.cellCenters_x.size(), meshStructure.cellCenters_y.size(), meshStructure.cellCenters_z.size(), VTK::DOUBLE);
         config.SetWriteMode("ascii");
         config.SetASCIIPrecision(8);
     VTK::gridVectorType gridVector = {meshStructure.cellCenters_x.data(), meshStructure.cellCenters_y.data(), meshStructure.cellCenters_z.data()};
@@ -84,7 +84,7 @@ int main(int argc, char const *argv[])
     VTK::vectorMapType vectorMap = { };
 
     // Write output
-    VTK::FieldWriter writer(gridVector, scalarMap, vectorMap, config);
+    VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
     writer.WriteData("mesh.vtk", "3D Rectilinear Grid");
 
     /*-------------------------------------------------------------------------------------*\
