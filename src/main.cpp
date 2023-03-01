@@ -7,6 +7,7 @@
 #include "SimulationParameters.h"
 #include "InputProcessing.h"
 #include "MeshStructure.h"
+#include "VTKWriter.h"
 
 
 #include <iostream>
@@ -70,44 +71,59 @@ int main(int argc, char const *argv[])
     MeshStructure meshStructure(inputData);
 
 
+    /*-------------------------------------------------------------------------------------*\
+                                           Output
+    \*-------------------------------------------------------------------------------------*/
+
+    // Data to pass to writer
+    VTK::FieldWriterConfig config( meshStructure.cellCenters_x.size(), meshStructure.cellCenters_y.size(), meshStructure.cellCenters_z.size(), VTK::DOUBLE);
+        config.SetWriteMode("ascii");
+        config.SetASCIIPrecision(8);
+    VTK::gridVectorType gridVector = {meshStructure.cellCenters_x.data(), meshStructure.cellCenters_y.data(), meshStructure.cellCenters_z.data()};
+    VTK::scalarMapType scalarMap = { };
+    VTK::vectorMapType vectorMap = { };
+
+    // Write output
+    VTK::FieldWriter writer(gridVector, scalarMap, vectorMap, config);
+    writer.WriteData("mesh.vtk", "3D Rectilinear Grid");
 
     /*-------------------------------------------------------------------------------------*\
                                            Testing
     \*-------------------------------------------------------------------------------------*/
 
-    std::cout << inputData.domainSize_x << std::endl;
-    std::cout << inputData.domainSize_y << std::endl;
-    std::cout << inputData.domainSize_z << std::endl;
-    std::cout << "\n";
+    // std::cout << inputData.domainSize_x << std::endl;
+    // std::cout << inputData.domainSize_y << std::endl;
+    // std::cout << inputData.domainSize_z << std::endl;
+    // std::cout << "\n";
 
-    for (int i = 0; i != 3; i++) {
-        std::cout << inputData.mesh.biasFactors_x[i]  << std::endl;
-        std::cout << inputData.mesh.nCells_x[i]  << std::endl;
-        std::cout << inputData.mesh.segmentBounds_x[i].first << " ";
-        std::cout << inputData.mesh.segmentBounds_x[i].second  << std::endl;
-    }
-    std::cout << "\n";
+    // for (int i = 0; i != 3; i++) {
+    //     std::cout << inputData.mesh.biasFactors_x[i]  << std::endl;
+    //     std::cout << inputData.mesh.nCells_x[i]  << std::endl;
+    //     std::cout << inputData.mesh.segmentBounds_x[i].first << " ";
+    //     std::cout << inputData.mesh.segmentBounds_x[i].second  << std::endl;
+    // }
+    // std::cout << "\n";
 
-    for (int i = 0; i != 1; i++) {
-        std::cout << inputData.mesh.biasFactors_y[i]  << std::endl;
-        std::cout << inputData.mesh.nCells_y[i]  << std::endl;
-        std::cout << inputData.mesh.segmentBounds_y[i].first << " ";
-        std::cout << inputData.mesh.segmentBounds_y[i].second  << std::endl;
-    }
-    std::cout << "\n";
+    // for (int i = 0; i != 1; i++) {
+    //     std::cout << inputData.mesh.biasFactors_y[i]  << std::endl;
+    //     std::cout << inputData.mesh.nCells_y[i]  << std::endl;
+    //     std::cout << inputData.mesh.segmentBounds_y[i].first << " ";
+    //     std::cout << inputData.mesh.segmentBounds_y[i].second  << std::endl;
+    // }
+    // std::cout << "\n";
 
-    for (int i = 0; i != 1; i++) {
-        std::cout << inputData.mesh.biasFactors_z[i]  << std::endl;
-        std::cout << inputData.mesh.nCells_z[i]  << std::endl;
-        std::cout << inputData.mesh.segmentBounds_z[i].first << " ";
-        std::cout << inputData.mesh.segmentBounds_z[i].second  << std::endl;
-    }
-    std::cout << "\n";
+    // for (int i = 0; i != 1; i++) {
+    //     std::cout << inputData.mesh.biasFactors_z[i]  << std::endl;
+    //     std::cout << inputData.mesh.nCells_z[i]  << std::endl;
+    //     std::cout << inputData.mesh.segmentBounds_z[i].first << " ";
+    //     std::cout << inputData.mesh.segmentBounds_z[i].second  << std::endl;
+    // }
+    // std::cout << "\n";
 
-    std::cout << "Mesh dimensions" << std::endl;
-    std::cout << meshStructure.cellCenters_x.dimension(0) << std::endl;
-    std::cout << meshStructure.cellCenters_y.dimension(0) << std::endl;
-    std::cout << meshStructure.cellCenters_z.dimension(0) << std::endl;
+    // std::cout << "Mesh dimensions" << std::endl;
+    // std::cout << meshStructure.cellCenters_x.dimension(0) << std::endl;
+    // std::cout << meshStructure.cellCenters_y.dimension(0) << std::endl;
+    // std::cout << meshStructure.cellCenters_z.dimension(0) << std::endl;
 
     return 0;
 }
