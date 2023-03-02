@@ -27,19 +27,19 @@ Mesh {
 
     Grid Y {
         Segment {
-            bounds = (0, 1.5)
+            bounds = (0, 1)
             nCells = 6
             biasFactor = -4
         }
 
         Segment {
-            bounds = (1.5, 2.5)
+            bounds = (1, 2)
             nCells = 20
             biasFactor = 1
         }
 
         Segment {
-            bounds = (2.5, 4)
+            bounds = (2, 3)
             nCells = 6
             biasFactor = 4
         }

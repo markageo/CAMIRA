@@ -42,7 +42,6 @@ namespace
             for (int i = 0; i != meshSegments[s].nCells; i++) {        // Cells within segment
                 cellLengths.push_back( firstCellLength*std::pow( growthRates[s], static_cast<SIM::floatType>(i) ) );
             }
-            
         }
 
         return cellLengths;
@@ -53,10 +52,11 @@ namespace
     {
         int nCellsTotal = cellLengths.size();
 
-        SIM::floatType previousCellPosition = 0.0;
+        SIM::floatType previousCellPosition = 0.0, previousCellLength = 0.0;
         for (int i = 0; i != nCellsTotal; i++) {
-            cellCenters(i) = previousCellPosition + cellLengths[i]/2.0;
+            cellCenters(i) = previousCellPosition + previousCellLength/2.0 + cellLengths[i]/2.0;
             previousCellPosition = cellCenters(i);
+            previousCellLength = cellLengths[i];
         }
 
     }
