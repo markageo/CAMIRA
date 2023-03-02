@@ -18,8 +18,6 @@ class MeshStructure
 
     private:
 
-        void CreateMesh(const InputData &);
-
 };
 
 #endif  // MESH_STRCTURE
