@@ -101,6 +101,7 @@ namespace
         const pt::ptree &gridTree = meshTree.get_child(gridString);
         std::string boundsString, nCellsString, biasFactorString;
         std::vector<SIM::floatType> tempBoundsVector;
+        InputData::MeshSegment tempMeshSegment;
         for (auto segment : gridTree) {
             if (segment.first != "Segment") {
                 // throw ERROR invalid child name
@@ -108,13 +109,14 @@ namespace
             nCellsString     = segment.second.get<std::string>("nCells");
             boundsString     = segment.second.get<std::string>("bounds");
             biasFactorString = segment.second.get<std::string>("biasFactor");
-
             tempBoundsVector = ParseVectorString(boundsString, 2);
-            meshSegments.emplace_back( tempBoundsVector[0],
-                                       tempBoundsVector[1],
-                                       String2Type<SIM::floatType>(nCellsString),
-                                       String2Type<SIM::floatType>(biasFactorString) 
-                                     );
+
+            tempMeshSegment.nCells = String2Type<SIM::floatType>(nCellsString);
+            tempMeshSegment.biasFactor = String2Type<SIM::floatType>(biasFactorString);
+            tempMeshSegment.lowerBound = tempBoundsVector[0];
+            tempMeshSegment.upperBound = tempBoundsVector[1];
+
+            meshSegments.push_back(tempMeshSegment);
         }
     }
 
