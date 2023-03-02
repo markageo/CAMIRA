@@ -7,6 +7,7 @@
 #include <utility>
 #include <optional>
 #include <iostream>
+#include <algorithm>
 
 #define VECTOR_START_CHAR       '('
 #define VECTOR_END_CHAR         ')'
@@ -77,6 +78,24 @@ namespace
                                                 Mesh
     \*-------------------------------------------------------------------------------------*/
 
+    void ValidateSegmentBounds(const std::vector<InputData::MeshSegment> &meshSegment)
+    {
+        using v_size_type = std::vector<InputData::MeshSegment>::size_type;
+
+        // The first one must start at zero
+        if (meshSegment[0].lowerBound != 0.0) {
+            // throw ERROR - must have mesh segment starting at coordinate 0
+        }
+
+        // Must be no gaps or overlaps in the segments
+        for (v_size_type i = 1; i != meshSegment.size(); i++) {
+            if ( meshSegment[i].lowerBound != meshSegment[i-1].upperBound ) {
+                // throw ERROR - segments must not overlap or have gaps
+            }
+        }
+
+    }
+
     void ReadGrid(const pt::ptree &meshTree, std::vector<InputData::MeshSegment> &meshSegments, const std::string &gridString)
     {
         const pt::ptree &gridTree = meshTree.get_child(gridString);
@@ -99,7 +118,6 @@ namespace
         }
     }
 
-
     void ReadMesh(InputData &inputData, const pt::ptree &tree)
     {
         const pt::ptree &meshTree = tree.get_child("Mesh");
@@ -115,6 +133,18 @@ namespace
         ReadGrid(meshTree, inputData.meshSegments_x, "GridX");
         ReadGrid(meshTree, inputData.meshSegments_y, "GridY");
         ReadGrid(meshTree, inputData.meshSegments_z, "GridZ");
+
+        // Sort in increasing order of lower bound
+        auto sortComparison = [](const auto& i, const auto& j) { return i.lowerBound < j.lowerBound; };
+        std::sort( inputData.meshSegments_x.begin(), inputData.meshSegments_x.end(), sortComparison);
+        std::sort( inputData.meshSegments_y.begin(), inputData.meshSegments_y.end(), sortComparison );
+        std::sort( inputData.meshSegments_z.begin(), inputData.meshSegments_z.end(), sortComparison );
+
+        // Check that the bounds are valid
+        ValidateSegmentBounds(inputData.meshSegments_x);
+        ValidateSegmentBounds(inputData.meshSegments_y);
+        ValidateSegmentBounds(inputData.meshSegments_z);
+
     }
 
 

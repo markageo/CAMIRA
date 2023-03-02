@@ -5,6 +5,12 @@ Mesh {
 
     Grid X {
         Segment {
+            bounds = (6, 10)
+            nCells = 10
+            biasFactor = 10
+        }
+
+        Segment {
             bounds = (0, 4)
             nCells = 10
             biasFactor = -10
@@ -16,11 +22,6 @@ Mesh {
             biasFactor = 1
         }
 
-        Segment {
-            bounds = (6, 10)
-            nCells = 10
-            biasFactor = 10
-        }
     }
 
 
