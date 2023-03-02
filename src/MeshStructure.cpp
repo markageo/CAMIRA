@@ -61,6 +61,18 @@ namespace
 
     }
 
+    void CalculateCellFaceAreas(Eigen::Tensor<SIM::floatType, 2> &cellFaceAreas, const std::vector<SIM::floatType> &cellLengths_x, 
+        const std::vector<SIM::floatType> &cellLengths_y)
+    {
+        using v_size_type = std::vector<SIM::floatType>::size_type;
+
+        for (v_size_type i = 0; i != cellLengths_x.size(); i++) {
+            for (v_size_type j = 0; j != cellLengths_y.size(); j++) {
+                cellFaceAreas(i, j) = cellLengths_x[i] * cellLengths_y[j];
+            }
+        }
+    }
+
 
     SIM::intType TotalCells(const std::vector<InputData::MeshSegment> &meshSegments)
     {
@@ -77,7 +89,10 @@ namespace
 MeshStructure::MeshStructure(const InputData &inputData) :
     cellCenters_x( TotalCells(inputData.meshSegments_x) ),
     cellCenters_y( TotalCells(inputData.meshSegments_y) ),
-    cellCenters_z( TotalCells(inputData.meshSegments_z) )
+    cellCenters_z( TotalCells(inputData.meshSegments_z) ),
+    cellFaceAreas_x( cellCenters_y.dimension(0), cellCenters_z.dimension(0) ),
+    cellFaceAreas_y( cellCenters_z.dimension(0), cellCenters_x.dimension(0) ),
+    cellFaceAreas_z( cellCenters_x.dimension(0), cellCenters_y.dimension(0) )
     { 
         std::vector<SIM::floatType> growthRates_x = CalculateGrowthRates(inputData.meshSegments_x);
         std::vector<SIM::floatType> growthRates_y = CalculateGrowthRates(inputData.meshSegments_y);
@@ -90,6 +105,11 @@ MeshStructure::MeshStructure(const InputData &inputData) :
         CalculateCellCenters(cellCenters_x, cellLengths_x);
         CalculateCellCenters(cellCenters_y, cellLengths_y);
         CalculateCellCenters(cellCenters_z, cellLengths_z);
+
+        CalculateCellFaceAreas(cellFaceAreas_x, cellLengths_y, cellLengths_z);
+        CalculateCellFaceAreas(cellFaceAreas_y, cellLengths_z, cellLengths_x);
+        CalculateCellFaceAreas(cellFaceAreas_z, cellLengths_x, cellLengths_y);
+
     };
 
 
