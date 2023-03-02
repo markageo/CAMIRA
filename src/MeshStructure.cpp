@@ -23,14 +23,12 @@ namespace
     }
 
 
-    void CalculateCellCenters(Eigen::Tensor<SIM::floatType, 1> &cellCenters, const std::vector<SIM::floatType> &growthRates, 
-        const std::vector<InputData::MeshSegment> &meshSegments)
+    std::vector<SIM::floatType> CalculateCellLengths(const std::vector<InputData::MeshSegment> &meshSegments, const std::vector<SIM::floatType> &growthRates)
     {
         int nSegments = meshSegments.size();
+        std::vector<SIM::floatType> cellLengths;
 
         SIM::floatType segmentLength, firstCellLength, geometricFactor;
-        SIM::floatType currentCellWidth, previousCellWidth = 0.0, previousCellPosition = 0.0;
-        SIM::intType gridIndex = 0;
         for (int s = 0; s != nSegments; s++) {    // Segments
 
             if (growthRates[s] != 1.0) {
@@ -42,15 +40,25 @@ namespace
             firstCellLength = segmentLength/geometricFactor; 
 
             for (int i = 0; i != meshSegments[s].nCells; i++) {        // Cells within segment
-                currentCellWidth = firstCellLength*std::pow( growthRates[s], static_cast<SIM::floatType>(i) );
-
-                cellCenters(gridIndex) = previousCellPosition + previousCellWidth/2.0 + currentCellWidth/2.0;
-
-                previousCellPosition = cellCenters(gridIndex);
-                previousCellWidth = currentCellWidth;
-                gridIndex++;
+                cellLengths.push_back( firstCellLength*std::pow( growthRates[s], static_cast<SIM::floatType>(i) ) );
             }
+            
         }
+
+        return cellLengths;
+    }
+
+
+    void CalculateCellCenters(Eigen::Tensor<SIM::floatType, 1> &cellCenters, const std::vector<SIM::floatType> &cellLengths)
+    {
+        int nCellsTotal = cellLengths.size();
+
+        SIM::floatType previousCellPosition = 0.0;
+        for (int i = 0; i != nCellsTotal; i++) {
+            cellCenters(i) = previousCellPosition + cellLengths[i]/2.0;
+            previousCellPosition = cellCenters(i);
+        }
+
     }
 
 
@@ -75,9 +83,13 @@ MeshStructure::MeshStructure(const InputData &inputData) :
         std::vector<SIM::floatType> growthRates_y = CalculateGrowthRates(inputData.meshSegments_y);
         std::vector<SIM::floatType> growthRates_z = CalculateGrowthRates(inputData.meshSegments_z);
 
-        CalculateCellCenters(cellCenters_x, growthRates_x, inputData.meshSegments_x);
-        CalculateCellCenters(cellCenters_y, growthRates_y, inputData.meshSegments_y);
-        CalculateCellCenters(cellCenters_z, growthRates_z, inputData.meshSegments_z);
+        std::vector<SIM::floatType> cellLengths_x = CalculateCellLengths(inputData.meshSegments_x, growthRates_x);
+        std::vector<SIM::floatType> cellLengths_y = CalculateCellLengths(inputData.meshSegments_y, growthRates_y);
+        std::vector<SIM::floatType> cellLengths_z = CalculateCellLengths(inputData.meshSegments_z, growthRates_z);
+
+        CalculateCellCenters(cellCenters_x, cellLengths_x);
+        CalculateCellCenters(cellCenters_y, cellLengths_y);
+        CalculateCellCenters(cellCenters_z, cellLengths_z);
     };
 
 
