@@ -34,7 +34,7 @@ namespace
         for (int s = 0; s != nSegments; s++) {    // Segments
 
             if (growthRates[s] != 1.0) {
-                geometricFactor = (1.0 - std::pow( growthRates[s], meshSegments[s].nCells )) / (1.0 - growthRates[s]);   // geometric series formaula
+                geometricFactor = (1.0 - std::pow( growthRates[s], meshSegments[s].nCells )) / (1.0 - growthRates[s]);   // geometric series formula
             } else {
                 geometricFactor = meshSegments[s].nCells;
             }
@@ -65,7 +65,7 @@ namespace
 
 }
 
-// Constructor
+// Constructor, creates the mesh
 MeshStructure::MeshStructure(const InputData &inputData) :
     cellCenters_x( TotalCells(inputData.meshSegments_x) ),
     cellCenters_y( TotalCells(inputData.meshSegments_y) ),
