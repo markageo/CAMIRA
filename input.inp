@@ -1,25 +1,26 @@
 # Input file
 Mesh {
 
-    domain = (10, 4, 5)
+    domain = (10, 3, 5)
 
     Grid X {
+        
         Segment {
-            bounds = (6, 10)
-            nCells = 10
-            biasFactor = 10
-        }
-
-        Segment {
-            bounds = (0, 4)
-            nCells = 10
+            bounds     = (0, 4)
+            nCells     = 10
             biasFactor = -10
         }
 
         Segment {
-            bounds = (4, 6)
-            nCells = 20
+            bounds     = (4, 6)
+            nCells     = 20
             biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (6, 10)
+            nCells     = 10
+            biasFactor = 10
         }
 
     }
@@ -27,20 +28,20 @@ Mesh {
 
     Grid Y {
         Segment {
-            bounds = (0, 1)
-            nCells = 6
+            bounds     = (0, 1)
+            nCells     = 6
             biasFactor = -4
         }
 
         Segment {
-            bounds = (1, 2)
-            nCells = 20
+            bounds     = (1, 2)
+            nCells     = 20
             biasFactor = 1
         }
 
         Segment {
-            bounds = (2, 3)
-            nCells = 6
+            bounds     = (2, 3)
+            nCells     = 6
             biasFactor = 4
         }
     }
@@ -48,14 +49,14 @@ Mesh {
 
     Grid Z {
         Segment {
-            bounds = (0, 1.5)
-            nCells = 20
+            bounds     = (0, 1.5)
+            nCells     = 20
             biasFactor = 1
         }
 
         Segment {
-            bounds = (1.5, 4)
-            nCells = 10
+            bounds     = (1.5, 4)
+            nCells     = 10
             biasFactor = 4
         }
     }
