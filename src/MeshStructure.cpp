@@ -109,7 +109,6 @@ MeshStructure::MeshStructure(const InputData &inputData) :
         CalculateCellFaceAreas(cellFaceAreas_x, cellLengths_y, cellLengths_z);
         CalculateCellFaceAreas(cellFaceAreas_y, cellLengths_z, cellLengths_x);
         CalculateCellFaceAreas(cellFaceAreas_z, cellLengths_x, cellLengths_y);
-
     };
 
 

@@ -12,10 +12,13 @@
 #include <utility>
 
 // Characters used to define structure of input files
-#define COMMENT_CHAR           '#'
+#define COMMENT_CHAR_1         '/'
+#define COMMENT_CHAR_2         '/' // Can make null character (\0) if comment symbol is only one character
 #define BLOCK_OPEN_CHAR        '{'
 #define BLOCK_CLOSE_CHAR       '}'
 #define ASSIGNMENT_CHAR        '='
+#define DIRECTIVE_CHAR         '#'
+#define INCLUDE_DIRECTIVE      "include"
 
 namespace pt = boost::property_tree;
 
@@ -33,7 +36,10 @@ enum ErrorType {
     unbalancedBraceError,
     noKeyGivenError,
     noDataGivenError,
-    noClosingQuotesError
+    noClosingQuotesError,
+    invalidDirective,
+    expectEndOfLineDirective,
+    expectingString
 };
 
 // Parser states
@@ -47,6 +53,7 @@ class ReaderStream;
 void ParseStream(ReaderStream &, pt::ptree &);
 void ProcessExpectingKeyState(ReaderStream &, std::stack<pt::ptree *> &, pt::ptree *&, ParserState &);
 void ProcessExpectingDataState(ReaderStream &, std::stack<pt::ptree *> &, pt::ptree *&, ParserState &);
+void ProcessDirective(ReaderStream &, std::stack<pt::ptree *> &);
 void DisplayErrorCode(ErrorType, ReaderStream &);
 
 
@@ -55,7 +62,7 @@ class ReaderStream
     public:
 
         ReaderStream(const std::string &inputFileName) : 
-            m_inputFileName(inputFileName), m_inputFileStream(inputFileName), m_lineNumber(0) {};
+            m_filename(inputFileName), m_inputFileStream(inputFileName), m_lineNumber(0) {};
 
         // Wrapper for getline function which reads new line and updates state of reader
         ReaderStream &ReadInputLine() 
@@ -75,6 +82,20 @@ class ReaderStream
         bool AtEndOfLine() const 
         { return m_linePos == m_inputLine.end(); }
 
+        // Check if at comment symbol
+        bool AtCommentSymbol() const 
+        { 
+            if (*m_linePos == COMMENT_CHAR_1) {
+
+                if (COMMENT_CHAR_2 == '\0')
+                    return true; 
+
+                if ( *(m_linePos+1) == COMMENT_CHAR_2 ) 
+                    return true;
+            } 
+            return false;
+        }
+
         // Go to next character in line (skipping whitespace)
         void GoToNextCharacter() { 
             SkipWhitespace();
@@ -86,8 +107,8 @@ class ReaderStream
         { return m_lineNumber; }
 
         // Return input file name
-        std::string InputFileName() const 
-        { return m_inputFileName; }
+        std::string Filename() const 
+        { return m_filename; }
 
 
         // Read key, whitespace is removed
@@ -98,8 +119,13 @@ class ReaderStream
                 SkipWhitespace();
                 if (SeperatorChar(*m_linePos))
                     break;
+
+                if (AtCommentSymbol()) 
+                    break;
+
                 if (m_linePos == m_inputLine.end())
                     break;
+
                 key += *m_linePos;
                 ++m_linePos;
             }
@@ -124,10 +150,17 @@ class ReaderStream
 
             while (1) {
                 if (quoteChar == '\0') {
+
                     SkipWhitespace();
-                    if (m_linePos == m_inputLine.end()) { 
+                    if (m_linePos == m_inputLine.end()) 
                         break; 
-                    }
+
+                    if (SeperatorChar(*m_linePos))
+                        break;
+                    
+                    if (AtCommentSymbol()) 
+                        break;
+
                 } else {
                     if (*m_linePos == quoteChar) {
                         ++m_linePos;
@@ -144,6 +177,24 @@ class ReaderStream
             SkipWhitespace();
             return data;
         }
+
+
+        // Read type of directive, stops at whitespace
+        std::string ReadDirectiveType() {
+            std::string directive;
+            if (*m_linePos == DIRECTIVE_CHAR)
+                m_linePos++;
+            while (1) {
+                if (m_linePos == m_inputLine.end())
+                    break;
+                if (std::isspace(*m_linePos))
+                    break;
+                directive += *m_linePos;
+                ++m_linePos;
+            }
+            SkipWhitespace();
+            return directive;
+        }
         
 
         // Status checks
@@ -153,15 +204,6 @@ class ReaderStream
         bool operator!() const 
         { return m_inputFileStream.fail(); }
 
-    private:
-
-         // State of the reader
-        std::string m_inputFileName;
-        std::ifstream m_inputFileStream;
-        std::string m_inputLine;
-        std::string::iterator m_linePos;
-        unsigned m_lineNumber;
-
         // Advance line iterator until there is no whitespace
         void SkipWhitespace() {
             while(std::isspace(*m_linePos)) {
@@ -169,18 +211,26 @@ class ReaderStream
             }
         }
 
-        // Check if character is a seperator charactor, i.e. block opening, comment, 
-        // or equals sign
+    private:
+
+         // State of the reader
+        std::string m_filename;
+        std::ifstream m_inputFileStream;
+        std::string m_inputLine;
+        std::string::iterator m_linePos;
+        unsigned m_lineNumber;
+
+
+        // Check if character is a seperator charactor, i.e. block opening/closing 
+        // or assignment
         bool SeperatorChar(const char ch) {
-            if (ch == BLOCK_OPEN_CHAR       ||
-                ch == BLOCK_CLOSE_CHAR      ||
-                ch == ASSIGNMENT_CHAR ||
-                ch == COMMENT_CHAR          ) { 
-                    return true;
-                } 
-                else { 
-                    return false;
-                }
+            if (ch == BLOCK_OPEN_CHAR    ||
+                ch == BLOCK_CLOSE_CHAR   ||
+                ch == ASSIGNMENT_CHAR   ) { 
+                return true;
+            } else { 
+                return false;
+            }
         }
 };
 
@@ -201,11 +251,26 @@ void ParseStream(ReaderStream &readerStream, pt::ptree &tree) {
     // Iterate each line
     while(readerStream.ReadInputLine()) {
 
+        // Skip whitespace so comment and directive chacaters can be seen
+        readerStream.SkipWhitespace();
+
+        // Ignore entire line if it starts with a comment
+        if (readerStream.AtCommentSymbol()) 
+            continue;
+
+        // Directive
+        if (readerStream.CurrentCharacter() == DIRECTIVE_CHAR) 
+        { 
+            ProcessDirective(readerStream, ptStack);  
+            continue;
+        }
+
         // Read through the line
         while (!readerStream.AtEndOfLine()) {
             
             // Ignore rest of line if there is comment
-            if (readerStream.CurrentCharacter() == COMMENT_CHAR) { break; }
+            if (readerStream.AtCommentSymbol()) 
+                break;
 
             switch (parserState)
             {
@@ -226,6 +291,37 @@ void ParseStream(ReaderStream &readerStream, pt::ptree &tree) {
     }
 }
 
+
+// Process directives
+void ProcessDirective(ReaderStream &readerStream, std::stack<pt::ptree *> &ptStack) 
+{       
+
+    // Directive type
+    std::string directive;
+    directive = readerStream.ReadDirectiveType();
+    if (directive == INCLUDE_DIRECTIVE) {
+        
+        readerStream.SkipWhitespace();
+        if (readerStream.CurrentCharacter() != '"' && readerStream.CurrentCharacter() != '\'')
+            throw expectingString;
+
+        ReaderStream readerStreamInclude( readerStream.ReadData() );
+        if (!readerStream) 
+            throw fileReadError;
+        
+        // Recursive call
+        ParseStream(readerStreamInclude, *ptStack.top());
+
+    } else {
+        throw invalidDirective;
+    }
+
+    // There cannot be anything after the directive
+    if ( !readerStream.AtEndOfLine() ) 
+        throw expectEndOfLineDirective;
+
+
+}
 
 // Prcess data when parser is expecting key
 void ProcessExpectingKeyState(ReaderStream &readerStream, std::stack<pt::ptree *> &ptStack, pt::ptree *&ptLast, ParserState &parserState) 
@@ -305,11 +401,13 @@ void ProcessExpectingDataState(ReaderStream &readerStream, std::stack<pt::ptree 
 // Display error message corresponding to error code
 void DisplayErrorCode(ErrorType error, ReaderStream &readerStream) 
 {
-    std::cout << "\n" << "FILE PARSING ERROR" << "\n";
+    std::cout << "\n" << "FILE PARSING ERROR: " 
+              << "'" << readerStream.Filename() << "'" 
+              << "\n";
     switch (error)
     {
         case fileReadError:
-            std::cout <<  "Unable to open file '" + readerStream.InputFileName() << "." << "\n";
+            std::cout <<  "Unable to open file '" + readerStream.Filename() << "." << "\n";
             break;
 
         case unmatchedBlockError:
@@ -336,6 +434,21 @@ void DisplayErrorCode(ErrorType error, ReaderStream &readerStream)
             std::cout << "Line " << readerStream.LineNumber() << ": "
                       << "Unclosed string." << "\n";
             break;
+
+        case invalidDirective:
+            std::cout << "Line " << readerStream.LineNumber() << ": "
+                      << "Invalid directive." << "\n";
+            break;
+
+        case expectEndOfLineDirective:
+            std::cout << "Line " << readerStream.LineNumber() << ": "
+                      << "Expected end of line after directive." << "\n";
+            break;
+
+        case expectingString:
+            std::cout << "Line " << readerStream.LineNumber() << ": "
+                      << "Expected string." << "\n";
+            break;
         
     }
     std::cout << std::endl;
@@ -358,9 +471,8 @@ std::optional<pt::ptree> ParseFile(const std::string &inputFileName)
 
     try {
 
-        if (!readerStream) {
+        if (!readerStream)
             throw fileReadError;
-        }
         
         // Start reading from the root space of the input file
         ParseStream(readerStream, pt);
