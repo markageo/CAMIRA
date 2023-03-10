@@ -18,6 +18,8 @@ namespace pt = boost::property_tree;
 namespace
 {
 
+    using namespace CFD;
+
     /*-------------------------------------------------------------------------------------*\
                                          Helper Functions
     \*-------------------------------------------------------------------------------------*/
@@ -34,9 +36,9 @@ namespace
     }
 
     // Parse vector string into an std::vector
-    std::vector<SIM::floatType> ParseVectorString(const std::string &vecString, const int &dim)
+    std::vector<CFD::floatType> ParseVectorString(const std::string &vecString, const int &dim)
     {
-        std::vector<SIM::floatType> vec;
+        std::vector<CFD::floatType> vec;
         std::string::const_iterator stringIterator = vecString.begin();
         std::string valueString;
         int dimCount = 0;
@@ -48,12 +50,12 @@ namespace
         
         while(stringIterator != vecString.end()) {
             if (*stringIterator == VECTOR_END_CHAR) {
-                vec.push_back( String2Type<SIM::floatType>(valueString) );
+                vec.push_back( String2Type<CFD::floatType>(valueString) );
                 break;
             }
 
             if (*stringIterator == VECTOR_DELIMITER_CHAR) {
-                vec.push_back( String2Type<SIM::floatType>(valueString) );
+                vec.push_back( String2Type<CFD::floatType>(valueString) );
                 valueString.clear();
                 dimCount++;
             } else {
@@ -100,7 +102,7 @@ namespace
     {
         const pt::ptree &gridTree = meshTree.get_child(gridString);
         std::string boundsString, nCellsString, biasFactorString;
-        std::vector<SIM::floatType> tempBoundsVector;
+        std::vector<CFD::floatType> tempBoundsVector;
         InputData::MeshSegment tempMeshSegment;
         for (auto segment : gridTree) {
             if (segment.first != "Segment") {
@@ -111,8 +113,8 @@ namespace
             biasFactorString = segment.second.get<std::string>("biasFactor");
             tempBoundsVector = ParseVectorString(boundsString, 2);
 
-            tempMeshSegment.nCells = String2Type<SIM::floatType>(nCellsString);
-            tempMeshSegment.biasFactor = String2Type<SIM::floatType>(biasFactorString);
+            tempMeshSegment.nCells = String2Type<CFD::floatType>(nCellsString);
+            tempMeshSegment.biasFactor = String2Type<CFD::floatType>(biasFactorString);
             tempMeshSegment.lowerBound = tempBoundsVector[0];
             tempMeshSegment.upperBound = tempBoundsVector[1];
 
@@ -126,7 +128,7 @@ namespace
 
         // Domain
         const std::string &domainSizeString = meshTree.get<std::string>("domain");
-        std::vector<SIM::floatType> domainSize = ParseVectorString(domainSizeString, 3);
+        std::vector<CFD::floatType> domainSize = ParseVectorString(domainSizeString, 3);
         inputData.domainSize_x = domainSize[0];
         inputData.domainSize_y = domainSize[1];
         inputData.domainSize_z = domainSize[2];
@@ -153,7 +155,7 @@ namespace
 }   // end anonymous namepsace
 
 
-std::optional<InputData> ReadInputData(const std::string &inputFileName) 
+std::optional<InputData> CFD::ReadInputData(const std::string &inputFileName) 
 {
     std::optional<pt::ptree> tree_optional = ParseFile(inputFileName);
     if (!tree_optional)

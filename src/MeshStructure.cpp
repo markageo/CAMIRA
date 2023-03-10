@@ -7,10 +7,13 @@
 // Helper functions
 namespace
 {
-    std::vector<SIM::floatType> CalculateGrowthRates(const std::vector<InputData::MeshSegment> &meshSegments)
+
+    using namespace CFD;
+
+    std::vector<CFD::floatType> CalculateGrowthRates(const std::vector<InputData::MeshSegment> &meshSegments)
     {
         int nSegments = meshSegments.size();
-        std::vector<SIM::floatType> growthRates(nSegments);
+        std::vector<CFD::floatType> growthRates(nSegments);
 
         // Negative growth rate means shrinking grid
         for (int i = 0; i != nSegments; i++) {
@@ -23,12 +26,12 @@ namespace
     }
 
 
-    std::vector<SIM::floatType> CalculateCellLengths(const std::vector<InputData::MeshSegment> &meshSegments, const std::vector<SIM::floatType> &growthRates)
+    std::vector<CFD::floatType> CalculateCellLengths(const std::vector<InputData::MeshSegment> &meshSegments, const std::vector<CFD::floatType> &growthRates)
     {
         int nSegments = meshSegments.size();
-        std::vector<SIM::floatType> cellLengths;
+        std::vector<CFD::floatType> cellLengths;
 
-        SIM::floatType segmentLength, firstCellLength, geometricFactor;
+        CFD::floatType segmentLength, firstCellLength, geometricFactor;
         for (int s = 0; s != nSegments; s++) {    // Segments
 
             if (growthRates[s] != 1.0) {
@@ -40,7 +43,7 @@ namespace
             firstCellLength = segmentLength/geometricFactor; 
 
             for (int i = 0; i != meshSegments[s].nCells; i++) {        // Cells within segment
-                cellLengths.push_back( firstCellLength*std::pow( growthRates[s], static_cast<SIM::floatType>(i) ) );
+                cellLengths.push_back( firstCellLength*std::pow( growthRates[s], static_cast<CFD::floatType>(i) ) );
             }
         }
 
@@ -48,11 +51,11 @@ namespace
     }
 
 
-    void CalculateCellCenters(Eigen::Tensor<SIM::floatType, 1> &cellCenters, const std::vector<SIM::floatType> &cellLengths)
+    void CalculateCellCenters(Eigen::Tensor<CFD::floatType, 1> &cellCenters, const std::vector<CFD::floatType> &cellLengths)
     {
         int nCellsTotal = cellLengths.size();
 
-        SIM::floatType previousCellPosition = 0.0, previousCellLength = 0.0;
+        CFD::floatType previousCellPosition = 0.0, previousCellLength = 0.0;
         for (int i = 0; i != nCellsTotal; i++) {
             cellCenters(i) = previousCellPosition + previousCellLength/2.0 + cellLengths[i]/2.0;
             previousCellPosition = cellCenters(i);
@@ -61,10 +64,10 @@ namespace
 
     }
 
-    void CalculateCellFaceAreas(Eigen::Tensor<SIM::floatType, 2> &cellFaceAreas, const std::vector<SIM::floatType> &cellLengths_x, 
-        const std::vector<SIM::floatType> &cellLengths_y)
+    void CalculateCellFaceAreas(Eigen::Tensor<CFD::floatType, 2> &cellFaceAreas, const std::vector<CFD::floatType> &cellLengths_x, 
+        const std::vector<CFD::floatType> &cellLengths_y)
     {
-        using v_size_type = std::vector<SIM::floatType>::size_type;
+        using v_size_type = std::vector<CFD::floatType>::size_type;
 
         for (v_size_type i = 0; i != cellLengths_x.size(); i++) {
             for (v_size_type j = 0; j != cellLengths_y.size(); j++) {
@@ -74,9 +77,9 @@ namespace
     }
 
 
-    SIM::intType TotalCells(const std::vector<InputData::MeshSegment> &meshSegments)
+    CFD::intType TotalCells(const std::vector<InputData::MeshSegment> &meshSegments)
     {
-        SIM::intType totalCells = 0;
+        CFD::intType totalCells = 0;
         for (auto segment : meshSegments) {
             totalCells += segment.nCells;
         }
@@ -86,7 +89,7 @@ namespace
 }
 
 // Constructor, creates the mesh
-MeshStructure::MeshStructure(const InputData &inputData) :
+CFD::MeshStructure::MeshStructure(const InputData &inputData) :
     cellCenters_x( TotalCells(inputData.meshSegments_x) ),
     cellCenters_y( TotalCells(inputData.meshSegments_y) ),
     cellCenters_z( TotalCells(inputData.meshSegments_z) ),
@@ -94,13 +97,13 @@ MeshStructure::MeshStructure(const InputData &inputData) :
     cellFaceAreas_y( cellCenters_z.dimension(0), cellCenters_x.dimension(0) ),
     cellFaceAreas_z( cellCenters_x.dimension(0), cellCenters_y.dimension(0) )
     { 
-        std::vector<SIM::floatType> growthRates_x = CalculateGrowthRates(inputData.meshSegments_x);
-        std::vector<SIM::floatType> growthRates_y = CalculateGrowthRates(inputData.meshSegments_y);
-        std::vector<SIM::floatType> growthRates_z = CalculateGrowthRates(inputData.meshSegments_z);
+        std::vector<CFD::floatType> growthRates_x = CalculateGrowthRates(inputData.meshSegments_x);
+        std::vector<CFD::floatType> growthRates_y = CalculateGrowthRates(inputData.meshSegments_y);
+        std::vector<CFD::floatType> growthRates_z = CalculateGrowthRates(inputData.meshSegments_z);
 
-        std::vector<SIM::floatType> cellLengths_x = CalculateCellLengths(inputData.meshSegments_x, growthRates_x);
-        std::vector<SIM::floatType> cellLengths_y = CalculateCellLengths(inputData.meshSegments_y, growthRates_y);
-        std::vector<SIM::floatType> cellLengths_z = CalculateCellLengths(inputData.meshSegments_z, growthRates_z);
+        std::vector<CFD::floatType> cellLengths_x = CalculateCellLengths(inputData.meshSegments_x, growthRates_x);
+        std::vector<CFD::floatType> cellLengths_y = CalculateCellLengths(inputData.meshSegments_y, growthRates_y);
+        std::vector<CFD::floatType> cellLengths_z = CalculateCellLengths(inputData.meshSegments_z, growthRates_z);
 
         CalculateCellCenters(cellCenters_x, cellLengths_x);
         CalculateCellCenters(cellCenters_y, cellLengths_y);

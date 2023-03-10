@@ -7,22 +7,26 @@
 #include <utility>
 #include <optional>
 
+namespace CFD
+{
 
 struct InputData
 {
 
-    SIM::floatType domainSize_x, domainSize_y, domainSize_z;
+    CFD::floatType domainSize_x, domainSize_y, domainSize_z;
 
     struct MeshSegment {
-        SIM::floatType lowerBound;
-        SIM::floatType upperBound;
-        SIM::intType nCells;
-        SIM::floatType biasFactor;
+        CFD::floatType lowerBound;
+        CFD::floatType upperBound;
+        CFD::intType nCells;
+        CFD::floatType biasFactor;
     };
     std::vector<MeshSegment> meshSegments_x, meshSegments_y, meshSegments_z;
 
 };
 
 std::optional<InputData> ReadInputData(const std::string &);
+
+} // end namespace CFD
 
 #endif  // INPUT_PROCESSING
