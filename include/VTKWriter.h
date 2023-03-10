@@ -13,9 +13,9 @@ namespace VTK
 {
 
 using sizeType = int long;
-using gridVectorType = std::vector<void *> ;
-using scalarMapType = std::map<std::string, void *>;
-using vectorMapType = std::map<std::string, std::vector<void *>>;
+using gridVectorType = std::vector<const void *>;
+using scalarMapType = std::map<std::string, const void *>;
+using vectorMapType = std::map<std::string, std::vector<const void *>>;
 
 typedef enum {
     DOUBLE, FLOAT
@@ -73,10 +73,10 @@ class VTKWriter
 
         std::function<void(double)> DataProperWriteFunc;
         void WriteDataArray(const void *, const sizeType &) const ;
-        void WriteDataArray(const std::vector<void *> , const sizeType &) const;
+        void WriteDataArray(const std::vector<const void *> , const sizeType &) const;
         void WriteDatasetRectilinearGrid();
         void WriteDataAttributeScalar(const std::string &, const void *);
-        void WriteDataAttributeVector(const std::string &, const std::vector<void *> &);
+        void WriteDataAttributeVector(const std::string &, const std::vector<const void *> &);
         template <typename T> T SwapEndian(const T &);
 
 };
