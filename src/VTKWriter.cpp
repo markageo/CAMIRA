@@ -140,7 +140,7 @@ int VTKWriter::WriteData(const std::string &filename, const std::string &title)
 \*-------------------------------------------------------------------------------------*/
 
 
-// Iterate raw data pointer and write 1 dimension of data
+// Iterate raw data pointer and write 1D data
 void VTKWriter::WriteDataArray(const void *voidDataPtr, const sizeType &iterLength) const {
     if (m_config.DataType() == DOUBLE) {
         auto dataPtr = reinterpret_cast<const double *>(voidDataPtr);
@@ -155,7 +155,8 @@ void VTKWriter::WriteDataArray(const void *voidDataPtr, const sizeType &iterLeng
     }
 }
 
-void VTKWriter::WriteDataArray(const std::vector<void *> voidDataPtrVec, const sizeType &iterLength) const {
+// Iteratre raw data pointer and write 3D data
+void VTKWriter::WriteDataArray(const std::vector<const void *> voidDataPtrVec, const sizeType &iterLength) const {
     if (m_config.DataType() == DOUBLE) {
         auto dataPtr1 = reinterpret_cast<const double *>(voidDataPtrVec[0]);
         auto dataPtr2 = reinterpret_cast<const double *>(voidDataPtrVec[1]);
@@ -227,7 +228,7 @@ void VTKWriter::WriteDataAttributeScalar(const std::string &scalarFieldName, con
 
 
 // Write vector data attribute to file
-void VTKWriter::WriteDataAttributeVector(const std::string &vectorFieldName, const std::vector<void *> &vectorField)
+void VTKWriter::WriteDataAttributeVector(const std::string &vectorFieldName, const std::vector<const void *> &vectorField)
 {
     m_outputFileStream << "VECTORS" 
                            << " " << vectorFieldName
