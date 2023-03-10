@@ -1,4 +1,4 @@
-# Input file
+// Input file
 Mesh {
 
     domain = (10, 3, 5)

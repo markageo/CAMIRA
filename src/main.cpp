@@ -36,11 +36,11 @@ int main(int argc, char const *argv[])
 
     // User input data
     std::string inputFileRetryChoice;
-    std::optional<InputData> inputData_optional;
+    std::optional<CFD::InputData> inputData_optional;
     while (true){
         try {
             std::cout << "Reading input file: '" + inputFilename + "'" << std::endl;
-            inputData_optional = ReadInputData(inputFilename);
+            inputData_optional = CFD::ReadInputData(inputFilename);
             if (!inputData_optional) 
                 throw -1;
             std::cout << "Success!" << "\n\n";
@@ -68,7 +68,7 @@ int main(int argc, char const *argv[])
                                            Meshing
     \*-------------------------------------------------------------------------------------*/
 
-    MeshStructure meshStructure(inputData);
+    CFD::MeshStructure meshStructure(inputData);
 
 
     /*-------------------------------------------------------------------------------------*\
@@ -77,7 +77,7 @@ int main(int argc, char const *argv[])
 
     // Data to pass to writer
     VTK::dataType VTKDataType = VTK::DOUBLE;
-    if (std::is_same<SIM::floatType, float>::value) {
+    if (std::is_same<CFD::floatType, float>::value) {
         VTKDataType = VTK::FLOAT;
     } 
     VTK::VTKWriterConfig config( meshStructure.cellCenters_x.size(), meshStructure.cellCenters_y.size(), meshStructure.cellCenters_z.size(), VTKDataType);

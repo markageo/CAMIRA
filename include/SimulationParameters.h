@@ -1,7 +1,7 @@
 #ifndef SIMULATION_PARAMETERS
 #define SIMULATION_PARAMETERS
 
-namespace SIM 
+namespace CFD 
 {
     using floatType = double;
     using intType = int;
