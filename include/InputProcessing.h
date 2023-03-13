@@ -25,7 +25,7 @@ struct InputData
 
 };
 
-std::optional<InputData> ReadInputData(const std::string &);
+InputData ReadInputData(const std::string &);
 
 } // end namespace CFD
 

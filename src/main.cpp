@@ -9,7 +9,6 @@
 #include "MeshStructure.h"
 #include "VTKWriter.h"
 
-
 #include <iostream>
 #include <optional>
 #include <type_traits>
@@ -36,31 +35,38 @@ int main(int argc, char const *argv[])
 
     // User input data
     std::string inputFileRetryChoice;
-    std::optional<CFD::InputData> inputData_optional;
+    CFD::InputData inputData;
     while (true){
         try {
-            std::cout << "Reading input file: '" + inputFilename + "'" << std::endl;
-            inputData_optional = CFD::ReadInputData(inputFilename);
-            if (!inputData_optional) 
-                throw -1;
+
+            std::cout << "Reading input file: '" + inputFilename + "' ..." << "\n\n";
+            inputData = CFD::ReadInputData(inputFilename);
             std::cout << "Success!" << "\n\n";
             break;
-        } catch (int status) {
-            std::cout << "Failure reading input file, would you like to try again? (y/n)" << "\n";
-            std::cin >> inputFileRetryChoice;
-            if (inputFileRetryChoice != "y") {exit(-1);}
+
+        } catch (std::exception &e) {
+
+            std::cout << "Failure reading input file! \n" 
+                      << e.what() 
+                      << "\n\n";
+
+            std::cout << "Would you like to try again? (y/n)" 
+                      << "\n";
+            std::cin  >> inputFileRetryChoice;
+            if (inputFileRetryChoice != "y") 
+                exit(-1);
             std::cout << "\n";
 
             std::cout << "Please enter input file name: " << "\n";
-            std::cin >> inputFilename;
+            std::cin  >> inputFilename;
             std::cout << "\n";
             std::cin.ignore();
+
         }
     }
     std::cout << "Press enter to begin.";
     std::cin.ignore();
     std::cout << std::endl;
-    auto inputData = inputData_optional.value();
 
 
 

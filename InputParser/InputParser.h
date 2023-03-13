@@ -3,10 +3,10 @@
 
 #include "boost/property_tree/ptree.hpp"
 #include <string>
-#include <optional>
+#include <stdexcept>
 
 // Parsing function declaration
-std::optional<boost::property_tree::ptree> ParseFile(const std::string &inputFileName) ;
+boost::property_tree::ptree ParseFile(const std::string &inputFileName) ;
 
 
 #endif  // INPUT_PARSER
