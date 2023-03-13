@@ -17,9 +17,8 @@ class MeshStructure
 
         MeshStructure(const CFD::InputData &);
 
-        // TODO: These should maybe be encapsulated in getters so that they cannot be changed from the outside
-        Eigen::Tensor<CFD::floatType, 1> cellCenters_x, cellCenters_y, cellCenters_z;
-        Eigen::Tensor<CFD::floatType, 2> cellFaceAreas_x, cellFaceAreas_y, cellFaceAreas_z; // Index by right hand rule
+        array1D cellCenters_x, cellCenters_y, cellCenters_z;
+        array2D cellFaceAreas_x, cellFaceAreas_y, cellFaceAreas_z; // Index by right hand rule
 
     private:
 
