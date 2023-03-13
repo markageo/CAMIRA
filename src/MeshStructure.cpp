@@ -69,8 +69,8 @@ namespace
     {
         using v_size_type = std::vector<CFD::floatType>::size_type;
 
-        for (v_size_type i = 0; i != cellLengths_x.size(); i++) {
-            for (v_size_type j = 0; j != cellLengths_y.size(); j++) {
+        for (v_size_type j = 0; j != cellLengths_y.size(); j++) {
+            for (v_size_type i = 0; i != cellLengths_x.size(); i++) {
                 cellFaceAreas(i, j) = cellLengths_x[i] * cellLengths_y[j];
             }
         }
