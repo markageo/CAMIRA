@@ -475,7 +475,7 @@ pt::ptree ParseFile(const std::string &inputFileName)
     pt::ptree pt;
 
     if (!readerStream)
-        throw fileReadError;
+        throw std::runtime_error( ErrorString(fileReadError, readerStream) );
     
     // Start reading from the root space of the input file
     ParseStream(readerStream, pt);
