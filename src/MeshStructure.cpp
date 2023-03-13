@@ -51,7 +51,7 @@ namespace
     }
 
 
-    void CalculateCellCenters(Eigen::Tensor<CFD::floatType, 1> &cellCenters, const std::vector<CFD::floatType> &cellLengths)
+    void CalculateCellCenters(CFD::array1D &cellCenters, const std::vector<CFD::floatType> &cellLengths)
     {
         int nCellsTotal = cellLengths.size();
 
@@ -64,7 +64,7 @@ namespace
 
     }
 
-    void CalculateCellFaceAreas(Eigen::Tensor<CFD::floatType, 2> &cellFaceAreas, const std::vector<CFD::floatType> &cellLengths_x, 
+    void CalculateCellFaceAreas(CFD::array2D &cellFaceAreas, const std::vector<CFD::floatType> &cellLengths_x, 
         const std::vector<CFD::floatType> &cellLengths_y)
     {
         using v_size_type = std::vector<CFD::floatType>::size_type;
