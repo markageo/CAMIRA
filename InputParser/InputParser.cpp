@@ -18,6 +18,8 @@
 #define BLOCK_CLOSE_CHAR       '}'
 #define ASSIGNMENT_CHAR        '='
 #define DIRECTIVE_CHAR         '#'
+
+// Directives
 #define INCLUDE_DIRECTIVE      "include"
 
 namespace pt = boost::property_tree;
@@ -54,7 +56,7 @@ void ParseStream(ReaderStream &, pt::ptree &);
 void ProcessExpectingKeyState(ReaderStream &, std::stack<pt::ptree *> &, pt::ptree *&, ParserState &);
 void ProcessExpectingDataState(ReaderStream &, std::stack<pt::ptree *> &, pt::ptree *&, ParserState &);
 void ProcessDirective(ReaderStream &, std::stack<pt::ptree *> &);
-void DisplayErrorCode(ErrorType, ReaderStream &);
+std::string ErrorString(const ErrorType &, const ReaderStream &);
 
 
 class ReaderStream
@@ -167,7 +169,7 @@ class ReaderStream
                         break;
                     }
                     if (m_linePos == m_inputLine.end()) {
-                        throw noClosingQuotesError;
+                        throw std::runtime_error( ErrorString(noClosingQuotesError, *this) );
                         break;
                     }
                 }
@@ -303,22 +305,22 @@ void ProcessDirective(ReaderStream &readerStream, std::stack<pt::ptree *> &ptSta
         
         readerStream.SkipWhitespace();
         if (readerStream.CurrentCharacter() != '"' && readerStream.CurrentCharacter() != '\'')
-            throw expectingString;
+            throw std::runtime_error( ErrorString(expectingString, readerStream) );
 
         ReaderStream readerStreamInclude( readerStream.ReadData() );
         if (!readerStream) 
-            throw fileReadError;
+            throw std::runtime_error( ErrorString(fileReadError, readerStream) );
         
         // Recursive call
         ParseStream(readerStreamInclude, *ptStack.top());
 
     } else {
-        throw invalidDirective;
+        throw std::runtime_error( ErrorString(invalidDirective, readerStream) );
     }
 
     // There cannot be anything after the directive
     if ( !readerStream.AtEndOfLine() ) 
-        throw expectEndOfLineDirective;
+        throw std::runtime_error( ErrorString(expectEndOfLineDirective, readerStream) );
 
 
 }
@@ -331,7 +333,7 @@ void ProcessExpectingKeyState(ReaderStream &readerStream, std::stack<pt::ptree *
     {
         case BLOCK_OPEN_CHAR:
             if (!ptLast) {
-                throw unmatchedBlockError;
+                throw std::runtime_error( ErrorString(unmatchedBlockError, readerStream) );
             }
             ptStack.push(ptLast);
             ptLast = nullptr;
@@ -340,7 +342,7 @@ void ProcessExpectingKeyState(ReaderStream &readerStream, std::stack<pt::ptree *
 
         case BLOCK_CLOSE_CHAR:
             if (ptStack.size() <= 1) {
-                throw unbalancedBraceError;
+                throw std::runtime_error( ErrorString(unbalancedBraceError, readerStream) );
             }
             ptStack.pop();
             ptLast = nullptr;
@@ -348,7 +350,7 @@ void ProcessExpectingKeyState(ReaderStream &readerStream, std::stack<pt::ptree *
             break;
 
         case ASSIGNMENT_CHAR:
-            throw noKeyGivenError;
+            throw std::runtime_error( ErrorString(noKeyGivenError, readerStream) );
             break;
 
         default:
@@ -374,7 +376,7 @@ void ProcessExpectingDataState(ReaderStream &readerStream, std::stack<pt::ptree 
 
         case BLOCK_CLOSE_CHAR:
             if (ptStack.size() <= 1) {
-                throw unbalancedBraceError;
+                throw std::runtime_error( ErrorString(unbalancedBraceError, readerStream) );
             }
             ptStack.pop();
             ptLast = nullptr;
@@ -386,7 +388,7 @@ void ProcessExpectingDataState(ReaderStream &readerStream, std::stack<pt::ptree 
             readerStream.GoToNextCharacter();
             data = readerStream.ReadData();
             if (data.empty()) {
-                throw noDataGivenError;
+                throw std::runtime_error( ErrorString(noDataGivenError, readerStream) );
             }
             ptLast->data() = data;
             parserState = expectingKey;
@@ -398,60 +400,63 @@ void ProcessExpectingDataState(ReaderStream &readerStream, std::stack<pt::ptree 
 }
 
 
-// Display error message corresponding to error code
-void DisplayErrorCode(ErrorType error, ReaderStream &readerStream) 
+// Return error message
+std::string ErrorString(const ErrorType &error, const ReaderStream &readerStream) 
 {
-    std::cout << "\n" << "FILE PARSING ERROR: " 
-              << "'" << readerStream.Filename() << "'" 
-              << "\n";
+    std::string errorMessage;
+
     switch (error)
     {
         case fileReadError:
-            std::cout <<  "Unable to open file '" + readerStream.Filename() << "." << "\n";
+            errorMessage = "Unable to open file '" + readerStream.Filename() + ".";
             break;
 
         case unmatchedBlockError:
-            std::cout << "Line " << readerStream.LineNumber() << ": "
-                      << "Block opened with '{'  without matching block name." << "\n";
+            errorMessage = "Line " + std::to_string(readerStream.LineNumber())
+                         + ": Block opened with '{'  without matching block name.";
             break;
 
         case unbalancedBraceError:
-            std::cout << "Line " << readerStream.LineNumber() << ": "
-                      << "Unbalanced block braces '{' and '}'." << "\n";
+            errorMessage = "Line " + std::to_string(readerStream.LineNumber()) 
+                         + ": Unbalanced block braces '{' and '}'.";
             break;
 
         case noKeyGivenError:
-            std::cout << "Line " << readerStream.LineNumber() << ": "
-                      << "Assignment operator '=' without corresponding key." << "\n";
+            errorMessage = "Line " + std::to_string(readerStream.LineNumber())
+                         + ": Assignment operator '=' without corresponding key.";
             break;
 
         case noDataGivenError:
-            std::cout << "Line " << readerStream.LineNumber() << ": "
-                      << "Key assignment '=' specified without data." << "\n";
+            errorMessage = "Line " + std::to_string(readerStream.LineNumber())
+                         + ": Key assignment '=' specified without data.";
             break;
 
         case noClosingQuotesError:
-            std::cout << "Line " << readerStream.LineNumber() << ": "
-                      << "Unclosed string." << "\n";
+            errorMessage = "Line " + std::to_string(readerStream.LineNumber())
+                         + ": Unclosed string.";
             break;
 
         case invalidDirective:
-            std::cout << "Line " << readerStream.LineNumber() << ": "
-                      << "Invalid directive." << "\n";
+            errorMessage = "Line " + std::to_string(readerStream.LineNumber())
+                         + "Invalid directive.";
             break;
 
         case expectEndOfLineDirective:
-            std::cout << "Line " << readerStream.LineNumber() << ": "
-                      << "Expected end of line after directive." << "\n";
+            errorMessage = "Line " + std::to_string(readerStream.LineNumber())
+                         + ": Expected end of line after directive.";
             break;
 
         case expectingString:
-            std::cout << "Line " << readerStream.LineNumber() << ": "
-                      << "Expected string." << "\n";
+            errorMessage = "Line " + std::to_string(readerStream.LineNumber())
+                         + "Expected string.";
             break;
         
+        default:
+            errorMessage = "undefined error!";
+        
     }
-    std::cout << std::endl;
+    
+    return errorMessage;
 }
 
 
@@ -463,28 +468,19 @@ void DisplayErrorCode(ErrorType error, ReaderStream &readerStream)
 \*-------------------------------------------------------------------------------------*/
 
 // Read input from file and store in returned property tree
-std::optional<pt::ptree> ParseFile(const std::string &inputFileName) 
+pt::ptree ParseFile(const std::string &inputFileName) 
 {
 
     ReaderStream readerStream(inputFileName);
     pt::ptree pt;
 
-    try {
+    if (!readerStream)
+        throw fileReadError;
+    
+    // Start reading from the root space of the input file
+    ParseStream(readerStream, pt);
 
-        if (!readerStream)
-            throw fileReadError;
-        
-        // Start reading from the root space of the input file
-        ParseStream(readerStream, pt);
-
-        // Success
-        return pt;
-
-    } catch (ErrorType err) {
-
-        // Display appropriate error message
-        DisplayErrorCode(err, readerStream);
-        return {};
-    }
+    // Success
+    return pt;
     
 }

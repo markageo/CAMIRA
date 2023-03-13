@@ -155,13 +155,10 @@ namespace
 }   // end anonymous namepsace
 
 
-std::optional<InputData> CFD::ReadInputData(const std::string &inputFileName) 
+InputData CFD::ReadInputData(const std::string &inputFileName) 
 {
-    std::optional<pt::ptree> tree_optional = ParseFile(inputFileName);
-    if (!tree_optional)
-        return {};
-    pt::ptree tree = tree_optional.value();
-
+    pt::ptree tree = ParseFile(inputFileName);
+    
     InputData inputData;
     ReadMesh(inputData, tree);
     
