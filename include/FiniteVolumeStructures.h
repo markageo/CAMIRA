@@ -61,13 +61,12 @@ class TransportEquation
 };
 
 
-
 // Recitlinear mesh structure and mesher
-class MeshStructure
+class Mesh
 {
     public:
 
-        MeshStructure(const CFD::InputData &);
+        Mesh(const CFD::InputData &);
 
         intType nCells_x, nCells_y, nCells_z;
         array1D cellCenters_x, cellCenters_y, cellCenters_z;
@@ -75,6 +74,37 @@ class MeshStructure
 
     private:
 
+};
+
+
+// Storage of cell face velocities
+class FaceVelocities
+{
+    // Faces are staggered in the negative direction:
+    //   cellFaceVelocity_x(i, j, k) -> u(i-1/2, j    , k    )
+    //   cellFaceVelocity_y(i, j, k) -> u(i    , j-1/2, k    )
+    //   cellFaceVelocity_z(i, j, k) -> u(i    , j    , k-1/2)
+    // Subscript indicates the normal direction of the face.
+
+    public:
+
+        FaceVelocities(const intType n_x, const intType n_y, const intType n_z);
+
+        array3D cellFaceVelocities_x, cellFaceVelocities_y, cellFaceVelocities_z;
+
+    private:
+};
+
+
+// Velocity and pressure solution arrays
+class SolutionFields
+{
+    public:
+        SolutionFields(const intType n_x, const intType n_y, const intType n_z);
+
+        array3D U, V, W, P;
+
+    private:
 };
 
 

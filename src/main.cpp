@@ -10,7 +10,6 @@
 #include "VTKWriter.h"
 
 #include <iostream>
-#include <optional>
 #include <type_traits>
 
 int main(int argc, char const *argv[]) 
@@ -44,7 +43,7 @@ int main(int argc, char const *argv[])
             std::cout << "Success!" << "\n\n";
             break;
 
-        } catch (std::exception &e) {
+        } catch (std::runtime_error &e) {
 
             std::cout << "Failure reading input file! \n" 
                       << e.what() 
@@ -69,20 +68,18 @@ int main(int argc, char const *argv[])
     std::cout << std::endl;
 
 
-
     /*-------------------------------------------------------------------------------------*\
                                            Meshing
     \*-------------------------------------------------------------------------------------*/
 
-    CFD::MeshStructure mesh(inputData);
+    CFD::Mesh mesh(inputData);
 
 
     /*-------------------------------------------------------------------------------------*\
-                                         Solver Call
+                                           Solve
     \*-------------------------------------------------------------------------------------*/
 
     
-
 
     /*-------------------------------------------------------------------------------------*\
                                            Output
