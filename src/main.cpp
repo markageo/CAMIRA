@@ -9,8 +9,6 @@
 #include "FiniteVolumeStructures.h"
 #include "VTKWriter.h"
 
-
-
 #include <iostream>
 #include <optional>
 #include <type_traits>
@@ -110,6 +108,7 @@ int main(int argc, char const *argv[])
     /*-------------------------------------------------------------------------------------*\
                                            Testing
     \*-------------------------------------------------------------------------------------*/
+
 
     return 0;
 }

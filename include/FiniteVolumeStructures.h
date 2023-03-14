@@ -8,6 +8,9 @@
 namespace CFD 
 {
 
+namespace TC
+{
+
 enum TransportCoefficients {
     p,    // (i  , j  , k  ) 
     n,    // (i  , j+1, k  )
@@ -25,13 +28,16 @@ enum TransportCoefficients {
     count
 }; 
 
+}   // end namespace TC
 
+
+// Allocates and points to general coefficients in transport equation
 class TransportEquation
 {   
     public:
 
-        TransportEquation(const intType n_x,const intType n_y, const intType n_z, const std::vector<TransportCoefficients> coeffs) : 
-            coeffsUsed(coeffs), coeffPointers(count) 
+        TransportEquation(const intType n_x, const intType n_y, const intType n_z, const std::vector<TC::TransportCoefficients> coeffs) : 
+            coeffsUsed(coeffs), coeffPointers(TC::count) 
         {
             for (const auto& index : coeffsUsed){
                 coeffPointers[index] = new CFD::array3D(n_x, n_y, n_z);
@@ -44,20 +50,19 @@ class TransportEquation
             }
         }
 
-        CFD::array3D& operator[](TransportCoefficients idx){
+        CFD::array3D& operator[](TC::TransportCoefficients idx){
             return *coeffPointers[idx];
         }
 
-
     private:
 
-        std::vector<TransportCoefficients> coeffsUsed;
+        std::vector<TC::TransportCoefficients> coeffsUsed;
         std::vector<CFD::array3D*> coeffPointers;
 };
 
 
 
-
+// Recitlinear mesh structure and mesher
 class MeshStructure
 {
     public:
