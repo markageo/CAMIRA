@@ -1,10 +1,22 @@
-#include "MeshStructure.h"
-#include <iostream>
+#include "SimulationParameters.h"
+#include "FiniteVolumeStructures.h"
+#include "Tensor"
 
+#include <iostream>
 #include <cmath>
 #include <functional>
 
-// Helper functions
+
+/*-------------------------------------------------------------------------------------*\
+                                    FVDiscretisation
+\*-------------------------------------------------------------------------------------*/
+
+/* NULL */
+
+/*-------------------------------------------------------------------------------------*\
+                                         Mesh
+\*-------------------------------------------------------------------------------------*/
+
 namespace
 {
 
@@ -90,9 +102,12 @@ namespace
 
 // Constructor, creates the mesh
 CFD::MeshStructure::MeshStructure(const InputData &inputData) :
-    cellCenters_x( TotalCells(inputData.meshSegments_x) ),
-    cellCenters_y( TotalCells(inputData.meshSegments_y) ),
-    cellCenters_z( TotalCells(inputData.meshSegments_z) ),
+    nCells_x( TotalCells(inputData.meshSegments_x) ),
+    nCells_y( TotalCells(inputData.meshSegments_y) ),
+    nCells_z( TotalCells(inputData.meshSegments_z) ),
+    cellCenters_x( nCells_x ),
+    cellCenters_y( nCells_y ),
+    cellCenters_z( nCells_z ),
     cellFaceAreas_x( cellCenters_y.dimension(0), cellCenters_z.dimension(0) ),
     cellFaceAreas_y( cellCenters_z.dimension(0), cellCenters_x.dimension(0) ),
     cellFaceAreas_z( cellCenters_x.dimension(0), cellCenters_y.dimension(0) )
@@ -115,3 +130,7 @@ CFD::MeshStructure::MeshStructure(const InputData &inputData) :
     };
 
 
+
+/*-------------------------------------------------------------------------------------*\
+                                   Face Velocities
+\*-------------------------------------------------------------------------------------*/
