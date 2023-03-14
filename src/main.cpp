@@ -6,8 +6,10 @@
 
 #include "SimulationParameters.h"
 #include "InputProcessing.h"
-#include "MeshStructure.h"
+#include "FiniteVolumeStructures.h"
 #include "VTKWriter.h"
+
+
 
 #include <iostream>
 #include <optional>
@@ -74,7 +76,14 @@ int main(int argc, char const *argv[])
                                            Meshing
     \*-------------------------------------------------------------------------------------*/
 
-    CFD::MeshStructure meshStructure(inputData);
+    CFD::MeshStructure mesh(inputData);
+
+
+    /*-------------------------------------------------------------------------------------*\
+                                         Solver Call
+    \*-------------------------------------------------------------------------------------*/
+
+    
 
 
     /*-------------------------------------------------------------------------------------*\
@@ -86,10 +95,10 @@ int main(int argc, char const *argv[])
     if (std::is_same<CFD::floatType, float>::value) {
         VTKDataType = VTK::FLOAT;
     } 
-    VTK::VTKWriterConfig config( meshStructure.cellCenters_x.size(), meshStructure.cellCenters_y.size(), meshStructure.cellCenters_z.size(), VTKDataType);
+    VTK::VTKWriterConfig config( mesh.cellCenters_x.size(), mesh.cellCenters_y.size(), mesh.cellCenters_z.size(), VTKDataType);
         config.SetWriteMode("ascii");
         config.SetASCIIPrecision(8);
-    VTK::gridVectorType gridVector = {meshStructure.cellCenters_x.data(), meshStructure.cellCenters_y.data(), meshStructure.cellCenters_z.data()};
+    VTK::gridVectorType gridVector = {mesh.cellCenters_x.data(), mesh.cellCenters_y.data(), mesh.cellCenters_z.data()};
     VTK::scalarMapType scalarMap = { };
     VTK::vectorMapType vectorMap = { };
 
@@ -101,8 +110,6 @@ int main(int argc, char const *argv[])
     /*-------------------------------------------------------------------------------------*\
                                            Testing
     \*-------------------------------------------------------------------------------------*/
-
-
 
     return 0;
 }
