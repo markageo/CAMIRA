@@ -8,10 +8,11 @@
 
 
 /*-------------------------------------------------------------------------------------*\
-                                    FVDiscretisation
+                                    Transport Equation
 \*-------------------------------------------------------------------------------------*/
 
 /* NULL */
+
 
 /*-------------------------------------------------------------------------------------*\
                                          Mesh
@@ -101,7 +102,7 @@ namespace
 }
 
 // Constructor, creates the mesh
-CFD::MeshStructure::MeshStructure(const InputData &inputData) :
+CFD::Mesh::Mesh(const InputData &inputData) :
     nCells_x( TotalCells(inputData.meshSegments_x) ),
     nCells_y( TotalCells(inputData.meshSegments_y) ),
     nCells_z( TotalCells(inputData.meshSegments_z) ),
@@ -134,3 +135,21 @@ CFD::MeshStructure::MeshStructure(const InputData &inputData) :
 /*-------------------------------------------------------------------------------------*\
                                    Face Velocities
 \*-------------------------------------------------------------------------------------*/
+
+CFD::FaceVelocities::FaceVelocities(const intType n_x, const intType n_y, const intType n_z) :
+    cellFaceVelocities_x(n_x+1, n_y  , n_z  ),
+    cellFaceVelocities_y(n_x  , n_y+1, n_z  ),
+    cellFaceVelocities_z(n_x  , n_y  , n_z+1)
+    {};
+
+
+/*-------------------------------------------------------------------------------------*\
+                                   Solution Fields
+\*-------------------------------------------------------------------------------------*/
+
+CFD::SolutionFields::SolutionFields(const intType n_x, const intType n_y, const intType n_z) :
+    U(n_x, n_y, n_z),
+    V(n_x, n_y, n_z),
+    W(n_x, n_y, n_z),
+    P(n_x, n_y, n_z)
+    {};
