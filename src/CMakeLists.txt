@@ -1,7 +1,8 @@
 # Add libraries
 add_library(libs InputProcessing.cpp
                  VTKWriter.cpp
-                 FiniteVolumeStructures.cpp)
+                 FiniteVolumeStructures.cpp
+                 Solver.cpp)
 
 # Add the executable
 add_executable(main main.cpp)

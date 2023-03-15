@@ -8,7 +8,7 @@
 
 
 /*-------------------------------------------------------------------------------------*\
-                                    Transport Equation
+                                    Array Allocator
 \*-------------------------------------------------------------------------------------*/
 
 /* NULL */
@@ -140,16 +140,4 @@ CFD::FaceVelocities::FaceVelocities(const intType n_x, const intType n_y, const 
     cellFaceVelocities_x(n_x+1, n_y  , n_z  ),
     cellFaceVelocities_y(n_x  , n_y+1, n_z  ),
     cellFaceVelocities_z(n_x  , n_y  , n_z+1)
-    {};
-
-
-/*-------------------------------------------------------------------------------------*\
-                                   Solution Fields
-\*-------------------------------------------------------------------------------------*/
-
-CFD::SolutionFields::SolutionFields(const intType n_x, const intType n_y, const intType n_z) :
-    U(n_x, n_y, n_z),
-    V(n_x, n_y, n_z),
-    W(n_x, n_y, n_z),
-    P(n_x, n_y, n_z)
     {};

@@ -60,5 +60,36 @@ Mesh {
             biasFactor = 4
         }
     }
+}
 
+BoundaryConditions
+{
+
+    +x {
+        u = zeroGradient
+        v = zeroGradient
+        p = zeroGradient
+    }
+
+    -x {
+        u = noSlip
+        v = uniform 0
+        p = zeroGradient
+    }
+
+    +y {
+
+    }
+
+    -y {
+
+    }
+
+    +z {
+
+    }
+
+    -z {
+
+    }
 }
