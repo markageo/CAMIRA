@@ -61,7 +61,7 @@ struct InputData
         BoundaryConditions::ENUMDATA type;
         CFD::floatType value;
     };
-    std::vector< std::map<BoundaryPatches::ENUMDATA, BoundaryConditionStruct> > boundaryConditions;
+    std::vector< std::vector< BoundaryConditionStruct > > boundaryConditions;
     
 };
 

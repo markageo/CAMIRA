@@ -18,7 +18,7 @@ namespace pt = boost::property_tree;
 
 // InputData constructor
 CFD::InputData::InputData() :
-    boundaryConditions(CFD::Fields::ENUMDATA::count)
+    boundaryConditions(CFD::Fields::ENUMDATA::count, std::vector< CFD::InputData::BoundaryConditionStruct >(CFD::BoundaryPatches::ENUMDATA::count) )
     {};
 
 
@@ -164,15 +164,16 @@ namespace
                                        Boundary Conditions
     \*-------------------------------------------------------------------------------------*/
 
-
     InputData::BoundaryConditionStruct readBoundaryValueString(const std::string &boundaryString)
     {
         using BC = BoundaryConditions::ENUMDATA;
 
         InputData::BoundaryConditionStruct bcStruct;
+        std::string bcTypeString;
+        std::string bcValueString;
+        std::string::const_iterator stringIterator = boundaryString.begin();
 
-
-
+        
         return bcStruct;
     }
 
@@ -205,10 +206,9 @@ namespace
             for (auto [fieldEnum, fieldString] : fieldMap) {
 
                 valueString = boundaryPatchTreePointer->get<std::string>(fieldString);
-                inputData.boundaryConditions[fieldEnum].emplace( std::make_pair( patchEnum, readBoundaryValueString(valueString) ) );
+                inputData.boundaryConditions[fieldEnum][patchEnum] = readBoundaryValueString(valueString);
 
             }
-
         }
 
     }
