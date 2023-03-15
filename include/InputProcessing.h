@@ -6,15 +6,47 @@
 #include <vector>
 #include <utility>
 #include <optional>
+#include <map>
+
 
 namespace CFD
 {
 
+namespace BoundaryConditions 
+{
+    enum ENUMDATA 
+    {
+        zeroGradient,
+        uniform,
+        extrapolated,
+        count
+    };
+};
+
+
+namespace BoundaryPatches 
+{   
+    enum ENUMDATA
+    {
+        xPositive, xNegative,
+        yPositive, yNegative,
+        zPositive, zNegative,
+        count
+    };
+};
+
+
 struct InputData
 {
+    
+    // Constructor
+    InputData();
 
+    // Domain size
     CFD::floatType domainSize_x, domainSize_y, domainSize_z;
 
+
+    // Mesh
     struct MeshSegment {
         CFD::floatType lowerBound;
         CFD::floatType upperBound;
@@ -23,6 +55,14 @@ struct InputData
     };
     std::vector<MeshSegment> meshSegments_x, meshSegments_y, meshSegments_z;
 
+
+    // Boundary conditions
+    struct BoundaryConditionStruct {
+        BoundaryConditions::ENUMDATA type;
+        CFD::floatType value;
+    };
+    std::vector< std::map<BoundaryPatches::ENUMDATA, BoundaryConditionStruct> > boundaryConditions;
+    
 };
 
 InputData ReadInputData(const std::string &);

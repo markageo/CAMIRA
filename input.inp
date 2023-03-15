@@ -1,4 +1,12 @@
 // Input file
+
+
+Model {
+    rho  = 1
+    nu   = 1
+}
+
+
 Mesh {
 
     domain = (10, 3, 5)
@@ -62,34 +70,56 @@ Mesh {
     }
 }
 
+
 BoundaryConditions
 {
 
     +x {
         u = zeroGradient
         v = zeroGradient
+        w = zeroGradient
         p = zeroGradient
     }
 
     -x {
-        u = noSlip
+        u = uniform 1
         v = uniform 0
+        w = uniform 0
         p = zeroGradient
     }
 
     +y {
-
+        u = uniform 1
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform 0
     }
 
     -y {
-
+        u = uniform 0
+        v = uniform 0
+        w = uniform 0
+        p = extrapolated
     }
 
     +z {
-
+        u = zeroGradient
+        v = zeroGradient
+        w = uniform 0
+        p = zeroGradient
     }
 
     -z {
-
+        u = zeroGradient
+        v = zeroGradient
+        w = uniform 0
+        p = zeroGradient
     }
+}
+
+
+Solver {
+
+    sweepDirection = x
+
 }

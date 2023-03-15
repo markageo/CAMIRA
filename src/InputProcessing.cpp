@@ -2,6 +2,7 @@
 
 #define NDEBUG
 #include "InputParser.h"
+#include "FiniteVolumeStructures.h"
 #include "SimulationParameters.h"
 #include "boost/property_tree/ptree.hpp"
 #include <utility>
@@ -14,6 +15,12 @@
 #define VECTOR_DELIMITER_CHAR   ','
 
 namespace pt = boost::property_tree;
+
+// InputData constructor
+CFD::InputData::InputData() :
+    boundaryConditions(CFD::Fields::ENUMDATA::count)
+    {};
+
 
 namespace
 {
@@ -98,6 +105,7 @@ namespace
 
     }
 
+
     void ReadGrid(const pt::ptree &meshTree, std::vector<InputData::MeshSegment> &meshSegments, const std::string &gridString)
     {
         const pt::ptree &gridTree = meshTree.get_child(gridString);
@@ -121,6 +129,7 @@ namespace
             meshSegments.push_back(tempMeshSegment);
         }
     }
+
 
     void ReadMesh(InputData &inputData, const pt::ptree &tree)
     {
@@ -151,16 +160,70 @@ namespace
 
     }
 
+    /*-------------------------------------------------------------------------------------*\
+                                       Boundary Conditions
+    \*-------------------------------------------------------------------------------------*/
+
+
+    InputData::BoundaryConditionStruct readBoundaryValueString(const std::string &boundaryString)
+    {
+        using BC = BoundaryConditions::ENUMDATA;
+
+        InputData::BoundaryConditionStruct bcStruct;
+
+
+
+        return bcStruct;
+    }
+
+
+    void ReadBoundaryConditions(InputData &inputData, const pt::ptree &tree)
+    {
+        using BP = BoundaryPatches::ENUMDATA;
+        using F  = Fields::ENUMDATA;
+
+        const pt::ptree &boundaryConditionsTree = tree.get_child("BoundaryConditions");
+
+        // Boundary name strings
+        std::map<BP, std::string> boundaryPatchMap{ {BP::xPositive, "+x"}, {BP::xNegative, "-x"},
+                                                    {BP::yPositive, "+y"}, {BP::yNegative, "-y"},
+                                                    {BP::zPositive, "+z"}, {BP::zNegative, "-z"} };
+
+        // Field name strings
+        std::map<F, std::string> fieldMap { {F::U, "u"},
+                                            {F::V, "v"},
+                                            {F::W, "w"},
+                                            {F::P, "p"} };
+
+        // Iterate boundary patches
+        std::string valueString;
+        const pt::ptree *boundaryPatchTreePointer = nullptr;
+        for (auto [patchEnum, patchString] : boundaryPatchMap) {
+            boundaryPatchTreePointer = &( boundaryConditionsTree.get_child(patchString) );
+
+            // Iterate fields
+            for (auto [fieldEnum, fieldString] : fieldMap) {
+
+                valueString = boundaryPatchTreePointer->get<std::string>(fieldString);
+                inputData.boundaryConditions[fieldEnum].emplace( std::make_pair( patchEnum, readBoundaryValueString(valueString) ) );
+
+            }
+
+        }
+
+    }
+
 
 }   // end anonymous namepsace
 
 
-InputData CFD::ReadInputData(const std::string &inputFileName) 
+CFD::InputData CFD::ReadInputData(const std::string &inputFileName) 
 {
     pt::ptree tree = ParseFile(inputFileName);
     
     InputData inputData;
     ReadMesh(inputData, tree);
+    ReadBoundaryConditions(inputData, tree);
     
     return inputData;
 

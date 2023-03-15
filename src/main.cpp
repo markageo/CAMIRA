@@ -44,11 +44,12 @@ int main(int argc, char const *argv[])
             std::cout << "Success!" << "\n\n";
             break;
 
-        } catch (std::runtime_error &e) {
+        // } catch (std::runtime_error &e) {
+        } catch (int &e) {
 
-            std::cout << "Failure reading input file! \n" 
-                      << e.what() 
-                      << "\n\n";
+            // std::cout << "Failure reading input file! \n" 
+            //           << e.what() 
+            //           << "\n\n";
 
             std::cout << "Would you like to try again? (y/n)" 
                       << "\n";
@@ -73,7 +74,7 @@ int main(int argc, char const *argv[])
                                            Solve
     \*-------------------------------------------------------------------------------------*/
 
-    
+
     CFD::Mesh mesh(inputData);
 
     using FE = CFD::Fields::ENUMDATA;
