@@ -47,32 +47,32 @@ namespace CFD
     {
         static_assert(std::is_enum<arrayEnum>::value, "Template parameter must be enum type.");
 
-    public:
-        ArrayAllocator(const intType n_x, const intType n_y, const intType n_z, const std::vector<arrayEnum> coeffs) : 
-            coeffsUsed(coeffs), coeffPointers(arrayEnum::count)
-        {
-            for (const auto &index : coeffsUsed)
+        public:
+            ArrayAllocator(const intType n_x, const intType n_y, const intType n_z, const std::vector<arrayEnum> coeffs) : 
+                coeffsUsed(coeffs), coeffPointers(arrayEnum::count)
             {
-                coeffPointers[index] = new CFD::array3D(n_x, n_y, n_z);
+                for (const auto &index : coeffsUsed)
+                {
+                    coeffPointers[index] = new CFD::array3D(n_x, n_y, n_z);
+                }
             }
-        }
 
-        ~ArrayAllocator()
-        {
-            for (const auto &index : coeffsUsed)
+            ~ArrayAllocator()
             {
-                delete coeffPointers[index];
+                for (const auto &index : coeffsUsed)
+                {
+                    delete coeffPointers[index];
+                }
             }
-        }
 
-        CFD::array3D &operator[](arrayEnum idx)
-        {
-            return *coeffPointers[idx];
-        }
+            CFD::array3D &operator[](arrayEnum idx)
+            {
+                return *coeffPointers[idx];
+            }
 
-    private:
-        std::vector<arrayEnum> coeffsUsed;
-        std::vector<CFD::array3D *> coeffPointers;
+        private:
+            std::vector<arrayEnum> coeffsUsed;
+            std::vector<CFD::array3D *> coeffPointers;
     };
 
     // Recitlinear mesh structure and mesher
