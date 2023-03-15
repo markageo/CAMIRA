@@ -8,6 +8,7 @@
 #include "InputProcessing.h"
 #include "FiniteVolumeStructures.h"
 #include "VTKWriter.h"
+#include "Solver.h"
 
 #include <iostream>
 #include <type_traits>
@@ -69,17 +70,17 @@ int main(int argc, char const *argv[])
 
 
     /*-------------------------------------------------------------------------------------*\
-                                           Meshing
-    \*-------------------------------------------------------------------------------------*/
-
-    CFD::Mesh mesh(inputData);
-
-
-    /*-------------------------------------------------------------------------------------*\
                                            Solve
     \*-------------------------------------------------------------------------------------*/
 
-    CFD::SolutionFields sol(mesh.nCells_x, mesh.nCells_y, mesh.nCells_z);
+    
+    CFD::Mesh mesh(inputData);
+
+    using FE = CFD::Fields::ENUMDATA;
+    CFD::ArrayAllocator<FE> fields(mesh.nCells_x, mesh.nCells_y, mesh.nCells_z, {FE::U, FE::V, FE::W, FE::P});
+
+    CFD::SweepSolve(fields, mesh, inputData);
+
 
     /*-------------------------------------------------------------------------------------*\
                                            Output
@@ -105,6 +106,9 @@ int main(int argc, char const *argv[])
     /*-------------------------------------------------------------------------------------*\
                                            Testing
     \*-------------------------------------------------------------------------------------*/
+
+    std::vector<CFD::Fields::ENUMDATA> fieldEnums = {CFD::Fields::ENUMDATA::U, CFD::Fields::ENUMDATA::V, CFD::Fields::ENUMDATA::P};
+    CFD::ArrayAllocator<CFD::Fields::ENUMDATA>(mesh.nCells_x, mesh.nCells_y, mesh.nCells_z, fieldEnums);
 
 
     return 0;
