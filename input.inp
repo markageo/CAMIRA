@@ -15,20 +15,8 @@ Mesh {
         
         Segment {
             bounds     = (0, 4)
-            nCells     = 10
-            biasFactor = -10
-        }
-
-        Segment {
-            bounds     = (4, 6)
-            nCells     = 20
+            nCells     = 40
             biasFactor = 1
-        }
-
-        Segment {
-            bounds     = (6, 10)
-            nCells     = 10
-            biasFactor = 10
         }
 
     }
@@ -36,36 +24,18 @@ Mesh {
 
     Grid Y {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 6
-            biasFactor = -4
-        }
-
-        Segment {
-            bounds     = (1, 2)
-            nCells     = 20
-            biasFactor = 1
-        }
-
-        Segment {
-            bounds     = (2, 3)
-            nCells     = 6
-            biasFactor = 4
+            bounds     = (0, 4)
+            nCells     = 40
+            biasFactor = 6
         }
     }
 
 
     Grid Z {
         Segment {
-            bounds     = (0, 1.5)
-            nCells     = 20
+            bounds     = (0, 10)
+            nCells     = 100
             biasFactor = 1
-        }
-
-        Segment {
-            bounds     = (1.5, 4)
-            nCells     = 10
-            biasFactor = 4
         }
     }
 }
@@ -82,37 +52,37 @@ BoundaryConditions
     }
 
     -x {
-        u = uniform 1
-        v = uniform 0
-        w = uniform 0
+        u = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
         p = zeroGradient
     }
 
     +y {
-        u = uniform 1
+        u = uniform, 1
         v = zeroGradient
         w = zeroGradient
-        p = uniform 0
+        p = uniform, 0
     }
 
     -y {
-        u = uniform 0
-        v = uniform 0
-        w = uniform 0
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
         p = extrapolated
     }
 
     +z {
         u = zeroGradient
         v = zeroGradient
-        w = uniform 0
+        w = uniform, 0
         p = zeroGradient
     }
 
     -z {
         u = zeroGradient
         v = zeroGradient
-        w = uniform 0
+        w = uniform, 0
         p = zeroGradient
     }
 }
@@ -120,6 +90,7 @@ BoundaryConditions
 
 Solver {
 
-    sweepDirection = x
+    planeSweepDirection = z
+    lineSweepDirection  = y
 
 }

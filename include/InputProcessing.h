@@ -5,9 +5,6 @@
 #include "boost/property_tree/ptree.hpp"
 #include <vector>
 #include <utility>
-#include <optional>
-#include <map>
-
 
 namespace CFD
 {
@@ -61,7 +58,7 @@ struct InputData
         BoundaryConditions::ENUMDATA type;
         CFD::floatType value;
     };
-    std::vector< std::vector< BoundaryConditionStruct > > boundaryConditions;
+    std::vector< std::vector< BoundaryConditionStruct > > boundaryConditions; 
     
 };
 

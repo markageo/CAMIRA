@@ -9,10 +9,12 @@
 #include <optional>
 #include <iostream>
 #include <algorithm>
+#include <map>
 
 #define VECTOR_START_CHAR       '('
 #define VECTOR_END_CHAR         ')'
 #define VECTOR_DELIMITER_CHAR   ','
+#define MULTI_DELIMITER_CHAR    ','
 
 namespace pt = boost::property_tree;
 
@@ -173,7 +175,55 @@ namespace
         std::string bcValueString;
         std::string::const_iterator stringIterator = boundaryString.begin();
 
-        
+        // Read the boundary condition type
+        while (stringIterator != boundaryString.end()) {
+
+            if (*stringIterator == MULTI_DELIMITER_CHAR) 
+                break;
+            
+            bcTypeString += *stringIterator;
+            stringIterator++;
+
+        }
+
+
+        // Store the type, some don't need a value
+        if        (bcTypeString == "uniform") {
+
+            bcStruct.type = BC::uniform;
+
+        } else if (bcTypeString == "zeroGradient") {
+
+            bcStruct.type = BC::zeroGradient;
+            bcStruct.value = 0.0;
+            return bcStruct;
+
+        } else if (bcTypeString == "extrapolated") {
+            bcStruct.type = BC::extrapolated;
+            bcStruct.value = 0.0;
+            return bcStruct;
+        } else {
+            // throw ERROR -  invalid BC type
+        }
+
+
+        // Check for expected value
+        if (*stringIterator != MULTI_DELIMITER_CHAR) {
+            // throw ERROR - expected value for boudnary condition
+        }
+        stringIterator++;
+
+        // Read the value to end of line
+        while (stringIterator != boundaryString.end()) {            
+            bcValueString += *stringIterator;
+            stringIterator++;
+        }
+
+        // Convert and store value
+        if (bcStruct.type == BC::uniform) {
+            bcStruct.value = std::stod(bcValueString);
+        }
+
         return bcStruct;
     }
 

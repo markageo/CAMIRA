@@ -74,11 +74,12 @@ int main(int argc, char const *argv[])
                                            Solve
     \*-------------------------------------------------------------------------------------*/
 
+    using F = CFD::Fields::ENUMDATA;
+    using BC = CFD::BoundaryConditions::ENUMDATA;
+    using BP = CFD::BoundaryPatches::ENUMDATA;
 
     CFD::Mesh mesh(inputData);
-
-    using FE = CFD::Fields::ENUMDATA;
-    CFD::ArrayAllocator<FE> fields(mesh.nCells_x, mesh.nCells_y, mesh.nCells_z, {FE::U, FE::V, FE::W, FE::P});
+    CFD::ArrayAllocator<F> fields(mesh.nCells_x, mesh.nCells_y, mesh.nCells_z, {F::U, F::V, F::W, F::P});
 
     CFD::SweepSolve(fields, mesh, inputData);
 
@@ -108,8 +109,12 @@ int main(int argc, char const *argv[])
                                            Testing
     \*-------------------------------------------------------------------------------------*/
 
-    std::vector<CFD::Fields::ENUMDATA> fieldEnums = {CFD::Fields::ENUMDATA::U, CFD::Fields::ENUMDATA::V, CFD::Fields::ENUMDATA::P};
-    CFD::ArrayAllocator<CFD::Fields::ENUMDATA>(mesh.nCells_x, mesh.nCells_y, mesh.nCells_z, fieldEnums);
+    // Testing BC reader
+
+    std::cout << inputData.boundaryConditions[F::U][BP::xNegative].type << std::endl;
+    std::cout << inputData.boundaryConditions[F::U][BP::xNegative].value<< std::endl;
+    std::cout << inputData.boundaryConditions[F::U][BP::xPositive].type << std::endl;
+
 
 
     return 0;
