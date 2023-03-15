@@ -1,3 +1,6 @@
+#ifndef VTK_WRITER
+#define VTK_WRITER
+
 #include <string>
 #include <vector>
 #include <fstream>
@@ -83,3 +86,5 @@ class VTKWriter
 
 
 } // end namespace VTKwriter
+
+#endif // VTK_WRITER
