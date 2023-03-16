@@ -83,7 +83,6 @@ int main(int argc, char const *argv[])
 
     CFD::SweepSolve(fields, mesh, inputData);
 
-
     /*-------------------------------------------------------------------------------------*\
                                            Output
     \*-------------------------------------------------------------------------------------*/
@@ -110,7 +109,6 @@ int main(int argc, char const *argv[])
     \*-------------------------------------------------------------------------------------*/
 
     // Testing BC reader
-
     std::cout << inputData.boundaryConditions[F::U][BP::xNegative].type << std::endl;
     std::cout << inputData.boundaryConditions[F::U][BP::xNegative].value<< std::endl;
     std::cout << inputData.boundaryConditions[F::U][BP::xPositive].type << std::endl;
