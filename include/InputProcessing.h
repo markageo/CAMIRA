@@ -9,30 +9,6 @@
 namespace CFD
 {
 
-namespace BoundaryConditions 
-{
-    enum ENUMDATA 
-    {
-        zeroGradient,
-        uniform,
-        extrapolated,
-        count
-    };
-};
-
-
-namespace BoundaryPatches 
-{   
-    enum ENUMDATA
-    {
-        xPositive, xNegative,
-        yPositive, yNegative,
-        zPositive, zNegative,
-        count
-    };
-};
-
-
 struct InputData
 {
     
