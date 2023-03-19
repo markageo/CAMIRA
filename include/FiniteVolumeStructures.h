@@ -4,12 +4,13 @@
 #include "SimulationParameters.h"
 #include "InputProcessing.h"
 #include "Tensor"
+#include <memory>
 
 namespace CFD
 {
-    
+
 // Allocate 3D arrays using enums
-template <typename arrayEnum = TransportCoefficients::ENUMDATA>
+template <typename arrayEnum>
 class ArrayAllocator
 {
     static_assert(std::is_enum<arrayEnum>::value, "Template parameter must be enum type.");
@@ -20,15 +21,7 @@ class ArrayAllocator
         {
             for (const auto &index : coeffsUsed)
             {
-                coeffPointers[index] = new CFD::array3D(n_x, n_y, n_z);
-            }
-        }
-
-        ~ArrayAllocator()
-        {
-            for (const auto &index : coeffsUsed)
-            {
-                delete coeffPointers[index];
+                coeffPointers[index] = std::make_unique<CFD::array3D>( CFD::array3D(n_x, n_y, n_z) );
             }
         }
 
@@ -39,8 +32,9 @@ class ArrayAllocator
 
     private:
         std::vector<arrayEnum> coeffsUsed;
-        std::vector<CFD::array3D *> coeffPointers;
+        std::vector< std::unique_ptr<CFD::array3D> > coeffPointers;
 };
+
 
 // Recitlinear mesh structure and mesher
 struct Mesh
@@ -50,6 +44,7 @@ struct Mesh
     array1D cellCenters_x, cellCenters_y, cellCenters_z;
     array2D cellFaceAreas_x, cellFaceAreas_y, cellFaceAreas_z; // Index by right hand rule
 };
+
 
 // Storage of cell face normal velocities
 struct FaceVelocities
