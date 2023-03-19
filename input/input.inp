@@ -1,43 +1,10 @@
-// Input file
+// Laminar flat plate main input file
 
+#include "mesh.inp"
 
 Model {
     rho  = 1
     nu   = 1
-}
-
-
-Mesh {
-
-    domain = (10, 3, 5)
-
-    Grid X {
-        
-        Segment {
-            bounds     = (0, 4)
-            nCells     = 40
-            biasFactor = 1
-        }
-
-    }
-
-
-    Grid Y {
-        Segment {
-            bounds     = (0, 4)
-            nCells     = 40
-            biasFactor = 6
-        }
-    }
-
-
-    Grid Z {
-        Segment {
-            bounds     = (0, 10)
-            nCells     = 100
-            biasFactor = 1
-        }
-    }
 }
 
 

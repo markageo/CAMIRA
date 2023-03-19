@@ -10,6 +10,7 @@
 #include <map>
 #include <cstdlib>
 #include <utility>
+#include <filesystem>
 
 // Characters used to define structure of input files
 #define COMMENT_CHAR_1         '/'
@@ -111,6 +112,14 @@ class ReaderStream
         // Return input file name
         std::string Filename() const 
         { return m_filename; }
+
+        // Return relative path to input file (LINUX FILESYSTEMS ONLY)
+        std::string RelativePath() const
+        { 
+            std::string::const_iterator stringIterator = m_filename.end();
+            for ( /* NULL */ ; *stringIterator != '/' && stringIterator != m_filename.begin(); stringIterator--) {};
+            return std::string( m_filename.begin(), stringIterator );
+        }
 
 
         // Read key, whitespace is removed
@@ -307,7 +316,11 @@ void ProcessDirective(ReaderStream &readerStream, std::stack<pt::ptree *> &ptSta
         if (readerStream.CurrentCharacter() != '"' && readerStream.CurrentCharacter() != '\'')
             throw std::runtime_error( ErrorString(expectingString, readerStream) );
 
-        ReaderStream readerStreamInclude( readerStream.ReadData() );
+        std::string includeFilename = readerStream.ReadData();
+        std::string processPath = std::filesystem::current_path();
+        std::string includeFullPath = processPath + "/" + readerStream.RelativePath() + "/" + includeFilename;
+        
+        ReaderStream readerStreamInclude( includeFullPath );
         if (!readerStream) 
             throw std::runtime_error( ErrorString(fileReadError, readerStream) );
         
