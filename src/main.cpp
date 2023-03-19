@@ -113,7 +113,7 @@ int main(int argc, char const *argv[])
     std::cout << inputData.boundaryConditions[F::U][BP::xNegative].value<< std::endl;
     std::cout << inputData.boundaryConditions[F::U][BP::xPositive].type << std::endl;
 
-
+    
 
 
     return 0;
