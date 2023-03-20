@@ -19,12 +19,22 @@ class ArrayAllocator
     public:
 
         // All arrays have same dimensions
-        ArrayAllocator(const indexVector &dims, const std::vector<arrayEnum> coeffs) : 
-            coeffsUsed(coeffs), coeffPointers(arrayEnum::count)
+        ArrayAllocator(const std::vector<arrayEnum> coeffs, const indexVector &dims) : 
+            coeffPointers(arrayEnum::count)
         {
-            for (const auto &index : coeffsUsed)
-            {
-                coeffPointers[index] = std::make_unique<CFD::array3D>( CFD::array3D(dims(0), dims(1), dims(2)) );
+            for (const auto &index : coeffs) {
+                coeffPointers[index] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ) );
+            }
+        }
+
+        // Arrays can have different dimensions
+        ArrayAllocator( const std::vector< std::pair< arrayEnum, CFD::indexVector > > &arraySpec) : 
+            coeffPointers(arrayEnum::count)
+        {
+            CFD::indexVector dims;
+            for (size_t i = 0; i != arraySpec.size(); i++) {
+                dims = arraySpec[i].second;
+                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ) );
             }
         }
 
@@ -39,12 +49,11 @@ class ArrayAllocator
         }
 
     private:
-        std::vector<arrayEnum> coeffsUsed;
         std::vector< std::unique_ptr<CFD::array3D> > coeffPointers;
 };
 
 
-// Recitlinear mesh structure and mesher
+// Recitlinear mesh structure and mesher (on construction)
 struct Mesh
 {
     Mesh(const CFD::InputData &);
@@ -52,19 +61,6 @@ struct Mesh
     array1D cellCenters_x, cellCenters_y, cellCenters_z;
     array1D cellFaces_x, cellFaces_y, cellFaces_z;
     array2D cellFaceAreas_x, cellFaceAreas_y, cellFaceAreas_z; // Index by right hand rule
-};
-
-
-// Storage of cell face normal velocities
-struct FaceVelocities
-{
-    // Faces are staggered in the negative direction:
-    //   cellFaceVelocity_x(i, j, k) -> u(i-1/2, j    , k    )
-    //   cellFaceVelocity_y(i, j, k) -> u(i    , j-1/2, k    )
-    //   cellFaceVelocity_z(i, j, k) -> u(i    , j    , k-1/2)
-    // Subscript indicates the normal direction of the face.
-    FaceVelocities(const CFD::indexVector &);
-    array3D cellFaceVelocities_x, cellFaceVelocities_y, cellFaceVelocities_z;
 };
 
 
