@@ -4,7 +4,7 @@
     Mark George
 \*---------------------------------------------------------------------------*/
 
-#include "SimulationParameters.h"
+#include "Types.h"
 #include "InputProcessing.h"
 #include "FiniteVolumeStructures.h"
 #include "VTKWriter.h"

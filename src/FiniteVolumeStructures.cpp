@@ -1,4 +1,4 @@
-#include "SimulationParameters.h"
+#include "Types.h"
 #include "FiniteVolumeStructures.h"
 #include "Tensor"
 

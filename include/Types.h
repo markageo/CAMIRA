@@ -1,5 +1,5 @@
-#ifndef SIMULATION_PARAMETERS
-#define SIMULATION_PARAMETERS
+#ifndef TYPES
+#define TYPES
 
 #include "Tensor"
 
@@ -82,4 +82,4 @@ namespace CFD
 }
 
 
-#endif // SIMULATION_PARAMETERS 
+#endif // TYPES

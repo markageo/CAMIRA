@@ -1,7 +1,7 @@
 #ifndef FV_STRUCTURES
 #define FV_STRUCTURES
 
-#include "SimulationParameters.h"
+#include "Types.h"
 #include "InputProcessing.h"
 #include "Tensor"
 #include <memory>
@@ -27,7 +27,6 @@ class ArrayAllocator
                 coeffPointers[index] = std::make_unique<CFD::array3D>( CFD::array3D(dims(0), dims(1), dims(2)) );
             }
         }
-
 
         CFD::array3D &operator[](arrayEnum idx)
         {
