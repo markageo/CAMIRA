@@ -5,6 +5,7 @@
 #include "InputProcessing.h"
 #include "Tensor"
 #include <memory>
+#include <utility>
 
 namespace CFD
 {
@@ -16,16 +17,24 @@ class ArrayAllocator
     static_assert(std::is_enum<arrayEnum>::value, "Template parameter must be enum type.");
 
     public:
-        ArrayAllocator(const intType n_x, const intType n_y, const intType n_z, const std::vector<arrayEnum> coeffs) : 
+
+        // All arrays have same dimensions
+        ArrayAllocator(const indexVector &dims, const std::vector<arrayEnum> coeffs) : 
             coeffsUsed(coeffs), coeffPointers(arrayEnum::count)
         {
             for (const auto &index : coeffsUsed)
             {
-                coeffPointers[index] = std::make_unique<CFD::array3D>( CFD::array3D(n_x, n_y, n_z) );
+                coeffPointers[index] = std::make_unique<CFD::array3D>( CFD::array3D(dims(0), dims(1), dims(2)) );
             }
         }
 
+
         CFD::array3D &operator[](arrayEnum idx)
+        {
+            return *coeffPointers[idx];
+        }
+
+        CFD::array3D &operator[](arrayEnum idx) const
         {
             return *coeffPointers[idx];
         }
@@ -40,8 +49,9 @@ class ArrayAllocator
 struct Mesh
 {
     Mesh(const CFD::InputData &);
-    intType nCells_x, nCells_y, nCells_z;
+    CFD::indexVector nCells;
     array1D cellCenters_x, cellCenters_y, cellCenters_z;
+    array1D cellFaces_x, cellFaces_y, cellFaces_z;
     array2D cellFaceAreas_x, cellFaceAreas_y, cellFaceAreas_z; // Index by right hand rule
 };
 
@@ -54,9 +64,10 @@ struct FaceVelocities
     //   cellFaceVelocity_y(i, j, k) -> u(i    , j-1/2, k    )
     //   cellFaceVelocity_z(i, j, k) -> u(i    , j    , k-1/2)
     // Subscript indicates the normal direction of the face.
-    FaceVelocities(const intType n_x, const intType n_y, const intType n_z);
+    FaceVelocities(const CFD::indexVector &);
     array3D cellFaceVelocities_x, cellFaceVelocities_y, cellFaceVelocities_z;
 };
+
 
 } // end namespace CFD
 

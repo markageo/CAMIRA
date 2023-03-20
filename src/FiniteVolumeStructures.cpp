@@ -77,6 +77,21 @@ namespace
 
     }
 
+
+    void CalculateCellFaces(CFD::array1D &cellFaces, const std::vector<CFD::floatType> &cellLengths)
+    {
+        int nFaces = cellLengths.size() + 1;
+
+        CFD::floatType previousFacePosition = 0.0, previousCellLength = 0.0;
+        for (int i = 0; i != nFaces; i++) {
+            cellFaces(i) = previousFacePosition + previousCellLength;
+            previousFacePosition = cellFaces(i);
+            previousCellLength = cellLengths[i];
+        }
+
+    }
+
+
     void CalculateCellFaceAreas(CFD::array2D &cellFaceAreas, const std::vector<CFD::floatType> &cellLengths_x, 
         const std::vector<CFD::floatType> &cellLengths_y)
     {
@@ -103,12 +118,13 @@ namespace
 
 // Constructor, creates the mesh
 CFD::Mesh::Mesh(const InputData &inputData) :
-    nCells_x( TotalCells(inputData.meshSegments_x) ),
-    nCells_y( TotalCells(inputData.meshSegments_y) ),
-    nCells_z( TotalCells(inputData.meshSegments_z) ),
-    cellCenters_x( nCells_x ),
-    cellCenters_y( nCells_y ),
-    cellCenters_z( nCells_z ),
+    nCells( { TotalCells(inputData.meshSegments_x),  TotalCells(inputData.meshSegments_y), TotalCells(inputData.meshSegments_z)} ),
+    cellCenters_x( nCells(0) ),
+    cellCenters_y( nCells(1) ),
+    cellCenters_z( nCells(2) ),
+    cellFaces_x( nCells(0) + 1 ),
+    cellFaces_y( nCells(1) + 1 ),
+    cellFaces_z( nCells(2) + 1 ),
     cellFaceAreas_x( cellCenters_y.dimension(0), cellCenters_z.dimension(0) ),
     cellFaceAreas_y( cellCenters_z.dimension(0), cellCenters_x.dimension(0) ),
     cellFaceAreas_z( cellCenters_x.dimension(0), cellCenters_y.dimension(0) )
@@ -125,6 +141,10 @@ CFD::Mesh::Mesh(const InputData &inputData) :
         CalculateCellCenters(cellCenters_y, cellLengths_y);
         CalculateCellCenters(cellCenters_z, cellLengths_z);
 
+        CalculateCellFaces(cellFaces_x, cellLengths_x);
+        CalculateCellFaces(cellFaces_y, cellLengths_y);
+        CalculateCellFaces(cellFaces_z, cellLengths_z);
+
         CalculateCellFaceAreas(cellFaceAreas_x, cellLengths_y, cellLengths_z);
         CalculateCellFaceAreas(cellFaceAreas_y, cellLengths_z, cellLengths_x);
         CalculateCellFaceAreas(cellFaceAreas_z, cellLengths_x, cellLengths_y);
@@ -136,8 +156,8 @@ CFD::Mesh::Mesh(const InputData &inputData) :
                                    Face Velocities
 \*-------------------------------------------------------------------------------------*/
 
-CFD::FaceVelocities::FaceVelocities(const intType n_x, const intType n_y, const intType n_z) :
-    cellFaceVelocities_x(n_x+1, n_y  , n_z  ),
-    cellFaceVelocities_y(n_x  , n_y+1, n_z  ),
-    cellFaceVelocities_z(n_x  , n_y  , n_z+1)
+CFD::FaceVelocities::FaceVelocities(const CFD::indexVector &dims) :
+    cellFaceVelocities_x(dims(0)+1, dims(1)  , dims(2)  ),
+    cellFaceVelocities_y(dims(0)  , dims(1)+1, dims(2)  ),
+    cellFaceVelocities_z(dims(0)  , dims(1)  , dims(2)+1)
     {};

@@ -13,6 +13,7 @@
 #include <iostream>
 #include <type_traits>
 
+
 int main(int argc, char const *argv[]) 
 {
 
@@ -79,7 +80,7 @@ int main(int argc, char const *argv[])
     using BP = CFD::BoundaryPatches::ENUMDATA;
 
     CFD::Mesh mesh(inputData);
-    CFD::ArrayAllocator<F> fields(mesh.nCells_x, mesh.nCells_y, mesh.nCells_z, {F::U, F::V, F::W, F::P});
+    CFD::ArrayAllocator<F> fields(mesh.nCells, {F::U, F::V, F::W, F::P});
 
     CFD::SweepSolve(fields, mesh, inputData);
 
@@ -107,13 +108,6 @@ int main(int argc, char const *argv[])
     /*-------------------------------------------------------------------------------------*\
                                            Testing
     \*-------------------------------------------------------------------------------------*/
-
-    // Testing BC reader
-    std::cout << inputData.boundaryConditions[F::U][BP::xNegative].type << std::endl;
-    std::cout << inputData.boundaryConditions[F::U][BP::xNegative].value<< std::endl;
-    std::cout << inputData.boundaryConditions[F::U][BP::xPositive].type << std::endl;
-
-    
 
 
     return 0;
