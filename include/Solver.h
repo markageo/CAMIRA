@@ -2,7 +2,7 @@
 #define SOLVER
 
 #include "InputProcessing.h"
-#include "SimulationParameters.h"
+#include "Types.h"
 #include "FiniteVolumeStructures.h"
 
 namespace CFD

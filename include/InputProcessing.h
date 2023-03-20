@@ -1,7 +1,7 @@
 #ifndef INPUT_PROCESSING
 #define INPUT_PROCESSING
 
-#include "SimulationParameters.h"
+#include "Types.h"
 #include "boost/property_tree/ptree.hpp"
 #include <vector>
 #include <utility>

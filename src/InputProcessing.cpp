@@ -3,7 +3,7 @@
 #define NDEBUG
 #include "InputParser.h"
 #include "FiniteVolumeStructures.h"
-#include "SimulationParameters.h"
+#include "Types.h"
 #include "boost/property_tree/ptree.hpp"
 #include <utility>
 #include <optional>

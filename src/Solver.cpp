@@ -1,6 +1,6 @@
 #include "Solver.h"
 #include "InputProcessing.h"
-#include "SimulationParameters.h"
+#include "Types.h"
 #include "FiniteVolumeStructures.h"
 
 void CFD::SweepSolve(ArrayAllocator<CFD::Fields::ENUMDATA>  &fields, const Mesh &mesh, const InputData &inputData) 
