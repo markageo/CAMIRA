@@ -2,6 +2,7 @@
 add_library(libs InputProcessing.cpp
                  VTKWriter.cpp
                  FiniteVolumeStructures.cpp
+                 FiniteVolumeFunctions.cpp
                  Solver.cpp)
 
 # Add the executable
