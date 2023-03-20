@@ -149,15 +149,3 @@ CFD::Mesh::Mesh(const InputData &inputData) :
         CalculateCellFaceAreas(cellFaceAreas_y, cellLengths_z, cellLengths_x);
         CalculateCellFaceAreas(cellFaceAreas_z, cellLengths_x, cellLengths_y);
     };
-
-
-
-/*-------------------------------------------------------------------------------------*\
-                                   Face Velocities
-\*-------------------------------------------------------------------------------------*/
-
-CFD::FaceVelocities::FaceVelocities(const CFD::indexVector &dims) :
-    cellFaceVelocities_x(dims(0)+1, dims(1)  , dims(2)  ),
-    cellFaceVelocities_y(dims(0)  , dims(1)+1, dims(2)  ),
-    cellFaceVelocities_z(dims(0)  , dims(1)  , dims(2)+1)
-    {};
