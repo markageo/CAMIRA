@@ -13,6 +13,8 @@ namespace CFD
     using array3D = Eigen::Tensor<floatType, 3>;    // Column major
     using indexVector = Eigen::Matrix<intType, 1, 3>;
 
+
+    // Enums to be used as indices for containers
     namespace Axis
     {
         enum ENUMDATA
