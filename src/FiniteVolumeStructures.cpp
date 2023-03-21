@@ -92,6 +92,14 @@ namespace
     }
 
 
+    void CalculateInterpolationFactors(CFD::array1D &interpFactors, const CFD::array1D &cellCenters, const CFD::array1D &cellFaces) 
+    {
+        for (int i = 1; i != interpFactors.dimension(0)-1; i++) {
+            interpFactors(i) = ( cellFaces(i) - cellCenters(i-1) ) / ( cellCenters(i) - cellCenters(i-1) );
+        }
+    }
+
+
     void CalculateCellFaceAreas(CFD::array2D &cellFaceAreas, const std::vector<CFD::floatType> &cellLengths_x, 
         const std::vector<CFD::floatType> &cellLengths_y)
     {
@@ -125,6 +133,9 @@ CFD::Mesh::Mesh(const InputData &inputData) :
     cellFaces_x( nCells(0) + 1 ),
     cellFaces_y( nCells(1) + 1 ),
     cellFaces_z( nCells(2) + 1 ),
+    interpFactors_x( nCells(0) + 1 ),
+    interpFactors_y( nCells(1) + 1 ),
+    interpFactors_z( nCells(2) + 1 ),
     cellFaceAreas_x( cellCenters_y.dimension(0), cellCenters_z.dimension(0) ),
     cellFaceAreas_y( cellCenters_z.dimension(0), cellCenters_x.dimension(0) ),
     cellFaceAreas_z( cellCenters_x.dimension(0), cellCenters_y.dimension(0) )
@@ -144,6 +155,10 @@ CFD::Mesh::Mesh(const InputData &inputData) :
         CalculateCellFaces(cellFaces_x, cellLengths_x);
         CalculateCellFaces(cellFaces_y, cellLengths_y);
         CalculateCellFaces(cellFaces_z, cellLengths_z);
+
+        CalculateInterpolationFactors(interpFactors_x, cellCenters_x, cellFaces_x);
+        CalculateInterpolationFactors(interpFactors_y, cellCenters_y, cellFaces_y);
+        CalculateInterpolationFactors(interpFactors_z, cellCenters_z, cellFaces_z);
 
         CalculateCellFaceAreas(cellFaceAreas_x, cellLengths_y, cellLengths_z);
         CalculateCellFaceAreas(cellFaceAreas_y, cellLengths_z, cellLengths_x);
