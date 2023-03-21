@@ -4,7 +4,10 @@
 #include "InputParser.h"
 #include "FiniteVolumeStructures.h"
 #include "Types.h"
+
 #include "boost/property_tree/ptree.hpp"
+#include "Geometry"
+
 #include <utility>
 #include <optional>
 #include <iostream>
@@ -166,7 +169,7 @@ namespace
                                        Boundary Conditions
     \*-------------------------------------------------------------------------------------*/
 
-    InputData::BoundaryConditionStruct readBoundaryValueString(const std::string &boundaryString)
+    InputData::BoundaryConditionStruct ReadBoundaryValueString(const std::string &boundaryString)
     {
         using BC = BoundaryConditions::ENUMDATA;
 
@@ -256,10 +259,166 @@ namespace
             for (auto [fieldEnum, fieldString] : fieldMap) {
 
                 valueString = boundaryPatchTreePointer->get<std::string>(fieldString);
-                inputData.boundaryConditions[fieldEnum][patchEnum] = readBoundaryValueString(valueString);
+                inputData.boundaryConditions[fieldEnum][patchEnum] = ReadBoundaryValueString(valueString);
 
             }
         }
+
+    }
+
+
+    /*-------------------------------------------------------------------------------------*\
+                                           Solver
+    \*-------------------------------------------------------------------------------------*/
+
+
+    CFD::BoundaryPatches::ENUMDATA ReadAxisDirection(const std::string &axisString)
+    {
+        using BP = CFD::BoundaryPatches::ENUMDATA;
+        if        ( axisString == "+x" ) {
+            return BP::xPositive;
+
+        } else if ( axisString == "-x" ) {
+            return BP::xNegative;
+
+        } else if ( axisString == "+y" ) {
+            return BP::yPositive;
+        
+        } else if ( axisString == "-y" ) {
+            return BP::yNegative;
+
+        } else if ( axisString == "+z" ) {
+            return BP::zPositive;
+
+        } else if ( axisString == "-z" ) {
+            return BP::zNegative;
+
+        } else {
+            // throw ERROR - invalid sweeping direction
+            return BP::count;
+        }
+    }
+
+
+    Eigen::Matrix<CFD::intType, 3, 1> Axis2Vector(const CFD::BoundaryPatches::ENUMDATA axis)
+    {
+        using BP = CFD::BoundaryPatches::ENUMDATA;
+        switch (axis)
+        {
+            case (BP::xPositive):
+                return {1, 0, 0};
+                
+            case (BP::xNegative):
+                return {-1, 0, 0};
+
+            case (BP::yPositive):
+                return {0, 1, 0};
+
+            case (BP::yNegative):
+                return {0, -1, 0};
+
+            case (BP::zPositive):
+                return {0, 0, 1};
+
+            case (BP::zNegative):
+                return {0, 0, -1};
+
+            default:
+                return {0, 0, 0};
+        }
+    }
+
+
+    CFD::BoundaryPatches::ENUMDATA Vector2Axis(const Eigen::Matrix<CFD::intType, 3, 1> &vector)
+    {
+        using BP = CFD::BoundaryPatches::ENUMDATA;
+        if        ( ( vector.array() ==  Axis2Vector(BP::xPositive).array() ).all() ) {
+            return BP::xPositive;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::xNegative).array() ).all() ) {
+            return BP::xNegative;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::yPositive).array() ).all() ) {
+            return BP::yPositive;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::yNegative).array() ).all() ) {
+            return BP::yNegative;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::zPositive).array() ).all() ) {
+            return BP::zPositive;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::zNegative).array() ).all() ) {
+            return BP::zNegative;
+
+        } else {
+            return BP::count;
+        }
+    }
+
+
+    void ReadSweepDirections(InputData &inputData, const pt::ptree &solverTree) 
+    {
+
+        using BP = CFD::BoundaryPatches::ENUMDATA;
+
+        std::string valueString;
+        BP planeSweepDirection, lineSweepDirection, pointSweepDirection;
+        Eigen::Matrix<CFD::intType, 3, 1> planeSweepVector, lineSweepVector, pointSweepVector;
+
+        // Default
+        inputData.axisTransformation = { {BP::xPositive, BP::xPositive},
+                                         {BP::xNegative, BP::xNegative},
+                                         {BP::yPositive, BP::yPositive},
+                                         {BP::yNegative, BP::yNegative},
+                                         {BP::zPositive, BP::zPositive},
+                                         {BP::zNegative, BP::zNegative} };
+
+        // User input for plane sweep direction
+        valueString = solverTree.get<std::string>("planeSweepDirection");
+        planeSweepDirection = ReadAxisDirection( valueString );
+        planeSweepVector = Axis2Vector( planeSweepDirection );
+
+        // User input for line sweep direction
+        valueString = solverTree.get<std::string>("lineSweepDirection");
+        lineSweepDirection = ReadAxisDirection( valueString );
+        lineSweepVector = Axis2Vector( lineSweepDirection );
+
+        // Point sweep direction, chosen to make right handed coordinate system
+        pointSweepVector = lineSweepVector.cross( planeSweepVector );
+        pointSweepDirection = Vector2Axis( pointSweepVector );
+
+        // Update the axisTransformation map
+        inputData.axisTransformation[BP::xPositive] = pointSweepDirection;
+        inputData.axisTransformation[BP::xNegative] = Vector2Axis( -pointSweepVector );
+
+        inputData.axisTransformation[BP::yPositive] = lineSweepDirection;
+        inputData.axisTransformation[BP::yNegative] = Vector2Axis( -lineSweepVector );
+
+        inputData.axisTransformation[BP::zPositive] = planeSweepDirection;
+        inputData.axisTransformation[BP::zNegative] = Vector2Axis( -planeSweepVector );
+
+    }
+
+
+    void ReadSolver(InputData &inputData, const pt::ptree &tree)
+    {
+        
+        const pt::ptree &solverTree = tree.get_child("Solver");
+
+        // Sweep direction transformation data
+        ReadSweepDirections(inputData, solverTree);
+
+
+        // TESTING
+        std::cout << "TESTING" << "\n\n";
+
+        std::cout << "axisTransformation  map:" << "\n";
+        for (auto [key, value] : inputData.axisTransformation) {
+            std::cout << key << "  " <<  value << "\n";
+        }
+        std::cout << "\n";
+
+        std::cout << "END TESTING" << "\n\n";
 
     }
 
@@ -274,6 +433,7 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFileName)
     InputData inputData;
     ReadMesh(inputData, tree);
     ReadBoundaryConditions(inputData, tree);
+    ReadSolver(inputData, tree);
     
     return inputData;
 
