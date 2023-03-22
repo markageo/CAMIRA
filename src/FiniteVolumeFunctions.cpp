@@ -5,13 +5,6 @@
 namespace
 {
 
-    // Return linear interpolation factor for cell faces
-    CFD::floatType InterpFactor( const CFD::array1D &cellFaces, const CFD::array1D &cellCenters, const CFD::iterType index) 
-    {
-        return ( cellFaces(index) - cellCenters(index-1) ) / ( cellCenters(index) - cellCenters(index-1) );
-    }
-
-
     void UpdateFaceVelocites_x(CFD::array3D &faceVel, const CFD::array3D &cellVel, const CFD::Mesh &mesh)
     {
         using namespace CFD;
@@ -22,7 +15,7 @@ namespace
                 for (iterType i = 1; i != faceVel.dimension(0)-1; i++) {
 
                     // Linear interpolation
-                    interpFactor = InterpFactor(mesh.cellFaces_x, mesh.cellCenters_x, i);
+                    interpFactor = mesh.interpFactors_x(i);
                     faceVel(i, j, k) = (1 - interpFactor)*cellVel(i-1, j, k) + interpFactor*cellVel(i, j, k);
 
                 }
@@ -41,7 +34,7 @@ namespace
                 for (iterType i = 0; i != faceVel.dimension(0); i++) {
 
                     // Linear interpolation
-                    interpFactor = InterpFactor(mesh.cellFaces_x, mesh.cellCenters_x, i);
+                    interpFactor = mesh.interpFactors_y(j);
                     faceVel(i, j, k) = (1 - interpFactor)*cellVel(i, j-1, k) + interpFactor*cellVel(i, j, k);
 
                 }
@@ -60,7 +53,7 @@ namespace
                 for (iterType i = 0; i != faceVel.dimension(0); i++) {
 
                     // Linear interpolation
-                    interpFactor = InterpFactor(mesh.cellFaces_x, mesh.cellCenters_x, i);
+                    interpFactor = mesh.interpFactors_z(k);
                     faceVel(i, j, k) = (1 - interpFactor)*cellVel(i, j, k-1) + interpFactor*cellVel(i, j, k);
 
                 }
@@ -84,7 +77,6 @@ void CFD::UpdateFaceVelocities( ArrayAllocator<CFD::Fields::ENUMDATA> &faceVeloc
     UpdateFaceVelocites_x( faceVelocities[F::U], fields[F::U], mesh);
     UpdateFaceVelocites_y( faceVelocities[F::V], fields[F::V], mesh);
     UpdateFaceVelocites_z( faceVelocities[F::W], fields[F::W], mesh);
-
 
     // +x boundary
     switch ( boundaryConditions[F::U][BP::xPositive].type ) {

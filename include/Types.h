@@ -53,9 +53,12 @@ namespace CFD
     {   
         enum ENUMDATA
         {
-            xPositive, xNegative,
-            yPositive, yNegative,
-            zPositive, zNegative,
+            xPositive,
+            xNegative,
+            yPositive,
+            yNegative,
+            zPositive,
+            zNegative,
             count
         };
     };

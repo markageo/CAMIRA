@@ -21,9 +21,16 @@
 
 namespace pt = boost::property_tree;
 
+
 // InputData constructor
 CFD::InputData::InputData() :
-    boundaryConditions(CFD::Fields::ENUMDATA::count, std::vector< CFD::InputData::BoundaryConditionStruct >(CFD::BoundaryPatches::ENUMDATA::count) )
+    boundaryConditions(CFD::Fields::ENUMDATA::count, std::vector< CFD::InputData::BoundaryConditionStruct >(CFD::BoundaryPatches::ENUMDATA::count) ),
+    axisTransformation( { {CFD::BoundaryPatches::ENUMDATA::xPositive, CFD::BoundaryPatches::ENUMDATA::xPositive},
+                          {CFD::BoundaryPatches::ENUMDATA::xNegative, CFD::BoundaryPatches::ENUMDATA::xNegative},
+                          {CFD::BoundaryPatches::ENUMDATA::yPositive, CFD::BoundaryPatches::ENUMDATA::yPositive},
+                          {CFD::BoundaryPatches::ENUMDATA::yNegative, CFD::BoundaryPatches::ENUMDATA::yNegative},
+                          {CFD::BoundaryPatches::ENUMDATA::zPositive, CFD::BoundaryPatches::ENUMDATA::zPositive},
+                          {CFD::BoundaryPatches::ENUMDATA::zNegative, CFD::BoundaryPatches::ENUMDATA::zNegative} })
     {};
 
 
@@ -252,16 +259,37 @@ namespace
         // Iterate boundary patches
         std::string valueString;
         const pt::ptree *boundaryPatchTreePointer = nullptr;
-        for (auto [patchEnum, patchString] : boundaryPatchMap) {
+        for (const auto& [patchEnum, patchString] : boundaryPatchMap) {
             boundaryPatchTreePointer = &( boundaryConditionsTree.get_child(patchString) );
 
             // Iterate fields
-            for (auto [fieldEnum, fieldString] : fieldMap) {
+            for (const auto& [fieldEnum, fieldString] : fieldMap) {
 
                 valueString = boundaryPatchTreePointer->get<std::string>(fieldString);
                 inputData.boundaryConditions[fieldEnum][patchEnum] = ReadBoundaryValueString(valueString);
 
             }
+        }
+
+    }
+
+
+    void TransformBoundaryConditions(InputData &inputData)
+    {
+        using BP = CFD::BoundaryPatches::ENUMDATA;
+        using F = CFD::Fields::ENUMDATA;
+
+        // Temporary for boundary conditions as user specifies them
+        std::vector< std::vector< InputData::BoundaryConditionStruct > > boundaryConditionsUser = inputData.boundaryConditions;
+
+        // Iterate fields, they all have the same trasformation
+        for ( size_t i = 0; i != inputData.boundaryConditions.size(); i++ ) {
+        
+            // Transform using the axisTransformation map
+            for (int patchEnum = 0; patchEnum != BP::count; patchEnum++) {
+                inputData.boundaryConditions[i][patchEnum] = boundaryConditionsUser[i][ inputData.axisTransformation.at( static_cast<BP>(patchEnum) ) ];
+            }
+            
         }
 
     }
@@ -365,14 +393,6 @@ namespace
         BP planeSweepDirection, lineSweepDirection, pointSweepDirection;
         Eigen::Matrix<CFD::intType, 3, 1> planeSweepVector, lineSweepVector, pointSweepVector;
 
-        // Default
-        inputData.axisTransformation = { {BP::xPositive, BP::xPositive},
-                                         {BP::xNegative, BP::xNegative},
-                                         {BP::yPositive, BP::yPositive},
-                                         {BP::yNegative, BP::yNegative},
-                                         {BP::zPositive, BP::zPositive},
-                                         {BP::zNegative, BP::zNegative} };
-
         // User input for plane sweep direction
         valueString = solverTree.get<std::string>("planeSweepDirection");
         planeSweepDirection = ReadAxisDirection( valueString );
@@ -382,6 +402,11 @@ namespace
         valueString = solverTree.get<std::string>("lineSweepDirection");
         lineSweepDirection = ReadAxisDirection( valueString );
         lineSweepVector = Axis2Vector( lineSweepDirection );
+
+        // Plane and line sweep direction must be orthogonal
+        if ( abs( planeSweepVector.dot( lineSweepVector ) ) == 1 ) {
+            // throw ERROR - plane and line sweep directions cannot be the same
+        }
 
         // Point sweep direction, chosen to make right handed coordinate system
         pointSweepVector = lineSweepVector.cross( planeSweepVector );
@@ -408,18 +433,6 @@ namespace
         // Sweep direction transformation data
         ReadSweepDirections(inputData, solverTree);
 
-
-        // TESTING
-        std::cout << "TESTING" << "\n\n";
-
-        std::cout << "axisTransformation  map:" << "\n";
-        for (auto [key, value] : inputData.axisTransformation) {
-            std::cout << key << "  " <<  value << "\n";
-        }
-        std::cout << "\n";
-
-        std::cout << "END TESTING" << "\n\n";
-
     }
 
 
@@ -435,6 +448,8 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFileName)
     ReadBoundaryConditions(inputData, tree);
     ReadSolver(inputData, tree);
     
+    TransformBoundaryConditions(inputData);
+
     return inputData;
 
 }
