@@ -39,12 +39,12 @@ namespace
     }
 
 
-    std::vector<CFD::floatType> CalculateCellLengths(const std::vector<InputData::MeshSegment> &meshSegments, const std::vector<CFD::floatType> &growthRates)
+    void CalculateCellLengths(array1D &cellLengths, const std::vector<InputData::MeshSegment> &meshSegments, const std::vector<CFD::floatType> &growthRates)
     {
         int nSegments = meshSegments.size();
-        std::vector<CFD::floatType> cellLengths;
 
         CFD::floatType segmentLength, firstCellLength, geometricFactor;
+        int cellIndex = 0;
         for (int s = 0; s != nSegments; s++) {    // Segments
 
             if (growthRates[s] != 1.0) {
@@ -56,29 +56,29 @@ namespace
             firstCellLength = segmentLength/geometricFactor; 
 
             for (int i = 0; i != meshSegments[s].nCells; i++) {        // Cells within segment
-                cellLengths.push_back( firstCellLength*std::pow( growthRates[s], static_cast<CFD::floatType>(i) ) );
+                cellLengths( cellIndex ) = firstCellLength*std::pow( growthRates[s], static_cast<CFD::floatType>(i) );
+                cellIndex++;
             }
         }
 
-        return cellLengths;
     }
 
 
-    void CalculateCellCenters(CFD::array1D &cellCenters, const std::vector<CFD::floatType> &cellLengths)
+    void CalculateCellCenters(CFD::array1D &cellCenters, const array1D &cellLengths)
     {
         int nCellsTotal = cellLengths.size();
 
         CFD::floatType previousCellPosition = 0.0, previousCellLength = 0.0;
         for (int i = 0; i != nCellsTotal; i++) {
-            cellCenters(i) = previousCellPosition + previousCellLength/2.0 + cellLengths[i]/2.0;
+            cellCenters(i) = previousCellPosition + previousCellLength/2.0 + cellLengths(i)/2.0;
             previousCellPosition = cellCenters(i);
-            previousCellLength = cellLengths[i];
+            previousCellLength = cellLengths(i);
         }
 
     }
 
 
-    void CalculateCellFaces(CFD::array1D &cellFaces, const std::vector<CFD::floatType> &cellLengths)
+    void CalculateCellFaces(CFD::array1D &cellFaces, const array1D &cellLengths)
     {
         int nFaces = cellLengths.size() + 1;
 
@@ -86,7 +86,7 @@ namespace
         for (int i = 0; i != nFaces; i++) {
             cellFaces(i) = previousFacePosition + previousCellLength;
             previousFacePosition = cellFaces(i);
-            previousCellLength = cellLengths[i];
+            previousCellLength = cellLengths(i);
         }
 
     }
@@ -100,14 +100,11 @@ namespace
     }
 
 
-    void CalculateCellFaceAreas(CFD::array2D &cellFaceAreas, const std::vector<CFD::floatType> &cellLengths_x, 
-        const std::vector<CFD::floatType> &cellLengths_y)
+    void CalculateCellFaceAreas(CFD::array2D &cellFaceAreas, const array1D &cellLengths_x, const array1D &cellLengths_y)
     {
-        using v_size_type = std::vector<CFD::floatType>::size_type;
-
-        for (v_size_type j = 0; j != cellLengths_y.size(); j++) {
-            for (v_size_type i = 0; i != cellLengths_x.size(); i++) {
-                cellFaceAreas(i, j) = cellLengths_x[i] * cellLengths_y[j];
+        for (int j = 0; j != cellLengths_y.dimension(0); j++) {
+            for (int i = 0; i != cellLengths_x.dimension(0); i++) {
+                cellFaceAreas(i, j) = cellLengths_x(i) * cellLengths_y(j);
             }
         }
     }
@@ -133,6 +130,9 @@ CFD::Mesh::Mesh(const InputData &inputData) :
     cellFaces_x( nCells(0) + 1 ),
     cellFaces_y( nCells(1) + 1 ),
     cellFaces_z( nCells(2) + 1 ),
+    cellLengths_x( nCells(0) ),
+    cellLengths_y( nCells(1) ),
+    cellLengths_z( nCells(2) ),
     interpFactors_x( nCells(0) + 1 ),
     interpFactors_y( nCells(1) + 1 ),
     interpFactors_z( nCells(2) + 1 ),
@@ -144,9 +144,9 @@ CFD::Mesh::Mesh(const InputData &inputData) :
         std::vector<CFD::floatType> growthRates_y = CalculateGrowthRates(inputData.meshSegments_y);
         std::vector<CFD::floatType> growthRates_z = CalculateGrowthRates(inputData.meshSegments_z);
 
-        std::vector<CFD::floatType> cellLengths_x = CalculateCellLengths(inputData.meshSegments_x, growthRates_x);
-        std::vector<CFD::floatType> cellLengths_y = CalculateCellLengths(inputData.meshSegments_y, growthRates_y);
-        std::vector<CFD::floatType> cellLengths_z = CalculateCellLengths(inputData.meshSegments_z, growthRates_z);
+        CalculateCellLengths(cellLengths_x, inputData.meshSegments_x, growthRates_x);
+        CalculateCellLengths(cellLengths_y, inputData.meshSegments_y, growthRates_y);
+        CalculateCellLengths(cellLengths_z, inputData.meshSegments_z, growthRates_z);
 
         CalculateCellCenters(cellCenters_x, cellLengths_x);
         CalculateCellCenters(cellCenters_y, cellLengths_y);
