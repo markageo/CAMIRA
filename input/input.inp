@@ -57,7 +57,7 @@ BoundaryConditions
 
 Solver {
 
-    planeSweepDirection = z
-    lineSweepDirection  = y
+    planeSweepDirection = +z
+    lineSweepDirection = -y
 
 }
