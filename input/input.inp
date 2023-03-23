@@ -1,10 +1,42 @@
 // Laminar flat plate main input file
 
-#include "mesh.inp"
-
 Model {
     rho  = 1
     nu   = 1
+}
+
+
+Mesh {
+
+    domain = (1, 1, 1)
+
+    Grid X {
+        
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 5
+            biasFactor = 1
+        }
+
+    }
+
+
+    Grid Y {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 5
+            biasFactor = 1
+        }
+    }
+
+
+    Grid Z {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 5
+            biasFactor = 1
+        }
+    }
 }
 
 
@@ -12,14 +44,14 @@ BoundaryConditions
 {
 
     +x {
-        u = zeroGradient
+        u = extrapolated
         v = zeroGradient
         w = zeroGradient
         p = zeroGradient
     }
 
     -x {
-        u = uniform, 1
+        u = extrapolated
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
@@ -27,14 +59,14 @@ BoundaryConditions
 
     +y {
         u = uniform, 1
-        v = zeroGradient
+        v = extrapolated
         w = zeroGradient
         p = uniform, 0
     }
 
     -y {
         u = uniform, 0
-        v = zeroGradient
+        v = extrapolated
         w = uniform, 0
         p = extrapolated
     }
@@ -42,14 +74,14 @@ BoundaryConditions
     +z {
         u = zeroGradient
         v = zeroGradient
-        w = zeroGradient
+        w = extrapolated
         p = zeroGradient
     }
 
     -z {
         u = zeroGradient
         v = zeroGradient
-        w = uniform, 0
+        w = extrapolated
         p = zeroGradient
     }
 }

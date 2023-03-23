@@ -100,13 +100,14 @@ namespace
         using F = CFD::Fields::ENUMDATA;
 
         floatType extrapFactor_p = ( 2.0*mesh.cellLengths_x(fieldIndex_p) + mesh.cellLengths_x(fieldIndex_f) )
-                           / ( mesh.cellLengths_x(fieldIndex_p) + mesh.cellLengths_x(fieldIndex_f) );
-        floatType extrapFactor_f = extrapFactor_p - ( mesh.cellLengths_x(fieldIndex_p) + mesh.cellLengths_x(fieldIndex_f) );
+                                 / ( mesh.cellLengths_x(fieldIndex_p) + mesh.cellLengths_x(fieldIndex_f) );
+        floatType extrapFactor_f = ( mesh.cellLengths_x(fieldIndex_p) )
+                                 / ( mesh.cellLengths_x(fieldIndex_p) + mesh.cellLengths_x(fieldIndex_f) );
 
         for (iterType k = 0; k != faceVelocities[F::U].dimension(2); k++ ) {
             for (iterType j = 0; j != faceVelocities[F::U].dimension(1); j++) {
                 faceVelocities[F::U](faceIndex, j, k) = extrapFactor_p*fields[F::U](fieldIndex_p, j, k)
-                                                            - extrapFactor_f*fields[F::U](fieldIndex_f, j, k);
+                                                      - extrapFactor_f*fields[F::U](fieldIndex_f, j, k);
             }
         } 
     }
@@ -147,13 +148,14 @@ namespace
         using F = CFD::Fields::ENUMDATA;
 
         floatType extrapFactor_p = ( 2.0*mesh.cellLengths_y(fieldIndex_p) + mesh.cellLengths_y(fieldIndex_f) )
-                           / ( mesh.cellLengths_y(fieldIndex_p) + mesh.cellLengths_y(fieldIndex_f) );
-        floatType extrapFactor_f = extrapFactor_p - ( mesh.cellLengths_y(fieldIndex_p) + mesh.cellLengths_y(fieldIndex_f) );
+                                 / ( mesh.cellLengths_y(fieldIndex_p) + mesh.cellLengths_y(fieldIndex_f) );
+        floatType extrapFactor_f = ( mesh.cellLengths_y(fieldIndex_p) )
+                                 / ( mesh.cellLengths_y(fieldIndex_p) + mesh.cellLengths_y(fieldIndex_f) );
 
         for (iterType k = 0; k != faceVelocities[F::V].dimension(2); k++ ) {
             for (iterType i = 0; i != faceVelocities[F::V].dimension(0); i++) {
                 faceVelocities[F::V](i, faceIndex, k) = extrapFactor_p*fields[F::V](i, fieldIndex_p, k)
-                                                            - extrapFactor_f*fields[F::V](i, fieldIndex_f, k);
+                                                      - extrapFactor_f*fields[F::V](i, fieldIndex_f, k);
             }
         } 
     }
@@ -194,13 +196,14 @@ namespace
         using F = CFD::Fields::ENUMDATA;
 
         floatType extrapFactor_p = ( 2.0*mesh.cellLengths_z(fieldIndex_p) + mesh.cellLengths_z(fieldIndex_f) )
-                           / ( mesh.cellLengths_z(fieldIndex_p) + mesh.cellLengths_z(fieldIndex_f) );
-        floatType extrapFactor_f = extrapFactor_p - ( mesh.cellLengths_z(fieldIndex_p) + mesh.cellLengths_z(fieldIndex_f) );
+                                 / ( mesh.cellLengths_z(fieldIndex_p) + mesh.cellLengths_z(fieldIndex_f) );
+        floatType extrapFactor_f = ( mesh.cellLengths_z(fieldIndex_p) )
+                                 / ( mesh.cellLengths_z(fieldIndex_p) + mesh.cellLengths_z(fieldIndex_f) );
 
         for (iterType j = 0; j != faceVelocities[F::W].dimension(1); j++ ) {
             for (iterType i = 0; i != faceVelocities[F::W].dimension(0); i++) {
                 faceVelocities[F::W](i, j, faceIndex) = extrapFactor_p*fields[F::W](i, j, fieldIndex_p)
-                                                            - extrapFactor_f*fields[F::W](i, j, fieldIndex_f);
+                                                      - extrapFactor_f*fields[F::W](i, j, fieldIndex_f);
             }
         } 
     }
