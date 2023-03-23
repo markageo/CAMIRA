@@ -34,7 +34,7 @@ BoundaryConditions
 
     -y {
         u = uniform, 0
-        v = uniform, 0
+        v = zeroGradient
         w = uniform, 0
         p = extrapolated
     }
@@ -42,7 +42,7 @@ BoundaryConditions
     +z {
         u = zeroGradient
         v = zeroGradient
-        w = uniform, 0
+        w = zeroGradient
         p = zeroGradient
     }
 
@@ -58,6 +58,6 @@ BoundaryConditions
 Solver {
 
     planeSweepDirection = +z
-    lineSweepDirection = -y
+    lineSweepDirection = +y
 
 }

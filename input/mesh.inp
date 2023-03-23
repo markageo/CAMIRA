@@ -2,13 +2,13 @@
 
 Mesh {
 
-    domain = (10, 3, 5)
+    domain = (1, 1, 1)
 
     Grid X {
         
         Segment {
-            bounds     = (0, 4)
-            nCells     = 40
+            bounds     = (0, 1)
+            nCells     = 5
             biasFactor = 1
         }
 
@@ -17,17 +17,17 @@ Mesh {
 
     Grid Y {
         Segment {
-            bounds     = (0, 4)
-            nCells     = 40
-            biasFactor = 6
+            bounds     = (0, 1)
+            nCells     = 5
+            biasFactor = 1
         }
     }
 
 
     Grid Z {
         Segment {
-            bounds     = (0, 10)
-            nCells     = 100
+            bounds     = (0, 1)
+            nCells     = 5
             biasFactor = 1
         }
     }

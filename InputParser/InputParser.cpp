@@ -1,6 +1,6 @@
 #include "InputParser.h"
 
-#define NDEBUG
+// #define NDEBUG
 
 #include "boost/property_tree/ptree.hpp"
 #include <string>
@@ -421,7 +421,7 @@ std::string ErrorString(const ErrorType &error, const ReaderStream &readerStream
     switch (error)
     {
         case fileReadError:
-            errorMessage = "Unable to open file '" + readerStream.Filename() + ".";
+            errorMessage = "Unable to open file '" + readerStream.Filename() + "'.";
             break;
 
         case unmatchedBlockError:

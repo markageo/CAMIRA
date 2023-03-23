@@ -1,10 +1,8 @@
 "filename", "language", "C++", "comment", "blank", "total"
-"/home/mark/PhD/Code/coupled-sweep-ns/InputParser/InputParser.cpp", "C++", -345, -49, -105, -499
-"/home/mark/PhD/Code/coupled-sweep-ns/InputParser/InputParser.h", "C++", -7, -1, -4, -12
 "/home/mark/PhD/Code/coupled-sweep-ns/include/FiniteVolumeFunctions.h", "C++", 11, 1, 5, 17
-"/home/mark/PhD/Code/coupled-sweep-ns/include/FiniteVolumeStructures.h", "C++", 52, 4, 14, 70
+"/home/mark/PhD/Code/coupled-sweep-ns/include/FiniteVolumeStructures.h", "C++", 53, 4, 14, 71
 "/home/mark/PhD/Code/coupled-sweep-ns/include/InputProcessing.h", "C++", 30, 4, 14, 48
 "/home/mark/PhD/Code/coupled-sweep-ns/include/Solver.h", "C++", 11, 0, 6, 17
 "/home/mark/PhD/Code/coupled-sweep-ns/include/Types.h", "C++", 78, 1, 11, 90
 "/home/mark/PhD/Code/coupled-sweep-ns/include/VTKWriter.h", "C++", 61, 2, 28, 91
-"Total", "-", -109, -38, -31, -178
+"Total", "-", 244, 12, 78, 334

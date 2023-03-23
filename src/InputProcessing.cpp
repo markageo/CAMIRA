@@ -277,7 +277,6 @@ namespace
     void TransformBoundaryConditions(InputData &inputData)
     {
         using BP = CFD::BoundaryPatches::ENUMDATA;
-        using F = CFD::Fields::ENUMDATA;
 
         // Temporary for boundary conditions as user specifies them
         std::vector< std::vector< InputData::BoundaryConditionStruct > > boundaryConditionsUser = inputData.boundaryConditions;
