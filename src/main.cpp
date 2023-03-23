@@ -10,6 +10,8 @@
 #include "VTKWriter.h"
 #include "Solver.h"
 
+#include "FiniteVolumeFunctions.h"
+
 #include <iostream>
 #include <type_traits>
 
@@ -79,7 +81,7 @@ int main(int argc, char const *argv[])
     using BC = CFD::BoundaryConditions::ENUMDATA;
     using BP = CFD::BoundaryPatches::ENUMDATA;
 
-    CFD::Mesh mesh(inputData);
+    const CFD::Mesh mesh(inputData);
     CFD::ArrayAllocator<F> fields({F::U, F::V, F::W, F::P}, mesh.nCells);
 
     // Faces are staggered in the negative direction:
@@ -91,7 +93,10 @@ int main(int argc, char const *argv[])
                                              {F::V, {mesh.nCells(0)  , mesh.nCells(1)+1, mesh.nCells(2)  }}, 
                                              {F::W, {mesh.nCells(0)  , mesh.nCells(1)  , mesh.nCells(2)+1}} } );
 
-    CFD::SweepSolve(fields, mesh, inputData);
+
+    
+    CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
+    
 
     /*-------------------------------------------------------------------------------------*\
                                            Output
@@ -112,7 +117,6 @@ int main(int argc, char const *argv[])
     // Write output
     VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
     writer.WriteData("mesh.vtk", "3D Rectilinear Grid");
-
 
     /*-------------------------------------------------------------------------------------*\
                                            Testing
