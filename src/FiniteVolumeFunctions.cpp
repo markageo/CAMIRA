@@ -17,9 +17,8 @@ namespace
         for (iterType k = 0; k != faceVel.dimension(2); k++ ) {
             for (iterType j = 0; j != faceVel.dimension(1); j++) {
                 for (iterType i = 1; i != faceVel.dimension(0)-1; i++) {
-
-                    // Linear interpolation
                     interpFactor = mesh.interpFactors_x(i);
+                    
                     faceVel(i, j, k) = (1 - interpFactor)*cellVel(i-1, j, k) + interpFactor*cellVel(i, j, k);
 
                 }
@@ -35,10 +34,9 @@ namespace
         floatType interpFactor;
         for (iterType k = 0; k != faceVel.dimension(2); k++ ) {
             for (iterType j = 1; j != faceVel.dimension(1)-1; j++) {
+                interpFactor = mesh.interpFactors_y(j);
                 for (iterType i = 0; i != faceVel.dimension(0); i++) {
-
-                    // Linear interpolation
-                    interpFactor = mesh.interpFactors_y(j);
+                    
                     faceVel(i, j, k) = (1 - interpFactor)*cellVel(i, j-1, k) + interpFactor*cellVel(i, j, k);
 
                 }
@@ -53,11 +51,10 @@ namespace
 
         floatType interpFactor;
         for (iterType k = 1; k != faceVel.dimension(2)-1; k++ ) {
+            interpFactor = mesh.interpFactors_z(k);
             for (iterType j = 0; j != faceVel.dimension(1); j++) {
                 for (iterType i = 0; i != faceVel.dimension(0); i++) {
 
-                    // Linear interpolation
-                    interpFactor = mesh.interpFactors_z(k);
                     faceVel(i, j, k) = (1 - interpFactor)*cellVel(i, j, k-1) + interpFactor*cellVel(i, j, k);
 
                 }
