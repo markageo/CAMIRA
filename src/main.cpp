@@ -98,10 +98,18 @@ int main(int argc, char const *argv[])
 
 
     fields[F::U].setRandom();
+    fields[F::V].setRandom();
+    fields[F::W].setRandom();
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
     
     UTIL::writeArray("U_cell_centers.txt", fields[F::U]);
     UTIL::writeArray("U_cell_faces.txt", faceVelocities[F::U]);
+
+    UTIL::writeArray("V_cell_centers.txt", fields[F::V]);
+    UTIL::writeArray("V_cell_faces.txt", faceVelocities[F::V]);
+
+    UTIL::writeArray("W_cell_centers.txt", fields[F::W]);
+    UTIL::writeArray("W_cell_faces.txt", faceVelocities[F::W]);
 
     
 
