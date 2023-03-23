@@ -9,8 +9,10 @@
 #include "FiniteVolumeStructures.h"
 #include "VTKWriter.h"
 #include "Solver.h"
+#include "utils.h"
 
 #include "FiniteVolumeFunctions.h"
+
 
 #include <iostream>
 #include <type_traits>
@@ -94,8 +96,13 @@ int main(int argc, char const *argv[])
                                              {F::W, {mesh.nCells(0)  , mesh.nCells(1)  , mesh.nCells(2)+1}} } );
 
 
-    
+
+    fields[F::U].setRandom();
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
+    
+    UTIL::writeArray("U_cell_centers.txt", fields[F::U]);
+    UTIL::writeArray("U_cell_faces.txt", faceVelocities[F::U]);
+
     
 
     /*-------------------------------------------------------------------------------------*\
