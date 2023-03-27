@@ -3,6 +3,29 @@
 
 #include <iostream>
 
+using C = CFD::TransportCoefficients::ENUMDATA;
+
+CFD::FVCoefficients::FVCoefficients(const CFD::indexVector3 &dims) :
+    auu({C::p, C::n, C::e, C::s, C::w, C::t, C::b}, dims),
+    aup({C::p, C::e, C::w}, dims(0)),
+
+    avv({C::p, C::n, C::e, C::s, C::w, C::t, C::b}, dims),
+    avp({C::p, C::n, C::s}, dims(1)),
+
+    aww({C::p, C::n, C::e, C::s, C::w, C::t, C::b}, dims),
+    awp({C::p, C::t, C::b}, dims(2)),
+
+    acu({C::p, C::e, C::w}, dims(0)),
+    acv({C::p, C::n, C::s}, dims(1)),
+    acw({C::p, C::t, C::b}, dims(2)),
+    // acp 
+
+    bu(dims(0), dims(1), dims(2)), 
+    bv(dims(0), dims(1), dims(2)), 
+    bw(dims(0), dims(1), dims(2)), 
+    bc(dims(0), dims(1), dims(2))
+    {};
+
 
 namespace
 {

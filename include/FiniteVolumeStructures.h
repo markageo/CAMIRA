@@ -10,7 +10,7 @@
 namespace CFD
 {
 
-// Allocate 3D arrays using enums
+// Allocate arrays using enums
 template <typename arrayEnum, typename arrayType = CFD::array3D>
 class ArrayAllocator
 {
@@ -101,7 +101,7 @@ class ArrayAllocator
 
 
     private:
-        std::vector< std::unique_ptr<CFD::array3D> > coeffPointers;
+        std::vector< std::unique_ptr<arrayType> > coeffPointers;
 };
 
 
