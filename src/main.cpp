@@ -83,7 +83,7 @@ int main(int argc, char const *argv[])
     using BP = CFD::BoundaryPatches::ENUMDATA;
 
     const CFD::Mesh mesh(inputData);
-    CFD::ArrayAllocator<F> fields({F::U, F::V, F::W, F::P}, mesh.nCells + 2);
+    CFD::ArrayAllocator<F> fields({F::U, F::V, F::W, F::P}, mesh.nCells);
 
     // Faces are staggered in the negative direction:
     //   cellFaceVelocity_x(i, j, k) -> u(i-1/2, j    , k    )
@@ -101,6 +101,21 @@ int main(int argc, char const *argv[])
     fields[F::W].setRandom();
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
     
+    // Cell centers to file
+    UTIL::writeArray("debug/cell_centers_x.txt", mesh.cellCenters_x);
+    UTIL::writeArray("debug/cell_centers_y.txt", mesh.cellCenters_y);
+    UTIL::writeArray("debug/cell_centers_z.txt", mesh.cellCenters_z);
+
+    // Cell centers to file
+    UTIL::writeArray("debug/cell_faces_x.txt", mesh.cellFaces_x);
+    UTIL::writeArray("debug/cell_faces_y.txt", mesh.cellFaces_y);
+    UTIL::writeArray("debug/cell_faces_z.txt", mesh.cellFaces_z);
+
+    // Write extrapolation factors to a file
+    UTIL::writeArray("debug/interp_factors_x.txt", mesh.interpFactors_x);
+    UTIL::writeArray("debug/interp_factors_y.txt", mesh.interpFactors_y);
+    UTIL::writeArray("debug/interp_factors_z.txt", mesh.interpFactors_z);
+
     // Write fields to a file
     UTIL::writeArray("debug/U_cell_centers.txt", fields[F::U]);
     UTIL::writeArray("debug/U_cell_faces.txt", faceVelocities[F::U]);
@@ -110,11 +125,6 @@ int main(int argc, char const *argv[])
 
     UTIL::writeArray("debug/W_cell_centers.txt", fields[F::W]);
     UTIL::writeArray("debug/W_cell_faces.txt", faceVelocities[F::W]);
-
-    // // Write extrapolation factors to a file
-    UTIL::writeArray("debug/interp_factors_x.txt", mesh.interpFactors_x);
-    UTIL::writeArray("debug/interp_factors_y.txt", mesh.interpFactors_y);
-    UTIL::writeArray("debug/interp_factors_z.txt", mesh.interpFactors_z);
 
     /*-------------------------------------------------------------------------------------*\
                                            Output
