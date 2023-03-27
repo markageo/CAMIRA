@@ -102,6 +102,7 @@ int main(int argc, char const *argv[])
     fields[F::W].setRandom();
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
     
+    // Write fields to a file
     UTIL::writeArray("U_cell_centers.txt", fields[F::U]);
     UTIL::writeArray("U_cell_faces.txt", faceVelocities[F::U]);
 
@@ -111,7 +112,10 @@ int main(int argc, char const *argv[])
     UTIL::writeArray("W_cell_centers.txt", fields[F::W]);
     UTIL::writeArray("W_cell_faces.txt", faceVelocities[F::W]);
 
-    
+    // // Write extrapolation factors to a file
+    UTIL::writeArray("interp_factors_x.txt", mesh.interpFactors_x);
+    // UTIL::writeArray("interp_factors_y", mesh.interpFactors_y);
+    // UTIL::writeArray("interp_factors_z", mesh.interpFactors_z);
 
     /*-------------------------------------------------------------------------------------*\
                                            Output
