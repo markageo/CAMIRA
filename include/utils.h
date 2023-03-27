@@ -15,7 +15,6 @@ namespace UTIL
 template<typename T>
 void writeArray(const std::string &filename, const T &array, const int precision = 4)
 {
-
     std::ofstream fileStream(filename);
     fileStream << std::fixed;
     fileStream << std::setprecision(precision);
@@ -25,20 +24,14 @@ void writeArray(const std::string &filename, const T &array, const int precision
         const auto& dims = array.dimensions();
 
         if (dims.size() < 3) {
-
             fileStream << array;
-
         } else if (dims.size() == 3) {
-
             for (int k = 0; k != dims[2]; k++) {
                 fileStream << array.chip(k , 2);
                 fileStream << "\n\n";
             }
-
         }
-
     }
-
 }
 
 }
