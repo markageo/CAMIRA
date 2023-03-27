@@ -11,7 +11,7 @@ namespace CFD
     using array1D = Eigen::Tensor<floatType, 1>;    // Column major
     using array2D = Eigen::Tensor<floatType, 2>;    // Column major
     using array3D = Eigen::Tensor<floatType, 3>;    // Column major
-    using indexVector = Eigen::Array<intType, 1, 3>;
+    using indexVector = Eigen::Array<intType, 3, 1>;
 
 
     // Enums to be used as indices for containers
