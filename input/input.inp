@@ -15,7 +15,7 @@ Mesh {
         Segment {
             bounds     = (0, 1)
             nCells     = 5
-            biasFactor = 1
+            biasFactor = 2
         }
 
     }
@@ -25,7 +25,7 @@ Mesh {
         Segment {
             bounds     = (0, 1)
             nCells     = 5
-            biasFactor = 1
+            biasFactor = 3
         }
     }
 
@@ -34,7 +34,7 @@ Mesh {
         Segment {
             bounds     = (0, 1)
             nCells     = 5
-            biasFactor = 1
+            biasFactor = 5
         }
     }
 }
