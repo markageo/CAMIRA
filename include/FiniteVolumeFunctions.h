@@ -20,11 +20,16 @@ struct FVCoefficients
     // 'v' can take the values
     //  u: x velocity, v: v velocity, w: w velocity, p: pressure
 
+    // In the finite volume formulation, momentum equations are divided by the cell face area 
+    // normal to the direction of the momentum equation. This means the pressure coefficients
+    // can be stored in 1D arrays, and cell face areas only appear in the diffusion equations.
+
     FVCoefficients(const CFD::indexVector3 &);
     ArrayAllocator<TransportCoefficients::ENUMDATA, array3D> auu, avv, aww;          // Momentum velocity coefficients
     ArrayAllocator<TransportCoefficients::ENUMDATA, array1D> aup, avp, awp;          // Momentum pressure coefficients
     ArrayAllocator<TransportCoefficients::ENUMDATA, array1D> acu, acv, acw;          // Continuity velocity coefficients
     ArrayAllocator<TransportCoefficients::ENUMDATA, array3D> acp;                    // Continuity pressure coefficients
+    array3D                                                  bu, bv, bw, bc;         // Momentum and continuity source terms (appear on the right hand size)     
 };
 
 
