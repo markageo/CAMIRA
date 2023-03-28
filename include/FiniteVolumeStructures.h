@@ -110,11 +110,11 @@ struct Mesh
 {
     Mesh(const CFD::InputData &);
     indexVector3 nCells;
-    array1D cellCenters_x, cellCenters_y, cellCenters_z;
-    array1D cellFaces_x, cellFaces_y, cellFaces_z;
-    array1D cellLengths_x, cellLengths_y, cellLengths_z;
-    array1D interpFactors_x, interpFactors_y, interpFactors_z; // faceValue(i) = (1 - interpFactor(i))*cellValue(i-1) + interpFactor(i)*cellValue(i)
-    array2D cellFaceAreas_x, cellFaceAreas_y, cellFaceAreas_z; // Index by right hand rule
+    ArrayAllocator<Axis::ENUMDATA, array1D> cellCenters, 
+                                            cellFaces,
+                                            cellLengths, 
+                                            interpFactors;  // faceValue(i) = (1 - interpFactor(i))*cellValue(i-1) + interpFactor(i)*cellValue(i)
+    ArrayAllocator<Axis::ENUMDATA, array2D> cellFaceAreas;  // Index by right hand rule
 };
 
 

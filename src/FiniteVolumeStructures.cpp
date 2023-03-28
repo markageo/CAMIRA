@@ -124,43 +124,51 @@ namespace
 // Constructor, creates the mesh
 CFD::Mesh::Mesh(const InputData &inputData) :
     nCells( { TotalCells(inputData.meshSegments_x),  TotalCells(inputData.meshSegments_y), TotalCells(inputData.meshSegments_z)} ),
-    cellCenters_x( nCells(0) ),
-    cellCenters_y( nCells(1) ),
-    cellCenters_z( nCells(2) ),
-    cellFaces_x( nCells(0) + 1 ),
-    cellFaces_y( nCells(1) + 1 ),
-    cellFaces_z( nCells(2) + 1 ),
-    cellLengths_x( nCells(0) ),
-    cellLengths_y( nCells(1) ),
-    cellLengths_z( nCells(2) ),
-    interpFactors_x( nCells(0) + 1 ),
-    interpFactors_y( nCells(1) + 1 ),
-    interpFactors_z( nCells(2) + 1 ),
-    cellFaceAreas_x( cellCenters_y.dimension(0), cellCenters_z.dimension(0) ),
-    cellFaceAreas_y( cellCenters_z.dimension(0), cellCenters_x.dimension(0) ),
-    cellFaceAreas_z( cellCenters_x.dimension(0), cellCenters_y.dimension(0) )
+
+    cellCenters( {{Axis::ENUMDATA::X, nCells(0)},
+                  {Axis::ENUMDATA::Y, nCells(1)},
+                  {Axis::ENUMDATA::Z, nCells(2)}} ),
+
+    cellFaces( {{Axis::ENUMDATA::X, nCells(0) + 1},
+                {Axis::ENUMDATA::Y, nCells(1) + 1},
+                {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
+
+    cellLengths( {{Axis::ENUMDATA::X, nCells(0)},
+                  {Axis::ENUMDATA::Y, nCells(1)},
+                  {Axis::ENUMDATA::Z, nCells(2)}} ),
+
+    interpFactors( {{Axis::ENUMDATA::X, nCells(0) + 1},
+                    {Axis::ENUMDATA::Y, nCells(1) + 1},
+                    {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
+
+    cellFaceAreas( {{Axis::ENUMDATA::X, {nCells(1), nCells(2)} },
+                    {Axis::ENUMDATA::Y, {nCells(2), nCells(0)} },
+                    {Axis::ENUMDATA::Z, {nCells(0), nCells(1)} }} )
+
     { 
         std::vector<CFD::floatType> growthRates_x = CalculateGrowthRates(inputData.meshSegments_x);
         std::vector<CFD::floatType> growthRates_y = CalculateGrowthRates(inputData.meshSegments_y);
         std::vector<CFD::floatType> growthRates_z = CalculateGrowthRates(inputData.meshSegments_z);
 
-        CalculateCellLengths(cellLengths_x, inputData.meshSegments_x, growthRates_x);
-        CalculateCellLengths(cellLengths_y, inputData.meshSegments_y, growthRates_y);
-        CalculateCellLengths(cellLengths_z, inputData.meshSegments_z, growthRates_z);
+        using enum Axis::ENUMDATA;
 
-        CalculateCellCenters(cellCenters_x, cellLengths_x);
-        CalculateCellCenters(cellCenters_y, cellLengths_y);
-        CalculateCellCenters(cellCenters_z, cellLengths_z);
+        CalculateCellLengths(cellLengths[X], inputData.meshSegments_x, growthRates_x);
+        CalculateCellLengths(cellLengths[Y], inputData.meshSegments_y, growthRates_y);
+        CalculateCellLengths(cellLengths[Z], inputData.meshSegments_z, growthRates_z);
 
-        CalculateCellFaces(cellFaces_x, cellLengths_x);
-        CalculateCellFaces(cellFaces_y, cellLengths_y);
-        CalculateCellFaces(cellFaces_z, cellLengths_z);
+        CalculateCellCenters(cellCenters[X], cellLengths[X]);
+        CalculateCellCenters(cellCenters[Y], cellLengths[Y]);
+        CalculateCellCenters(cellCenters[Z], cellLengths[Z]);
 
-        CalculateInterpolationFactors(interpFactors_x, cellCenters_x, cellFaces_x);
-        CalculateInterpolationFactors(interpFactors_y, cellCenters_y, cellFaces_y);
-        CalculateInterpolationFactors(interpFactors_z, cellCenters_z, cellFaces_z);
+        CalculateCellFaces(cellFaces[X], cellLengths[X]);
+        CalculateCellFaces(cellFaces[Y], cellLengths[Y]);
+        CalculateCellFaces(cellFaces[Z], cellLengths[Z]);
 
-        CalculateCellFaceAreas(cellFaceAreas_x, cellLengths_y, cellLengths_z);
-        CalculateCellFaceAreas(cellFaceAreas_y, cellLengths_z, cellLengths_x);
-        CalculateCellFaceAreas(cellFaceAreas_z, cellLengths_x, cellLengths_y);
+        CalculateInterpolationFactors(interpFactors[X], cellCenters[X], cellFaces[X]);
+        CalculateInterpolationFactors(interpFactors[Y], cellCenters[Y], cellFaces[Y]);
+        CalculateInterpolationFactors(interpFactors[Z], cellCenters[Z], cellFaces[Z]);
+
+        CalculateCellFaceAreas(cellFaceAreas[X], cellLengths[Y], cellLengths[Z]);
+        CalculateCellFaceAreas(cellFaceAreas[Y], cellLengths[Z], cellLengths[X]);
+        CalculateCellFaceAreas(cellFaceAreas[Z], cellLengths[X], cellLengths[Y]);
     };

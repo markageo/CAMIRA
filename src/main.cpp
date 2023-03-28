@@ -78,6 +78,7 @@ int main(int argc, char const *argv[])
                                            Solve
     \*-------------------------------------------------------------------------------------*/
 
+    using AX = CFD::Axis::ENUMDATA;
     using F = CFD::Fields::ENUMDATA;
     using BC = CFD::BoundaryConditions::ENUMDATA;
     using BP = CFD::BoundaryPatches::ENUMDATA;
@@ -102,19 +103,19 @@ int main(int argc, char const *argv[])
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
     
     // Cell centers to file
-    UTIL::writeArray("debug/cell_centers_x.txt", mesh.cellCenters_x);
-    UTIL::writeArray("debug/cell_centers_y.txt", mesh.cellCenters_y);
-    UTIL::writeArray("debug/cell_centers_z.txt", mesh.cellCenters_z);
+    UTIL::writeArray("debug/cell_centers_x.txt", mesh.cellCenters[AX::X]);
+    UTIL::writeArray("debug/cell_centers_y.txt", mesh.cellCenters[AX::Y]);
+    UTIL::writeArray("debug/cell_centers_z.txt", mesh.cellCenters[AX::Z]);
 
     // Cell centers to file
-    UTIL::writeArray("debug/cell_faces_x.txt", mesh.cellFaces_x);
-    UTIL::writeArray("debug/cell_faces_y.txt", mesh.cellFaces_y);
-    UTIL::writeArray("debug/cell_faces_z.txt", mesh.cellFaces_z);
+    UTIL::writeArray("debug/cell_faces_x.txt", mesh.cellFaces[AX::X]);
+    UTIL::writeArray("debug/cell_faces_y.txt", mesh.cellFaces[AX::Y]);
+    UTIL::writeArray("debug/cell_faces_z.txt", mesh.cellFaces[AX::Z]);
 
     // Write extrapolation factors to a file
-    UTIL::writeArray("debug/interp_factors_x.txt", mesh.interpFactors_x);
-    UTIL::writeArray("debug/interp_factors_y.txt", mesh.interpFactors_y);
-    UTIL::writeArray("debug/interp_factors_z.txt", mesh.interpFactors_z);
+    UTIL::writeArray("debug/interp_factors_x.txt", mesh.interpFactors[AX::X]);
+    UTIL::writeArray("debug/interp_factors_y.txt", mesh.interpFactors[AX::Y]);
+    UTIL::writeArray("debug/interp_factors_z.txt", mesh.interpFactors[AX::Z]);
 
     // Write fields to a file
     UTIL::writeArray("debug/U_cell_centers.txt", fields[F::U]);
@@ -135,10 +136,10 @@ int main(int argc, char const *argv[])
     if (std::is_same<CFD::floatType, float>::value) {
         VTKDataType = VTK::FLOAT;
     } 
-    VTK::VTKWriterConfig config( mesh.cellCenters_x.size(), mesh.cellCenters_y.size(), mesh.cellCenters_z.size(), VTKDataType);
+    VTK::VTKWriterConfig config( mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z], VTKDataType);
         config.SetWriteMode("ascii");
         config.SetASCIIPrecision(8);
-    VTK::gridVectorType gridVector = {mesh.cellCenters_x.data(), mesh.cellCenters_y.data(), mesh.cellCenters_z.data()};
+    VTK::gridVectorType gridVector = {mesh.cellCenters[AX::X].data(), mesh.cellCenters[AX::Y].data(), mesh.cellCenters[AX::Z].data()};
     VTK::scalarMapType scalarMap = { };
     VTK::vectorMapType vectorMap = { };
 
