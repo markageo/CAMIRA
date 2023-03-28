@@ -213,7 +213,7 @@ namespace CFD
 {
 
 void UpdateFaceVelocities( ArrayAllocator<Fields::ENUMDATA> &faceVelocities, const Mesh &mesh, const ArrayAllocator<Fields::ENUMDATA> &fields, 
-    const std::vector< std::vector<InputData::BoundaryConditionStruct> > &boundaryConditions)
+    const InputData::BoundaryConditionData &boundaryConditions)
 {
 
     using F = Fields::ENUMDATA;

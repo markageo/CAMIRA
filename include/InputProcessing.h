@@ -35,7 +35,8 @@ struct InputData
         BoundaryConditions::ENUMDATA type;
         CFD::floatType value;
     };
-    std::vector< std::vector< BoundaryConditionStruct > > boundaryConditions; // boundaryConditions[Field][Patch]
+    using BoundaryConditionData = std::vector< std::vector< BoundaryConditionStruct > >;
+    BoundaryConditionData boundaryConditions; // boundaryConditions[Field][Patch]
     std::map< CFD::BoundaryPatches::ENUMDATA, CFD::BoundaryPatches::ENUMDATA > axisTransformation; // Code patch -> user patch
 
     
