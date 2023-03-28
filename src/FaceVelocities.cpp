@@ -10,12 +10,13 @@ namespace
 void UpdateFaceVelocites_x(CFD::array3D &faceVel, const CFD::array3D &cellVel, const CFD::Mesh &mesh)
 {
     using namespace CFD;
+    using enum Axis::ENUMDATA;
 
     floatType interpFactor;
     for (iterType k = 0; k != faceVel.dimension(2); k++ ) {
         for (iterType j = 0; j != faceVel.dimension(1); j++) {
             for (iterType i = 1; i != faceVel.dimension(0)-1; i++) {
-                interpFactor = mesh.interpFactors_x(i);
+                interpFactor = mesh.interpFactors[X](i);
                 
                 faceVel(i, j, k) = (1 - interpFactor)*cellVel(i-1, j, k) + interpFactor*cellVel(i, j, k);
 
@@ -28,11 +29,12 @@ void UpdateFaceVelocites_x(CFD::array3D &faceVel, const CFD::array3D &cellVel, c
 void UpdateFaceVelocites_y(CFD::array3D &faceVel, const CFD::array3D &cellVel, const CFD::Mesh &mesh)
 {
     using namespace CFD;
+    using enum Axis::ENUMDATA;
 
     floatType interpFactor;
     for (iterType k = 0; k != faceVel.dimension(2); k++ ) {
         for (iterType j = 1; j != faceVel.dimension(1)-1; j++) {
-            interpFactor = mesh.interpFactors_y(j);
+            interpFactor = mesh.interpFactors[Y](j);
             for (iterType i = 0; i != faceVel.dimension(0); i++) {
                 
                 faceVel(i, j, k) = (1 - interpFactor)*cellVel(i, j-1, k) + interpFactor*cellVel(i, j, k);
@@ -46,10 +48,11 @@ void UpdateFaceVelocites_y(CFD::array3D &faceVel, const CFD::array3D &cellVel, c
 void UpdateFaceVelocites_z(CFD::array3D &faceVel, const CFD::array3D &cellVel, const CFD::Mesh &mesh)
 {
     using namespace CFD;
+    using enum Axis::ENUMDATA;
 
     floatType interpFactor;
     for (iterType k = 1; k != faceVel.dimension(2)-1; k++ ) {
-        interpFactor = mesh.interpFactors_z(k);
+        interpFactor = mesh.interpFactors[Z](k);
         for (iterType j = 0; j != faceVel.dimension(1); j++) {
             for (iterType i = 0; i != faceVel.dimension(0); i++) {
 
@@ -95,12 +98,13 @@ void setExtrapolated_x( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelociti
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex_p, const CFD::iterType fieldIndex_f) 
 {
     using namespace CFD;
-    using F = CFD::Fields::ENUMDATA;
+    using enum Axis::ENUMDATA;
+    using F = Fields::ENUMDATA;
 
-    floatType extrapFactor_p = ( 2.0*mesh.cellLengths_x(fieldIndex_p) + mesh.cellLengths_x(fieldIndex_f) )
-                                / ( mesh.cellLengths_x(fieldIndex_p) + mesh.cellLengths_x(fieldIndex_f) );
-    floatType extrapFactor_f = ( mesh.cellLengths_x(fieldIndex_p) )
-                                / ( mesh.cellLengths_x(fieldIndex_p) + mesh.cellLengths_x(fieldIndex_f) );
+    floatType extrapFactor_p = ( 2.0*mesh.cellLengths[X](fieldIndex_p) + mesh.cellLengths[X](fieldIndex_f) )
+                                / ( mesh.cellLengths[X](fieldIndex_p) + mesh.cellLengths[X](fieldIndex_f) );
+    floatType extrapFactor_f = ( mesh.cellLengths[X](fieldIndex_p) )
+                                / ( mesh.cellLengths[X](fieldIndex_p) + mesh.cellLengths[X](fieldIndex_f) );
 
     for (iterType k = 0; k != faceVelocities[F::U].dimension(2); k++ ) {
         for (iterType j = 0; j != faceVelocities[F::U].dimension(1); j++) {
@@ -118,7 +122,7 @@ void setZeroGradient_y( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelociti
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex) 
 {
     using namespace CFD;
-    using F = CFD::Fields::ENUMDATA;
+    using F = Fields::ENUMDATA;
 
     for (iterType k = 0; k != faceVelocities[F::V].dimension(2); k++ ) {
         for (iterType i = 0; i != faceVelocities[F::V].dimension(0); i++) {
@@ -130,7 +134,7 @@ void setZeroGradient_y( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelociti
 void setUniform_y( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, const CFD::iterType faceIndex, const CFD::floatType value) 
 {
     using namespace CFD;
-    using F = CFD::Fields::ENUMDATA;
+    using F = Fields::ENUMDATA;
 
     for (iterType k = 0; k != faceVelocities[F::V].dimension(2); k++ ) {
         for (iterType i = 0; i != faceVelocities[F::V].dimension(0); i++) {
@@ -143,12 +147,13 @@ void setExtrapolated_y( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelociti
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex_p, const CFD::iterType fieldIndex_f) 
 {
     using namespace CFD;
-    using F = CFD::Fields::ENUMDATA;
+    using enum Axis::ENUMDATA;
+    using F = Fields::ENUMDATA;
 
-    floatType extrapFactor_p = ( 2.0*mesh.cellLengths_y(fieldIndex_p) + mesh.cellLengths_y(fieldIndex_f) )
-                                / ( mesh.cellLengths_y(fieldIndex_p) + mesh.cellLengths_y(fieldIndex_f) );
-    floatType extrapFactor_f = ( mesh.cellLengths_y(fieldIndex_p) )
-                                / ( mesh.cellLengths_y(fieldIndex_p) + mesh.cellLengths_y(fieldIndex_f) );
+    floatType extrapFactor_p = ( 2.0*mesh.cellLengths[Y](fieldIndex_p) + mesh.cellLengths[Y](fieldIndex_f) )
+                                / ( mesh.cellLengths[Y](fieldIndex_p) + mesh.cellLengths[Y](fieldIndex_f) );
+    floatType extrapFactor_f = ( mesh.cellLengths[Y](fieldIndex_p) )
+                                / ( mesh.cellLengths[Y](fieldIndex_p) + mesh.cellLengths[Y](fieldIndex_f) );
 
     for (iterType k = 0; k != faceVelocities[F::V].dimension(2); k++ ) {
         for (iterType i = 0; i != faceVelocities[F::V].dimension(0); i++) {
@@ -165,7 +170,7 @@ void setZeroGradient_z( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelociti
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex) 
 {
     using namespace CFD;
-    using F = CFD::Fields::ENUMDATA;
+    using F = Fields::ENUMDATA;
 
     for (iterType j = 0; j != faceVelocities[F::W].dimension(1); j++ ) {
         for (iterType i = 0; i != faceVelocities[F::W].dimension(0); i++) {
@@ -177,7 +182,7 @@ void setZeroGradient_z( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelociti
 void setUniform_z( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, const CFD::iterType faceIndex, const CFD::floatType value) 
 {
     using namespace CFD;
-    using F = CFD::Fields::ENUMDATA;
+    using F = Fields::ENUMDATA;
 
     for (iterType j = 0; j != faceVelocities[F::W].dimension(1); j++ ) {
         for (iterType i = 0; i != faceVelocities[F::W].dimension(0); i++) {
@@ -190,12 +195,13 @@ void setExtrapolated_z( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelociti
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex_p, const CFD::iterType fieldIndex_f) 
 {
     using namespace CFD;
-    using F = CFD::Fields::ENUMDATA;
-
-    floatType extrapFactor_p = ( 2.0*mesh.cellLengths_z(fieldIndex_p) + mesh.cellLengths_z(fieldIndex_f) )
-                                / ( mesh.cellLengths_z(fieldIndex_p) + mesh.cellLengths_z(fieldIndex_f) );
-    floatType extrapFactor_f = ( mesh.cellLengths_z(fieldIndex_p) )
-                                / ( mesh.cellLengths_z(fieldIndex_p) + mesh.cellLengths_z(fieldIndex_f) );
+    using enum Axis::ENUMDATA;
+    using F = Fields::ENUMDATA;
+   
+    floatType extrapFactor_p = ( 2.0*mesh.cellLengths[Z](fieldIndex_p) + mesh.cellLengths[Z](fieldIndex_f) )
+                                / ( mesh.cellLengths[Z](fieldIndex_p) + mesh.cellLengths[Z](fieldIndex_f) );
+    floatType extrapFactor_f = ( mesh.cellLengths[Z](fieldIndex_p) )
+                                / ( mesh.cellLengths[Z](fieldIndex_p) + mesh.cellLengths[Z](fieldIndex_f) );
 
     for (iterType j = 0; j != faceVelocities[F::W].dimension(1); j++ ) {
         for (iterType i = 0; i != faceVelocities[F::W].dimension(0); i++) {

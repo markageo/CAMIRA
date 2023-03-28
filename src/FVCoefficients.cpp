@@ -44,6 +44,7 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
     using F = Fields::ENUMDATA;
     using BC = BoundaryConditions::ENUMDATA;
     using BP = BoundaryPatches::ENUMDATA;
+    using AX = Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
     iterType iEnd = mesh.nCells(0) - 1,
@@ -52,23 +53,23 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
 
     // U momentum 
     for (iterType i = 0; i != iEnd; i++) {
-        fvCoeffs.aup[p](i) = 1 - mesh.interpFactors_x(i) - mesh.interpFactors_x(i-1);
-        fvCoeffs.aup[e](i) = mesh.interpFactors_x(i);
-        fvCoeffs.aup[w](i) = - ( 1 - mesh.interpFactors_x(i-1) ); 
+        fvCoeffs.aup[p](i) = 1 - mesh.interpFactors[AX::X](i) - mesh.interpFactors[AX::X](i-1);
+        fvCoeffs.aup[e](i) = mesh.interpFactors[AX::X](i);
+        fvCoeffs.aup[w](i) = - ( 1 - mesh.interpFactors[AX::X](i-1) ); 
     }
 
     // V momentum 
     for (iterType j = 0; j != jEnd; j++) {
-        fvCoeffs.avp[p](j) = 1 - mesh.interpFactors_y(j) - mesh.interpFactors_y(j-1);
-        fvCoeffs.avp[n](j) = mesh.interpFactors_y(j);
-        fvCoeffs.avp[s](j) = - ( 1 - mesh.interpFactors_y(j-1) ); 
+        fvCoeffs.avp[p](j) = 1 - mesh.interpFactors[AX::Y](j) - mesh.interpFactors[AX::Y](j-1);
+        fvCoeffs.avp[n](j) = mesh.interpFactors[AX::Y](j);
+        fvCoeffs.avp[s](j) = - ( 1 - mesh.interpFactors[AX::Y](j-1) ); 
     }
 
     // W momentum 
     for (iterType k = 0; k != kEnd; k++) {
-        fvCoeffs.awp[p](k) = 1 - mesh.interpFactors_z(k) - mesh.interpFactors_z(k-1);
-        fvCoeffs.awp[t](k) = mesh.interpFactors_z(k);
-        fvCoeffs.awp[b](k) = - ( 1 - mesh.interpFactors_z(k-1) ); 
+        fvCoeffs.awp[p](k) = 1 - mesh.interpFactors[AX::Z](k) - mesh.interpFactors[AX::Z](k-1);
+        fvCoeffs.awp[t](k) = mesh.interpFactors[AX::Z](k);
+        fvCoeffs.awp[b](k) = - ( 1 - mesh.interpFactors[AX::Z](k-1) ); 
     }
 
 
@@ -81,7 +82,7 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
             break;
 
         case BC::uniform:
-            fvCoeffs.aup[p]( iEnd ) += - ( 1 - mesh.interpFactors_x( iEnd ) );
+            fvCoeffs.aup[p]( iEnd ) += - ( 1 - mesh.interpFactors[AX::X]( iEnd ) );
             fvCoeffs.aup[e]( iEnd ) = 0;
             fvCoeffs.bu( iEnd ) += boundaryConditions[F::P][BP::xPositive].value; 
             break;
