@@ -24,7 +24,7 @@ namespace pt = boost::property_tree;
 
 // InputData constructor
 CFD::InputData::InputData() :
-    boundaryConditions(CFD::Fields::ENUMDATA::count, std::vector< CFD::InputData::BoundaryConditionStruct >(CFD::BoundaryPatches::ENUMDATA::count) ),
+    boundaryConditions(CFD::Fields::count, std::vector< CFD::InputData::BoundaryConditionStruct >(CFD::BoundaryPatches::count) ),
     axisTransformation( { {CFD::BoundaryPatches::ENUMDATA::xPositive, CFD::BoundaryPatches::ENUMDATA::xPositive},
                           {CFD::BoundaryPatches::ENUMDATA::xNegative, CFD::BoundaryPatches::ENUMDATA::xNegative},
                           {CFD::BoundaryPatches::ENUMDATA::yPositive, CFD::BoundaryPatches::ENUMDATA::yPositive},
@@ -276,7 +276,9 @@ namespace
 
     void TransformBoundaryConditions(InputData &inputData)
     {
+        int nPatches = CFD::BoundaryPatches::count;
         using BP = CFD::BoundaryPatches::ENUMDATA;
+        
 
         // Temporary for boundary conditions as user specifies them
         std::vector< std::vector< InputData::BoundaryConditionStruct > > boundaryConditionsUser = inputData.boundaryConditions;
@@ -285,7 +287,7 @@ namespace
         for ( size_t i = 0; i != inputData.boundaryConditions.size(); i++ ) {
         
             // Transform using the axisTransformation map
-            for (int patchEnum = 0; patchEnum != BP::count; patchEnum++) {
+            for (int patchEnum = 0; patchEnum != nPatches; patchEnum++) {
                 inputData.boundaryConditions[i][patchEnum] = boundaryConditionsUser[i][ inputData.axisTransformation.at( static_cast<BP>(patchEnum) ) ];
             }
             
@@ -322,7 +324,7 @@ namespace
 
         } else {
             // throw ERROR - invalid sweeping direction
-            return BP::count;
+            return BP::xPositive;
         }
     }
 
@@ -351,6 +353,7 @@ namespace
                 return {0, 0, -1};
 
             default:
+                // throw ERROR - invalud axis enum
                 return {0, 0, 0};
         }
     }
@@ -378,7 +381,8 @@ namespace
             return BP::zNegative;
 
         } else {
-            return BP::count;
+            // throw ERROR - invalid unit vector
+            return BP::xPositive;
         }
     }
 

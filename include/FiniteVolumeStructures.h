@@ -3,118 +3,46 @@
 
 #include "Types.h"
 #include "InputProcessing.h"
-#include "Tensor"
-#include <memory>
-#include <utility>
 
 namespace CFD
 {
-
-// Allocate arrays using enums
-template <typename arrayEnum, typename arrayType = CFD::array3D>
-class ArrayAllocator
-{
-    static_assert(std::is_enum<arrayEnum>::value, "Template parameter must be enum type.");
-
-    public:
-
-        // ----------------------------- Constructor: All arrays have same dimensions ----------------------------- //
-
-        // 3D
-        ArrayAllocator(const std::vector<arrayEnum> &coeffs, const indexVector3 &dims) requires ( std::is_same< arrayType, CFD::array3D >::value ) : 
-            coeffPointers(arrayEnum::count)
-        {
-            for (const auto &index : coeffs) {
-                coeffPointers[index] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ) );
-            }
-        }
-
-        // 2D
-        ArrayAllocator(const std::vector<arrayEnum> &coeffs, const indexVector2 &dims) requires ( std::is_same< arrayType, CFD::array2D >::value ) : 
-            coeffPointers(arrayEnum::count)
-        {
-            for (const auto &index : coeffs) {
-                coeffPointers[index] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ) );
-            }
-        }
-
-        // 1D
-        ArrayAllocator(const std::vector<arrayEnum> &coeffs, const intType &dim) requires ( std::is_same< arrayType, CFD::array1D >::value ) : 
-            coeffPointers(arrayEnum::count)
-        {
-            for (const auto &index : coeffs) {
-                coeffPointers[index] = std::make_unique<CFD::array1D>( CFD::array1D( dim ) );
-            }
-        }
-
-
-        // --------------------------- Constructor: Arrays can have different dimensions --------------------------- //
-
-        // 3D
-        ArrayAllocator( const std::vector< std::pair< arrayEnum, CFD::indexVector3 > > &arraySpec) requires ( std::is_same< arrayType, CFD::array3D >::value ) : 
-            coeffPointers(arrayEnum::count)
-        {
-            CFD::indexVector3 dims;
-            for (size_t i = 0; i != arraySpec.size(); i++) {
-                dims = arraySpec[i].second;
-                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ) );
-            }
-        }
-
-
-        // 2D
-        ArrayAllocator( const std::vector< std::pair< arrayEnum, CFD::indexVector2 > > &arraySpec) requires ( std::is_same< arrayType, CFD::array2D >::value ) : 
-            coeffPointers(arrayEnum::count)
-        {
-            CFD::indexVector2 dims;
-            for (size_t i = 0; i != arraySpec.size(); i++) {
-                dims = arraySpec[i].second;
-                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ) );
-            }
-        }
-
-
-        // 1D
-        ArrayAllocator( const std::vector< std::pair< arrayEnum, CFD::intType > > &arraySpec) requires ( std::is_same< arrayType, CFD::array1D >::value ) : 
-            coeffPointers(arrayEnum::count)
-        {
-            CFD::intType dim;
-            for (size_t i = 0; i != arraySpec.size(); i++) {
-                dim = arraySpec[i].second;
-                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array1D>( CFD::array1D( dim ) );
-            }
-        }
-
-
-
-        // ----------------------------------- Array reference return operators ----------------------------------- //
-
-        arrayType &operator[](arrayEnum idx)
-        {
-            return *coeffPointers[idx];
-        }
-
-        arrayType &operator[](arrayEnum idx) const
-        {
-            return *coeffPointers[idx];
-        }
-
-
-    private:
-        std::vector< std::unique_ptr<arrayType> > coeffPointers;
-};
-
 
 // Recitlinear mesh structure and mesher (on construction)
 struct Mesh
 {
     Mesh(const CFD::InputData &);
     indexVector3 nCells;
-    ArrayAllocator<Axis::ENUMDATA, array1D> cellCenters, 
-                                            cellFaces,
-                                            cellLengths, 
-                                            interpFactors;  // faceValue(i) = (1 - interpFactor(i))*cellValue(i-1) + interpFactor(i)*cellValue(i)
-    ArrayAllocator<Axis::ENUMDATA, array2D> cellFaceAreas;  // Index by right hand rule
+    ArrayAllocator<Axis, array1D> cellCenters, 
+                                  cellFaces,
+                                  cellLengths, 
+                                  interpFactors;  // faceValue(i) = (1 - interpFactor(i))*cellValue(i-1) + interpFactor(i)*cellValue(i)
+    ArrayAllocator<Axis, array2D> cellFaceAreas;  // Index by right hand rule
+};
+
+
+// Structure to store finite volume discrete equation coefficients (Picard linearisation)
+struct FVCoefficients
+{
+    // Naming convention:
+    //  aev - coefficient for equation 'e' multiplying with variable 'v'
+    //  be  - source term for equation 'e'
+    // 
+    // 'e' can take the values
+    //  u: U momentum, v: V momentum, w: W momentum, c: Conitnuity
+    //
+    // 'v' can take the values
+    //  u: x velocity, v: v velocity, w: w velocity, p: pressure
+
+    // In the finite volume formulation, momentum equations are divided by the cell face area 
+    // normal to the direction of the momentum equation. This means the pressure coefficients
+    // can be stored in 1D arrays, and cell face areas only appear in the diffusion equations.
+
+    FVCoefficients(const CFD::indexVector3 &);
+    ArrayAllocator<TransportCoefficients, array3D> auu, avv, aww;          // Momentum velocity coefficients
+    ArrayAllocator<TransportCoefficients, array1D> aup, avp, awp;          // Momentum pressure coefficients
+    ArrayAllocator<TransportCoefficients, array1D> acu, acv, acw;          // Continuity velocity coefficients
+    ArrayAllocator<TransportCoefficients, array3D> acp;                    // Continuity pressure coefficients
+    array3D                                        bu, bv, bw, bc;         // Momentum and continuity source terms (appear on the right hand size)     
 };
 
 

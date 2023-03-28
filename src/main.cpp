@@ -5,16 +5,15 @@
 \*---------------------------------------------------------------------------*/
 
 #include "Types.h"
+#include "utils.h"
 #include "InputProcessing.h"
 #include "FiniteVolumeStructures.h"
+#include "FiniteVolumeFunctions.h"
 #include "VTKWriter.h"
 #include "Solver.h"
-#include "utils.h"
-
-#include "FiniteVolumeFunctions.h"
 
 #include <iostream>
-#include <type_traits>
+// #include <type_traits>
 
 
 int main(int argc, char const *argv[]) 
@@ -84,14 +83,14 @@ int main(int argc, char const *argv[])
     using BP = CFD::BoundaryPatches::ENUMDATA;
 
     const CFD::Mesh mesh(inputData);
-    CFD::ArrayAllocator<F> fields({F::U, F::V, F::W, F::P}, mesh.nCells);
+    CFD::ArrayAllocator<CFD::Fields> fields({F::U, F::V, F::W, F::P}, mesh.nCells);
 
     // Faces are staggered in the negative direction:
     //   cellFaceVelocity_x(i, j, k) -> u(i-1/2, j    , k    )
     //   cellFaceVelocity_y(i, j, k) -> u(i    , j-1/2, k    )
     //   cellFaceVelocity_z(i, j, k) -> u(i    , j    , k-1/2)
     // Subscript indicates the normal direction of the face.
-    CFD::ArrayAllocator<F> faceVelocities( { {F::U, {mesh.nCells(0)+1, mesh.nCells(1)  , mesh.nCells(2)  }}, 
+    CFD::ArrayAllocator<CFD::Fields> faceVelocities( { {F::U, {mesh.nCells(0)+1, mesh.nCells(1)  , mesh.nCells(2)  }}, 
                                              {F::V, {mesh.nCells(0)  , mesh.nCells(1)+1, mesh.nCells(2)  }}, 
                                              {F::W, {mesh.nCells(0)  , mesh.nCells(1)  , mesh.nCells(2)+1}} } );
 

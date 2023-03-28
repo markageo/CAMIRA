@@ -67,7 +67,7 @@ void UpdateFaceVelocites_z(CFD::array3D &faceVel, const CFD::array3D &cellVel, c
 
 // ------------------------------------------ Boundary conditions on x normal faces ------------------------------------------ //
 
-void setZeroGradient_x( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &fields, 
+void setZeroGradient_x( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields> &fields, 
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex) 
 {
     using namespace CFD;
@@ -81,7 +81,7 @@ void setZeroGradient_x( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelociti
 }
 
 
-void setUniform_x( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, const CFD::iterType faceIndex, const CFD::floatType value) 
+void setUniform_x( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::iterType faceIndex, const CFD::floatType value) 
 {
     using namespace CFD;
     using F = CFD::Fields::ENUMDATA;
@@ -94,7 +94,7 @@ void setUniform_x( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, c
 }
 
 
-void setExtrapolated_x( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &fields, const CFD::Mesh &mesh, 
+void setExtrapolated_x( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields> &fields, const CFD::Mesh &mesh, 
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex_p, const CFD::iterType fieldIndex_f) 
 {
     using namespace CFD;
@@ -118,7 +118,7 @@ void setExtrapolated_x( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelociti
 
 // ------------------------------------------ Boundary conditions on y normal faces ------------------------------------------ //
 
-void setZeroGradient_y( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &fields, 
+void setZeroGradient_y( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields> &fields, 
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex) 
 {
     using namespace CFD;
@@ -131,7 +131,7 @@ void setZeroGradient_y( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelociti
     }   
 }
 
-void setUniform_y( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, const CFD::iterType faceIndex, const CFD::floatType value) 
+void setUniform_y( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::iterType faceIndex, const CFD::floatType value) 
 {
     using namespace CFD;
     using F = Fields::ENUMDATA;
@@ -143,7 +143,7 @@ void setUniform_y( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, c
     }   
 }
 
-void setExtrapolated_y( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &fields, const CFD::Mesh &mesh, 
+void setExtrapolated_y( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields> &fields, const CFD::Mesh &mesh, 
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex_p, const CFD::iterType fieldIndex_f) 
 {
     using namespace CFD;
@@ -166,7 +166,7 @@ void setExtrapolated_y( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelociti
 
 // ------------------------------------------ Boundary conditions on z normal faces ------------------------------------------ //
 
-void setZeroGradient_z( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &fields, 
+void setZeroGradient_z( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields> &fields, 
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex) 
 {
     using namespace CFD;
@@ -179,7 +179,7 @@ void setZeroGradient_z( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelociti
     }   
 }
 
-void setUniform_z( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, const CFD::iterType faceIndex, const CFD::floatType value) 
+void setUniform_z( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::iterType faceIndex, const CFD::floatType value) 
 {
     using namespace CFD;
     using F = Fields::ENUMDATA;
@@ -191,7 +191,7 @@ void setUniform_z( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, c
     }   
 }
 
-void setExtrapolated_z( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &fields, const CFD::Mesh &mesh, 
+void setExtrapolated_z( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields> &fields, const CFD::Mesh &mesh, 
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex_p, const CFD::iterType fieldIndex_f) 
 {
     using namespace CFD;
@@ -218,7 +218,7 @@ void setExtrapolated_z( CFD::ArrayAllocator<CFD::Fields::ENUMDATA> &faceVelociti
 namespace CFD
 {
 
-void UpdateFaceVelocities( ArrayAllocator<Fields::ENUMDATA> &faceVelocities, const Mesh &mesh, const ArrayAllocator<Fields::ENUMDATA> &fields, 
+void UpdateFaceVelocities( ArrayAllocator<Fields> &faceVelocities, const Mesh &mesh, const ArrayAllocator<Fields> &fields, 
     const InputData::BoundaryConditionData &boundaryConditions)
 {
 
