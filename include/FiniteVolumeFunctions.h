@@ -21,16 +21,24 @@ struct FVCoefficients
     //  u: x velocity, v: v velocity, w: w velocity, p: pressure
 
     FVCoefficients(const CFD::indexVector3 &);
-    CFD::ArrayAllocator<CFD::TransportCoefficients::ENUMDATA, CFD::array3D> auu, avv, aww;          // Momentum velocity coefficients
-    CFD::ArrayAllocator<CFD::TransportCoefficients::ENUMDATA, CFD::array1D> aup, avp, awp;          // Momentum pressure coefficients
-    CFD::ArrayAllocator<CFD::TransportCoefficients::ENUMDATA, CFD::array1D> acu, acv, acw; //acp;     // Continuity velocity and pressure coefficients
-    CFD::array3D                                                            bu, bv, bw, bc;         // Source terms for momentum and continuity equations 
+    ArrayAllocator<TransportCoefficients::ENUMDATA, array3D> auu, avv, aww;          // Momentum velocity coefficients
+    ArrayAllocator<TransportCoefficients::ENUMDATA, array1D> aup, avp, awp;          // Momentum pressure coefficients
+    ArrayAllocator<TransportCoefficients::ENUMDATA, array1D> acu, acv, acw;          // Continuity velocity coefficients
+    ArrayAllocator<TransportCoefficients::ENUMDATA, array3D> acp;                    // Continuity pressure coefficients
 };
 
 
 // Update face velocities
-void UpdateFaceVelocities( ArrayAllocator<CFD::Fields::ENUMDATA>  &, const Mesh &, const ArrayAllocator<CFD::Fields::ENUMDATA> &, 
+void UpdateFaceVelocities( ArrayAllocator<Fields::ENUMDATA>  &, const Mesh &, const ArrayAllocator<Fields::ENUMDATA> &, 
     const std::vector< std::vector< InputData::BoundaryConditionStruct > > &);
+
+// Initialise finite volume coefficients
+void InitialiseFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields::ENUMDATA> &);
+
+// Update finite volume coefficients (Picard linearisation)
+void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields::ENUMDATA> &);
+
+
 
 } // end namespace CFD
 
