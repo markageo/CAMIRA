@@ -1,18 +1,8 @@
-#include "Types.h"
 #include "FiniteVolumeStructures.h"
-#include "Tensor"
 
-#include <iostream>
 #include <cmath>
-#include <functional>
 
-
-/*-------------------------------------------------------------------------------------*\
-                                    Array Allocator
-\*-------------------------------------------------------------------------------------*/
-
-/* NULL */
-
+using namespace CFD;
 
 /*-------------------------------------------------------------------------------------*\
                                          Mesh
@@ -21,12 +11,10 @@
 namespace
 {
 
-    using namespace CFD;
-
-    std::vector<CFD::floatType> CalculateGrowthRates(const std::vector<InputData::MeshSegment> &meshSegments)
+    std::vector<floatType> CalculateGrowthRates(const std::vector<InputData::MeshSegment> &meshSegments)
     {
         int nSegments = meshSegments.size();
-        std::vector<CFD::floatType> growthRates(nSegments);
+        std::vector<floatType> growthRates(nSegments);
 
         // Negative growth rate means shrinking grid
         for (int i = 0; i != nSegments; i++) {
@@ -39,11 +27,11 @@ namespace
     }
 
 
-    void CalculateCellLengths(array1D &cellLengths, const std::vector<InputData::MeshSegment> &meshSegments, const std::vector<CFD::floatType> &growthRates)
+    void CalculateCellLengths(array1D &cellLengths, const std::vector<InputData::MeshSegment> &meshSegments, const std::vector<floatType> &growthRates)
     {
         int nSegments = meshSegments.size();
 
-        CFD::floatType segmentLength, firstCellLength, geometricFactor;
+        floatType segmentLength, firstCellLength, geometricFactor;
         int cellIndex = 0;
         for (int s = 0; s != nSegments; s++) {    // Segments
 
@@ -56,7 +44,7 @@ namespace
             firstCellLength = segmentLength/geometricFactor; 
 
             for (int i = 0; i != meshSegments[s].nCells; i++) {        // Cells within segment
-                cellLengths( cellIndex ) = firstCellLength*std::pow( growthRates[s], static_cast<CFD::floatType>(i) );
+                cellLengths( cellIndex ) = firstCellLength*std::pow( growthRates[s], static_cast<floatType>(i) );
                 cellIndex++;
             }
         }
@@ -64,11 +52,11 @@ namespace
     }
 
 
-    void CalculateCellCenters(CFD::array1D &cellCenters, const array1D &cellLengths)
+    void CalculateCellCenters(array1D &cellCenters, const array1D &cellLengths)
     {
         int nCellsTotal = cellLengths.size();
 
-        CFD::floatType previousCellPosition = 0.0, previousCellLength = 0.0;
+        floatType previousCellPosition = 0.0, previousCellLength = 0.0;
         for (int i = 0; i != nCellsTotal; i++) {
             cellCenters(i) = previousCellPosition + previousCellLength/2.0 + cellLengths(i)/2.0;
             previousCellPosition = cellCenters(i);
@@ -78,11 +66,11 @@ namespace
     }
 
 
-    void CalculateCellFaces(CFD::array1D &cellFaces, const array1D &cellLengths)
+    void CalculateCellFaces(array1D &cellFaces, const array1D &cellLengths)
     {
         int nFaces = cellLengths.size() + 1;
 
-        CFD::floatType previousFacePosition = 0.0, previousCellLength = 0.0;
+        floatType previousFacePosition = 0.0, previousCellLength = 0.0;
         for (int i = 0; i != nFaces; i++) {
             cellFaces(i) = previousFacePosition + previousCellLength;
             previousFacePosition = cellFaces(i);
@@ -92,7 +80,7 @@ namespace
     }
 
 
-    void CalculateInterpolationFactors(CFD::array1D &interpFactors, const CFD::array1D &cellCenters, const CFD::array1D &cellFaces) 
+    void CalculateInterpolationFactors(array1D &interpFactors, const array1D &cellCenters, const array1D &cellFaces) 
     {
         for (int i = 1; i != interpFactors.dimension(0)-1; i++) {
             interpFactors(i) = ( cellFaces(i) - cellCenters(i-1) ) / ( cellCenters(i) - cellCenters(i-1) );
@@ -100,7 +88,7 @@ namespace
     }
 
 
-    void CalculateCellFaceAreas(CFD::array2D &cellFaceAreas, const array1D &cellLengths_x, const array1D &cellLengths_y)
+    void CalculateCellFaceAreas(array2D &cellFaceAreas, const array1D &cellLengths_x, const array1D &cellLengths_y)
     {
         for (int j = 0; j != cellLengths_y.dimension(0); j++) {
             for (int i = 0; i != cellLengths_x.dimension(0); i++) {
@@ -110,9 +98,9 @@ namespace
     }
 
 
-    CFD::intType TotalCells(const std::vector<InputData::MeshSegment> &meshSegments)
+    intType TotalCells(const std::vector<InputData::MeshSegment> &meshSegments)
     {
-        CFD::intType totalCells = 0;
+        intType totalCells = 0;
         for (auto segment : meshSegments) {
             totalCells += segment.nCells;
         }
@@ -122,7 +110,7 @@ namespace
 }
 
 // Constructor, creates the mesh
-CFD::Mesh::Mesh(const InputData &inputData) :
+Mesh::Mesh(const InputData &inputData) :
     nCells( { TotalCells(inputData.meshSegments_x),  TotalCells(inputData.meshSegments_y), TotalCells(inputData.meshSegments_z)} ),
 
     cellCenters( {{Axis::ENUMDATA::X, nCells(0)},
@@ -146,9 +134,9 @@ CFD::Mesh::Mesh(const InputData &inputData) :
                     {Axis::ENUMDATA::Z, {nCells(0), nCells(1)} }} )
 
     { 
-        std::vector<CFD::floatType> growthRates_x = CalculateGrowthRates(inputData.meshSegments_x);
-        std::vector<CFD::floatType> growthRates_y = CalculateGrowthRates(inputData.meshSegments_y);
-        std::vector<CFD::floatType> growthRates_z = CalculateGrowthRates(inputData.meshSegments_z);
+        std::vector<floatType> growthRates_x = CalculateGrowthRates(inputData.meshSegments_x);
+        std::vector<floatType> growthRates_y = CalculateGrowthRates(inputData.meshSegments_y);
+        std::vector<floatType> growthRates_z = CalculateGrowthRates(inputData.meshSegments_z);
 
         using enum Axis::ENUMDATA;
 
@@ -172,3 +160,32 @@ CFD::Mesh::Mesh(const InputData &inputData) :
         CalculateCellFaceAreas(cellFaceAreas[Y], cellLengths[Z], cellLengths[X]);
         CalculateCellFaceAreas(cellFaceAreas[Z], cellLengths[X], cellLengths[Y]);
     };
+
+
+/*-------------------------------------------------------------------------------------*\
+                                    FVCoefficients
+\*-------------------------------------------------------------------------------------*/
+
+using C = TransportCoefficients::ENUMDATA;
+
+FVCoefficients::FVCoefficients(const indexVector3 &dims) :
+    auu({C::p, C::n, C::e, C::s, C::w, C::t, C::b}, dims),
+    avv({C::p, C::n, C::e, C::s, C::w, C::t, C::b}, dims),
+    aww({C::p, C::n, C::e, C::s, C::w, C::t, C::b}, dims),
+
+    aup({C::p, C::e, C::w}, dims(0)),
+    avp({C::p, C::n, C::s}, dims(1)),
+    awp({C::p, C::t, C::b}, dims(2)),
+
+    acu({C::p, C::e, C::w}, dims(0)),
+    acv({C::p, C::n, C::s}, dims(1)),
+    acw({C::p, C::t, C::b}, dims(2)),
+    
+    acp({C::p, C::n, C::e, C::s, C::w, C::t, C::b, C::nn, C::ee, C::ss, C::ww, C::tt, C::bb}, dims),
+
+    bu(dims(0), dims(1), dims(2)),
+    bv(dims(0), dims(1), dims(2)),
+    bw(dims(0), dims(1), dims(2)),
+    bc(dims(0), dims(1), dims(2))
+    {};
+

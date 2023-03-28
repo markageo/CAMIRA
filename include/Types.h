@@ -2,91 +2,205 @@
 #define TYPES
 
 #include "Tensor"
+#include <type_traits>
+#include <vector>
+#include <memory>
 
 namespace CFD 
 {
-    using floatType = double;
-    using intType = int;
-    using iterType = int;
-    using array1D = Eigen::Tensor<floatType, 1>;    // Column major
-    using array2D = Eigen::Tensor<floatType, 2>;    // Column major
-    using array3D = Eigen::Tensor<floatType, 3>;    // Column major
-    using indexVector3 = Eigen::Array<intType, 3, 1>;
-    using indexVector2 = Eigen::Array<intType, 2, 1>;
 
+using floatType = double;
+using intType = int;
+using iterType = int;
+using array1D = Eigen::Tensor<floatType, 1>;    // Column major
+using array2D = Eigen::Tensor<floatType, 2>;    // Column major
+using array3D = Eigen::Tensor<floatType, 3>;    // Column major
+using indexVector3 = Eigen::Array<intType, 3, 1>;
+using indexVector2 = Eigen::Array<intType, 2, 1>;
 
-    // Enums to be used as indices for containers
-    namespace Axis
+// Enums to be used as indices for containers
+// Place inside structs to avoid name conflicts with "count"
+struct Axis
+{
+    enum ENUMDATA
     {
-        enum ENUMDATA
-        {
-            X = 0,
-            Y = 1,
-            Z = 2,
-            count
-        };
-    }
-
-    namespace Fields
-    {
-        enum ENUMDATA
-        {
-            U, // x velocity
-            V, // y velocity
-            W, // z velocity
-            P, // Pressure
-            count
-        };
-    }
-
-    namespace BoundaryConditions 
-    {
-        enum ENUMDATA 
-        {
-            zeroGradient,
-            uniform,
-            extrapolated,
-            count
-        };
+        X = 0,
+        Y = 1,
+        Z = 2,
     };
+    const static int count =  3;
+};
 
-    namespace BoundaryPatches 
-    {   
-        enum ENUMDATA
-        {
-            xPositive,
-            xNegative,
-            yPositive,
-            yNegative,
-            zPositive,
-            zNegative,
-            count
-        };
-    };
 
-    namespace TransportCoefficients
+struct Fields
+{
+    enum ENUMDATA
     {
-        enum ENUMDATA
+        U, // x velocity
+        V, // y velocity
+        W, // z velocity
+        P, // Pressure
+    };
+    const static int count = 4;
+};
+
+
+struct BoundaryConditions 
+{
+    enum ENUMDATA 
+    {
+        zeroGradient,
+        uniform,
+        extrapolated,
+    };
+    const static int count = 3;
+};
+
+
+struct BoundaryPatches 
+{   
+    enum ENUMDATA
+    {
+        xPositive,
+        xNegative,
+        yPositive,
+        yNegative,
+        zPositive,
+        zNegative,
+    };
+    const static int count = 6; 
+};
+
+
+struct TransportCoefficients
+{
+    enum ENUMDATA
+    {
+        p,  // (i  , j  , k  )
+        n,  // (i  , j+1, k  )
+        e,  // (i+1, j  , k  )
+        s,  // (i  , j-1, k  )
+        w,  // (i-1, j  , k  )
+        t,  // (i  , j  , k+1)
+        b,  // (i  , j  , k-1)
+        nn, // (i  , j+2, k  )
+        ee, // (i+2, j  , k  )
+        ss, // (i  , j-2, k  )
+        ww, // (i-2, j  , k  )
+        tt, // (i  , j  , k+2)
+        bb, // (i  , j  , k-2)
+    };
+    const static int count = 13;
+};
+
+
+// Allocate arrays using enums
+template <typename enumStruct, typename arrayType = CFD::array3D>
+class ArrayAllocator
+{
+    static_assert(std::is_same<enumStruct, CFD::Axis                 >::value ||
+                std::is_same<enumStruct, CFD::Fields               >::value ||
+                std::is_same<enumStruct, CFD::BoundaryConditions   >::value ||
+                std::is_same<enumStruct, CFD::BoundaryPatches      >::value ||
+                std::is_same<enumStruct, CFD::TransportCoefficients>::value,
+                "Template parameter must be struct containing ENUMDATA type.");
+
+    typedef typename enumStruct::ENUMDATA ENUMDATA;
+
+    public:
+
+        // ----------------------------- Constructor: All arrays have same dimensions ----------------------------- //
+
+        // 3D
+        ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const indexVector3 &dims) 
+        requires ( std::is_same< arrayType, CFD::array3D >::value ) : 
+            coeffPointers(enumStruct::count)
         {
-            p,  // (i  , j  , k  )
-            n,  // (i  , j+1, k  )
-            e,  // (i+1, j  , k  )
-            s,  // (i  , j-1, k  )
-            w,  // (i-1, j  , k  )
-            t,  // (i  , j  , k+1)
-            b,  // (i  , j  , k-1)
-            nn, // (i  , j+2, k  )
-            ee, // (i+2, j  , k  )
-            ss, // (i  , j-2, k  )
-            ww, // (i-2, j  , k  )
-            tt, // (i  , j  , k+2)
-            bb, // (i  , j  , k-2)
-            count
-        };
+            for (const auto &index : coeffs) {
+                coeffPointers[index] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ) );
+            }
+        }
 
-    }
+        // 2D
+        ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const indexVector2 &dims) 
+        requires ( std::is_same< arrayType, CFD::array2D >::value ) : 
+            coeffPointers(enumStruct::count)
+        {
+            for (const auto &index : coeffs) {
+                coeffPointers[index] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ) );
+            }
+        }
 
-}
+        // 1D
+        ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const intType &dim) 
+        requires ( std::is_same< arrayType, CFD::array1D >::value ) : 
+            coeffPointers(enumStruct::count)
+        {
+            for (const auto &index : coeffs) {
+                coeffPointers[index] = std::make_unique<CFD::array1D>( CFD::array1D( dim ) );
+            }
+        }
 
+
+        // --------------------------- Constructor: Arrays can have different dimensions --------------------------- //
+
+        // 3D
+        ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::indexVector3 > > &arraySpec) 
+        requires ( std::is_same< arrayType, CFD::array3D >::value ) : 
+            coeffPointers(enumStruct::count)
+        {
+            CFD::indexVector3 dims;
+            for (size_t i = 0; i != arraySpec.size(); i++) {
+                dims = arraySpec[i].second;
+                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ) );
+            }
+        }
+
+
+        // 2D
+        ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::indexVector2 > > &arraySpec) 
+        requires ( std::is_same< arrayType, CFD::array2D >::value ) : 
+            coeffPointers(enumStruct::count)
+        {
+            CFD::indexVector2 dims;
+            for (size_t i = 0; i != arraySpec.size(); i++) {
+                dims = arraySpec[i].second;
+                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ) );
+            }
+        }
+
+
+        // 1D
+        ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::intType > > &arraySpec) 
+        requires ( std::is_same< arrayType, CFD::array1D >::value ) : 
+            coeffPointers(enumStruct::count)
+        {
+            CFD::intType dim;
+            for (size_t i = 0; i != arraySpec.size(); i++) {
+                dim = arraySpec[i].second;
+                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array1D>( CFD::array1D( dim ) );
+            }
+        }
+
+
+
+        // ----------------------------------- Array reference return operators ----------------------------------- //
+
+        arrayType &operator[](enumStruct::ENUMDATA idx)
+        {
+            return *coeffPointers[idx];
+        }
+
+        arrayType &operator[](enumStruct::ENUMDATA idx) const
+        {
+            return *coeffPointers[idx];
+        }
+
+
+    private:
+        std::vector< std::unique_ptr<arrayType> > coeffPointers;
+};
+
+}   // end namespace CFD
 
 #endif // TYPES
