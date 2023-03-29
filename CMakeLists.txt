@@ -21,16 +21,17 @@ target_compile_options(compiler_flags INTERFACE
 )
 
 # include directories
+include_directories(${CMAKE_SOURCE_DIR})
+
 include_directories(include)
 
 include_directories(InputParser)
 
+# include_directories(Eigen)
+# include_directories(Eigen/unsupported)
+# include_directories(Eigen/unsupported/CXX11)
 
-include_directories(Eigen)
-include_directories(Eigen/unsupported)
-include_directories(Eigen/unsupported/CXX11)
-
-include_directories(Boost/boost/property_tree)
+# include_directories(Boost/boost/property_tree)
 
 # Add directories
 add_subdirectory(InputParser)
