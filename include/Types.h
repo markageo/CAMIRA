@@ -99,11 +99,11 @@ template <typename enumStruct, typename arrayType = CFD::array3D>
 class ArrayAllocator
 {
     static_assert(std::is_same<enumStruct, CFD::Axis                 >::value ||
-                std::is_same<enumStruct, CFD::Fields               >::value ||
-                std::is_same<enumStruct, CFD::BoundaryConditions   >::value ||
-                std::is_same<enumStruct, CFD::BoundaryPatches      >::value ||
-                std::is_same<enumStruct, CFD::TransportCoefficients>::value,
-                "Template parameter must be struct containing ENUMDATA type.");
+                  std::is_same<enumStruct, CFD::Fields               >::value ||
+                  std::is_same<enumStruct, CFD::BoundaryConditions   >::value ||
+                  std::is_same<enumStruct, CFD::BoundaryPatches      >::value ||
+                  std::is_same<enumStruct, CFD::TransportCoefficients>::value,
+                  "Template parameter must be struct containing ENUMDATA type.");
 
     typedef typename enumStruct::ENUMDATA ENUMDATA;
 

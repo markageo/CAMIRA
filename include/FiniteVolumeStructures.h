@@ -3,6 +3,7 @@
 
 #include "Types.h"
 #include "InputProcessing.h"
+#include <vector>
 
 namespace CFD
 {
@@ -17,6 +18,10 @@ struct Mesh
                                   cellLengths, 
                                   interpFactors;  // faceValue(i) = (1 - interpFactor(i))*cellValue(i-1) + interpFactor(i)*cellValue(i)
     ArrayAllocator<Axis, array2D> cellFaceAreas;  // Index by right hand rule
+    struct ExtrapFactorsStruct {
+        floatType p, a;     // Boundary point and adjacent cell
+    };
+    std::vector< ExtrapFactorsStruct > extrapFactors;    // extrapFactors[boundaryPatch]
 };
 
 

@@ -1,5 +1,7 @@
 #include "FiniteVolumeFunctions.h"
 
+#include <iostream>
+
 // Implementation file for face velocity update functions
 
 namespace
@@ -206,7 +208,7 @@ void setExtrapolated_z( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const 
     for (iterType j = 0; j != faceVelocities[F::W].dimension(1); j++ ) {
         for (iterType i = 0; i != faceVelocities[F::W].dimension(0); i++) {
             faceVelocities[F::W](i, j, faceIndex) = extrapFactor_p*fields[F::W](i, j, fieldIndex_p)
-                                                    - extrapFactor_f*fields[F::W](i, j, fieldIndex_f);
+                                                  - extrapFactor_f*fields[F::W](i, j, fieldIndex_f);
         }
     } 
 }

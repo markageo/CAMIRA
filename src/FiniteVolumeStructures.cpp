@@ -98,6 +98,51 @@ namespace
     }
 
 
+    Mesh::ExtrapFactorsStruct GetExtrapolationFactors(const array1D &cellLengths, const int fieldIndex_p, const int fieldIndex_a)
+    {
+        floatType extrapFactor_p = ( 2.0*cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) )
+                                 / ( cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) );
+
+        floatType extrapFactor_a = - ( cellLengths(fieldIndex_p) )
+                                   / ( cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) );
+        
+        return Mesh::ExtrapFactorsStruct( extrapFactor_p, extrapFactor_a );
+    }
+
+
+    void CalculateExtrapolationFactors(std::vector< Mesh::ExtrapFactorsStruct > &extrapFactors, const ArrayAllocator<Axis, array1D> &cellLengths, const Axis::ENUMDATA axis)
+    {  
+
+        using enum BoundaryPatches::ENUMDATA;
+        using enum Axis::ENUMDATA;
+
+        BoundaryPatches::ENUMDATA patchPositive, patchNegative;
+        if         (axis == X) {
+            patchPositive = xPositive;
+            patchNegative = xNegative;
+        } else if  (axis == Y) {
+            patchPositive = yPositive;
+            patchNegative = yNegative;
+        } else if  (axis == Z) {
+            patchPositive = zPositive;
+            patchNegative = zNegative;
+        }
+
+        int fieldIndex_p, fieldIndex_a; // Boundary cell node and the adjacent one
+
+        // Positive patch boundary
+        fieldIndex_p = cellLengths[axis].dimension(0) - 1;
+        fieldIndex_a = fieldIndex_p - 1;
+        extrapFactors[patchPositive] = GetExtrapolationFactors(cellLengths[axis], fieldIndex_p, fieldIndex_a);
+
+        // Negative patch boundary
+        fieldIndex_p = 0;
+        fieldIndex_a = fieldIndex_p + 1;
+        extrapFactors[patchNegative] = GetExtrapolationFactors(cellLengths[axis], fieldIndex_p, fieldIndex_a);
+
+    }
+
+
     intType TotalCells(const std::vector<InputData::MeshSegment> &meshSegments)
     {
         intType totalCells = 0;
@@ -131,7 +176,9 @@ Mesh::Mesh(const InputData &inputData) :
 
     cellFaceAreas( {{Axis::ENUMDATA::X, {nCells(1), nCells(2)} },
                     {Axis::ENUMDATA::Y, {nCells(2), nCells(0)} },
-                    {Axis::ENUMDATA::Z, {nCells(0), nCells(1)} }} )
+                    {Axis::ENUMDATA::Z, {nCells(0), nCells(1)} }} ),
+
+    extrapFactors( BoundaryPatches::count )
 
     { 
         std::vector<floatType> growthRates_x = CalculateGrowthRates(inputData.meshSegments_x);
@@ -152,13 +199,17 @@ Mesh::Mesh(const InputData &inputData) :
         CalculateCellFaces(cellFaces[Y], cellLengths[Y]);
         CalculateCellFaces(cellFaces[Z], cellLengths[Z]);
 
+        CalculateCellFaceAreas(cellFaceAreas[X], cellLengths[Y], cellLengths[Z]);
+        CalculateCellFaceAreas(cellFaceAreas[Y], cellLengths[Z], cellLengths[X]);
+        CalculateCellFaceAreas(cellFaceAreas[Z], cellLengths[X], cellLengths[Y]);
+
         CalculateInterpolationFactors(interpFactors[X], cellCenters[X], cellFaces[X]);
         CalculateInterpolationFactors(interpFactors[Y], cellCenters[Y], cellFaces[Y]);
         CalculateInterpolationFactors(interpFactors[Z], cellCenters[Z], cellFaces[Z]);
 
-        CalculateCellFaceAreas(cellFaceAreas[X], cellLengths[Y], cellLengths[Z]);
-        CalculateCellFaceAreas(cellFaceAreas[Y], cellLengths[Z], cellLengths[X]);
-        CalculateCellFaceAreas(cellFaceAreas[Z], cellLengths[X], cellLengths[Y]);
+        CalculateExtrapolationFactors(extrapFactors, cellLengths, X);
+        CalculateExtrapolationFactors(extrapFactors, cellLengths, Y);
+        CalculateExtrapolationFactors(extrapFactors, cellLengths, Z);
     };
 
 

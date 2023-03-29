@@ -126,6 +126,7 @@ int main(int argc, char const *argv[])
     UTIL::writeArray("debug/W_cell_centers.txt", fields[F::W]);
     UTIL::writeArray("debug/W_cell_faces.txt", faceVelocities[F::W]);
 
+
     /*-------------------------------------------------------------------------------------*\
                                            Output
     \*-------------------------------------------------------------------------------------*/
