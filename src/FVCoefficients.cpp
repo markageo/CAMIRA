@@ -44,11 +44,7 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
             fvCoeffs.aup[p]( iEnd ) = -mesh.interpFactors[X](iEnd);
             fvCoeffs.aup[e]( iEnd ) = 0;
             fvCoeffs.aup[w]( iEnd ) = -( 1 - mesh.interpFactors[X](iEnd) );
-            for (iterType k = 0; k != mesh.nCells(2); k++) {
-                for (iterType j = 0; j != mesh.nCells(1); j++) {
-                    fvCoeffs.bu( iEnd, j, k ) += -boundaryConditions[F::P][BP::xPositive].value; 
-                }
-            }
+            fvCoeffs.bu.chip( iEnd, X ) += fvCoeffs.bu.constant( -boundaryConditions[F::P][BP::xPositive].value );
             break;
 
         case BC::extrapolated:
@@ -75,11 +71,7 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
             fvCoeffs.aup[p]( 0 ) = 1 - mesh.interpFactors[X](1);
             fvCoeffs.aup[e]( 0 ) = mesh.interpFactors[X](1);
             fvCoeffs.aup[w]( 0 ) = 0;
-            for (iterType k = 0; k != mesh.nCells(2); k++) {
-                for (iterType j = 0; j != mesh.nCells(1); j++) {
-                    fvCoeffs.bu( 0, j, k ) += boundaryConditions[F::P][BP::xNegative].value;  
-                }
-            }
+            fvCoeffs.bu.chip( 0, X ) += fvCoeffs.bu.constant( boundaryConditions[F::P][BP::xNegative].value );
             break;
 
         case BC::extrapolated:
@@ -115,11 +107,7 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
             fvCoeffs.avp[p]( jEnd ) = -mesh.interpFactors[Y](jEnd);
             fvCoeffs.avp[n]( jEnd ) = 0;
             fvCoeffs.avp[s]( jEnd ) = -( 1 - mesh.interpFactors[Y](jEnd) );
-            for (iterType k = 0; k != mesh.nCells(2); k++) {
-                for (iterType i = 0; i != mesh.nCells(0); i++) {
-                    fvCoeffs.bv( i, jEnd, k ) += -boundaryConditions[F::P][BP::yPositive].value; 
-                }
-            }
+            fvCoeffs.bv.chip( jEnd, Y ) += fvCoeffs.bv.constant( -boundaryConditions[F::P][BP::yPositive].value );
             break;
 
         case BC::extrapolated:
@@ -146,11 +134,7 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
             fvCoeffs.avp[p]( 0 ) = 1 - mesh.interpFactors[Y](1);
             fvCoeffs.avp[n]( 0 ) = mesh.interpFactors[Y](1);
             fvCoeffs.avp[s]( 0 ) = 0;
-            for (iterType k = 0; k != mesh.nCells(2); k++) {
-                for (iterType i = 0; i != mesh.nCells(0); i++) {
-                    fvCoeffs.bv( i, 0, k ) += boundaryConditions[F::P][BP::yNegative].value;  
-                }
-            }
+            fvCoeffs.bv.chip( 0, Y ) += fvCoeffs.bv.constant( boundaryConditions[F::P][BP::yNegative].value );
             break;
 
         case BC::extrapolated:
@@ -186,11 +170,7 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
             fvCoeffs.awp[p]( kEnd ) = -mesh.interpFactors[Z](kEnd);
             fvCoeffs.awp[t]( kEnd ) = 0;
             fvCoeffs.awp[b]( kEnd ) = -( 1 - mesh.interpFactors[Z](kEnd) );
-            for (iterType j = 0; j != mesh.nCells(1); j++) {
-                for (iterType i = 0; i != mesh.nCells(0); i++) {
-                    fvCoeffs.bw( i, j, kEnd ) += -boundaryConditions[F::P][BP::zPositive].value; 
-                }
-            }
+            fvCoeffs.bw.chip( kEnd, Z ) += fvCoeffs.bw.constant( -boundaryConditions[F::P][BP::zPositive].value );
             break;
 
         case BC::extrapolated:
@@ -217,11 +197,7 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
             fvCoeffs.awp[p]( 0 ) = 1 - mesh.interpFactors[Z](1);
             fvCoeffs.awp[t]( 0 ) = mesh.interpFactors[Z](1);
             fvCoeffs.awp[b]( 0 ) = 0;
-            for (iterType j = 0; j != mesh.nCells(1); j++) {
-                for (iterType i = 0; i != mesh.nCells(0); i++) {
-                    fvCoeffs.bw( i, j, 0 ) += boundaryConditions[F::P][BP::zNegative].value;  
-                }
-            }
+            fvCoeffs.bw.chip( 0, Z ) += fvCoeffs.bw.constant( boundaryConditions[F::P][BP::zNegative].value );
             break;
 
         case BC::extrapolated:
