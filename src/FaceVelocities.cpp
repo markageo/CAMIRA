@@ -1,7 +1,5 @@
 #include "FiniteVolumeFunctions.h"
 
-#include <iostream>
-
 // Implementation file for face velocity update functions
 
 namespace
@@ -96,22 +94,16 @@ void setUniform_x( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::
 }
 
 
-void setExtrapolated_x( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields> &fields, const CFD::Mesh &mesh, 
+void setExtrapolated_x( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields> &fields, const CFD::Mesh::ExtrapFactorsStruct &extrapFactorsStruct, 
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex_p, const CFD::iterType fieldIndex_f) 
 {
     using namespace CFD;
-    using enum Axis::ENUMDATA;
     using F = Fields::ENUMDATA;
-
-    floatType extrapFactor_p = ( 2.0*mesh.cellLengths[X](fieldIndex_p) + mesh.cellLengths[X](fieldIndex_f) )
-                                / ( mesh.cellLengths[X](fieldIndex_p) + mesh.cellLengths[X](fieldIndex_f) );
-    floatType extrapFactor_f = ( mesh.cellLengths[X](fieldIndex_p) )
-                                / ( mesh.cellLengths[X](fieldIndex_p) + mesh.cellLengths[X](fieldIndex_f) );
 
     for (iterType k = 0; k != faceVelocities[F::U].dimension(2); k++ ) {
         for (iterType j = 0; j != faceVelocities[F::U].dimension(1); j++) {
-            faceVelocities[F::U](faceIndex, j, k) = extrapFactor_p*fields[F::U](fieldIndex_p, j, k)
-                                                    - extrapFactor_f*fields[F::U](fieldIndex_f, j, k);
+            faceVelocities[F::U](faceIndex, j, k) = extrapFactorsStruct.p * fields[F::U](fieldIndex_p, j, k)
+                                                  - extrapFactorsStruct.a * fields[F::U](fieldIndex_f, j, k);
         }
     } 
 }
@@ -145,22 +137,16 @@ void setUniform_y( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::
     }   
 }
 
-void setExtrapolated_y( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields> &fields, const CFD::Mesh &mesh, 
+void setExtrapolated_y( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields> &fields, const CFD::Mesh::ExtrapFactorsStruct &extrapFactorsStruct, 
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex_p, const CFD::iterType fieldIndex_f) 
 {
     using namespace CFD;
-    using enum Axis::ENUMDATA;
     using F = Fields::ENUMDATA;
-
-    floatType extrapFactor_p = ( 2.0*mesh.cellLengths[Y](fieldIndex_p) + mesh.cellLengths[Y](fieldIndex_f) )
-                                / ( mesh.cellLengths[Y](fieldIndex_p) + mesh.cellLengths[Y](fieldIndex_f) );
-    floatType extrapFactor_f = ( mesh.cellLengths[Y](fieldIndex_p) )
-                                / ( mesh.cellLengths[Y](fieldIndex_p) + mesh.cellLengths[Y](fieldIndex_f) );
 
     for (iterType k = 0; k != faceVelocities[F::V].dimension(2); k++ ) {
         for (iterType i = 0; i != faceVelocities[F::V].dimension(0); i++) {
-            faceVelocities[F::V](i, faceIndex, k) = extrapFactor_p*fields[F::V](i, fieldIndex_p, k)
-                                                    - extrapFactor_f*fields[F::V](i, fieldIndex_f, k);
+            faceVelocities[F::V](i, faceIndex, k) = extrapFactorsStruct.p * fields[F::V](i, fieldIndex_p, k)
+                                                  - extrapFactorsStruct.a * fields[F::V](i, fieldIndex_f, k);
         }
     } 
 }
@@ -193,22 +179,16 @@ void setUniform_z( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::
     }   
 }
 
-void setExtrapolated_z( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields> &fields, const CFD::Mesh &mesh, 
+void setExtrapolated_z( CFD::ArrayAllocator<CFD::Fields> &faceVelocities, const CFD::ArrayAllocator<CFD::Fields> &fields, const CFD::Mesh::ExtrapFactorsStruct &extrapFactorsStruct, 
                         const CFD::iterType faceIndex, const CFD::iterType fieldIndex_p, const CFD::iterType fieldIndex_f) 
 {
     using namespace CFD;
-    using enum Axis::ENUMDATA;
     using F = Fields::ENUMDATA;
    
-    floatType extrapFactor_p = ( 2.0*mesh.cellLengths[Z](fieldIndex_p) + mesh.cellLengths[Z](fieldIndex_f) )
-                                / ( mesh.cellLengths[Z](fieldIndex_p) + mesh.cellLengths[Z](fieldIndex_f) );
-    floatType extrapFactor_f = ( mesh.cellLengths[Z](fieldIndex_p) )
-                                / ( mesh.cellLengths[Z](fieldIndex_p) + mesh.cellLengths[Z](fieldIndex_f) );
-
     for (iterType j = 0; j != faceVelocities[F::W].dimension(1); j++ ) {
         for (iterType i = 0; i != faceVelocities[F::W].dimension(0); i++) {
-            faceVelocities[F::W](i, j, faceIndex) = extrapFactor_p*fields[F::W](i, j, fieldIndex_p)
-                                                  - extrapFactor_f*fields[F::W](i, j, fieldIndex_f);
+            faceVelocities[F::W](i, j, faceIndex) = extrapFactorsStruct.p * fields[F::W](i, j, fieldIndex_p)
+                                                  - extrapFactorsStruct.a * fields[F::W](i, j, fieldIndex_f);
         }
     } 
 }
@@ -223,7 +203,6 @@ namespace CFD
 void UpdateFaceVelocities( ArrayAllocator<Fields> &faceVelocities, const Mesh &mesh, const ArrayAllocator<Fields> &fields, 
     const InputData::BoundaryConditionData &boundaryConditions)
 {
-
     using F = Fields::ENUMDATA;
     using BC = BoundaryConditions::ENUMDATA;
     using BP = BoundaryPatches::ENUMDATA;
@@ -250,7 +229,7 @@ void UpdateFaceVelocities( ArrayAllocator<Fields> &faceVelocities, const Mesh &m
             break;
 
         case BC::extrapolated:
-            setExtrapolated_x(faceVelocities, fields, mesh, faceEndIndex, fieldEndIndex, fieldEndIndex-1);
+            setExtrapolated_x(faceVelocities, fields, mesh.extrapFactors[BP::xPositive], faceEndIndex, fieldEndIndex, fieldEndIndex-1);
             break;
 
         default:
@@ -271,7 +250,7 @@ void UpdateFaceVelocities( ArrayAllocator<Fields> &faceVelocities, const Mesh &m
             break;
 
         case BC::extrapolated:
-            setExtrapolated_x(faceVelocities, fields, mesh, faceEndIndex, fieldEndIndex, fieldEndIndex+1);
+            setExtrapolated_x(faceVelocities, fields, mesh.extrapFactors[BP::xNegative], faceEndIndex, fieldEndIndex, fieldEndIndex+1);
             break;
 
         default:
@@ -292,7 +271,7 @@ void UpdateFaceVelocities( ArrayAllocator<Fields> &faceVelocities, const Mesh &m
             break;
 
         case BC::extrapolated:
-            setExtrapolated_y(faceVelocities, fields, mesh, faceEndIndex, fieldEndIndex, fieldEndIndex-1);
+            setExtrapolated_y(faceVelocities, fields, mesh.extrapFactors[BP::yPositive], faceEndIndex, fieldEndIndex, fieldEndIndex-1);
             break;
 
         default:
@@ -313,7 +292,7 @@ void UpdateFaceVelocities( ArrayAllocator<Fields> &faceVelocities, const Mesh &m
             break;
 
         case BC::extrapolated:
-            setExtrapolated_y(faceVelocities, fields, mesh, faceEndIndex, fieldEndIndex, fieldEndIndex+1);
+            setExtrapolated_y(faceVelocities, fields, mesh.extrapFactors[BP::yNegative], faceEndIndex, fieldEndIndex, fieldEndIndex+1);
             break;
 
         default:
@@ -334,7 +313,7 @@ void UpdateFaceVelocities( ArrayAllocator<Fields> &faceVelocities, const Mesh &m
             break;
 
         case BC::extrapolated:
-            setExtrapolated_z(faceVelocities, fields, mesh, faceEndIndex, fieldEndIndex, fieldEndIndex-1);
+            setExtrapolated_z(faceVelocities, fields, mesh.extrapFactors[BP::zPositive], faceEndIndex, fieldEndIndex, fieldEndIndex-1);
             break;
 
         default:
@@ -355,7 +334,7 @@ void UpdateFaceVelocities( ArrayAllocator<Fields> &faceVelocities, const Mesh &m
             break;
 
         case BC::extrapolated:
-            setExtrapolated_z(faceVelocities, fields, mesh, faceEndIndex, fieldEndIndex, fieldEndIndex+1);
+            setExtrapolated_z(faceVelocities, fields, mesh.extrapFactors[BP::zNegative], faceEndIndex, fieldEndIndex, fieldEndIndex+1);
             break;
 
         default:
