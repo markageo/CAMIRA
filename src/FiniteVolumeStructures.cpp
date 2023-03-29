@@ -70,13 +70,10 @@ namespace
     {
         int nFaces = cellLengths.size() + 1;
 
-        floatType previousFacePosition = 0.0, previousCellLength = 0.0;
-        for (int i = 0; i != nFaces; i++) {
-            cellFaces(i) = previousFacePosition + previousCellLength;
-            previousFacePosition = cellFaces(i);
-            previousCellLength = cellLengths(i);
+        cellFaces(0) = 0;
+        for (int i = 1; i != nFaces; i++) {
+            cellFaces(i) = cellFaces(i-1) + cellLengths(i-1);
         }
-
     }
 
 
@@ -139,7 +136,6 @@ namespace
         fieldIndex_p = 0;
         fieldIndex_a = fieldIndex_p + 1;
         extrapFactors[patchNegative] = GetExtrapolationFactors(cellLengths[axis], fieldIndex_p, fieldIndex_a);
-
     }
 
 
