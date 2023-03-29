@@ -1,7 +1,7 @@
 #ifndef TYPES
 #define TYPES
 
-#include "Tensor"
+#include "Eigen/unsupported/CXX11/Tensor"
 #include <type_traits>
 #include <vector>
 #include <memory>

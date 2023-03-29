@@ -5,8 +5,8 @@
 #include "FiniteVolumeStructures.h"
 #include "Types.h"
 
-#include "boost/property_tree/ptree.hpp"
-#include "Geometry"
+#include "Boost/boost/property_tree/ptree.hpp"
+#include "Eigen/Geometry"
 
 #include <utility>
 #include <optional>
