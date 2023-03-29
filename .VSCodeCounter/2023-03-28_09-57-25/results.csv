@@ -1,8 +1,0 @@
-"filename", "language", "C++", "comment", "blank", "total"
-"/home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolumeFunctions.cpp", "C++", 258, 21, 92, 371
-"/home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolumeStructures.cpp", "C++", 119, 9, 39, 167
-"/home/mark/PhD/Code/coupled-sweep-ns/src/InputProcessing.cpp", "C++", 282, 50, 127, 459
-"/home/mark/PhD/Code/coupled-sweep-ns/src/Solver.cpp", "C++", 7, 9, 19, 35
-"/home/mark/PhD/Code/coupled-sweep-ns/src/VTKWriter.cpp", "C++", 201, 43, 57, 301
-"/home/mark/PhD/Code/coupled-sweep-ns/src/main.cpp", "C++", 87, 34, 35, 156
-"Total", "-", 954, 166, 369, 1489
