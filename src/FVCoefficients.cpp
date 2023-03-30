@@ -21,17 +21,17 @@ void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, 
     TransportCoefficients::ENUMDATA east, west;     // These are just names, they can be north, south etc.
     if         (axis == X) {
         positivePatch = BP::xPositive;
-        positivePatch = BP::xNegative;
+        negativePatch = BP::xNegative;
         east = e;
         west = w;
     } else if (axis == Y) {
         positivePatch = BP::yPositive;
-        positivePatch = BP::yNegative;
+        negativePatch = BP::yNegative;
         east = n;
         west = s;
     } else if (axis == Z) {
         positivePatch = BP::zPositive;
-        positivePatch = BP::zNegative;
+        negativePatch = BP::zNegative;
         east = t;
         west = b;
     }
