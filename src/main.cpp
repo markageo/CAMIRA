@@ -13,8 +13,14 @@
 #include "Solver.h"
 
 #include <iostream>
-#include <chrono>
+#include <fmt/core.h>
 
+#ifdef PROFILING
+#include "profiler/profiler.h"
+namespace PROF {
+    profiler<perf_counter::clock<time_units::SECONDS>> prof;
+}
+#endif
 
 int main(int argc, char const *argv[]) 
 {
@@ -82,7 +88,11 @@ int main(int argc, char const *argv[])
     using BC = CFD::BoundaryConditions::ENUMDATA;
     using BP = CFD::BoundaryPatches::ENUMDATA;
 
+    TIC("Meshing");
     const CFD::Mesh mesh(inputData);
+    TOC();
+
+    TIC("Field Allocation");
     CFD::ArrayAllocator<CFD::Fields> fields({F::U, F::V, F::W, F::P}, mesh.nCells);
 
     // Faces are staggered in the negative direction:
@@ -91,16 +101,20 @@ int main(int argc, char const *argv[])
     //   cellFaceVelocity_z(i, j, k) -> u(i    , j    , k-1/2)
     // Subscript indicates the normal direction of the face.
     CFD::ArrayAllocator<CFD::Fields> faceVelocities( { {F::U, {mesh.nCells(0)+1, mesh.nCells(1)  , mesh.nCells(2)  }}, 
-                                             {F::V, {mesh.nCells(0)  , mesh.nCells(1)+1, mesh.nCells(2)  }}, 
-                                             {F::W, {mesh.nCells(0)  , mesh.nCells(1)  , mesh.nCells(2)+1}} } );
+                                                       {F::V, {mesh.nCells(0)  , mesh.nCells(1)+1, mesh.nCells(2)  }}, 
+                                                       {F::W, {mesh.nCells(0)  , mesh.nCells(1)  , mesh.nCells(2)+1}} } );
+    TOC();
 
-
-
+    TIC("Set Values");
     fields[F::U].setRandom();
     fields[F::V].setRandom();
     fields[F::W].setRandom();
+    TOC();
+
+    TIC("Face Velocity Update")
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
-    
+    TOC();
+
     // Cell centers to file
     // UTIL::writeArray("debug/cell_centers_x.txt", mesh.cellCenters[AX::X]);
     // UTIL::writeArray("debug/cell_centers_y.txt", mesh.cellCenters[AX::Y]);
@@ -137,24 +151,21 @@ int main(int argc, char const *argv[])
         VTKDataType = VTK::FLOAT;
     } 
     VTK::VTKWriterConfig config( mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z], VTKDataType);
-        config.SetWriteMode("ascii");
-        config.SetASCIIPrecision(8);
+        config.SetWriteMode("binary");
     VTK::gridVectorType gridVector = {mesh.cellCenters[AX::X].data(), mesh.cellCenters[AX::Y].data(), mesh.cellCenters[AX::Z].data()};
-    VTK::scalarMapType scalarMap = { };
+    VTK::scalarMapType scalarMap = { {"U", fields[F::U].data() } };
     VTK::vectorMapType vectorMap = { };
 
     // Write output
     VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
-
-    std::cout << "Starting writing..." << std::endl; 
-    auto start = std::chrono::high_resolution_clock::now();
-
+    TIC("Writer");
     writer.WriteData("mesh.vtk", "3D Rectilinear Grid");
+    TOC();
 
-    auto stop  = std::chrono::high_resolution_clock::now();
-    auto wallTime = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    std::cout << "Time to write: " << wallTime.count() << " us" << std::endl;
-
+    // Display profiling information
+    #ifdef PROFILING
+        std::cout << PROF::prof;
+    #endif
 
     return 0;
 }

@@ -8,6 +8,22 @@
 #include <iomanip>
 #include <iostream>
 
+#ifdef PROFILING
+#   if !defined(TIC) || !defined(TOC)
+#       include <profiler/profiler.h>
+#       define TIC(name) PROF::prof.tic(name);
+#       define TOC(name) PROF::prof.toc(name);
+#   endif
+#else
+#   ifndef TIC
+#       define TIC(name)
+#   endif
+#   ifndef TOC
+#       define TOC(name)
+#   endif
+#endif
+
+
 namespace UTIL
 {
 
