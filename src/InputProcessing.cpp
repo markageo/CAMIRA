@@ -96,6 +96,28 @@ namespace
 
     }
 
+
+    /*-------------------------------------------------------------------------------------*\
+                                               Model
+    \*-------------------------------------------------------------------------------------*/
+
+    void ReadModel(InputData &inputData, const pt::ptree &tree)
+    {
+        using enum Axis::ENUMDATA;
+
+        const pt::ptree &meshTree = tree.get_child("Model");
+
+        // Domain
+        const std::string &rhoString = meshTree.get<std::string>("rho");
+        inputData.rho = String2Type<floatType>(rhoString);
+
+        const std::string &nuString = meshTree.get<std::string>("nu");
+        inputData.nu = String2Type<floatType>(nuString);
+
+    }
+
+
+
     /*-------------------------------------------------------------------------------------*\
                                                 Mesh
     \*-------------------------------------------------------------------------------------*/
@@ -456,6 +478,7 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFileName)
     pt::ptree tree = ParseFile(inputFileName);
     
     InputData inputData;
+    ReadModel(inputData, tree);
     ReadMesh(inputData, tree);
     ReadBoundaryConditions(inputData, tree);
     ReadSolver(inputData, tree);
@@ -463,7 +486,6 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFileName)
     TransformBoundaryConditions(inputData);
 
     return inputData;
-
 }
 
 
