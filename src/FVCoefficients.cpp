@@ -8,49 +8,63 @@ namespace
 
 using namespace CFD;
 
-void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const InputData::BoundaryConditionData &boundaryConditions)
+// Set coefficients for quantities that are intrpolated linearly onto faces.
+void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array1D> &coeffs, array3D &sourceTerm, const Mesh &mesh, 
+                                     const InputData::BoundaryConditionData &boundaryConditions, const Fields::ENUMDATA field, Axis::ENUMDATA axis)
 {
-
-    using F = Fields::ENUMDATA;
     using BC = BoundaryConditions::ENUMDATA;
     using BP = BoundaryPatches::ENUMDATA;
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    iterType iEnd = mesh.nCells(0) - 1,
-             jEnd = mesh.nCells(1) - 1,
-             kEnd = mesh.nCells(2) - 1;
+    BoundaryPatches::ENUMDATA positivePatch, negativePatch;
+    TransportCoefficients::ENUMDATA east, west;     // These are just names, they can be north, south etc.
+    if         (axis == X) {
+        positivePatch = BP::xPositive;
+        positivePatch = BP::xNegative;
+        east = e;
+        west = w;
+    } else if (axis == Y) {
+        positivePatch = BP::yPositive;
+        positivePatch = BP::yNegative;
+        east = n;
+        west = s;
+    } else if (axis == Z) {
+        positivePatch = BP::zPositive;
+        positivePatch = BP::zNegative;
+        east = t;
+        west = b;
+    }
+    iterType iEnd = mesh.nCells(axis) - 1;
 
-
-    // ---------------------------------------------------- U momentum ---------------------------------------------------- //
 
     // Internal cells
     for (iterType i = 1; i != iEnd; i++) {
-        fvCoeffs.aup[p](i) = 1 - mesh.interpFactors[X](i+1) - mesh.interpFactors[X](i);
-        fvCoeffs.aup[e](i) = mesh.interpFactors[X](i+1);
-        fvCoeffs.aup[w](i) = - ( 1 - mesh.interpFactors[X](i) ); 
+        coeffs[p   ](i) = 1 - mesh.interpFactors[axis](i+1) - mesh.interpFactors[axis](i);
+        coeffs[east](i) = mesh.interpFactors[axis](i+1);
+        coeffs[west](i) = - ( 1 - mesh.interpFactors[axis](i) ); 
     }
 
-    // +x boundary
-    switch ( boundaryConditions[F::P][BP::xPositive].type ) {
+    // Axis positive boundary
+    switch ( boundaryConditions[field][positivePatch].type ) {
         
         case BC::zeroGradient:
-            fvCoeffs.aup[p]( iEnd ) =  ( 1 - mesh.interpFactors[X](iEnd) );
-            fvCoeffs.aup[e]( iEnd ) = 0;
-            fvCoeffs.aup[w]( iEnd ) = -( 1 - mesh.interpFactors[X](iEnd) );
+            coeffs[p   ]( iEnd ) =  ( 1 - mesh.interpFactors[axis](iEnd) );
+            coeffs[east]( iEnd ) = 0;
+            coeffs[west]( iEnd ) = -( 1 - mesh.interpFactors[axis](iEnd) );
             break;
 
         case BC::uniform:
-            fvCoeffs.aup[p]( iEnd ) = -mesh.interpFactors[X](iEnd);
-            fvCoeffs.aup[e]( iEnd ) = 0;
-            fvCoeffs.aup[w]( iEnd ) = -( 1 - mesh.interpFactors[X](iEnd) );
-            fvCoeffs.bu.chip( iEnd, X ) += fvCoeffs.bu.constant( -boundaryConditions[F::P][BP::xPositive].value );
+            coeffs[p   ]( iEnd ) = -mesh.interpFactors[axis](iEnd);
+            coeffs[east]( iEnd ) = 0;
+            coeffs[west]( iEnd ) = -( 1 - mesh.interpFactors[axis](iEnd) );
+            sourceTerm.chip( iEnd, axis ) += sourceTerm.constant( -boundaryConditions[field][positivePatch].value );
             break;
 
         case BC::extrapolated:
-            fvCoeffs.aup[p]( iEnd ) = mesh.extrapFactors[BP::xPositive].p + mesh.interpFactors[X](iEnd);
-            fvCoeffs.aup[e]( iEnd ) = 0;
-            fvCoeffs.aup[w]( iEnd ) = mesh.extrapFactors[BP::xPositive].a - ( 1 - mesh.interpFactors[X](iEnd) );
+            coeffs[p   ]( iEnd ) = mesh.extrapFactors[positivePatch].p + mesh.interpFactors[axis](iEnd);
+            coeffs[east]( iEnd ) = 0;
+            coeffs[west]( iEnd ) = mesh.extrapFactors[positivePatch].a - ( 1 - mesh.interpFactors[axis](iEnd) );
             break;
 
         default:
@@ -58,26 +72,26 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
     }
 
 
-    // -x boundary
-    switch ( boundaryConditions[F::P][BP::xNegative].type ) {
+    // Axis negative boundary
+    switch ( boundaryConditions[field][negativePatch].type ) {
         
         case BC::zeroGradient:
-            fvCoeffs.aup[p]( 0 ) = -mesh.interpFactors[X](1);
-            fvCoeffs.aup[e]( 0 ) =  mesh.interpFactors[X](1);
-            fvCoeffs.aup[w]( 0 ) = 0;
+            coeffs[p   ]( 0 ) = -mesh.interpFactors[axis](1);
+            coeffs[east]( 0 ) =  mesh.interpFactors[axis](1);
+            coeffs[west]( 0 ) = 0;
             break;
 
         case BC::uniform:
-            fvCoeffs.aup[p]( 0 ) = 1 - mesh.interpFactors[X](1);
-            fvCoeffs.aup[e]( 0 ) = mesh.interpFactors[X](1);
-            fvCoeffs.aup[w]( 0 ) = 0;
-            fvCoeffs.bu.chip( 0, X ) += fvCoeffs.bu.constant( boundaryConditions[F::P][BP::xNegative].value );
+            coeffs[p   ]( 0 ) = 1 - mesh.interpFactors[axis](1);
+            coeffs[east]( 0 ) = mesh.interpFactors[axis](1);
+            coeffs[west]( 0 ) = 0;
+            sourceTerm.chip( 0, axis ) += sourceTerm.constant( boundaryConditions[field][negativePatch].value );
             break;
 
         case BC::extrapolated:
-            fvCoeffs.aup[p]( 0 ) = 1 - mesh.interpFactors[X](1) - mesh.extrapFactors[BP::xNegative].p;
-            fvCoeffs.aup[e]( 0 ) = mesh.interpFactors[X](1) - mesh.extrapFactors[BP::xNegative].a;
-            fvCoeffs.aup[w]( 0 ) = 0;
+            coeffs[p   ]( 0 ) = 1 - mesh.interpFactors[axis](1) - mesh.extrapFactors[negativePatch].p;
+            coeffs[east]( 0 ) = mesh.interpFactors[axis](1) - mesh.extrapFactors[negativePatch].a;
+            coeffs[west]( 0 ) = 0;
             break;
 
         default:
@@ -87,178 +101,10 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
 
     // Multiply by inverse of cell length
     for (iterType i = 0; i != iEnd+1; i++) {
-        fvCoeffs.aup[p](i) *= mesh.cellLengthsInv[X](i);
-        fvCoeffs.aup[e](i) *= mesh.cellLengthsInv[X](i);
-        fvCoeffs.aup[w](i) *= mesh.cellLengthsInv[X](i); 
+        coeffs[p   ](i) *= mesh.cellLengthsInv[axis](i);
+        coeffs[east](i) *= mesh.cellLengthsInv[axis](i);
+        coeffs[west](i) *= mesh.cellLengthsInv[axis](i); 
     }
-
-
-    // ---------------------------------------------------- V momentum ---------------------------------------------------- //
-
-    // Internal cells
-    for (iterType j = 1; j != jEnd-1; j++) {
-        fvCoeffs.avp[p](j) = 1 - mesh.interpFactors[Y](j+1) - mesh.interpFactors[Y](j);
-        fvCoeffs.avp[n](j) = mesh.interpFactors[Y](j+1);
-        fvCoeffs.avp[s](j) = - ( 1 - mesh.interpFactors[Y](j) ); 
-    }
-
-    // +y boundary
-    switch ( boundaryConditions[F::P][BP::yPositive].type ) {
-        
-        case BC::zeroGradient:
-            fvCoeffs.avp[p]( jEnd ) =  ( 1 - mesh.interpFactors[Y](jEnd) );
-            fvCoeffs.avp[n]( jEnd ) = 0;
-            fvCoeffs.avp[s]( jEnd ) = -( 1 - mesh.interpFactors[Y](jEnd) );
-            break;
-
-        case BC::uniform:
-            fvCoeffs.avp[p]( jEnd ) = -mesh.interpFactors[Y](jEnd);
-            fvCoeffs.avp[n]( jEnd ) = 0;
-            fvCoeffs.avp[s]( jEnd ) = -( 1 - mesh.interpFactors[Y](jEnd) );
-            fvCoeffs.bv.chip( jEnd, Y ) += fvCoeffs.bv.constant( -boundaryConditions[F::P][BP::yPositive].value );
-            break;
-
-        case BC::extrapolated:
-            fvCoeffs.avp[p]( jEnd ) = mesh.extrapFactors[BP::yPositive].p + mesh.interpFactors[Y](jEnd);
-            fvCoeffs.avp[n]( jEnd ) = 0;
-            fvCoeffs.avp[s]( jEnd ) = mesh.extrapFactors[BP::yPositive].a - ( 1 - mesh.interpFactors[Y](jEnd) );
-            break;
-
-        default:
-            break;
-    }
-
-
-    // -y boundary
-    switch ( boundaryConditions[F::P][BP::yNegative].type ) {
-        
-        case BC::zeroGradient:
-            fvCoeffs.avp[p]( 0 ) = -mesh.interpFactors[Y](1);
-            fvCoeffs.avp[n]( 0 ) =  mesh.interpFactors[Y](1);
-            fvCoeffs.avp[s]( 0 ) = 0;
-            break;
-
-        case BC::uniform:
-            fvCoeffs.avp[p]( 0 ) = 1 - mesh.interpFactors[Y](1);
-            fvCoeffs.avp[n]( 0 ) = mesh.interpFactors[Y](1);
-            fvCoeffs.avp[s]( 0 ) = 0;
-            fvCoeffs.bv.chip( 0, Y ) += fvCoeffs.bv.constant( boundaryConditions[F::P][BP::yNegative].value );
-            break;
-
-        case BC::extrapolated:
-            fvCoeffs.avp[p]( 0 ) = 1 - mesh.interpFactors[Y](1) - mesh.extrapFactors[BP::yNegative].p;
-            fvCoeffs.avp[n]( 0 ) = mesh.interpFactors[Y](1) - mesh.extrapFactors[BP::yNegative].a;
-            fvCoeffs.avp[s]( 0 ) = 0;
-            break;
-
-        default:
-            break;
-    } 
-
-
-    // Multiply by inverse of cell length
-    for (iterType j = 0; j != jEnd+1; j++) {
-        fvCoeffs.avp[p](j) *= mesh.cellLengthsInv[Y](j);
-        fvCoeffs.avp[n](j) *= mesh.cellLengthsInv[Y](j);
-        fvCoeffs.avp[s](j) *= mesh.cellLengthsInv[Y](j); 
-    }
-
-
-    // ---------------------------------------------------- W momentum ---------------------------------------------------- //
-
-    // Internal cells
-    for (iterType k = 1; k != kEnd-1; k++) {
-        fvCoeffs.awp[p](k) = 1 - mesh.interpFactors[Z](k+1) - mesh.interpFactors[Z](k);
-        fvCoeffs.awp[t](k) = mesh.interpFactors[Z](k+1);
-        fvCoeffs.awp[b](k) = - ( 1 - mesh.interpFactors[Z](k) ); 
-    }
-
-    // +z boundary
-    switch ( boundaryConditions[F::P][BP::zPositive].type ) {
-        
-        case BC::zeroGradient:
-            fvCoeffs.awp[p]( kEnd ) =  ( 1 - mesh.interpFactors[Z](kEnd) );
-            fvCoeffs.awp[t]( kEnd ) = 0;
-            fvCoeffs.awp[b]( kEnd ) = -( 1 - mesh.interpFactors[Z](kEnd) );
-            break;
-
-        case BC::uniform:
-            fvCoeffs.awp[p]( kEnd ) = -mesh.interpFactors[Z](kEnd);
-            fvCoeffs.awp[t]( kEnd ) = 0;
-            fvCoeffs.awp[b]( kEnd ) = -( 1 - mesh.interpFactors[Z](kEnd) );
-            fvCoeffs.bw.chip( kEnd, Z ) += fvCoeffs.bw.constant( -boundaryConditions[F::P][BP::zPositive].value );
-            break;
-
-        case BC::extrapolated:
-            fvCoeffs.awp[p]( kEnd ) = mesh.extrapFactors[BP::zPositive].p + mesh.interpFactors[Z](kEnd);
-            fvCoeffs.awp[t]( kEnd ) = 0;
-            fvCoeffs.awp[b]( kEnd ) = mesh.extrapFactors[BP::zPositive].a - ( 1 - mesh.interpFactors[Z](kEnd) );
-            break;
-
-        default:
-            break;
-    }
-
-
-    // -z boundary
-    switch ( boundaryConditions[F::P][BP::zNegative].type ) {
-        
-        case BC::zeroGradient:
-            fvCoeffs.awp[p]( 0 ) = -mesh.interpFactors[Z](1);
-            fvCoeffs.awp[t]( 0 ) =  mesh.interpFactors[Z](1);
-            fvCoeffs.awp[b]( 0 ) = 0;
-            break;
-
-        case BC::uniform:
-            fvCoeffs.awp[p]( 0 ) = 1 - mesh.interpFactors[Z](1);
-            fvCoeffs.awp[t]( 0 ) = mesh.interpFactors[Z](1);
-            fvCoeffs.awp[b]( 0 ) = 0;
-            fvCoeffs.bw.chip( 0, Z ) += fvCoeffs.bw.constant( boundaryConditions[F::P][BP::zNegative].value );
-            break;
-
-        case BC::extrapolated:
-            fvCoeffs.awp[p]( 0 ) = 1 - mesh.interpFactors[Z](1) - mesh.extrapFactors[BP::zNegative].p;
-            fvCoeffs.awp[t]( 0 ) = mesh.interpFactors[Z](1) - mesh.extrapFactors[BP::zNegative].a;
-            fvCoeffs.awp[b]( 0 ) = 0;
-            break;
-
-        default:
-            break;
-    } 
-    
-
-    // Multiply by inverse of cell length
-    for (iterType k = 0; k != kEnd+1; k++) {
-        fvCoeffs.awp[p](k) *= mesh.cellLengthsInv[Z](k);
-        fvCoeffs.awp[t](k) *= mesh.cellLengthsInv[Z](k);
-        fvCoeffs.awp[b](k) *= mesh.cellLengthsInv[Z](k); 
-    }
-
-}
-
-
-
-void SetVelocityContinuity(FVCoefficients &fvCoeffs, const Mesh &mesh, const InputData::BoundaryConditionData &boundaryConditions)
-{
-    using F = Fields::ENUMDATA;
-    using BC = BoundaryConditions::ENUMDATA;
-    using BP = BoundaryPatches::ENUMDATA;
-    using enum Axis::ENUMDATA;
-    using enum TransportCoefficients::ENUMDATA;
-
-    iterType iEnd = mesh.nCells(0) - 1,
-             jEnd = mesh.nCells(1) - 1,
-             kEnd = mesh.nCells(2) - 1;
-
-    // ---------------------------------------------------- U velocity ---------------------------------------------------- //
-
-
-
-    // ---------------------------------------------------- V velocity ---------------------------------------------------- //
-
-
-    // ---------------------------------------------------- W velocity ---------------------------------------------------- //
-
 
 }
 
@@ -278,12 +124,16 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
     // Momentum velocity terms
 
     // Momentum pressure terms
-    SetPressureMomentum(fvCoeffs, mesh, boundaryConditions);
+    SetFaceInterpolatedCoefficients(fvCoeffs.aup, fvCoeffs.bu, mesh, boundaryConditions, Fields::P, Axis::X);
+    SetFaceInterpolatedCoefficients(fvCoeffs.avp, fvCoeffs.bv, mesh, boundaryConditions, Fields::P, Axis::Y);
+    SetFaceInterpolatedCoefficients(fvCoeffs.avp, fvCoeffs.bv, mesh, boundaryConditions, Fields::P, Axis::Z);
 
     // Continuity velocity terms
-    SetVelocityContinuity(fvCoeffs, mesh, boundaryConditions);
+    SetFaceInterpolatedCoefficients(fvCoeffs.acu, fvCoeffs.bc, mesh, boundaryConditions, Fields::U, Axis::X);
+    SetFaceInterpolatedCoefficients(fvCoeffs.acv, fvCoeffs.bc, mesh, boundaryConditions, Fields::V, Axis::Y);
+    SetFaceInterpolatedCoefficients(fvCoeffs.acw, fvCoeffs.bc, mesh, boundaryConditions, Fields::W, Axis::Z);
 
-    // Continuity pressure terms
+    // Continuity pressure terms (Rhie-Chow interpolation)
 
 }
 
