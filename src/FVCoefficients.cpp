@@ -111,11 +111,9 @@ void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, 
 
     // Divide pressure terms by density
     if (field == F::P) {
-        for (iterType i = 0; i != iEnd+1; i++) {
-            coeffs[p   ](i) /= inputData.rho;
-            coeffs[east](i) /= inputData.rho;
-            coeffs[west](i) /= inputData.rho; 
-        }
+        coeffs[p   ] /= coeffs[p   ].constant( inputData.rho );
+        coeffs[east] /= coeffs[west].constant( inputData.rho );
+        coeffs[west] /= coeffs[west].constant( inputData.rho );
     }
 
 }
