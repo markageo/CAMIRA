@@ -39,12 +39,12 @@ endif()
 
 
 # include directories
-include_directories(${CMAKE_SOURCE_DIR})
+# include_directories(${CMAKE_SOURCE_DIR})
 include_directories(include)
-include_directories(InputParser)
+include_directories(libraries)
 
 # Add directories
-add_subdirectory(fmt)
-add_subdirectory(InputParser)
+add_subdirectory(libraries/fmt)
+add_subdirectory(libraries/InputParser)
 add_subdirectory(src)
 
