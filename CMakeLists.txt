@@ -16,7 +16,7 @@ set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 
 # Add compiler flags
 target_compile_options(compiler_flags INTERFACE
-    "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wunused;-std=c++2a;-O3>>"
+    "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wunused;-std=c++2a;-g>>"
     "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
 )
 

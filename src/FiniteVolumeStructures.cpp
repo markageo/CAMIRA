@@ -168,6 +168,10 @@ Mesh::Mesh(const InputData &inputData) :
                   {Axis::ENUMDATA::Y, nCells(1)},
                   {Axis::ENUMDATA::Z, nCells(2)}} ),
 
+    cellLengthsInv( {{Axis::ENUMDATA::X, nCells(0)},
+                     {Axis::ENUMDATA::Y, nCells(1)},
+                     {Axis::ENUMDATA::Z, nCells(2)}} ),
+
     interpFactors( {{Axis::ENUMDATA::X, nCells(0) + 1},
                     {Axis::ENUMDATA::Y, nCells(1) + 1},
                     {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
@@ -188,6 +192,7 @@ Mesh::Mesh(const InputData &inputData) :
             growthRates[axis] = CalculateGrowthRates(inputData.meshSegments[axis]);
 
             CalculateCellLengths(cellLengths[axis], inputData.meshSegments[axis], growthRates[axis]);
+            cellLengthsInv[axis] = cellLengths[axis].inverse();
             CalculateCellCenters(cellCenters[axis], cellLengths[axis]);
             CalculateCellFaces(cellFaces[axis], cellLengths[axis]);
             CalculateCellFaceAreas(cellFaceAreas[axis], cellLengths[axis], cellLengths[axis]);
