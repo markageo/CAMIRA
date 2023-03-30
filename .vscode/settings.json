@@ -72,6 +72,10 @@
         "semaphore": "cpp",
         "span": "cpp",
         "stop_token": "cpp",
-        "codecvt": "cpp"
+        "codecvt": "cpp",
+        "tensor": "cpp",
+        "csignal": "cpp",
+        "any": "cpp",
+        "valarray": "cpp"
     }
 }
