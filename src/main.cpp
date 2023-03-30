@@ -116,29 +116,29 @@ int main(int argc, char const *argv[])
     TOC();
 
     // Cell centers to file
-    // UTIL::writeArray("debug/cell_centers_x.txt", mesh.cellCenters[AX::X]);
-    // UTIL::writeArray("debug/cell_centers_y.txt", mesh.cellCenters[AX::Y]);
-    // UTIL::writeArray("debug/cell_centers_z.txt", mesh.cellCenters[AX::Z]);
+    UTIL::writeArray("debug/cell_centers_x.txt", mesh.cellCenters[AX::X]);
+    UTIL::writeArray("debug/cell_centers_y.txt", mesh.cellCenters[AX::Y]);
+    UTIL::writeArray("debug/cell_centers_z.txt", mesh.cellCenters[AX::Z]);
 
-    // // Cell centers to file
-    // UTIL::writeArray("debug/cell_faces_x.txt", mesh.cellFaces[AX::X]);
-    // UTIL::writeArray("debug/cell_faces_y.txt", mesh.cellFaces[AX::Y]);
-    // UTIL::writeArray("debug/cell_faces_z.txt", mesh.cellFaces[AX::Z]);
+    // Cell centers to file
+    UTIL::writeArray("debug/cell_faces_x.txt", mesh.cellFaces[AX::X]);
+    UTIL::writeArray("debug/cell_faces_y.txt", mesh.cellFaces[AX::Y]);
+    UTIL::writeArray("debug/cell_faces_z.txt", mesh.cellFaces[AX::Z]);
 
-    // // Write extrapolation factors to a file
-    // UTIL::writeArray("debug/interp_factors_x.txt", mesh.interpFactors[AX::X]);
-    // UTIL::writeArray("debug/interp_factors_y.txt", mesh.interpFactors[AX::Y]);
-    // UTIL::writeArray("debug/interp_factors_z.txt", mesh.interpFactors[AX::Z]);
+    // Write extrapolation factors to a file
+    UTIL::writeArray("debug/interp_factors_x.txt", mesh.interpFactors[AX::X]);
+    UTIL::writeArray("debug/interp_factors_y.txt", mesh.interpFactors[AX::Y]);
+    UTIL::writeArray("debug/interp_factors_z.txt", mesh.interpFactors[AX::Z]);
 
-    // // Write fields to a file
-    // UTIL::writeArray("debug/U_cell_centers.txt", fields[F::U]);
-    // UTIL::writeArray("debug/U_cell_faces.txt", faceVelocities[F::U]);
+    // Write fields to a file
+    UTIL::writeArray("debug/U_cell_centers.txt", fields[F::U]);
+    UTIL::writeArray("debug/U_cell_faces.txt", faceVelocities[F::U]);
 
-    // UTIL::writeArray("debug/V_cell_centers.txt", fields[F::V]);
-    // UTIL::writeArray("debug/V_cell_faces.txt", faceVelocities[F::V]);
+    UTIL::writeArray("debug/V_cell_centers.txt", fields[F::V]);
+    UTIL::writeArray("debug/V_cell_faces.txt", faceVelocities[F::V]);
 
-    // UTIL::writeArray("debug/W_cell_centers.txt", fields[F::W]);
-    // UTIL::writeArray("debug/W_cell_faces.txt", faceVelocities[F::W]);
+    UTIL::writeArray("debug/W_cell_centers.txt", fields[F::W]);
+    UTIL::writeArray("debug/W_cell_faces.txt", faceVelocities[F::W]);
 
 
     /*-------------------------------------------------------------------------------------*\

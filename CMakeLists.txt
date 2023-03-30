@@ -38,8 +38,6 @@ if (PROFILING)
 endif()
 
 
-
-
 # include directories
 include_directories(${CMAKE_SOURCE_DIR})
 include_directories(include)

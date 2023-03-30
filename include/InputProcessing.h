@@ -27,7 +27,8 @@ struct InputData
         CFD::intType nCells;
         CFD::floatType biasFactor;
     };
-    std::vector<MeshSegment> meshSegments_x, meshSegments_y, meshSegments_z;
+    std::vector< std::vector<MeshSegment> > meshSegments;   // meshSegments[Axis][segment]
+
 
 
     // Boundary conditions

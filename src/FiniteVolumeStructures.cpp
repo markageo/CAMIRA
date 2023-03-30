@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#include <iostream>
+
 using namespace CFD;
 
 /*-------------------------------------------------------------------------------------*\
@@ -152,7 +154,7 @@ namespace
 
 // Constructor, creates the mesh
 Mesh::Mesh(const InputData &inputData) :
-    nCells( { TotalCells(inputData.meshSegments_x),  TotalCells(inputData.meshSegments_y), TotalCells(inputData.meshSegments_z)} ),
+    nCells( { TotalCells(inputData.meshSegments[0]),  TotalCells(inputData.meshSegments[1]), TotalCells(inputData.meshSegments[2])} ),
 
     cellCenters( {{Axis::ENUMDATA::X, nCells(0)},
                   {Axis::ENUMDATA::Y, nCells(1)},
@@ -177,35 +179,22 @@ Mesh::Mesh(const InputData &inputData) :
     extrapFactors( BoundaryPatches::count )
 
     { 
-        std::vector<floatType> growthRates_x = CalculateGrowthRates(inputData.meshSegments_x);
-        std::vector<floatType> growthRates_y = CalculateGrowthRates(inputData.meshSegments_y);
-        std::vector<floatType> growthRates_z = CalculateGrowthRates(inputData.meshSegments_z);
-
         using enum Axis::ENUMDATA;
 
-        CalculateCellLengths(cellLengths[X], inputData.meshSegments_x, growthRates_x);
-        CalculateCellLengths(cellLengths[Y], inputData.meshSegments_y, growthRates_y);
-        CalculateCellLengths(cellLengths[Z], inputData.meshSegments_z, growthRates_z);
+        std::vector< std::vector<floatType> > growthRates(Axis::count);
 
-        CalculateCellCenters(cellCenters[X], cellLengths[X]);
-        CalculateCellCenters(cellCenters[Y], cellLengths[Y]);
-        CalculateCellCenters(cellCenters[Z], cellLengths[Z]);
+        for (int i = 0; i != Axis::count; i++) {
+            Axis::ENUMDATA axis = static_cast<Axis::ENUMDATA>(i);
+            growthRates[axis] = CalculateGrowthRates(inputData.meshSegments[axis]);
 
-        CalculateCellFaces(cellFaces[X], cellLengths[X]);
-        CalculateCellFaces(cellFaces[Y], cellLengths[Y]);
-        CalculateCellFaces(cellFaces[Z], cellLengths[Z]);
+            CalculateCellLengths(cellLengths[axis], inputData.meshSegments[axis], growthRates[axis]);
+            CalculateCellCenters(cellCenters[axis], cellLengths[axis]);
+            CalculateCellFaces(cellFaces[axis], cellLengths[axis]);
+            CalculateCellFaceAreas(cellFaceAreas[axis], cellLengths[axis], cellLengths[axis]);
+            CalculateInterpolationFactors(interpFactors[axis], cellCenters[axis], cellFaces[axis]);
+            CalculateExtrapolationFactors(extrapFactors, cellLengths, axis);
+        }
 
-        CalculateCellFaceAreas(cellFaceAreas[X], cellLengths[Y], cellLengths[Z]);
-        CalculateCellFaceAreas(cellFaceAreas[Y], cellLengths[Z], cellLengths[X]);
-        CalculateCellFaceAreas(cellFaceAreas[Z], cellLengths[X], cellLengths[Y]);
-
-        CalculateInterpolationFactors(interpFactors[X], cellCenters[X], cellFaces[X]);
-        CalculateInterpolationFactors(interpFactors[Y], cellCenters[Y], cellFaces[Y]);
-        CalculateInterpolationFactors(interpFactors[Z], cellCenters[Z], cellFaces[Z]);
-
-        CalculateExtrapolationFactors(extrapFactors, cellLengths, X);
-        CalculateExtrapolationFactors(extrapFactors, cellLengths, Y);
-        CalculateExtrapolationFactors(extrapFactors, cellLengths, Z);
     };
 
 
