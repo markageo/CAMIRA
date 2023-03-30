@@ -121,6 +121,9 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
     const InputData::BoundaryConditionData &boundaryConditions)
 {
 
+    // Diffusion coefficients
+    
+
     // Momentum velocity terms
 
     // Momentum pressure terms

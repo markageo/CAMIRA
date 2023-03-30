@@ -100,14 +100,20 @@ namespace
                                                 Mesh
     \*-------------------------------------------------------------------------------------*/
 
-    void ValidateSegmentBounds(const std::vector<InputData::MeshSegment> &meshSegment)
+    void ValidateSegmentBounds(const std::vector<InputData::MeshSegment> &meshSegment, const floatType &domainSize)
     {
         using v_size_type = std::vector<InputData::MeshSegment>::size_type;
 
         // The first one must start at zero
-        if (meshSegment[0].lowerBound != 0.0) {
+        if (meshSegment.front().lowerBound != 0.0) {
             // throw ERROR - must have mesh segment starting at coordinate 0
         }
+
+        // Must end at the given domain size
+        if (meshSegment.back().upperBound != domainSize ) {
+            // throw ERROR - segments dont match given domain bounds
+        }
+
 
         // Must be no gaps or overlaps in the segments
         for (v_size_type i = 1; i != meshSegment.size(); i++) {
@@ -152,10 +158,10 @@ namespace
 
         // Domain
         const std::string &domainSizeString = meshTree.get<std::string>("domain");
-        std::vector<CFD::floatType> domainSize = ParseVectorString(domainSizeString, 3);
-        inputData.domainSize_x = domainSize[0];
-        inputData.domainSize_y = domainSize[1];
-        inputData.domainSize_z = domainSize[2];
+        std::vector<CFD::floatType> domainSizeTemp = ParseVectorString(domainSizeString, 3);
+        inputData.domainSize(0) = domainSizeTemp[0];
+        inputData.domainSize(1) = domainSizeTemp[1];
+        inputData.domainSize(2) = domainSizeTemp[2];
 
         // Grids
         ReadGrid(meshTree, inputData.meshSegments[X], "GridX");
@@ -169,9 +175,9 @@ namespace
         std::sort( inputData.meshSegments[Z].begin(), inputData.meshSegments[Z].end(), sortComparison );
 
         // Check that the bounds are valid
-        ValidateSegmentBounds(inputData.meshSegments[X]);
-        ValidateSegmentBounds(inputData.meshSegments[Y]);
-        ValidateSegmentBounds(inputData.meshSegments[Z]);
+        ValidateSegmentBounds(inputData.meshSegments[X], inputData.domainSize[X]);
+        ValidateSegmentBounds(inputData.meshSegments[Y], inputData.domainSize[Y]);
+        ValidateSegmentBounds(inputData.meshSegments[Z], inputData.domainSize[Z]);
 
     }
 

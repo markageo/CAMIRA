@@ -17,6 +17,8 @@ using array2D = Eigen::Tensor<floatType, 2>;    // Column major
 using array3D = Eigen::Tensor<floatType, 3>;    // Column major
 using indexVector3 = Eigen::Array<intType, 3, 1>;
 using indexVector2 = Eigen::Array<intType, 2, 1>;
+using floatVector3 = Eigen::Array<floatType, 3, 1>;
+using floatVector2 = Eigen::Array<floatType, 2, 1>;
 
 // Enums to be used as indices for containers
 // Place inside structs to avoid name conflicts with "count"
