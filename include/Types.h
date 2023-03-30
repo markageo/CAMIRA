@@ -117,7 +117,7 @@ class ArrayAllocator
             coeffPointers(enumStruct::count)
         {
             for (const auto &index : coeffs) {
-                coeffPointers[index] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ) );
+                coeffPointers[index] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ).setZero() );
             }
         }
 
@@ -127,7 +127,7 @@ class ArrayAllocator
             coeffPointers(enumStruct::count)
         {
             for (const auto &index : coeffs) {
-                coeffPointers[index] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ) );
+                coeffPointers[index] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ).setZero() );
             }
         }
 
@@ -137,7 +137,7 @@ class ArrayAllocator
             coeffPointers(enumStruct::count)
         {
             for (const auto &index : coeffs) {
-                coeffPointers[index] = std::make_unique<CFD::array1D>( CFD::array1D( dim ) );
+                coeffPointers[index] = std::make_unique<CFD::array1D>( CFD::array1D( dim ).setZero() );
             }
         }
 
@@ -152,7 +152,7 @@ class ArrayAllocator
             CFD::indexVector3 dims;
             for (size_t i = 0; i != arraySpec.size(); i++) {
                 dims = arraySpec[i].second;
-                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ) );
+                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ).setZero() );
             }
         }
 
@@ -165,7 +165,7 @@ class ArrayAllocator
             CFD::indexVector2 dims;
             for (size_t i = 0; i != arraySpec.size(); i++) {
                 dims = arraySpec[i].second;
-                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ) );
+                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ).setZero() );
             }
         }
 
@@ -178,7 +178,7 @@ class ArrayAllocator
             CFD::intType dim;
             for (size_t i = 0; i != arraySpec.size(); i++) {
                 dim = arraySpec[i].second;
-                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array1D>( CFD::array1D( dim ) );
+                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array1D>( CFD::array1D( dim ).setZero() );
             }
         }
 
