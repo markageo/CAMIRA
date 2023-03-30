@@ -10,12 +10,15 @@ using namespace CFD;
 
 // Set coefficients for quantities that are intrpolated linearly onto faces.
 void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array1D> &coeffs, array3D &sourceTerm, const Mesh &mesh, 
-                                     const InputData::BoundaryConditionData &boundaryConditions, const Fields::ENUMDATA field, Axis::ENUMDATA axis)
+                                     const InputData &inputData, const Fields::ENUMDATA field, Axis::ENUMDATA axis)
 {
     using BC = BoundaryConditions::ENUMDATA;
     using BP = BoundaryPatches::ENUMDATA;
+    using F  = Fields::ENUMDATA;
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
+
+    const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
 
     BoundaryPatches::ENUMDATA positivePatch, negativePatch;
     TransportCoefficients::ENUMDATA east, west;     // These are just names, they can be north, south etc.
@@ -106,6 +109,15 @@ void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, 
         coeffs[west](i) *= mesh.cellLengthsInv[axis](i); 
     }
 
+    // Divide pressure terms by density
+    if (field == F::P) {
+        for (iterType i = 0; i != iEnd+1; i++) {
+            coeffs[p   ](i) /= inputData.rho;
+            coeffs[east](i) /= inputData.rho;
+            coeffs[west](i) /= inputData.rho; 
+        }
+    }
+
 }
 
 
@@ -118,23 +130,24 @@ namespace CFD
 
 
 void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const ArrayAllocator<Fields> &faceVelocities, 
-    const InputData::BoundaryConditionData &boundaryConditions)
+    const InputData &inputData)
 {
 
     // Diffusion coefficients
-    
+
 
     // Momentum velocity terms
 
+
     // Momentum pressure terms
-    SetFaceInterpolatedCoefficients(fvCoeffs.aup, fvCoeffs.bu, mesh, boundaryConditions, Fields::P, Axis::X);
-    SetFaceInterpolatedCoefficients(fvCoeffs.avp, fvCoeffs.bv, mesh, boundaryConditions, Fields::P, Axis::Y);
-    SetFaceInterpolatedCoefficients(fvCoeffs.avp, fvCoeffs.bv, mesh, boundaryConditions, Fields::P, Axis::Z);
+    SetFaceInterpolatedCoefficients(fvCoeffs.aup, fvCoeffs.bu, mesh, inputData, Fields::P, Axis::X);
+    SetFaceInterpolatedCoefficients(fvCoeffs.avp, fvCoeffs.bv, mesh, inputData, Fields::P, Axis::Y);
+    SetFaceInterpolatedCoefficients(fvCoeffs.avp, fvCoeffs.bv, mesh, inputData, Fields::P, Axis::Z);
 
     // Continuity velocity terms
-    SetFaceInterpolatedCoefficients(fvCoeffs.acu, fvCoeffs.bc, mesh, boundaryConditions, Fields::U, Axis::X);
-    SetFaceInterpolatedCoefficients(fvCoeffs.acv, fvCoeffs.bc, mesh, boundaryConditions, Fields::V, Axis::Y);
-    SetFaceInterpolatedCoefficients(fvCoeffs.acw, fvCoeffs.bc, mesh, boundaryConditions, Fields::W, Axis::Z);
+    SetFaceInterpolatedCoefficients(fvCoeffs.acu, fvCoeffs.bc, mesh, inputData, Fields::U, Axis::X);
+    SetFaceInterpolatedCoefficients(fvCoeffs.acv, fvCoeffs.bc, mesh, inputData, Fields::V, Axis::Y);
+    SetFaceInterpolatedCoefficients(fvCoeffs.acw, fvCoeffs.bc, mesh, inputData, Fields::W, Axis::Z);
 
     // Continuity pressure terms (Rhie-Chow interpolation)
 
