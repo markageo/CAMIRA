@@ -25,7 +25,7 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
     // ---------------------------------------------------- U momentum ---------------------------------------------------- //
 
     // Internal cells
-    for (iterType i = 1; i != iEnd-1; i++) {
+    for (iterType i = 1; i != iEnd; i++) {
         fvCoeffs.aup[p](i) = 1 - mesh.interpFactors[X](i+1) - mesh.interpFactors[X](i);
         fvCoeffs.aup[e](i) = mesh.interpFactors[X](i+1);
         fvCoeffs.aup[w](i) = - ( 1 - mesh.interpFactors[X](i) ); 
@@ -83,6 +83,14 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
         default:
             break;
     } 
+
+
+    // Multiply by inverse of cell length
+    for (iterType i = 0; i != iEnd+1; i++) {
+        fvCoeffs.aup[p](i) *= mesh.cellLengthsInv[X](i);
+        fvCoeffs.aup[e](i) *= mesh.cellLengthsInv[X](i);
+        fvCoeffs.aup[w](i) *= mesh.cellLengthsInv[X](i); 
+    }
 
 
     // ---------------------------------------------------- V momentum ---------------------------------------------------- //
@@ -148,6 +156,14 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
     } 
 
 
+    // Multiply by inverse of cell length
+    for (iterType j = 0; j != jEnd+1; j++) {
+        fvCoeffs.avp[p](j) *= mesh.cellLengthsInv[Y](j);
+        fvCoeffs.avp[n](j) *= mesh.cellLengthsInv[Y](j);
+        fvCoeffs.avp[s](j) *= mesh.cellLengthsInv[Y](j); 
+    }
+
+
     // ---------------------------------------------------- W momentum ---------------------------------------------------- //
 
     // Internal cells
@@ -210,6 +226,13 @@ void SetPressureMomentum(FVCoefficients &fvCoeffs, const Mesh &mesh, const Input
             break;
     } 
     
+
+    // Multiply by inverse of cell length
+    for (iterType k = 0; k != kEnd+1; k++) {
+        fvCoeffs.awp[p](k) *= mesh.cellLengthsInv[Z](k);
+        fvCoeffs.awp[t](k) *= mesh.cellLengthsInv[Z](k);
+        fvCoeffs.awp[b](k) *= mesh.cellLengthsInv[Z](k); 
+    }
 
 }
 

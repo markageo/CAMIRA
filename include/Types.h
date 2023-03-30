@@ -94,7 +94,7 @@ struct TransportCoefficients
 };
 
 
-// Allocate arrays using enums
+// Allocate arrays using enums. Arrays are initialised to zero.
 template <typename enumStruct, typename arrayType = CFD::array3D>
 class ArrayAllocator
 {

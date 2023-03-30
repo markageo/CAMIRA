@@ -16,6 +16,7 @@ struct Mesh
     ArrayAllocator<Axis, array1D> cellCenters, 
                                   cellFaces,
                                   cellLengths, 
+                                  cellLengthsInv, // 1/cellLengths
                                   interpFactors;  // faceValue(i) = (1 - interpFactor(i))*cellValue(i-1) + interpFactor(i)*cellValue(i)
     ArrayAllocator<Axis, array2D> cellFaceAreas;  // Index by right hand rule
 
@@ -40,11 +41,10 @@ struct FVCoefficients
     // 'v' can take the values
     //  u: x velocity, v: v velocity, w: w velocity, p: pressure
 
-    // In the finite volume formulation:
-    // - momentum equations are divided by the cell face area normal to the direction of the momentum equation. 
-    // - Continuity equation is divided through by the cell volume.
-    // This means the pressure coefficients in the momentum equations, and the velocity coefficients in the 
-    // continuity equation can be stored in 1D arrays.
+    // In the finite volume formulation, all equations are divided by the cell volume. This 
+    // means that the pressure coefficients in the momentum equations and the velocity 
+    // coefficients in the continuity equations can be stored in 1D arrays when using a 
+    // rectilinear grid.
 
     FVCoefficients(const CFD::indexVector3 &);
     ArrayAllocator<TransportCoefficients, array3D> auu, avv, aww;          // Momentum velocity coefficients
