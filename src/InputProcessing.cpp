@@ -24,6 +24,7 @@ namespace pt = boost::property_tree;
 
 // InputData constructor
 CFD::InputData::InputData() :
+    meshSegments( Axis::count ),
     boundaryConditions(CFD::Fields::count, std::vector< CFD::InputData::BoundaryConditionStruct >(CFD::BoundaryPatches::count) ),
     axisTransformation( { {CFD::BoundaryPatches::ENUMDATA::xPositive, CFD::BoundaryPatches::ENUMDATA::xPositive},
                           {CFD::BoundaryPatches::ENUMDATA::xNegative, CFD::BoundaryPatches::ENUMDATA::xNegative},
@@ -145,6 +146,8 @@ namespace
 
     void ReadMesh(InputData &inputData, const pt::ptree &tree)
     {
+        using enum Axis::ENUMDATA;
+
         const pt::ptree &meshTree = tree.get_child("Mesh");
 
         // Domain
@@ -155,20 +158,20 @@ namespace
         inputData.domainSize_z = domainSize[2];
 
         // Grids
-        ReadGrid(meshTree, inputData.meshSegments_x, "GridX");
-        ReadGrid(meshTree, inputData.meshSegments_y, "GridY");
-        ReadGrid(meshTree, inputData.meshSegments_z, "GridZ");
+        ReadGrid(meshTree, inputData.meshSegments[X], "GridX");
+        ReadGrid(meshTree, inputData.meshSegments[Y], "GridY");
+        ReadGrid(meshTree, inputData.meshSegments[Z], "GridZ");
 
         // Sort in increasing order of lower bound
         auto sortComparison = [](const auto& i, const auto& j) { return i.lowerBound < j.lowerBound; };
-        std::sort( inputData.meshSegments_x.begin(), inputData.meshSegments_x.end(), sortComparison);
-        std::sort( inputData.meshSegments_y.begin(), inputData.meshSegments_y.end(), sortComparison );
-        std::sort( inputData.meshSegments_z.begin(), inputData.meshSegments_z.end(), sortComparison );
+        std::sort( inputData.meshSegments[X].begin(), inputData.meshSegments[X].end(), sortComparison);
+        std::sort( inputData.meshSegments[Y].begin(), inputData.meshSegments[Y].end(), sortComparison );
+        std::sort( inputData.meshSegments[Z].begin(), inputData.meshSegments[Z].end(), sortComparison );
 
         // Check that the bounds are valid
-        ValidateSegmentBounds(inputData.meshSegments_x);
-        ValidateSegmentBounds(inputData.meshSegments_y);
-        ValidateSegmentBounds(inputData.meshSegments_z);
+        ValidateSegmentBounds(inputData.meshSegments[X]);
+        ValidateSegmentBounds(inputData.meshSegments[Y]);
+        ValidateSegmentBounds(inputData.meshSegments[Z]);
 
     }
 
