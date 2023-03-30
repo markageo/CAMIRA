@@ -16,16 +16,20 @@ struct InputData
     // Constructor
     InputData();
 
+    // Model
+    floatType rho, nu;
+
+
     // Domain size
-    CFD::floatType domainSize_x, domainSize_y, domainSize_z;
+    floatVector3 domainSize;
 
 
     // Mesh
     struct MeshSegment {
-        CFD::floatType lowerBound;
-        CFD::floatType upperBound;
-        CFD::intType nCells;
-        CFD::floatType biasFactor;
+        floatType lowerBound;
+        floatType upperBound;
+        intType nCells;
+        floatType biasFactor;
     };
     std::vector< std::vector<MeshSegment> > meshSegments;   // meshSegments[Axis][segment]
 
@@ -38,7 +42,7 @@ struct InputData
     };
     using BoundaryConditionData = std::vector< std::vector< BoundaryConditionStruct > >;
     BoundaryConditionData boundaryConditions; // boundaryConditions[Field][Patch]
-    std::map< CFD::BoundaryPatches::ENUMDATA, CFD::BoundaryPatches::ENUMDATA > axisTransformation; // Code patch -> user patch
+    std::map< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > axisTransformation; // Code patch -> user patch
 
     
 };
