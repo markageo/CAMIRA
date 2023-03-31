@@ -209,7 +209,16 @@ class ArrayAllocator
         }
 
 
-        // ---------------------------------------------- Desctructor --------------------------------------------- //
+        // ------------------------------------------- Move Constructor ------------------------------------------- //
+
+        ArrayAllocator(ArrayAllocator&& that) noexcept :
+            ArrayAllocator()
+        {
+            std::swap(*this, that);
+        }
+
+
+        // ---------------------------------------------- Destructor ---------------------------------------------- //
 
         ~ArrayAllocator() = default;
 
@@ -225,8 +234,6 @@ class ArrayAllocator
         {
             return *coeffPointers[idx];
         }
-
-        
 
 
     private:
