@@ -8,48 +8,110 @@ namespace
 
 using namespace CFD;
 
-
+// Set diffusion coefficients for a given momentum equation
 void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, const Mesh &mesh, const InputData &inputData, 
                             const Fields::ENUMDATA field)
 {
 
     using BC = BoundaryConditions::ENUMDATA;
     using BP = BoundaryPatches::ENUMDATA;
-    using F  = Fields::ENUMDATA;
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
     
+    const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
     indexVector3 endIndex = { mesh.nCells(X) - 1, mesh.nCells(Y) - 1 , mesh.nCells(Z) - 1};
+
     TransportCoefficients::ENUMDATA east, west;     // These are just names, they can be north, south etc.
+    BoundaryPatches::ENUMDATA positivePatch, negativePatch;
+    Axis::ENUMDATA axis;
 
-    for (int axis = 0; axis != Axis::count; axis++) {
 
-        if        (axis == X) {
+    // Diffusion in each axis is calculated in the same way
+    for (int axisNum = 0; axisNum != Axis::count; axisNum++) {
+
+        axis = static_cast<Axis::ENUMDATA>(axisNum);
+        
+        if         (axis == X) {
+            positivePatch = BP::xPositive;
+            negativePatch = BP::xNegative;
             east = e;
             west = w;
         } else if (axis == Y) {
+            positivePatch = BP::yPositive;
+            negativePatch = BP::yNegative;
             east = n;
             west = s;
         } else if (axis == Z) {
+            positivePatch = BP::zPositive;
+            negativePatch = BP::zNegative;
             east = t;
             west = b;
         }
 
+
+        // Internal cells
         for (iterType i = 1; i != endIndex(axis); i++) {
-            diff[X][p   ](i) = - ( mesh.cellCenterDiffInv[X](i+1) + mesh.cellCenterDiffInv[X](i) );
-            diff[X][east](i) = mesh.cellCenterDiffInv[X](i+1);
-            diff[X][west](i) = mesh.cellCenterDiffInv[X](i);
+            diff[axis][p   ](i) = - ( mesh.cellCenterDiffInv[axis](i+1) + mesh.cellCenterDiffInv[axis](i) );
+            diff[axis][east](i) = mesh.cellCenterDiffInv[axis](i+1);
+            diff[axis][west](i) = mesh.cellCenterDiffInv[axis](i);
+        }
+
+
+        // Axis positive boundary
+        switch ( boundaryConditions[field][positivePatch].type ) {
+            
+            case BC::zeroGradient: 
+                
+                break;
+
+            case BC::uniform:
+
+                break;
+
+            case BC::extrapolated:
+
+                break;
+
+            default:
+                break;
+        }
+
+
+        // Axis negative boundary
+        switch ( boundaryConditions[field][negativePatch].type ) {
+            
+            case BC::zeroGradient: 
+                
+                break;
+
+            case BC::uniform:
+
+                break;
+
+            case BC::extrapolated:
+
+                break;
+
+            default:
+                break;
+        }
+
+
+        // Divide by inverse cell length
+        for (iterType i = 0; i != endIndex(axis)+1; i++) {
+            diff[axis][p   ](i) *= mesh.cellLengthsInv[axis](i);
+            diff[axis][east](i) *= mesh.cellLengthsInv[axis](i);
+            diff[axis][west](i) *= mesh.cellLengthsInv[axis](i);
+        }
+
+        // Multiply by viscosity
+        for (iterType i = 0; i != endIndex(axis)+1; i++) {
+            diff[axis][p   ](i) *= inputData.nu;
+            diff[axis][east](i) *= inputData.nu;
+            diff[axis][west](i) *= inputData.nu;
         }
 
     }
-
-    // Boundary conditions
-
-
-    // Divide by inverse cell length
-    
-
-    // Multiply by viscosity
 
 
 }
@@ -180,6 +242,8 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
 
     // Diffusion coefficients
     SetDiffusionCoeffients(fvCoeffs.diffu, mesh, inputData, Fields::U);
+    SetDiffusionCoeffients(fvCoeffs.diffv, mesh, inputData, Fields::V);
+    SetDiffusionCoeffients(fvCoeffs.diffw, mesh, inputData, Fields::W);
 
     // Momentum velocity terms
 
