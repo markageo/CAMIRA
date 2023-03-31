@@ -8,49 +8,108 @@ namespace
 
 using namespace CFD;
 
+
+bool CheckDiffusionZeroGradient(const InputData::BoundaryConditionData &boundaryConditions)
+{
+
+}
+
+
 // Set diffusion coefficients for a given momentum equation
 void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, const Mesh &mesh, const InputData &inputData, 
                             const Fields::ENUMDATA field)
 {
 
+    // !!!!!!!!!!!! NEED TO FLIP THE SIGN OF THE COEFFICIENTS !!!!!!!!!!!!
+
     using BC = BoundaryConditions::ENUMDATA;
     using BP = BoundaryPatches::ENUMDATA;
+    using F  = Fields::ENUMDATA;
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
     
     const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
-    indexVector3 endIndex = { mesh.nCells(X) - 1, mesh.nCells(Y) - 1 , mesh.nCells(Z) - 1};
+    indexVector3 endIndexVector = { mesh.nCells(X) - 1, mesh.nCells(Y) - 1 , mesh.nCells(Z) - 1};
+    intType iEnd;
 
     TransportCoefficients::ENUMDATA east, west;     // These are just names, they can be north, south etc.
     BoundaryPatches::ENUMDATA positivePatch, negativePatch;
     Axis::ENUMDATA axis;
+    bool positivePatchZeroGradient, negativePatchZeroGradient;   // Override if boundary conditions in continuity equation imply zeroGradient BC
 
 
     // Diffusion in each axis is calculated in the same way
     for (int axisNum = 0; axisNum != Axis::count; axisNum++) {
 
         axis = static_cast<Axis::ENUMDATA>(axisNum);
-        
+        iEnd = endIndexVector(axis);
+        positivePatchZeroGradient = false;
+        negativePatchZeroGradient = false;
+
         if         (axis == X) {
             positivePatch = BP::xPositive;
             negativePatch = BP::xNegative;
             east = e;
             west = w;
+
+            // Check if continuity equation implies a zero gradient boundary condition
+            if (field == F::U) {
+
+                // Check if V and W boundary conditions are uniform
+                if (boundaryConditions[F::V][positivePatch].type == BC::uniform && 
+                    boundaryConditions[F::W][positivePatch].type == BC::uniform) {
+                    positivePatchZeroGradient = true;
+                }
+
+                if (boundaryConditions[F::V][negativePatch].type == BC::uniform && 
+                    boundaryConditions[F::W][negativePatch].type == BC::uniform) {
+                    negativePatchZeroGradient = true;
+                }
+            }
+
         } else if (axis == Y) {
             positivePatch = BP::yPositive;
             negativePatch = BP::yNegative;
             east = n;
             west = s;
+
+            if (field == F::V) {
+
+                if (boundaryConditions[F::U][positivePatch].type == BC::uniform && 
+                    boundaryConditions[F::W][positivePatch].type == BC::uniform) {
+                    positivePatchZeroGradient = true;
+                }
+
+                if (boundaryConditions[F::U][negativePatch].type == BC::uniform && 
+                    boundaryConditions[F::W][negativePatch].type == BC::uniform) {
+                    negativePatchZeroGradient = true;
+                }
+            }
+
         } else if (axis == Z) {
             positivePatch = BP::zPositive;
             negativePatch = BP::zNegative;
             east = t;
             west = b;
+
+            if (field == F::W) {
+
+                if (boundaryConditions[F::U][positivePatch].type == BC::uniform && 
+                    boundaryConditions[F::V][positivePatch].type == BC::uniform) {
+                    positivePatchZeroGradient = true;
+                }
+
+                if (boundaryConditions[F::U][negativePatch].type == BC::uniform && 
+                    boundaryConditions[F::V][negativePatch].type == BC::uniform) {
+                    negativePatchZeroGradient = true;
+                }
+            }
+
         }
 
 
         // Internal cells
-        for (iterType i = 1; i != endIndex(axis); i++) {
+        for (iterType i = 1; i != iEnd; i++) {
             diff[axis][p   ](i) = - ( mesh.cellCenterDiffInv[axis](i+1) + mesh.cellCenterDiffInv[axis](i) );
             diff[axis][east](i) = mesh.cellCenterDiffInv[axis](i+1);
             diff[axis][west](i) = mesh.cellCenterDiffInv[axis](i);
@@ -61,7 +120,9 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
         switch ( boundaryConditions[field][positivePatch].type ) {
             
             case BC::zeroGradient: 
-                
+                diff[axis][p   ](iEnd) = - mesh.cellCenterDiffInv[axis](iEnd);
+                diff[axis][east](iEnd) = 0;
+                diff[axis][west](iEnd) = mesh.cellCenterDiffInv[axis](iEnd);
                 break;
 
             case BC::uniform:
@@ -81,7 +142,9 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
         switch ( boundaryConditions[field][negativePatch].type ) {
             
             case BC::zeroGradient: 
-                
+                diff[axis][p   ](0) = - mesh.cellCenterDiffInv[axis](1);
+                diff[axis][east](0) = mesh.cellCenterDiffInv[axis](1);
+                diff[axis][west](0) = 0;
                 break;
 
             case BC::uniform:
@@ -98,14 +161,14 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
 
 
         // Divide by inverse cell length
-        for (iterType i = 0; i != endIndex(axis)+1; i++) {
+        for (iterType i = 0; i != iEnd+1; i++) {
             diff[axis][p   ](i) *= mesh.cellLengthsInv[axis](i);
             diff[axis][east](i) *= mesh.cellLengthsInv[axis](i);
             diff[axis][west](i) *= mesh.cellLengthsInv[axis](i);
         }
 
         // Multiply by viscosity
-        for (iterType i = 0; i != endIndex(axis)+1; i++) {
+        for (iterType i = 0; i != iEnd+1; i++) {
             diff[axis][p   ](i) *= inputData.nu;
             diff[axis][east](i) *= inputData.nu;
             diff[axis][west](i) *= inputData.nu;
