@@ -68,6 +68,17 @@ namespace
     }
 
 
+    // void CalculateCellCenterDiffInv(array1D &cellCenterDiffInv, const array1D &cellCenters)
+    // {
+    //     // First and last element dont correspond to valid values
+    //     int nFaces = cellCenterDiffInv.size() + 1;
+
+    //     for (int i = 1; i != nFaces-1; i++) {
+    //         cellCenterDiffInv(i) = 1.0/( cellCenters(i) - cellCenters(i-1) );
+    //     }
+    // }
+
+
     void CalculateCellFaces(array1D &cellFaces, const array1D &cellLengths)
     {
         int nFaces = cellLengths.size() + 1;
@@ -172,6 +183,10 @@ Mesh::Mesh(const InputData &inputData) :
                      {Axis::ENUMDATA::Y, nCells(1)},
                      {Axis::ENUMDATA::Z, nCells(2)}} ),
 
+    // cellCenterDiffInv( {{Axis::ENUMDATA::X, nCells(0) + 1},
+    //                     {Axis::ENUMDATA::Y, nCells(1) + 1},
+    //                     {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
+
     interpFactors( {{Axis::ENUMDATA::X, nCells(0) + 1},
                     {Axis::ENUMDATA::Y, nCells(1) + 1},
                     {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
@@ -193,7 +208,10 @@ Mesh::Mesh(const InputData &inputData) :
 
             CalculateCellLengths(cellLengths[axis], inputData.meshSegments[axis], growthRates[axis]);
             cellLengthsInv[axis] = cellLengths[axis].inverse();
+
             CalculateCellCenters(cellCenters[axis], cellLengths[axis]);
+            // CalculateCellCenterDiffInv(cellCenterDiffInv[axis], cellCenters[axis]);
+
             CalculateCellFaces(cellFaces[axis], cellLengths[axis]);
             CalculateCellFaceAreas(cellFaceAreas[axis], cellLengths[axis], cellLengths[axis]);
             CalculateInterpolationFactors(interpFactors[axis], cellCenters[axis], cellFaces[axis]);
@@ -208,6 +226,7 @@ Mesh::Mesh(const InputData &inputData) :
 \*-------------------------------------------------------------------------------------*/
 
 using C = TransportCoefficients::ENUMDATA;
+using A = Axis::ENUMDATA;
 
 FVCoefficients::FVCoefficients(const indexVector3 &dims) :
     auu({C::p, C::n, C::e, C::s, C::w, C::t, C::b}, dims),
@@ -227,6 +246,18 @@ FVCoefficients::FVCoefficients(const indexVector3 &dims) :
     bu(dims(0), dims(1), dims(2)),
     bv(dims(0), dims(1), dims(2)),
     bw(dims(0), dims(1), dims(2)),
-    bc(dims(0), dims(1), dims(2))
+    bc(dims(0), dims(1), dims(2)),
+
+    diffu({ ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims(0) ),
+            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims(1) ),
+            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims(2) ) }),
+
+    diffv({ ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims(0) ),
+            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims(1) ),
+            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims(2) ) }),
+
+    diffw({ ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims(0) ),
+            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims(1) ),
+            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims(2) ) })
     {};
 

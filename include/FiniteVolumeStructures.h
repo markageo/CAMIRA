@@ -14,11 +14,12 @@ struct Mesh
     Mesh(const CFD::InputData &);
     indexVector3 nCells;
     ArrayAllocator<Axis, array1D> cellCenters, 
-                                  cellFaces,
+                                  cellFaces,            // cellFaces[axis](i) -> cellFaces[axis](i - 1/2)
                                   cellLengths, 
-                                  cellLengthsInv, // 1/cellLengths
-                                  interpFactors;  // faceValue(i) = (1 - interpFactor(i))*cellValue(i-1) + interpFactor(i)*cellValue(i)
-    ArrayAllocator<Axis, array2D> cellFaceAreas;  // Index by right hand rule
+                                  cellLengthsInv,       // inverse of cell lengths
+                                //   cellCenterDiffInv,    // inverse of distance between cell centers, same convention as cell faces
+                                  interpFactors;        // faceValue(i) = (1 - interpFactor(i))*cellValue(i-1) + interpFactor(i)*cellValue(i)
+    ArrayAllocator<Axis, array2D> cellFaceAreas;        // Index by right hand rule
 
     struct ExtrapFactorsStruct {
         floatType p,    // Boundary cell 
@@ -51,7 +52,9 @@ struct FVCoefficients
     ArrayAllocator<TransportCoefficients, array1D> aup, avp, awp;          // Momentum pressure coefficients
     ArrayAllocator<TransportCoefficients, array1D> acu, acv, acw;          // Continuity velocity coefficients
     ArrayAllocator<TransportCoefficients, array3D> acp;                    // Continuity pressure coefficients
-    array3D                                        bu, bv, bw, bc;         // Momentum and continuity source terms (appear on the right hand size)     
+    array3D                                        bu, bv, bw, bc;         // Momentum and continuity source terms (appear on the right hand size)
+
+    std::vector< ArrayAllocator<TransportCoefficients, array1D> > diffu, diffv, diffw;    // Diffusion coefficients, diffu[Axis][TransportCoefficient]
 };
 
 
