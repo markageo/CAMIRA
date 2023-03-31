@@ -116,13 +116,6 @@ int main(int argc, char const *argv[])
     TOC();
 
     
-    CFD::ArrayAllocator copyArray( fields );
-    CFD::ArrayAllocator copyAssign = fields;
-    UTIL::writeArray("debug/array.txt", fields[F::W]);
-    UTIL::writeArray("debug/array_copy.txt", copyArray[F::W]);
-    UTIL::writeArray("debug/array_copy_assign.txt", copyArray[F::W]);
-
-
     // // Cell centers to file
     // UTIL::writeArray("debug/cell_centers_x.txt", mesh.cellCenters[AX::X]);
     // UTIL::writeArray("debug/cell_centers_y.txt", mesh.cellCenters[AX::Y]);

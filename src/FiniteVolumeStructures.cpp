@@ -68,15 +68,15 @@ namespace
     }
 
 
-    // void CalculateCellCenterDiffInv(array1D &cellCenterDiffInv, const array1D &cellCenters)
-    // {
-    //     // First and last element dont correspond to valid values
-    //     int nFaces = cellCenterDiffInv.size() + 1;
+    void CalculateCellCenterDiffInv(array1D &cellCenterDiffInv, const array1D &cellCenters)
+    {
+        // First and last element dont correspond to valid values
+        int nFaces = cellCenters.size() + 1;
 
-    //     for (int i = 1; i != nFaces-1; i++) {
-    //         cellCenterDiffInv(i) = 1.0/( cellCenters(i) - cellCenters(i-1) );
-    //     }
-    // }
+        for (int i = 1; i != nFaces-1; i++) {
+            cellCenterDiffInv(i) = 1.0/( cellCenters(i) - cellCenters(i-1) );
+        }
+    }
 
 
     void CalculateCellFaces(array1D &cellFaces, const array1D &cellLengths)
@@ -183,9 +183,9 @@ Mesh::Mesh(const InputData &inputData) :
                      {Axis::ENUMDATA::Y, nCells(1)},
                      {Axis::ENUMDATA::Z, nCells(2)}} ),
 
-    // cellCenterDiffInv( {{Axis::ENUMDATA::X, nCells(0) + 1},
-    //                     {Axis::ENUMDATA::Y, nCells(1) + 1},
-    //                     {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
+    cellCenterDiffInv( {{Axis::ENUMDATA::X, nCells(0) + 1},
+                        {Axis::ENUMDATA::Y, nCells(1) + 1},
+                        {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
 
     interpFactors( {{Axis::ENUMDATA::X, nCells(0) + 1},
                     {Axis::ENUMDATA::Y, nCells(1) + 1},
@@ -210,7 +210,7 @@ Mesh::Mesh(const InputData &inputData) :
             cellLengthsInv[axis] = cellLengths[axis].inverse();
 
             CalculateCellCenters(cellCenters[axis], cellLengths[axis]);
-            // CalculateCellCenterDiffInv(cellCenterDiffInv[axis], cellCenters[axis]);
+            CalculateCellCenterDiffInv(cellCenterDiffInv[axis], cellCenters[axis]);
 
             CalculateCellFaces(cellFaces[axis], cellLengths[axis]);
             CalculateCellFaceAreas(cellFaceAreas[axis], cellLengths[axis], cellLengths[axis]);
