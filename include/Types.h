@@ -5,6 +5,8 @@
 #include <type_traits>
 #include <vector>
 #include <memory>
+#include <utility>
+#include <iostream>
 
 namespace CFD 
 {
@@ -184,6 +186,32 @@ class ArrayAllocator
             }
         }
 
+        // ------------------------------------------- Copy Constructor ------------------------------------------- //
+
+        ArrayAllocator(const ArrayAllocator &that) :
+            coeffPointers(enumStruct::count)
+        {
+            // Allocate a new array object only if it was allocated in the original
+            for (size_t i = 0; i != coeffPointers.size(); i++) {
+                if (that.coeffPointers[i]) {
+                    coeffPointers[i] = std::make_unique<arrayType>( *that.coeffPointers[i] );
+                }
+            }
+        }
+
+
+        // --------------------------------------- Copy Assignment Operator --------------------------------------- //
+
+        ArrayAllocator &operator=(const ArrayAllocator that)
+        {
+            std::swap(*this, that);
+            return *this;
+        }
+
+
+        // ---------------------------------------------- Desctructor --------------------------------------------- //
+
+        ~ArrayAllocator() = default;
 
 
         // ----------------------------------- Array reference return operators ----------------------------------- //
@@ -197,6 +225,8 @@ class ArrayAllocator
         {
             return *coeffPointers[idx];
         }
+
+        
 
 
     private:

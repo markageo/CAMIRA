@@ -8,6 +8,53 @@ namespace
 
 using namespace CFD;
 
+
+// void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, const Mesh &mesh, const InputData &inputData, 
+//                             const Fields::ENUMDATA field)
+// {
+
+//     using BC = BoundaryConditions::ENUMDATA;
+//     using BP = BoundaryPatches::ENUMDATA;
+//     using F  = Fields::ENUMDATA;
+//     using enum Axis::ENUMDATA;
+//     using enum TransportCoefficients::ENUMDATA;
+    
+//     indexVector3 endIndex = { mesh.nCells(X) - 1, mesh.nCells(Y) - 1 , mesh.nCells(Z) - 1};
+//     TransportCoefficients::ENUMDATA east, west;     // These are just names, they can be north, south etc.
+
+//     for (int axis = 0; axis != Axis::count; axis++) {
+
+//         if        (axis == X) {
+//             east = e;
+//             west = w;
+//         } else if (axis == Y) {
+//             east = n;
+//             west = s;
+//         } else if (axis == Z) {
+//             east = t;
+//             west = b;
+//         }
+
+//         for (iterType i = 1; i != endIndex(axis); i++) {
+//             diff[X][p   ](i) = - ( mesh.cellCenterDiffInv[X](i+1) + mesh.cellCenterDiffInv[X](i) );
+//             diff[X][east](i) = mesh.cellCenterDiffInv[X](i+1);
+//             diff[X][west](i) = mesh.cellCenterDiffInv[X](i);
+//         }
+
+//     }
+
+//     // Boundary conditions
+
+
+//     // Divide by inverse cell length
+    
+
+//     // Multiply by viscosity
+
+
+// }
+
+
 // Set coefficients for quantities that are intrpolated linearly onto faces.
 void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array1D> &coeffs, array3D &sourceTerm, const Mesh &mesh, 
                                      const InputData &inputData, const Fields::ENUMDATA field, Axis::ENUMDATA axis)
@@ -128,11 +175,11 @@ namespace CFD
 
 
 void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const ArrayAllocator<Fields> &faceVelocities, 
-    const InputData &inputData)
+                              const InputData &inputData)
 {
 
     // Diffusion coefficients
-
+    // SetDiffusionCoeffients(fvCoeffs.diffu, mesh, inputData, Fields::U);
 
     // Momentum velocity terms
 
