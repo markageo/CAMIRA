@@ -1,0 +1,36 @@
+Date : 2023-03-28 09:57:55
+Directory : /home/mark/PhD/Code/coupled-sweep-ns/InputParser
+Total : 9 files,  38 codes, 21 comments, 5 blanks, all 64 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C++      |          9 |         38 |         21 |          5 |         64 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                  | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                     |          9 |         38 |         21 |          5 |         64 |
+| . (Files)                                                             |          2 |        351 |         51 |        109 |        511 |
+| ..                                                                    |          7 |       -313 |        -30 |       -104 |       -447 |
+| ../include                                                            |          7 |       -313 |        -30 |       -104 |       -447 |
++-----------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                              | language | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| /home/mark/PhD/Code/coupled-sweep-ns/InputParser/InputParser.cpp      | C++      |        344 |         50 |        105 |        499 |
+| /home/mark/PhD/Code/coupled-sweep-ns/InputParser/InputParser.h        | C++      |          7 |          1 |          4 |         12 |
+| /home/mark/PhD/Code/coupled-sweep-ns/include/FiniteVolumeFunctions.h  | C++      |        -19 |        -11 |         -8 |        -38 |
+| /home/mark/PhD/Code/coupled-sweep-ns/include/FiniteVolumeStructures.h | C++      |        -85 |        -11 |        -27 |       -123 |
+| /home/mark/PhD/Code/coupled-sweep-ns/include/InputProcessing.h        | C++      |        -30 |         -4 |        -14 |        -48 |
+| /home/mark/PhD/Code/coupled-sweep-ns/include/Solver.h                 | C++      |        -10 |          0 |         -6 |        -16 |
+| /home/mark/PhD/Code/coupled-sweep-ns/include/Types.h                  | C++      |        -79 |         -1 |        -11 |        -91 |
+| /home/mark/PhD/Code/coupled-sweep-ns/include/VTKWriter.h              | C++      |        -61 |         -2 |        -28 |        -91 |
+| /home/mark/PhD/Code/coupled-sweep-ns/include/utils.h                  | C++      |        -29 |         -1 |        -10 |        -40 |
+| Total                                                                 |          |         38 |         21 |          5 |         64 |
++-----------------------------------------------------------------------+----------+------------+------------+------------+------------+
