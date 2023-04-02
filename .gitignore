@@ -2,4 +2,3 @@ build/*
 debug/*
 main
 *.vtk
-*.txt
