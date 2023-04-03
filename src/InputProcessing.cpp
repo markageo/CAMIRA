@@ -1,6 +1,5 @@
 #include "InputProcessing.h"
 
-#define NDEBUG
 #include "InputParser/InputParser.h"
 #include "FiniteVolumeStructures.h"
 #include "Types.h"

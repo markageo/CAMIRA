@@ -213,9 +213,13 @@ Mesh::Mesh(const InputData &inputData) :
             CalculateCellCenterDiffInv(cellCenterDiffInv[axis], cellCenters[axis]);
 
             CalculateCellFaces(cellFaces[axis], cellLengths[axis]);
-            CalculateCellFaceAreas(cellFaceAreas[axis], cellLengths[axis], cellLengths[axis]);
             CalculateInterpolationFactors(interpFactors[axis], cellCenters[axis], cellFaces[axis]);
             CalculateExtrapolationFactors(extrapFactors, cellLengths, axis);
+            
+            // Cyclic permutations to get correct order of axis for area, which is indexed by right hand rule
+            Axis::ENUMDATA axis1 = static_cast<Axis::ENUMDATA>( (i+1) % Axis::count );
+            Axis::ENUMDATA axis2 = static_cast<Axis::ENUMDATA>( (i+2) % Axis::count );
+            CalculateCellFaceAreas(cellFaceAreas[axis], cellLengths[axis1], cellLengths[axis2]);
         }
 
     };
@@ -228,6 +232,7 @@ Mesh::Mesh(const InputData &inputData) :
 using C = TransportCoefficients::ENUMDATA;
 using A = Axis::ENUMDATA;
 
+// Construct using vector of number of cells in each dimension
 FVCoefficients::FVCoefficients(const indexVector3 &dims) :
     auu({C::p, C::n, C::e, C::s, C::w, C::t, C::b}, dims),
     avv({C::p, C::n, C::e, C::s, C::w, C::t, C::b}, dims),
@@ -247,6 +252,11 @@ FVCoefficients::FVCoefficients(const indexVector3 &dims) :
     bv(dims(0), dims(1), dims(2)),
     bw(dims(0), dims(1), dims(2)),
     bc(dims(0), dims(1), dims(2)),
+
+    boundaryConstu(BoundaryPatches::count, 0),
+    boundaryConstv(BoundaryPatches::count, 0),
+    boundaryConstw(BoundaryPatches::count, 0),
+    boundaryConstc(BoundaryPatches::count, 0),
 
     diffu({ ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims(0) ),
             ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims(1) ),

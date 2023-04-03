@@ -235,6 +235,13 @@ class ArrayAllocator
             return *coeffPointers[idx];
         }
 
+        // -------------------------------------------- Size function -------------------------------------------- //
+
+        intType size()
+        {
+            return coeffPointers.size();
+        }
+
 
     private:
         std::vector< std::unique_ptr<arrayType> > coeffPointers;
