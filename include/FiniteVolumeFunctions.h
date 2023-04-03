@@ -13,7 +13,7 @@ void UpdateFaceVelocities( ArrayAllocator<Fields>  &, const Mesh &, const ArrayA
     const std::vector< std::vector< InputData::BoundaryConditionStruct > > &);
 
 // Initialise finite volume coefficients
-void InitialiseFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields> &);
+void InitialiseFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields> &, const InputData &);
 
 // Update finite volume coefficients (Picard linearisation)
 void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields> &);

@@ -54,6 +54,8 @@ struct FVCoefficients
     ArrayAllocator<TransportCoefficients, array3D> acp;                    // Continuity pressure coefficients
     array3D                                        bu, bv, bw, bc;         // Momentum and continuity source terms (appear on the right hand size)
 
+    std::vector<floatType> boundaryConstu, boundaryConstv, boundaryConstw, boundaryConstc;    // Constant terms that arise from uniform boundary conditions, boundaryConst[boundaryPatch]                
+
     std::vector< ArrayAllocator<TransportCoefficients, array1D> > diffu, diffv, diffw;    // Diffusion coefficients, diffu[Axis][TransportCoefficient]
 };
 

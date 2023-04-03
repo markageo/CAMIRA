@@ -1,5 +1,7 @@
 #include "FiniteVolumeFunctions.h"
 
+#include <iostream>
+
 // Implementation file for finite volume coefficient structure and update functions
 
  
@@ -8,16 +10,27 @@ namespace
 
 using namespace CFD;
 
-
-bool CheckDiffusionZeroGradient(const InputData::BoundaryConditionData &boundaryConditions)
+BoundaryConditions::ENUMDATA GetDiffusionBC(const InputData::BoundaryConditionData &boundaryConditions, const BoundaryPatches::ENUMDATA boundaryPatch, 
+                                const Fields::ENUMDATA field, const Fields::ENUMDATA fieldToCheck, Fields::ENUMDATA orthogonalField1, const Fields::ENUMDATA orthogonalField2)
 {
+    // Check if continuity equation implies a zero gradient boundary condition. This occurs if both orthogonal fields have a uniform BC
+    using BC = BoundaryConditions::ENUMDATA;
 
+    if (field == fieldToCheck) {
+
+        if (boundaryConditions[orthogonalField1][boundaryPatch].type == BC::uniform && 
+            boundaryConditions[orthogonalField2][boundaryPatch].type == BC::uniform) {
+            return BC::zeroGradient;
+        }
+    }
+
+    return boundaryConditions[field][boundaryPatch].type;
 }
 
 
 // Set diffusion coefficients for a given momentum equation
-void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, const Mesh &mesh, const InputData &inputData, 
-                            const Fields::ENUMDATA field)
+void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, std::vector<floatType> &boundaryConstants, 
+                            const Mesh &mesh, const InputData &inputData, const Fields::ENUMDATA field)
 {
 
     // !!!!!!!!!!!! NEED TO FLIP THE SIGN OF THE COEFFICIENTS !!!!!!!!!!!!
@@ -35,7 +48,7 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
     TransportCoefficients::ENUMDATA east, west;     // These are just names, they can be north, south etc.
     BoundaryPatches::ENUMDATA positivePatch, negativePatch;
     Axis::ENUMDATA axis;
-    bool positivePatchZeroGradient, negativePatchZeroGradient;   // Override if boundary conditions in continuity equation imply zeroGradient BC
+    BoundaryConditions::ENUMDATA positivePatchBC, negativePatchBC;  // Store these since the continuity equation can override a BC to be zeroGradient
 
 
     // Diffusion in each axis is calculated in the same way
@@ -43,67 +56,31 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
 
         axis = static_cast<Axis::ENUMDATA>(axisNum);
         iEnd = endIndexVector(axis);
-        positivePatchZeroGradient = false;
-        negativePatchZeroGradient = false;
 
+        // Set variables unique to each axis
         if         (axis == X) {
             positivePatch = BP::xPositive;
             negativePatch = BP::xNegative;
             east = e;
-            west = w;
-
-            // Check if continuity equation implies a zero gradient boundary condition
-            if (field == F::U) {
-
-                // Check if V and W boundary conditions are uniform
-                if (boundaryConditions[F::V][positivePatch].type == BC::uniform && 
-                    boundaryConditions[F::W][positivePatch].type == BC::uniform) {
-                    positivePatchZeroGradient = true;
-                }
-
-                if (boundaryConditions[F::V][negativePatch].type == BC::uniform && 
-                    boundaryConditions[F::W][negativePatch].type == BC::uniform) {
-                    negativePatchZeroGradient = true;
-                }
-            }
-
+            west = w;    
+            positivePatchBC = GetDiffusionBC(boundaryConditions, positivePatch, field, F::U, F::V, F::W);
+            negativePatchBC = GetDiffusionBC(boundaryConditions, negativePatch, field, F::U, F::V, F::W); 
+              
         } else if (axis == Y) {
             positivePatch = BP::yPositive;
             negativePatch = BP::yNegative;
             east = n;
             west = s;
-
-            if (field == F::V) {
-
-                if (boundaryConditions[F::U][positivePatch].type == BC::uniform && 
-                    boundaryConditions[F::W][positivePatch].type == BC::uniform) {
-                    positivePatchZeroGradient = true;
-                }
-
-                if (boundaryConditions[F::U][negativePatch].type == BC::uniform && 
-                    boundaryConditions[F::W][negativePatch].type == BC::uniform) {
-                    negativePatchZeroGradient = true;
-                }
-            }
+            positivePatchBC = GetDiffusionBC(boundaryConditions, positivePatch, field, F::V, F::W, F::U);
+            negativePatchBC = GetDiffusionBC(boundaryConditions, negativePatch, field, F::V, F::W, F::U); 
 
         } else if (axis == Z) {
             positivePatch = BP::zPositive;
             negativePatch = BP::zNegative;
             east = t;
             west = b;
-
-            if (field == F::W) {
-
-                if (boundaryConditions[F::U][positivePatch].type == BC::uniform && 
-                    boundaryConditions[F::V][positivePatch].type == BC::uniform) {
-                    positivePatchZeroGradient = true;
-                }
-
-                if (boundaryConditions[F::U][negativePatch].type == BC::uniform && 
-                    boundaryConditions[F::V][negativePatch].type == BC::uniform) {
-                    negativePatchZeroGradient = true;
-                }
-            }
+            positivePatchBC = GetDiffusionBC(boundaryConditions, positivePatch, field, F::W, F::U, F::V);
+            negativePatchBC = GetDiffusionBC(boundaryConditions, negativePatch, field, F::W, F::U, F::V); 
 
         }
 
@@ -117,7 +94,7 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
 
 
         // Axis positive boundary
-        switch ( boundaryConditions[field][positivePatch].type ) {
+        switch ( positivePatchBC ) {
             
             case BC::zeroGradient: 
                 diff[axis][p   ](iEnd) = - mesh.cellCenterDiffInv[axis](iEnd);
@@ -126,11 +103,16 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
                 break;
 
             case BC::uniform:
-
+                diff[axis][p   ](iEnd) = - ( 2*mesh.cellLengthsInv[axis](iEnd) + mesh.cellCenterDiffInv[axis](iEnd) );
+                diff[axis][east](iEnd) = 0;
+                diff[axis][west](iEnd) = mesh.cellCenterDiffInv[axis](iEnd);
+                boundaryConstants[positivePatch] += 2*mesh.cellLengthsInv[axis](iEnd) * boundaryConditions[field][positivePatch].value;
                 break;
 
             case BC::extrapolated:
-
+                diff[axis][p   ](iEnd) = 2*mesh.cellLengthsInv[axis](iEnd) * (mesh.extrapFactors[positivePatch].p - 1)  -  mesh.cellCenterDiffInv[axis](iEnd);
+                diff[axis][east](iEnd) = 0;
+                diff[axis][west](iEnd) = 2*mesh.cellLengthsInv[axis](iEnd) * mesh.extrapFactors[positivePatch].a  +  mesh.cellCenterDiffInv[axis](iEnd);
                 break;
 
             default:
@@ -139,7 +121,7 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
 
 
         // Axis negative boundary
-        switch ( boundaryConditions[field][negativePatch].type ) {
+        switch ( negativePatchBC) {
             
             case BC::zeroGradient: 
                 diff[axis][p   ](0) = - mesh.cellCenterDiffInv[axis](1);
@@ -148,11 +130,16 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
                 break;
 
             case BC::uniform:
-
+                diff[axis][p   ](0) = - ( mesh.cellCenterDiffInv[axis](1) + 2*mesh.cellLengthsInv[axis](0) );
+                diff[axis][east](0) = mesh.cellCenterDiffInv[axis](1);
+                diff[axis][west](0) = 0;
+                boundaryConstants[negativePatch] += 2*mesh.cellLengthsInv[axis](0) * boundaryConditions[field][negativePatch].value;
                 break;
 
             case BC::extrapolated:
-
+                diff[axis][p   ](0) = 2*mesh.cellLengthsInv[axis](0) * (mesh.extrapFactors[negativePatch].p - 1)  -  mesh.cellCenterDiffInv[axis](1);
+                diff[axis][east](0) = 2*mesh.cellLengthsInv[axis](0) * mesh.extrapFactors[negativePatch].a  +  mesh.cellCenterDiffInv[axis](1);
+                diff[axis][west](0) = 0;
                 break;
 
             default:
@@ -160,7 +147,7 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
         }
 
 
-        // Divide by inverse cell length
+        // Divide by inverse cell length and flip the sign
         for (iterType i = 0; i != iEnd+1; i++) {
             diff[axis][p   ](i) *= mesh.cellLengthsInv[axis](i);
             diff[axis][east](i) *= mesh.cellLengthsInv[axis](i);
@@ -176,12 +163,11 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
 
     }
 
-
 }
 
 
 // Set coefficients for quantities that are intrpolated linearly onto faces.
-void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array1D> &coeffs, array3D &sourceTerm, const Mesh &mesh, 
+void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array1D> &coeffs, std::vector<floatType> &boundaryConstants, const Mesh &mesh, 
                                      const InputData &inputData, const Fields::ENUMDATA field, Axis::ENUMDATA axis)
 {
     using BC = BoundaryConditions::ENUMDATA;
@@ -212,7 +198,6 @@ void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, 
     }
     iterType iEnd = mesh.nCells(axis) - 1;
 
-
     // Internal cells
     for (iterType i = 1; i != iEnd; i++) {
         coeffs[p   ](i) = 1 - mesh.interpFactors[axis](i+1) - mesh.interpFactors[axis](i);
@@ -233,7 +218,7 @@ void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, 
             coeffs[p   ]( iEnd ) = -mesh.interpFactors[axis](iEnd);
             coeffs[east]( iEnd ) = 0;
             coeffs[west]( iEnd ) = -( 1 - mesh.interpFactors[axis](iEnd) );
-            sourceTerm.chip( iEnd, axis ) += sourceTerm.constant( -boundaryConditions[field][positivePatch].value );
+            boundaryConstants[positivePatch] += -boundaryConditions[field][positivePatch].value;
             break;
 
         case BC::extrapolated:
@@ -260,7 +245,7 @@ void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, 
             coeffs[p   ]( 0 ) = 1 - mesh.interpFactors[axis](1);
             coeffs[east]( 0 ) = mesh.interpFactors[axis](1);
             coeffs[west]( 0 ) = 0;
-            sourceTerm.chip( 0, axis ) += sourceTerm.constant( boundaryConditions[field][negativePatch].value );
+            boundaryConstants[negativePatch] += boundaryConditions[field][negativePatch].value;
             break;
 
         case BC::extrapolated:
@@ -304,24 +289,29 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
 {
 
     // Diffusion coefficients
-    SetDiffusionCoeffients(fvCoeffs.diffu, mesh, inputData, Fields::U);
-    SetDiffusionCoeffients(fvCoeffs.diffv, mesh, inputData, Fields::V);
-    SetDiffusionCoeffients(fvCoeffs.diffw, mesh, inputData, Fields::W);
+    SetDiffusionCoeffients(fvCoeffs.diffu, fvCoeffs.boundaryConstu, mesh, inputData, Fields::U);
+    SetDiffusionCoeffients(fvCoeffs.diffv, fvCoeffs.boundaryConstv, mesh, inputData, Fields::V);
+    SetDiffusionCoeffients(fvCoeffs.diffw, fvCoeffs.boundaryConstw, mesh, inputData, Fields::W);
 
     // Momentum velocity terms
 
 
     // Momentum pressure terms
-    SetFaceInterpolatedCoefficients(fvCoeffs.aup, fvCoeffs.bu, mesh, inputData, Fields::P, Axis::X);
-    SetFaceInterpolatedCoefficients(fvCoeffs.avp, fvCoeffs.bv, mesh, inputData, Fields::P, Axis::Y);
-    SetFaceInterpolatedCoefficients(fvCoeffs.avp, fvCoeffs.bv, mesh, inputData, Fields::P, Axis::Z);
+    SetFaceInterpolatedCoefficients(fvCoeffs.aup, fvCoeffs.boundaryConstu, mesh, inputData, Fields::P, Axis::X);
+    SetFaceInterpolatedCoefficients(fvCoeffs.avp, fvCoeffs.boundaryConstv, mesh, inputData, Fields::P, Axis::Y);
+    SetFaceInterpolatedCoefficients(fvCoeffs.awp, fvCoeffs.boundaryConstw, mesh, inputData, Fields::P, Axis::Z);
 
     // Continuity velocity terms
-    SetFaceInterpolatedCoefficients(fvCoeffs.acu, fvCoeffs.bc, mesh, inputData, Fields::U, Axis::X);
-    SetFaceInterpolatedCoefficients(fvCoeffs.acv, fvCoeffs.bc, mesh, inputData, Fields::V, Axis::Y);
-    SetFaceInterpolatedCoefficients(fvCoeffs.acw, fvCoeffs.bc, mesh, inputData, Fields::W, Axis::Z);
+    SetFaceInterpolatedCoefficients(fvCoeffs.acu, fvCoeffs.boundaryConstc, mesh, inputData, Fields::U, Axis::X);
+    SetFaceInterpolatedCoefficients(fvCoeffs.acv, fvCoeffs.boundaryConstc, mesh, inputData, Fields::V, Axis::Y);
+    SetFaceInterpolatedCoefficients(fvCoeffs.acw, fvCoeffs.boundaryConstc, mesh, inputData, Fields::W, Axis::Z);
 
     // Continuity pressure terms (Rhie-Chow interpolation)
+
+    // Source terms
+    /* NULL */
+
+    // Boundary constants in source terms
 
 }
 
