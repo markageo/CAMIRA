@@ -235,11 +235,11 @@ class ArrayAllocator
             return *coeffPointers[idx];
         }
 
-        // -------------------------------------------- Size function -------------------------------------------- //
+        // ------------------------------------------- Container access ------------------------------------------- //
 
-        intType size()
+        std::vector< std::unique_ptr<arrayType> > &container()
         {
-            return coeffPointers.size();
+            return coeffPointers;
         }
 
 
