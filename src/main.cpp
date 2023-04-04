@@ -85,7 +85,6 @@ int main(int argc, char const *argv[])
 
     using AX = CFD::Axis::ENUMDATA;
     using F = CFD::Fields::ENUMDATA;
-    using BC = CFD::BoundaryConditions::ENUMDATA;
     using BP = CFD::BoundaryPatches::ENUMDATA;
 
     TIC("Meshing");
