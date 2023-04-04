@@ -245,6 +245,7 @@ class ArrayAllocator
 
     private:
         std::vector< std::unique_ptr<arrayType> > coeffPointers;
+
 };
 
 }   // end namespace CFD
