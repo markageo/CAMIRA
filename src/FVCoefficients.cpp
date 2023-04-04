@@ -151,7 +151,7 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
         }
 
 
-        // Divide by inverse cell length and flip the sign
+        // Divide by inverse cell length
         for (iterType i = 0; i != iEnd+1; i++) {
             diff[axis][p   ](i) *= mesh.cellLengthsInv[axis](i);
             diff[axis][east](i) *= mesh.cellLengthsInv[axis](i);
@@ -186,10 +186,9 @@ void SetPicardCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array
 
     const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
 
+    // Coefficients are updated by looping through cell faces. This makes boundary conditions simpler and halves the number of upwind checks.
     // ALl directions can contribute to the p coefficient, so initialise it to zero
     coeffs[p].setConstant(0);
-    
-    // Coefficients are updated by looping through cell faces. This makes boundary conditions simpler and halves the number of upwind checks.
     
     // X normal faces
     floatType uf, coeff_e, coeff_w;
@@ -261,10 +260,11 @@ void SetPicardCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array
 
 
     // +x boundary
+    intType iEnd = mesh.nCells[X] - 1;
     switch ( boundaryConditions[field][BP::xPositive].type ) {
         
         case BC::zeroGradient:
-
+            coeffs[p].chip(iEnd, X) += faceVelocities[F::U].chip(iEnd+1, X) * faceVelocities[F::U].constant( mesh.cellLengthsInv[X](iEnd) );
             break;
 
         case BC::uniform:
@@ -279,6 +279,21 @@ void SetPicardCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array
 
 
     // -x boundary
+    switch ( boundaryConditions[field][BP::xNegative].type ) {
+        
+        case BC::zeroGradient:
+            coeffs[p].chip(0, X) += faceVelocities[F::U].chip(0, X) * faceVelocities[F::U].constant( mesh.cellLengthsInv[X](0) );
+            break;
+
+        case BC::uniform:
+            break;
+
+        case BC::extrapolated:
+            break;
+
+        default:
+            break;
+    }
 
 
 }
@@ -413,23 +428,23 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
 {
 
     // Diffusion coefficients
-    SetDiffusionCoeffients(fvCoeffs.diffu, fvCoeffs.boundaryConstu, mesh, inputData, Fields::U);
-    SetDiffusionCoeffients(fvCoeffs.diffv, fvCoeffs.boundaryConstv, mesh, inputData, Fields::V);
-    SetDiffusionCoeffients(fvCoeffs.diffw, fvCoeffs.boundaryConstw, mesh, inputData, Fields::W);
+    SetDiffusionCoeffients(fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh, inputData, Fields::U);
+    SetDiffusionCoeffients(fvCoeffs.Vmom.diff, fvCoeffs.Vmom.boundaryDiff, mesh, inputData, Fields::V);
+    SetDiffusionCoeffients(fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh, inputData, Fields::W);
 
     // Momentum velocity terms
-    SetPicardCoefficients(fvCoeffs.auu, faceVelocities, mesh, inputData, Fields::U);
+    SetPicardCoefficients(fvCoeffs.Umom.AU, faceVelocities, mesh, inputData, Fields::U);
 
 
     // Momentum pressure terms
-    SetFaceInterpolatedCoefficients(fvCoeffs.aup, fvCoeffs.boundaryConstu, mesh, inputData, Fields::P, Axis::X);
-    SetFaceInterpolatedCoefficients(fvCoeffs.avp, fvCoeffs.boundaryConstv, mesh, inputData, Fields::P, Axis::Y);
-    SetFaceInterpolatedCoefficients(fvCoeffs.awp, fvCoeffs.boundaryConstw, mesh, inputData, Fields::P, Axis::Z);
+    SetFaceInterpolatedCoefficients(fvCoeffs.Umom.AP, fvCoeffs.Umom.boundaryP, mesh, inputData, Fields::P, Axis::X);
+    SetFaceInterpolatedCoefficients(fvCoeffs.Vmom.AP, fvCoeffs.Vmom.boundaryP, mesh, inputData, Fields::P, Axis::Y);
+    SetFaceInterpolatedCoefficients(fvCoeffs.Wmom.AP, fvCoeffs.Wmom.boundaryP, mesh, inputData, Fields::P, Axis::Z);
 
     // Continuity velocity terms
-    SetFaceInterpolatedCoefficients(fvCoeffs.acu, fvCoeffs.boundaryConstc, mesh, inputData, Fields::U, Axis::X);
-    SetFaceInterpolatedCoefficients(fvCoeffs.acv, fvCoeffs.boundaryConstc, mesh, inputData, Fields::V, Axis::Y);
-    SetFaceInterpolatedCoefficients(fvCoeffs.acw, fvCoeffs.boundaryConstc, mesh, inputData, Fields::W, Axis::Z);
+    SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AU, fvCoeffs.Cont.boundaryVel, mesh, inputData, Fields::U, Axis::X);
+    SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AV, fvCoeffs.Cont.boundaryVel, mesh, inputData, Fields::V, Axis::Y);
+    SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AU, fvCoeffs.Cont.boundaryVel, mesh, inputData, Fields::W, Axis::Z);
 
     // Continuity pressure terms (Rhie-Chow interpolation)
 

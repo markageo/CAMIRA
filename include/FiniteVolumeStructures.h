@@ -32,31 +32,33 @@ struct Mesh
 // Structure to store finite volume discrete equation coefficients (Picard linearisation)
 struct FVCoefficients
 {
-    // Naming convention:
-    //  aev - coefficient for equation 'e' multiplying with variable 'v'
-    //  be  - source term for equation 'e'
-    // 
-    // 'e' can take the values
-    //  u: U momentum, v: V momentum, w: W momentum, c: Conitnuity
-    //
-    // 'v' can take the values
-    //  u: x velocity, v: v velocity, w: w velocity, p: pressure
-
     // In the finite volume formulation, all equations are divided by the cell volume. This 
     // means that the pressure coefficients in the momentum equations and the velocity 
     // coefficients in the continuity equations can be stored in 1D arrays when using a 
     // rectilinear grid.
 
-    FVCoefficients(const CFD::indexVector3 &);
-    ArrayAllocator<TransportCoefficients, array3D> auu, avv, aww;          // Momentum velocity coefficients
-    ArrayAllocator<TransportCoefficients, array1D> aup, avp, awp;          // Momentum pressure coefficients
-    ArrayAllocator<TransportCoefficients, array1D> acu, acv, acw;          // Continuity velocity coefficients
-    ArrayAllocator<TransportCoefficients, array3D> acp;                    // Continuity pressure coefficients
-    array3D                                        bu, bv, bw, bc;         // Momentum and continuity source terms (appear on the right hand size)
+    FVCoefficients(const indexVector3 &);
 
-    std::vector<floatType> boundaryConstu, boundaryConstv, boundaryConstw, boundaryConstc;    // Constant terms that arise from uniform boundary conditions, boundaryConst[boundaryPatch]                
+    struct MomentumEquation {
+        MomentumEquation(const Fields::ENUMDATA, const indexVector3 &);
+        ArrayAllocator<TransportCoefficients, array3D> AU, AV, AW;          // Velocity coefficients
+        ArrayAllocator<TransportCoefficients, array1D> AP;                  // Pressure coefficients
+        array3D B;                                                          // Source Term
+        std::vector< ArrayAllocator<TransportCoefficients, array1D> > diff; // Diffusion coefficients diff[Axis][TransportCoefficient]
+        std::vector< floatType > boundaryDiff, boundaryP, boundaryVel;      // Constant terms that come from uniform BC boundaryDiff[BoundaryPatch]
+    };
 
-    std::vector< ArrayAllocator<TransportCoefficients, array1D> > diffu, diffv, diffw;    // Diffusion coefficients, diffu[Axis][TransportCoefficient]
+    struct ContinuityEquation {
+        ContinuityEquation(const indexVector3 &);
+        ArrayAllocator<TransportCoefficients, array1D> AU, AV, AW;          // Velocity coefficients
+        ArrayAllocator<TransportCoefficients, array3D> AP;                  // Pressure coefficients
+        array3D B;                                                          // Source term
+        std::vector< floatType > boundaryVel;                               // Constant terms that come from uniform BC boundaryVel[BoundaryPatch]
+        std::vector< floatType > boundaryP;                                 // These may need to be 2D arrays   
+    };
+
+    MomentumEquation Umom, Vmom, Wmom;
+    ContinuityEquation Cont;
 };
 
 
