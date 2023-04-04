@@ -10,6 +10,11 @@ namespace
 
 using namespace CFD;
 
+
+/*---------------------------------------------------------------------------------------------------------------*\
+                                                    Diffusion
+\*---------------------------------------------------------------------------------------------------------------*/
+
 BoundaryConditions::ENUMDATA GetDiffusionBC(const InputData::BoundaryConditionData &boundaryConditions, const BoundaryPatches::ENUMDATA boundaryPatch, 
                                 const Fields::ENUMDATA field, const Fields::ENUMDATA fieldToCheck, Fields::ENUMDATA orthogonalField1, const Fields::ENUMDATA orthogonalField2)
 {
@@ -166,6 +171,129 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
 }
 
 
+/*---------------------------------------------------------------------------------------------------------------*\
+                                         Momentum Velocity Coefficients
+\*---------------------------------------------------------------------------------------------------------------*/
+
+
+void SetPicardCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, const ArrayAllocator<Fields> &faceVelocities,
+                           const Mesh &mesh, const InputData &inputData, const Fields::ENUMDATA field)
+{
+    using BC = BoundaryConditions::ENUMDATA;
+    using BP = BoundaryPatches::ENUMDATA;
+    using F  = Fields::ENUMDATA;
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+
+    const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
+    indexVector3 endIndexVector = { mesh.nCells(X) - 1, mesh.nCells(Y) - 1 , mesh.nCells(Z) - 1};
+
+    // Set all coefficients to zero
+    coeffs[p].setConstant(0);
+    coeffs[n].setConstant(0);
+    coeffs[e].setConstant(0);
+    coeffs[s].setConstant(0);
+    coeffs[w].setConstant(0);
+    coeffs[t].setConstant(0);
+    coeffs[b].setConstant(0);
+
+    floatType uf, coeff;   // temporary variable for face velocity and upwinding coefficient
+
+    // Internal cells
+    for (iterType k = 1; k != endIndexVector[Z]; k++) {
+        for (iterType j = 1; j != endIndexVector[Y]; j++) {
+            for (iterType i = 1; i != endIndexVector[X]; i++) {
+                
+
+                // Upwind east face
+                uf = faceVelocities[F::U](i+1, j, k);
+                coeff = uf * mesh.cellLengthsInv[X](i);
+                if ( uf >= 0) {
+                    coeffs[p](i, j, k) += coeff;
+                } else {
+                    coeffs[e](i, j, k)  = coeff;
+                }
+
+                // Upwind west face
+                uf = faceVelocities[F::U](i, j, k);
+                coeff = - uf * mesh.cellLengthsInv[X](i);
+                if ( uf >= 0) {
+                    coeffs[w](i, j, k)  = coeff;
+                } else {
+                    coeffs[p](i, j, k) += coeff;
+                }
+
+                // Upwind north face
+                uf = faceVelocities[F::V](i, j+1, k);
+                coeff = uf * mesh.cellLengthsInv[Y](j);
+                if ( uf >= 0) {
+                    coeffs[p](i, j, k) += coeff;
+                } else {
+                    coeffs[n](i, j, k)  = coeff;
+                }
+
+                // Upwind south face
+                uf = faceVelocities[F::V](i, j, k);
+                coeff = - uf * mesh.cellLengthsInv[Y](j);
+                if ( uf >= 0) {
+                    coeffs[s](i, j, k)  = coeff;
+                } else {
+                    coeffs[p](i, j, k) += coeff;
+                }
+
+                // Upwind top face
+                uf = faceVelocities[F::W](i, j, k+1);
+                coeff = uf * mesh.cellLengthsInv[Z](k);
+                if ( uf >= 0) {
+                    coeffs[p](i, j, k) += coeff;
+                } else {
+                    coeffs[t](i, j, k)  = coeff;
+                }
+
+                // Upwind bottom face
+                uf = faceVelocities[F::W](i, j, k);
+                coeff = - uf * mesh.cellLengthsInv[Z](k);
+                if ( uf >= 0) {
+                    coeffs[b](i, j, k)  = coeff;
+                } else {
+                    coeffs[p](i, j, k) += coeff;
+                }
+
+            }
+        }
+    }
+
+
+    // +x boundary
+    switch ( boundaryConditions[field][BP::xPositive].type ) {
+        
+        case BC::zeroGradient:
+
+            break;
+
+        case BC::uniform:
+            break;
+
+        case BC::extrapolated:
+            break;
+
+        default:
+            break;
+    }
+
+
+    // -x boundary
+
+
+}
+
+
+
+
+/*---------------------------------------------------------------------------------------------------------------*\
+                                        Linear Interpolated Coefficients
+\*---------------------------------------------------------------------------------------------------------------*/
+
 // Set coefficients for quantities that are intrpolated linearly onto faces.
 void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array1D> &coeffs, std::vector<floatType> &boundaryConstants, const Mesh &mesh, 
                                      const InputData &inputData, const Fields::ENUMDATA field, Axis::ENUMDATA axis)
@@ -275,7 +403,7 @@ void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, 
 
 }
 
-
+ 
 }   // end anonymous namespace
 
 
@@ -294,6 +422,7 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
     SetDiffusionCoeffients(fvCoeffs.diffw, fvCoeffs.boundaryConstw, mesh, inputData, Fields::W);
 
     // Momentum velocity terms
+    SetPicardCoefficients(fvCoeffs.auu, faceVelocities, mesh, inputData, Fields::U);
 
 
     // Momentum pressure terms

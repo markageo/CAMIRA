@@ -115,11 +115,10 @@ int main(int argc, char const *argv[])
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
     TOC();
 
+    TIC("Allocate and Initialise FV Coefficients")
     CFD::FVCoefficients fvCoeffs(mesh.nCells);
-    TIC("Initialise FV Coefficients")
     CFD::InitialiseFVCoefficients(fvCoeffs, mesh, faceVelocities, inputData);
     TOC()
-
     
     // // Cell centers to file
     // UTIL::writeArray("debug/cell_centers_x.dat", mesh.cellCenters[AX::X]);
