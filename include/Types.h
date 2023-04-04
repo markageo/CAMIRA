@@ -225,12 +225,12 @@ class ArrayAllocator
 
         // ----------------------------------- Array reference return operators ----------------------------------- //
 
-        arrayType &operator[](enumStruct::ENUMDATA idx)
+        arrayType &operator[](const enumStruct::ENUMDATA idx)
         {
             return *coeffPointers[idx];
         }
 
-        arrayType &operator[](enumStruct::ENUMDATA idx) const
+        arrayType &operator[](const enumStruct::ENUMDATA idx) const 
         {
             return *coeffPointers[idx];
         }
