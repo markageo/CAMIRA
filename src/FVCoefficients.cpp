@@ -1,5 +1,6 @@
 #include "FiniteVolumeFunctions.h"
 
+#include <algorithm>
 #include <iostream>
 
 // Implementation file for finite volume coefficient structure and update functions
@@ -184,77 +185,75 @@ void SetPicardCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array
     using enum TransportCoefficients::ENUMDATA;
 
     const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
-    indexVector3 endIndexVector = { mesh.nCells(X) - 1, mesh.nCells(Y) - 1 , mesh.nCells(Z) - 1};
 
-    // Set all coefficients to zero
+    // ALl directions can contribute to the p coefficient, so initialise it to zero
     coeffs[p].setConstant(0);
-    coeffs[n].setConstant(0);
-    coeffs[e].setConstant(0);
-    coeffs[s].setConstant(0);
-    coeffs[w].setConstant(0);
-    coeffs[t].setConstant(0);
-    coeffs[b].setConstant(0);
-
-    floatType uf, coeff;   // temporary variable for face velocity and upwinding coefficient
-
-    // Internal cells
-    for (iterType k = 1; k != endIndexVector[Z]; k++) {
-        for (iterType j = 1; j != endIndexVector[Y]; j++) {
-            for (iterType i = 1; i != endIndexVector[X]; i++) {
+    
+    // Coefficients are updated by looping through cell faces. This makes boundary conditions simpler and halves the number of upwind checks.
+    
+    // X normal faces
+    floatType uf, coeff_e, coeff_w;
+    for (iterType k = 0; k != faceVelocities[F::U].dimension(Z); k++) {
+        for (iterType j = 0; j != faceVelocities[F::U].dimension(Y); j++) {
+            for (iterType i = 1; i != faceVelocities[F::U].dimension(X)-1; i++) {
                 
-                // Upwind east face
-                uf = faceVelocities[F::U](i+1, j, k);
-                coeff = uf * mesh.cellLengthsInv[X](i);
-                if ( uf >= 0) {
-                    coeffs[p](i, j, k) += coeff;
-                } else {
-                    coeffs[e](i, j, k)  = coeff;
-                }
-
-                // Upwind west face
                 uf = faceVelocities[F::U](i, j, k);
-                coeff = - uf * mesh.cellLengthsInv[X](i);
-                if ( uf >= 0) {
-                    coeffs[w](i, j, k)  = coeff;
-                } else {
-                    coeffs[p](i, j, k) += coeff;
-                }
+                coeff_w = uf * mesh.cellLengthsInv[X](i-1);
+                coeff_e = uf * mesh.cellLengthsInv[X](i);
 
-                // Upwind north face
-                uf = faceVelocities[F::V](i, j+1, k);
-                coeff = uf * mesh.cellLengthsInv[Y](j);
-                if ( uf >= 0) {
-                    coeffs[p](i, j, k) += coeff;
-                } else {
-                    coeffs[n](i, j, k)  = coeff;
-                }
+                // Cell on west side
+                coeffs[e](i-1, j, k)  = std::min( coeff_w, 0.0 );
+                coeffs[p](i-1, j, k) += coeff_w - coeffs[e](i, j, k);
 
-                // Upwind south face
+                // Cell on east side
+                coeffs[w](i, j, k)  = std::max( coeff_e, 0.0 );
+                coeffs[p](i, j, k) += coeff_e - coeffs[w](i, j, k);
+
+            }
+        }
+    }
+
+    
+    // Y normal faces
+    floatType coeff_n, coeff_s;
+    for (iterType k = 0; k != faceVelocities[F::U].dimension(Z); k++) {
+        for (iterType j = 1; j != faceVelocities[F::U].dimension(Y)-1; j++) {
+            for (iterType i = 0; i != faceVelocities[F::U].dimension(X); i++) {
+                
                 uf = faceVelocities[F::V](i, j, k);
-                coeff = - uf * mesh.cellLengthsInv[Y](j);
-                if ( uf >= 0) {
-                    coeffs[s](i, j, k)  = coeff;
-                } else {
-                    coeffs[p](i, j, k) += coeff;
-                }
+                coeff_s = uf * mesh.cellLengthsInv[Y](j-1);
+                coeff_n = uf * mesh.cellLengthsInv[Y](j);
 
-                // Upwind top face
-                uf = faceVelocities[F::W](i, j, k+1);
-                coeff = uf * mesh.cellLengthsInv[Z](k);
-                if ( uf >= 0) {
-                    coeffs[p](i, j, k) += coeff;
-                } else {
-                    coeffs[t](i, j, k)  = coeff;
-                }
+                // Cell on south side
+                coeffs[n](i, j-1, k)  = std::min( coeff_s, 0.0 );
+                coeffs[p](i, j-1, k) += coeff_s - coeffs[n](i, j, k);
 
-                // Upwind bottom face
+                // Cell on north side
+                coeffs[s](i, j, k)  = std::max( coeff_n, 0.0 );
+                coeffs[p](i, j, k) += coeff_n - coeffs[s](i, j, k);
+
+            }
+        }
+    }
+
+
+    // Z normal faces
+    floatType coeff_t, coeff_b;
+    for (iterType k = 1; k != faceVelocities[F::U].dimension(Z)-1; k++) {
+        for (iterType j = 0; j != faceVelocities[F::U].dimension(Y); j++) {
+            for (iterType i = 0; i != faceVelocities[F::U].dimension(X); i++) {
+                
                 uf = faceVelocities[F::W](i, j, k);
-                coeff = - uf * mesh.cellLengthsInv[Z](k);
-                if ( uf >= 0) {
-                    coeffs[b](i, j, k)  = coeff;
-                } else {
-                    coeffs[p](i, j, k) += coeff;
-                }
+                coeff_b = uf * mesh.cellLengthsInv[Z](k-1);
+                coeff_t = uf * mesh.cellLengthsInv[Z](k);
+
+                // Cell on bottom side 
+                coeffs[t](i, j-1, k)  = std::min( coeff_b, 0.0 );
+                coeffs[p](i, j-1, k) += coeff_b - coeffs[t](i, j, k);
+
+                // Cell on top side
+                coeffs[b](i, j, k)  = std::max( coeff_t, 0.0 );
+                coeffs[p](i, j, k) += coeff_t - coeffs[b](i, j, k);
 
             }
         }
