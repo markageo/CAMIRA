@@ -38,8 +38,6 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
                             const Mesh &mesh, const InputData &inputData, const Fields::ENUMDATA field)
 {
 
-    // !!!!!!!!!!!! NEED TO FLIP THE SIGN OF THE COEFFICIENTS !!!!!!!!!!!!
-
     using BC = BoundaryConditions::ENUMDATA;
     using BP = BoundaryPatches::ENUMDATA;
     using F  = Fields::ENUMDATA;
@@ -92,9 +90,9 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
 
         // Internal cells
         for (iterType i = 1; i != iEnd; i++) {
-            diff[axis][p   ](i) = - ( mesh.cellCenterDiffInv[axis](i+1) + mesh.cellCenterDiffInv[axis](i) );
-            diff[axis][east](i) = mesh.cellCenterDiffInv[axis](i+1);
-            diff[axis][west](i) = mesh.cellCenterDiffInv[axis](i);
+            diff[axis][p   ](i) = ( mesh.cellCenterDiffInv[axis](i+1) + mesh.cellCenterDiffInv[axis](i) );
+            diff[axis][east](i) = - mesh.cellCenterDiffInv[axis](i+1);
+            diff[axis][west](i) = - mesh.cellCenterDiffInv[axis](i);
         }
 
 
@@ -102,22 +100,22 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
         switch ( positivePatchBC ) {
             
             case BC::zeroGradient: 
-                diff[axis][p   ](iEnd) = - mesh.cellCenterDiffInv[axis](iEnd);
+                diff[axis][p   ](iEnd) = mesh.cellCenterDiffInv[axis](iEnd);
                 diff[axis][east](iEnd) = 0;
-                diff[axis][west](iEnd) = mesh.cellCenterDiffInv[axis](iEnd);
+                diff[axis][west](iEnd) = - mesh.cellCenterDiffInv[axis](iEnd);
                 break;
 
             case BC::uniform:
-                diff[axis][p   ](iEnd) = - ( 2*mesh.cellLengthsInv[axis](iEnd) + mesh.cellCenterDiffInv[axis](iEnd) );
+                diff[axis][p   ](iEnd) = ( 2*mesh.cellLengthsInv[axis](iEnd) + mesh.cellCenterDiffInv[axis](iEnd) );
                 diff[axis][east](iEnd) = 0;
-                diff[axis][west](iEnd) = mesh.cellCenterDiffInv[axis](iEnd);
-                boundaryConstants[positivePatch] += 2*mesh.cellLengthsInv[axis](iEnd) * boundaryConditions[field][positivePatch].value;
+                diff[axis][west](iEnd) = - mesh.cellCenterDiffInv[axis](iEnd);
+                boundaryConstants[positivePatch] += 2*mesh.cellLengthsInv[axis](iEnd) * boundaryConditions[field][positivePatch].value; // This is on the RHS
                 break;
 
             case BC::extrapolated:
-                diff[axis][p   ](iEnd) = 2*mesh.cellLengthsInv[axis](iEnd) * (mesh.extrapFactors[positivePatch].p - 1)  -  mesh.cellCenterDiffInv[axis](iEnd);
+                diff[axis][p   ](iEnd) = - 2*mesh.cellLengthsInv[axis](iEnd) * (mesh.extrapFactors[positivePatch].p - 1)  -  mesh.cellCenterDiffInv[axis](iEnd);
                 diff[axis][east](iEnd) = 0;
-                diff[axis][west](iEnd) = 2*mesh.cellLengthsInv[axis](iEnd) * mesh.extrapFactors[positivePatch].a  +  mesh.cellCenterDiffInv[axis](iEnd);
+                diff[axis][west](iEnd) = - 2*mesh.cellLengthsInv[axis](iEnd) * mesh.extrapFactors[positivePatch].a  +  mesh.cellCenterDiffInv[axis](iEnd);
                 break;
 
             default:
@@ -129,21 +127,21 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
         switch ( negativePatchBC) {
             
             case BC::zeroGradient: 
-                diff[axis][p   ](0) = - mesh.cellCenterDiffInv[axis](1);
-                diff[axis][east](0) = mesh.cellCenterDiffInv[axis](1);
+                diff[axis][p   ](0) = mesh.cellCenterDiffInv[axis](1);
+                diff[axis][east](0) = - mesh.cellCenterDiffInv[axis](1);
                 diff[axis][west](0) = 0;
                 break;
 
             case BC::uniform:
-                diff[axis][p   ](0) = - ( mesh.cellCenterDiffInv[axis](1) + 2*mesh.cellLengthsInv[axis](0) );
-                diff[axis][east](0) = mesh.cellCenterDiffInv[axis](1);
+                diff[axis][p   ](0) = ( mesh.cellCenterDiffInv[axis](1) + 2*mesh.cellLengthsInv[axis](0) );
+                diff[axis][east](0) = - mesh.cellCenterDiffInv[axis](1);
                 diff[axis][west](0) = 0;
-                boundaryConstants[negativePatch] += 2*mesh.cellLengthsInv[axis](0) * boundaryConditions[field][negativePatch].value;
+                boundaryConstants[negativePatch] += 2*mesh.cellLengthsInv[axis](0) * boundaryConditions[field][negativePatch].value; // This is on the RHS
                 break;
 
             case BC::extrapolated:
-                diff[axis][p   ](0) = 2*mesh.cellLengthsInv[axis](0) * (mesh.extrapFactors[negativePatch].p - 1)  -  mesh.cellCenterDiffInv[axis](1);
-                diff[axis][east](0) = 2*mesh.cellLengthsInv[axis](0) * mesh.extrapFactors[negativePatch].a  +  mesh.cellCenterDiffInv[axis](1);
+                diff[axis][p   ](0) = - 2*mesh.cellLengthsInv[axis](0) * (mesh.extrapFactors[negativePatch].p - 1)  -  mesh.cellCenterDiffInv[axis](1);
+                diff[axis][east](0) = - 2*mesh.cellLengthsInv[axis](0) * mesh.extrapFactors[negativePatch].a  +  mesh.cellCenterDiffInv[axis](1);
                 diff[axis][west](0) = 0;
                 break;
 
@@ -204,7 +202,6 @@ void SetPicardCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array
         for (iterType j = 1; j != endIndexVector[Y]; j++) {
             for (iterType i = 1; i != endIndexVector[X]; i++) {
                 
-
                 // Upwind east face
                 uf = faceVelocities[F::U](i+1, j, k);
                 coeff = uf * mesh.cellLengthsInv[X](i);
