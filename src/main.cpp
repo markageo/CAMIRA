@@ -85,7 +85,6 @@ int main(int argc, char const *argv[])
 
     using AX = CFD::Axis::ENUMDATA;
     using F = CFD::Fields::ENUMDATA;
-    using BP = CFD::BoundaryPatches::ENUMDATA;
 
     TIC("Meshing");
     const CFD::Mesh mesh(inputData);
@@ -114,8 +113,11 @@ int main(int argc, char const *argv[])
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
     TOC();
 
-    TIC("Allocate and Initialise FV Coefficients")
+    TIC("Allocate FV Coefficients")
     CFD::FVCoefficients fvCoeffs(mesh.nCells);
+    TOC()
+
+    TIC("Initialise FV Coefficients")
     CFD::InitialiseFVCoefficients(fvCoeffs, mesh, faceVelocities, inputData);
     TOC()
     
