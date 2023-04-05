@@ -99,7 +99,7 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
                 diff[axis][p   ](iEnd) = ( 2*mesh.cellLengthsInv[axis](iEnd) + mesh.cellCenterDiffInv[axis](iEnd) );
                 diff[axis][east](iEnd) = 0;
                 diff[axis][west](iEnd) = - mesh.cellCenterDiffInv[axis](iEnd);
-                boundaryConstants[positivePatch] += 2*mesh.cellLengthsInv[axis](iEnd) * boundaryConditions[field][positivePatch].value; // This is on the RHS
+                boundaryConstants[positivePatch] += -2*mesh.cellLengthsInv[axis](iEnd) * boundaryConditions[field][positivePatch].value;
                 break;
 
             case BC::extrapolated:
@@ -126,7 +126,7 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
                 diff[axis][p   ](0) = ( mesh.cellCenterDiffInv[axis](1) + 2*mesh.cellLengthsInv[axis](0) );
                 diff[axis][east](0) = - mesh.cellCenterDiffInv[axis](1);
                 diff[axis][west](0) = 0;
-                boundaryConstants[negativePatch] += 2*mesh.cellLengthsInv[axis](0) * boundaryConditions[field][negativePatch].value; // This is on the RHS
+                boundaryConstants[negativePatch] += -2*mesh.cellLengthsInv[axis](0) * boundaryConditions[field][negativePatch].value;
                 break;
 
             case BC::extrapolated:
