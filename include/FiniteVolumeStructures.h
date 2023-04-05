@@ -45,7 +45,8 @@ struct FVCoefficients
         ArrayAllocator<TransportCoefficients, array1D> AP;                  // Pressure coefficients
         array3D B;                                                          // Source Term
         std::vector< ArrayAllocator<TransportCoefficients, array1D> > diff; // Diffusion coefficients diff[Axis][TransportCoefficient]
-        std::vector< floatType > boundaryDiff, boundaryP, boundaryVel;      // Constant terms that come from uniform BC boundaryDiff[BoundaryPatch]
+        std::vector< floatType > boundaryDiff, boundaryP;                   // Constant terms that come from uniform BC boundaryDiff[BoundaryPatch]
+        std::vector< array2D > boundaryVel;
     };
 
     struct ContinuityEquation {

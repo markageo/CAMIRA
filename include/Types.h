@@ -98,6 +98,25 @@ struct TransportCoefficients
 };
 
 
+// Lookup arrays for coefficients and patches coerresponding to each axis
+constexpr std::array<BoundaryPatches::ENUMDATA, 3> positivePatches = {BoundaryPatches::ENUMDATA::xPositive,
+                                                                      BoundaryPatches::ENUMDATA::yPositive,
+                                                                      BoundaryPatches::ENUMDATA::zPositive};
+
+constexpr std::array<BoundaryPatches::ENUMDATA, 3> negativePatches{BoundaryPatches::ENUMDATA::xNegative,
+                                                                   BoundaryPatches::ENUMDATA::yNegative,
+                                                                   BoundaryPatches::ENUMDATA::zNegative};
+
+constexpr std::array<TransportCoefficients::ENUMDATA, 3> eastCoefficients{TransportCoefficients::ENUMDATA::e,
+                                                                          TransportCoefficients::ENUMDATA::n,
+                                                                          TransportCoefficients::ENUMDATA::t};
+
+
+constexpr std::array<TransportCoefficients::ENUMDATA, 3> westCoefficients{TransportCoefficients::ENUMDATA::w,
+                                                                          TransportCoefficients::ENUMDATA::s,
+                                                                          TransportCoefficients::ENUMDATA::b};
+
+
 // Allocate arrays using enums. Arrays are initialised to zero.
 template <typename enumStruct, typename arrayType = CFD::array3D>
 class ArrayAllocator
@@ -225,15 +244,29 @@ class ArrayAllocator
 
         // ----------------------------------- Array reference return operators ----------------------------------- //
 
-        arrayType &operator[](const enumStruct::ENUMDATA idx)
+        // // For strongly types enum input, this is probably more type safe
+        // arrayType &operator[](const enumStruct::ENUMDATA idx)
+        // {
+        //     return *coeffPointers[idx];
+        // }
+
+        // arrayType &operator[](const enumStruct::ENUMDATA idx) const 
+        // {
+        //     return *coeffPointers[idx];
+        // }
+
+
+        // For int parameters
+        arrayType &operator[](const intType idx)
         {
             return *coeffPointers[idx];
         }
 
-        arrayType &operator[](const enumStruct::ENUMDATA idx) const 
+        arrayType &operator[](const intType idx) const 
         {
             return *coeffPointers[idx];
         }
+
 
         // ------------------------------------------- Container access ------------------------------------------- //
 

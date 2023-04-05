@@ -309,6 +309,7 @@ intType EquationDim(const Fields::ENUMDATA field) {
 
 using C = TransportCoefficients::ENUMDATA;
 using F = Fields::ENUMDATA;
+using enum Axis::ENUMDATA;
 
 // Momentum equations constructor
 FVCoefficients::MomentumEquation::MomentumEquation(const Fields::ENUMDATA field, const CFD::indexVector3 &dims) :
@@ -316,13 +317,15 @@ FVCoefficients::MomentumEquation::MomentumEquation(const Fields::ENUMDATA field,
     AV( EquationEnums(field, F::V), dims ),
     AW( EquationEnums(field, F::W), dims ),
     AP( EquationEnums(field, F::P), dims( EquationDim(field) ) ),
-    B( dims(0), dims(1), dims(2) ),
-    diff({ ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims(0) ),
-           ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims(1) ),
-           ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims(2) ) }),
+    B( dims(X), dims(Y), dims(Z) ),
+    diff({ ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims(X) ),
+           ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims(Y) ),
+           ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims(Z) ) }),
     boundaryDiff( BoundaryPatches::count ),
     boundaryP( BoundaryPatches::count ),
-    boundaryVel( BoundaryPatches::count )
+    boundaryVel( {array2D( dims(Y), dims(Z) ), array2D( dims(Y), dims(Z) ),
+                  array2D( dims(X), dims(Z) ), array2D( dims(X), dims(Z) ),
+                  array2D( dims(X), dims(Y) ), array2D( dims(X), dims(Y) )} )   // This doesnt follow right hand rule
 {};
 
 
@@ -332,7 +335,7 @@ FVCoefficients::ContinuityEquation::ContinuityEquation(const indexVector3 &dims)
     AV( EquationEnums(F::P, F::V), dims( EquationDim(F::V) ) ),
     AW( EquationEnums(F::P, F::W), dims( EquationDim(F::W) ) ),
     AP( EquationEnums(F::P, F::P), dims ),
-    B( dims(0), dims(1), dims(2) ),
+    B( dims(X), dims(Y), dims(Z) ),
     boundaryVel( BoundaryPatches::count ),
     boundaryP( BoundaryPatches::count )
 {};
