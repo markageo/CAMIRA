@@ -24,7 +24,7 @@ Mesh {
     Grid Y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 5
+            nCells     = 6
             biasFactor = 3
         }
     }
@@ -33,7 +33,7 @@ Mesh {
     Grid Z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 5
+            nCells     = 4
             biasFactor = 1
         }
     }
@@ -51,9 +51,9 @@ BoundaryConditions
     }
 
     -x {
-        u = extrapolated
-        v = uniform, 0
-        w = uniform, 0
+        u = uniform, 1
+        v = uniform, 2
+        w = uniform, 3
         p = zeroGradient
     }
 
@@ -81,7 +81,7 @@ BoundaryConditions
     -z {
         u = zeroGradient
         v = zeroGradient
-        w = extrapolated
+        w = zeroGradient
         p = zeroGradient
     }
 }
