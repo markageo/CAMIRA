@@ -16,10 +16,10 @@ using namespace CFD;
                                                     Diffusion
 \*---------------------------------------------------------------------------------------------------------------*/
 
+// Check if continuity equation implies a zero gradient boundary condition. This occurs if both orthogonal fields have a uniform BC
 BoundaryConditions::ENUMDATA GetDiffusionBC(const InputData::BoundaryConditionData &boundaryConditions, const BoundaryPatches::ENUMDATA boundaryPatch, 
                                 const Fields::ENUMDATA field, const Fields::ENUMDATA fieldToCheck, Fields::ENUMDATA orthogonalField1, const Fields::ENUMDATA orthogonalField2)
 {
-    // Check if continuity equation implies a zero gradient boundary condition. This occurs if both orthogonal fields have a uniform BC
     using BC = BoundaryConditions::ENUMDATA;
 
     if (field == fieldToCheck) {
@@ -40,7 +40,6 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
 {
 
     using BC = BoundaryConditions::ENUMDATA;
-    using BP = BoundaryPatches::ENUMDATA;
     using F  = Fields::ENUMDATA;
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
@@ -51,38 +50,28 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
 
     TransportCoefficients::ENUMDATA east, west;     // These are just names, they can be north, south etc.
     BoundaryPatches::ENUMDATA positivePatch, negativePatch;
-    Axis::ENUMDATA axis;
     BoundaryConditions::ENUMDATA positivePatchBC, negativePatchBC;  // Store these since the continuity equation can override a BC to be zeroGradient
 
 
     // Diffusion in each axis is calculated in the same way
-    for (int axisNum = 0; axisNum != Axis::count; axisNum++) {
+    for (int axis = 0; axis != Axis::count; axis++) {
 
-        axis = static_cast<Axis::ENUMDATA>(axisNum);
         iEnd = endIndexVector(axis);
+        positivePatch = positivePatches[axis];
+        negativePatch = negativePatches[axis];
+        east = eastCoefficients[axis];
+        west = westCoefficients[axis];     
 
         // Set variables unique to each axis
-        if         (axis == X) {
-            positivePatch = BP::xPositive;
-            negativePatch = BP::xNegative;
-            east = e;
-            west = w;    
+        if         (axis == X) {  
             positivePatchBC = GetDiffusionBC(boundaryConditions, positivePatch, field, F::U, F::V, F::W);
             negativePatchBC = GetDiffusionBC(boundaryConditions, negativePatch, field, F::U, F::V, F::W); 
               
         } else if (axis == Y) {
-            positivePatch = BP::yPositive;
-            negativePatch = BP::yNegative;
-            east = n;
-            west = s;
             positivePatchBC = GetDiffusionBC(boundaryConditions, positivePatch, field, F::V, F::W, F::U);
             negativePatchBC = GetDiffusionBC(boundaryConditions, negativePatch, field, F::V, F::W, F::U); 
 
         } else if (axis == Z) {
-            positivePatch = BP::zPositive;
-            negativePatch = BP::zNegative;
-            east = t;
-            west = b;
             positivePatchBC = GetDiffusionBC(boundaryConditions, positivePatch, field, F::W, F::U, F::V);
             negativePatchBC = GetDiffusionBC(boundaryConditions, negativePatch, field, F::W, F::U, F::V); 
 
@@ -174,23 +163,15 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
                                          Momentum Velocity Coefficients
 \*---------------------------------------------------------------------------------------------------------------*/
 
-
-void SetPicardCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, const ArrayAllocator<Fields> &faceVelocities,
-                           const Mesh &mesh, const InputData &inputData, const Fields::ENUMDATA field)
+// Upwind coefficients for X normal faces
+void UpwindXnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
+                   const ArrayAllocator<Fields> &faceVelocities, const Mesh &mesh)
 {
-    using BC = BoundaryConditions::ENUMDATA;
-    using BP = BoundaryPatches::ENUMDATA;
+
     using F  = Fields::ENUMDATA;
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
-
-    // Coefficients are updated by looping through cell faces. This makes boundary conditions simpler and halves the number of upwind checks.
-    // ALl directions can contribute to the p coefficient, so initialise it to zero
-    coeffs[p].setConstant(0);
-    
-    // X normal faces
     floatType uf, coeff_e, coeff_w;
     for (iterType k = 0; k != faceVelocities[F::U].dimension(Z); k++) {
         for (iterType j = 0; j != faceVelocities[F::U].dimension(Y); j++) {
@@ -211,10 +192,19 @@ void SetPicardCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array
             }
         }
     }
+}
 
-    
-    // Y normal faces
-    floatType coeff_n, coeff_s;
+
+// Upwind coefficients Y normal faces
+void UpwindYnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
+                   const ArrayAllocator<Fields> &faceVelocities, const Mesh &mesh)
+{
+
+    using F  = Fields::ENUMDATA;
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+
+    floatType uf, coeff_n, coeff_s;
     for (iterType k = 0; k != faceVelocities[F::U].dimension(Z); k++) {
         for (iterType j = 1; j != faceVelocities[F::U].dimension(Y)-1; j++) {
             for (iterType i = 0; i != faceVelocities[F::U].dimension(X); i++) {
@@ -234,10 +224,19 @@ void SetPicardCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array
             }
         }
     }
+}
 
 
-    // Z normal faces
-    floatType coeff_t, coeff_b;
+// Upwind coefficients for Z normal faces
+void UpwindZnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
+                   const ArrayAllocator<Fields> &faceVelocities, const Mesh &mesh)
+{
+
+    using F  = Fields::ENUMDATA;
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+
+    floatType uf, coeff_t, coeff_b;
     for (iterType k = 1; k != faceVelocities[F::U].dimension(Z)-1; k++) {
         for (iterType j = 0; j != faceVelocities[F::U].dimension(Y); j++) {
             for (iterType i = 0; i != faceVelocities[F::U].dimension(X); i++) {
@@ -257,44 +256,92 @@ void SetPicardCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array
             }
         }
     }
+}
 
 
-    // +x boundary
-    intType iEnd = mesh.nCells[X] - 1;
-    switch ( boundaryConditions[field][BP::xPositive].type ) {
-        
-        case BC::zeroGradient:
-            coeffs[p].chip(iEnd, X) += faceVelocities[F::U].chip(iEnd+1, X) * faceVelocities[F::U].constant( mesh.cellLengthsInv[X](iEnd) );
-            break;
+void SetPicardCoefficients(ArrayAllocator<TransportCoefficients, array3D> &coeffs, std::vector<array2D> &boundaryConstants,
+                           const ArrayAllocator<Fields> &faceVelocities, const Mesh &mesh, const InputData &inputData, const Fields::ENUMDATA field)
+{
+    using BC = BoundaryConditions::ENUMDATA;
+    using F  = Fields::ENUMDATA;
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
 
-        case BC::uniform:
-            break;
+    const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
 
-        case BC::extrapolated:
-            break;
+    
+    // ALl directions can contribute to the p coefficient, so initialise it to zero
+    coeffs[p].setConstant(0);
+    
+    // Coefficients are updated by looping through cell faces. This makes boundary conditions simpler and halves the number of upwind checks.
+    UpwindXnormal(coeffs, faceVelocities, mesh);
+    UpwindYnormal(coeffs, faceVelocities, mesh);
+    UpwindZnormal(coeffs, faceVelocities, mesh);
 
-        default:
-            break;
+
+    // Boundary conditions by axis
+    constexpr std::array<Fields::ENUMDATA, 3> faceVelocityFields = {F::U, F::V, F::W};
+    Fields::ENUMDATA axisVel;
+    BoundaryPatches::ENUMDATA positivePatch, negativePatch;
+    TransportCoefficients::ENUMDATA east, west;
+    iterType iEnd;
+    for (int axis = 0; axis != Axis::count; axis++) {
+        positivePatch = positivePatches[axis];
+        negativePatch = negativePatches[axis];
+        east = eastCoefficients[axis];
+        west = westCoefficients[axis];
+        axisVel = faceVelocityFields[axis];
+        iEnd = mesh.nCells(axis) - 1;
+
+
+        // Axis positive boundary
+        switch ( boundaryConditions[field][positivePatch].type ) {
+            
+            case BC::zeroGradient:
+                coeffs[p].chip(iEnd, axis) += faceVelocities[axisVel].chip(iEnd+1, axis) * faceVelocities[axisVel].chip(iEnd+1, axis).constant( mesh.cellLengthsInv[axis](iEnd) );
+                break;
+
+            case BC::uniform:
+                boundaryConstants[positivePatch] += faceVelocities[axisVel].chip(iEnd+1, axis)
+                                                  * boundaryConstants[positivePatch].constant( boundaryConditions[field][positivePatch].value * mesh.cellLengthsInv[axis](iEnd) );
+                break;
+
+            case BC::extrapolated:
+                coeffs[p   ].chip(iEnd, axis) += faceVelocities[axisVel].chip(iEnd+1, axis) 
+                                               * faceVelocities[axisVel].chip(iEnd+1, axis).constant( mesh.extrapFactors[positivePatch].p * mesh.cellLengthsInv[axis](iEnd) );
+                coeffs[west].chip(iEnd, axis) += faceVelocities[axisVel].chip(iEnd+1, axis) 
+                                               * faceVelocities[axisVel].chip(iEnd+1, axis).constant( mesh.extrapFactors[positivePatch].a * mesh.cellLengthsInv[axis](iEnd) );
+                break;
+
+            default:
+                break;
+        }
+
+
+        // Axis negative boundary
+        switch ( boundaryConditions[field][negativePatch].type ) {
+            
+            case BC::zeroGradient:
+                coeffs[p].chip(0, axis) += faceVelocities[axisVel].chip(0, axis) * faceVelocities[axisVel].chip(0, axis).constant( mesh.cellLengthsInv[X](0) );
+                break;
+
+            case BC::uniform:
+                boundaryConstants[negativePatch] += faceVelocities[axisVel].chip(0, axis)
+                                                  * boundaryConstants[negativePatch].constant( boundaryConditions[field][negativePatch].value * mesh.cellLengthsInv[axis](0) );
+                break;
+
+            case BC::extrapolated:
+                coeffs[p   ].chip(0, axis) += faceVelocities[axisVel].chip(0, axis) 
+                                            * faceVelocities[axisVel].chip(0, axis).constant( mesh.extrapFactors[negativePatch].p * mesh.cellLengthsInv[axis](0) );
+                coeffs[east].chip(0, axis) += faceVelocities[axisVel].chip(0, axis) 
+                                            * faceVelocities[axisVel].chip(0, axis).constant( mesh.extrapFactors[negativePatch].a * mesh.cellLengthsInv[axis](0) );
+                break;
+
+            default:
+                break;
+        }
+
     }
-
-
-    // -x boundary
-    switch ( boundaryConditions[field][BP::xNegative].type ) {
-        
-        case BC::zeroGradient:
-            coeffs[p].chip(0, X) += faceVelocities[F::U].chip(0, X) * faceVelocities[F::U].constant( mesh.cellLengthsInv[X](0) );
-            break;
-
-        case BC::uniform:
-            break;
-
-        case BC::extrapolated:
-            break;
-
-        default:
-            break;
-    }
-
 
 }
 
@@ -310,31 +357,16 @@ void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, 
                                      const InputData &inputData, const Fields::ENUMDATA field, Axis::ENUMDATA axis)
 {
     using BC = BoundaryConditions::ENUMDATA;
-    using BP = BoundaryPatches::ENUMDATA;
     using F  = Fields::ENUMDATA;
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
     const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
 
-    BoundaryPatches::ENUMDATA positivePatch, negativePatch;
-    TransportCoefficients::ENUMDATA east, west;     // These are just names, they can be north, south etc.
-    if         (axis == X) {
-        positivePatch = BP::xPositive;
-        negativePatch = BP::xNegative;
-        east = e;
-        west = w;
-    } else if (axis == Y) {
-        positivePatch = BP::yPositive;
-        negativePatch = BP::yNegative;
-        east = n;
-        west = s;
-    } else if (axis == Z) {
-        positivePatch = BP::zPositive;
-        negativePatch = BP::zNegative;
-        east = t;
-        west = b;
-    }
+    BoundaryPatches::ENUMDATA positivePatch = positivePatches[axis],
+                              negativePatch = negativePatches[axis];
+    TransportCoefficients::ENUMDATA east = eastCoefficients[axis],    // These are just names, they can be north, south etc.
+                                    west = westCoefficients[axis];  
     iterType iEnd = mesh.nCells(axis) - 1;
 
     // Internal cells
@@ -433,7 +465,11 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
     SetDiffusionCoeffients(fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh, inputData, Fields::W);
 
     // Momentum velocity terms
-    SetPicardCoefficients(fvCoeffs.Umom.AU, faceVelocities, mesh, inputData, Fields::U);
+    SetPicardCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, Fields::U);
+    SetPicardCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, Fields::V);
+    SetPicardCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, Fields::W);
+
+    // Add diffusion to the velocity coefficients in momentum equations
 
 
     // Momentum pressure terms
@@ -451,7 +487,7 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
     // Source terms
     /* NULL */
 
-    // Boundary constants in source terms
+    // Add boundary constants to source terms
 
 }
 
