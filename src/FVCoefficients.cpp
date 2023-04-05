@@ -322,7 +322,7 @@ void SetPicardCoefficients(ArrayAllocator<TransportCoefficients, array3D> &coeff
         switch ( boundaryConditions[field][negativePatch].type ) {
             
             case BC::zeroGradient:
-                coeffs[p].chip(0, axis) += faceVelocities[axisVel].chip(0, axis) * faceVelocities[axisVel].chip(0, axis).constant( mesh.cellLengthsInv[X](0) );
+                coeffs[p].chip(0, axis) += faceVelocities[axisVel].chip(0, axis) * faceVelocities[axisVel].chip(0, axis).constant( mesh.cellLengthsInv[axis](0) );
                 break;
 
             case BC::uniform:
@@ -344,7 +344,6 @@ void SetPicardCoefficients(ArrayAllocator<TransportCoefficients, array3D> &coeff
     }
 
 }
-
 
 
 
@@ -443,7 +442,6 @@ void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, 
         coeffs[east] /= coeffs[west].constant( inputData.rho );
         coeffs[west] /= coeffs[west].constant( inputData.rho );
     }
-
 }
 
  
@@ -483,6 +481,7 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
     SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AW, fvCoeffs.Cont.boundaryVel, mesh, inputData, Fields::W, Axis::Z);
 
     // Continuity pressure terms (Rhie-Chow interpolation)
+    
 
     // Source terms
     /* NULL */
