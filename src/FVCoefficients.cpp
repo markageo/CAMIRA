@@ -165,7 +165,7 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
 
 // Upwind coefficients for X normal faces
 void UpwindXnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
-                   const ArrayAllocator<Fields> &faceVelocities, const Mesh &mesh)
+                   const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, const Mesh &mesh)
 {
 
     using F  = Fields::ENUMDATA;
@@ -197,7 +197,7 @@ void UpwindXnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coe
 
 // Upwind coefficients Y normal faces
 void UpwindYnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
-                   const ArrayAllocator<Fields> &faceVelocities, const Mesh &mesh)
+                   const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, const Mesh &mesh)
 {
 
     using F  = Fields::ENUMDATA;
@@ -229,7 +229,7 @@ void UpwindYnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coe
 
 // Upwind coefficients for Z normal faces
 void UpwindZnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
-                   const ArrayAllocator<Fields> &faceVelocities, const Mesh &mesh)
+                   const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, const Mesh &mesh)
 {
 
     using F  = Fields::ENUMDATA;
@@ -260,7 +260,7 @@ void UpwindZnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coe
 
 
 void SetAdvectionCoefficients(ArrayAllocator<TransportCoefficients, array3D> &coeffs, std::vector<array2D> &boundaryConstants,
-                           const ArrayAllocator<Fields> &faceVelocities, const Mesh &mesh, const InputData &inputData, const Fields::ENUMDATA field)
+                           const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, const Mesh &mesh, const InputData &inputData, const Fields::ENUMDATA field)
 {
     using BC = BoundaryConditions::ENUMDATA;
     using F  = Fields::ENUMDATA;
@@ -492,7 +492,7 @@ void SetMomentumInterpolationCoefficients()
 
 }
  
- 
+
 }   // end anonymous namespace
 
 
@@ -501,7 +501,7 @@ namespace CFD
 {
 
 
-void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const ArrayAllocator<Fields> &faceVelocities, 
+void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
                               const InputData &inputData)
 {
 
@@ -542,7 +542,7 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
 }
 
 
-void UpdateFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const ArrayAllocator<Fields> &faceVelocities)
+void UpdateFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const ArrayAllocator<Fields, CFD::array3D> &faceVelocities)
 {
 
 }

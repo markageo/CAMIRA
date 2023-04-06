@@ -68,7 +68,7 @@ void FaceVelocityZnormal(CFD::array3D &faceVel, const CFD::array3D &cellVel, con
 namespace CFD
 {
 
-void UpdateFaceVelocities( ArrayAllocator<Fields> &faceVelocities, const Mesh &mesh, const ArrayAllocator<Fields> &fields, 
+void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities, const Mesh &mesh, const ArrayAllocator<Fields, CFD::array3D> &fields, 
     const InputData::BoundaryConditionData &boundaryConditions)
 {
     using F = Fields::ENUMDATA;

@@ -9,14 +9,14 @@ namespace CFD
 {
 
 // Update face velocities
-void UpdateFaceVelocities( ArrayAllocator<Fields>  &, const Mesh &, const ArrayAllocator<Fields> &, 
+void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D>  &, const Mesh &, const ArrayAllocator<Fields, CFD::array3D> &, 
     const std::vector< std::vector< InputData::BoundaryConditionStruct > > &);
 
 // Initialise finite volume coefficients
-void InitialiseFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields> &, const InputData &);
+void InitialiseFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields, CFD::array3D> &, const InputData &);
 
 // Update finite volume coefficients (Picard linearisation)
-void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields> &);
+void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields, CFD::array3D> &);
 
 } // end namespace CFD
 

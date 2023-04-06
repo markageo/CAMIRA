@@ -91,14 +91,14 @@ int main(int argc, char const *argv[])
     TOC();
 
     TIC("Field Allocation");
-    CFD::ArrayAllocator<CFD::Fields> fields({F::U, F::V, F::W, F::P}, mesh.nCells);
+    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells);
 
     // Faces are staggered in the negative direction:
     //   cellFaceVelocity_x(i, j, k) -> u(i-1/2, j    , k    )
     //   cellFaceVelocity_y(i, j, k) -> u(i    , j-1/2, k    )
     //   cellFaceVelocity_z(i, j, k) -> u(i    , j    , k-1/2)
     // Subscript indicates the normal direction of the face.
-    CFD::ArrayAllocator<CFD::Fields> faceVelocities( { {F::U, {mesh.nCells(0)+1, mesh.nCells(1)  , mesh.nCells(2)  }}, 
+    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> faceVelocities( { {F::U, {mesh.nCells(0)+1, mesh.nCells(1)  , mesh.nCells(2)  }}, 
                                                        {F::V, {mesh.nCells(0)  , mesh.nCells(1)+1, mesh.nCells(2)  }}, 
                                                        {F::W, {mesh.nCells(0)  , mesh.nCells(1)  , mesh.nCells(2)+1}} } );
     TOC();

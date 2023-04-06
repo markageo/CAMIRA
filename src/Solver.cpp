@@ -4,7 +4,7 @@
 #include "FiniteVolumeStructures.h"
 
 
-void CFD::SweepSolve(ArrayAllocator<CFD::Fields::ENUMDATA>  &fields, const Mesh &mesh, const InputData &inputData) 
+void CFD::SweepSolve(ArrayAllocator<CFD::Fields::ENUMDATA, CFD::array3D>  &fields, const Mesh &mesh, const InputData &inputData) 
 {
 
     // Initialise cell face velocities
