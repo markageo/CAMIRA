@@ -259,7 +259,7 @@ void UpwindZnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coe
 }
 
 
-void SetPicardCoefficients(ArrayAllocator<TransportCoefficients, array3D> &coeffs, std::vector<array2D> &boundaryConstants,
+void SetAdvectionCoefficients(ArrayAllocator<TransportCoefficients, array3D> &coeffs, std::vector<array2D> &boundaryConstants,
                            const ArrayAllocator<Fields> &faceVelocities, const Mesh &mesh, const InputData &inputData, const Fields::ENUMDATA field)
 {
     using BC = BoundaryConditions::ENUMDATA;
@@ -341,6 +341,44 @@ void SetPicardCoefficients(ArrayAllocator<TransportCoefficients, array3D> &coeff
                 break;
         }
 
+    }
+
+}
+
+
+
+/*---------------------------------------------------------------------------------------------------------------*\
+                                           Add Diffusion Coefficients
+\*---------------------------------------------------------------------------------------------------------------*/
+
+void AddDiffusion(ArrayAllocator<TransportCoefficients, array3D> &velCoeffs, std::vector< array2D > &boundaryVel,
+                  const std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diffCoeffs, const std::vector< floatType > &boundaryDiff,
+                  const Mesh &mesh)
+{
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+
+    // Velocity coefficients
+    for (iterType k = 0; k != mesh.nCells(Z); k++) {
+        for (iterType j = 0; j != mesh.nCells(Y); j++) {
+            for (iterType i = 0; i != mesh.nCells(X); i++) {
+                velCoeffs[p](i, j, k) += diffCoeffs[X][p](i) + diffCoeffs[Y][p](j) + diffCoeffs[Z][p](k);
+
+                velCoeffs[e](i, j, k) += diffCoeffs[X][e](i);
+                velCoeffs[w](i, j, k) += diffCoeffs[X][w](i);
+                
+                velCoeffs[n](i, j, k) += diffCoeffs[Y][n](j);
+                velCoeffs[s](i, j, k) += diffCoeffs[Y][s](j);
+
+                velCoeffs[t](i, j, k) += diffCoeffs[Z][t](k);
+                velCoeffs[b](i, j, k) += diffCoeffs[Z][b](k);
+            }
+        }
+    }
+
+    // Constant terms
+    for (int patch = 0; patch != BoundaryPatches::count; patch++) {
+        boundaryVel[patch] += boundaryVel[patch].constant( boundaryDiff[patch] );
     }
 
 }
@@ -444,6 +482,16 @@ void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, 
     }
 }
 
+
+/*---------------------------------------------------------------------------------------------------------------*\
+                        Momentum Weighted Interpolation (Rhie-Chow Interpolation) Coefficients
+\*---------------------------------------------------------------------------------------------------------------*/
+
+void SetMomentumInterpolationCoefficients()
+{
+
+}
+ 
  
 }   // end anonymous namespace
 
@@ -463,12 +511,14 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
     SetDiffusionCoeffients(fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh, inputData, Fields::W);
 
     // Momentum velocity terms
-    SetPicardCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, Fields::U);
-    SetPicardCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, Fields::V);
-    SetPicardCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, Fields::W);
+    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, Fields::U);
+    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, Fields::V);
+    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, Fields::W);
 
     // Add diffusion to the velocity coefficients in momentum equations
-
+    AddDiffusion(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh);
+    AddDiffusion(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, fvCoeffs.Vmom.diff, fvCoeffs.Vmom.boundaryDiff, mesh);
+    AddDiffusion(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh);
 
     // Momentum pressure terms
     SetFaceInterpolatedCoefficients(fvCoeffs.Umom.AP, fvCoeffs.Umom.boundaryP, mesh, inputData, Fields::P, Axis::X);
@@ -481,6 +531,7 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
     SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AW, fvCoeffs.Cont.boundaryVel, mesh, inputData, Fields::W, Axis::Z);
 
     // Continuity pressure terms (Rhie-Chow interpolation)
+    SetMomentumInterpolationCoefficients();
     
 
     // Source terms

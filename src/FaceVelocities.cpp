@@ -80,7 +80,7 @@ void UpdateFaceVelocities( ArrayAllocator<Fields> &faceVelocities, const Mesh &m
     FaceVelocityYnormal( faceVelocities[F::V], fields[F::V], mesh);
     FaceVelocityZnormal( faceVelocities[F::W], fields[F::W], mesh);
 
-    // Just to assign the boundary index of the face flux and field arrays
+    // To allow each axis to be computed by looping
     constexpr std::array<Fields::ENUMDATA, 3> faceVelocityFields = {F::U, F::V, F::W};
     Fields::ENUMDATA axisVel;
     iterType faceEndIndex, fieldEndIndex;
