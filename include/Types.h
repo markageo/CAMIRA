@@ -118,7 +118,7 @@ constexpr std::array<TransportCoefficients::ENUMDATA, 3> westCoefficients{Transp
 
 
 // Allocate arrays using enums. Arrays are initialised to zero.
-template <typename enumStruct, typename arrayType = CFD::array3D>
+template <typename enumStruct, typename arrayType>
 class ArrayAllocator
 {
     static_assert(std::is_same<enumStruct, CFD::Axis                 >::value ||
