@@ -99,8 +99,8 @@ int main(int argc, char const *argv[])
     //   cellFaceVelocity_z(i, j, k) -> u(i    , j    , k-1/2)
     // Subscript indicates the normal direction of the face.
     CFD::ArrayAllocator<CFD::Fields, CFD::array3D> faceVelocities( { {F::U, {mesh.nCells(0)+1, mesh.nCells(1)  , mesh.nCells(2)  }}, 
-                                                       {F::V, {mesh.nCells(0)  , mesh.nCells(1)+1, mesh.nCells(2)  }}, 
-                                                       {F::W, {mesh.nCells(0)  , mesh.nCells(1)  , mesh.nCells(2)+1}} } );
+                                                                     {F::V, {mesh.nCells(0)  , mesh.nCells(1)+1, mesh.nCells(2)  }}, 
+                                                                     {F::W, {mesh.nCells(0)  , mesh.nCells(1)  , mesh.nCells(2)+1}} } );
     TOC();
 
     TIC("Set Values");
