@@ -182,8 +182,8 @@ void UpwindXnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coe
                 coeff_e = uf * mesh.cellLengthsInv[X](i);
 
                 // Cell on west side
-                coeffs[e](i-1, j, k)  = std::min( coeff_w, 0.0 );
-                coeffs[p](i-1, j, k) += coeff_w - coeffs[e](i, j, k);
+                coeffs[e](i-1, j, k) = std::min( coeff_w, 0.0 );
+                coeffs[p](i-1, j, k) = coeff_w - coeffs[e](i, j, k); // Doesnt need += since this is the first to be updated
 
                 // Cell on east side
                 coeffs[w](i, j, k)  = std::max( coeff_e, 0.0 );
@@ -214,8 +214,8 @@ void UpwindYnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coe
                 coeff_n = uf * mesh.cellLengthsInv[Y](j);
 
                 // Cell on south side
-                coeffs[n](i, j-1, k)  = std::min( coeff_s, 0.0 );
-                coeffs[p](i, j-1, k) += coeff_s - coeffs[n](i, j, k);
+                coeffs[n](i, j-1, k) = std::min( coeff_s, 0.0 );
+                coeffs[p](i, j-1, k) = coeff_s - coeffs[n](i, j, k); // Doesnt need += since this is the first to be updated
 
                 // Cell on north side
                 coeffs[s](i, j, k)  = std::max( coeff_n, 0.0 );
@@ -246,8 +246,8 @@ void UpwindZnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coe
                 coeff_t = uf * mesh.cellLengthsInv[Z](k);
 
                 // Cell on bottom side 
-                coeffs[t](i, j-1, k)  = std::min( coeff_b, 0.0 );
-                coeffs[p](i, j-1, k) += coeff_b - coeffs[t](i, j, k);
+                coeffs[t](i, j, k-1) = std::min( coeff_b, 0.0 );
+                coeffs[p](i, j, k-1) = coeff_b - coeffs[t](i, j, k); // Doesnt need += since this is the first to be updated
 
                 // Cell on top side
                 coeffs[b](i, j, k)  = std::max( coeff_t, 0.0 );
@@ -268,10 +268,6 @@ void SetAdvectionCoefficients(ArrayAllocator<TransportCoefficients, array3D> &co
     using enum TransportCoefficients::ENUMDATA;
 
     const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
-
-    
-    // ALl directions can contribute to the p coefficient, so initialise it to zero
-    coeffs[p].setConstant(0);
     
     // Coefficients are updated by looping through cell faces. This makes boundary conditions simpler and halves the number of upwind checks.
     UpwindXnormal(coeffs, faceVelocities, mesh);
@@ -487,8 +483,10 @@ void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, 
                         Momentum Weighted Interpolation (Rhie-Chow Interpolation) Coefficients
 \*---------------------------------------------------------------------------------------------------------------*/
 
-void SetMomentumInterpolationCoefficients()
+void SetMomentumInterpolationCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const InputData &inputData)
 {
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
 
 }
  
@@ -531,7 +529,7 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
     SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AW, fvCoeffs.Cont.boundaryVel, mesh, inputData, Fields::W, Axis::Z);
 
     // Continuity pressure terms (Rhie-Chow interpolation)
-    SetMomentumInterpolationCoefficients();
+    SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
     
 
     // Source terms
