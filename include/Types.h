@@ -128,9 +128,9 @@ class ArrayAllocator
                   std::is_same<enumStruct, CFD::TransportCoefficients>::value,
                   "Template parameter must be struct containing ENUMDATA type.");
 
-    static_assert(std::is_same< enumStruct, CFD::array1D >::value ||
-                  std::is_same< enumStruct, CFD::array2D >::value ||
-                  std::is_same< enumStruct, CFD::array3D >::value,
+    static_assert(std::is_same< arrayType, CFD::array1D >::value ||
+                  std::is_same< arrayType, CFD::array2D >::value ||
+                  std::is_same< arrayType, CFD::array3D >::value,
                   "Array tpye invalid.");
 
     typedef typename enumStruct::ENUMDATA ENUMDATA;
