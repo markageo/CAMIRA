@@ -14,8 +14,8 @@ void FaceVelocityXnormal(CFD::array3D &faceVel, const CFD::array3D &cellVel, con
     for (iterType k = 0; k != faceVel.dimension(2); k++ ) {
         for (iterType j = 0; j != faceVel.dimension(1); j++) {
             for (iterType i = 1; i != faceVel.dimension(0)-1; i++) {
-                interpFactor = mesh.interpFactors[X](i);
                 
+                interpFactor = mesh.interpFactors[X](i);
                 faceVel(i, j, k) = (1 - interpFactor)*cellVel(i-1, j, k) + interpFactor*cellVel(i, j, k);
 
             }
@@ -32,9 +32,9 @@ void FaceVelocityYnormal(CFD::array3D &faceVel, const CFD::array3D &cellVel, con
     floatType interpFactor;
     for (iterType k = 0; k != faceVel.dimension(2); k++ ) {
         for (iterType j = 1; j != faceVel.dimension(1)-1; j++) {
-            interpFactor = mesh.interpFactors[Y](j);
             for (iterType i = 0; i != faceVel.dimension(0); i++) {
                 
+                interpFactor = mesh.interpFactors[Y](j);
                 faceVel(i, j, k) = (1 - interpFactor)*cellVel(i, j-1, k) + interpFactor*cellVel(i, j, k);
 
             }
@@ -50,10 +50,10 @@ void FaceVelocityZnormal(CFD::array3D &faceVel, const CFD::array3D &cellVel, con
 
     floatType interpFactor;
     for (iterType k = 1; k != faceVel.dimension(2)-1; k++ ) {
-        interpFactor = mesh.interpFactors[Z](k);
         for (iterType j = 0; j != faceVel.dimension(1); j++) {
             for (iterType i = 0; i != faceVel.dimension(0); i++) {
 
+                interpFactor = mesh.interpFactors[Z](k);
                 faceVel(i, j, k) = (1 - interpFactor)*cellVel(i, j, k-1) + interpFactor*cellVel(i, j, k);
 
             }
