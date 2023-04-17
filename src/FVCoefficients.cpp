@@ -13,6 +13,12 @@ using namespace CFD;
 
 
 /*---------------------------------------------------------------------------------------------------------------*\
+                                                Lookup Definitions
+\*---------------------------------------------------------------------------------------------------------------*/
+
+
+
+/*---------------------------------------------------------------------------------------------------------------*\
                                                     Diffusion
 \*---------------------------------------------------------------------------------------------------------------*/
 
@@ -665,19 +671,14 @@ void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
                                            const Mesh &mesh, 
                                            const InputData &inputData)
 {
-    using enum Axis::ENUMDATA;
-    using enum TransportCoefficients::ENUMDATA;
-
     const floatType rho = inputData.rho;
-    std::vector<floatType> coeffs;
 
     // Internal cells
     MWInterpolationXnormal(fvCoeffs, mesh, rho);
     MWInterpolationYnormal(fvCoeffs, mesh, rho);
     MWInterpolationZnormal(fvCoeffs, mesh, rho);
 
-    // Boundary conditions
-
+    // Face velocity correction is assumed to be zero on the boundaries, so no special boundary conditions treatement is needed.
 
 }
  
@@ -722,9 +723,8 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs,
     SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AW, fvCoeffs.Cont.boundaryVel, mesh, inputData, Fields::W, Axis::Z);
 
     // Continuity pressure terms (Rhie-Chow interpolation)
-    // SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
+    SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
     
-
     // Source terms
     /* NULL */
 
