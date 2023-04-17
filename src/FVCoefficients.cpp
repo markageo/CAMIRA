@@ -17,8 +17,12 @@ using namespace CFD;
 \*---------------------------------------------------------------------------------------------------------------*/
 
 // Check if continuity equation implies a zero gradient boundary condition. This occurs if both orthogonal fields have a uniform BC
-BoundaryConditions::ENUMDATA GetDiffusionBC(const InputData::BoundaryConditionData &boundaryConditions, const BoundaryPatches::ENUMDATA boundaryPatch, 
-                                const Fields::ENUMDATA field, const Fields::ENUMDATA fieldToCheck, Fields::ENUMDATA orthogonalField1, const Fields::ENUMDATA orthogonalField2)
+BoundaryConditions::ENUMDATA GetDiffusionBC( const InputData::BoundaryConditionData &boundaryConditions, 
+                                             const BoundaryPatches::ENUMDATA boundaryPatch, 
+                                             const Fields::ENUMDATA field, 
+                                             const Fields::ENUMDATA fieldToCheck, 
+                                             const Fields::ENUMDATA orthogonalField1, 
+                                             const Fields::ENUMDATA orthogonalField2)
 {
     using BC = BoundaryConditions::ENUMDATA;
 
@@ -35,8 +39,11 @@ BoundaryConditions::ENUMDATA GetDiffusionBC(const InputData::BoundaryConditionDa
 
 
 // Set diffusion coefficients for a given momentum equation
-void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, std::vector<floatType> &boundaryConstants, 
-                            const Mesh &mesh, const InputData &inputData, const Fields::ENUMDATA field)
+void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, 
+                            std::vector<floatType> &boundaryConstants, 
+                            const Mesh &mesh, 
+                            const InputData &inputData, 
+                            const Fields::ENUMDATA field)
 {
 
     using BC = BoundaryConditions::ENUMDATA;
@@ -164,8 +171,9 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
 \*---------------------------------------------------------------------------------------------------------------*/
 
 // Upwind coefficients for X normal faces
-void UpwindXnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
-                   const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, const Mesh &mesh)
+void UpwindXnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
+                    const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
+                    const Mesh &mesh)
 {
 
     using F  = Fields::ENUMDATA;
@@ -198,8 +206,9 @@ void UpwindXnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coe
 
 
 // Upwind coefficients Y normal faces
-void UpwindYnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
-                   const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, const Mesh &mesh)
+void UpwindYnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
+                    const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
+                    const Mesh &mesh)
 {
 
     using F  = Fields::ENUMDATA;
@@ -231,8 +240,9 @@ void UpwindYnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coe
 
 
 // Upwind coefficients for Z normal faces
-void UpwindZnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
-                   const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, const Mesh &mesh)
+void UpwindZnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
+                    const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
+                    const Mesh &mesh)
 {
 
     using F  = Fields::ENUMDATA;
@@ -263,12 +273,66 @@ void UpwindZnormal(ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coe
 }
 
 
-void SetAdvectionCoefficients(ArrayAllocator<TransportCoefficients, array3D> &coeffs, std::vector<array2D> &boundaryConstants,
-                           const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, const Mesh &mesh, const InputData &inputData, const Fields::ENUMDATA field)
+void AdvectionBoundaryConditions( ArrayAllocator<TransportCoefficients, array3D> &coeffs, 
+                                  std::vector<array2D> &boundaryConstants,
+                                  const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
+                                  const Mesh &mesh,  
+                                  const std::vector<InputData::BoundaryConditionStruct> &boundaryConditionStructs, 
+                                  const BoundaryPatches::ENUMDATA boundaryPatch,
+                                  const intType iCellBound,
+                                  const intType iFaceBound)
 {
+
     using BC = BoundaryConditions::ENUMDATA;
     using F  = Fields::ENUMDATA;
     using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+
+    static const std::array<Fields::ENUMDATA, 3> faceVelocityFields = {F::U, F::V, F::W}; // Used to get corresponding velocity field from axis
+    static const std::array<TransportCoefficients::ENUMDATA, 6> interiorCoeffs = {w,  // xPositive
+                                                                                  e,  // xNegative
+                                                                                  s,  // yPositive
+                                                                                  n,  // yNegative
+                                                                                  b,  // zPositive
+                                                                                  t}; // zNegative
+
+    const Axis::ENUMDATA axis = BoundaryPatchAxis[boundaryPatch];
+    const TransportCoefficients::ENUMDATA interiorCoeff = interiorCoeffs[boundaryPatch];
+    const Fields::ENUMDATA axisVel = faceVelocityFields[axis];
+
+    // Axis positive boundary
+    switch ( boundaryConditionStructs[boundaryPatch].type ) {
+        
+        case BC::zeroGradient:
+            coeffs[p].chip(iCellBound, axis) += faceVelocities[axisVel].chip(iFaceBound, axis) * faceVelocities[axisVel].chip(iFaceBound, axis).constant( mesh.cellLengthsInv[axis](iCellBound) );
+            break;
+
+        case BC::uniform:
+            boundaryConstants[boundaryPatch] += faceVelocities[axisVel].chip(iFaceBound, axis)
+                                                * boundaryConstants[boundaryPatch].constant( boundaryConditionStructs[boundaryPatch].value * mesh.cellLengthsInv[axis](iCellBound) );
+            break;
+
+        case BC::extrapolated:
+            coeffs[p   ].chip(iCellBound, axis) += faceVelocities[axisVel].chip(iFaceBound, axis) 
+                                                 * faceVelocities[axisVel].chip(iFaceBound, axis).constant( mesh.extrapFactors[boundaryPatch].p * mesh.cellLengthsInv[axis](iCellBound) );
+            coeffs[interiorCoeff].chip(iCellBound, axis) += faceVelocities[axisVel].chip(iFaceBound, axis) 
+                                                          * faceVelocities[axisVel].chip(iFaceBound, axis).constant( mesh.extrapFactors[boundaryPatch].a * mesh.cellLengthsInv[axis](iCellBound) );
+            break;
+
+        default:
+            break;
+    }
+
+}
+
+
+void SetAdvectionCoefficients( ArrayAllocator<TransportCoefficients, array3D> &coeffs, 
+                               std::vector<array2D> &boundaryConstants,
+                               const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
+                               const Mesh &mesh, 
+                               const InputData &inputData, 
+                               const Fields::ENUMDATA field)
+{
     using enum TransportCoefficients::ENUMDATA;
 
     const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
@@ -280,66 +344,18 @@ void SetAdvectionCoefficients(ArrayAllocator<TransportCoefficients, array3D> &co
 
 
     // Boundary conditions by axis
-    constexpr std::array<Fields::ENUMDATA, 3> faceVelocityFields = {F::U, F::V, F::W};
-    Fields::ENUMDATA axisVel;
-    BoundaryPatches::ENUMDATA positivePatch, negativePatch;
-    TransportCoefficients::ENUMDATA east, west;
-    iterType iEnd;
+    intType iCellBound, iFaceBound;    // Index of cell and face at boundary
     for (int axis = 0; axis != Axis::count; axis++) {
-        positivePatch = positivePatches[axis];
-        negativePatch = negativePatches[axis];
-        east = eastCoefficients[axis];
-        west = westCoefficients[axis];
-        axisVel = faceVelocityFields[axis];
-        iEnd = mesh.nCells(axis) - 1;
 
+        // Axis positive
+        iCellBound = mesh.nCells(axis) - 1;
+        iFaceBound = iCellBound + 1;
+        AdvectionBoundaryConditions(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], positivePatches[axis], iCellBound, iFaceBound);
 
-        // Axis positive boundary
-        switch ( boundaryConditions[field][positivePatch].type ) {
-            
-            case BC::zeroGradient:
-                coeffs[p].chip(iEnd, axis) += faceVelocities[axisVel].chip(iEnd+1, axis) * faceVelocities[axisVel].chip(iEnd+1, axis).constant( mesh.cellLengthsInv[axis](iEnd) );
-                break;
-
-            case BC::uniform:
-                boundaryConstants[positivePatch] += faceVelocities[axisVel].chip(iEnd+1, axis)
-                                                  * boundaryConstants[positivePatch].constant( boundaryConditions[field][positivePatch].value * mesh.cellLengthsInv[axis](iEnd) );
-                break;
-
-            case BC::extrapolated:
-                coeffs[p   ].chip(iEnd, axis) += faceVelocities[axisVel].chip(iEnd+1, axis) 
-                                               * faceVelocities[axisVel].chip(iEnd+1, axis).constant( mesh.extrapFactors[positivePatch].p * mesh.cellLengthsInv[axis](iEnd) );
-                coeffs[west].chip(iEnd, axis) += faceVelocities[axisVel].chip(iEnd+1, axis) 
-                                               * faceVelocities[axisVel].chip(iEnd+1, axis).constant( mesh.extrapFactors[positivePatch].a * mesh.cellLengthsInv[axis](iEnd) );
-                break;
-
-            default:
-                break;
-        }
-
-
-        // Axis negative boundary
-        switch ( boundaryConditions[field][negativePatch].type ) {
-            
-            case BC::zeroGradient:
-                coeffs[p].chip(0, axis) += faceVelocities[axisVel].chip(0, axis) * faceVelocities[axisVel].chip(0, axis).constant( mesh.cellLengthsInv[axis](0) );
-                break;
-
-            case BC::uniform:
-                boundaryConstants[negativePatch] += faceVelocities[axisVel].chip(0, axis)
-                                                  * boundaryConstants[negativePatch].constant( boundaryConditions[field][negativePatch].value * mesh.cellLengthsInv[axis](0) );
-                break;
-
-            case BC::extrapolated:
-                coeffs[p   ].chip(0, axis) += faceVelocities[axisVel].chip(0, axis) 
-                                            * faceVelocities[axisVel].chip(0, axis).constant( mesh.extrapFactors[negativePatch].p * mesh.cellLengthsInv[axis](0) );
-                coeffs[east].chip(0, axis) += faceVelocities[axisVel].chip(0, axis) 
-                                            * faceVelocities[axisVel].chip(0, axis).constant( mesh.extrapFactors[negativePatch].a * mesh.cellLengthsInv[axis](0) );
-                break;
-
-            default:
-                break;
-        }
+        // Axis negative
+        iCellBound = 0;
+        iFaceBound = iCellBound;
+        AdvectionBoundaryConditions(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], negativePatches[axis], iCellBound, iFaceBound);
 
     }
 
@@ -351,9 +367,11 @@ void SetAdvectionCoefficients(ArrayAllocator<TransportCoefficients, array3D> &co
                                            Add Diffusion Coefficients
 \*---------------------------------------------------------------------------------------------------------------*/
 
-void AddDiffusion(ArrayAllocator<TransportCoefficients, array3D> &velCoeffs, std::vector< array2D > &boundaryVel,
-                  const std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diffCoeffs, const std::vector< floatType > &boundaryDiff,
-                  const Mesh &mesh)
+void AddDiffusion( ArrayAllocator<TransportCoefficients, array3D> &velCoeffs, 
+                   std::vector< array2D > &boundaryVel,
+                   const std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diffCoeffs, 
+                   const std::vector< floatType > &boundaryDiff,
+                   const Mesh &mesh)
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
@@ -390,9 +408,13 @@ void AddDiffusion(ArrayAllocator<TransportCoefficients, array3D> &velCoeffs, std
 \*---------------------------------------------------------------------------------------------------------------*/
 
 // Set coefficients for quantities that are intrpolated linearly onto faces.
-void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, CFD::array1D> &coeffs, std::vector<floatType> &boundaryConstants, const Mesh &mesh, 
-                                     const InputData &inputData, const Fields::ENUMDATA field, Axis::ENUMDATA axis)
-{
+void SetFaceInterpolatedCoefficients( ArrayAllocator<CFD::TransportCoefficients, CFD::array1D> &coeffs, 
+                                      std::vector<floatType> &boundaryConstants, 
+                                      const Mesh &mesh, 
+                                      const InputData &inputData, 
+                                      const Fields::ENUMDATA field, 
+                                      const Axis::ENUMDATA axis)
+{ 
     using BC = BoundaryConditions::ENUMDATA;
     using F  = Fields::ENUMDATA;
     using enum Axis::ENUMDATA;
@@ -488,8 +510,12 @@ void SetFaceInterpolatedCoefficients(ArrayAllocator<CFD::TransportCoefficients, 
 \*---------------------------------------------------------------------------------------------------------------*/
 
 // Face velocity correction coefficients for a single face from Momentum Weighted Coefficients. In order of westmost to eastmost.
-std::vector<floatType> MWICoeffs(const indexVector3 &idx, const ArrayAllocator<TransportCoefficients, array3D> &AUU, const ArrayAllocator<TransportCoefficients, array1D> &AUP,
-                                 const Mesh &mesh, const floatType rho, const Axis::ENUMDATA axis)
+std::vector<floatType> MWICoeffs( const indexVector3 &idx, 
+                                  const ArrayAllocator<TransportCoefficients, array3D> &AUU, 
+                                  const ArrayAllocator<TransportCoefficients, array1D> &AUP,
+                                  const Mesh &mesh, 
+                                  const floatType rho, 
+                                  const Axis::ENUMDATA axis)
 {
     using enum TransportCoefficients::ENUMDATA;
     using enum Axis::ENUMDATA;
@@ -517,7 +543,9 @@ std::vector<floatType> MWICoeffs(const indexVector3 &idx, const ArrayAllocator<T
 }
 
 
-void MWInterpolationXnormal(FVCoefficients &fvCoeffs, const Mesh &mesh, const floatType rho)
+void MWInterpolationXnormal( FVCoefficients &fvCoeffs, 
+                             const Mesh &mesh, 
+                             const floatType rho)
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
@@ -525,9 +553,9 @@ void MWInterpolationXnormal(FVCoefficients &fvCoeffs, const Mesh &mesh, const fl
     std::vector<floatType> coeffs;
 
     // These will get written to multiple times and need to be reset to zero
-    fvCoeffs.Cont.AP[w ].chip(0, X) = 0;
-    fvCoeffs.Cont.AP[p ].chip(0, X) = 0;
-    fvCoeffs.Cont.AP[e ].chip(0, X) = 0;
+    fvCoeffs.Cont.AP[w ].chip(0, X) = fvCoeffs.Cont.AP[w ].chip(0, X).constant( 0 );
+    fvCoeffs.Cont.AP[p ].chip(0, X) = fvCoeffs.Cont.AP[p ].chip(0, X).constant( 0 );
+    fvCoeffs.Cont.AP[e ].chip(0, X) = fvCoeffs.Cont.AP[e ].chip(0, X).constant( 0 );
 
     for (iterType k = 0; k != mesh.nCells(Z); k++) {
         for (iterType j = 0; j != mesh.nCells(Y); j++) {
@@ -555,7 +583,9 @@ void MWInterpolationXnormal(FVCoefficients &fvCoeffs, const Mesh &mesh, const fl
 }
 
 
-void MWInterpolationYnormal(FVCoefficients &fvCoeffs, const Mesh &mesh, const floatType rho)
+void MWInterpolationYnormal( FVCoefficients &fvCoeffs, 
+                             const Mesh &mesh, 
+                             const floatType rho)
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
@@ -563,8 +593,8 @@ void MWInterpolationYnormal(FVCoefficients &fvCoeffs, const Mesh &mesh, const fl
     std::vector<floatType> coeffs;
 
     // These will get written to multiple times and need to be reset to zero
-    fvCoeffs.Cont.AP[n ].chip(0, Y) = 0;
-    fvCoeffs.Cont.AP[s ].chip(0, Y) = 0;
+    fvCoeffs.Cont.AP[n ].chip(0, Y) = fvCoeffs.Cont.AP[n ].chip(0, Y).constant( 0 );
+    fvCoeffs.Cont.AP[s ].chip(0, Y) = fvCoeffs.Cont.AP[s ].chip(0, Y).constant( 0 );
 
     for (iterType k = 0; k != mesh.nCells(Z); k++) {
         for (iterType j = 1; j != mesh.nCells(Y)-1; j++) {
@@ -592,7 +622,9 @@ void MWInterpolationYnormal(FVCoefficients &fvCoeffs, const Mesh &mesh, const fl
 }
 
 
-void MWInterpolationZnormal(FVCoefficients &fvCoeffs, const Mesh &mesh, const floatType rho)
+void MWInterpolationZnormal( FVCoefficients &fvCoeffs, 
+                             const Mesh &mesh, 
+                             const floatType rho)
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
@@ -600,8 +632,8 @@ void MWInterpolationZnormal(FVCoefficients &fvCoeffs, const Mesh &mesh, const fl
     std::vector<floatType> coeffs;
 
     // These will get written to multiple times and need to be reset to zero
-    fvCoeffs.Cont.AP[t ].chip(0, Z) = 0;
-    fvCoeffs.Cont.AP[b ].chip(0, Z) = 0;
+    fvCoeffs.Cont.AP[t ].chip(0, Z) = fvCoeffs.Cont.AP[t ].chip(0, Z).constant( 0 );
+    fvCoeffs.Cont.AP[b ].chip(0, Z) = fvCoeffs.Cont.AP[b ].chip(0, Z).constant( 0 );
 
     for (iterType k = 1; k != mesh.nCells(Z)-1; k++) {
         for (iterType j = 0; j != mesh.nCells(Y); j++) {
@@ -629,7 +661,9 @@ void MWInterpolationZnormal(FVCoefficients &fvCoeffs, const Mesh &mesh, const fl
 }
 
 
-void SetMomentumInterpolationCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const InputData &inputData)
+void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs, 
+                                           const Mesh &mesh, 
+                                           const InputData &inputData)
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
@@ -656,7 +690,9 @@ namespace CFD
 {
 
 
-void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
+void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, 
+                              const Mesh &mesh, 
+                              const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
                               const InputData &inputData)
 {
 
@@ -697,7 +733,9 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const 
 }
 
 
-void UpdateFVCoefficients(FVCoefficients &fvCoeffs, const Mesh &mesh, const ArrayAllocator<Fields, CFD::array3D> &faceVelocities)
+void UpdateFVCoefficients(FVCoefficients &fvCoeffs, 
+                          const Mesh &mesh, 
+                          const ArrayAllocator<Fields, CFD::array3D> &faceVelocities)
 {
 
 }

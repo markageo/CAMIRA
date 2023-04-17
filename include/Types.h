@@ -117,6 +117,15 @@ constexpr std::array<TransportCoefficients::ENUMDATA, 3> westCoefficients{Transp
                                                                           TransportCoefficients::ENUMDATA::b};
 
 
+// Lookup array for determining Axis based on BoundaryPatch
+constexpr std::array<Axis::ENUMDATA, 6> BoundaryPatchAxis{Axis::ENUMDATA::X,    // xPositive
+                                                          Axis::ENUMDATA::X,    // xNegative
+                                                          Axis::ENUMDATA::Y,    // yPositive
+                                                          Axis::ENUMDATA::Y,    // yNegative
+                                                          Axis::ENUMDATA::Z,    // zPositive
+                                                          Axis::ENUMDATA::Z};   // zNegative
+
+
 // Allocate arrays using enums. Arrays are initialised to zero.
 template <typename enumStruct, typename arrayType>
 class ArrayAllocator
