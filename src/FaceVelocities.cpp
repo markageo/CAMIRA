@@ -5,7 +5,9 @@
 namespace
 {
 
-void FaceVelocityXnormal(CFD::array3D &faceVel, const CFD::array3D &cellVel, const CFD::Mesh &mesh)
+void FaceVelocityXnormal( CFD::array3D &faceVel, 
+                          const CFD::array3D &cellVel, 
+                          const CFD::Mesh &mesh)
 {
     using namespace CFD;
     using enum Axis::ENUMDATA;
@@ -14,7 +16,7 @@ void FaceVelocityXnormal(CFD::array3D &faceVel, const CFD::array3D &cellVel, con
     for (iterType k = 0; k != faceVel.dimension(2); k++ ) {
         for (iterType j = 0; j != faceVel.dimension(1); j++) {
             for (iterType i = 1; i != faceVel.dimension(0)-1; i++) {
-                
+
                 interpFactor = mesh.interpFactors[X](i);
                 faceVel(i, j, k) = (1 - interpFactor)*cellVel(i-1, j, k) + interpFactor*cellVel(i, j, k);
 
@@ -24,7 +26,9 @@ void FaceVelocityXnormal(CFD::array3D &faceVel, const CFD::array3D &cellVel, con
 }
 
 
-void FaceVelocityYnormal(CFD::array3D &faceVel, const CFD::array3D &cellVel, const CFD::Mesh &mesh)
+void FaceVelocityYnormal( CFD::array3D &faceVel, 
+                          const CFD::array3D &cellVel, 
+                          const CFD::Mesh &mesh)
 {
     using namespace CFD;
     using enum Axis::ENUMDATA;
@@ -43,7 +47,9 @@ void FaceVelocityYnormal(CFD::array3D &faceVel, const CFD::array3D &cellVel, con
 }
 
 
-void FaceVelocityZnormal(CFD::array3D &faceVel, const CFD::array3D &cellVel, const CFD::Mesh &mesh)
+void FaceVelocityZnormal( CFD::array3D &faceVel, 
+                          const CFD::array3D &cellVel, 
+                          const CFD::Mesh &mesh)
 {
     using namespace CFD;
     using enum Axis::ENUMDATA;
@@ -68,8 +74,10 @@ void FaceVelocityZnormal(CFD::array3D &faceVel, const CFD::array3D &cellVel, con
 namespace CFD
 {
 
-void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities, const Mesh &mesh, const ArrayAllocator<Fields, CFD::array3D> &fields, 
-    const InputData::BoundaryConditionData &boundaryConditions)
+void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
+                           const Mesh &mesh, 
+                           const ArrayAllocator<Fields, CFD::array3D> &fields, 
+                           const InputData::BoundaryConditionData &boundaryConditions)
 {
     using F = Fields::ENUMDATA;
     using BC = BoundaryConditions::ENUMDATA;
