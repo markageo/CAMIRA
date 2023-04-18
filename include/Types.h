@@ -125,13 +125,7 @@ constexpr std::array<Axis::ENUMDATA, 6> BoundaryPatchAxis{Axis::ENUMDATA::X,    
                                                           Axis::ENUMDATA::Z,    // zPositive
                                                           Axis::ENUMDATA::Z};   // zNegative
 
-constexpr std::array<TransportCoefficients::ENUMDATA, 6> interiorCoeffs = {w,  // xPositive
-                                                                           e,  // xNegative
-                                                                           s,  // yPositive
-                                                                           n,  // yNegative
-                                                                           b,  // zPositive
-                                                                           t}; // zNegative                                                    
-
+                                                
 
 // Allocate arrays using enums. Arrays are initialised to zero.
 template <typename enumStruct, typename arrayType>
@@ -242,9 +236,9 @@ class ArrayAllocator
 
         // --------------------------------------- Copy Assignment Operator --------------------------------------- //
 
-        ArrayAllocator &operator=(const ArrayAllocator that)
-        {
-            std::swap(*this, that);
+        ArrayAllocator &operator=(ArrayAllocator that)
+        {   
+            std::swap( this->coeffPointers, that.coeffPointers );
             return *this;
         }
 
@@ -252,10 +246,16 @@ class ArrayAllocator
         // ------------------------------------------- Move Constructor ------------------------------------------- //
 
         ArrayAllocator(ArrayAllocator&& that) noexcept :
-            ArrayAllocator()
+            coeffPointers( std::move( that.coeffPointers ) )
+        {}
+
+
+        // --------------------------------------- Move Assignment Operator --------------------------------------- //
+
+        ArrayAllocator &operator=(ArrayAllocator &&that) noexcept
         {
-            std::swap(*this, that);
-        }
+            return ArrayAllocator( std::move( that ) );
+        }    
 
 
         // ---------------------------------------------- Destructor ---------------------------------------------- //
@@ -264,18 +264,6 @@ class ArrayAllocator
 
 
         // ----------------------------------- Array reference return operators ----------------------------------- //
-
-        // // For strongly types enum input, this is probably more type safe
-        // arrayType &operator[](const enumStruct::ENUMDATA idx)
-        // {
-        //     return *coeffPointers[idx];
-        // }
-
-        // arrayType &operator[](const enumStruct::ENUMDATA idx) const 
-        // {
-        //     return *coeffPointers[idx];
-        // }
-
 
         // For int parameters
         arrayType &operator[](const intType idx)
