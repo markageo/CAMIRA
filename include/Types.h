@@ -125,6 +125,13 @@ constexpr std::array<Axis::ENUMDATA, 6> BoundaryPatchAxis{Axis::ENUMDATA::X,    
                                                           Axis::ENUMDATA::Z,    // zPositive
                                                           Axis::ENUMDATA::Z};   // zNegative
 
+constexpr std::array<TransportCoefficients::ENUMDATA, 6> interiorCoeffs = {w,  // xPositive
+                                                                           e,  // xNegative
+                                                                           s,  // yPositive
+                                                                           n,  // yNegative
+                                                                           b,  // zPositive
+                                                                           t}; // zNegative                                                    
+
 
 // Allocate arrays using enums. Arrays are initialised to zero.
 template <typename enumStruct, typename arrayType>

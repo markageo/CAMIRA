@@ -17,12 +17,13 @@
 
 #ifdef PROFILING
 #include "profiler/profiler.h"
-namespace PROF {
+namespace PROF
+{
     profiler<perf_counter::clock<time_units::SECONDS>> prof;
 }
 #endif
 
-int main(int argc, char const *argv[]) 
+int main(int argc, char const *argv[])
 {
 
     /*-------------------------------------------------------------------------------------*\
@@ -31,53 +32,64 @@ int main(int argc, char const *argv[])
 
     // Input file from first command line argument
     std::string inputFilename;
-    if (argc == 1) {
-        std::cout << "Please enter input file name: " << "\n";
+    if (argc == 1)
+    {
+        std::cout << "Please enter input file name: "
+                  << "\n";
         std::cin >> inputFilename;
         std::cout << "\n";
         std::cin.ignore();
-    } else if (argc == 2) {
+    }
+    else if (argc == 2)
+    {
         inputFilename = argv[1];
-    } else {
-        throw std::invalid_argument( "Invalid command line options." );
+    }
+    else
+    {
+        throw std::invalid_argument("Invalid command line options.");
     }
 
     // User input data
     std::string inputFileRetryChoice;
     CFD::InputData inputData;
-    while (true){
-        try {
+    while (true)
+    {
+        try
+        {
 
-            std::cout << "Reading input file: '" + inputFilename + "' ..." << "\n\n";
+            std::cout << "Reading input file: '" + inputFilename + "' ..."
+                      << "\n\n";
             inputData = CFD::ReadInputData(inputFilename);
-            std::cout << "Success!" << "\n\n";
+            std::cout << "Success!"
+                      << "\n\n";
             break;
 
-        // } catch (std::runtime_error &e) {
-        } catch (int &e) {
+            // } catch (std::runtime_error &e) {
+        }
+        catch (int &e)
+        {
 
-            // std::cout << "Failure reading input file! \n" 
-            //           << e.what() 
+            // std::cout << "Failure reading input file! \n"
+            //           << e.what()
             //           << "\n\n";
 
-            std::cout << "Would you like to try again? (y/n)" 
+            std::cout << "Would you like to try again? (y/n)"
                       << "\n";
-            std::cin  >> inputFileRetryChoice;
-            if (inputFileRetryChoice != "y") 
+            std::cin >> inputFileRetryChoice;
+            if (inputFileRetryChoice != "y")
                 exit(-1);
             std::cout << "\n";
 
-            std::cout << "Please enter input file name: " << "\n";
-            std::cin  >> inputFilename;
+            std::cout << "Please enter input file name: "
+                      << "\n";
+            std::cin >> inputFilename;
             std::cout << "\n";
             std::cin.ignore();
-
         }
     }
     std::cout << "Press enter to begin.";
     std::cin.ignore();
     std::cout << std::endl;
-
 
     /*-------------------------------------------------------------------------------------*\
                                            Solve
@@ -98,9 +110,9 @@ int main(int argc, char const *argv[])
     //   cellFaceVelocity_y(i, j, k) -> u(i    , j-1/2, k    )
     //   cellFaceVelocity_z(i, j, k) -> u(i    , j    , k-1/2)
     // Subscript indicates the normal direction of the face.
-    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> faceVelocities( { {F::U, {mesh.nCells(0)+1, mesh.nCells(1)  , mesh.nCells(2)  }}, 
-                                                                     {F::V, {mesh.nCells(0)  , mesh.nCells(1)+1, mesh.nCells(2)  }}, 
-                                                                     {F::W, {mesh.nCells(0)  , mesh.nCells(1)  , mesh.nCells(2)+1}} } );
+    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> faceVelocities({{F::U, {mesh.nCells(0) + 1, mesh.nCells(1), mesh.nCells(2)}},
+                                                                   {F::V, {mesh.nCells(0), mesh.nCells(1) + 1, mesh.nCells(2)}},
+                                                                   {F::W, {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2) + 1}}});
     TOC();
 
     TIC("Set Values");
@@ -113,14 +125,10 @@ int main(int argc, char const *argv[])
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
     TOC();
 
-    TIC("Allocate FV Coefficients")
-    CFD::FVCoefficients fvCoeffs(mesh.nCells);
+    TIC("Allocate and Initialise FV Coefficients")
+    CFD::FVCoefficients fvCoeffs = CFD::InitialiseFVCoefficients(mesh, faceVelocities, inputData);
     TOC()
 
-    TIC("Initialise FV Coefficients")
-    CFD::InitialiseFVCoefficients(fvCoeffs, mesh, faceVelocities, inputData);
-    TOC()
-    
     // // Cell centers to file
     // UTIL::writeArray("debug/cell_centers_x.dat", mesh.cellCenters[AX::X]);
     // UTIL::writeArray("debug/cell_centers_y.dat", mesh.cellCenters[AX::Y]);
@@ -146,21 +154,21 @@ int main(int argc, char const *argv[])
     // UTIL::writeArray("debug/W_cell_centers.dat", fields[F::W]);
     // UTIL::writeArray("debug/W_cell_faces.dat", faceVelocities[F::W]);
 
-
     /*-------------------------------------------------------------------------------------*\
                                            Output
     \*-------------------------------------------------------------------------------------*/
 
     // Data to pass to writer
     VTK::dataType VTKDataType = VTK::DOUBLE;
-    if (std::is_same<CFD::floatType, float>::value) {
+    if (std::is_same<CFD::floatType, float>::value)
+    {
         VTKDataType = VTK::FLOAT;
-    } 
-    VTK::VTKWriterConfig config( mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z], VTKDataType);
-        config.SetWriteMode("binary");
+    }
+    VTK::VTKWriterConfig config(mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z], VTKDataType);
+    config.SetWriteMode("binary");
     VTK::gridVectorType gridVector = {mesh.cellCenters[AX::X].data(), mesh.cellCenters[AX::Y].data(), mesh.cellCenters[AX::Z].data()};
-    VTK::scalarMapType scalarMap = { {"U", fields[F::U].data() } };
-    VTK::vectorMapType vectorMap = { };
+    VTK::scalarMapType scalarMap = {{"U", fields[F::U].data()}};
+    VTK::vectorMapType vectorMap = {};
 
     // Write output
     VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
@@ -168,10 +176,10 @@ int main(int argc, char const *argv[])
     writer.WriteData("mesh.vtk", "3D Rectilinear Grid");
     TOC();
 
-    // Display profiling information
-    #ifdef PROFILING
-        std::cout << PROF::prof;
-    #endif
+// Display profiling information
+#ifdef PROFILING
+    std::cout << PROF::prof;
+#endif
 
     return 0;
 }

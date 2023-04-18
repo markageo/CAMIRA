@@ -163,6 +163,7 @@ intType TotalCells(const std::vector<InputData::MeshSegment> &meshSegments)
 
 }   // end anonymous namespace
 
+
 // Constructor, creates the mesh
 Mesh::Mesh(const InputData &inputData) :
     nCells( { TotalCells(inputData.meshSegments[0]),  TotalCells(inputData.meshSegments[1]), TotalCells(inputData.meshSegments[2])} ),

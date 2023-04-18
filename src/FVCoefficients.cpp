@@ -11,13 +11,6 @@ namespace
 
 using namespace CFD;
 
-
-/*---------------------------------------------------------------------------------------------------------------*\
-                                                Lookup Definitions
-\*---------------------------------------------------------------------------------------------------------------*/
-
-
-
 /*---------------------------------------------------------------------------------------------------------------*\
                                                     Diffusion
 \*---------------------------------------------------------------------------------------------------------------*/
@@ -25,13 +18,33 @@ using namespace CFD;
 // Check if continuity equation implies a zero gradient boundary condition. This occurs if both orthogonal fields have a uniform BC
 BoundaryConditions::ENUMDATA GetDiffusionBC( const InputData::BoundaryConditionData &boundaryConditions, 
                                              const BoundaryPatches::ENUMDATA boundaryPatch, 
-                                             const Fields::ENUMDATA field, 
-                                             const Fields::ENUMDATA fieldToCheck, 
-                                             const Fields::ENUMDATA orthogonalField1, 
-                                             const Fields::ENUMDATA orthogonalField2)
+                                             const Fields::ENUMDATA field )
 {
     using BC = BoundaryConditions::ENUMDATA;
+    using F = Fields::ENUMDATA;
+    using enum Axis::ENUMDATA;
 
+    Fields::ENUMDATA fieldToCheck;
+    Fields::ENUMDATA orthogonalField1; 
+    Fields::ENUMDATA orthogonalField2;
+    const Axis::ENUMDATA axis = BoundaryPatchAxis[boundaryPatch];
+
+    // Set the field we need to check based on the axis
+    if        (axis == X) {
+        fieldToCheck = F::U;
+        orthogonalField1 = F::V;
+        orthogonalField2 = F::W;
+    } else if (axis == Y) {
+        fieldToCheck = F::V;
+        orthogonalField1 = F::W;
+        orthogonalField2 = F::U;
+    } else if (axis == Z) {
+        fieldToCheck = F::W;
+        orthogonalField1 = F::U;
+        orthogonalField2 = F::V;
+    }
+
+    // Only check the field that in the direction of the current axis
     if (field == fieldToCheck) {
 
         if (boundaryConditions[orthogonalField1][boundaryPatch].type == BC::uniform && 
@@ -41,6 +54,84 @@ BoundaryConditions::ENUMDATA GetDiffusionBC( const InputData::BoundaryConditionD
     }
 
     return boundaryConditions[field][boundaryPatch].type;
+}
+
+
+// Apply boundary conditions for diffusion terms on axis positive boundary
+void DiffusionPositiveBoundary( std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, 
+                                std::vector<floatType> &boundaryConstants,
+                                const Mesh &mesh,  
+                                const std::vector<InputData::BoundaryConditionStruct> &boundaryConditionStructs, 
+                                const Axis::ENUMDATA axis)
+{
+    using BC = BoundaryConditions::ENUMDATA;
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+
+    const BoundaryPatches::ENUMDATA boundaryPatch = positivePatches[axis];
+    const TransportCoefficients::ENUMDATA west = westCoefficients[axis];
+    const intType iCellBound = mesh.nCells(axis) - 1;
+
+    // Axis positive boundary
+    switch ( boundaryConditionStructs[boundaryPatch].type ) {
+        
+        case BC::zeroGradient: 
+            /* NULL */
+            break;
+
+        case BC::uniform:
+            diff[axis][p   ](iCellBound) +=   2*mesh.cellLengthsInv[axis](iCellBound);
+            boundaryConstants[west]      += - 2*mesh.cellLengthsInv[axis](iCellBound) * boundaryConditionStructs[boundaryPatch].value;
+            break;
+
+        case BC::extrapolated:
+            diff[axis][p   ](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * (mesh.extrapFactors[boundaryPatch].p - 1);
+            diff[axis][west](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * mesh.extrapFactors[boundaryPatch].a;
+            break;
+
+        default:
+            break;
+    }
+
+}
+
+
+// Apply boundary conditions for diffusion terms on axis negative boundary
+void DiffusionNegativeBoundary( std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, 
+                                std::vector<floatType> &boundaryConstants,
+                                const Mesh &mesh,  
+                                const std::vector<InputData::BoundaryConditionStruct> &boundaryConditionStructs, 
+                                const Axis::ENUMDATA axis)
+{
+    using BC = BoundaryConditions::ENUMDATA;
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+
+    const BoundaryPatches::ENUMDATA boundaryPatch = negativePatches[axis];
+    const TransportCoefficients::ENUMDATA east = eastCoefficients[axis];
+    const intType iCellBound = 0;
+
+    // Axis positive boundary
+    switch ( boundaryConditionStructs[boundaryPatch].type ) {
+        
+        case BC::zeroGradient: 
+            /* NULL */
+            break;
+
+        case BC::uniform:
+            diff[axis][p   ](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound);
+            boundaryConstants[east]      +=   2*mesh.cellLengthsInv[axis](iCellBound) * boundaryConditionStructs[boundaryPatch].value;
+            break;
+
+        case BC::extrapolated:
+            diff[axis][p   ](iCellBound) += 2*mesh.cellLengthsInv[axis](iCellBound) * (mesh.extrapFactors[boundaryPatch].p - 1);
+            diff[axis][east](iCellBound) += 2*mesh.cellLengthsInv[axis](iCellBound) * mesh.extrapFactors[boundaryPatch].a;
+            break;
+
+        default:
+            break;
+    }
+
 }
 
 
@@ -58,8 +149,6 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
     using enum TransportCoefficients::ENUMDATA;
     
     const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
-    indexVector3 endIndexVector = { mesh.nCells(X) - 1, mesh.nCells(Y) - 1 , mesh.nCells(Z) - 1};
-    intType iEnd;
 
     TransportCoefficients::ENUMDATA east, west;     // These are just names, they can be north, south etc.
     BoundaryPatches::ENUMDATA positivePatch, negativePatch;
@@ -69,99 +158,52 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
     // Diffusion in each axis is calculated in the same way
     for (int axis = 0; axis != Axis::count; axis++) {
 
-        iEnd = endIndexVector(axis);
         positivePatch = positivePatches[axis];
         negativePatch = negativePatches[axis];
         east = eastCoefficients[axis];
         west = westCoefficients[axis];     
 
-        // Set variables unique to each axis
-        if         (axis == X) {  
-            positivePatchBC = GetDiffusionBC(boundaryConditions, positivePatch, field, F::U, F::V, F::W);
-            negativePatchBC = GetDiffusionBC(boundaryConditions, negativePatch, field, F::U, F::V, F::W); 
-              
-        } else if (axis == Y) {
-            positivePatchBC = GetDiffusionBC(boundaryConditions, positivePatch, field, F::V, F::W, F::U);
-            negativePatchBC = GetDiffusionBC(boundaryConditions, negativePatch, field, F::V, F::W, F::U); 
-
-        } else if (axis == Z) {
-            positivePatchBC = GetDiffusionBC(boundaryConditions, positivePatch, field, F::W, F::U, F::V);
-            negativePatchBC = GetDiffusionBC(boundaryConditions, negativePatch, field, F::W, F::U, F::V); 
-
-        }
-
-
-        // Internal cells
-        for (iterType i = 1; i != iEnd; i++) {
-            diff[axis][p   ](i) = ( mesh.cellCenterDiffInv[axis](i+1) + mesh.cellCenterDiffInv[axis](i) );
-            diff[axis][east](i) = - mesh.cellCenterDiffInv[axis](i+1);
-            diff[axis][west](i) = - mesh.cellCenterDiffInv[axis](i);
-        }
-
-
-        // Axis positive boundary
-        switch ( positivePatchBC ) {
+        // Internal faces
+        for (iterType i = 1; i != mesh.nCells(X)-1; i++) {
             
-            case BC::zeroGradient: 
-                diff[axis][p   ](iEnd) = mesh.cellCenterDiffInv[axis](iEnd);
-                diff[axis][east](iEnd) = 0;
-                diff[axis][west](iEnd) = - mesh.cellCenterDiffInv[axis](iEnd);
-                break;
+            // Cell on west side
+            diff[axis][p   ](i-1) +=   mesh.cellCenterDiffInv[axis](i);
+            diff[axis][east](i-1) += - mesh.cellCenterDiffInv[axis](i);
 
-            case BC::uniform:
-                diff[axis][p   ](iEnd) = ( 2*mesh.cellLengthsInv[axis](iEnd) + mesh.cellCenterDiffInv[axis](iEnd) );
-                diff[axis][east](iEnd) = 0;
-                diff[axis][west](iEnd) = - mesh.cellCenterDiffInv[axis](iEnd);
-                boundaryConstants[positivePatch] += -2*mesh.cellLengthsInv[axis](iEnd) * boundaryConditions[field][positivePatch].value;
-                break;
+            // Cell on east side
+            diff[axis][p   ](i) += - mesh.cellCenterDiffInv[axis](i);
+            diff[axis][west](i) +=   mesh.cellCenterDiffInv[axis](i);
 
-            case BC::extrapolated:
-                diff[axis][p   ](iEnd) = - 2*mesh.cellLengthsInv[axis](iEnd) * (mesh.extrapFactors[positivePatch].p - 1)  -  mesh.cellCenterDiffInv[axis](iEnd);
-                diff[axis][east](iEnd) = 0;
-                diff[axis][west](iEnd) = - 2*mesh.cellLengthsInv[axis](iEnd) * mesh.extrapFactors[positivePatch].a  +  mesh.cellCenterDiffInv[axis](iEnd);
-                break;
-
-            default:
-                break;
         }
 
+
+        // Check boundary condition from continuity condition
+        positivePatchBC = GetDiffusionBC(boundaryConditions, positivePatch, field);
+        negativePatchBC = GetDiffusionBC(boundaryConditions, negativePatch, field); 
+
+
+        // Boundary conditions only need to be set if it is not zero gradient
+        // Axis positive boundary
+        if (positivePatchBC != BC::zeroGradient) {
+            DiffusionPositiveBoundary(diff, boundaryConstants, mesh, boundaryConditions[field], static_cast<Axis::ENUMDATA>(axis));
+        }
 
         // Axis negative boundary
-        switch ( negativePatchBC) {
-            
-            case BC::zeroGradient: 
-                diff[axis][p   ](0) = mesh.cellCenterDiffInv[axis](1);
-                diff[axis][east](0) = - mesh.cellCenterDiffInv[axis](1);
-                diff[axis][west](0) = 0;
-                break;
-
-            case BC::uniform:
-                diff[axis][p   ](0) = ( mesh.cellCenterDiffInv[axis](1) + 2*mesh.cellLengthsInv[axis](0) );
-                diff[axis][east](0) = - mesh.cellCenterDiffInv[axis](1);
-                diff[axis][west](0) = 0;
-                boundaryConstants[negativePatch] += -2*mesh.cellLengthsInv[axis](0) * boundaryConditions[field][negativePatch].value;
-                break;
-
-            case BC::extrapolated:
-                diff[axis][p   ](0) = - 2*mesh.cellLengthsInv[axis](0) * (mesh.extrapFactors[negativePatch].p - 1)  -  mesh.cellCenterDiffInv[axis](1);
-                diff[axis][east](0) = - 2*mesh.cellLengthsInv[axis](0) * mesh.extrapFactors[negativePatch].a  +  mesh.cellCenterDiffInv[axis](1);
-                diff[axis][west](0) = 0;
-                break;
-
-            default:
-                break;
+        if (negativePatchBC != BC::zeroGradient) {
+            DiffusionNegativeBoundary(diff, boundaryConstants, mesh, boundaryConditions[field], static_cast<Axis::ENUMDATA>(axis));
         }
 
 
         // Divide by inverse cell length
-        for (iterType i = 0; i != iEnd+1; i++) {
+        for (iterType i = 0; i != mesh.nCells(axis); i++) {
             diff[axis][p   ](i) *= mesh.cellLengthsInv[axis](i);
             diff[axis][east](i) *= mesh.cellLengthsInv[axis](i);
             diff[axis][west](i) *= mesh.cellLengthsInv[axis](i);
         }
 
+
         // Multiply by viscosity
-        for (iterType i = 0; i != iEnd+1; i++) {
+        for (iterType i = 0; i != mesh.nCells(axis); i++) {
             diff[axis][p   ](i) *= inputData.nu;
             diff[axis][east](i) *= inputData.nu;
             diff[axis][west](i) *= inputData.nu;
@@ -173,7 +215,7 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
 
 
 /*---------------------------------------------------------------------------------------------------------------*\
-                                         Momentum Velocity Coefficients
+                                         Momentum Advection Coefficients
 \*---------------------------------------------------------------------------------------------------------------*/
 
 // Upwind coefficients for X normal faces
@@ -295,12 +337,7 @@ void AdvectionBoundaryConditions( ArrayAllocator<TransportCoefficients, array3D>
     using enum TransportCoefficients::ENUMDATA;
 
     static const std::array<Fields::ENUMDATA, 3> faceVelocityFields = {F::U, F::V, F::W}; // Used to get corresponding velocity field from axis
-    static const std::array<TransportCoefficients::ENUMDATA, 6> interiorCoeffs = {w,  // xPositive
-                                                                                  e,  // xNegative
-                                                                                  s,  // yPositive
-                                                                                  n,  // yNegative
-                                                                                  b,  // zPositive
-                                                                                  t}; // zNegative
+    
 
     const Axis::ENUMDATA axis = BoundaryPatchAxis[boundaryPatch];
     const TransportCoefficients::ENUMDATA interiorCoeff = interiorCoeffs[boundaryPatch];
@@ -315,7 +352,7 @@ void AdvectionBoundaryConditions( ArrayAllocator<TransportCoefficients, array3D>
 
         case BC::uniform:
             boundaryConstants[boundaryPatch] += faceVelocities[axisVel].chip(iFaceBound, axis)
-                                                * boundaryConstants[boundaryPatch].constant( boundaryConditionStructs[boundaryPatch].value * mesh.cellLengthsInv[axis](iCellBound) );
+                                              * boundaryConstants[boundaryPatch].constant( boundaryConditionStructs[boundaryPatch].value * mesh.cellLengthsInv[axis](iCellBound) );
             break;
 
         case BC::extrapolated:
@@ -678,8 +715,8 @@ void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
     MWInterpolationYnormal(fvCoeffs, mesh, rho);
     MWInterpolationZnormal(fvCoeffs, mesh, rho);
 
-    // Face velocity correction is assumed to be zero on the boundaries, so no special boundary conditions treatement is needed.
-
+    // Face velocity correction is assumed to be zero on the boundaries, 
+    // so no special boundary conditions treatement is needed.
 }
  
 
@@ -691,11 +728,12 @@ namespace CFD
 {
 
 
-void InitialiseFVCoefficients(FVCoefficients &fvCoeffs, 
-                              const Mesh &mesh, 
-                              const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
-                              const InputData &inputData)
+FVCoefficients InitialiseFVCoefficients( const Mesh &mesh, 
+                                         const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
+                                         const InputData &inputData)
 {
+    // Default construct the coefficients class
+    FVCoefficients fvCoeffs(mesh.nCells);
 
     // Diffusion coefficients
     SetDiffusionCoeffients(fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh, inputData, Fields::U);
@@ -730,6 +768,8 @@ void InitialiseFVCoefficients(FVCoefficients &fvCoeffs,
 
     // Add boundary constants to source terms
 
+
+    return fvCoeffs;
 }
 
 
