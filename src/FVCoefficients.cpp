@@ -235,15 +235,15 @@ void UpwindXnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
             for (iterType i = 1; i != faceVelocities[F::U].dimension(X)-1; i++) {
                 
                 uf = faceVelocities[F::U](i, j, k);
-                coeff_w = uf * mesh.cellLengthsInv[X](i-1);
-                coeff_e = uf * mesh.cellLengthsInv[X](i);
+                coeff_w =   uf * mesh.cellLengthsInv[X](i-1);
+                coeff_e = - uf * mesh.cellLengthsInv[X](i);
 
                 // Cell on west side
                 coeffs[e](i-1, j, k) = std::min( coeff_w, 0.0 );
                 coeffs[p](i-1, j, k) += coeff_w - coeffs[e](i, j, k);
 
                 // Cell on east side
-                coeffs[w](i, j, k)  = std::max( coeff_e, 0.0 );
+                coeffs[w](i, j, k)  = std::min( coeff_e, 0.0 );      // The sign of this coefficient is negative
                 coeffs[p](i, j, k)  = coeff_e - coeffs[w](i, j, k);  // Shouldn't be += since this is the first time it is touched
 
             }
@@ -269,15 +269,15 @@ void UpwindYnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
             for (iterType i = 0; i != faceVelocities[F::U].dimension(X); i++) {
                 
                 uf = faceVelocities[F::V](i, j, k);
-                coeff_s = uf * mesh.cellLengthsInv[Y](j-1);
-                coeff_n = uf * mesh.cellLengthsInv[Y](j);
+                coeff_s =   uf * mesh.cellLengthsInv[Y](j-1);
+                coeff_n = - uf * mesh.cellLengthsInv[Y](j);
 
                 // Cell on south side
                 coeffs[n](i, j-1, k) = std::min( coeff_s, 0.0 );
                 coeffs[p](i, j-1, k) += coeff_s - coeffs[n](i, j, k);
 
                 // Cell on north side
-                coeffs[s](i, j, k)  = std::max( coeff_n, 0.0 );
+                coeffs[s](i, j, k)  = std::min( coeff_n, 0.0 );     // The sign of this coefficient is negative
                 coeffs[p](i, j, k)  += coeff_n - coeffs[s](i, j, k); 
 
             }
@@ -303,15 +303,15 @@ void UpwindZnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
             for (iterType i = 0; i != faceVelocities[F::U].dimension(X); i++) {
                 
                 uf = faceVelocities[F::W](i, j, k);
-                coeff_b = uf * mesh.cellLengthsInv[Z](k-1);
-                coeff_t = uf * mesh.cellLengthsInv[Z](k);
+                coeff_b =   uf * mesh.cellLengthsInv[Z](k-1);
+                coeff_t = - uf * mesh.cellLengthsInv[Z](k);
 
                 // Cell on bottom side 
                 coeffs[t](i, j, k-1) = std::min( coeff_b, 0.0 );
                 coeffs[p](i, j, k-1) += coeff_b - coeffs[t](i, j, k); 
 
                 // Cell on top side
-                coeffs[b](i, j, k)  = std::max( coeff_t, 0.0 );
+                coeffs[b](i, j, k)  = std::min( coeff_t, 0.0 );      // The sign of this coefficient is negative
                 coeffs[p](i, j, k)  += coeff_t - coeffs[b](i, j, k);
 
             }
