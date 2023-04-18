@@ -143,7 +143,7 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
                 extrapFactor_p = mesh.extrapFactors[negativePatch].p;
                 extrapFactor_a = mesh.extrapFactors[negativePatch].a;
                 faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].chip(fieldEndIndex, axis) * fields[axisVel].chip(fieldEndIndex, axis).constant( extrapFactor_p )
-                                                                 + fields[axisVel].chip(fieldEndIndex+1, axis) * fields[axisVel].chip(fieldEndIndex-1, axis).constant( extrapFactor_a );
+                                                                 + fields[axisVel].chip(fieldEndIndex+1, axis) * fields[axisVel].chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
                 break;
 
             default:
