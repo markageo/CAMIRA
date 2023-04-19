@@ -21,6 +21,75 @@
 namespace pt = boost::property_tree;
 
 
+// Read command line input for input file name
+CFD::InputData CFD::InputDataFromCommandLine(int argc, char const *argv[])
+{
+    // InputData object to return
+    CFD::InputData inputData;
+
+    // Input file from first command line argument
+    std::string inputFilename;
+    if (argc == 1) {
+        std::cout << "Please enter input file name: "
+                  << "\n";
+        std::cin >> inputFilename;
+        std::cout << "\n";
+        std::cin.ignore();
+
+    }
+    else if (argc == 2) {
+        inputFilename = argv[1];
+
+    }
+    else {
+        throw std::invalid_argument("Invalid command line options.");
+
+    }
+
+    // User input data
+    std::string inputFileRetryChoice;
+    while (true)
+    {
+        try
+        {
+            std::cout << "Reading input file: '" + inputFilename + "' ..."
+                      << "\n\n";
+            inputData = CFD::ReadInputData(inputFilename);
+            std::cout << "Success!"
+                      << "\n\n";
+            break;
+
+            // } catch (std::runtime_error &e) {
+        }
+        catch (int &e)
+        {
+
+            // std::cout << "Failure reading input file! \n"
+            //           << e.what()
+            //           << "\n\n";
+
+            std::cout << "Would you like to try again? (y/n)"
+                      << "\n";
+            std::cin >> inputFileRetryChoice;
+            if (inputFileRetryChoice != "y")
+                exit(-1);
+            std::cout << "\n";
+
+            std::cout << "Please enter input file name: "
+                      << "\n";
+            std::cin >> inputFilename;
+            std::cout << "\n";
+            std::cin.ignore();
+        }
+    }
+    std::cout << "Press enter to begin.";
+    std::cin.ignore();
+    std::cout << std::endl;
+
+    return inputData;
+}
+
+
 // InputData constructor
 CFD::InputData::InputData() :
     meshSegments( Axis::count ),
@@ -484,6 +553,7 @@ namespace
 }   // end anonymous namepsace
 
 
+// Parse input file and read into InputData structure
 CFD::InputData CFD::ReadInputData(const std::string &inputFileName) 
 {
     pt::ptree tree = ParseFile(inputFileName);
