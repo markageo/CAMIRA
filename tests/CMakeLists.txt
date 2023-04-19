@@ -1,0 +1,6 @@
+option (TESTS "Create test executable" off)
+if (TESTS)
+	message(STATUS "Test executable will be created")
+    add_executable(test test.cpp)
+    target_link_libraries(test PUBLIC model)
+endif()
