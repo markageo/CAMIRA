@@ -55,7 +55,8 @@ namespace
     }
 
     // Parse vector string into an std::vector
-    std::vector<CFD::floatType> ParseVectorString(const std::string &vecString, const int &dim)
+    std::vector<CFD::floatType> ParseVectorString(const std::string &vecString, 
+                                                  const int &dim)
     {
         std::vector<CFD::floatType> vec;
         std::string::const_iterator stringIterator = vecString.begin();
@@ -100,7 +101,8 @@ namespace
                                                Model
     \*-------------------------------------------------------------------------------------*/
 
-    void ReadModel(InputData &inputData, const pt::ptree &tree)
+    void ReadModel(InputData &inputData, 
+                   const pt::ptree &tree)
     {
         using enum Axis::ENUMDATA;
 
@@ -121,7 +123,8 @@ namespace
                                                 Mesh
     \*-------------------------------------------------------------------------------------*/
 
-    void ValidateSegmentBounds(const std::vector<InputData::MeshSegment> &meshSegment, const floatType &domainSize)
+    void ValidateSegmentBounds(const std::vector<InputData::MeshSegment> &meshSegment, 
+                               const floatType &domainSize)
     {
         using v_size_type = std::vector<InputData::MeshSegment>::size_type;
 
@@ -146,7 +149,9 @@ namespace
     }
 
 
-    void ReadGrid(const pt::ptree &meshTree, std::vector<InputData::MeshSegment> &meshSegments, const std::string &gridString)
+    void ReadGrid( std::vector<InputData::MeshSegment> &meshSegments,
+                   const pt::ptree &meshTree,   
+                   const std::string &gridString)
     {
         const pt::ptree &gridTree = meshTree.get_child(gridString);
         std::string boundsString, nCellsString, biasFactorString;
@@ -171,7 +176,8 @@ namespace
     }
 
 
-    void ReadMesh(InputData &inputData, const pt::ptree &tree)
+    void ReadMesh(InputData &inputData, 
+                  const pt::ptree &tree)
     {
         using enum Axis::ENUMDATA;
 
@@ -185,9 +191,9 @@ namespace
         inputData.domainSize(2) = domainSizeTemp[2];
 
         // Grids
-        ReadGrid(meshTree, inputData.meshSegments[X], "GridX");
-        ReadGrid(meshTree, inputData.meshSegments[Y], "GridY");
-        ReadGrid(meshTree, inputData.meshSegments[Z], "GridZ");
+        ReadGrid(inputData.meshSegments[X], meshTree, "GridX");
+        ReadGrid(inputData.meshSegments[Y], meshTree, "GridY");
+        ReadGrid(inputData.meshSegments[Z], meshTree, "GridZ");
 
         // Sort in increasing order of lower bound
         auto sortComparison = [](const auto& i, const auto& j) { return i.lowerBound < j.lowerBound; };
@@ -268,7 +274,8 @@ namespace
     }
 
 
-    void ReadBoundaryConditions(InputData &inputData, const pt::ptree &tree)
+    void ReadBoundaryConditions(InputData &inputData, 
+                                const pt::ptree &tree)
     {
         using BP = BoundaryPatches::ENUMDATA;
         using F  = Fields::ENUMDATA;
@@ -420,7 +427,8 @@ namespace
     }
 
 
-    void ReadSweepDirections(InputData &inputData, const pt::ptree &solverTree) 
+    void ReadSweepDirections(InputData &inputData, 
+                             const pt::ptree &solverTree) 
     {
 
         using BP = CFD::BoundaryPatches::ENUMDATA;
@@ -461,7 +469,8 @@ namespace
     }
 
 
-    void ReadSolver(InputData &inputData, const pt::ptree &tree)
+    void ReadSolver(InputData &inputData, 
+                    const pt::ptree &tree)
     {
         
         const pt::ptree &solverTree = tree.get_child("Solver");
