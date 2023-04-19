@@ -63,7 +63,7 @@ BoundaryConditions::ENUMDATA GetDiffusionBC( const InputData::BoundaryConditionD
 void DiffusionPositiveBoundary( std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, 
                                 std::vector<floatType> &boundaryConstants,
                                 const Mesh &mesh,  
-                                const std::vector<InputData::BoundaryConditionStruct> &boundaryConditionStructs, 
+                                const EnumVector< BoundaryPatches, InputData::BoundaryConditionStruct > &boundaryConditionStructs,
                                 const Axis::ENUMDATA axis)
 {
     using BC = BoundaryConditions::ENUMDATA;
@@ -102,7 +102,7 @@ void DiffusionPositiveBoundary( std::vector< ArrayAllocator<TransportCoefficient
 void DiffusionNegativeBoundary( std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, 
                                 std::vector<floatType> &boundaryConstants,
                                 const Mesh &mesh,  
-                                const std::vector<InputData::BoundaryConditionStruct> &boundaryConditionStructs, 
+                                const EnumVector< BoundaryPatches, InputData::BoundaryConditionStruct > &boundaryConditionStructs,
                                 const Axis::ENUMDATA axis)
 {
     using BC = BoundaryConditions::ENUMDATA;
@@ -326,7 +326,7 @@ void AdvectionPositiveBoundary( ArrayAllocator<TransportCoefficients, array3D> &
                                 std::vector<array2D> &boundaryConstants,
                                 const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
                                 const Mesh &mesh,  
-                                const std::vector<InputData::BoundaryConditionStruct> &boundaryConditionStructs, 
+                                const EnumVector< BoundaryPatches, InputData::BoundaryConditionStruct > &boundaryConditionStructs,
                                 const Axis::ENUMDATA axis)
 {
     using BC = BoundaryConditions::ENUMDATA;
@@ -372,7 +372,7 @@ void AdvectionNegativeBoundary( ArrayAllocator<TransportCoefficients, array3D> &
                                 std::vector<array2D> &boundaryConstants,
                                 const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
                                 const Mesh &mesh,  
-                                const std::vector<InputData::BoundaryConditionStruct> &boundaryConditionStructs, 
+                                const EnumVector< BoundaryPatches, InputData::BoundaryConditionStruct > &boundaryConditionStructs,
                                 const Axis::ENUMDATA axis)
 {
     using BC = BoundaryConditions::ENUMDATA;
@@ -488,7 +488,7 @@ void AddDiffusion( ArrayAllocator<TransportCoefficients, array3D> &velCoeffs,
 void InterpolationPositiveBoundary( ArrayAllocator<TransportCoefficients, array1D> &coeffs, 
                                     std::vector<floatType> &boundaryConstants,
                                     const Mesh &mesh,  
-                                    const std::vector<InputData::BoundaryConditionStruct> &boundaryConditionStructs, 
+                                    const EnumVector< BoundaryPatches, InputData::BoundaryConditionStruct > &boundaryConditionStructs,
                                     const Axis::ENUMDATA axis)
 {
 
@@ -528,7 +528,7 @@ void InterpolationPositiveBoundary( ArrayAllocator<TransportCoefficients, array1
 void InterpolationNegativeBoundary( ArrayAllocator<TransportCoefficients, array1D> &coeffs, 
                                     std::vector<floatType> &boundaryConstants,
                                     const Mesh &mesh,  
-                                    const std::vector<InputData::BoundaryConditionStruct> &boundaryConditionStructs, 
+                                    const EnumVector< BoundaryPatches, InputData::BoundaryConditionStruct > &boundaryConditionStructs, 
                                     const Axis::ENUMDATA axis)
 {
 

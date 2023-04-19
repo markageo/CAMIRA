@@ -10,7 +10,7 @@ namespace CFD
 
 // Update face velocities
 void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D>  &, const Mesh &, const ArrayAllocator<Fields, CFD::array3D> &, 
-    const std::vector< std::vector< InputData::BoundaryConditionStruct > > &);
+    const InputData::BoundaryConditionData &);
 
 // Initialise finite volume coefficients
 FVCoefficients InitialiseFVCoefficients(const Mesh &, const ArrayAllocator<Fields, CFD::array3D> &, const InputData &);

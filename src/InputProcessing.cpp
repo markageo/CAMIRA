@@ -306,19 +306,22 @@ namespace
 
     void TransformBoundaryConditions(InputData &inputData)
     {
-        int nPatches = CFD::BoundaryPatches::count;
         using BP = CFD::BoundaryPatches::ENUMDATA;
-        
+        using F = CFD::Fields::ENUMDATA;
 
         // Temporary for boundary conditions as user specifies them
-        std::vector< std::vector< InputData::BoundaryConditionStruct > > boundaryConditionsUser = inputData.boundaryConditions;
-
-        // Iterate fields, they all have the same trasformation
-        for ( size_t i = 0; i != inputData.boundaryConditions.size(); i++ ) {
+        InputData::BoundaryConditionData boundaryConditionsUser = inputData.boundaryConditions;
         
+        // Iterate fields, they all have the same trasformation
+        F field;
+        BP patch;
+        for ( int f = 0; f != Fields::count; f++ ) {
+            field = static_cast<F>(f);
+
             // Transform using the axisTransformation map
-            for (int patchEnum = 0; patchEnum != nPatches; patchEnum++) {
-                inputData.boundaryConditions[i][patchEnum] = boundaryConditionsUser[i][ inputData.axisTransformation.at( static_cast<BP>(patchEnum) ) ];
+            for ( int p = 0; p != BoundaryPatches::count; p++ ) {
+                patch = static_cast<BP>(p);
+                inputData.boundaryConditions[field][patch] = boundaryConditionsUser[field][ inputData.axisTransformation.at( patch ) ];
             }
             
         }

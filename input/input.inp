@@ -5,10 +5,9 @@ Model {
     nu   = 1
 }
 
-
 Mesh {
 
-    domain = (1, 1, 1)
+    domain = (5, 10, 6)
 
     Grid X {
         
@@ -18,22 +17,40 @@ Mesh {
             biasFactor = 2
         }
 
+        Segment {
+            bounds     = (1, 4)
+            nCells     = 25
+            biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (4, 5)
+            nCells     = 5
+            biasFactor = -2
+        }
+
     }
 
 
     Grid Y {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 6
+            bounds     = (0, 5)
+            nCells     = 20
             biasFactor = 3
+        }
+
+        Segment {
+            bounds     = (5, 10)
+            nCells     = 20
+            biasFactor = -3
         }
     }
 
 
     Grid Z {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 4
+            bounds     = (0, 3)
+            nCells     = 10
             biasFactor = 1
         }
     }

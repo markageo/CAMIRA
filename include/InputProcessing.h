@@ -31,8 +31,7 @@ struct InputData
         intType nCells;
         floatType biasFactor;
     };
-    std::vector< std::vector<MeshSegment> > meshSegments;   // meshSegments[Axis][segment]
-
+    EnumVector< Axis, std::vector< MeshSegment > > meshSegments;
 
 
     // Boundary conditions
@@ -40,8 +39,8 @@ struct InputData
         BoundaryConditions::ENUMDATA type;
         CFD::floatType value;
     };
-    using BoundaryConditionData = std::vector< std::vector< BoundaryConditionStruct > >;
-    BoundaryConditionData boundaryConditions; // boundaryConditions[Field][Patch]
+    using BoundaryConditionData = EnumVector< Fields, EnumVector< BoundaryPatches, BoundaryConditionStruct > >;
+    BoundaryConditionData boundaryConditions;
     std::map< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > axisTransformation; // Code patch -> user patch
 
     

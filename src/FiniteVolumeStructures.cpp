@@ -166,7 +166,7 @@ intType TotalCells(const std::vector<InputData::MeshSegment> &meshSegments)
 
 // Constructor, creates the mesh
 Mesh::Mesh(const InputData &inputData) :
-    nCells( { TotalCells(inputData.meshSegments[0]),  TotalCells(inputData.meshSegments[1]), TotalCells(inputData.meshSegments[2])} ),
+    nCells( { TotalCells(inputData.meshSegments[Axis::X]),  TotalCells(inputData.meshSegments[Axis::Y]), TotalCells(inputData.meshSegments[Axis::Z])} ),
 
     cellCenters( {{Axis::ENUMDATA::X, nCells(0)},
                   {Axis::ENUMDATA::Y, nCells(1)},

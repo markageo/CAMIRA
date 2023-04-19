@@ -126,6 +126,9 @@ constexpr std::array<Axis::ENUMDATA, 6> BoundaryPatchAxis{Axis::ENUMDATA::X,    
                                                           Axis::ENUMDATA::Z};   // zNegative
 
 
+
+
+
 // Wrapper for std::vector that can only be indexed using enums
 template <typename enumStruct, typename T>
 class EnumVector
@@ -151,7 +154,7 @@ class EnumVector
             return dataVector[idx];
         }
 
-        T &operator[](const enumStruct::ENUMDATA idx) const 
+        const T &operator[](const enumStruct::ENUMDATA idx) const 
         {
             return dataVector[idx];
         }
@@ -168,6 +171,8 @@ class EnumVector
     private:
         std::vector<T> dataVector;
 };
+
+
 
 
 
@@ -307,7 +312,7 @@ class ArrayAllocator
         //     return *coeffPointers[idx];
         // }
 
-        // arrayType &operator[](const enumStruct::ENUMDATA idx) const 
+        // const arrayType &operator[](const enumStruct::ENUMDATA idx) const 
         // {
         //     return *coeffPointers[idx];
         // }
@@ -318,7 +323,7 @@ class ArrayAllocator
             return *coeffPointers[idx];
         }
 
-        arrayType &operator[](const intType idx) const 
+        const arrayType &operator[](const intType idx) const 
         {
             return *coeffPointers[idx];
         }
