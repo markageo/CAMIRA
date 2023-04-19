@@ -125,7 +125,51 @@ constexpr std::array<Axis::ENUMDATA, 6> BoundaryPatchAxis{Axis::ENUMDATA::X,    
                                                           Axis::ENUMDATA::Z,    // zPositive
                                                           Axis::ENUMDATA::Z};   // zNegative
 
-                                                
+
+// Wrapper for std::vector that can only be indexed using enums
+template <typename enumStruct, typename T>
+class EnumVector
+{
+    static_assert(std::is_same<enumStruct, CFD::Axis                 >::value ||
+                  std::is_same<enumStruct, CFD::Fields               >::value ||
+                  std::is_same<enumStruct, CFD::BoundaryConditions   >::value ||
+                  std::is_same<enumStruct, CFD::BoundaryPatches      >::value ||
+                  std::is_same<enumStruct, CFD::TransportCoefficients>::value,
+                  "Template parameter must be struct containing ENUMDATA type.");
+
+    public:
+
+        // Constructors
+        EnumVector() {};
+        EnumVector( const size_t count ) : dataVector( count ) {};
+        EnumVector( const size_t count, const T value) : dataVector( count, value ) {};
+        EnumVector( const std::vector<T> &vec ) : dataVector( vec ) {};
+
+        // Strong type indexing
+        T &operator[](const enumStruct::ENUMDATA idx)
+        {
+            return dataVector[idx];
+        }
+
+        T &operator[](const enumStruct::ENUMDATA idx) const 
+        {
+            return dataVector[idx];
+        }
+
+        // Get underlying data vector
+        std::vector<T> &get()
+        {
+            return dataVector;
+        }
+
+        // Copy constructor/assignemnt, move constructor/assignment, and destructor are trivial. 
+        // Use the synthesised.
+
+    private:
+        std::vector<T> dataVector;
+};
+
+
 
 // Allocate arrays using enums. Arrays are initialised to zero.
 template <typename enumStruct, typename arrayType>
@@ -147,8 +191,7 @@ class ArrayAllocator
 
     public:
 
-        // ----------------------------- Constructor: All arrays have same dimensions ----------------------------- //
-
+        // Constructor, all arrays have the same dimensions
         // 3D
         ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const indexVector3 &dims) 
         requires ( std::is_same< arrayType, CFD::array3D >::value ) : 
@@ -180,8 +223,7 @@ class ArrayAllocator
         }
 
 
-        // --------------------------- Constructor: Arrays can have different dimensions --------------------------- //
-
+        // Constructor, array can have difference dimensions
         // 3D
         ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::indexVector3 > > &arraySpec) 
         requires ( std::is_same< arrayType, CFD::array3D >::value ) : 
@@ -193,7 +235,6 @@ class ArrayAllocator
                 coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ).setZero() );
             }
         }
-
 
         // 2D
         ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::indexVector2 > > &arraySpec) 
@@ -207,7 +248,6 @@ class ArrayAllocator
             }
         }
 
-
         // 1D
         ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::intType > > &arraySpec) 
         requires ( std::is_same< arrayType, CFD::array1D >::value ) : 
@@ -220,8 +260,8 @@ class ArrayAllocator
             }
         }
 
-        // ------------------------------------------- Copy Constructor ------------------------------------------- //
 
+        // Copy Constructor
         ArrayAllocator(const ArrayAllocator &that) :
             coeffPointers(enumStruct::count)
         {
@@ -234,8 +274,7 @@ class ArrayAllocator
         }
 
 
-        // --------------------------------------- Copy Assignment Operator --------------------------------------- //
-
+        // Copy assignment
         ArrayAllocator &operator=(ArrayAllocator that)
         {   
             std::swap( this->coeffPointers, that.coeffPointers );
@@ -243,27 +282,35 @@ class ArrayAllocator
         }
 
 
-        // ------------------------------------------- Move Constructor ------------------------------------------- //
-
+        // Move constructor
         ArrayAllocator(ArrayAllocator&& that) noexcept :
             coeffPointers( std::move( that.coeffPointers ) )
         {}
 
 
-        // --------------------------------------- Move Assignment Operator --------------------------------------- //
-
+        // Move assignment
         ArrayAllocator &operator=(ArrayAllocator &&that) noexcept
         {
             return ArrayAllocator( std::move( that ) );
         }    
 
-
-        // ---------------------------------------------- Destructor ---------------------------------------------- //
-
+        // Destructor
         ~ArrayAllocator() = default;
 
 
-        // ----------------------------------- Array reference return operators ----------------------------------- //
+        
+        // Indexing operators
+
+        // // For strongly types enum input, this is probably more type safe
+        // arrayType &operator[](const enumStruct::ENUMDATA idx)
+        // {
+        //     return *coeffPointers[idx];
+        // }
+
+        // arrayType &operator[](const enumStruct::ENUMDATA idx) const 
+        // {
+        //     return *coeffPointers[idx];
+        // }
 
         // For int parameters
         arrayType &operator[](const intType idx)
@@ -277,9 +324,8 @@ class ArrayAllocator
         }
 
 
-        // ------------------------------------------- Container access ------------------------------------------- //
-
-        std::vector< std::unique_ptr<arrayType> > &container()
+        // Container access
+        std::vector< std::unique_ptr<arrayType> > &get()
         {
             return coeffPointers;
         }
