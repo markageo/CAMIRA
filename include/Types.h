@@ -22,6 +22,7 @@ using indexVector2 = Eigen::Array<intType, 2, 1>;
 using floatVector3 = Eigen::Array<floatType, 3, 1>;
 using floatVector2 = Eigen::Array<floatType, 2, 1>;
 
+
 // Enums to be used as indices for containers
 // Place inside structs to avoid name conflicts with "count"
 struct Axis
