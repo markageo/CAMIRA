@@ -302,26 +302,14 @@ class ArrayAllocator
         // Destructor
         ~ArrayAllocator() = default;
 
+
         // Indexing operators
-
-        // // For strongly types enum input, this is probably more type safe
-        // arrayType &operator[](const enumStruct::ENUMDATA idx)
-        // {
-        //     return *coeffPointers[idx];
-        // }
-
-        // const arrayType &operator[](const enumStruct::ENUMDATA idx) const 
-        // {
-        //     return *coeffPointers[idx];
-        // }
-
-        // For int parameters
-        arrayType &operator[](const intType idx)
+        arrayType &operator[](const enumStruct::ENUMDATA idx)
         {
             return *coeffPointers[idx];
         }
 
-        const arrayType &operator[](const intType idx) const 
+        const arrayType &operator[](const enumStruct::ENUMDATA idx) const 
         {
             return *coeffPointers[idx];
         }
