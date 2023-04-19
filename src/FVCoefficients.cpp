@@ -60,8 +60,8 @@ BoundaryConditions::ENUMDATA GetDiffusionBC( const InputData::BoundaryConditionD
 
 
 // Apply boundary conditions for diffusion terms on axis positive boundary
-void DiffusionPositiveBoundary( std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, 
-                                std::vector<floatType> &boundaryConstants,
+void DiffusionPositiveBoundary( EnumVector< Axis,  ArrayAllocator<TransportCoefficients, array1D> > &diff, 
+                                EnumVector< BoundaryPatches, floatType > &boundaryConstants,
                                 const Mesh &mesh,  
                                 const EnumVector< BoundaryPatches, InputData::BoundaryConditionStruct > &boundaryConditionStructs,
                                 const Axis::ENUMDATA axis)
@@ -99,8 +99,8 @@ void DiffusionPositiveBoundary( std::vector< ArrayAllocator<TransportCoefficient
 
 
 // Apply boundary conditions for diffusion terms on axis negative boundary
-void DiffusionNegativeBoundary( std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, 
-                                std::vector<floatType> &boundaryConstants,
+void DiffusionNegativeBoundary( EnumVector< Axis, ArrayAllocator<TransportCoefficients, array1D> > &diff, 
+                                EnumVector< BoundaryPatches, floatType > &boundaryConstants,
                                 const Mesh &mesh,  
                                 const EnumVector< BoundaryPatches, InputData::BoundaryConditionStruct > &boundaryConditionStructs,
                                 const Axis::ENUMDATA axis)
@@ -138,8 +138,8 @@ void DiffusionNegativeBoundary( std::vector< ArrayAllocator<TransportCoefficient
 
 
 // Set diffusion coefficients for a given momentum equation
-void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diff, 
-                            std::vector<floatType> &boundaryConstants, 
+void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficients, array1D> > &diff, 
+                            EnumVector< BoundaryPatches, floatType > &boundaryConstants, 
                             const Mesh &mesh, 
                             const InputData &inputData, 
                             const Fields::ENUMDATA field)
@@ -157,7 +157,9 @@ void SetDiffusionCoeffients(std::vector< ArrayAllocator<TransportCoefficients, a
 
 
     // Diffusion in each axis is calculated in the same way
-    for (int axis = 0; axis != Axis::count; axis++) {
+    Axis::ENUMDATA axis;
+    for (int a = 0; a != Axis::count; a++) {
+        axis = static_cast<Axis::ENUMDATA>(a);
 
         positivePatch = positivePatches[axis];
         negativePatch = negativePatches[axis];
@@ -323,7 +325,7 @@ void UpwindZnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
 
 
 void AdvectionPositiveBoundary( ArrayAllocator<TransportCoefficients, array3D> &coeffs, 
-                                std::vector<array2D> &boundaryConstants,
+                                EnumVector<BoundaryPatches, array2D> &boundaryConstants,
                                 const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
                                 const Mesh &mesh,  
                                 const EnumVector< BoundaryPatches, InputData::BoundaryConditionStruct > &boundaryConditionStructs,
@@ -369,7 +371,7 @@ void AdvectionPositiveBoundary( ArrayAllocator<TransportCoefficients, array3D> &
 
 
 void AdvectionNegativeBoundary( ArrayAllocator<TransportCoefficients, array3D> &coeffs, 
-                                std::vector<array2D> &boundaryConstants,
+                                EnumVector<BoundaryPatches, array2D> &boundaryConstants,
                                 const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
                                 const Mesh &mesh,  
                                 const EnumVector< BoundaryPatches, InputData::BoundaryConditionStruct > &boundaryConditionStructs,
@@ -415,7 +417,7 @@ void AdvectionNegativeBoundary( ArrayAllocator<TransportCoefficients, array3D> &
 
 
 void SetAdvectionCoefficients( ArrayAllocator<TransportCoefficients, array3D> &coeffs, 
-                               std::vector<array2D> &boundaryConstants,
+                               EnumVector<BoundaryPatches, array2D> &boundaryConstants,
                                const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
                                const Mesh &mesh, 
                                const InputData &inputData, 
@@ -444,10 +446,10 @@ void SetAdvectionCoefficients( ArrayAllocator<TransportCoefficients, array3D> &c
                                            Add Diffusion Coefficients
 \*---------------------------------------------------------------------------------------------------------------*/
 
-void AddDiffusion( ArrayAllocator<TransportCoefficients, array3D> &velCoeffs, 
-                   std::vector< array2D > &boundaryVel,
-                   const std::vector< ArrayAllocator<TransportCoefficients, array1D> > &diffCoeffs, 
-                   const std::vector< floatType > &boundaryDiff,
+void AddDiffusion( ArrayAllocator< TransportCoefficients, array3D > &velCoeffs, 
+                   EnumVector< BoundaryPatches, array2D > &boundaryVel,
+                   const EnumVector< Axis, ArrayAllocator<TransportCoefficients, array1D> > &diffCoeffs, 
+                   const EnumVector< BoundaryPatches, floatType > &boundaryDiff,
                    const Mesh &mesh)
 {
     using enum Axis::ENUMDATA;
@@ -472,7 +474,9 @@ void AddDiffusion( ArrayAllocator<TransportCoefficients, array3D> &velCoeffs,
     }
 
     // Constant terms
-    for (int patch = 0; patch != BoundaryPatches::count; patch++) {
+    BoundaryPatches::ENUMDATA patch;
+    for (int p = 0; p != BoundaryPatches::count; p++) {
+        patch = static_cast<BoundaryPatches::ENUMDATA>(p);
         boundaryVel[patch] += boundaryVel[patch].constant( boundaryDiff[patch] );
     }
 
@@ -485,8 +489,8 @@ void AddDiffusion( ArrayAllocator<TransportCoefficients, array3D> &velCoeffs,
 \*---------------------------------------------------------------------------------------------------------------*/
 
 
-void InterpolationPositiveBoundary( ArrayAllocator<TransportCoefficients, array1D> &coeffs, 
-                                    std::vector<floatType> &boundaryConstants,
+void InterpolationPositiveBoundary( ArrayAllocator< TransportCoefficients, array1D > &coeffs, 
+                                    EnumVector< BoundaryPatches, floatType > &boundaryConstants,
                                     const Mesh &mesh,  
                                     const EnumVector< BoundaryPatches, InputData::BoundaryConditionStruct > &boundaryConditionStructs,
                                     const Axis::ENUMDATA axis)
@@ -525,8 +529,8 @@ void InterpolationPositiveBoundary( ArrayAllocator<TransportCoefficients, array1
 }
 
 
-void InterpolationNegativeBoundary( ArrayAllocator<TransportCoefficients, array1D> &coeffs, 
-                                    std::vector<floatType> &boundaryConstants,
+void InterpolationNegativeBoundary( ArrayAllocator< TransportCoefficients, array1D > &coeffs, 
+                                    EnumVector< BoundaryPatches, floatType > &boundaryConstants,
                                     const Mesh &mesh,  
                                     const EnumVector< BoundaryPatches, InputData::BoundaryConditionStruct > &boundaryConditionStructs, 
                                     const Axis::ENUMDATA axis)
@@ -567,7 +571,7 @@ void InterpolationNegativeBoundary( ArrayAllocator<TransportCoefficients, array1
 
 // Set coefficients for quantities that are intrpolated linearly onto faces.
 void SetFaceInterpolatedCoefficients( ArrayAllocator<CFD::TransportCoefficients, CFD::array1D> &coeffs, 
-                                      std::vector<floatType> &boundaryConstants, 
+                                      EnumVector< BoundaryPatches, floatType > &boundaryConstants, 
                                       const Mesh &mesh, 
                                       const InputData &inputData, 
                                       const Fields::ENUMDATA field, 
@@ -851,10 +855,10 @@ void AddContinuityBoundaryConstants( FVCoefficients::ContinuityEquation &contCoe
         iEnd = contCoeffs.B.dimension(axis)-1;
 
         // Negative side boundary
-        contCoeffs.B.chip( 0   , axis ) += contCoeffs.B.chip( 0   , axis ).constant( contCoeffs.boundaryVel[negativePatch] + contCoeffs.boundaryP[negativePatch] );
+        contCoeffs.B.chip( 0   , axis ) += - contCoeffs.B.chip( 0   , axis ).constant( contCoeffs.boundaryVel[negativePatch] + contCoeffs.boundaryP[negativePatch] );
 
         // Positive side boundary
-        contCoeffs.B.chip( iEnd, axis ) += contCoeffs.B.chip( iEnd, axis ).constant( contCoeffs.boundaryVel[positivePatch] + contCoeffs.boundaryP[positivePatch] );
+        contCoeffs.B.chip( iEnd, axis ) += - contCoeffs.B.chip( iEnd, axis ).constant( contCoeffs.boundaryVel[positivePatch] + contCoeffs.boundaryP[positivePatch] );
     }
 }
 

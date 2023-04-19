@@ -44,9 +44,10 @@ struct FVCoefficients
         ArrayAllocator<TransportCoefficients, array3D> AU, AV, AW;          // Velocity coefficients (LHS)
         ArrayAllocator<TransportCoefficients, array1D> AP;                  // Pressure coefficients (LHS)
         array3D B;                                                          // Source Term (RHS)
-        std::vector< ArrayAllocator<TransportCoefficients, array1D> > diff; // Diffusion coefficients diff[Axis][TransportCoefficient] (LHS)
-        std::vector< floatType > boundaryDiff, boundaryP;                   // Constant terms that come from uniform BC boundaryDiff[BoundaryPatch] (LHS)
-        std::vector< array2D > boundaryVel;                                 // (LHS)
+        EnumVector< Axis, ArrayAllocator<TransportCoefficients, array1D> > diff;    // Diffusion coefficients (LHS)
+        EnumVector< BoundaryPatches, floatType > boundaryDiff, boundaryP;             // Constant terms that come from uniform BC (LHS)
+        EnumVector< BoundaryPatches, array2D > boundaryVel;       
+
     };
 
     struct ContinuityEquation {
@@ -54,8 +55,7 @@ struct FVCoefficients
         ArrayAllocator<TransportCoefficients, array1D> AU, AV, AW;          // Velocity coefficients (LHS)
         ArrayAllocator<TransportCoefficients, array3D> AP;                  // Pressure coefficients (LHS)
         array3D B;                                                          // Source term (RHS)
-        std::vector< floatType > boundaryVel;                               // Constant terms that come from uniform BC boundaryVel[BoundaryPatch] (LHS)
-        std::vector< floatType > boundaryP;                                 // These may need to be 2D arrays (LHS)   
+        EnumVector< BoundaryPatches, floatType > boundaryVel, boundaryP;    // Constant terms that come from uniform BC (LHS)
     };
 
     MomentumEquation Umom, Vmom, Wmom;

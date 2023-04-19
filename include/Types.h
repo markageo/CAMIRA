@@ -302,8 +302,6 @@ class ArrayAllocator
         // Destructor
         ~ArrayAllocator() = default;
 
-
-        
         // Indexing operators
 
         // // For strongly types enum input, this is probably more type safe
