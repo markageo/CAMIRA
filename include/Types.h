@@ -141,7 +141,7 @@ class ArrayAllocator
     static_assert(std::is_same< arrayType, CFD::array1D >::value ||
                   std::is_same< arrayType, CFD::array2D >::value ||
                   std::is_same< arrayType, CFD::array3D >::value,
-                  "Array tpye invalid.");
+                  "Array type invalid.");
 
     typedef typename enumStruct::ENUMDATA ENUMDATA;
 
