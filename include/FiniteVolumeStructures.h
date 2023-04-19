@@ -41,21 +41,21 @@ struct FVCoefficients
 
     struct MomentumEquation {
         MomentumEquation(const Fields::ENUMDATA, const indexVector3 &);
-        ArrayAllocator<TransportCoefficients, array3D> AU, AV, AW;          // Velocity coefficients
-        ArrayAllocator<TransportCoefficients, array1D> AP;                  // Pressure coefficients
-        array3D B;                                                          // Source Term
-        std::vector< ArrayAllocator<TransportCoefficients, array1D> > diff; // Diffusion coefficients diff[Axis][TransportCoefficient]
-        std::vector< floatType > boundaryDiff, boundaryP;                   // Constant terms that come from uniform BC boundaryDiff[BoundaryPatch]
-        std::vector< array2D > boundaryVel;
+        ArrayAllocator<TransportCoefficients, array3D> AU, AV, AW;          // Velocity coefficients (LHS)
+        ArrayAllocator<TransportCoefficients, array1D> AP;                  // Pressure coefficients (LHS)
+        array3D B;                                                          // Source Term (RHS)
+        std::vector< ArrayAllocator<TransportCoefficients, array1D> > diff; // Diffusion coefficients diff[Axis][TransportCoefficient] (LHS)
+        std::vector< floatType > boundaryDiff, boundaryP;                   // Constant terms that come from uniform BC boundaryDiff[BoundaryPatch] (LHS)
+        std::vector< array2D > boundaryVel;                                 // (LHS)
     };
 
     struct ContinuityEquation {
         ContinuityEquation(const indexVector3 &);
-        ArrayAllocator<TransportCoefficients, array1D> AU, AV, AW;          // Velocity coefficients
-        ArrayAllocator<TransportCoefficients, array3D> AP;                  // Pressure coefficients
-        array3D B;                                                          // Source term
-        std::vector< floatType > boundaryVel;                               // Constant terms that come from uniform BC boundaryVel[BoundaryPatch]
-        std::vector< floatType > boundaryP;                                 // These may need to be 2D arrays   
+        ArrayAllocator<TransportCoefficients, array1D> AU, AV, AW;          // Velocity coefficients (LHS)
+        ArrayAllocator<TransportCoefficients, array3D> AP;                  // Pressure coefficients (LHS)
+        array3D B;                                                          // Source term (RHS)
+        std::vector< floatType > boundaryVel;                               // Constant terms that come from uniform BC boundaryVel[BoundaryPatch] (LHS)
+        std::vector< floatType > boundaryP;                                 // These may need to be 2D arrays (LHS)   
     };
 
     MomentumEquation Umom, Vmom, Wmom;
