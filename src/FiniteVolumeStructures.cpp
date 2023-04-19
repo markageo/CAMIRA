@@ -29,7 +29,9 @@ std::vector<floatType> CalculateGrowthRates(const std::vector<InputData::MeshSeg
 }
 
 
-void CalculateCellLengths(array1D &cellLengths, const std::vector<InputData::MeshSegment> &meshSegments, const std::vector<floatType> &growthRates)
+void CalculateCellLengths(array1D &cellLengths, 
+                          const std::vector<InputData::MeshSegment> &meshSegments, 
+                          const std::vector<floatType> &growthRates)
 {
     int nSegments = meshSegments.size();
 
@@ -54,7 +56,8 @@ void CalculateCellLengths(array1D &cellLengths, const std::vector<InputData::Mes
 }
 
 
-void CalculateCellCenters(array1D &cellCenters, const array1D &cellLengths)
+void CalculateCellCenters(array1D &cellCenters, 
+                          const array1D &cellLengths)
 {
     int nCellsTotal = cellLengths.size();
 
@@ -68,7 +71,8 @@ void CalculateCellCenters(array1D &cellCenters, const array1D &cellLengths)
 }
 
 
-void CalculateCellCenterDiffInv(array1D &cellCenterDiffInv, const array1D &cellCenters)
+void CalculateCellCenterDiffInv(array1D &cellCenterDiffInv, 
+                                const array1D &cellCenters)
 {
     // First and last element dont correspond to valid values
     int nFaces = cellCenters.size() + 1;
@@ -79,7 +83,8 @@ void CalculateCellCenterDiffInv(array1D &cellCenterDiffInv, const array1D &cellC
 }
 
 
-void CalculateCellFaces(array1D &cellFaces, const array1D &cellLengths)
+void CalculateCellFaces(array1D &cellFaces, 
+                        const array1D &cellLengths)
 {
     int nFaces = cellLengths.size() + 1;
 
@@ -90,7 +95,9 @@ void CalculateCellFaces(array1D &cellFaces, const array1D &cellLengths)
 }
 
 
-void CalculateInterpolationFactors(array1D &interpFactors, const array1D &cellCenters, const array1D &cellFaces) 
+void CalculateInterpolationFactors(array1D &interpFactors, 
+                                   const array1D &cellCenters, 
+                                   const array1D &cellFaces) 
 {
     for (int i = 1; i != interpFactors.dimension(0)-1; i++) {
         interpFactors(i) = ( cellFaces(i) - cellCenters(i-1) ) / ( cellCenters(i) - cellCenters(i-1) );
@@ -98,7 +105,9 @@ void CalculateInterpolationFactors(array1D &interpFactors, const array1D &cellCe
 }
 
 
-void CalculateCellFaceAreas(array2D &cellFaceAreas, const array1D &cellLengths_x, const array1D &cellLengths_y)
+void CalculateCellFaceAreas(array2D &cellFaceAreas, 
+                            const array1D &cellLengths_x, 
+                            const array1D &cellLengths_y)
 {
     for (int j = 0; j != cellLengths_y.dimension(0); j++) {
         for (int i = 0; i != cellLengths_x.dimension(0); i++) {
@@ -108,7 +117,9 @@ void CalculateCellFaceAreas(array2D &cellFaceAreas, const array1D &cellLengths_x
 }
 
 
-Mesh::ExtrapFactorsStruct GetExtrapolationFactors(const array1D &cellLengths, const int fieldIndex_p, const int fieldIndex_a)
+Mesh::ExtrapFactorsStruct GetExtrapolationFactors(const array1D &cellLengths, 
+                                                  const int fieldIndex_p, 
+                                                  const int fieldIndex_a)
 {
     floatType extrapFactor_p = ( 2.0*cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) )
                                 / ( cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) );
@@ -120,7 +131,9 @@ Mesh::ExtrapFactorsStruct GetExtrapolationFactors(const array1D &cellLengths, co
 }
 
 
-void CalculateExtrapolationFactors(std::vector< Mesh::ExtrapFactorsStruct > &extrapFactors, const ArrayAllocator<Axis, array1D> &cellLengths, const Axis::ENUMDATA axis)
+void CalculateExtrapolationFactors(EnumVector<BoundaryPatches, Mesh::ExtrapFactorsStruct > &extrapFactors, 
+                                   const ArrayAllocator<Axis, array1D> &cellLengths, 
+                                   const Axis::ENUMDATA axis)
 {  
 
     using enum BoundaryPatches::ENUMDATA;
@@ -234,7 +247,8 @@ namespace
 {
 
 // Return the vector of enums corresponding to the coefficients required to multiply be a variable for a particular equation
-std::vector< TransportCoefficients::ENUMDATA > EquationEnums(const Fields::ENUMDATA equation, const Fields::ENUMDATA variable)
+std::vector< TransportCoefficients::ENUMDATA > EquationEnums(const Fields::ENUMDATA equation, 
+                                                             const Fields::ENUMDATA variable)
 {
     using F = Fields::ENUMDATA;
     using C = TransportCoefficients::ENUMDATA;
@@ -313,7 +327,8 @@ using F = Fields::ENUMDATA;
 using enum Axis::ENUMDATA;
 
 // Momentum equations constructor
-FVCoefficients::MomentumEquation::MomentumEquation(const Fields::ENUMDATA field, const CFD::indexVector3 &dims) :
+FVCoefficients::MomentumEquation::MomentumEquation(const Fields::ENUMDATA field, 
+                                                   const CFD::indexVector3 &dims) :
     AU( EquationEnums(field, F::U), dims ),
     AV( EquationEnums(field, F::V), dims ),
     AW( EquationEnums(field, F::W), dims ),

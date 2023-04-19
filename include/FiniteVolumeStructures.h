@@ -25,7 +25,7 @@ struct Mesh
         floatType p,    // Boundary cell 
                   a;    // One from boundary cell
     };
-    std::vector< ExtrapFactorsStruct > extrapFactors;    // extrapFactors[boundaryPatch]
+    EnumVector< BoundaryPatches, ExtrapFactorsStruct > extrapFactors;
 };
 
 
