@@ -16,13 +16,6 @@
 #include <iostream>
 #include <fmt/core.h>
 
-#ifdef PROFILING
-#include "profiler/profiler.h"
-namespace PROF
-{
-    profiler<perf_counter::clock<time_units::SECONDS>> prof;
-}
-#endif
 
 int main(int argc, char const *argv[])
 {
@@ -31,66 +24,7 @@ int main(int argc, char const *argv[])
                                          Input Processing
     \*-------------------------------------------------------------------------------------*/
 
-    // Input file from first command line argument
-    std::string inputFilename;
-    if (argc == 1)
-    {
-        std::cout << "Please enter input file name: "
-                  << "\n";
-        std::cin >> inputFilename;
-        std::cout << "\n";
-        std::cin.ignore();
-    }
-    else if (argc == 2)
-    {
-        inputFilename = argv[1];
-    }
-    else
-    {
-        throw std::invalid_argument("Invalid command line options.");
-    }
-
-    // User input data
-    std::string inputFileRetryChoice;
-    CFD::InputData inputData;
-    while (true)
-    {
-        try
-        {
-
-            std::cout << "Reading input file: '" + inputFilename + "' ..."
-                      << "\n\n";
-            inputData = CFD::ReadInputData(inputFilename);
-            std::cout << "Success!"
-                      << "\n\n";
-            break;
-
-            // } catch (std::runtime_error &e) {
-        }
-        catch (int &e)
-        {
-
-            // std::cout << "Failure reading input file! \n"
-            //           << e.what()
-            //           << "\n\n";
-
-            std::cout << "Would you like to try again? (y/n)"
-                      << "\n";
-            std::cin >> inputFileRetryChoice;
-            if (inputFileRetryChoice != "y")
-                exit(-1);
-            std::cout << "\n";
-
-            std::cout << "Please enter input file name: "
-                      << "\n";
-            std::cin >> inputFilename;
-            std::cout << "\n";
-            std::cin.ignore();
-        }
-    }
-    std::cout << "Press enter to begin.";
-    std::cin.ignore();
-    std::cout << std::endl;
+    CFD::InputData inputData = CFD::InputDataFromCommandLine(argc, argv);
 
     /*-------------------------------------------------------------------------------------*\
                                           Test Functions

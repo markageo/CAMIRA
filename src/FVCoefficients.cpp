@@ -74,7 +74,6 @@ void DiffusionPositiveBoundary( EnumVector< Axis,  ArrayAllocator<TransportCoeff
     const TransportCoefficients::ENUMDATA west = westCoefficients[axis];
     const intType iCellBound = mesh.nCells(axis) - 1;
 
-    // Axis positive boundary
     switch ( boundaryConditionStructs[boundaryPatch].type ) {
         
         case BC::zeroGradient: 
@@ -113,7 +112,6 @@ void DiffusionNegativeBoundary( EnumVector< Axis, ArrayAllocator<TransportCoeffi
     const TransportCoefficients::ENUMDATA east = eastCoefficients[axis];
     const intType iCellBound = 0;
 
-    // Axis positive boundary
     switch ( boundaryConditionStructs[boundaryPatch].type ) {
         
         case BC::zeroGradient: 
@@ -955,6 +953,3 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
 
 
 }   // end namespace CFD
-
-
-
