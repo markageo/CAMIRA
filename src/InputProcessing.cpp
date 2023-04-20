@@ -89,8 +89,8 @@ CFD::InputData CFD::InputDataFromCommandLine(int argc, char const *argv[])
 
 // InputData constructor
 CFD::InputData::InputData() :
-    meshSegments( Axis::count ),
-    boundaryConditions(CFD::Fields::count, std::vector< CFD::InputData::BoundaryConditionStruct >(CFD::BoundaryPatches::count) ),
+    meshSegments(),
+    boundaryConditions(),
     axisTransformation( { {CFD::BoundaryPatches::ENUMDATA::xPositive, CFD::BoundaryPatches::ENUMDATA::xPositive},
                           {CFD::BoundaryPatches::ENUMDATA::xNegative, CFD::BoundaryPatches::ENUMDATA::xNegative},
                           {CFD::BoundaryPatches::ENUMDATA::yPositive, CFD::BoundaryPatches::ENUMDATA::yPositive},

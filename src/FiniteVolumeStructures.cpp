@@ -209,7 +209,7 @@ Mesh::Mesh(const InputData &inputData) :
                     {Axis::ENUMDATA::Y, {nCells(2), nCells(0)} },
                     {Axis::ENUMDATA::Z, {nCells(0), nCells(1)} }} ),
 
-    extrapFactors( BoundaryPatches::count )
+    extrapFactors()
 
     { 
         using enum Axis::ENUMDATA;
@@ -337,8 +337,8 @@ FVCoefficients::MomentumEquation::MomentumEquation(const Fields::ENUMDATA field,
     diff({ ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims(X) ),
            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims(Y) ),
            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims(Z) ) }),
-    boundaryDiff( BoundaryPatches::count ),
-    boundaryP( BoundaryPatches::count ),
+    boundaryDiff(),
+    boundaryP(),
     boundaryVel( {array2D( dims(Y), dims(Z) ), array2D( dims(Y), dims(Z) ),
                   array2D( dims(X), dims(Z) ), array2D( dims(X), dims(Z) ),
                   array2D( dims(X), dims(Y) ), array2D( dims(X), dims(Y) )} )   // This doesnt follow right hand rule
@@ -352,8 +352,8 @@ FVCoefficients::ContinuityEquation::ContinuityEquation(const indexVector3 &dims)
     AW( EquationEnums(F::P, F::W), dims( EquationDim(F::W) ) ),
     AP( EquationEnums(F::P, F::P), dims ),
     B( dims(X), dims(Y), dims(Z) ),
-    boundaryVel( BoundaryPatches::count ),
-    boundaryP( BoundaryPatches::count )
+    boundaryVel(),
+    boundaryP()
 {};
 
 
