@@ -21,22 +21,22 @@ void TEST::WriteMesh(const CFD::Mesh &mesh, const std::string &filedir) {
         axis = static_cast<AX>(a);
 
         // Cell Lengths
-        UTIL::writeArray(Fname("cell_lengths"), mesh.cellLengths[axis]);   
+        UTIL::WriteArray(Fname("cell_lengths"), mesh.cellLengths[axis]);   
 
         // Inverse cell lengths
-        UTIL::writeArray(Fname("inv_cell_lengths"), mesh.cellLengthsInv[axis]);   
+        UTIL::WriteArray(Fname("inv_cell_lengths"), mesh.cellLengthsInv[axis]);   
 
         // Cell centers
-        UTIL::writeArray(Fname("cell_centers"), mesh.cellCenters[AX::X]);  
+        UTIL::WriteArray(Fname("cell_centers"), mesh.cellCenters[AX::X]);  
 
         // Inverse of cell center difference
-        UTIL::writeArray(Fname("inv_cell_center_diff"), mesh.cellCenterDiffInv[AX::X]);
+        UTIL::WriteArray(Fname("inv_cell_center_diff"), mesh.cellCenterDiffInv[AX::X]);
 
         // Cell faces
-        UTIL::writeArray(Fname("cell_faces"), mesh.cellFaces[AX::X]);
+        UTIL::WriteArray(Fname("cell_faces"), mesh.cellFaces[AX::X]);
 
         // Write interpolation factors to a file
-        UTIL::writeArray(Fname("interp_factors"), mesh.interpFactors[AX::X]);
+        UTIL::WriteArray(Fname("interp_factors"), mesh.interpFactors[AX::X]);
 
     }
 

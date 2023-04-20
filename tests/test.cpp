@@ -45,7 +45,7 @@ int main(int argc, char const *argv[])
     TOC();
 
     // Write mesh data to file for each axis
-    TEST::WriteMesh(mesh, "tests/mesh/");
+    TEST::WriteMesh(mesh, "tests/mesh/output/");
 
 
     /*-------------------------------------------------------------------------------------*\
@@ -74,6 +74,8 @@ int main(int argc, char const *argv[])
     fields[F::V].setRandom();
     fields[F::W].setRandom();
     TOC();
+
+    UTIL::WriteArray("tests/test_velocities.dat", fields[F::U]);
 
     // Update the face velocities
     TIC("Face Velocity Update")
