@@ -13,33 +13,49 @@
 #include "VTKWriter.h"
 #include "Solver.h"
 
+#include "TestFunctions.h"
+
 #include <iostream>
 #include <fmt/core.h>
 
+#ifdef PROFILING
+#include "profiler/profiler.h"
+    namespace PROF {
+        profiler<perf_counter::clock<time_units::SECONDS>> prof;
+    }
+#endif
 
 int main(int argc, char const *argv[])
 {
 
-    /*-------------------------------------------------------------------------------------*\
-                                         Input Processing
-    \*-------------------------------------------------------------------------------------*/
-
+    // Read input file from command line
     CFD::InputData inputData = CFD::InputDataFromCommandLine(argc, argv);
 
-    /*-------------------------------------------------------------------------------------*\
-                                          Test Functions
-    \*-------------------------------------------------------------------------------------*/
-
+    // Useful enums
     using AX = CFD::Axis::ENUMDATA;
     using F = CFD::Fields::ENUMDATA;
 
+    /*-------------------------------------------------------------------------------------*\
+                                            Mesh Testing
+    \*-------------------------------------------------------------------------------------*/
+
+    // Generate mesh
     TIC("Meshing");
     const CFD::Mesh mesh(inputData);
     TOC();
 
+    // Write mesh data to file for each axis
+    TEST::WriteMesh(mesh, "tests/mesh/");
+
+
+    /*-------------------------------------------------------------------------------------*\
+                                      Face Velocities Testing
+    \*-------------------------------------------------------------------------------------*/
+
+    // Allocate fields and face velocities
     TIC("Field Allocation");
     CFD::ArrayAllocator<CFD::Fields, CFD::array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells);
-    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> fields2({F::U, F::V, F::W, F::P}, mesh.nCells);
+
 
     // Faces are staggered in the negative direction:
     //   cellFaceVelocity_x(i, j, k) -> u(i-1/2, j    , k    )
@@ -51,44 +67,28 @@ int main(int argc, char const *argv[])
                                                                     {F::W, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} );
     TOC();
 
+
+    // Set values for the velocity fields
     TIC("Set Values");
     fields[F::U].setRandom();
     fields[F::V].setRandom();
     fields[F::W].setRandom();
     TOC();
 
+    // Update the face velocities
     TIC("Face Velocity Update")
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
     TOC();
 
+    /*-------------------------------------------------------------------------------------*\
+                                Finite Volume Coeffiicents Testing
+    \*-------------------------------------------------------------------------------------*/
+
+    
+    // Create initial finite volume coefficients
     TIC("Allocate and Initialise FV Coefficients")
     CFD::FVCoefficients fvCoeffs = CFD::InitialiseFVCoefficients(mesh, faceVelocities, inputData);
     TOC()
-
-    // // Cell centers to file
-    // UTIL::writeArray("debug/cell_centers_x.dat", mesh.cellCenters[AX::X]);
-    // UTIL::writeArray("debug/cell_centers_y.dat", mesh.cellCenters[AX::Y]);
-    // UTIL::writeArray("debug/cell_centers_z.dat", mesh.cellCenters[AX::Z]);
-
-    // // Cell centers to file
-    // UTIL::writeArray("debug/cell_faces_x.dat", mesh.cellFaces[AX::X]);
-    // UTIL::writeArray("debug/cell_faces_y.dat", mesh.cellFaces[AX::Y]);
-    // UTIL::writeArray("debug/cell_faces_z.dat", mesh.cellFaces[AX::Z]);
-
-    // // Write extrapolation factors to a file
-    // UTIL::writeArray("debug/interp_factors_x.dat", mesh.interpFactors[AX::X]);
-    // UTIL::writeArray("debug/interp_factors_y.dat", mesh.interpFactors[AX::Y]);
-    // UTIL::writeArray("debug/interp_factors_z.dat", mesh.interpFactors[AX::Z]);
-
-    // // Write fields to a file
-    // UTIL::writeArray("debug/U_cell_centers.dat", fields[F::U]);
-    // UTIL::writeArray("debug/U_cell_faces.dat", faceVelocities[F::U]);
-
-    // UTIL::writeArray("debug/V_cell_centers.dat", fields[F::V]);
-    // UTIL::writeArray("debug/V_cell_faces.dat", faceVelocities[F::V]);
-
-    // UTIL::writeArray("debug/W_cell_centers.dat", fields[F::W]);
-    // UTIL::writeArray("debug/W_cell_faces.dat", faceVelocities[F::W]);
 
     /*-------------------------------------------------------------------------------------*\
                                            Output
@@ -112,10 +112,10 @@ int main(int argc, char const *argv[])
     writer.WriteData("mesh.vtk", "3D Rectilinear Grid");
     TOC();
 
-// Display profiling information
-#ifdef PROFILING
-    std::cout << PROF::prof;
-#endif
+    // Display profiling information
+    #ifdef PROFILING
+        std::cout << PROF::prof;
+    #endif
 
     return 0;
 }

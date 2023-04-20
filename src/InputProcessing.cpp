@@ -58,15 +58,12 @@ CFD::InputData CFD::InputDataFromCommandLine(int argc, char const *argv[])
             std::cout << "Success!"
                       << "\n\n";
             break;
-
-            // } catch (std::runtime_error &e) {
-        }
-        catch (int &e)
+        } 
+        catch (std::runtime_error &e) 
         {
-
-            // std::cout << "Failure reading input file! \n"
-            //           << e.what()
-            //           << "\n\n";
+            std::cout << "Failure reading input file! \n"
+                      << e.what()
+                      << "\n\n";
 
             std::cout << "Would you like to try again? (y/n)"
                       << "\n";

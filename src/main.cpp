@@ -17,10 +17,9 @@
 
 #ifdef PROFILING
 #include "profiler/profiler.h"
-namespace PROF
-{
-    profiler<perf_counter::clock<time_units::SECONDS>> prof;
-}
+    namespace PROF {
+        profiler<perf_counter::clock<time_units::SECONDS>> prof;
+    }
 #endif
 
 int main(int argc, char const *argv[])
@@ -80,10 +79,10 @@ int main(int argc, char const *argv[])
     writer.WriteData("mesh.vtk", "3D Rectilinear Grid");
     TOC();
 
-// Display profiling information
-#ifdef PROFILING
-    std::cout << PROF::prof;
-#endif
+    // Display profiling information
+    #ifdef PROFILING
+        std::cout << PROF::prof;
+    #endif
 
     return 0;
 }

@@ -31,6 +31,11 @@ namespace UTIL
 template<typename T>
 void writeArray(const std::string &filename, const T &array, const int precision = 6)
 {
+    // static_assert(std::is_same< T, CFD::array1D >::value ||
+    //               std::is_same< T, CFD::array2D >::value ||
+    //               std::is_same< T, CFD::array3D >::value,
+    //               "Array type invalid.");
+
     std::ofstream fileStream(filename);
     fileStream << std::fixed;
     fileStream << std::setprecision(precision);
