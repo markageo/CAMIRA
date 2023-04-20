@@ -2,4 +2,5 @@ build/*
 debug/*
 main
 test
+tests/mesh
 *.vtk
