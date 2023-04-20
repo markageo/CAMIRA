@@ -7,6 +7,8 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 #ifdef PROFILING
 #   if !defined(TIC) || !defined(TOC)
@@ -74,17 +76,72 @@ void WriteArray(const std::string &filename, const T &array, const int precision
 }
 
 
-// Read eigen tensor from file, file must be in the format created by WriteArray
+
+// Read Eigen::Tensor (1D, 2D, or 3D) from file, file must be in the format created by WriteArray
 template<typename T>
 T ReadArray(const std::string &filename)
 {
+
     static_assert(std::is_same< T, CFD::array1D >::value ||
                   std::is_same< T, CFD::array2D >::value ||
                   std::is_same< T, CFD::array3D >::value,
                   "Array type invalid.");
 
-    
+    using dimType = long int;
 
+    std::ifstream fileStream(filename);
+
+    // Get dimensions from first line
+    std::string line, word;                 // Some temporary variables
+    dimType dim, ndims;
+    std::array<dimType, 3> dims = {0, 0, 0};
+    std::getline(fileStream, line);         // First line of file contains dimension information
+    std::istringstream lineStream(line);    // For tokenizing line and casting 
+    lineStream >> word;
+    if (word != "dimensions") {             // File is invalid
+        T emptyArray;
+        return emptyArray;   
+    }
+    while (lineStream >> dim ) {            // Read in dimensions
+        dims[ndims] = dim;
+        ndims++;
+    }
+
+    // Array to return
+    T array( ConstructArray<T>(dims) );
+ 
+    // Read into the tensor, tensor must be column major, stride by number of columns to account 
+    // for reading order not being continguous.
+    auto *dataPointer = array.data();
+    // for (int long i = 0; i != ndims; i++) {
+    //     fileStream >> dataPointer[i];
+    //     std::cout << dataPointer[i] << "\n\n";
+    // }
+
+    return array;
+}
+
+
+// Template specialization for constructing array
+template<typename T> inline
+T ConstructArray(const std::array<long int, 3> &dims) = delete;
+
+template<> inline
+CFD::array1D ConstructArray<CFD::array1D>(const std::array<long int, 3> &dims)
+{
+    return CFD::array1D(dims[0]);
+}
+
+template<> inline
+CFD::array2D ConstructArray<CFD::array2D>(const std::array<long int, 3> &dims)
+{
+    return CFD::array2D(dims[0], dims[1]);
+}
+
+template<> inline
+CFD::array3D ConstructArray<CFD::array3D>(const std::array<long int, 3> &dims)
+{
+    return CFD::array3D(dims[0], dims[1], dims[2]);
 }
 
 
