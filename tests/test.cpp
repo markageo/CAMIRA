@@ -81,10 +81,6 @@ int main(int argc, char const *argv[])
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
     TOC();
 
-    UTIL::WriteArray("tests/test_velocities.dat", fields[F::U]);
-    CFD::array3D array = UTIL::ReadArray<CFD::array3D>("tests/test_velocities.dat");
-    UTIL::WriteArray("tests/test_velocities_rewritten.dat", array);
-
 
     /*-------------------------------------------------------------------------------------*\
                                 Finite Volume Coeffiicents Testing

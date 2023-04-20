@@ -92,17 +92,17 @@ T ReadArray(const std::string &filename)
     std::ifstream fileStream(filename);
 
     // Get dimensions from first line
-    std::string line, word;                 // Some temporary variables
+    std::string line, word;                  // Some temporary variables
     dimType dim, ndims = 0;
-    std::array<dimType, 3> dims = {0, 0, 0};
-    std::getline(fileStream, line);         // First line of file contains dimension information
-    std::istringstream lineStream(line);    // For tokenizing line and casting 
+    std::array<dimType, 3> dims = {1, 1, 1}; // Unused dimensions have size 1   
+    std::getline(fileStream, line);          // First line of file contains dimension information
+    std::istringstream lineStream(line);     // For tokenizing line and casting 
     lineStream >> word;
-    if (word != "dimensions") {             // File is invalid
+    if (word != "dimensions") {              // File is invalid
         T emptyArray;
         return emptyArray;   
     }
-    while (lineStream >> dim ) {            // Read in dimensions
+    while (lineStream >> dim ) {             // Read in dimensions
         dims[ndims] = dim;
         ndims++;
     }
@@ -113,10 +113,18 @@ T ReadArray(const std::string &filename)
     // Read into the tensor, tensor must be column major, stride by number of columns to account 
     // for reading order not being continguous.
     auto *dataPointer = array.data();
-    // for (int long i = 0; i != ndims; i++) {
-    //     fileStream >> dataPointer[i];
-    //     std::cout << dataPointer[i] << "\n\n";
-    // }
+    dimType idx;
+
+    for (dimType k = 0; k != dims[2]; k++) {
+        for (dimType i = 0; i != dims[0]; i++) {
+            for (dimType j = 0; j != dims[1]; j++) {
+
+                idx = i + j*dims[0] + k*dims[0]*dims[1];
+                fileStream >> dataPointer[idx];
+
+            }
+        }
+    }
 
     return array;
 }
