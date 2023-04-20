@@ -7,6 +7,7 @@
 #include <memory>
 #include <utility>
 #include <iostream>
+#include <algorithm>
 
 namespace CFD 
 {
@@ -99,6 +100,28 @@ struct TransportCoefficients
 };
 
 
+// struct TransportCoefficients
+// {
+//     enum ENUMDATA
+//     {
+//         tt, // (i  , j  , k+2)
+//         nn, // (i  , j+2, k  )
+//         ee, // (i+2, j  , k  )
+//         t,  // (i  , j  , k+1)
+//         n,  // (i  , j+1, k  )
+//         e,  // (i+1, j  , k  )
+//         p,  // (i  , j  , k  )
+//         w,  // (i-1, j  , k  )
+//         s,  // (i  , j-1, k  )
+//         b,  // (i  , j  , k-1)
+//         ww, // (i-2, j  , k  )
+//         ss, // (i  , j-2, k  )
+//         bb, // (i  , j  , k-2)
+//     };
+//     const static int count = 13;
+// };
+
+
 // Lookup arrays for coefficients and patches coerresponding to each axis
 constexpr std::array<BoundaryPatches::ENUMDATA, 3> positivePatches = {BoundaryPatches::ENUMDATA::xPositive,
                                                                       BoundaryPatches::ENUMDATA::yPositive,
@@ -145,32 +168,27 @@ class EnumVector
 
         // Constructors
         EnumVector() {};
-        EnumVector( const size_t count ) : m_dataVector( count ) {};
-        EnumVector( const size_t count, const T value) : m_dataVector( count, value ) {};
-        EnumVector( const std::vector<T> &vec ) : m_dataVector( vec ) {};
+        EnumVector( const std::array<T, enumStruct::count> &arr ) : m_dataArray( arr ) {};
 
         // Strong type indexing
         T &operator[](const enumStruct::ENUMDATA idx)
         {
-            return m_dataVector[idx];
+            return m_dataArray[idx];
         }
 
         const T &operator[](const enumStruct::ENUMDATA idx) const 
         {
-            return m_dataVector[idx];
+            return m_dataArray[idx];
         }
 
         // Get underlying data vector
         std::vector<T> &get()
         {
-            return m_dataVector;
+            return m_dataArray;
         }
 
-        // Copy constructor/assignemnt, move constructor/assignment, and destructor are trivial. 
-        // Use the synthesised.
-
     private:
-        std::vector<T> m_dataVector;
+        std::array<T, enumStruct::count> m_dataArray;
 };
 
 
@@ -327,6 +345,123 @@ class ArrayAllocator
         std::vector< std::unique_ptr<arrayType> > m_coeffPointers;
 
 };
+
+
+
+
+// // Create vector of arrays. Arrays are initialised to zero.
+// template <typename enumStruct, typename arrayType>
+// class ArrayAllocator
+// {
+//     static_assert(std::is_same<enumStruct, CFD::Axis                 >::value ||
+//                   std::is_same<enumStruct, CFD::Fields               >::value ||
+//                   std::is_same<enumStruct, CFD::BoundaryConditions   >::value ||
+//                   std::is_same<enumStruct, CFD::BoundaryPatches      >::value ||
+//                   std::is_same<enumStruct, CFD::TransportCoefficients>::value,
+//                   "Template parameter must be struct containing ENUMDATA type.");
+
+//     static_assert(std::is_same< arrayType, CFD::array1D >::value ||
+//                   std::is_same< arrayType, CFD::array2D >::value ||
+//                   std::is_same< arrayType, CFD::array3D >::value,
+//                   "Array type invalid.");
+
+//     typedef typename enumStruct::ENUMDATA ENUMDATA;
+
+//     public:
+
+//         // Constructor, all arrays have the same dimensions
+//         // 3D
+//         ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const indexVector3 &dims) 
+//         requires ( std::is_same< arrayType, CFD::array3D >::value ) : 
+//             m_arrayVector( enumStruct::count )
+//         {
+//             for (const auto &index : coeffs) {
+//                 m_arrayVector[index] = CFD::array3D( dims(0), dims(1), dims(2) ).setZero() ;
+//             }
+//         }
+
+//         // 2D
+//         ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const indexVector2 &dims) 
+//         requires ( std::is_same< arrayType, CFD::array2D >::value ) : 
+//             m_arrayVector(enumStruct::count)
+//         {
+//             for (const auto &index : coeffs) {
+//                 m_arrayVector[index] = CFD::array2D( dims(0), dims(1) ).setZero() ;
+//             }
+//         }
+
+//         // 1D
+//         ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const intType &dim) 
+//         requires ( std::is_same< arrayType, CFD::array1D >::value ) : 
+//             m_arrayVector(enumStruct::count)
+//         {
+//             for (const auto &index : coeffs) {
+//                 m_arrayVector[index] = CFD::array1D( dim ).setZero() ;
+//             }
+//         }
+
+
+//         // Constructor, array can have difference dimensions
+//         // 3D
+//         ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::indexVector3 > > &arraySpec) 
+//         requires ( std::is_same< arrayType, CFD::array3D >::value ) : 
+//             m_arrayVector(enumStruct::count)
+//         {
+//             CFD::indexVector3 dims;
+//             for (size_t i = 0; i != arraySpec.size(); i++) {
+//                 dims = arraySpec[i].second;
+//                 m_arrayVector[ arraySpec[i].first ] =  CFD::array3D( dims(0), dims(1), dims(2) ).setZero() ;
+//             }
+//         }
+
+//         // 2D
+//         ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::indexVector2 > > &arraySpec) 
+//         requires ( std::is_same< arrayType, CFD::array2D >::value ) : 
+//             m_arrayVector(enumStruct::count)
+//         {
+//             CFD::indexVector2 dims;
+//             for (size_t i = 0; i != arraySpec.size(); i++) {
+//                 dims = arraySpec[i].second;
+//                 m_arrayVector[ arraySpec[i].first ] = CFD::array2D( dims(0), dims(1) ).setZero() ;
+//             }
+//         }
+
+//         // 1D
+//         ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::intType > > &arraySpec) 
+//         requires ( std::is_same< arrayType, CFD::array1D >::value ) : 
+//             m_arrayVector(enumStruct::count)
+//         {
+//             CFD::intType dim;
+//             for (size_t i = 0; i != arraySpec.size(); i++) {
+//                 dim = arraySpec[i].second;
+//                 m_arrayVector[ arraySpec[i].first ] = CFD::array1D( dim ).setZero();
+//             }
+//         }
+
+
+//         // Indexing operators
+//         arrayType &operator[](const enumStruct::ENUMDATA idx)
+//         {
+//             return m_arrayVector[idx];
+//         }
+
+//         const arrayType &operator[](const enumStruct::ENUMDATA idx) const 
+//         {
+//             return m_arrayVector[idx];
+//         }
+
+
+//         // Container access
+//         std::vector< arrayType > &get()
+//         {
+//             return m_arrayVector;
+//         }
+
+
+//     private:
+//         std::vector< arrayType > m_arrayVector;
+
+// };
 
 }   // end namespace CFD
 

@@ -45,7 +45,7 @@ struct FVCoefficients
         ArrayAllocator<TransportCoefficients, array1D> AP;                  // Pressure coefficients (LHS)
         array3D B;                                                          // Source Term (RHS)
         EnumVector< Axis, ArrayAllocator<TransportCoefficients, array1D> > diff;    // Diffusion coefficients (LHS)
-        EnumVector< BoundaryPatches, floatType > boundaryDiff, boundaryP;             // Constant terms that come from uniform BC (LHS)
+        EnumVector< BoundaryPatches, floatType > boundaryDiff, boundaryP;           // Constant terms that come from uniform BC (LHS)
         EnumVector< BoundaryPatches, array2D > boundaryVel;       
 
     };
