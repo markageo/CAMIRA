@@ -229,7 +229,12 @@ Mesh::Mesh(const InputData &inputData) :
             CalculateCellFaces(cellFaces[axis], cellLengths[axis]);
             CalculateInterpolationFactors(interpFactors[axis], cellCenters[axis], cellFaces[axis]);
             CalculateExtrapolationFactors(extrapFactors, cellLengths, axis);
-            
+        }
+
+        // Cell face areas should be calculated on their own since they depend o other axis
+        for (int i = 0; i != Axis::count; i++) {
+            Axis::ENUMDATA axis = static_cast<Axis::ENUMDATA>(i);
+
             // Cyclic permutations to get correct order of axis for area, which is indexed by right hand rule
             Axis::ENUMDATA axis1 = static_cast<Axis::ENUMDATA>( (i+1) % Axis::count );
             Axis::ENUMDATA axis2 = static_cast<Axis::ENUMDATA>( (i+2) % Axis::count );
