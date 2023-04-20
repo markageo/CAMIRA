@@ -75,12 +75,17 @@ int main(int argc, char const *argv[])
     fields[F::W].setRandom();
     TOC();
 
-    UTIL::WriteArray("tests/test_velocities.dat", fields[F::U]);
+    
 
     // Update the face velocities
     TIC("Face Velocity Update")
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
     TOC();
+
+    UTIL::WriteArray("tests/test_velocities.dat", fields[F::U]);
+    CFD::array3D array = UTIL::ReadArray<CFD::array3D>("tests/test_velocities.dat");
+    UTIL::WriteArray("tests/test_velocities_rewritten.dat", array);
+
 
     /*-------------------------------------------------------------------------------------*\
                                 Finite Volume Coeffiicents Testing

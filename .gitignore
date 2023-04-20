@@ -1,6 +1,9 @@
-build/*
-debug/*
 main
 test
-tests/mesh
+
+build/*
+debug/*
+tests/mesh/output/*
+
 *.vtk
+*.dat

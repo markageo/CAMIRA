@@ -78,6 +78,7 @@
         "any": "cpp",
         "valarray": "cpp",
         "__nullptr": "cpp",
-        "__config": "cpp"
+        "__config": "cpp",
+        "__tuple": "cpp"
     }
 }

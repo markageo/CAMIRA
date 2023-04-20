@@ -21,7 +21,7 @@ Mesh {
     Grid Y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 6
+            nCells     = 4
             biasFactor = 3
         }
     }
@@ -30,7 +30,7 @@ Mesh {
     Grid Z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 7
+            nCells     = 6
             biasFactor = 1
         }
     }
