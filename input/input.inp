@@ -7,12 +7,12 @@ Model {
 
 Mesh {
 
-    domain = (5, 10, 6)
+    domain = (5, 6, 7)
 
     Grid X {
         Segment {
             bounds     = (0, 1)
-            nCells     = 5
+            nCells     = 7
             biasFactor = 2
         }
     }
@@ -21,7 +21,7 @@ Mesh {
     Grid Y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 4
+            nCells     = 5
             biasFactor = 3
         }
     }
