@@ -79,6 +79,7 @@
         "valarray": "cpp",
         "__nullptr": "cpp",
         "__config": "cpp",
-        "__tuple": "cpp"
+        "__tuple": "cpp",
+        "shared_mutex": "cpp"
     }
 }

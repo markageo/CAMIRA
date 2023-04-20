@@ -47,7 +47,6 @@ int main(int argc, char const *argv[])
     // Write mesh data to file for each axis
     TEST::WriteMesh(mesh, "tests/mesh/output/");
 
-
     /*-------------------------------------------------------------------------------------*\
                                       Face Velocities Testing
     \*-------------------------------------------------------------------------------------*/

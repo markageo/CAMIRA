@@ -93,7 +93,7 @@ T ReadArray(const std::string &filename)
 
     // Get dimensions from first line
     std::string line, word;                 // Some temporary variables
-    dimType dim, ndims;
+    dimType dim, ndims = 0;
     std::array<dimType, 3> dims = {0, 0, 0};
     std::getline(fileStream, line);         // First line of file contains dimension information
     std::istringstream lineStream(line);    // For tokenizing line and casting 

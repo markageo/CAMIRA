@@ -145,32 +145,32 @@ class EnumVector
 
         // Constructors
         EnumVector() {};
-        EnumVector( const size_t count ) : dataVector( count ) {};
-        EnumVector( const size_t count, const T value) : dataVector( count, value ) {};
-        EnumVector( const std::vector<T> &vec ) : dataVector( vec ) {};
+        EnumVector( const size_t count ) : m_dataVector( count ) {};
+        EnumVector( const size_t count, const T value) : m_dataVector( count, value ) {};
+        EnumVector( const std::vector<T> &vec ) : m_dataVector( vec ) {};
 
         // Strong type indexing
         T &operator[](const enumStruct::ENUMDATA idx)
         {
-            return dataVector[idx];
+            return m_dataVector[idx];
         }
 
         const T &operator[](const enumStruct::ENUMDATA idx) const 
         {
-            return dataVector[idx];
+            return m_dataVector[idx];
         }
 
         // Get underlying data vector
         std::vector<T> &get()
         {
-            return dataVector;
+            return m_dataVector;
         }
 
         // Copy constructor/assignemnt, move constructor/assignment, and destructor are trivial. 
         // Use the synthesised.
 
     private:
-        std::vector<T> dataVector;
+        std::vector<T> m_dataVector;
 };
 
 
@@ -201,30 +201,30 @@ class ArrayAllocator
         // 3D
         ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const indexVector3 &dims) 
         requires ( std::is_same< arrayType, CFD::array3D >::value ) : 
-            coeffPointers(enumStruct::count)
+            m_coeffPointers(enumStruct::count)
         {
             for (const auto &index : coeffs) {
-                coeffPointers[index] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ).setZero() );
+                m_coeffPointers[index] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ).setZero() );
             }
         }
 
         // 2D
         ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const indexVector2 &dims) 
         requires ( std::is_same< arrayType, CFD::array2D >::value ) : 
-            coeffPointers(enumStruct::count)
+            m_coeffPointers(enumStruct::count)
         {
             for (const auto &index : coeffs) {
-                coeffPointers[index] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ).setZero() );
+                m_coeffPointers[index] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ).setZero() );
             }
         }
 
         // 1D
         ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const intType &dim) 
         requires ( std::is_same< arrayType, CFD::array1D >::value ) : 
-            coeffPointers(enumStruct::count)
+            m_coeffPointers(enumStruct::count)
         {
             for (const auto &index : coeffs) {
-                coeffPointers[index] = std::make_unique<CFD::array1D>( CFD::array1D( dim ).setZero() );
+                m_coeffPointers[index] = std::make_unique<CFD::array1D>( CFD::array1D( dim ).setZero() );
             }
         }
 
@@ -233,48 +233,48 @@ class ArrayAllocator
         // 3D
         ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::indexVector3 > > &arraySpec) 
         requires ( std::is_same< arrayType, CFD::array3D >::value ) : 
-            coeffPointers(enumStruct::count)
+            m_coeffPointers(enumStruct::count)
         {
             CFD::indexVector3 dims;
             for (size_t i = 0; i != arraySpec.size(); i++) {
                 dims = arraySpec[i].second;
-                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ).setZero() );
+                m_coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ).setZero() );
             }
         }
 
         // 2D
         ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::indexVector2 > > &arraySpec) 
         requires ( std::is_same< arrayType, CFD::array2D >::value ) : 
-            coeffPointers(enumStruct::count)
+            m_coeffPointers(enumStruct::count)
         {
             CFD::indexVector2 dims;
             for (size_t i = 0; i != arraySpec.size(); i++) {
                 dims = arraySpec[i].second;
-                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ).setZero() );
+                m_coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ).setZero() );
             }
         }
 
         // 1D
         ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::intType > > &arraySpec) 
         requires ( std::is_same< arrayType, CFD::array1D >::value ) : 
-            coeffPointers(enumStruct::count)
+            m_coeffPointers(enumStruct::count)
         {
             CFD::intType dim;
             for (size_t i = 0; i != arraySpec.size(); i++) {
                 dim = arraySpec[i].second;
-                coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array1D>( CFD::array1D( dim ).setZero() );
+                m_coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array1D>( CFD::array1D( dim ).setZero() );
             }
         }
 
 
         // Copy Constructor
         ArrayAllocator(const ArrayAllocator &that) :
-            coeffPointers(enumStruct::count)
+            m_coeffPointers(enumStruct::count)
         {
             // Allocate a new array object only if it was allocated in the original
-            for (size_t i = 0; i != coeffPointers.size(); i++) {
-                if (that.coeffPointers[i]) {
-                    coeffPointers[i] = std::make_unique<arrayType>( *that.coeffPointers[i] );
+            for (size_t i = 0; i != m_coeffPointers.size(); i++) {
+                if (that.m_coeffPointers[i]) {
+                    m_coeffPointers[i] = std::make_unique<arrayType>( *that.m_coeffPointers[i] );
                 }
             }
         }
@@ -283,14 +283,14 @@ class ArrayAllocator
         // Copy assignment
         ArrayAllocator &operator=(ArrayAllocator that)
         {   
-            std::swap( this->coeffPointers, that.coeffPointers );
+            std::swap( this->m_coeffPointers, that.m_coeffPointers );
             return *this;
         }
 
 
         // Move constructor
         ArrayAllocator(ArrayAllocator&& that) noexcept :
-            coeffPointers( std::move( that.coeffPointers ) )
+            m_coeffPointers( std::move( that.m_coeffPointers ) )
         {}
 
 
@@ -307,24 +307,24 @@ class ArrayAllocator
         // Indexing operators
         arrayType &operator[](const enumStruct::ENUMDATA idx)
         {
-            return *coeffPointers[idx];
+            return *m_coeffPointers[idx];
         }
 
         const arrayType &operator[](const enumStruct::ENUMDATA idx) const 
         {
-            return *coeffPointers[idx];
+            return *m_coeffPointers[idx];
         }
 
 
         // Container access
         std::vector< std::unique_ptr<arrayType> > &get()
         {
-            return coeffPointers;
+            return m_coeffPointers;
         }
 
 
     private:
-        std::vector< std::unique_ptr<arrayType> > coeffPointers;
+        std::vector< std::unique_ptr<arrayType> > m_coeffPointers;
 
 };
 
