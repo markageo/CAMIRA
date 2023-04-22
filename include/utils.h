@@ -12,7 +12,7 @@
 
 #ifdef PROFILING
 #   if !defined(TIC) || !defined(TOC)
-#       include <profiler/profiler.h>
+#       include "profiler/profiler.h"
 #       define TIC(name) PROF::prof.tic(name);
 #       define TOC(name) PROF::prof.toc(name);
 #   endif
