@@ -48,7 +48,7 @@ int main(int argc, char const *argv[])
     TEST::WriteMesh(mesh, "tests/mesh/output/");
 
     /*-------------------------------------------------------------------------------------*\
-                                      Face Velocities Testing
+                                          Fields Testing
     \*-------------------------------------------------------------------------------------*/
 
     // Allocate fields and face velocities
@@ -74,12 +74,12 @@ int main(int argc, char const *argv[])
     fields[F::W].setRandom();
     TOC();
 
-    
-
     // Update the face velocities
     TIC("Face Velocity Update")
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
     TOC();
+
+    // Write face velocit
 
 
     /*-------------------------------------------------------------------------------------*\

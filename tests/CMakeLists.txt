@@ -8,6 +8,8 @@ if (TESTS)
 
     # tests executable
     add_executable(test test.cpp)
-    target_link_libraries(test PUBLIC test_libs)
     target_link_libraries(test PUBLIC model)
+    target_link_libraries(test_libs PUBLIC model)
+    target_link_libraries(test PUBLIC test_libs)
+    
 endif()

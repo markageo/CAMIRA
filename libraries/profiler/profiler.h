@@ -25,42 +25,42 @@ public:
     typedef double                       delta_type;
 
     /// Initialize 
-    profiler() : name("Profiler") {
+    profiler() : m_name("Profiler") {
         init();
     }
 
-    profiler(const std::string& name) : name(name) {
+    profiler(const std::string& name) : m_name(name) {
         init();
     }
 
     void tic(const std::string& name){ 
-        stack.back()->children[name].begin = counter.now();
-        stack.back()->children[name].nCalls++;
-        stack.push_back(&stack.back()->children[name]);
+        m_stack.back()->children[name].begin = m_counter.now();
+        m_stack.back()->children[name].nCalls++;
+        m_stack.push_back(&m_stack.back()->children[name]);
     }
 
     delta_type toc(const std::string& /*name*/ = ""){
-        if (stack.size() == 1) return 0;
+        if (m_stack.size() == 1) return 0;
 
-        auto top = stack.back();
-        stack.pop_back();
+        auto top = m_stack.back();
+        m_stack.pop_back();
 
-        value_type now   = counter.now();
+        value_type now   = m_counter.now();
         delta_type delta = now - top->begin;
 
         top->time_delta += delta;
-        root.time_delta  = now - root.begin;
+        m_root.time_delta  = now - m_root.begin;
 
         return delta;
     }
 
     void reset() {
-        stack.clear();
-        root.time_delta = 0;
-        root.children.clear();
+        m_stack.clear();
+        m_root.time_delta = 0;
+        m_root.children.clear();
 
-        stack.push_back(&root);
-        root.begin = counter.now();
+        m_stack.push_back(&m_root);
+        m_root.begin = m_counter.now();
     }
 
 private:
@@ -77,7 +77,7 @@ private:
 
         delta_type children_time() const {
             delta_type s = 0;
-            for (const auto& [name, child]: children) 
+            for (const auto& [childName, child]: children) 
                 s += child.time_delta;
             return s;
         }
@@ -109,27 +109,27 @@ private:
                     "percnt"_a = percentage_time, "counter"_a = nCalls);
             }
 
-            for (auto& [name, child] : children)
-                child.print(out, name, level + INDENT_LEVEL, total, width);
+            for (auto& [childName, child] : children)
+                child.print(out, childName, level + INDENT_LEVEL, total, width);
         }
 
         size_t total_width(const std::string &name, int level) const {
             size_t w = name.size() + level;
-            for(auto const& [name, child] : children)
-                w = std::max(w, child.total_width(name, level + INDENT_LEVEL));
+            for(auto const& [childName, child] : children)
+                w = std::max(w, child.total_width(childName, level + INDENT_LEVEL));
             return w;
         }
     };
 
-    std::string name;
-    Counter counter;
-    profiler_unit root;
-    std::vector<profiler_unit*> stack;
+    std::string m_name;
+    Counter m_counter;
+    profiler_unit m_root;
+    std::vector<profiler_unit*> m_stack;
 
     void print(std::ostream &out) const {
-        if (stack.back() != &root)
+        if (m_stack.back() != &m_root)
             fmt::print(out, "Warning! Profile is incomplete.\n");
-        root.print(out, name, 0, root.time_delta, root.total_width(name, 0));
+        m_root.print(out, m_name, 0, m_root.time_delta, m_root.total_width(m_name, 0));
     }
 
     friend std::ostream& operator<<(std::ostream &out, const profiler &prof) {
@@ -139,10 +139,10 @@ private:
     }
     
     void init() {
-        stack.reserve(64);
-        stack.push_back(&root);
-        root.nCalls++;
-        root.begin = counter.now();
+        m_stack.reserve(64);
+        m_stack.push_back(&m_root);
+        m_root.nCalls++;
+        m_root.begin = m_counter.now();
     }
 };
 
