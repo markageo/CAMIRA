@@ -54,6 +54,7 @@ public:
         return delta;
     }
 
+
     void reset() {
         m_stack.clear();
         m_root.time_delta = 0;

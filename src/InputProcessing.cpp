@@ -566,6 +566,3 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFileName)
     return inputData;
 }
 
-
-
-

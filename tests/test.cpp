@@ -5,6 +5,11 @@
     Mark George
 \*---------------------------------------------------------------------------*/
 
+#include <iostream>
+#include <stdlib.h>
+#include <time.h>
+#include <fmt/core.h>
+
 #include "Types.h"
 #include "utils.h"
 #include "InputProcessing.h"
@@ -12,11 +17,9 @@
 #include "FiniteVolumeFunctions.h"
 #include "VTKWriter.h"
 #include "Solver.h"
-
 #include "TestFunctions.h"
 
-#include <iostream>
-#include <fmt/core.h>
+
 
 #ifdef PROFILING
 #include "profiler/profiler.h"
@@ -28,8 +31,24 @@
 int main(int argc, char const *argv[])
 {
 
-    // Read input file from command line
-    CFD::InputData inputData = CFD::InputDataFromCommandLine(argc, argv);
+    /*-------------------------------------------------------------------------------------*\
+                                        Config/Input Files
+    \*-------------------------------------------------------------------------------------*/
+
+    // Conifg file
+    std::string configFilename;
+    if (argc == 1) {
+        std::cout << "Please enter config filename: " << "\n";
+        std::cin >> configFilename;
+        std::cout << "\n";
+    }
+    else if (argc == 2) {
+        configFilename = argv[1];
+    }
+    else {
+        throw std::invalid_argument("Invalid command line options.");
+    }
+    TEST::TestConfig testConfig = TEST::ReadConfig(configFilename);
 
     // Useful enums
     using AX = CFD::Axis::ENUMDATA;
@@ -39,13 +58,25 @@ int main(int argc, char const *argv[])
                                             Mesh Testing
     \*-------------------------------------------------------------------------------------*/
 
+    // Read input file for mesh testing
+    CFD::InputData inputData = CFD::ReadInputData(testConfig.testInputDirectory + testConfig.testInputFilename);
+
     // Generate mesh
     TIC("Meshing");
     const CFD::Mesh mesh(inputData);
     TOC();
 
-    // Write mesh data to file for each axis
-    TEST::WriteMesh(mesh, "tests/mesh/output/");
+    if (testConfig.meshTest == TEST::write) {
+
+        // Write mesh data to file for each axis
+        TEST::WriteMesh(mesh, "tests/mesh/output/");
+
+    } else if (testConfig.meshTest == TEST::test) {
+
+        // Compare to the verified mesh
+
+    } 
+    
 
     /*-------------------------------------------------------------------------------------*\
                                           Fields Testing
@@ -67,6 +98,9 @@ int main(int argc, char const *argv[])
     TOC();
 
 
+    // Set the seed so the random arrays are reproducable
+    srand(590);
+
     // Set values for the velocity fields
     TIC("Set Values");
     fields[F::U].setRandom();
@@ -79,8 +113,8 @@ int main(int argc, char const *argv[])
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
     TOC();
 
-    // Write face velocit
-
+    // Write face velocity
+    UTIL::WriteArray("tests/velocities.dat", fields[F::U]);
 
     /*-------------------------------------------------------------------------------------*\
                                 Finite Volume Coeffiicents Testing

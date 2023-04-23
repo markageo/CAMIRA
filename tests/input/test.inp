@@ -1,0 +1,63 @@
+// Main input file for testing
+
+#include "test_mesh.inp"
+
+Model {
+    rho  = 1
+    nu   = 1
+}
+
+
+BoundaryConditions
+{
+
+    +x {
+        u = extrapolated
+        v = zeroGradient
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    -x {
+        u = uniform, 1
+        v = uniform, 2
+        w = uniform, 3
+        p = zeroGradient
+    }
+
+    +y {
+        u = uniform, 1
+        v = extrapolated
+        w = zeroGradient
+        p = uniform, 0
+    }
+
+    -y {
+        u = uniform, 0
+        v = extrapolated
+        w = uniform, 0
+        p = extrapolated
+    }
+
+    +z {
+        u = zeroGradient
+        v = zeroGradient
+        w = extrapolated
+        p = zeroGradient
+    }
+
+    -z {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = zeroGradient
+    }
+}
+
+
+Solver {
+
+    planeSweepDirection = +z
+    lineSweepDirection = +y
+
+}
