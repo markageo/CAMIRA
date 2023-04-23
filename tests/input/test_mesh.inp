@@ -1,0 +1,68 @@
+// Mesh used for testing
+
+Mesh {
+
+    domain = (4, 4, 4)
+
+    Grid X {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 4
+            biasFactor = 2
+        }
+
+        Segment {
+            bounds     = (1, 3)
+            nCells     = 6
+            biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (3, 4)
+            nCells     = 4
+            biasFactor = -2
+        }
+    }
+
+
+    Grid Y {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 4
+            biasFactor = 2
+        }
+
+        Segment {
+            bounds     = (1, 3)
+            nCells     = 6
+            biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (3, 4)
+            nCells     = 4
+            biasFactor = -2
+        }
+    }
+
+
+    Grid Z {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 4
+            biasFactor = 2
+        }
+
+        Segment {
+            bounds     = (1, 3)
+            nCells     = 6
+            biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (3, 4)
+            nCells     = 4
+            biasFactor = -2
+        }
+    }
+}
