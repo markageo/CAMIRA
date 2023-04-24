@@ -63,18 +63,18 @@ int main(int argc, char const *argv[])
     const CFD::Mesh mesh(inputData);
     TOC();
 
-    if (testConfig.meshTest == TEST::write) {
-
-        // Write mesh data to file for each axis
+    // Write mesh to the output directory
+    if (testConfig.meshTest != TEST::none) {
         TEST::WriteMesh(mesh, testConfig.meshTestOutputDirectory);
-
-    } else if (testConfig.meshTest == TEST::test) {
-
-        // Compare with the generated mesh data
+    } 
     
-
-        // Display the result
-
+    // Compare with the mesh in the reference directory
+    if (testConfig.meshTest == TEST::test) {
+        if ( TEST::CompareMesh(testConfig.meshTestOutputDirectory, testConfig.meshTestReferenceDirectory) ){
+            std::cout << "Meshes same" << "\n";
+        } else {
+            std::cout << "Meshes different!" << "\n";
+        }
     } 
     
 

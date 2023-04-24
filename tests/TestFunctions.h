@@ -27,10 +27,10 @@ TestConfig ReadConfig(const std::string &);
 
 
 // Write sets of data to file
-void WriteMesh(const CFD::Mesh &, const std::string &);
+void WriteMesh(const CFD::Mesh &, const std::string &, const int = 6);
 
-// Compare generated mesh with stored one
-bool CompareMesh(const CFD::Mesh &, const std::string &);
+// Compare meshes in two different directories
+bool CompareMesh(const std::string &, const std::string &);
 
 
 }   // end namespace TEST
