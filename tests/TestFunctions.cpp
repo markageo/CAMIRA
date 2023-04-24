@@ -120,6 +120,11 @@ void TEST::WriteMesh(const CFD::Mesh &mesh, const std::string &filedir)
     auto Fname = [&] (const std::string &s) -> std::string { return filedir + s + axisSuffix[axis] + ext; };
     std::filesystem::create_directory(filedir);
 
+    // Temporary array for extrapolation factors
+    // rows  : extrapFactors.p, extrapFactors.a
+    // cols  : positivePatch, negativepatch
+    CFD::array2D extrapFactorsArray(2, 2); 
+
     for (int a = 0; a != 3; a++) {
         axis = static_cast<AX>(a);
 
@@ -130,16 +135,23 @@ void TEST::WriteMesh(const CFD::Mesh &mesh, const std::string &filedir)
         UTIL::WriteArray(Fname("inv_cell_lengths"), mesh.cellLengthsInv[axis]);   
 
         // Cell centers
-        UTIL::WriteArray(Fname("cell_centers"), mesh.cellCenters[AX::X]);  
+        UTIL::WriteArray(Fname("cell_centers"), mesh.cellCenters[axis]);  
 
         // Inverse of cell center difference
-        UTIL::WriteArray(Fname("inv_cell_center_diff"), mesh.cellCenterDiffInv[AX::X]);
+        UTIL::WriteArray(Fname("inv_cell_center_diff"), mesh.cellCenterDiffInv[axis]);
 
         // Cell faces
-        UTIL::WriteArray(Fname("cell_faces"), mesh.cellFaces[AX::X]);
+        UTIL::WriteArray(Fname("cell_faces"), mesh.cellFaces[axis]);
 
         // Write interpolation factors to a file
-        UTIL::WriteArray(Fname("interp_factors"), mesh.interpFactors[AX::X]);
+        UTIL::WriteArray(Fname("interp_factors"), mesh.interpFactors[axis]);
+
+        // Put the extrapolation factors in an array and write it out
+        extrapFactorsArray(0, 0) = mesh.extrapFactors[CFD::positivePatches[axis]].p;
+        extrapFactorsArray(1, 0) = mesh.extrapFactors[CFD::positivePatches[axis]].a;
+        extrapFactorsArray(0, 1) = mesh.extrapFactors[CFD::negativePatches[axis]].p;
+        extrapFactorsArray(1, 1) = mesh.extrapFactors[CFD::negativePatches[axis]].a;
+        UTIL::WriteArray(Fname("extrap_factors"), extrapFactorsArray);
 
     }
 
