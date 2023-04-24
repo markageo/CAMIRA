@@ -76,6 +76,34 @@ void WriteArray(const std::string &filename, const T &array, const int precision
 }
 
 
+// Functions used for constructing arrays in ReadArray function
+namespace 
+{
+
+    // Template specialization for constructing array
+    template<typename T> inline
+    T ConstructArray(const std::array<long int, 3> &dims) = delete;
+
+    template<> inline
+    CFD::array1D ConstructArray<CFD::array1D>(const std::array<long int, 3> &dims)
+    {
+        return CFD::array1D(dims[0]);
+    }
+
+    template<> inline
+    CFD::array2D ConstructArray<CFD::array2D>(const std::array<long int, 3> &dims)
+    {
+        return CFD::array2D(dims[0], dims[1]);
+    }
+
+    template<> inline
+    CFD::array3D ConstructArray<CFD::array3D>(const std::array<long int, 3> &dims)
+    {
+        return CFD::array3D(dims[0], dims[1], dims[2]);
+    }
+
+}
+
 
 // Read Eigen::Tensor (1D, 2D, or 3D) from file, file must be in the format created by WriteArray
 template<typename T>
@@ -129,28 +157,6 @@ T ReadArray(const std::string &filename)
     return array;
 }
 
-
-// Template specialization for constructing array
-template<typename T> inline
-T ConstructArray(const std::array<long int, 3> &dims) = delete;
-
-template<> inline
-CFD::array1D ConstructArray<CFD::array1D>(const std::array<long int, 3> &dims)
-{
-    return CFD::array1D(dims[0]);
-}
-
-template<> inline
-CFD::array2D ConstructArray<CFD::array2D>(const std::array<long int, 3> &dims)
-{
-    return CFD::array2D(dims[0], dims[1]);
-}
-
-template<> inline
-CFD::array3D ConstructArray<CFD::array3D>(const std::array<long int, 3> &dims)
-{
-    return CFD::array3D(dims[0], dims[1], dims[2]);
-}
 
 
 }   // end namespace UTIL
