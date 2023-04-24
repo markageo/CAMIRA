@@ -1,0 +1,33 @@
+// Mesh used for testing face velocities
+
+Mesh {
+
+    domain = (2, 2, 2)
+
+    Grid X {
+        Segment {
+            bounds     = (0, 2)
+            nCells     = 7
+            biasFactor = 2
+        }
+    }
+
+
+    Grid Y {
+        Segment {
+            bounds     = (0, 2)
+            nCells     = 7
+            biasFactor = 2
+        }
+    }
+
+
+    Grid Z {
+        Segment {
+            bounds     = (0, 2)
+            nCells     = 7
+            biasFactor = 2
+        }
+    }
+}
+

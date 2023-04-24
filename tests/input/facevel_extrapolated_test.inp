@@ -1,0 +1,62 @@
+// Input file for testing face velocities with extrapolated boundary condition
+
+#include "facevel_test_mesh.inp"
+
+BoundaryConditions
+{
+
+    +x {
+        u = extrapolated
+        v = extrapolated
+        w = extrapolated
+        p = extrapolated
+    }
+
+    -x {
+        u = extrapolated
+        v = extrapolated
+        w = extrapolated
+        p = extrapolated
+    }
+
+    +y {
+        u = extrapolated
+        v = extrapolated
+        w = extrapolated
+        p = extrapolated
+    }
+
+    -y {
+        u = extrapolated
+        v = extrapolated
+        w = extrapolated
+        p = extrapolated
+    }
+
+    +z {
+        u = extrapolated
+        v = extrapolated
+        w = extrapolated
+        p = extrapolated
+    }
+
+    -z {
+        u = extrapolated
+        v = extrapolated
+        w = extrapolated
+        p = extrapolated
+    }
+}
+
+Model {
+    rho  = 1
+    nu   = 1
+}
+
+
+Solver {
+
+    planeSweepDirection = +z
+    lineSweepDirection = +y
+
+}

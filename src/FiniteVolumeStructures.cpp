@@ -45,7 +45,7 @@ void CalculateCellLengths(array1D &cellLengths,
             geometricFactor = meshSegments[s].nCells;
         }
         segmentLength = meshSegments[s].upperBound - meshSegments[s].lowerBound;
-        firstCellLength = segmentLength/geometricFactor; 
+        firstCellLength = segmentLength / geometricFactor; 
 
         for (int i = 0; i != meshSegments[s].nCells; i++) {        // Cells within segment
             cellLengths( cellIndex ) = firstCellLength*std::pow( growthRates[s], static_cast<floatType>(i) );
