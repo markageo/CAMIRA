@@ -100,13 +100,6 @@ int main(int argc, char const *argv[])
     // Update the face velocities
     CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
 
-    std::cout << testConfig.faceVelUniformTestInputFilename << "\n";
-    std::cout << testConfig.faceVelZeroGradientTestInputFilename << "\n";
-    std::cout << testConfig.faceVelExtrapolatedTestInputFilename << "\n";
-    std::cout << testConfig.faceVelTest << "\n";
-    std::cout << testConfig.faceVelTestOutputDirectory << "\n";
-    std::cout << testConfig.faceVelTestReferenceDirectory << "\n";
-
     /*-------------------------------------------------------------------------------------*\
                                 Finite Volume Coeffiicents Testing
     \*-------------------------------------------------------------------------------------*/
