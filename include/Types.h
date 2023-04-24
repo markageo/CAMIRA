@@ -6,7 +6,6 @@
 #include <vector>
 #include <memory>
 #include <utility>
-#include <iostream>
 #include <algorithm>
 
 namespace CFD 
@@ -22,6 +21,17 @@ using indexVector3 = Eigen::Array<intType, 3, 1>;
 using indexVector2 = Eigen::Array<intType, 2, 1>;
 using floatVector3 = Eigen::Array<floatType, 3, 1>;
 using floatVector2 = Eigen::Array<floatType, 2, 1>;
+
+
+// For changing index from regular index to ghost node indexing
+const intType nGhost = 2;
+inline Eigen::array<Eigen::Index, 1> G(const Eigen::Index i) 
+    { return {i + nGhost}; };
+inline Eigen::array<Eigen::Index, 2> G(const Eigen::Index i, const Eigen::Index j) 
+    { return {i + nGhost, j + nGhost}; };
+inline Eigen::array<Eigen::Index, 3> G(const Eigen::Index i, const Eigen::Index j, const Eigen::Index k) 
+    { return {i + nGhost, j + nGhost, k + nGhost}; };
+
 
 
 // Enums to be used as indices for containers
@@ -82,44 +92,22 @@ struct TransportCoefficients
 {
     enum ENUMDATA
     {
-        p,  // (i  , j  , k  )
-        n,  // (i  , j+1, k  )
-        e,  // (i+1, j  , k  )
-        s,  // (i  , j-1, k  )
-        w,  // (i-1, j  , k  )
-        t,  // (i  , j  , k+1)
-        b,  // (i  , j  , k-1)
+        tt, // (i  , j  , k+2)
         nn, // (i  , j+2, k  )
         ee, // (i+2, j  , k  )
-        ss, // (i  , j-2, k  )
+        t,  // (i  , j  , k+1)
+        n,  // (i  , j+1, k  )
+        e,  // (i+1, j  , k  )
+        p,  // (i  , j  , k  )
+        w,  // (i-1, j  , k  )
+        s,  // (i  , j-1, k  )
+        b,  // (i  , j  , k-1)
         ww, // (i-2, j  , k  )
-        tt, // (i  , j  , k+2)
+        ss, // (i  , j-2, k  )
         bb, // (i  , j  , k-2)
     };
     const static int count = 13;
 };
-
-
-// struct TransportCoefficients
-// {
-//     enum ENUMDATA
-//     {
-//         tt, // (i  , j  , k+2)
-//         nn, // (i  , j+2, k  )
-//         ee, // (i+2, j  , k  )
-//         t,  // (i  , j  , k+1)
-//         n,  // (i  , j+1, k  )
-//         e,  // (i+1, j  , k  )
-//         p,  // (i  , j  , k  )
-//         w,  // (i-1, j  , k  )
-//         s,  // (i  , j-1, k  )
-//         b,  // (i  , j  , k-1)
-//         ww, // (i-2, j  , k  )
-//         ss, // (i  , j-2, k  )
-//         bb, // (i  , j  , k-2)
-//     };
-//     const static int count = 13;
-// };
 
 
 // Lookup arrays for coefficients and patches coerresponding to each axis
@@ -148,8 +136,6 @@ constexpr std::array<Axis::ENUMDATA, 6> BoundaryPatchAxis{Axis::ENUMDATA::X,    
                                                           Axis::ENUMDATA::Y,    // yNegative
                                                           Axis::ENUMDATA::Z,    // zPositive
                                                           Axis::ENUMDATA::Z};   // zNegative
-
-
 
 
 
