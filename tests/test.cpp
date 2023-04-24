@@ -50,16 +50,13 @@ int main(int argc, char const *argv[])
     }
     TEST::TestConfig testConfig = TEST::ReadConfig(configFilename);
 
-    // Useful enums
-    using AX = CFD::Axis::ENUMDATA;
-    using F = CFD::Fields::ENUMDATA;
 
     /*-------------------------------------------------------------------------------------*\
                                             Mesh Testing
     \*-------------------------------------------------------------------------------------*/
 
     // Read input file for mesh testing
-    CFD::InputData inputData = CFD::ReadInputData(testConfig.testInputDirectory + testConfig.testInputFilename);
+    CFD::InputData inputData = CFD::ReadInputData(testConfig.testInputDirectory + testConfig.meshTestInputFilename);
 
     // Generate mesh
     TIC("Meshing");
@@ -69,11 +66,14 @@ int main(int argc, char const *argv[])
     if (testConfig.meshTest == TEST::write) {
 
         // Write mesh data to file for each axis
-        TEST::WriteMesh(mesh, "tests/mesh/output/");
+        TEST::WriteMesh(mesh, testConfig.meshTestOutputDirectory);
 
     } else if (testConfig.meshTest == TEST::test) {
 
-        // Compare to the verified mesh
+        // Compare with the generated mesh data
+    
+
+        // Display the result
 
     } 
     
@@ -81,6 +81,8 @@ int main(int argc, char const *argv[])
     /*-------------------------------------------------------------------------------------*\
                                           Fields Testing
     \*-------------------------------------------------------------------------------------*/
+
+    using F = CFD::Fields::ENUMDATA;
 
     // Allocate fields and face velocities
     TIC("Field Allocation");
@@ -126,27 +128,9 @@ int main(int argc, char const *argv[])
     CFD::FVCoefficients fvCoeffs = CFD::InitialiseFVCoefficients(mesh, faceVelocities, inputData);
     TOC()
 
-    /*-------------------------------------------------------------------------------------*\
-                                           Output
-    \*-------------------------------------------------------------------------------------*/
 
-    // Data to pass to writer
-    VTK::dataType VTKDataType = VTK::DOUBLE;
-    if (std::is_same<CFD::floatType, float>::value)
-    {
-        VTKDataType = VTK::FLOAT;
-    }
-    VTK::VTKWriterConfig config(mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z], VTKDataType);
-        config.SetWriteMode("binary");
-    VTK::gridVectorType gridVector = {mesh.cellCenters[AX::X].data(), mesh.cellCenters[AX::Y].data(), mesh.cellCenters[AX::Z].data()};
-    VTK::scalarMapType scalarMap = {{"U", fields[F::U].data()}};
-    VTK::vectorMapType vectorMap = {};
 
-    // Write output
-    VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
-    TIC("Writer");
-    writer.WriteData("mesh.vtk", "3D Rectilinear Grid");
-    TOC();
+
 
     // Display profiling information
     #ifdef PROFILING

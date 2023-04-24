@@ -1,4 +1,5 @@
-// Mesh used for testing
+// Input file used for testing the mesh.
+// Only the mesh section should be used
 
 Mesh {
 
@@ -65,4 +66,66 @@ Mesh {
             biasFactor = -2
         }
     }
+}
+
+
+
+Model {
+    rho  = 1
+    nu   = 1
+}
+
+
+BoundaryConditions
+{
+
+    +x {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = uniform, 0
+    }
+
+    -x {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = uniform, 0
+    }
+
+    +y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = uniform, 0
+    }
+
+    -y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = uniform, 0
+    }
+
+    +z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = uniform, 0
+    }
+
+    -z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = uniform, 0
+    }
+}
+
+
+Solver {
+
+    planeSweepDirection = +z
+    lineSweepDirection = +y
+
 }

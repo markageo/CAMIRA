@@ -62,7 +62,7 @@ namespace
         } else if (str == "write") {
             return TEST::write;
         }
-        return TEST::null;
+        return TEST::none;
     }
 
 }
@@ -88,11 +88,17 @@ TEST::TestConfig TEST::ReadConfig(const std::string &filename)
         if         (key == "testInputDirectory") {
             testConfig.testInputDirectory = String2Type<std::string>(value);
 
-        } else if (key == "testInputFilename") {
-            testConfig.testInputFilename = String2Type<std::string>(value);
+        } else if (key == "meshTestInputFilename") {
+            testConfig.meshTestInputFilename = String2Type<std::string>(value);
 
         } else if (key == "meshTest") {
             testConfig.meshTest = String2TestState(value);
+
+        } else if (key == "meshTestOutputDirectory") {
+            testConfig.meshTestOutputDirectory = String2Type<std::string>(value);
+
+        } else if (key == "meshTestReferenceDirectory") {
+            testConfig.meshTestReferenceDirectory = String2Type<std::string>(value);
 
         }
 
@@ -102,8 +108,8 @@ TEST::TestConfig TEST::ReadConfig(const std::string &filename)
 }
 
 
-// Write mesh data to files
-void TEST::WriteMesh(const CFD::Mesh &mesh, const std::string &filedir) {
+void TEST::WriteMesh(const CFD::Mesh &mesh, const std::string &filedir) 
+{
 
     using AX = CFD::Axis::ENUMDATA;
 
@@ -136,5 +142,14 @@ void TEST::WriteMesh(const CFD::Mesh &mesh, const std::string &filedir) {
         UTIL::WriteArray(Fname("interp_factors"), mesh.interpFactors[AX::X]);
 
     }
+
+}
+
+
+bool TEST::CompareMesh(const CFD::Mesh &, const std::string &)
+{
+
+
+    return false;
 
 }
