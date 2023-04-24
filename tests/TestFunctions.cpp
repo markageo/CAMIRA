@@ -86,20 +86,37 @@ TEST::TestConfig TEST::ReadConfig(const std::string &filename)
         key = ReadBeforeEquals(line);
         value = ReadAfterEquals(line);
         if         (key == "testInputDirectory") {
-            testConfig.testInputDirectory = String2Type<std::string>(value);
+            testConfig.testInputDirectory = value;
 
         } else if (key == "meshTestInputFilename") {
-            testConfig.meshTestInputFilename = String2Type<std::string>(value);
+            testConfig.meshTestInputFilename = value;
 
         } else if (key == "meshTest") {
             testConfig.meshTest = String2TestState(value);
 
         } else if (key == "meshTestOutputDirectory") {
-            testConfig.meshTestOutputDirectory = String2Type<std::string>(value);
+            testConfig.meshTestOutputDirectory = value;
 
         } else if (key == "meshTestReferenceDirectory") {
-            testConfig.meshTestReferenceDirectory = String2Type<std::string>(value);
+            testConfig.meshTestReferenceDirectory = value;
 
+        } else if (key == "faceVelUniformTestInputFilename") {
+            testConfig.faceVelUniformTestInputFilename = value;
+
+        } else if (key == "faceVelZeroGradientTestInputFilename") {
+            testConfig.faceVelZeroGradientTestInputFilename = value;
+
+        } else if (key == "faceVelExtrapolatedTestInputFilename") {
+            testConfig.faceVelExtrapolatedTestInputFilename = value;
+
+        } else if (key == "faceVelTest") {
+            testConfig.faceVelTest = String2TestState(value);
+
+        } else if (key ==  "faceVelTestOutputDirectory") {
+            testConfig.faceVelTestOutputDirectory = value;
+
+        } else if (key == "faceVelTestReferenceDirectory") {
+            testConfig.faceVelTestReferenceDirectory = value;
         }
 
     }
@@ -201,6 +218,7 @@ namespace
 
 
 }   // end anonymous namespace
+
 
 bool TEST::CompareMesh(const std::string &outputDir, const std::string &referenceDir)
 {

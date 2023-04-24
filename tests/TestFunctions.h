@@ -20,6 +20,14 @@ struct TestConfig
     testState meshTest;
     std::string meshTestOutputDirectory;
     std::string meshTestReferenceDirectory;
+
+    // Face velocity testing
+    std::string faceVelUniformTestInputFilename;
+    std::string faceVelZeroGradientTestInputFilename;
+    std::string faceVelExtrapolatedTestInputFilename;
+    testState faceVelTest;
+    std::string faceVelTestOutputDirectory;
+    std::string faceVelTestReferenceDirectory;
 };
 
 // Read test config files

@@ -1,0 +1,62 @@
+// Input file for testing face velocities with zero gradient boundary condition
+
+#include "facevel_test_mesh.inp"
+
+BoundaryConditions
+{
+
+    +x {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    -x {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    +y {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    -y {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    +z {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    -z {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = zeroGradient
+    }
+}
+
+Model {
+    rho  = 1
+    nu   = 1
+}
+
+
+Solver {
+
+    planeSweepDirection = +z
+    lineSweepDirection = +y
+
+}
