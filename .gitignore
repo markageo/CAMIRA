@@ -4,6 +4,6 @@ test
 build/*
 debug/*
 tests/mesh/output/*
+tests/facevel/output/*
 
 *.vtk
-*.dat
