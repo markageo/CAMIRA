@@ -327,9 +327,48 @@ bool TEST::CompareMesh(const std::string &outputDir,
         if (!ArraysSame(outputArray2D, referenceArray2D))
             return false;
 
+    }
+
+    return true;
+}
+
+
+
+bool TEST::CompareFaceVels(const std::string &outputDir, 
+                           const std::string &referenceDir)
+{
+    using BC = CFD::BoundaryConditions::ENUMDATA;
+
+    BC boundaryCondition;
+    std::string ext = ".dat";
+    CFD::EnumVector<CFD::BoundaryConditions, std::string> boundaryConditionSuffix{ {"_zeroGradient", "_uniform", "_extrapolated"} };
+    auto Fname = [&] (const std::string &s, const std::string &dir) -> std::string { return dir + "face_velocities" + boundaryConditionSuffix[boundaryCondition] + "_" + s + ext; };
+    
+    // Temporary variable for output and reference directories
+    CFD::array3D outputArray, referenceArray;
+
+    for (int bc = 0; bc != CFD::BoundaryConditions::count; bc++) {
+        boundaryCondition = static_cast<BC>(bc);
+
+        // U velocity 
+        outputArray = UTIL::ReadArray<CFD::array3D>(Fname("u", outputDir));
+        referenceArray = UTIL::ReadArray<CFD::array3D>(Fname("u", referenceDir));
+        if (!ArraysSame(outputArray, referenceArray))
+            return false;
+
+        // V velocity 
+        outputArray = UTIL::ReadArray<CFD::array3D>(Fname("v", outputDir));
+        referenceArray = UTIL::ReadArray<CFD::array3D>(Fname("v", referenceDir));
+        if (!ArraysSame(outputArray, referenceArray))
+            return false;
+
+        // W velocity 
+        outputArray = UTIL::ReadArray<CFD::array3D>(Fname("w", outputDir));
+        referenceArray = UTIL::ReadArray<CFD::array3D>(Fname("w", referenceDir));
+        if (!ArraysSame(outputArray, referenceArray))
+            return false;
 
     }
 
     return true;
-
 }
