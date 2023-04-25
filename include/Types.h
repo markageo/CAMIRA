@@ -8,8 +8,6 @@
 #include <utility>
 #include <algorithm>
 
-#include <iostream>
-
 namespace CFD 
 {
 
@@ -26,9 +24,9 @@ using floatVector2 = Eigen::Array<floatType, 2, 1>;
 
 
 // Number of ghost cells in solution field
-const intType nGhost = 2;
+constexpr intType nGhost = 2;
 
-// Convert regular indexing to ghost cell indexing
+// Convert regular indexing to ghost cell indexing, to use with Eigen::Tensor
 inline Eigen::array<Eigen::Index, 1> G(const Eigen::Index i) 
     { return {i + nGhost}; };
 
