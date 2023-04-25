@@ -134,7 +134,7 @@ void TEST::WriteMesh(const CFD::Mesh &mesh,
     using AX = CFD::Axis::ENUMDATA;
 
     AX axis;
-    std::string ext = ".dat";
+    std::string ext = TEST::testFileExtension;
     CFD::EnumVector<CFD::Axis, std::string> axisSuffix{ {"_x", "_y", "_z"} };
     std::filesystem::create_directory(filedir);
     auto Fname = [&] (const std::string &s) -> std::string { return filedir + s + axisSuffix[axis] + ext; };
@@ -182,7 +182,7 @@ void TEST::WriteFields(const CFD::ArrayAllocator<CFD::Fields, CFD::array3D> &fie
 {
     using F = CFD::Fields::ENUMDATA;
 
-    std::string ext = ".dat";
+    std::string ext = TEST::testFileExtension;
     std::filesystem::create_directory(filedir);
     auto Fname = [&] (const std::string &s) -> std::string { return filedir + "fields_" + s + ext; };
     
@@ -200,7 +200,7 @@ void TEST::WriteFaceVels(const CFD::EnumVector<CFD::BoundaryConditions, CFD::Arr
     using BC = CFD::BoundaryConditions::ENUMDATA;
 
     BC boundaryCondition;
-    std::string ext = ".dat";
+    std::string ext = TEST::testFileExtension;
     CFD::EnumVector<CFD::BoundaryConditions, std::string> boundaryConditionSuffix{ {"_zeroGradient", "_uniform", "_extrapolated"} };
     std::filesystem::create_directory(filedir);
     auto Fname = [&] (const std::string &s) -> std::string { return filedir + "face_velocities" + boundaryConditionSuffix[boundaryCondition] + "_" + s + ext; };
@@ -268,7 +268,7 @@ bool TEST::CompareMesh(const std::string &outputDir,
     using AX = CFD::Axis::ENUMDATA;
 
     AX axis;
-    std::string ext = ".dat";
+    std::string ext = TEST::testFileExtension;
     CFD::EnumVector<CFD::Axis, std::string> axisSuffix{ {"_x", "_y", "_z"} };
     std::string fname;
     auto Fname = [&] (const std::string &name, const std::string &dir) -> std::string { return dir + name + axisSuffix[axis] + ext; };
@@ -340,7 +340,7 @@ bool TEST::CompareFaceVels(const std::string &outputDir,
     using BC = CFD::BoundaryConditions::ENUMDATA;
 
     BC boundaryCondition;
-    std::string ext = ".dat";
+    std::string ext = TEST::testFileExtension;
     CFD::EnumVector<CFD::BoundaryConditions, std::string> boundaryConditionSuffix{ {"_zeroGradient", "_uniform", "_extrapolated"} };
     auto Fname = [&] (const std::string &s, const std::string &dir) -> std::string { return dir + "face_velocities" + boundaryConditionSuffix[boundaryCondition] + "_" + s + ext; };
     

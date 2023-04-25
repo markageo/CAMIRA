@@ -2,8 +2,12 @@
 #define TEST_FUNCTIONS
 
 #include "FiniteVolumeStructures.h"
+#include <string>
 
 namespace TEST {
+
+// File extension for output files
+constexpr char testFileExtension[] = ".dat";
 
 enum testState {
     none,
