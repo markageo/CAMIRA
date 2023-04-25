@@ -36,6 +36,8 @@ TestConfig ReadConfig(const std::string &);
 
 // Write sets of data to file
 void WriteMesh(const CFD::Mesh &, const std::string &, const int = 6);
+void WriteFields(const CFD::ArrayAllocator<CFD::Fields, CFD::array3D> &, const std::string &, const int = 6);
+void WriteFaceVels(const CFD::EnumVector<CFD::BoundaryConditions, CFD::ArrayAllocator<CFD::Fields, CFD::array3D> > &, const std::string &, const int = 6);
 
 // Compare meshes in two different directories
 bool CompareMesh(const std::string &, const std::string &);

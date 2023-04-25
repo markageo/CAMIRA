@@ -16,7 +16,8 @@ namespace
     }
 
     // Wrapper for std::getline that removes whitespace
-    std::ifstream &ReadInputLine(std::ifstream &ifs, std::string &str) 
+    std::ifstream &ReadInputLine(std::ifstream &ifs, 
+                                 std::string &str) 
     {
         std::getline(ifs, str);
         RemoveWhiteSpace(str);
@@ -125,7 +126,9 @@ TEST::TestConfig TEST::ReadConfig(const std::string &filename)
 }
 
 
-void TEST::WriteMesh(const CFD::Mesh &mesh, const std::string &filedir, const int precision) 
+void TEST::WriteMesh(const CFD::Mesh &mesh, 
+                     const std::string &filedir, 
+                     const int precision) 
 {
 
     using AX = CFD::Axis::ENUMDATA;
@@ -133,9 +136,8 @@ void TEST::WriteMesh(const CFD::Mesh &mesh, const std::string &filedir, const in
     AX axis;
     std::string ext = ".dat";
     CFD::EnumVector<CFD::Axis, std::string> axisSuffix{ {"_x", "_y", "_z"} };
-    std::string fname;
-    auto Fname = [&] (const std::string &s) -> std::string { return filedir + s + axisSuffix[axis] + ext; };
     std::filesystem::create_directory(filedir);
+    auto Fname = [&] (const std::string &s) -> std::string { return filedir + s + axisSuffix[axis] + ext; };
 
     // Temporary array for extrapolation factors
     // rows  : extrapFactors.p, extrapFactors.a
@@ -174,6 +176,43 @@ void TEST::WriteMesh(const CFD::Mesh &mesh, const std::string &filedir, const in
 
 }
 
+void TEST::WriteFields(const CFD::ArrayAllocator<CFD::Fields, CFD::array3D> &fields, 
+                       const std::string &filedir, 
+                       const int precision) 
+{
+    using F = CFD::Fields::ENUMDATA;
+
+    std::string ext = ".dat";
+    std::filesystem::create_directory(filedir);
+    auto Fname = [&] (const std::string &s) -> std::string { return filedir + "fields_" + s + ext; };
+    
+    UTIL::WriteArray(Fname("u"), fields[F::U], precision);
+    UTIL::WriteArray(Fname("v"), fields[F::V], precision);
+    UTIL::WriteArray(Fname("w"), fields[F::W], precision);
+}
+
+
+void TEST::WriteFaceVels(const CFD::EnumVector<CFD::BoundaryConditions, CFD::ArrayAllocator<CFD::Fields, CFD::array3D> > &faceVelocities, 
+                         const std::string &filedir, 
+                         const int precision) 
+{
+    using F = CFD::Fields::ENUMDATA;
+    using BC = CFD::BoundaryConditions::ENUMDATA;
+
+    BC boundaryCondition;
+    std::string ext = ".dat";
+    CFD::EnumVector<CFD::BoundaryConditions, std::string> boundaryConditionSuffix{ {"_zeroGradient", "_uniform", "_extrapolated"} };
+    std::filesystem::create_directory(filedir);
+    auto Fname = [&] (const std::string &s) -> std::string { return filedir + "face_velocities" + boundaryConditionSuffix[boundaryCondition] + "_" + s + ext; };
+    
+    for (int bc = 0; bc != CFD::BoundaryConditions::count; bc++) {
+        boundaryCondition = static_cast<BC>(bc);
+        UTIL::WriteArray(Fname("u"), faceVelocities[boundaryCondition][F::U], precision);
+        UTIL::WriteArray(Fname("v"), faceVelocities[boundaryCondition][F::V], precision);
+        UTIL::WriteArray(Fname("w"), faceVelocities[boundaryCondition][F::W], precision);
+    }
+}
+
 
 // Helper functions Comparision tests
 namespace 
@@ -181,7 +220,8 @@ namespace
 
     // Returns true if all elements of a tensor are exactly the same
     template<typename T>
-    bool ArraysSame(const T &array1, const T &array2) 
+    bool ArraysSame(const T &array1, 
+                    const T &array2) 
     {
         using dimType = long int;
 
@@ -203,7 +243,8 @@ namespace
 
     // Read and compare arrays. Returns true if they are the same
     template<typename T>
-    bool ReadAndCompare(const std::string &filename1, const std::string &filename2) {
+    bool ReadAndCompare(const std::string &filename1, 
+                        const std::string &filename2) {
 
         // Temporaries for storing read in data
         T array1, array2;
@@ -220,7 +261,8 @@ namespace
 }   // end anonymous namespace
 
 
-bool TEST::CompareMesh(const std::string &outputDir, const std::string &referenceDir)
+bool TEST::CompareMesh(const std::string &outputDir, 
+                       const std::string &referenceDir)
 {
 
     using AX = CFD::Axis::ENUMDATA;

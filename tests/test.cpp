@@ -20,7 +20,6 @@
 #include "TestFunctions.h"
 
 
-
 int main(int argc, char const *argv[])
 {
 
@@ -52,7 +51,7 @@ int main(int argc, char const *argv[])
     CFD::InputData inputData = CFD::ReadInputData(testConfig.testInputDirectory + testConfig.meshTestInputFilename);
 
     // Generate mesh
-    const CFD::Mesh mesh(inputData);
+    CFD::Mesh mesh(inputData);
 
     // Write mesh to the output directory
     if (testConfig.meshTest != TEST::none) {
@@ -62,50 +61,82 @@ int main(int argc, char const *argv[])
     // Compare with the mesh in the reference directory
     if (testConfig.meshTest == TEST::test) {
         if ( TEST::CompareMesh(testConfig.meshTestOutputDirectory, testConfig.meshTestReferenceDirectory) ){
-            std::cout << "Meshes same" << "\n";
+            std::cout << "Mesh test: PASSED." << "\n";
         } else {
-            std::cout << "Meshes different!" << "\n";
+            std::cout << "Mesh test: FAILED. Mesh does not match reference!" << "\n";
         }
     } 
     
 
     /*-------------------------------------------------------------------------------------*\
-                                          Fields Testing
+                                          Face velocities
     \*-------------------------------------------------------------------------------------*/
 
     using F = CFD::Fields::ENUMDATA;
+    using BC = CFD::BoundaryConditions::ENUMDATA;
 
-    // Allocate fields and face velocities
+    // Read and store boundary conditions for each case
+    CFD::EnumVector<CFD::BoundaryConditions, CFD::InputData::BoundaryConditionData> faceVelTestBoundaryConditions;
+    inputData = CFD::ReadInputData(testConfig.testInputDirectory + testConfig.faceVelUniformTestInputFilename);
+    faceVelTestBoundaryConditions[BC::uniform] = inputData.boundaryConditions;
+
+    inputData = CFD::ReadInputData(testConfig.testInputDirectory + testConfig.faceVelZeroGradientTestInputFilename);
+    faceVelTestBoundaryConditions[BC::zeroGradient] = inputData.boundaryConditions;
+
+    inputData = CFD::ReadInputData(testConfig.testInputDirectory + testConfig.faceVelExtrapolatedTestInputFilename);
+    faceVelTestBoundaryConditions[BC::extrapolated] = inputData.boundaryConditions;
+
+    // Generate mesh
+    mesh = CFD::Mesh(inputData);
+
+    // Allocate fields
     CFD::ArrayAllocator<CFD::Fields, CFD::array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells);
 
-
+    // Allocate face velocities for each bouundary condition type to be tested
     // Faces are staggered in the negative direction:
     //   cellFaceVelocity_x(i, j, k) -> u(i-1/2, j    , k    )
     //   cellFaceVelocity_y(i, j, k) -> u(i    , j-1/2, k    )
     //   cellFaceVelocity_z(i, j, k) -> u(i    , j    , k-1/2)
     // Subscript indicates the normal direction of the face.
-    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> faceVelocities( {{F::U, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
-                                                                    {F::V, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},
-                                                                    {F::W, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} );
+    CFD::EnumVector< CFD::BoundaryConditions, CFD::ArrayAllocator<CFD::Fields, CFD::array3D> > 
+        testFaceVelocities( CFD::ArrayAllocator<CFD::Fields, CFD::array3D>({{F::U, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
+                                                                            {F::V, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},             
+                                                                            {F::W, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}}) );
 
-
-    // Set the seed so the random arrays are reproducable
+    // Set values for the fields to be random and write them out to the test directory
+    // Make all the fields the same, they should be rotated to give the same results
     srand(590);
-
-    // Set values for the velocity fields
     fields[F::U].setRandom();
-    fields[F::V].setRandom();
-    fields[F::W].setRandom();
+    fields[F::V] = fields[F::U].shuffle( Eigen::array<int, 3>{1, 0, 2} );
+    fields[F::W] = fields[F::U].shuffle( Eigen::array<int, 3>{2, 1, 0} );
+    TEST::WriteFields(fields, testConfig.faceVelTestOutputDirectory);
+
 
     // Update the face velocities
-    CFD::UpdateFaceVelocities(faceVelocities, mesh, fields, inputData.boundaryConditions);
+    CFD::BoundaryConditions::ENUMDATA boundaryCondition;
+    for (int i = 0; i != CFD::BoundaryConditions::count; i++) {
+        boundaryCondition = static_cast<CFD::BoundaryConditions::ENUMDATA>(i);
+        CFD::UpdateFaceVelocities(testFaceVelocities[boundaryCondition], mesh, fields, faceVelTestBoundaryConditions[boundaryCondition]);
+    }
+
+    // Write face velocities to the output directory
+    if (testConfig.meshTest != TEST::none) {
+        TEST::WriteFaceVels(testFaceVelocities, testConfig.faceVelTestOutputDirectory);
+    } 
+    
+    // Compare with the values in the reference directory
+    // if (testConfig.meshTest == TEST::test) {
+    //     if (  ){
+    //         std::cout << "Face velcoity test: PASSED." << "\n";
+    //     } else {
+    //         std::cout << "Face velocity test: FAILED. Mesh does not match reference!" << "\n";
+    //     }
+    // } 
 
     /*-------------------------------------------------------------------------------------*\
                                 Finite Volume Coeffiicents Testing
     \*-------------------------------------------------------------------------------------*/
     
-    // Create initial finite volume coefficients
-    CFD::FVCoefficients fvCoeffs = CFD::InitialiseFVCoefficients(mesh, faceVelocities, inputData);
 
 
     return 0;
