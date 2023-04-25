@@ -61,9 +61,9 @@ int main(int argc, char const *argv[])
     // Compare with the mesh in the reference directory
     if (testConfig.meshTest == TEST::test) {
         if ( TEST::CompareMesh(testConfig.meshTestOutputDirectory, testConfig.meshTestReferenceDirectory) ){
-            std::cout << "Mesh test: PASSED." << "\n";
+            std::cout << "Mesh test: PASSED!" << "\n";
         } else {
-            std::cout << "Mesh test: FAILED. Mesh does not match reference!" << "\n";
+            std::cout << "Mesh test: FAILED! Mesh does not match reference!" << "\n";
         }
     } 
     
@@ -125,13 +125,13 @@ int main(int argc, char const *argv[])
     } 
     
     // Compare with the values in the reference directory
-    // if (testConfig.meshTest == TEST::test) {
-    //     if (  ){
-    //         std::cout << "Face velcoity test: PASSED." << "\n";
-    //     } else {
-    //         std::cout << "Face velocity test: FAILED. Mesh does not match reference!" << "\n";
-    //     }
-    // } 
+    if (testConfig.meshTest == TEST::test) {
+        if ( TEST::CompareFaceVels(testConfig.faceVelTestOutputDirectory, testConfig.faceVelTestReferenceDirectory) ){
+            std::cout << "Face velocity test: PASSED!" << "\n";
+        } else {
+            std::cout << "Face velocity test: FAILED! Face velocities do not match reference!" << "\n";
+        }
+    } 
 
     /*-------------------------------------------------------------------------------------*\
                                 Finite Volume Coeffiicents Testing
