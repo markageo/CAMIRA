@@ -274,6 +274,7 @@ namespace
 
     }
 
+
     /*-------------------------------------------------------------------------------------*\
                                        Boundary Conditions
     \*-------------------------------------------------------------------------------------*/
@@ -372,31 +373,6 @@ namespace
                 inputData.boundaryConditions[fieldEnum][patchEnum] = ReadBoundaryValueString(valueString);
 
             }
-        }
-
-    }
-
-
-    void TransformBoundaryConditions(InputData &inputData)
-    {
-        using BP = CFD::BoundaryPatches::ENUMDATA;
-        using F = CFD::Fields::ENUMDATA;
-
-        // Temporary for boundary conditions as user specifies them
-        InputData::BoundaryConditionData boundaryConditionsUser = inputData.boundaryConditions;
-        
-        // Iterate fields, they all have the same trasformation
-        F field;
-        BP patch;
-        for ( int f = 0; f != Fields::count; f++ ) {
-            field = static_cast<F>(f);
-
-            // Transform using the axisTransformation map
-            for ( int p = 0; p != BoundaryPatches::count; p++ ) {
-                patch = static_cast<BP>(p);
-                inputData.boundaryConditions[field][patch] = boundaryConditionsUser[field][ inputData.axisTransformation.at( patch ) ];
-            }
-            
         }
 
     }
@@ -547,6 +523,96 @@ namespace
     }
 
 
+    /*-------------------------------------------------------------------------------------*\
+                                    Axis Transformations
+    \*-------------------------------------------------------------------------------------*/
+
+    // The problem is remapped so that the plane sweeping direction is always in the z direction and
+    // the line sweeping direction is always in the y direction (in the code). This is more memory
+    // efficient and is simpler to implement.
+
+    // Remaps the users boundary conditions
+    void TransformBoundaryConditions(InputData &inputData)
+    {
+        using BP = CFD::BoundaryPatches::ENUMDATA;
+        using F = CFD::Fields::ENUMDATA;
+
+        // Temporary for boundary conditions as user specifies them
+        InputData::BoundaryConditionData boundaryConditionsUser = inputData.boundaryConditions;
+        
+        // Iterate fields, they all have the same trasformation
+        F field;
+        BP patch;
+        for ( int f = 0; f != Fields::count; f++ ) {
+            field = static_cast<F>(f);
+
+            // Transform using the axisTransformation map
+            for ( int p = 0; p != BoundaryPatches::count; p++ ) {
+                patch = static_cast<BP>(p);
+                inputData.boundaryConditions[field][patch] = boundaryConditionsUser[field][ inputData.axisTransformation.at( patch ) ];
+            }
+            
+        }
+
+    }
+
+
+    // Reverse a mesh in a given axis
+    void ReverseMesh(std::vector< InputData::MeshSegment > &meshSegments)
+    {
+        // Reverse the order of the segments
+        std::reverse(meshSegments.begin(), meshSegments.end());
+
+        // Now flip each segment
+        for (auto &segment : meshSegments) {
+            std::swap(segment.upperBound, segment.lowerBound);
+            segment.upperBound = - segment.upperBound;
+            segment.lowerBound = - segment.lowerBound;
+            segment.biasFactor = - segment.biasFactor;
+        }
+    }
+
+
+    // Remaps the user mesh
+    void TransformMesh(InputData &inputData)
+    {
+        using enum CFD::Axis::ENUMDATA;
+        using enum CFD::BoundaryPatches::ENUMDATA;
+
+        // Temporary for the axis being transformed from the user input
+        CFD::Axis::ENUMDATA userAxis;
+        CFD::BoundaryPatches::ENUMDATA userBoundaryPatch;
+
+        
+        // Swap the x axis
+        userBoundaryPatch = inputData.axisTransformation[ xPositive ];
+        userAxis = BoundaryPatchAxis[ userBoundaryPatch ];
+        std::swap( inputData.meshSegments[ X ], inputData.meshSegments[ userAxis ] );
+        std::swap( inputData.domainSize( X ), inputData.domainSize( userAxis ) );
+        if ( userBoundaryPatch == negativePatches[ userAxis ] ) {
+            ReverseMesh(inputData.meshSegments[ X ]);
+        }
+
+        // Swap the y axis
+        userBoundaryPatch = inputData.axisTransformation[ yPositive ];
+        userAxis = BoundaryPatchAxis[ userBoundaryPatch ];
+        std::swap( inputData.meshSegments[ Y ], inputData.meshSegments[ userAxis ] );
+        std::swap( inputData.domainSize( Y ), inputData.domainSize( userAxis ) );
+        if ( userBoundaryPatch == negativePatches[ userAxis ] ) {
+            ReverseMesh(inputData.meshSegments[ Y ]);
+        }
+
+        // The z axis is automatically satisfied, just need to check if it should be reversed
+        userBoundaryPatch = inputData.axisTransformation[ zPositive ];
+        userAxis = BoundaryPatchAxis[ userBoundaryPatch ];
+        if ( userBoundaryPatch == negativePatches[ userAxis ] ) {
+            ReverseMesh(inputData.meshSegments[ Z ]);
+        }
+
+
+    }
+
+
 }   // end anonymous namepsace
 
 
@@ -562,6 +628,7 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFileName)
     ReadSolver(inputData, tree);
     
     TransformBoundaryConditions(inputData);
+    TransformMesh(inputData);
 
     return inputData;
 }

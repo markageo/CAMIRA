@@ -39,7 +39,7 @@ void CalculateCellLengths(array1D &cellLengths,
     int cellIndex = 0;
     for (int s = 0; s != nSegments; s++) {    // Segments
 
-        if (growthRates[s] != 1.0) {
+        if (growthRates[s] != 1.0) { 
             geometricFactor = (1.0 - std::pow( growthRates[s], meshSegments[s].nCells )) / (1.0 - growthRates[s]);   // geometric series formula
         } else {
             geometricFactor = meshSegments[s].nCells;
@@ -57,11 +57,12 @@ void CalculateCellLengths(array1D &cellLengths,
 
 
 void CalculateCellCenters(array1D &cellCenters, 
-                          const array1D &cellLengths)
+                          const array1D &cellLengths,
+                          const floatType startPosition)
 {
     int nCellsTotal = cellLengths.size();
 
-    floatType previousCellPosition = 0.0, previousCellLength = 0.0;
+    floatType previousCellPosition = startPosition, previousCellLength = 0.0;
     for (int i = 0; i != nCellsTotal; i++) {
         cellCenters(i) = previousCellPosition + previousCellLength/2.0 + cellLengths(i)/2.0;
         previousCellPosition = cellCenters(i);
@@ -84,11 +85,12 @@ void CalculateCellCenterDiffInv(array1D &cellCenterDiffInv,
 
 
 void CalculateCellFaces(array1D &cellFaces, 
-                        const array1D &cellLengths)
+                        const array1D &cellLengths,
+                        const floatType startPosition)
 {
     int nFaces = cellLengths.size() + 1;
 
-    cellFaces(0) = 0;
+    cellFaces(0) = startPosition;
     for (int i = 1; i != nFaces; i++) {
         cellFaces(i) = cellFaces(i-1) + cellLengths(i-1);
     }
@@ -223,10 +225,10 @@ Mesh::Mesh(const InputData &inputData) :
             CalculateCellLengths(cellLengths[axis], inputData.meshSegments[axis], growthRates[axis]);
             cellLengthsInv[axis] = cellLengths[axis].inverse();
 
-            CalculateCellCenters(cellCenters[axis], cellLengths[axis]);
+            CalculateCellCenters(cellCenters[axis], cellLengths[axis], inputData.meshSegments[axis].front().lowerBound);
             CalculateCellCenterDiffInv(cellCenterDiffInv[axis], cellCenters[axis]);
 
-            CalculateCellFaces(cellFaces[axis], cellLengths[axis]);
+            CalculateCellFaces(cellFaces[axis], cellLengths[axis], inputData.meshSegments[axis].front().lowerBound);
             CalculateInterpolationFactors(interpFactors[axis], cellCenters[axis], cellFaces[axis]);
             CalculateExtrapolationFactors(extrapFactors, cellLengths, axis);
         }

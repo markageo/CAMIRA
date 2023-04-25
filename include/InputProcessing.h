@@ -51,6 +51,7 @@ InputData ReadInputData(const std::string &);
 
 InputData InputDataFromCommandLine(int, char const **);
 
+
 } // end namespace CFD
 
 #endif  // INPUT_PROCESSING

@@ -56,6 +56,7 @@ int main(int argc, char const *argv[])
     // Write mesh to the output directory
     if (testConfig.meshTest != TEST::none) {
         TEST::WriteMesh(mesh, testConfig.meshTestOutputDirectory);
+        std::cout << "Mesh written to output directory." << "\n";
     } 
     
     // Compare with the mesh in the reference directory
@@ -66,6 +67,7 @@ int main(int argc, char const *argv[])
             std::cout << "Mesh test: FAILED! Mesh does not match reference!" << "\n";
         }
     } 
+    std::cout << "\n";
     
 
     /*-------------------------------------------------------------------------------------*\
@@ -120,18 +122,20 @@ int main(int argc, char const *argv[])
     }
 
     // Write face velocities to the output directory
-    if (testConfig.meshTest != TEST::none) {
+    if (testConfig.faceVelTest != TEST::none) {
         TEST::WriteFaceVels(testFaceVelocities, testConfig.faceVelTestOutputDirectory);
+        std::cout << "Face velocities written to output directory" << "\n";
     } 
     
     // Compare with the values in the reference directory
-    if (testConfig.meshTest == TEST::test) {
+    if (testConfig.faceVelTest == TEST::test) {
         if ( TEST::CompareFaceVels(testConfig.faceVelTestOutputDirectory, testConfig.faceVelTestReferenceDirectory) ){
             std::cout << "Face velocity test: PASSED!" << "\n";
         } else {
             std::cout << "Face velocity test: FAILED! Face velocities do not match reference!" << "\n";
         }
     } 
+    std::cout << "\n";
 
     /*-------------------------------------------------------------------------------------*\
                                 Finite Volume Coeffiicents Testing
