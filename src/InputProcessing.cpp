@@ -580,35 +580,27 @@ namespace
         using enum CFD::BoundaryPatches::ENUMDATA;
 
         // Temporary for the axis being transformed from the user input
-        CFD::Axis::ENUMDATA userAxis;
-        CFD::BoundaryPatches::ENUMDATA userBoundaryPatch;
+        CFD::Axis::ENUMDATA codeAxis, userAxis;
+        CFD::BoundaryPatches::ENUMDATA codePositivePatch, userBoundaryPatch;
 
-        
-        // Swap the x axis
-        userBoundaryPatch = inputData.axisTransformation[ xPositive ];
-        userAxis = BoundaryPatchAxis[ userBoundaryPatch ];
-        std::swap( inputData.meshSegments[ X ], inputData.meshSegments[ userAxis ] );
-        std::swap( inputData.domainSize( X ), inputData.domainSize( userAxis ) );
-        if ( userBoundaryPatch == negativePatches[ userAxis ] ) {
-            ReverseMesh(inputData.meshSegments[ X ]);
+        for (int i = 0; i != CFD::Axis::count; i++) {
+            codeAxis = static_cast<CFD::Axis::ENUMDATA>(i);
+            codePositivePatch = positivePatches[codeAxis];
+
+            userBoundaryPatch = inputData.axisTransformation[ codePositivePatch ];
+            userAxis = BoundaryPatchAxis[ userBoundaryPatch ];
+
+            // Axis are transformed by swapping the data
+            if ( codeAxis != Z ) {  // The z axis is automatically satisfied
+                std::swap( inputData.meshSegments[ codeAxis ], inputData.meshSegments[ userAxis ] );
+                std::swap( inputData.domainSize( codeAxis ), inputData.domainSize( userAxis ) );
+            }
+
+            if ( userBoundaryPatch == negativePatches[ userAxis ] ) {
+                ReverseMesh(inputData.meshSegments[ codeAxis ]);
+            }
+
         }
-
-        // Swap the y axis
-        userBoundaryPatch = inputData.axisTransformation[ yPositive ];
-        userAxis = BoundaryPatchAxis[ userBoundaryPatch ];
-        std::swap( inputData.meshSegments[ Y ], inputData.meshSegments[ userAxis ] );
-        std::swap( inputData.domainSize( Y ), inputData.domainSize( userAxis ) );
-        if ( userBoundaryPatch == negativePatches[ userAxis ] ) {
-            ReverseMesh(inputData.meshSegments[ Y ]);
-        }
-
-        // The z axis is automatically satisfied, just need to check if it should be reversed
-        userBoundaryPatch = inputData.axisTransformation[ zPositive ];
-        userAxis = BoundaryPatchAxis[ userBoundaryPatch ];
-        if ( userBoundaryPatch == negativePatches[ userAxis ] ) {
-            ReverseMesh(inputData.meshSegments[ Z ]);
-        }
-
 
     }
 
