@@ -6,45 +6,45 @@ BoundaryConditions
 {
 
     +x {
-        u = uniform, 0
-        v = uniform, 0
-        w = uniform, 0
-        p = uniform, 0
+        u = uniform, 5.90
+        v = uniform, 5.90
+        w = uniform, 5.90
+        p = uniform, 5.90
     }
 
     -x {
-        u = uniform, 0
-        v = uniform, 0
-        w = uniform, 0
-        p = uniform, 0
+        u = uniform, 5.90
+        v = uniform, 5.90
+        w = uniform, 5.90
+        p = uniform, 5.90
     }
 
     +y {
-        u = uniform, 0
-        v = uniform, 0
-        w = uniform, 0
-        p = uniform, 0
+        u = uniform, 5.90
+        v = uniform, 5.90
+        w = uniform, 5.90
+        p = uniform, 5.90
     }
 
     -y {
-        u = uniform, 0
-        v = uniform, 0
-        w = uniform, 0
-        p = uniform, 0
+        u = uniform, 5.90
+        v = uniform, 5.90
+        w = uniform, 5.90
+        p = uniform, 5.90
     }
 
     +z {
-        u = uniform, 0
-        v = uniform, 0
-        w = uniform, 0
-        p = uniform, 0
+        u = uniform, 5.90
+        v = uniform, 5.90
+        w = uniform, 5.90
+        p = uniform, 5.90
     }
 
     -z {
-        u = uniform, 0
-        v = uniform, 0
-        w = uniform, 0
-        p = uniform, 0
+        u = uniform, 5.90
+        v = uniform, 5.90
+        w = uniform, 5.90
+        p = uniform, 5.90
     }
 }
 

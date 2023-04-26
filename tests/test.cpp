@@ -124,7 +124,8 @@ int main(int argc, char const *argv[])
     // Write face velocities to the output directory
     if (testConfig.faceVelTest != TEST::none) {
         TEST::WriteFaceVels(testFaceVelocities, testConfig.faceVelTestOutputDirectory);
-        std::cout << "Face velocities written to output directory" << "\n";
+        TEST::WriteMesh(mesh, testConfig.faceVelTestOutputDirectory);
+        std::cout << "Face velocities and associated mesh written to output directory" << "\n";
     } 
     
     // Compare with the values in the reference directory
