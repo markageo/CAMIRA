@@ -11,12 +11,11 @@
 #include <fmt/core.h>
 
 #include "Types.h"
-#include "utils.h"
+#include "Utils.h"
 #include "InputProcessing.h"
-#include "FiniteVolumeStructures.h"
-#include "FiniteVolumeFunctions.h"
-#include "VTKWriter.h"
+#include "FiniteVolume.h"
 #include "Solver.h"
+#include "VTKWriter.h"
 #include "TestFunctions.h"
 
 

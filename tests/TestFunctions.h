@@ -1,7 +1,7 @@
 #ifndef TEST_FUNCTIONS
 #define TEST_FUNCTIONS
 
-#include "FiniteVolumeStructures.h"
+#include "FiniteVolume.h"
 #include <string>
 
 namespace TEST {

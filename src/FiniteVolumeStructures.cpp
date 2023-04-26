@@ -1,4 +1,4 @@
-#include "FiniteVolumeStructures.h"
+#include "FiniteVolume.h"
 
 #include <cmath>
 

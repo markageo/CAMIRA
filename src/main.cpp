@@ -5,10 +5,9 @@
 \*---------------------------------------------------------------------------*/
 
 #include "Types.h"
-#include "utils.h"
+#include "Utils.h"
 #include "InputProcessing.h"
-#include "FiniteVolumeStructures.h"
-#include "FiniteVolumeFunctions.h"
+#include "FiniteVolume.h"
 #include "VTKWriter.h"
 #include "Solver.h"
 
@@ -59,6 +58,8 @@ int main(int argc, char const *argv[])
     /*-------------------------------------------------------------------------------------*\
                                            Output
     \*-------------------------------------------------------------------------------------*/
+
+
 
     // Data to pass to writer
     VTK::dataType VTKDataType = VTK::DOUBLE;
