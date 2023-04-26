@@ -2,8 +2,6 @@
 
 #include <cmath>
 
-#include <iostream>
-
 using namespace CFD;
 
 /*-------------------------------------------------------------------------------------*\
@@ -107,18 +105,6 @@ void CalculateInterpolationFactors(array1D &interpFactors,
 }
 
 
-void CalculateCellFaceAreas(array2D &cellFaceAreas, 
-                            const array1D &cellLengths_x, 
-                            const array1D &cellLengths_y)
-{
-    for (int j = 0; j != cellLengths_y.dimension(0); j++) {
-        for (int i = 0; i != cellLengths_x.dimension(0); i++) {
-            cellFaceAreas(i, j) = cellLengths_x(i) * cellLengths_y(j);
-        }
-    }
-}
-
-
 Mesh::ExtrapFactorsStruct GetExtrapolationFactors(const array1D &cellLengths, 
                                                   const int fieldIndex_p, 
                                                   const int fieldIndex_a)
@@ -207,10 +193,6 @@ Mesh::Mesh(const InputData &inputData) :
                     {Axis::ENUMDATA::Y, nCells(1) + 1},
                     {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
 
-    cellFaceAreas( {{Axis::ENUMDATA::X, {nCells(1), nCells(2)} },
-                    {Axis::ENUMDATA::Y, {nCells(2), nCells(0)} },
-                    {Axis::ENUMDATA::Z, {nCells(0), nCells(1)} }} ),
-
     extrapFactors()
 
     { 
@@ -231,16 +213,6 @@ Mesh::Mesh(const InputData &inputData) :
             CalculateCellFaces(cellFaces[axis], cellLengths[axis], inputData.meshSegments[axis].front().lowerBound);
             CalculateInterpolationFactors(interpFactors[axis], cellCenters[axis], cellFaces[axis]);
             CalculateExtrapolationFactors(extrapFactors, cellLengths, axis);
-        }
-
-        // Cell face areas should be calculated on their own since they depend o other axis
-        for (int i = 0; i != Axis::count; i++) {
-            Axis::ENUMDATA axis = static_cast<Axis::ENUMDATA>(i);
-
-            // Cyclic permutations to get correct order of axis for area, which is indexed by right hand rule
-            Axis::ENUMDATA axis1 = static_cast<Axis::ENUMDATA>( (i+1) % Axis::count );
-            Axis::ENUMDATA axis2 = static_cast<Axis::ENUMDATA>( (i+2) % Axis::count );
-            CalculateCellFaceAreas(cellFaceAreas[axis], cellLengths[axis1], cellLengths[axis2]);
         }
 
     };
@@ -372,3 +344,55 @@ FVCoefficients::FVCoefficients(const indexVector3 &dims) :
     Cont(dims)
 {};
 
+
+/*-------------------------------------------------------------------------------------*\
+                                      Free Functions
+\*-------------------------------------------------------------------------------------*/
+
+
+void TransformToUserCoordinates(Mesh &mesh, 
+                                ArrayAllocator<Fields, array3D> &fields, 
+                                ArrayAllocator<Fields, array3D> &faceVelocities,
+                                const std::map< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > &axisTransformation)
+{
+
+    Axis::ENUMDATA codeAxis, userAxis;
+    BoundaryPatches::ENUMDATA codePositivePatch, userBoundaryPatch;
+
+    // Mesh
+    for (int a = 0; a != Axis::count; a++) {
+        codeAxis = static_cast<Axis::ENUMDATA>(a);
+        codePositivePatch = positivePatches[codeAxis];
+
+        userBoundaryPatch = axisTransformation.at(codePositivePatch);
+        userAxis = boundaryPatchAxis[userBoundaryPatch];
+
+        if (codeAxis != Z) {
+            std::swap( mesh.nCells(codeAxis), mesh.nCells(userAxis) );
+            std::swap( mesh.cellCenters[codeAxis], mesh.cellCenters[userAxis] );
+            std::swap( mesh.cellFaces[codeAxis], mesh.cellFaces[userAxis] );
+            std::swap( mesh.cellLengths[codeAxis], mesh.cellLengths[userAxis] );
+            std::swap( mesh.cellLengthsInv[codeAxis], mesh.cellLengthsInv[userAxis] );
+            std::swap( mesh.cellCenterDiffInv[codeAxis], mesh.cellCenterDiffInv[userAxis] );
+            std::swap( mesh.interpFactors[codeAxis], mesh.interpFactors[userAxis] );
+            std::swap( mesh.interpFactors[codeAxis], mesh.interpFactors[userAxis] );
+        }
+        
+
+    }
+
+    Fields::ENUMDATA field;
+    for (int f = 0; f != Fields::count; f++) {
+        field = static_cast<F>(f);
+
+        // Cell center values
+
+
+        if (field == F::P) 
+            continue;
+
+        // Face velocities
+
+    }
+
+}

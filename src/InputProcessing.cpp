@@ -587,8 +587,8 @@ namespace
             codeAxis = static_cast<CFD::Axis::ENUMDATA>(i);
             codePositivePatch = positivePatches[codeAxis];
 
-            userBoundaryPatch = inputData.axisTransformation[ codePositivePatch ];
-            userAxis = BoundaryPatchAxis[ userBoundaryPatch ];
+            userBoundaryPatch = inputData.axisTransformation.at(codePositivePatch);
+            userAxis = boundaryPatchAxis[ userBoundaryPatch ];
 
             // Axis are transformed by swapping the data
             if ( codeAxis != Z ) {  // The z axis is automatically satisfied

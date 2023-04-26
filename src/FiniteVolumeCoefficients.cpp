@@ -26,7 +26,7 @@ BoundaryConditions::ENUMDATA GetDiffusionBC( const InputData::BoundaryConditionD
     Fields::ENUMDATA fieldToCheck;
     Fields::ENUMDATA orthogonalField1; 
     Fields::ENUMDATA orthogonalField2;
-    const Axis::ENUMDATA axis = BoundaryPatchAxis[boundaryPatch];
+    const Axis::ENUMDATA axis = boundaryPatchAxis[boundaryPatch];
 
     // Set the field we need to check based on the axis
     if        (axis == X) {
@@ -213,6 +213,9 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
     }
 
 }
+
+
+
 
 
 /*---------------------------------------------------------------------------------------------------------------*\
@@ -440,6 +443,8 @@ void SetAdvectionCoefficients( ArrayAllocator<TransportCoefficients, array3D> &c
 
 
 
+
+
 /*---------------------------------------------------------------------------------------------------------------*\
                                            Add Diffusion Coefficients
 \*---------------------------------------------------------------------------------------------------------------*/
@@ -479,6 +484,8 @@ void AddDiffusion( ArrayAllocator< TransportCoefficients, array3D > &velCoeffs,
     }
 
 }
+
+
 
 
 
@@ -615,6 +622,9 @@ void SetFaceInterpolatedCoefficients( ArrayAllocator<CFD::TransportCoefficients,
         coeffs[west] /= coeffs[west].constant( inputData.rho );
     }
 }
+
+
+
 
 
 /*---------------------------------------------------------------------------------------------------------------*\
@@ -810,6 +820,8 @@ void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
     MWInterpolationBoundaryConstants(fvCoeffs);
 }
  
+
+
 
 
 /*---------------------------------------------------------------------------------------------------------------*\

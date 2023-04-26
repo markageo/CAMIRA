@@ -21,7 +21,6 @@ struct Mesh
                                   cellLengthsInv,       // inverse of cell lengths
                                   cellCenterDiffInv,    // inverse of distance between cell centers, same convention as cell faces
                                   interpFactors;        // faceValue(i) = (1 - interpFactor(i))*cellValue(i-1) + interpFactor(i)*cellValue(i)
-    ArrayAllocator<Axis, array2D> cellFaceAreas;        // Index by right hand rule
 
     struct ExtrapFactorsStruct {
         floatType p,    // Boundary cell 
@@ -64,22 +63,31 @@ struct FVCoefficients
     ContinuityEquation Cont;
 };
 
+
+// Transform back to the coordinates consistentent with the input file 
+void TransformToUserCoordinates(Mesh &, ArrayAllocator<Fields, array3D> &, ArrayAllocator<Fields, array3D> &, const std::map< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > &);
+
+
+
+
+
 // -------------------------------------- Definition in FaceVelocities.cpp -------------------------------------- //
 
 // Update face velocities
-void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D>  &, const Mesh &, const ArrayAllocator<Fields, CFD::array3D> &, 
+void UpdateFaceVelocities( ArrayAllocator<Fields, array3D>  &, const Mesh &, const ArrayAllocator<Fields, array3D> &, 
     const InputData::BoundaryConditionData &);
+
+
 
 
 
 // -------------------------------------- Definition in FVCoefficients.cpp -------------------------------------- //
 
 // Initialise finite volume coefficients
-FVCoefficients InitialiseFVCoefficients(const Mesh &, const ArrayAllocator<Fields, CFD::array3D> &, const InputData &);
+FVCoefficients InitialiseFVCoefficients(const Mesh &, const ArrayAllocator<Fields, array3D> &, const InputData &);
 
 // Update finite volume coefficients (Picard linearisation)
-void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields, CFD::array3D> &);
-
+void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields, array3D> &);
 
 
 } // end namespace CFD
