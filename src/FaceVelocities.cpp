@@ -1,4 +1,4 @@
-#include "FiniteVolumeFunctions.h"
+#include "FiniteVolume.h"
 
 // Implementation file for face velocity update functions
 

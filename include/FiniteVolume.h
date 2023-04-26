@@ -1,5 +1,5 @@
-#ifndef FV_STRUCTURES
-#define FV_STRUCTURES
+#ifndef FINITE_VOLUME   
+#define FINITE_VOLUME
 
 #include "Types.h"
 #include "InputProcessing.h"
@@ -7,6 +7,8 @@
 
 namespace CFD
 {
+
+// -------------------------------------- Definition in FiniteVolumeStructures.cpp -------------------------------------- //
 
 // Recitlinear mesh structure and mesher (on construction)
 struct Mesh
@@ -62,7 +64,24 @@ struct FVCoefficients
     ContinuityEquation Cont;
 };
 
+// -------------------------------------- Definition in FaceVelocities.cpp -------------------------------------- //
+
+// Update face velocities
+void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D>  &, const Mesh &, const ArrayAllocator<Fields, CFD::array3D> &, 
+    const InputData::BoundaryConditionData &);
+
+
+
+// -------------------------------------- Definition in FVCoefficients.cpp -------------------------------------- //
+
+// Initialise finite volume coefficients
+FVCoefficients InitialiseFVCoefficients(const Mesh &, const ArrayAllocator<Fields, CFD::array3D> &, const InputData &);
+
+// Update finite volume coefficients (Picard linearisation)
+void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields, CFD::array3D> &);
+
+
 
 } // end namespace CFD
 
-#endif // FV_STRUCTURES
+#endif // FINITE_VOLUME

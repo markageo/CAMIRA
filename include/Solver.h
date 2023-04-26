@@ -3,7 +3,7 @@
 
 #include "InputProcessing.h"
 #include "Types.h"
-#include "FiniteVolumeStructures.h"
+#include "FiniteVolume.h"
 
 namespace CFD
 {

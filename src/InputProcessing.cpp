@@ -1,7 +1,7 @@
 #include "InputProcessing.h"
 
 #include "InputParser/InputParser.h"
-#include "FiniteVolumeStructures.h"
+#include "FiniteVolume.h"
 #include "Types.h"
 
 #include "Boost/boost/property_tree/ptree.hpp"

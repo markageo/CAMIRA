@@ -1,4 +1,4 @@
-#include "FiniteVolumeFunctions.h"
+#include "FiniteVolume.h"
 
 #include <algorithm>
 #include <iostream>
