@@ -160,35 +160,35 @@ class EnumVector
     public:
 
         // Constructors for general types
-        EnumVector() {};
-        EnumVector( const T &data ) { m_dataArray.fill( data ); };   // Requires T to be default constructable
-        EnumVector( const std::array<T, enumStruct::count> &arr ) : m_dataArray( arr ) {};
+        EnumVector() : m_dataVector( enumStruct::count ) {};
+        EnumVector( const T &data ) : m_dataVector( enumStruct::count, data )  { };
+        EnumVector( const std::array<T, enumStruct::count> &arr ) : m_dataVector( arr.begin(), arr.end() ) { };
 
         // Special constructors for array3D, array2D, and array1D objects, all having same dimenions
         EnumVector(const std::vector< ENUMDATA > &coeffs, const indexVector3 &dims) // 3D
         requires ( std::is_same< T, CFD::array3D >::value ) :
-            m_dataArray()
+            m_dataVector(enumStruct::count)
         {
             for (const auto &index : coeffs) {
-                m_dataArray[index] = CFD::array3D( dims(0), dims(1), dims(2) ).setZero();
+                m_dataVector[index] = CFD::array3D( dims(0), dims(1), dims(2) ).setZero();
             }
         }
 
         EnumVector(const std::vector< ENUMDATA > &coeffs, const indexVector2 &dims) // 2D
         requires ( std::is_same< T, CFD::array2D >::value ) :
-            m_dataArray()
+            m_dataVector(enumStruct::count)
         {
             for (const auto &index : coeffs) {
-                m_dataArray[index] = CFD::array2D( dims(0), dims(1) ).setZero();
+                m_dataVector[index] = CFD::array2D( dims(0), dims(1) ).setZero();
             }
         }
 
         EnumVector(const std::vector< ENUMDATA > &coeffs, const intType &dim) // 1D
         requires ( std::is_same< T, CFD::array1D >::value ) :
-            m_dataArray()
+            m_dataVector(enumStruct::count)
         {
             for (const auto &index : coeffs) {
-                m_dataArray[index] = CFD::array1D( dim ).setZero();
+                m_dataVector[index] = CFD::array1D( dim ).setZero();
             }
         }
 
@@ -196,34 +196,34 @@ class EnumVector
         // Special constructors for array3D, array2D, and array1D objects, can have different dimensions
         EnumVector( const std::vector< std::pair< ENUMDATA, CFD::indexVector3 > > &arraySpec)   // 3D
         requires ( std::is_same< T, CFD::array3D >::value ) : 
-            m_dataArray()
+            m_dataVector(enumStruct::count)
         {
             CFD::indexVector3 dims;
             for (size_t i = 0; i != arraySpec.size(); i++) {
                 dims = arraySpec[i].second;
-                m_dataArray[ arraySpec[i].first ] = CFD::array3D( dims(0), dims(1), dims(2) ).setZero();
+                m_dataVector[ arraySpec[i].first ] = CFD::array3D( dims(0), dims(1), dims(2) ).setZero();
             }
         }
 
         EnumVector( const std::vector< std::pair< ENUMDATA, CFD::indexVector2 > > &arraySpec)   // 2D
         requires ( std::is_same< T, CFD::array2D >::value ) : 
-            m_dataArray()
+            m_dataVector(enumStruct::count)
         {
             CFD::indexVector2 dims;
             for (size_t i = 0; i != arraySpec.size(); i++) {
                 dims = arraySpec[i].second;
-                m_dataArray[ arraySpec[i].first ] = CFD::array2D( dims(0), dims(1) ).setZero();
+                m_dataVector[ arraySpec[i].first ] = CFD::array2D( dims(0), dims(1) ).setZero();
             }
         }
 
         EnumVector( const std::vector< std::pair< ENUMDATA, CFD::intType > > &arraySpec)   // 1D
         requires ( std::is_same< T, CFD::array1D >::value ) : 
-            m_dataArray()
+            m_dataVector(enumStruct::count)
         {
             CFD::intType dim;
             for (size_t i = 0; i != arraySpec.size(); i++) {
                 dim = arraySpec[i].second;
-                m_dataArray[ arraySpec[i].first ] = CFD::array1D( dim ).setZero();
+                m_dataVector[ arraySpec[i].first ] = CFD::array1D( dim ).setZero();
             }
         }
 
@@ -231,22 +231,23 @@ class EnumVector
         // Strong type indexing
         T &operator[](const enumStruct::ENUMDATA idx)
         {
-            return m_dataArray[idx];
+            return m_dataVector[idx];
         }
 
         const T &operator[](const enumStruct::ENUMDATA idx) const 
         {
-            return m_dataArray[idx];
+            return m_dataVector[idx];
         }
 
         // Get underlying data vector
         std::vector<T> &get()
         {
-            return m_dataArray;
+            return m_dataVector;
         }
 
     private:
-        std::array<T, enumStruct::count> m_dataArray;
+        std::vector<T> m_dataVector;
+
 };
 
 
@@ -272,9 +273,6 @@ class ArrayAllocator
     typedef typename enumStruct::ENUMDATA ENUMDATA;
 
     public:
-
-        // Default constructor, just nullptrs
-        ArrayAllocator() {};
 
         // Constructor, all arrays have the same dimensions
         // 3D
