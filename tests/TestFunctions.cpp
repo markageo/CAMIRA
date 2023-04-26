@@ -101,14 +101,14 @@ TEST::TestConfig TEST::ReadConfig(const std::string &filename)
         } else if (key == "meshTestReferenceDirectory") {
             testConfig.meshTestReferenceDirectory = value;
 
-        } else if (key == "faceVelUniformTestInputFilename") {
-            testConfig.faceVelUniformTestInputFilename = value;
+        } else if (key == "velUniformTestInputFilename") {
+            testConfig.velUniformTestInputFilename = value;
 
-        } else if (key == "faceVelZeroGradientTestInputFilename") {
-            testConfig.faceVelZeroGradientTestInputFilename = value;
+        } else if (key == "velZeroGradientTestInputFilename") {
+            testConfig.velZeroGradientTestInputFilename = value;
 
-        } else if (key == "faceVelExtrapolatedTestInputFilename") {
-            testConfig.faceVelExtrapolatedTestInputFilename = value;
+        } else if (key == "velExtrapolatedTestInputFilename") {
+            testConfig.velExtrapolatedTestInputFilename = value;
 
         } else if (key == "faceVelTest") {
             testConfig.faceVelTest = String2TestState(value);
@@ -118,6 +118,15 @@ TEST::TestConfig TEST::ReadConfig(const std::string &filename)
 
         } else if (key == "faceVelTestReferenceDirectory") {
             testConfig.faceVelTestReferenceDirectory = value;
+
+        } else if (key == "fvCoeffTest") {
+            testConfig.fvCoeffTest = String2TestState(value);
+
+        } else if (key ==  "fvCoeffTestOutputDirectory") {
+            testConfig.fvCoeffTestOutputDirectory = value;
+
+        } else if (key == "fvCoeffTestReferenceDirectory") {
+            testConfig.fvCoeffTestReferenceDirectory = value;
         }
 
     }
@@ -176,6 +185,7 @@ void TEST::WriteMesh(const CFD::Mesh &mesh,
 
 }
 
+
 void TEST::WriteFields(const CFD::ArrayAllocator<CFD::Fields, CFD::array3D> &fields, 
                        const std::string &filedir, 
                        const int precision) 
@@ -201,15 +211,85 @@ void TEST::WriteFaceVels(const CFD::EnumVector<CFD::BoundaryConditions, CFD::Arr
 
     BC boundaryCondition;
     std::string ext = TEST::testFileExtension;
-    CFD::EnumVector<CFD::BoundaryConditions, std::string> boundaryConditionSuffix{ {"_zeroGradient", "_uniform", "_extrapolated"} };
+    CFD::EnumVector<CFD::BoundaryConditions, std::string> boundaryConditionSuffix{ {"zeroGradient", "uniform", "extrapolated"} };
     std::filesystem::create_directory(filedir);
-    auto Fname = [&] (const std::string &s) -> std::string { return filedir + "face_velocities" + boundaryConditionSuffix[boundaryCondition] + "_" + s + ext; };
+    auto Fname = [&] (const std::string &s) -> std::string { return filedir + "face_velocities_" + boundaryConditionSuffix[boundaryCondition] + "_" + s + ext; };
     
     for (int bc = 0; bc != CFD::BoundaryConditions::count; bc++) {
         boundaryCondition = static_cast<BC>(bc);
         UTIL::WriteArray(Fname("u"), faceVelocities[boundaryCondition][F::U], precision);
         UTIL::WriteArray(Fname("v"), faceVelocities[boundaryCondition][F::V], precision);
         UTIL::WriteArray(Fname("w"), faceVelocities[boundaryCondition][F::W], precision);
+    }
+}
+
+
+void TEST::WriteFVCoeffs(const CFD::EnumVector<CFD::BoundaryConditions, CFD::FVCoefficients > &fvCoeffs, 
+                         const std::string &filedir, 
+                         const int precision) 
+{
+    using BC = CFD::BoundaryConditions::ENUMDATA;
+    using TC = CFD::TransportCoefficients::ENUMDATA;
+
+    BC boundaryCondition;
+    TC transportCoeff;
+    std::string ext = TEST::testFileExtension;
+    CFD::EnumVector<CFD::BoundaryConditions, std::string> boundaryConditionSuffix{ {"zeroGradient", "uniform", "extrapolated"} };
+    CFD::EnumVector<CFD::TransportCoefficients, std::string> transportCoeffSuffix{ { "tt", "nn", "ee", "t", "n", "e", "p", "w", "s", "b", "ww", "ss", "bb" } };
+    std::filesystem::create_directory(filedir);
+    auto Fname = [&] (const std::string &eq, const std::string &var) -> std::string { return filedir + "fvCoeffs_" + boundaryConditionSuffix[boundaryCondition] 
+                                                                                                     + "_" + eq + "_" + var + "_" + transportCoeffSuffix[transportCoeff] 
+                                                                                                     + ext; };
+
+    // Boundary conditions
+    for (int bc = 0; bc != CFD::BoundaryConditions::count; bc++) {
+        boundaryCondition = static_cast<BC>(bc);
+
+        // Iterate coefficients
+        for (int tc = 0; tc != CFD::TransportCoefficients::count; tc++) {
+            transportCoeff = static_cast<TC>(tc);
+
+            // Momentum velocity coefficients
+            if ( fvCoeffs[boundaryCondition].Umom.AU.get(transportCoeff) ) {
+                UTIL::WriteArray(Fname("Umom", "AU"), fvCoeffs[boundaryCondition].Umom.AU[transportCoeff], precision);
+            }
+            if ( fvCoeffs[boundaryCondition].Vmom.AV.get(transportCoeff) ) {
+                UTIL::WriteArray(Fname("Vmom", "AV"), fvCoeffs[boundaryCondition].Vmom.AV[transportCoeff], precision);
+            }
+            if ( fvCoeffs[boundaryCondition].Wmom.AW.get(transportCoeff) ) {
+                UTIL::WriteArray(Fname("Wmom", "AW"), fvCoeffs[boundaryCondition].Wmom.AW[transportCoeff], precision);
+            }
+
+            // Momentum pressure coefficients
+            if ( fvCoeffs[boundaryCondition].Umom.AP.get(transportCoeff) ) {
+                UTIL::WriteArray(Fname("Umom", "AP"), fvCoeffs[boundaryCondition].Umom.AP[transportCoeff], precision);
+            }
+            if ( fvCoeffs[boundaryCondition].Vmom.AP.get(transportCoeff) ) {
+                UTIL::WriteArray(Fname("Vmom", "AP"), fvCoeffs[boundaryCondition].Vmom.AP[transportCoeff], precision);
+            }
+            if ( fvCoeffs[boundaryCondition].Wmom.AP.get(transportCoeff) ) {
+                UTIL::WriteArray(Fname("Wmom", "AP"), fvCoeffs[boundaryCondition].Wmom.AP[transportCoeff], precision);
+            }
+
+
+            // Continuity velocity coefficients
+            if ( fvCoeffs[boundaryCondition].Cont.AU.get(transportCoeff) ) {
+                UTIL::WriteArray(Fname("Cont", "AU"), fvCoeffs[boundaryCondition].Cont.AU[transportCoeff], precision);
+            }
+            if ( fvCoeffs[boundaryCondition].Cont.AV.get(transportCoeff) ) {
+                UTIL::WriteArray(Fname("Cont", "AV"), fvCoeffs[boundaryCondition].Cont.AV[transportCoeff], precision);
+            }
+            if ( fvCoeffs[boundaryCondition].Cont.AW.get(transportCoeff) ) {
+                UTIL::WriteArray(Fname("Cont", "AW"), fvCoeffs[boundaryCondition].Cont.AW[transportCoeff], precision);
+            }
+
+            // Continuity pressure coefficients
+            if ( fvCoeffs[boundaryCondition].Cont.AP.get(transportCoeff) ) {
+                UTIL::WriteArray(Fname("Cont", "AP"), fvCoeffs[boundaryCondition].Cont.AP[transportCoeff], precision);
+            }
+
+        }
+
     }
 }
 
