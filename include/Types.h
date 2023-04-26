@@ -393,11 +393,17 @@ class ArrayAllocator
         }
 
 
-        // Container access
-        std::vector< std::unique_ptr<arrayType> > &get()
+        // Return the pointer to the enumed object
+        std::unique_ptr<arrayType> &get(const enumStruct::ENUMDATA idx)
         {
-            return m_coeffPointers;
+            return m_coeffPointers[idx];
         }
+
+        const std::unique_ptr<arrayType> &get(const enumStruct::ENUMDATA idx) const
+        {
+            return m_coeffPointers[idx];
+        }
+
 
 
     private:
