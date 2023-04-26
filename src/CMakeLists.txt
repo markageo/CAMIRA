@@ -3,7 +3,7 @@ add_library(libs InputProcessing.cpp
                  VTKWriter.cpp
                  FiniteVolumeStructures.cpp
                  FaceVelocities.cpp
-                 FVCoefficients.cpp
+                 FiniteVolumeCoefficients.cpp
                  Solver.cpp)
 
 # Model library
