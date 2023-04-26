@@ -5,5 +5,6 @@ build/*
 debug/*
 tests/mesh/output/*
 tests/face_velocities/output/*
+tests/fv_coefficients/output/*
 
 *.vtk
