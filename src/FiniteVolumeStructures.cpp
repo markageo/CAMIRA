@@ -392,6 +392,7 @@ void CFD::TransformToUserCoordinates(Mesh &mesh,
 {
     Axis::ENUMDATA codeAxis, userAxis;
     BoundaryPatches::ENUMDATA codePositivePatch, userPatchFromPositive;
+    std::array<Axis::ENUMDATA, Axis::count> shuffleOrder = {X, Y, Z}; // Tracks where the user axis have been shuffled to when transforming mesh
     Eigen::array<int , Axis::count> shuffleArray;
     Eigen::array<bool, Axis::count> reverseArray;
 
@@ -403,7 +404,8 @@ void CFD::TransformToUserCoordinates(Mesh &mesh,
         userPatchFromPositive = axisTransformation.UserPatch(codePositivePatch);
         userAxis = boundaryPatchAxis[userPatchFromPositive];
 
-        if ( codeAxis != Z ) {    // Swapping the X and Y axis will automatically satisfy the Z axis
+        if ( shuffleOrder[userAxis] != codeAxis ) {     // Only if it needs to be swapped
+            std::swap( shuffleOrder[codeAxis], shuffleOrder[userAxis]  );
             SwapMesh(mesh, codeAxis, userAxis);
         }
 
@@ -413,22 +415,23 @@ void CFD::TransformToUserCoordinates(Mesh &mesh,
 
         // Fill the shuffle and revsere arrays, used for 3D arrays
         shuffleArray[codeAxis] = boundaryPatchAxis[ axisTransformation.CodePatch( codePositivePatch ) ];
-        reverseArray[codeAxis] = axisTransformation.CodePatch( codePositivePatch ) == negativePatches[ shuffleArray[codeAxis] ];
+        reverseArray[codeAxis] = axisTransformation.CodePatch( codePositivePatch ) == negativePatches[ shuffleArray[codeAxis] ];    // This reverse is after the shufflinf
     }
 
     // 3D arrays
+    // CCont do shuffle and reassign since dimensions change!!!!!!
     Fields::ENUMDATA field;
     for (int f = 0; f != Fields::count; f++) {
         field = static_cast<F>(f);
 
         // Cell center values
-        fields[field] = fields[field].shuffle(shuffleArray).reverse(reverseArray);
+        // fields[field] = fields[field].shuffle(shuffleArray).reverse(reverseArray);
 
         if (field == F::P) 
             continue;
 
         // Face velocities
-        faceVelocities[field] = faceVelocities[field].shuffle(shuffleArray).reverse(reverseArray);
+        // faceVelocities[field] = faceVelocities[field].shuffle(shuffleArray).reverse(reverseArray);
 
     }
 
