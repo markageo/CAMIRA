@@ -477,7 +477,6 @@ namespace
     void ReadSweepDirections(InputData &inputData, 
                              const pt::ptree &solverTree) 
     {
-
         using BP = CFD::BoundaryPatches::ENUMDATA;
 
         std::string valueString;
@@ -504,15 +503,14 @@ namespace
         pointSweepDirection = Vector2Axis( pointSweepVector );
 
         // Update the axisTransformation map
-        inputData.axisTransformation.UserPatch(BP::xPositive) = pointSweepDirection;
-        inputData.axisTransformation.UserPatch(BP::xNegative) = Vector2Axis( -pointSweepVector );
+        inputData.axisTransformation.Set( BP::xPositive, pointSweepDirection);
+        inputData.axisTransformation.Set( BP::xNegative, Vector2Axis( -pointSweepVector ));
 
-        inputData.axisTransformation.UserPatch(BP::yPositive) = lineSweepDirection;
-        inputData.axisTransformation.UserPatch(BP::yNegative) = Vector2Axis( -lineSweepVector );
+        inputData.axisTransformation.Set( BP::yPositive, lineSweepDirection);
+        inputData.axisTransformation.Set( BP::yNegative, Vector2Axis( -lineSweepVector ));
 
-        inputData.axisTransformation.UserPatch(BP::zPositive) = planeSweepDirection;
-        inputData.axisTransformation.UserPatch(BP::zNegative) = Vector2Axis( -planeSweepVector );
-
+        inputData.axisTransformation.Set( BP::zPositive, planeSweepDirection);
+        inputData.axisTransformation.Set( BP::zNegative, Vector2Axis( -planeSweepVector ));
     }
 
 
