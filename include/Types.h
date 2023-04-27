@@ -144,7 +144,7 @@ constexpr std::array<Axis::ENUMDATA, 6> boundaryPatchAxis{Axis::ENUMDATA::X,    
 
 
 
-// Wrapper for std::array that can only be indexed using enums
+// Wrapper for std::vector that can only be indexed using enums
 template <typename enumStruct, typename T>
 class EnumVector
 {
