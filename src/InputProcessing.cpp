@@ -579,22 +579,24 @@ namespace
     // Remaps the user mesh
     void TransformMesh(InputData &inputData)
     {
-        using enum CFD::Axis::ENUMDATA;
-        using enum CFD::BoundaryPatches::ENUMDATA;
+        using enum Axis::ENUMDATA;
+        using enum BoundaryPatches::ENUMDATA;
 
         // Temporary for the axis being transformed from the user input
-        CFD::Axis::ENUMDATA codeAxis, userAxis;
-        CFD::BoundaryPatches::ENUMDATA codePositivePatch, userBoundaryPatch;
+        Axis::ENUMDATA codeAxis, userAxis;
+        BoundaryPatches::ENUMDATA codePositivePatch, userBoundaryPatch;
+        std::array<Axis::ENUMDATA, Axis::count> shuffleOrder {X, Y, Z}; // Tracks where the user axis have been shuffled to
 
-        for (int i = 0; i != CFD::Axis::count; i++) {
-            codeAxis = static_cast<CFD::Axis::ENUMDATA>(i);
+        for (int i = 0; i != Axis::count; i++) {
+            codeAxis = static_cast<Axis::ENUMDATA>(i);
             codePositivePatch = positivePatches[codeAxis];
 
             userBoundaryPatch = inputData.axisTransformation.UserPatch(codePositivePatch);
             userAxis = boundaryPatchAxis[ userBoundaryPatch ];
 
             // Axis are transformed by swapping the data
-            if ( codeAxis != Z ) {  // The z axis is automatically satisfied
+            if ( shuffleOrder[codeAxis] != userAxis ) {  // Dont need to swap if already in correct location
+                std::swap( shuffleOrder[codeAxis], shuffleOrder[userAxis]  );
                 std::swap( inputData.meshSegments[ codeAxis ], inputData.meshSegments[ userAxis ] );
                 std::swap( inputData.domainSize( codeAxis ), inputData.domainSize( userAxis ) );
             }
