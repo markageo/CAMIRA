@@ -38,7 +38,7 @@ int main(int argc, char const *argv[])
     using F = CFD::Fields::ENUMDATA;
 
     TIC("Meshing");
-    const CFD::Mesh mesh(inputData);
+    CFD::Mesh mesh(inputData);
     TOC();
 
     TIC("Field Allocation");
@@ -54,12 +54,14 @@ int main(int argc, char const *argv[])
                                                                     {F::W, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} );
     TOC();
 
+    CFD::UpdateFaceVelocities( faceVelocities, mesh, fields, inputData.boundaryConditions);
 
     /*-------------------------------------------------------------------------------------*\
                                            Output
     \*-------------------------------------------------------------------------------------*/
 
-
+    // Undo the boundary condition transformation
+    CFD::TransformToUserCoordinates(mesh, fields, faceVelocities, inputData.axisTransformation);
 
     // Data to pass to writer
     VTK::dataType VTKDataType = VTK::DOUBLE;
