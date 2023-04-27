@@ -91,12 +91,17 @@ CFD::InputData CFD::InputDataFromCommandLine(int argc, char const *argv[])
 CFD::InputData::InputData() :
     meshSegments(),
     boundaryConditions(),
-    axisTransformation( { {CFD::BoundaryPatches::ENUMDATA::xPositive, CFD::BoundaryPatches::ENUMDATA::xPositive},
-                          {CFD::BoundaryPatches::ENUMDATA::xNegative, CFD::BoundaryPatches::ENUMDATA::xNegative},
-                          {CFD::BoundaryPatches::ENUMDATA::yPositive, CFD::BoundaryPatches::ENUMDATA::yPositive},
-                          {CFD::BoundaryPatches::ENUMDATA::yNegative, CFD::BoundaryPatches::ENUMDATA::yNegative},
-                          {CFD::BoundaryPatches::ENUMDATA::zPositive, CFD::BoundaryPatches::ENUMDATA::zPositive},
-                          {CFD::BoundaryPatches::ENUMDATA::zNegative, CFD::BoundaryPatches::ENUMDATA::zNegative} })
+    axisTransformation()
+    {};
+
+CFD::InputData::AxisTransformationMap::AxisTransformationMap() :
+    m_codeMap({ {CFD::BoundaryPatches::ENUMDATA::xPositive, CFD::BoundaryPatches::ENUMDATA::xPositive},
+                {CFD::BoundaryPatches::ENUMDATA::xNegative, CFD::BoundaryPatches::ENUMDATA::xNegative},
+                {CFD::BoundaryPatches::ENUMDATA::yPositive, CFD::BoundaryPatches::ENUMDATA::yPositive},
+                {CFD::BoundaryPatches::ENUMDATA::yNegative, CFD::BoundaryPatches::ENUMDATA::yNegative},
+                {CFD::BoundaryPatches::ENUMDATA::zPositive, CFD::BoundaryPatches::ENUMDATA::zPositive},
+                {CFD::BoundaryPatches::ENUMDATA::zNegative, CFD::BoundaryPatches::ENUMDATA::zNegative} }),
+    m_userMap( m_codeMap )
     {};
 
 
@@ -499,14 +504,14 @@ namespace
         pointSweepDirection = Vector2Axis( pointSweepVector );
 
         // Update the axisTransformation map
-        inputData.axisTransformation[BP::xPositive] = pointSweepDirection;
-        inputData.axisTransformation[BP::xNegative] = Vector2Axis( -pointSweepVector );
+        inputData.axisTransformation.UserPatch(BP::xPositive) = pointSweepDirection;
+        inputData.axisTransformation.UserPatch(BP::xNegative) = Vector2Axis( -pointSweepVector );
 
-        inputData.axisTransformation[BP::yPositive] = lineSweepDirection;
-        inputData.axisTransformation[BP::yNegative] = Vector2Axis( -lineSweepVector );
+        inputData.axisTransformation.UserPatch(BP::yPositive) = lineSweepDirection;
+        inputData.axisTransformation.UserPatch(BP::yNegative) = Vector2Axis( -lineSweepVector );
 
-        inputData.axisTransformation[BP::zPositive] = planeSweepDirection;
-        inputData.axisTransformation[BP::zNegative] = Vector2Axis( -planeSweepVector );
+        inputData.axisTransformation.UserPatch(BP::zPositive) = planeSweepDirection;
+        inputData.axisTransformation.UserPatch(BP::zNegative) = Vector2Axis( -planeSweepVector );
 
     }
 
@@ -549,7 +554,7 @@ namespace
             // Transform using the axisTransformation map
             for ( int p = 0; p != BoundaryPatches::count; p++ ) {
                 patch = static_cast<BP>(p);
-                inputData.boundaryConditions[field][patch] = boundaryConditionsUser[field][ inputData.axisTransformation.at( patch ) ];
+                inputData.boundaryConditions[field][patch] = boundaryConditionsUser[field][ inputData.axisTransformation.UserPatch( patch ) ];
             }
             
         }
@@ -587,7 +592,7 @@ namespace
             codeAxis = static_cast<CFD::Axis::ENUMDATA>(i);
             codePositivePatch = positivePatches[codeAxis];
 
-            userBoundaryPatch = inputData.axisTransformation.at(codePositivePatch);
+            userBoundaryPatch = inputData.axisTransformation.UserPatch(codePositivePatch);
             userAxis = boundaryPatchAxis[ userBoundaryPatch ];
 
             // Axis are transformed by swapping the data

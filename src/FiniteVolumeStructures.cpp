@@ -350,36 +350,70 @@ FVCoefficients::FVCoefficients(const indexVector3 &dims) :
 \*-------------------------------------------------------------------------------------*/
 
 
+namespace
+{
+
+    void SwapMesh(Mesh &mesh, const Axis::ENUMDATA axis1, const Axis::ENUMDATA axis2)
+    {
+        std::swap( mesh.nCells(axis1)           , mesh.nCells(axis2) );
+        std::swap( mesh.cellCenters[axis1]      , mesh.cellCenters[axis2] );
+        std::swap( mesh.cellFaces[axis1]        , mesh.cellFaces[axis2] );
+        std::swap( mesh.cellLengths[axis1]      , mesh.cellLengths[axis2] );
+        std::swap( mesh.cellLengthsInv[axis1]   , mesh.cellLengthsInv[axis2] );
+        std::swap( mesh.cellCenterDiffInv[axis1], mesh.cellCenterDiffInv[axis2] );
+        std::swap( mesh.interpFactors[axis1]    , mesh.interpFactors[axis2] );
+        std::swap( mesh.interpFactors[axis1]    , mesh.interpFactors[axis2] );
+
+        std::swap( mesh.extrapFactors[ positivePatches[axis1] ] , mesh.extrapFactors[ positivePatches[axis2] ] );
+        std::swap( mesh.extrapFactors[ negativePatches[axis1] ] , mesh.extrapFactors[ negativePatches[axis2] ] );
+    }
+
+
+    void ReverseMeshAxis(Mesh &mesh, const Axis::ENUMDATA axis)
+    {
+        Eigen::array<bool, 1> rev({true});
+            mesh.cellCenters[axis]       = - mesh.cellCenters[axis].reverse(rev);
+            mesh.cellCenters[axis]       = - mesh.cellFaces[axis].reverse(rev);
+            mesh.cellLengths[axis]       = mesh.cellLengths[axis].reverse(rev);
+            mesh.cellLengthsInv[axis]    = mesh.cellLengthsInv[axis].reverse(rev);
+            mesh.cellCenterDiffInv[axis] = mesh.cellCenterDiffInv[axis].reverse(rev);
+            mesh.interpFactors[axis]     = 1 - mesh.interpFactors[axis].reverse(rev);
+            std::swap( mesh.extrapFactors[ positivePatches[axis] ], mesh.extrapFactors[ negativePatches[axis] ] );
+    }
+
+}
+
+
 void TransformToUserCoordinates(Mesh &mesh, 
                                 ArrayAllocator<Fields, array3D> &fields, 
                                 ArrayAllocator<Fields, array3D> &faceVelocities,
-                                const std::map< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > &axisTransformation)
+                                const InputData::AxisTransformationMap &axisTransformation)
 {
 
+    using BP = BoundaryPatches::ENUMDATA;
     Axis::ENUMDATA codeAxis, userAxis;
-    BoundaryPatches::ENUMDATA codePositivePatch, userBoundaryPatch;
+    BoundaryPatches::ENUMDATA codePositivePatch, userPatchFromPositive;
 
     // Mesh
     for (int a = 0; a != Axis::count; a++) {
         codeAxis = static_cast<Axis::ENUMDATA>(a);
         codePositivePatch = positivePatches[codeAxis];
 
-        userBoundaryPatch = axisTransformation.at(codePositivePatch);
-        userAxis = boundaryPatchAxis[userBoundaryPatch];
+        userPatchFromPositive = axisTransformation.UserPatch(codePositivePatch);
+        userAxis = boundaryPatchAxis[userPatchFromPositive];
 
-        if (codeAxis != Z) {
-            std::swap( mesh.nCells(codeAxis), mesh.nCells(userAxis) );
-            std::swap( mesh.cellCenters[codeAxis], mesh.cellCenters[userAxis] );
-            std::swap( mesh.cellFaces[codeAxis], mesh.cellFaces[userAxis] );
-            std::swap( mesh.cellLengths[codeAxis], mesh.cellLengths[userAxis] );
-            std::swap( mesh.cellLengthsInv[codeAxis], mesh.cellLengthsInv[userAxis] );
-            std::swap( mesh.cellCenterDiffInv[codeAxis], mesh.cellCenterDiffInv[userAxis] );
-            std::swap( mesh.interpFactors[codeAxis], mesh.interpFactors[userAxis] );
-            std::swap( mesh.interpFactors[codeAxis], mesh.interpFactors[userAxis] );
+        if (codeAxis != Z) {    // Swapping the X and Y axis will automatically satisfy the Z axis
+            SwapMesh(mesh, codeAxis, userAxis);
         }
-        
 
+        if (userPatchFromPositive == negativePatches[userAxis] ) {
+            ReverseMeshAxis(mesh, userAxis);
+        }
     }
+
+
+    // Shuffle array for 3D arrays
+    // indexVector3 shuffleArray = { boundaryPatchAxis[ axisTransformation.at( BP::xPositive ) ] };
 
     Fields::ENUMDATA field;
     for (int f = 0; f != Fields::count; f++) {

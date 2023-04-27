@@ -65,7 +65,7 @@ struct FVCoefficients
 
 
 // Transform back to the coordinates consistentent with the input file 
-void TransformToUserCoordinates(Mesh &, ArrayAllocator<Fields, array3D> &, ArrayAllocator<Fields, array3D> &, const std::map< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > &);
+void TransformToUserCoordinates(Mesh &, ArrayAllocator<Fields, array3D> &, ArrayAllocator<Fields, array3D> &, const InputData::AxisTransformationMap &);
 
 
 

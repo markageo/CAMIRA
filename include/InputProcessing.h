@@ -10,7 +10,6 @@
 namespace CFD
 {
 
-
 struct InputData
 {
     
@@ -42,10 +41,38 @@ struct InputData
     };
     using BoundaryConditionData = EnumVector< Fields, EnumVector< BoundaryPatches, BoundaryConditionStruct > >;
     BoundaryConditionData boundaryConditions;
-    std::map< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > axisTransformation; // Code patch -> user patch
 
-    
+
+    // Structure for storing axis transformation, is just a one-to-one map
+    class AxisTransformationMap
+    {
+        using BP = BoundaryPatches::ENUMDATA;
+        public:
+            AxisTransformationMap();
+
+            // Code patch from user patch
+            BP &CodePatch(const BP userPatch)
+            { return m_userMap[ userPatch ]; }
+
+            const BP &CodePatch(const BP userPatch) const 
+            { return m_userMap.at( userPatch ); }
+
+            // User patch from the code patch
+            BP &UserPatch(const BP codePatch)
+            { return m_codeMap[ codePatch ]; }
+
+            const BP &UserPatch(const BP codePatch) const
+            { return m_codeMap.at( codePatch ); }
+
+        private:
+            std::map< BP, BP> m_codeMap;    // Code patch -> user patch
+            std::map< BP, BP> m_userMap;    // User patch -> code patch
+    };
+    AxisTransformationMap axisTransformation;
+
 };
+
+
 
 InputData ReadInputData(const std::string &);
 
