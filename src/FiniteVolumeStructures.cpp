@@ -166,7 +166,7 @@ intType TotalCells(const std::vector<InputData::MeshSegment> &meshSegments)
 
 
 // Constructor, creates the mesh
-Mesh::Mesh(const InputData &inputData) :
+CFD::Mesh::Mesh(const InputData &inputData) :
     nCells( { TotalCells(inputData.meshSegments[Axis::X]),  TotalCells(inputData.meshSegments[Axis::Y]), TotalCells(inputData.meshSegments[Axis::Z])} ),
 
     cellCenters( {{Axis::ENUMDATA::X, nCells(0)},
@@ -306,8 +306,8 @@ using F = Fields::ENUMDATA;
 using enum Axis::ENUMDATA;
 
 // Momentum equations constructor
-FVCoefficients::MomentumEquation::MomentumEquation(const Fields::ENUMDATA field, 
-                                                   const CFD::indexVector3 &dims) :
+CFD::FVCoefficients::MomentumEquation::MomentumEquation(const Fields::ENUMDATA field, 
+                                                        const indexVector3 &dims) :
     AU( EquationEnums(field, F::U), dims ),
     AV( EquationEnums(field, F::V), dims ),
     AW( EquationEnums(field, F::W), dims ),
@@ -381,18 +381,19 @@ namespace
             std::swap( mesh.extrapFactors[ positivePatches[axis] ], mesh.extrapFactors[ negativePatches[axis] ] );
     }
 
-}
+
+}   // end anonymous namespace
 
 
-void TransformToUserCoordinates(Mesh &mesh, 
-                                ArrayAllocator<Fields, array3D> &fields, 
-                                ArrayAllocator<Fields, array3D> &faceVelocities,
-                                const InputData::AxisTransformationMap &axisTransformation)
+void CFD::TransformToUserCoordinates(Mesh &mesh, 
+                                     ArrayAllocator<Fields, array3D> &fields, 
+                                     ArrayAllocator<Fields, array3D> &faceVelocities, 
+                                     const InputData::AxisTransformationMap &axisTransformation)
 {
-
-    using BP = BoundaryPatches::ENUMDATA;
     Axis::ENUMDATA codeAxis, userAxis;
     BoundaryPatches::ENUMDATA codePositivePatch, userPatchFromPositive;
+    Eigen::array<int , Axis::count> shuffleArray;
+    Eigen::array<bool, Axis::count> reverseArray;
 
     // Mesh
     for (int a = 0; a != Axis::count; a++) {
@@ -402,30 +403,32 @@ void TransformToUserCoordinates(Mesh &mesh,
         userPatchFromPositive = axisTransformation.UserPatch(codePositivePatch);
         userAxis = boundaryPatchAxis[userPatchFromPositive];
 
-        if (codeAxis != Z) {    // Swapping the X and Y axis will automatically satisfy the Z axis
+        if ( codeAxis != Z ) {    // Swapping the X and Y axis will automatically satisfy the Z axis
             SwapMesh(mesh, codeAxis, userAxis);
         }
 
-        if (userPatchFromPositive == negativePatches[userAxis] ) {
+        if ( userPatchFromPositive == negativePatches[userAxis] ) {
             ReverseMeshAxis(mesh, userAxis);
         }
+
+        // Fill the shuffle and revsere arrays, used for 3D arrays
+        shuffleArray[codeAxis] = boundaryPatchAxis[ axisTransformation.CodePatch( codePositivePatch ) ];
+        reverseArray[codeAxis] = axisTransformation.CodePatch( codePositivePatch ) == negativePatches[ shuffleArray[codeAxis] ];
     }
 
-
-    // Shuffle array for 3D arrays
-    // indexVector3 shuffleArray = { boundaryPatchAxis[ axisTransformation.CodePatch( BP::xPositive ) ] };
-
+    // 3D arrays
     Fields::ENUMDATA field;
     for (int f = 0; f != Fields::count; f++) {
         field = static_cast<F>(f);
 
         // Cell center values
-
+        fields[field] = fields[field].shuffle(shuffleArray).reverse(reverseArray);
 
         if (field == F::P) 
             continue;
 
         // Face velocities
+        faceVelocities[field] = faceVelocities[field].shuffle(shuffleArray).reverse(reverseArray);
 
     }
 
