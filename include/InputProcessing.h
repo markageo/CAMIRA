@@ -50,17 +50,18 @@ struct InputData
         public:
             AxisTransformationMap();
 
-            // Code patch from user patch
-            BP &CodePatch(const BP userPatch)
-            { return m_userMap[ userPatch ]; }
+            // Setting values
+            void Set(const BP codePatch, const BP userPatch)
+            {
+                m_codeMap[codePatch] = userPatch;
+                m_userMap[userPatch] = codePatch; 
+            }
 
+            // Code patch from user patch
             const BP &CodePatch(const BP userPatch) const 
             { return m_userMap.at( userPatch ); }
 
             // User patch from the code patch
-            BP &UserPatch(const BP codePatch)
-            { return m_codeMap[ codePatch ]; }
-
             const BP &UserPatch(const BP codePatch) const
             { return m_codeMap.at( codePatch ); }
 

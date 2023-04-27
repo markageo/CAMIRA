@@ -413,7 +413,7 @@ void TransformToUserCoordinates(Mesh &mesh,
 
 
     // Shuffle array for 3D arrays
-    // indexVector3 shuffleArray = { boundaryPatchAxis[ axisTransformation.at( BP::xPositive ) ] };
+    // indexVector3 shuffleArray = { boundaryPatchAxis[ axisTransformation.CodePatch( BP::xPositive ) ] };
 
     Fields::ENUMDATA field;
     for (int f = 0; f != Fields::count; f++) {
