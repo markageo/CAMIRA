@@ -12,7 +12,7 @@ Mesh {
     Grid X {
         Segment {
             bounds     = (0, 1)
-            nCells     = 7
+            nCells     = 5
             biasFactor = 2
         }
     }
@@ -21,7 +21,7 @@ Mesh {
     Grid Y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 5
+            nCells     = 6
             biasFactor = 3
         }
     }
@@ -30,7 +30,7 @@ Mesh {
     Grid Z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 6
+            nCells     = 7
             biasFactor = 1
         }
     }
@@ -86,7 +86,7 @@ BoundaryConditions
 
 Solver {
 
-    planeSweepDirection = +z
+    planeSweepDirection = +y
     lineSweepDirection = +x
 
 }
