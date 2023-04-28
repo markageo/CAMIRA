@@ -18,7 +18,7 @@ void FaceVelocityXnormal( CFD::array3D &faceVel,
             for (intType i = 1; i != faceVel.dimension(0)-1; i++) {
 
                 interpFactor = mesh.interpFactors[X](i);
-                faceVel(i, j, k) = (1 - interpFactor)*cellVel(i-1, j, k) + interpFactor*cellVel(i, j, k);
+                faceVel(i, j, k) = (1 - interpFactor)*cellVel( G(i-1, j, k) ) + interpFactor*cellVel( G(i, j, k) );
 
             }
         }
@@ -39,7 +39,7 @@ void FaceVelocityYnormal( CFD::array3D &faceVel,
             for (intType i = 0; i != faceVel.dimension(0); i++) {
                 
                 interpFactor = mesh.interpFactors[Y](j);
-                faceVel(i, j, k) = (1 - interpFactor)*cellVel(i, j-1, k) + interpFactor*cellVel(i, j, k);
+                faceVel(i, j, k) = (1 - interpFactor)*cellVel( G(i, j-1, k) ) + interpFactor*cellVel( G(i, j, k) );
 
             }
         }
@@ -60,7 +60,7 @@ void FaceVelocityZnormal( CFD::array3D &faceVel,
             for (intType i = 0; i != faceVel.dimension(0); i++) {
 
                 interpFactor = mesh.interpFactors[Z](k);
-                faceVel(i, j, k) = (1 - interpFactor)*cellVel(i, j, k-1) + interpFactor*cellVel(i, j, k);
+                faceVel(i, j, k) = (1 - interpFactor)*cellVel( G(i, j, k-1) ) + interpFactor*cellVel( G(i, j, k) );
 
             }
         }
@@ -95,6 +95,10 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
     floatType extrapFactor_p, extrapFactor_a;
     BoundaryPatches::ENUMDATA positivePatch, negativePatch;
 
+    // Ghost cells mean that a slice of the fields tensor must be used when setting BCs
+    Eigen::array<intType, 3> offsets = {nGhost, nGhost, nGhost};
+    Eigen::array<intType, 3> extents = {mesh.nCells(X), mesh.nCells(Y), mesh.nCells(Z)};
+
     for (int axis = 0; axis != Axis::count; axis++) {
 
         positivePatch = positivePatches[axis];
@@ -102,12 +106,12 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
         axisVel = faceVelocityFields[axis];
 
         // Axis positive boundary
-        faceEndIndex = faceVelocities[axisVel].dimension(axis)-1;
-        fieldEndIndex = fields[axisVel].dimension(axis)-1;
+        faceEndIndex = mesh.nCells(axis);
+        fieldEndIndex = mesh.nCells(axis)-1;
         switch ( boundaryConditions[axisVel][positivePatch].type ) {
             
             case BC::zeroGradient:
-                faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].chip(fieldEndIndex, axis);          
+                faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].slice(offsets, extents).chip(fieldEndIndex , axis);          
                 break;
 
             case BC::uniform:
@@ -117,8 +121,10 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
             case BC::extrapolated:
                 extrapFactor_p = mesh.extrapFactors[positivePatch].p;
                 extrapFactor_a = mesh.extrapFactors[positivePatch].a;
-                faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].chip(fieldEndIndex, axis) * fields[axisVel].chip(fieldEndIndex, axis).constant( extrapFactor_p )
-                                                                 + fields[axisVel].chip(fieldEndIndex-1, axis) * fields[axisVel].chip(fieldEndIndex-1, axis).constant( extrapFactor_a );
+                faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].slice(offsets, extents).chip(fieldEndIndex, axis) 
+                                                                                * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex, axis).constant( extrapFactor_p )
+                                                                 + fields[axisVel].slice(offsets, extents).chip(fieldEndIndex-1, axis) 
+                                                                                * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex-1, axis).constant( extrapFactor_a );
                 break;
 
             default:
@@ -132,7 +138,7 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
         switch ( boundaryConditions[axisVel][negativePatch].type ) {
             
             case BC::zeroGradient:
-                faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].chip(fieldEndIndex, axis);          
+                faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].slice(offsets, extents).chip(fieldEndIndex, axis);          
                 break;
 
             case BC::uniform:
@@ -142,8 +148,10 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
             case BC::extrapolated:
                 extrapFactor_p = mesh.extrapFactors[negativePatch].p;
                 extrapFactor_a = mesh.extrapFactors[negativePatch].a;
-                faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].chip(fieldEndIndex, axis) * fields[axisVel].chip(fieldEndIndex, axis).constant( extrapFactor_p )
-                                                                 + fields[axisVel].chip(fieldEndIndex+1, axis) * fields[axisVel].chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
+                faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].slice(offsets, extents).chip(fieldEndIndex  , axis) 
+                                                                                * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex, axis).constant( extrapFactor_p )
+                                                                 + fields[axisVel].slice(offsets, extents).chip(fieldEndIndex+1, axis) 
+                                                                                * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
                 break;
 
             default:

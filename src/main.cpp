@@ -42,7 +42,7 @@ int main(int argc, char const *argv[])
     TOC();
 
     TIC("Field Allocation");
-    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells);
+    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells + 2*CFD::nGhost);
 
     // Faces are staggered in the negative direction:
     //   cellFaceVelocity_x(i, j, k) -> u(i-1/2, j    , k    )

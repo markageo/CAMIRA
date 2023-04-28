@@ -86,7 +86,7 @@ int main(int argc, char const *argv[])
     mesh = CFD::Mesh(velTestInputData[BC::uniform]);
 
     // Allocate fields
-    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells);
+    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells + 2*CFD::nGhost);
 
     // Allocate face velocities for each bouundary condition type to be tested
     // Faces are staggered in the negative direction:
@@ -104,7 +104,11 @@ int main(int argc, char const *argv[])
     // Set values for the fields to be random and write them out to the test directory
     // Make all the fields the same, they should be rotated to give the same results
     srand(590);
-    fields[F::U].setRandom();
+    Eigen::array< std::pair<int, int>, 3 > paddings;
+    paddings[0] = std::make_pair(CFD::nGhost, CFD::nGhost);
+    paddings[1] = std::make_pair(CFD::nGhost, CFD::nGhost);
+    paddings[2] = std::make_pair(CFD::nGhost, CFD::nGhost);
+    fields[F::U] = CFD::array3D(mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)).setRandom().pad(paddings);
     fields[F::V] = fields[F::U].shuffle( Eigen::array<int, 3>{1, 0, 2} );
     fields[F::W] = fields[F::U].shuffle( Eigen::array<int, 3>{2, 1, 0} );
     TEST::WriteFields(fields, testConfig.faceVelTestOutputDirectory);
