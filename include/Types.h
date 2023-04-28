@@ -26,7 +26,7 @@ using floatVector2 = Eigen::Array<floatType, 2, 1>;
 constexpr intType nGhost = 2;
 
 // Convert regular indexing to ghost cell indexing, to use with Eigen::Tensor
-inline Eigen::array<Eigen::Index, 1> G(const Eigen::Index i) 
+inline Eigen::Index G(const Eigen::Index i) 
     { return {i + nGhost}; };
 
 inline Eigen::array<Eigen::Index, 2> G(const Eigen::Index i, const Eigen::Index j) 
