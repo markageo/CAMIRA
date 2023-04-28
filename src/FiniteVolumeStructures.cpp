@@ -419,19 +419,18 @@ void CFD::TransformToUserCoordinates(Mesh &mesh,
     }
 
     // 3D arrays
-    // CCont do shuffle and reassign since dimensions change!!!!!!
     Fields::ENUMDATA field;
     for (int f = 0; f != Fields::count; f++) {
         field = static_cast<F>(f);
 
         // Cell center values
-        // fields[field] = fields[field].shuffle(shuffleArray).reverse(reverseArray);
+        fields[field] = array3D(fields[field]).shuffle(shuffleArray).reverse(reverseArray);
 
         if (field == F::P) 
             continue;
 
         // Face velocities
-        // faceVelocities[field] = faceVelocities[field].shuffle(shuffleArray).reverse(reverseArray);
+        faceVelocities[field] = array3D(faceVelocities[field]).shuffle(shuffleArray).reverse(reverseArray);
 
     }
 
