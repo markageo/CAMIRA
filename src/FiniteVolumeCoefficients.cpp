@@ -165,7 +165,7 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
         west = westCoefficients[axis];     
 
         // Internal faces
-        for (iterType i = 1; i != mesh.nCells(axis); i++) {
+        for (intType i = 1; i != mesh.nCells(axis); i++) {
             
             // Cell on west side
             diff[axis][p   ](i-1) +=   mesh.cellCenterDiffInv[axis](i);
@@ -196,7 +196,7 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
 
 
         // Divide by inverse cell length
-        for (iterType i = 0; i != mesh.nCells(axis); i++) {
+        for (intType i = 0; i != mesh.nCells(axis); i++) {
             diff[axis][p   ](i) *= mesh.cellLengthsInv[axis](i);
             diff[axis][east](i) *= mesh.cellLengthsInv[axis](i);
             diff[axis][west](i) *= mesh.cellLengthsInv[axis](i);
@@ -204,7 +204,7 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
 
 
         // Multiply by viscosity
-        for (iterType i = 0; i != mesh.nCells(axis); i++) {
+        for (intType i = 0; i != mesh.nCells(axis); i++) {
             diff[axis][p   ](i) *= inputData.nu;
             diff[axis][east](i) *= inputData.nu;
             diff[axis][west](i) *= inputData.nu;
@@ -233,10 +233,10 @@ void UpwindXnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
     using enum TransportCoefficients::ENUMDATA;
 
     floatType uf, coeff_e, coeff_w;
-    for (iterType k = 0; k != faceVelocities[F::U].dimension(Z); k++) {
-        for (iterType j = 0; j != faceVelocities[F::U].dimension(Y); j++) {
+    for (intType k = 0; k != faceVelocities[F::U].dimension(Z); k++) {
+        for (intType j = 0; j != faceVelocities[F::U].dimension(Y); j++) {
             coeffs[p](0, j, k) = 0;     // This one doesn't get reset in the loop
-            for (iterType i = 1; i != faceVelocities[F::U].dimension(X)-1; i++) {
+            for (intType i = 1; i != faceVelocities[F::U].dimension(X)-1; i++) {
                 
                 uf = faceVelocities[F::U](i, j, k);
                 coeff_w =   uf * mesh.cellLengthsInv[X](i-1);
@@ -268,9 +268,9 @@ void UpwindYnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
     using enum TransportCoefficients::ENUMDATA;
 
     floatType uf, coeff_n, coeff_s;
-    for (iterType k = 0; k != faceVelocities[F::U].dimension(Z); k++) {
-        for (iterType j = 1; j != faceVelocities[F::U].dimension(Y)-1; j++) {
-            for (iterType i = 0; i != faceVelocities[F::U].dimension(X); i++) {
+    for (intType k = 0; k != faceVelocities[F::U].dimension(Z); k++) {
+        for (intType j = 1; j != faceVelocities[F::U].dimension(Y)-1; j++) {
+            for (intType i = 0; i != faceVelocities[F::U].dimension(X); i++) {
                 
                 uf = faceVelocities[F::V](i, j, k);
                 coeff_s =   uf * mesh.cellLengthsInv[Y](j-1);
@@ -302,9 +302,9 @@ void UpwindZnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
     using enum TransportCoefficients::ENUMDATA;
 
     floatType uf, coeff_t, coeff_b;
-    for (iterType k = 1; k != faceVelocities[F::U].dimension(Z)-1; k++) {
-        for (iterType j = 0; j != faceVelocities[F::U].dimension(Y); j++) {
-            for (iterType i = 0; i != faceVelocities[F::U].dimension(X); i++) {
+    for (intType k = 1; k != faceVelocities[F::U].dimension(Z)-1; k++) {
+        for (intType j = 0; j != faceVelocities[F::U].dimension(Y); j++) {
+            for (intType i = 0; i != faceVelocities[F::U].dimension(X); i++) {
                 
                 uf = faceVelocities[F::W](i, j, k);
                 coeff_b =   uf * mesh.cellLengthsInv[Z](k-1);
@@ -459,9 +459,9 @@ void AddDiffusion( ArrayAllocator< TransportCoefficients, array3D > &velCoeffs,
     using enum TransportCoefficients::ENUMDATA;
 
     // Velocity coefficients
-    for (iterType k = 0; k != mesh.nCells(Z); k++) {
-        for (iterType j = 0; j != mesh.nCells(Y); j++) {
-            for (iterType i = 0; i != mesh.nCells(X); i++) {
+    for (intType k = 0; k != mesh.nCells(Z); k++) {
+        for (intType j = 0; j != mesh.nCells(Y); j++) {
+            for (intType i = 0; i != mesh.nCells(X); i++) {
                 velCoeffs[p](i, j, k) += diffCoeffs[X][p](i) + diffCoeffs[Y][p](j) + diffCoeffs[Z][p](k);
 
                 velCoeffs[e](i, j, k) += diffCoeffs[X][e](i);
@@ -592,7 +592,7 @@ void SetFaceInterpolatedCoefficients( ArrayAllocator<CFD::TransportCoefficients,
                                     west = westCoefficients[axis];  
 
     // Internal faces
-    for (iterType i = 1; i != mesh.nCells(axis); i++) {
+    for (intType i = 1; i != mesh.nCells(axis); i++) {
         
         // Cell on west side
         coeffs[p   ](i-1) += 1 - mesh.interpFactors[axis](i);
@@ -609,7 +609,7 @@ void SetFaceInterpolatedCoefficients( ArrayAllocator<CFD::TransportCoefficients,
     InterpolationNegativeBoundary(coeffs, boundaryConstants, mesh, boundaryConditions[field], axis);
     
     // Multiply by inverse of cell length
-    for (iterType i = 0; i != mesh.nCells(axis); i++) {
+    for (intType i = 0; i != mesh.nCells(axis); i++) {
         coeffs[p   ](i) *= mesh.cellLengthsInv[axis](i);
         coeffs[east](i) *= mesh.cellLengthsInv[axis](i);
         coeffs[west](i) *= mesh.cellLengthsInv[axis](i); 
@@ -681,9 +681,9 @@ void MWInterpolationXnormal( FVCoefficients &fvCoeffs,
     fvCoeffs.Cont.AP[p ].chip(0, X) = fvCoeffs.Cont.AP[p ].chip(0, X).constant( 0 );
     fvCoeffs.Cont.AP[e ].chip(0, X) = fvCoeffs.Cont.AP[e ].chip(0, X).constant( 0 );
 
-    for (iterType k = 0; k != mesh.nCells(Z); k++) {
-        for (iterType j = 0; j != mesh.nCells(Y); j++) {
-            for (iterType i = 1; i != mesh.nCells(X)-1; i++) {
+    for (intType k = 0; k != mesh.nCells(Z); k++) {
+        for (intType j = 0; j != mesh.nCells(Y); j++) {
+            for (intType i = 1; i != mesh.nCells(X)-1; i++) {
 
                 // Coefficients vector, in order of westmost to east most
                 coeffs = MWICoeffs({i, j, k}, fvCoeffs.Umom.AU, fvCoeffs.Umom.AP, mesh, rho, X); 
@@ -720,9 +720,9 @@ void MWInterpolationYnormal( FVCoefficients &fvCoeffs,
     fvCoeffs.Cont.AP[n ].chip(0, Y) = fvCoeffs.Cont.AP[n ].chip(0, Y).constant( 0 );
     fvCoeffs.Cont.AP[s ].chip(0, Y) = fvCoeffs.Cont.AP[s ].chip(0, Y).constant( 0 );
 
-    for (iterType k = 0; k != mesh.nCells(Z); k++) {
-        for (iterType j = 1; j != mesh.nCells(Y)-1; j++) {
-            for (iterType i = 0; i != mesh.nCells(X); i++) {
+    for (intType k = 0; k != mesh.nCells(Z); k++) {
+        for (intType j = 1; j != mesh.nCells(Y)-1; j++) {
+            for (intType i = 0; i != mesh.nCells(X); i++) {
                 
                 // Coefficients vector, in order of westmost to east most
                 coeffs = MWICoeffs({i, j, k}, fvCoeffs.Vmom.AV, fvCoeffs.Vmom.AP, mesh, rho, Y); 
@@ -759,9 +759,9 @@ void MWInterpolationZnormal( FVCoefficients &fvCoeffs,
     fvCoeffs.Cont.AP[t ].chip(0, Z) = fvCoeffs.Cont.AP[t ].chip(0, Z).constant( 0 );
     fvCoeffs.Cont.AP[b ].chip(0, Z) = fvCoeffs.Cont.AP[b ].chip(0, Z).constant( 0 );
 
-    for (iterType k = 1; k != mesh.nCells(Z)-1; k++) {
-        for (iterType j = 0; j != mesh.nCells(Y); j++) {
-            for (iterType i = 0; i != mesh.nCells(X); i++) {
+    for (intType k = 1; k != mesh.nCells(Z)-1; k++) {
+        for (intType j = 0; j != mesh.nCells(Y); j++) {
+            for (intType i = 0; i != mesh.nCells(X); i++) {
 
                 // Coefficients vector, in order of westmost to east most
                 coeffs = MWICoeffs({i, j, k}, fvCoeffs.Wmom.AW, fvCoeffs.Wmom.AP, mesh, rho, Z); 

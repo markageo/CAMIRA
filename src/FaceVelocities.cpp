@@ -13,9 +13,9 @@ void FaceVelocityXnormal( CFD::array3D &faceVel,
     using enum Axis::ENUMDATA;
 
     floatType interpFactor;
-    for (iterType k = 0; k != faceVel.dimension(2); k++ ) {
-        for (iterType j = 0; j != faceVel.dimension(1); j++) {
-            for (iterType i = 1; i != faceVel.dimension(0)-1; i++) {
+    for (intType k = 0; k != faceVel.dimension(2); k++ ) {
+        for (intType j = 0; j != faceVel.dimension(1); j++) {
+            for (intType i = 1; i != faceVel.dimension(0)-1; i++) {
 
                 interpFactor = mesh.interpFactors[X](i);
                 faceVel(i, j, k) = (1 - interpFactor)*cellVel(i-1, j, k) + interpFactor*cellVel(i, j, k);
@@ -34,9 +34,9 @@ void FaceVelocityYnormal( CFD::array3D &faceVel,
     using enum Axis::ENUMDATA;
 
     floatType interpFactor;
-    for (iterType k = 0; k != faceVel.dimension(2); k++ ) {
-        for (iterType j = 1; j != faceVel.dimension(1)-1; j++) {
-            for (iterType i = 0; i != faceVel.dimension(0); i++) {
+    for (intType k = 0; k != faceVel.dimension(2); k++ ) {
+        for (intType j = 1; j != faceVel.dimension(1)-1; j++) {
+            for (intType i = 0; i != faceVel.dimension(0); i++) {
                 
                 interpFactor = mesh.interpFactors[Y](j);
                 faceVel(i, j, k) = (1 - interpFactor)*cellVel(i, j-1, k) + interpFactor*cellVel(i, j, k);
@@ -55,9 +55,9 @@ void FaceVelocityZnormal( CFD::array3D &faceVel,
     using enum Axis::ENUMDATA;
 
     floatType interpFactor;
-    for (iterType k = 1; k != faceVel.dimension(2)-1; k++ ) {
-        for (iterType j = 0; j != faceVel.dimension(1); j++) {
-            for (iterType i = 0; i != faceVel.dimension(0); i++) {
+    for (intType k = 1; k != faceVel.dimension(2)-1; k++ ) {
+        for (intType j = 0; j != faceVel.dimension(1); j++) {
+            for (intType i = 0; i != faceVel.dimension(0); i++) {
 
                 interpFactor = mesh.interpFactors[Z](k);
                 faceVel(i, j, k) = (1 - interpFactor)*cellVel(i, j, k-1) + interpFactor*cellVel(i, j, k);
@@ -91,7 +91,7 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
     // To allow each axis to be computed by looping
     constexpr std::array<Fields::ENUMDATA, 3> faceVelocityFields = {F::U, F::V, F::W};
     Fields::ENUMDATA axisVel;
-    iterType faceEndIndex, fieldEndIndex;
+    intType faceEndIndex, fieldEndIndex;
     floatType extrapFactor_p, extrapFactor_a;
     BoundaryPatches::ENUMDATA positivePatch, negativePatch;
 
