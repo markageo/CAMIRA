@@ -119,13 +119,13 @@ void DiffusionNegativeBoundary( EnumVector< Axis, ArrayAllocator<TransportCoeffi
             break;
 
         case BC::uniform:
-            diff[axis][p   ](iCellBound)     += - 2*mesh.cellLengthsInv[axis](iCellBound);
-            boundaryConstants[boundaryPatch] +=   2*mesh.cellLengthsInv[axis](iCellBound) * boundaryConditionStructs[boundaryPatch].value;
+            diff[axis][p   ](iCellBound)     +=   2*mesh.cellLengthsInv[axis](iCellBound);
+            boundaryConstants[boundaryPatch] += - 2*mesh.cellLengthsInv[axis](iCellBound) * boundaryConditionStructs[boundaryPatch].value;
             break;
 
         case BC::extrapolated:
-            diff[axis][p   ](iCellBound) += 2*mesh.cellLengthsInv[axis](iCellBound) * (mesh.extrapFactors[boundaryPatch].p - 1);
-            diff[axis][east](iCellBound) += 2*mesh.cellLengthsInv[axis](iCellBound) * mesh.extrapFactors[boundaryPatch].a;
+            diff[axis][p   ](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * (mesh.extrapFactors[boundaryPatch].p - 1);
+            diff[axis][east](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * mesh.extrapFactors[boundaryPatch].a;
             break;
 
         default:
@@ -172,8 +172,8 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
             diff[axis][east](i-1) += - mesh.cellCenterDiffInv[axis](i);
 
             // Cell on east side
-            diff[axis][p   ](i) += - mesh.cellCenterDiffInv[axis](i);
-            diff[axis][west](i) +=   mesh.cellCenterDiffInv[axis](i);
+            diff[axis][p   ](i)   +=   mesh.cellCenterDiffInv[axis](i);
+            diff[axis][west](i)   += - mesh.cellCenterDiffInv[axis](i);
 
         }
 
