@@ -199,6 +199,7 @@ void TEST::WriteFields(const CFD::ArrayAllocator<CFD::Fields, CFD::array3D> &fie
     UTIL::WriteArray(Fname("u"), fields[F::U], precision);
     UTIL::WriteArray(Fname("v"), fields[F::V], precision);
     UTIL::WriteArray(Fname("w"), fields[F::W], precision);
+    UTIL::WriteArray(Fname("p"), fields[F::P], precision);
 }
 
 
@@ -230,10 +231,13 @@ void TEST::WriteFVCoeffs(const CFD::EnumVector<CFD::BoundaryConditions, CFD::FVC
 {
     using BC = CFD::BoundaryConditions::ENUMDATA;
     using TC = CFD::TransportCoefficients::ENUMDATA;
+    using AX =  CFD::Axis::ENUMDATA;
 
     BC boundaryCondition;
     TC transportCoeff;
+    AX axis;
     std::string ext = TEST::testFileExtension;
+    CFD::EnumVector<CFD::Axis, std::string> axisSuffix{ {"x", "y", "z"} };
     CFD::EnumVector<CFD::BoundaryConditions, std::string> boundaryConditionSuffix{ {"zeroGradient", "uniform", "extrapolated"} };
     CFD::EnumVector<CFD::TransportCoefficients, std::string> transportCoeffSuffix{ { "tt", "nn", "ee", "t", "n", "e", "p", "w", "s", "b", "ww", "ss", "bb" } };
     std::filesystem::create_directory(filedir);
@@ -248,6 +252,23 @@ void TEST::WriteFVCoeffs(const CFD::EnumVector<CFD::BoundaryConditions, CFD::FVC
         // Iterate coefficients
         for (int tc = 0; tc != CFD::TransportCoefficients::count; tc++) {
             transportCoeff = static_cast<TC>(tc);
+
+            // Diffusion coefficients
+            for (int ax = 0; ax != CFD::Axis::count; ax++) {
+                axis = static_cast<AX>(ax);
+               
+                if ( fvCoeffs[boundaryCondition].Umom.diff[axis].get(transportCoeff) ) {
+                    UTIL::WriteArray(Fname("Umom", "diff_" + axisSuffix[axis]), fvCoeffs[boundaryCondition].Umom.diff[axis][transportCoeff], precision);
+                }
+                if ( fvCoeffs[boundaryCondition].Vmom.diff[axis].get(transportCoeff) ) {
+                    UTIL::WriteArray(Fname("Vmom", "diff_" + axisSuffix[axis]), fvCoeffs[boundaryCondition].Vmom.diff[axis][transportCoeff], precision);
+                }
+                if ( fvCoeffs[boundaryCondition].Wmom.diff[axis].get(transportCoeff) ) {
+                    UTIL::WriteArray(Fname("Wmom", "diff_" + axisSuffix[axis]), fvCoeffs[boundaryCondition].Wmom.diff[axis][transportCoeff], precision);
+                }
+
+            }
+
 
             // Momentum velocity coefficients
             if ( fvCoeffs[boundaryCondition].Umom.AU.get(transportCoeff) ) {

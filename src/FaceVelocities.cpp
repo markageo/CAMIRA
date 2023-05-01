@@ -121,10 +121,10 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
             case BC::extrapolated:
                 extrapFactor_p = mesh.extrapFactors[positivePatch].p;
                 extrapFactor_a = mesh.extrapFactors[positivePatch].a;
-                faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].slice(offsets, extents).chip(fieldEndIndex, axis) 
-                                                                                * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex, axis).constant( extrapFactor_p )
+                faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].slice(offsets, extents).chip(fieldEndIndex  , axis) 
+                                                                 * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
                                                                  + fields[axisVel].slice(offsets, extents).chip(fieldEndIndex-1, axis) 
-                                                                                * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex-1, axis).constant( extrapFactor_a );
+                                                                 * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex-1, axis).constant( extrapFactor_a );
                 break;
 
             default:

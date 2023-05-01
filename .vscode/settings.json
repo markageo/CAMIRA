@@ -80,6 +80,7 @@
         "__nullptr": "cpp",
         "__config": "cpp",
         "__tuple": "cpp",
-        "shared_mutex": "cpp"
+        "shared_mutex": "cpp",
+        "*.ipp": "cpp"
     }
 }
