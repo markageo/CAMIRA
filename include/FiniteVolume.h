@@ -73,21 +73,26 @@ void TransformToUserCoordinates(Mesh &, ArrayAllocator<Fields, array3D> &, Array
 
 // -------------------------------------- Definition in FaceVelocities.cpp -------------------------------------- //
 
+// Allocate and initialise face velocities
+ArrayAllocator<Fields, array3D> InitialiseFaceVelocities(const Mesh &, const ArrayAllocator<Fields, array3D> &, const InputData &);
+
 // Update face velocities
-void UpdateFaceVelocities( ArrayAllocator<Fields, array3D>  &, const Mesh &, const ArrayAllocator<Fields, array3D> &, 
-    const InputData::BoundaryConditionData &);
+void UpdateFaceVelocities( ArrayAllocator<Fields, array3D> &, const Mesh &, const ArrayAllocator<Fields, array3D> &, const InputData &);
 
 
 
 
 
-// -------------------------------------- Definition in FVCoefficients.cpp -------------------------------------- //
+// ---------------------------------- Definition in FiniteVolumeCoefficients.cpp --------------------------------- //
 
-// Initialise finite volume coefficients
+// Allocate and initialise finite volume coefficients
 FVCoefficients InitialiseFVCoefficients(const Mesh &, const ArrayAllocator<Fields, array3D> &, const InputData &);
 
 // Update finite volume coefficients (Picard linearisation)
-void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields, array3D> &);
+void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields, array3D> &, const InputData &);
+
+
+
 
 
 } // end namespace CFD

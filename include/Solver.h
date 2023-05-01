@@ -8,7 +8,7 @@
 namespace CFD
 {
 
-    void SweepSolve(CFD::ArrayAllocator<CFD::Fields::ENUMDATA, CFD::array3D> &, const CFD::Mesh &, const CFD::InputData &);
+    void SweepSolve(CFD::ArrayAllocator<CFD::Fields, CFD::array3D> &, const CFD::Mesh &, const CFD::InputData &);
 
 }   // end namespace CFD    
 

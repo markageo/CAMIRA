@@ -74,14 +74,38 @@ void FaceVelocityZnormal( CFD::array3D &faceVel,
 namespace CFD
 {
 
+
+ArrayAllocator<Fields, array3D> InitialiseFaceVelocities(const Mesh &mesh, 
+                                                         const ArrayAllocator<Fields, array3D> &fields, 
+                                                         const InputData &inputData)
+{
+    using F = Fields::ENUMDATA;
+
+    // Faces are staggered in the negative direction:
+    //   cellFaceVelocity_x(i, j, k) -> u(i-1/2, j    , k    )
+    //   cellFaceVelocity_y(i, j, k) -> u(i    , j-1/2, k    )
+    //   cellFaceVelocity_z(i, j, k) -> u(i    , j    , k-1/2)
+    // Subscript indicates the normal direction of the face.
+    ArrayAllocator<Fields, array3D> faceVelocities( {{F::U, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
+                                                     {F::V, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},
+                                                     {F::W, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} );
+                                                     
+    UpdateFaceVelocities(faceVelocities, mesh, fields, inputData);
+
+    return faceVelocities;
+}
+
+
 void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
                            const Mesh &mesh, 
                            const ArrayAllocator<Fields, CFD::array3D> &fields, 
-                           const InputData::BoundaryConditionData &boundaryConditions)
+                           const InputData &inputData)
 {
     using F = Fields::ENUMDATA;
     using BC = BoundaryConditions::ENUMDATA;
     using enum Axis::ENUMDATA;
+
+    const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
 
     // Non-boundary cells
     FaceVelocityXnormal( faceVelocities[F::U], fields[F::U], mesh);
