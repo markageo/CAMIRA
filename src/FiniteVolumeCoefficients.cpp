@@ -86,7 +86,8 @@ void DiffusionPositiveBoundary( EnumVector< Axis,  ArrayAllocator<TransportCoeff
             break;
 
         case BC::extrapolated:
-            diff[axis][p   ](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * (mesh.extrapFactors[boundaryPatch].p - 1);
+            // These work out to zero, since for linear extrapolation, the gradients will be equal on both cell faces
+            diff[axis][p   ](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * (mesh.extrapFactors[boundaryPatch].p - 1);  
             diff[axis][west](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * mesh.extrapFactors[boundaryPatch].a;
             break;
 
@@ -124,6 +125,7 @@ void DiffusionNegativeBoundary( EnumVector< Axis, ArrayAllocator<TransportCoeffi
             break;
 
         case BC::extrapolated:
+            // These work out to zero, since for linear extrapolation, the gradients will be equal on both cell faces
             diff[axis][p   ](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * (mesh.extrapFactors[boundaryPatch].p - 1);
             diff[axis][east](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * mesh.extrapFactors[boundaryPatch].a;
             break;
