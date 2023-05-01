@@ -111,6 +111,7 @@ int main(int argc, char const *argv[])
     fields[F::U] = CFD::array3D(mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)).setRandom().pad(paddings);
     fields[F::V] = fields[F::U].shuffle( Eigen::array<int, 3>{1, 0, 2} );
     fields[F::W] = fields[F::U].shuffle( Eigen::array<int, 3>{2, 1, 0} );
+    fields[F::P] = fields[F::U];
     TEST::WriteFields(fields, testConfig.faceVelTestOutputDirectory);
 
 

@@ -38,7 +38,7 @@ VTKWriter::VTKWriter(const gridVectorType &gridVector, const scalarMapType &scal
     m_vectorMap(vectorMap) 
     {
         if (config.WriteMode() == MODE_ASCII) {
-            DataProperWriteFunc =  [&](double data) {
+            DataProperWriteFunc =  [&](double data) {   // There should be a float version !?!?!?!?!?
                 m_outputFileStream << data << " "; 
             };
             m_outputFileStream << std::fixed << std::setprecision(config.ASCIIPrecision());
