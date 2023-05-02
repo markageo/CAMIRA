@@ -108,7 +108,9 @@ int main(int argc, char const *argv[])
     paddings[0] = std::make_pair(CFD::nGhost, CFD::nGhost);
     paddings[1] = std::make_pair(CFD::nGhost, CFD::nGhost);
     paddings[2] = std::make_pair(CFD::nGhost, CFD::nGhost);
-    fields[F::U] = CFD::array3D(mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)).setRandom().pad(paddings);
+    CFD::array3D randTemp(mesh.nCells(0), mesh.nCells(1), mesh.nCells(2));
+    randTemp = randTemp.setRandom() * randTemp.constant( 2 ) + randTemp.constant( -1 ); 
+    fields[F::U] = randTemp.pad(paddings);
     fields[F::V] = fields[F::U].shuffle( Eigen::array<int, 3>{1, 0, 2} );
     fields[F::W] = fields[F::U].shuffle( Eigen::array<int, 3>{2, 1, 0} );
     fields[F::P] = fields[F::U];

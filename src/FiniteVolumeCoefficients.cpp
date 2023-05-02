@@ -1,5 +1,7 @@
 #include "FiniteVolume.h"
 
+#include "Utils.h"
+
 #include <algorithm>
 #include <iostream>
 
@@ -440,6 +442,17 @@ void SetAdvectionCoefficients( ArrayAllocator<TransportCoefficients, array3D> &c
         AdvectionPositiveBoundary(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], static_cast<Axis::ENUMDATA>(axis));
         AdvectionNegativeBoundary(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], static_cast<Axis::ENUMDATA>(axis));
     }
+
+
+    // DEBUGING
+    TransportCoefficients::ENUMDATA transportCoeff;
+    for (int tc = 0; tc != TransportCoefficients::count; tc++) {
+        transportCoeff = static_cast<TransportCoefficients::ENUMDATA>(tc);
+        if ( coeffs.get(transportCoeff) ) {
+            UTIL::WriteArray("advection_coeffs_" + std::to_string(tc), coeffs[transportCoeff]);
+        }
+    }
+
 
 }
 
