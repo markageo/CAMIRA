@@ -43,6 +43,38 @@ struct InputData
     BoundaryConditionData boundaryConditions;
 
 
+    // Solver
+    struct PlaneSweepSettings {
+        intType maxSweeps;
+        floatType maxResidual;
+
+        floatVector3 momentumImplicitRelaxation;
+        floatType pressureImplicitRelaxation;
+
+        Linearisation linearisation;
+        intType maxLinearIterations;
+        floatType maxLinearResidual;
+    } planeSweepSettings;
+
+    struct PlaneSolverSettings {
+        PlaneSolvers type;
+        intType maxIterations;
+        floatType maxResidual;
+
+        floatVector3 momentumRelaxation;
+        floatType pressureRelaxation;
+    } planeSolverSettings;
+
+    struct LineSolverSettings {
+        PlaneSolvers type;
+        intType maxIterations;
+        floatType maxResidual;
+
+        floatVector3 momentumRelaxation;
+        floatType pressureRelaxation;
+    } lineSolverSettings;
+
+
     // Structure for storing axis transformation, is just a one-to-one map
     class AxisTransformationMap
     {

@@ -142,6 +142,19 @@ constexpr std::array<Axis::ENUMDATA, 6> boundaryPatchAxis{Axis::ENUMDATA::X,    
                                                           Axis::ENUMDATA::Z};   // zNegative
 
 
+// Solver settings
+enum class PlaneSolvers {
+    SUGS
+};
+
+enum class LineSolvers {
+    SUGS
+};
+
+enum class Linearisation {
+    Picard, Newton
+};
+
 
 // Wrapper for std::vector that can only be indexed using enums
 template <typename enumStruct, typename T>
