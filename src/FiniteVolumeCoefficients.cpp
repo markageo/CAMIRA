@@ -346,8 +346,8 @@ void AdvectionPositiveBoundary( ArrayAllocator<TransportCoefficients, array3D> &
     const BoundaryPatches::ENUMDATA boundaryPatch = positivePatches[axis];
     const TransportCoefficients::ENUMDATA west = westCoefficients[axis];
     const Fields::ENUMDATA axisVel = faceVelocityFields[axis];
-    const intType iCellBound = mesh.nCells(axis) - 1;
-    const intType iFaceBound = iCellBound + 1;
+    const intType iCellBound = mesh.nCells(axis) - 1;   // Index of cell at the boundary
+    const intType iFaceBound = iCellBound + 1;          // Index of face at the boundary
 
     switch ( boundaryConditionStructs[boundaryPatch].type ) {
         
@@ -358,7 +358,7 @@ void AdvectionPositiveBoundary( ArrayAllocator<TransportCoefficients, array3D> &
 
         case BC::uniform:
             boundaryConstants[boundaryPatch]  = faceVelocities[axisVel].chip(iFaceBound, axis)
-                                              * boundaryConstants[boundaryPatch].constant( boundaryConditionStructs[boundaryPatch].value * mesh.cellLengthsInv[axis](iCellBound) );
+                                              * faceVelocities[axisVel].chip(iFaceBound, axis).constant( boundaryConditionStructs[boundaryPatch].value * mesh.cellLengthsInv[axis](iCellBound) );
             break;
 
         case BC::extrapolated:
@@ -392,8 +392,8 @@ void AdvectionNegativeBoundary( ArrayAllocator<TransportCoefficients, array3D> &
     const BoundaryPatches::ENUMDATA boundaryPatch = negativePatches[axis];
     const TransportCoefficients::ENUMDATA east = eastCoefficients[axis];
     const Fields::ENUMDATA axisVel = faceVelocityFields[axis];
-    const intType iCellBound = 0;
-    const intType iFaceBound = 0;
+    const intType iCellBound = 0;   // Index of cell at the boundary 
+    const intType iFaceBound = 0;   // Index of face at the boundary
 
     switch ( boundaryConditionStructs[boundaryPatch].type ) {
         
@@ -404,7 +404,7 @@ void AdvectionNegativeBoundary( ArrayAllocator<TransportCoefficients, array3D> &
 
         case BC::uniform:
             boundaryConstants[boundaryPatch]  = - faceVelocities[axisVel].chip(iFaceBound, axis)
-                                              *   boundaryConstants[boundaryPatch].constant( boundaryConditionStructs[boundaryPatch].value * mesh.cellLengthsInv[axis](iCellBound) );
+                                              *   faceVelocities[axisVel].chip(iFaceBound, axis).constant( boundaryConditionStructs[boundaryPatch].value * mesh.cellLengthsInv[axis](iCellBound) );
             break;
 
         case BC::extrapolated:
@@ -438,9 +438,11 @@ void SetAdvectionCoefficients( ArrayAllocator<TransportCoefficients, array3D> &c
     UpwindZnormal(coeffs, faceVelocities, mesh);
 
     // Boundary conditions by axis
-    for (int axis = 0; axis != Axis::count; axis++) {
-        AdvectionPositiveBoundary(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], static_cast<Axis::ENUMDATA>(axis));
-        AdvectionNegativeBoundary(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], static_cast<Axis::ENUMDATA>(axis));
+    Axis::ENUMDATA axis;
+    for (int a = 0; a != Axis::count; a++) {
+        axis = static_cast<Axis::ENUMDATA>(a);
+        AdvectionPositiveBoundary(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], axis);
+        AdvectionNegativeBoundary(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], axis);
     }
 
 }
@@ -650,11 +652,12 @@ std::vector<floatType> MWICoeffs( const indexVector3 &idx,
     const TransportCoefficients::ENUMDATA west = westCoefficients[axis];
 
     // Temporary index vector that has the correct indices for the neighbouring cell of the current axis
-    indexVector3 idxn(idx);
+    indexVector3 idxn( idx );
+    const intType i = idx( axis );
     idxn(axis) -= 1;
     const floatType d = 1.0 / ( AUU[p]( idx(X), idx(Y), idx(Z) )  +  AUU[p]( idxn(X), idxn(Y), idxn(Z) ) ); 
 
-    const intType i = idx( axis );
+    // These coefficients assume that the momentum equations have been divided through by the cell volume
     coeffs[0] = d * (1 - mesh.interpFactors[axis](i))   * AUP[west](i-1);
 
     coeffs[1] = d * ( (1 - mesh.interpFactors[axis](i)) * AUP[p   ](i-1)
@@ -681,28 +684,28 @@ void MWInterpolationXnormal( FVCoefficients &fvCoeffs,
     std::vector<floatType> coeffs;
 
     // These will get written to multiple times and need to be reset to zero
-    fvCoeffs.Cont.AP[w ].chip(0, X) = fvCoeffs.Cont.AP[w ].chip(0, X).constant( 0 );
-    fvCoeffs.Cont.AP[p ].chip(0, X) = fvCoeffs.Cont.AP[p ].chip(0, X).constant( 0 );
-    fvCoeffs.Cont.AP[e ].chip(0, X) = fvCoeffs.Cont.AP[e ].chip(0, X).constant( 0 );
+    fvCoeffs.Cont.AP[w ].chip(0, X).setZero();
+    fvCoeffs.Cont.AP[p ].chip(0, X).setZero();
+    fvCoeffs.Cont.AP[e ].chip(0, X).setZero();
 
     for (intType k = 0; k != mesh.nCells(Z); k++) {
         for (intType j = 0; j != mesh.nCells(Y); j++) {
-            for (intType i = 1; i != mesh.nCells(X)-1; i++) {
+            for (intType i = 1; i != mesh.nCells(X)-1; i++) {   // Boundary condition in the x direction
 
                 // Coefficients vector, in order of westmost to east most
                 coeffs = MWICoeffs({i, j, k}, fvCoeffs.Umom.AU, fvCoeffs.Umom.AP, mesh, rho, X); 
 
                 // Cell on west side 
-                fvCoeffs.Cont.AP[w ](i-1, j, k) += coeffs[0];
-                fvCoeffs.Cont.AP[p ](i-1, j, k) += coeffs[1];
-                fvCoeffs.Cont.AP[e ](i-1, j, k) += coeffs[2];
-                fvCoeffs.Cont.AP[ee](i-1, j, k)  = coeffs[3];
+                fvCoeffs.Cont.AP[w ](i-1, j, k) += coeffs[0] * mesh.cellLengthsInv[X](i-1);
+                fvCoeffs.Cont.AP[p ](i-1, j, k) += coeffs[1] * mesh.cellLengthsInv[X](i-1);
+                fvCoeffs.Cont.AP[e ](i-1, j, k) += coeffs[2] * mesh.cellLengthsInv[X](i-1);
+                fvCoeffs.Cont.AP[ee](i-1, j, k)  = coeffs[3] * mesh.cellLengthsInv[X](i-1);
 
                 // Cell on east side
-                fvCoeffs.Cont.AP[ww](i, j, k) = coeffs[0];
-                fvCoeffs.Cont.AP[w ](i, j, k) = coeffs[1];
-                fvCoeffs.Cont.AP[p ](i, j, k) = coeffs[2];  // Shouldn't be += since this is the first time it is set
-                fvCoeffs.Cont.AP[e ](i, j, k) = coeffs[3];
+                fvCoeffs.Cont.AP[ww](i, j, k) = coeffs[0] * mesh.cellLengthsInv[X](i);
+                fvCoeffs.Cont.AP[w ](i, j, k) = coeffs[1] * mesh.cellLengthsInv[X](i);
+                fvCoeffs.Cont.AP[p ](i, j, k) = coeffs[2] * mesh.cellLengthsInv[X](i);  // Shouldn't be += since this is the first time it is set
+                fvCoeffs.Cont.AP[e ](i, j, k) = coeffs[3] * mesh.cellLengthsInv[X](i);
 
             }
         }
@@ -721,27 +724,27 @@ void MWInterpolationYnormal( FVCoefficients &fvCoeffs,
     std::vector<floatType> coeffs(4);
 
     // These will get written to multiple times and need to be reset to zero
-    fvCoeffs.Cont.AP[n ].chip(0, Y) = fvCoeffs.Cont.AP[n ].chip(0, Y).constant( 0 );
-    fvCoeffs.Cont.AP[s ].chip(0, Y) = fvCoeffs.Cont.AP[s ].chip(0, Y).constant( 0 );
+    fvCoeffs.Cont.AP[n ].chip(0, Y).setZero();
+    fvCoeffs.Cont.AP[s ].chip(0, Y).setZero();
 
     for (intType k = 0; k != mesh.nCells(Z); k++) {
-        for (intType j = 1; j != mesh.nCells(Y)-1; j++) {
+        for (intType j = 1; j != mesh.nCells(Y)-1; j++) {   // Boundary condition in the y direction
             for (intType i = 0; i != mesh.nCells(X); i++) {
                 
                 // Coefficients vector, in order of westmost to east most
                 coeffs = MWICoeffs({i, j, k}, fvCoeffs.Vmom.AV, fvCoeffs.Vmom.AP, mesh, rho, Y); 
 
                 // Cell on south
-                fvCoeffs.Cont.AP[s ](i, j-1, k) += coeffs[0];
-                fvCoeffs.Cont.AP[p ](i, j-1, k) += coeffs[1];
-                fvCoeffs.Cont.AP[n ](i, j-1, k) += coeffs[2];
-                fvCoeffs.Cont.AP[nn](i, j-1, k)  = coeffs[3];
+                fvCoeffs.Cont.AP[s ](i, j-1, k) += coeffs[0] * mesh.cellLengthsInv[Y](j-1);
+                fvCoeffs.Cont.AP[p ](i, j-1, k) += coeffs[1] * mesh.cellLengthsInv[Y](j-1);
+                fvCoeffs.Cont.AP[n ](i, j-1, k) += coeffs[2] * mesh.cellLengthsInv[Y](j-1);
+                fvCoeffs.Cont.AP[nn](i, j-1, k)  = coeffs[3] * mesh.cellLengthsInv[Y](j-1);
 
                 // Cell on north
-                fvCoeffs.Cont.AP[ss](i, j, k)  = coeffs[0];
-                fvCoeffs.Cont.AP[s ](i, j, k)  = coeffs[1];
-                fvCoeffs.Cont.AP[p ](i, j, k) += coeffs[2];
-                fvCoeffs.Cont.AP[n ](i, j, k)  = coeffs[3];
+                fvCoeffs.Cont.AP[ss](i, j, k)  = coeffs[0] * mesh.cellLengthsInv[Y](j);
+                fvCoeffs.Cont.AP[s ](i, j, k)  = coeffs[1] * mesh.cellLengthsInv[Y](j);
+                fvCoeffs.Cont.AP[p ](i, j, k) += coeffs[2] * mesh.cellLengthsInv[Y](j);
+                fvCoeffs.Cont.AP[n ](i, j, k)  = coeffs[3] * mesh.cellLengthsInv[Y](j);
 
             }
         }
@@ -760,10 +763,10 @@ void MWInterpolationZnormal( FVCoefficients &fvCoeffs,
     std::vector<floatType> coeffs;
 
     // These will get written to multiple times and need to be reset to zero
-    fvCoeffs.Cont.AP[t ].chip(0, Z) = fvCoeffs.Cont.AP[t ].chip(0, Z).constant( 0 );
-    fvCoeffs.Cont.AP[b ].chip(0, Z) = fvCoeffs.Cont.AP[b ].chip(0, Z).constant( 0 );
+    fvCoeffs.Cont.AP[t ].chip(0, Z).setZero();
+    fvCoeffs.Cont.AP[b ].chip(0, Z).setZero();
 
-    for (intType k = 1; k != mesh.nCells(Z)-1; k++) {
+    for (intType k = 1; k != mesh.nCells(Z)-1; k++) {   // Boundary condition in the z direction
         for (intType j = 0; j != mesh.nCells(Y); j++) {
             for (intType i = 0; i != mesh.nCells(X); i++) {
 
@@ -771,16 +774,16 @@ void MWInterpolationZnormal( FVCoefficients &fvCoeffs,
                 coeffs = MWICoeffs({i, j, k}, fvCoeffs.Wmom.AW, fvCoeffs.Wmom.AP, mesh, rho, Z); 
 
                 // Cell on bottom side
-                fvCoeffs.Cont.AP[b ](i, j, k-1) += coeffs[0];
-                fvCoeffs.Cont.AP[p ](i, j, k-1) += coeffs[1];
-                fvCoeffs.Cont.AP[t ](i, j, k-1) += coeffs[2];
-                fvCoeffs.Cont.AP[tt](i, j, k-1)  = coeffs[3];
+                fvCoeffs.Cont.AP[b ](i, j, k-1) += coeffs[0] * mesh.cellLengthsInv[Z](k-1);
+                fvCoeffs.Cont.AP[p ](i, j, k-1) += coeffs[1] * mesh.cellLengthsInv[Z](k-1);
+                fvCoeffs.Cont.AP[t ](i, j, k-1) += coeffs[2] * mesh.cellLengthsInv[Z](k-1);
+                fvCoeffs.Cont.AP[tt](i, j, k-1)  = coeffs[3] * mesh.cellLengthsInv[Z](k-1);
 
                 // Cell on top side
-                fvCoeffs.Cont.AP[bb](i, j, k)  = coeffs[0];
-                fvCoeffs.Cont.AP[b ](i, j, k)  = coeffs[1];
-                fvCoeffs.Cont.AP[p ](i, j, k) += coeffs[2];
-                fvCoeffs.Cont.AP[t ](i, j, k)  = coeffs[3];
+                fvCoeffs.Cont.AP[bb](i, j, k)  = coeffs[0] * mesh.cellLengthsInv[Z](k);
+                fvCoeffs.Cont.AP[b ](i, j, k)  = coeffs[1] * mesh.cellLengthsInv[Z](k);
+                fvCoeffs.Cont.AP[p ](i, j, k) += coeffs[2] * mesh.cellLengthsInv[Z](k);
+                fvCoeffs.Cont.AP[t ](i, j, k)  = coeffs[3] * mesh.cellLengthsInv[Z](k);
 
             }
         }
