@@ -240,7 +240,7 @@ void UpwindXnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
     for (intType k = 0; k != faceVelocities[F::U].dimension(Z); k++) {
         for (intType j = 0; j != faceVelocities[F::U].dimension(Y); j++) {
             coeffs[p](0, j, k) = 0;     // This one doesn't get reset in the loop
-            for (intType i = 1; i != faceVelocities[F::U].dimension(X)-1; i++) {
+            for (intType i = 1; i != faceVelocities[F::U].dimension(X)-1; i++) {    // Boundary condition in the x direction
                 
                 uf = faceVelocities[F::U](i, j, k);
                 coeff_w =   uf * mesh.cellLengthsInv[X](i-1);
@@ -272,9 +272,9 @@ void UpwindYnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
     using enum TransportCoefficients::ENUMDATA;
 
     floatType uf, coeff_n, coeff_s;
-    for (intType k = 0; k != faceVelocities[F::U].dimension(Z); k++) {
-        for (intType j = 1; j != faceVelocities[F::U].dimension(Y)-1; j++) {
-            for (intType i = 0; i != faceVelocities[F::U].dimension(X); i++) {
+    for (intType k = 0; k != faceVelocities[F::V].dimension(Z); k++) {
+        for (intType j = 1; j != faceVelocities[F::V].dimension(Y)-1; j++) {    // Boundary condition in the y direction
+            for (intType i = 0; i != faceVelocities[F::V].dimension(X); i++) {
                 
                 uf = faceVelocities[F::V](i, j, k);
                 coeff_s =   uf * mesh.cellLengthsInv[Y](j-1);
@@ -306,9 +306,9 @@ void UpwindZnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
     using enum TransportCoefficients::ENUMDATA;
 
     floatType uf, coeff_t, coeff_b;
-    for (intType k = 1; k != faceVelocities[F::U].dimension(Z)-1; k++) {
-        for (intType j = 0; j != faceVelocities[F::U].dimension(Y); j++) {
-            for (intType i = 0; i != faceVelocities[F::U].dimension(X); i++) {
+    for (intType k = 1; k != faceVelocities[F::W].dimension(Z)-1; k++) {    // Boundary condition in the z direction
+        for (intType j = 0; j != faceVelocities[F::W].dimension(Y); j++) {
+            for (intType i = 0; i != faceVelocities[F::W].dimension(X); i++) {
                 
                 uf = faceVelocities[F::W](i, j, k);
                 coeff_b =   uf * mesh.cellLengthsInv[Z](k-1);
@@ -442,17 +442,6 @@ void SetAdvectionCoefficients( ArrayAllocator<TransportCoefficients, array3D> &c
         AdvectionPositiveBoundary(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], static_cast<Axis::ENUMDATA>(axis));
         AdvectionNegativeBoundary(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], static_cast<Axis::ENUMDATA>(axis));
     }
-
-
-    // DEBUGING
-    TransportCoefficients::ENUMDATA transportCoeff;
-    for (int tc = 0; tc != TransportCoefficients::count; tc++) {
-        transportCoeff = static_cast<TransportCoefficients::ENUMDATA>(tc);
-        if ( coeffs.get(transportCoeff) ) {
-            UTIL::WriteArray("advection_coeffs_" + std::to_string(tc), coeffs[transportCoeff]);
-        }
-    }
-
 
 }
 
