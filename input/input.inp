@@ -84,9 +84,40 @@ BoundaryConditions
 }
 
 
+
 Solver {
 
     planeSweepDirection = +y
     lineSweepDirection = +x
+
+    planeSweeping {
+        maxSweeps = 1000;
+        maxResidual = 1e-4;
+
+        momentumImplicitRelaxation = (0.5, 0.5, 0.5)
+        pressureImplicitRelaxation = 1
+
+        Linearisation = Picard
+        maxLinearIterations = 10;
+        maxLinearResidual = 1e-3;
+    }
+    
+    planeSolver {
+        type = SUGS
+        maxIterations = 100
+        maxResidual = 1e-3
+
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
+    }
+
+    lineSolver {
+        type = SUGS
+        maxIterations = 100
+        maxResidual = 1e-3
+
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
+    }
 
 }
