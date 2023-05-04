@@ -90,6 +90,10 @@ Solver {
     planeSweepDirection = +y
     lineSweepDirection = +x
 
+    schemes {
+        Linearisation = Picard
+    }
+
     planeSweeping {
         maxSweeps = 1000;
         maxResidual = 1e-4;
@@ -97,8 +101,7 @@ Solver {
         momentumImplicitRelaxation = (0.5, 0.5, 0.5)
         pressureImplicitRelaxation = 1
 
-        Linearisation = Picard
-        maxLinearIterations = 10;
+        maxLinearSweeps = 10;
         maxLinearResidual = 1e-3;
     }
     

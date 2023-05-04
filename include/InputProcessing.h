@@ -12,7 +12,6 @@ namespace CFD
 
 struct InputData
 {
-    
     // Constructor
     InputData();
 
@@ -44,22 +43,25 @@ struct InputData
 
 
     // Solver
+    struct Schemes {
+        Linearisation linearisation;
+    };
+
     struct PlaneSweepSettings {
-        intType maxSweeps;
-        floatType maxResidual;
+        intType maxOuterIterations;
+        EnumVector<Fields, floatType> maxOuterResiduals;
+
+        intType maxInnerIterations;
+        EnumVector<Fields, floatType> maxInnerResiduals;
 
         floatVector3 momentumImplicitRelaxation;
         floatType pressureImplicitRelaxation;
-
-        Linearisation linearisation;
-        intType maxLinearIterations;
-        floatType maxLinearResidual;
     } planeSweepSettings;
 
     struct PlaneSolverSettings {
         PlaneSolvers type;
         intType maxIterations;
-        floatType maxResidual;
+        EnumVector<Fields, floatType> maxResiduals;
 
         floatVector3 momentumRelaxation;
         floatType pressureRelaxation;
@@ -68,7 +70,7 @@ struct InputData
     struct LineSolverSettings {
         PlaneSolvers type;
         intType maxIterations;
-        floatType maxResidual;
+        EnumVector<Fields, floatType> maxResiduals;
 
         floatVector3 momentumRelaxation;
         floatType pressureRelaxation;
