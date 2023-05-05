@@ -68,7 +68,7 @@ struct InputData
     } planeSolverSettings;
 
     struct LineSolverSettings {
-        PlaneSolvers type;
+        LineSolvers type;
         intType maxIterations;
         EnumVector<Fields, floatType> maxResiduals;
 

@@ -418,6 +418,7 @@ void CFD::TransformToUserCoordinates(Mesh &mesh,
         reverseArray[codeAxis] = axisTransformation.CodePatch( codePositivePatch ) == negativePatches[ shuffleArray[codeAxis] ];    // This reverse is after the shufflinf
     }
 
+
     // 3D arrays
     Fields::ENUMDATA field;
     for (int f = 0; f != Fields::count; f++) {
