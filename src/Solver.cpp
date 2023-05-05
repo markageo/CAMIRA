@@ -45,6 +45,103 @@ bool MetResidualTolerence( const EnumVector<Fields, floatType> &residuals,
 }   // end anonymous namespace
 
 
+
+class PlaneSolver
+{
+    public:
+
+        PlaneSolver( ArrayAllocator<Fields, array3D> &fields,
+                     FVCoefficients &fvCoeffs,
+                     const InputData::PlaneSolverSettings &planeSolverSettings,
+                     const InputData::LineSolverSettings &lineSolverSettings) :
+        m_fields( fields ),
+        m_fvCoeffs( fvCoeffs ),
+        m_maxIterations( planeSolverSettings.maxIterations ),
+        m_maxResiduals( planeSolverSettings.maxResiduals ),
+        m_lineSolver( fields, fvCoeffs, lineSolverSettings )
+        {}
+
+        void SolvePlaneForwardStagger(const intType k)
+        {
+            using enum Axis::ENUMDATA;
+            intType nLines = m_fields[Fields::ENUMDATA::P].dimension(Z) - 2*nGhost;    // All fields should have the same dimensions
+
+            // Forwards sweep RED cells
+            for (intType j = 0; j != nLines-1; j = j + 2) {
+                m_lineSolver.SolveLineForwardStagger(j, k);
+            }
+
+
+            // Backwards sweep BLACK cells
+            for (intType j = nLines-1; j != 0; j = j - 2) {
+                m_lineSolver.SolveLineBackwardStagger(j, k);
+            }
+        }
+
+        void SolvePlaneBackwardStagger(const intType k)
+        {
+            using enum Axis::ENUMDATA;
+            intType nLines = m_fields[Fields::ENUMDATA::P].dimension(Z) - 2*nGhost;    // All fields should have the same dimensions
+
+            // Forwards sweep RED cells
+            for (intType j = 0; j != nLines-1; j = j + 2) {
+                
+                
+
+            }
+
+
+            // Backwards sweep BLACK cells
+            for (intType j = nLines-1; j != 0; j = j - 2) {
+                
+
+
+            }
+        }
+
+    private:
+        intType m_maxIterations;
+        EnumVector<Fields, floatType> m_maxResiduals;
+        ArrayAllocator<Fields, array3D> &m_fields;
+        const FVCoefficients &m_fvCoeffs;
+        LineSolver m_lineSolver;
+};
+
+
+
+class LineSolver
+{
+    public:
+
+        LineSolver( ArrayAllocator<Fields, array3D> &fields,
+                    FVCoefficients &fvCoeffs,
+                    const InputData::LineSolverSettings &lineSolverSettings) :
+        m_fields( fields ),
+        m_fvCoeffs( fvCoeffs ),
+        m_maxIterations( lineSolverSettings.maxIterations ),
+        m_maxResiduals( lineSolverSettings.maxResiduals )
+        {}
+
+        void SolveLineForwardStagger(const intType j, const intType k)
+        {
+
+        }
+
+        void SolveLineBackwardStagger(const intType j, const intType k)
+        {
+
+        }
+
+    private:
+        intType m_maxIterations;
+        EnumVector<Fields, floatType> m_maxResiduals;
+        ArrayAllocator<Fields, array3D> &m_fields;
+        const FVCoefficients &m_fvCoeffs;
+
+};
+
+
+
 void CFD::SweepSolve(ArrayAllocator<CFD::Fields, CFD::array3D>  &fields, 
                      const Mesh &mesh, 
                      const InputData &inputData) 
@@ -60,13 +157,13 @@ void CFD::SweepSolve(ArrayAllocator<CFD::Fields, CFD::array3D>  &fields,
     FVCoefficients fvCoeffs = InitialiseFVCoefficients( mesh, fields, inputData );
     
     // Counters and residuals
-    intType nOuterIterations = 0;
-    intType nInnerIterations = 0;
+    intType nOuterIterations, nInnerIterations;
     EnumVector<Fields, floatType> residualsInner, residualsOuter, residualsOuterInitial, residualsInnerInitial;
     std::vector< EnumVector<Fields, floatType> > residualsHistory( planeSweepSettings.maxOuterIterations );
 
 
     // Outer iterations
+    nOuterIterations = 0;
     while ( nOuterIterations < planeSweepSettings.maxOuterIterations ) 
     {
         
@@ -76,8 +173,10 @@ void CFD::SweepSolve(ArrayAllocator<CFD::Fields, CFD::array3D>  &fields,
         
             // Coupled sweep for RED nodes in +z direction
 
+
+
             // Coupled sweep for BLACK nodes in -z direction
-            
+
 
             // Update residuals
             if ( nInnerIterations == 0 ) {
@@ -85,6 +184,7 @@ void CFD::SweepSolve(ArrayAllocator<CFD::Fields, CFD::array3D>  &fields,
             }
             UpdateResiduals(residualsInner, fields, fieldsOld);
             nInnerIterations++;
+
 
             // Check residual tolerence
             if ( MetResidualTolerence(residualsInner, planeSweepSettings.maxInnerResiduals) ) {
@@ -101,10 +201,12 @@ void CFD::SweepSolve(ArrayAllocator<CFD::Fields, CFD::array3D>  &fields,
         residualsHistory[nOuterIterations] = residualsOuter;
         nOuterIterations++;
 
+
         // Check residual tolerence
         if ( MetResidualTolerence(residualsOuter, planeSweepSettings.maxOuterResiduals) ) {
             break;
         }
+
 
         // Update nonlinear coefficients
         UpdateFaceVelocities( faceVelocities, mesh, fields, inputData );
@@ -113,5 +215,10 @@ void CFD::SweepSolve(ArrayAllocator<CFD::Fields, CFD::array3D>  &fields,
         // Update fields
         fieldsOld = fields;
     }
+
+
+    // Strip unused data
+    residualsHistory.resize( nOuterIterations );
+
         
 }
