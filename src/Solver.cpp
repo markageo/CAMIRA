@@ -46,99 +46,99 @@ bool MetResidualTolerence( const EnumVector<Fields, floatType> &residuals,
 
 
 
-class PlaneSolver
-{
-    public:
+// class PlaneSolver
+// {
+//     public:
 
-        PlaneSolver( ArrayAllocator<Fields, array3D> &fields,
-                     FVCoefficients &fvCoeffs,
-                     const InputData::PlaneSolverSettings &planeSolverSettings,
-                     const InputData::LineSolverSettings &lineSolverSettings) :
-        m_fields( fields ),
-        m_fvCoeffs( fvCoeffs ),
-        m_maxIterations( planeSolverSettings.maxIterations ),
-        m_maxResiduals( planeSolverSettings.maxResiduals ),
-        m_lineSolver( fields, fvCoeffs, lineSolverSettings )
-        {}
+//         PlaneSolver( ArrayAllocator<Fields, array3D> &fields,
+//                      FVCoefficients &fvCoeffs,
+//                      const InputData::PlaneSolverSettings &planeSolverSettings,
+//                      const InputData::LineSolverSettings &lineSolverSettings) :
+//         m_fields( fields ),
+//         m_fvCoeffs( fvCoeffs ),
+//         m_maxIterations( planeSolverSettings.maxIterations ),
+//         m_maxResiduals( planeSolverSettings.maxResiduals ),
+//         m_lineSolver( fields, fvCoeffs, lineSolverSettings )
+//         {}
 
-        void SolvePlaneForwardStagger(const intType k)
-        {
-            using enum Axis::ENUMDATA;
-            intType nLines = m_fields[Fields::ENUMDATA::P].dimension(Z) - 2*nGhost;    // All fields should have the same dimensions
+//         void SolvePlaneForwardStagger(const intType k)
+//         {
+//             using enum Axis::ENUMDATA;
+//             intType nLines = m_fields[Fields::ENUMDATA::P].dimension(Z) - 2*nGhost;    // All fields should have the same dimensions
 
-            // Forwards sweep RED cells
-            for (intType j = 0; j != nLines-1; j = j + 2) {
-                m_lineSolver.SolveLineForwardStagger(j, k);
-            }
+//             // Forwards sweep RED cells
+//             for (intType j = 0; j != nLines-1; j = j + 2) {
+//                 m_lineSolver.SolveLineForwardStagger(j, k);
+//             }
 
 
-            // Backwards sweep BLACK cells
-            for (intType j = nLines-1; j != 0; j = j - 2) {
-                m_lineSolver.SolveLineBackwardStagger(j, k);
-            }
-        }
+//             // Backwards sweep BLACK cells
+//             for (intType j = nLines-1; j != 0; j = j - 2) {
+//                 m_lineSolver.SolveLineBackwardStagger(j, k);
+//             }
+//         }
 
-        void SolvePlaneBackwardStagger(const intType k)
-        {
-            using enum Axis::ENUMDATA;
-            intType nLines = m_fields[Fields::ENUMDATA::P].dimension(Z) - 2*nGhost;    // All fields should have the same dimensions
+//         void SolvePlaneBackwardStagger(const intType k)
+//         {
+//             using enum Axis::ENUMDATA;
+//             intType nLines = m_fields[Fields::ENUMDATA::P].dimension(Z) - 2*nGhost;    // All fields should have the same dimensions
 
-            // Forwards sweep RED cells
-            for (intType j = 0; j != nLines-1; j = j + 2) {
+//             // Forwards sweep RED cells
+//             for (intType j = 0; j != nLines-1; j = j + 2) {
                 
                 
 
-            }
+//             }
 
 
-            // Backwards sweep BLACK cells
-            for (intType j = nLines-1; j != 0; j = j - 2) {
+//             // Backwards sweep BLACK cells
+//             for (intType j = nLines-1; j != 0; j = j - 2) {
                 
 
 
-            }
-        }
+//             }
+//         }
 
-    private:
-        intType m_maxIterations;
-        EnumVector<Fields, floatType> m_maxResiduals;
-        ArrayAllocator<Fields, array3D> &m_fields;
-        const FVCoefficients &m_fvCoeffs;
-        LineSolver m_lineSolver;
-};
+//     private:
+//         intType m_maxIterations;
+//         EnumVector<Fields, floatType> m_maxResiduals;
+//         ArrayAllocator<Fields, array3D> &m_fields;
+//         const FVCoefficients &m_fvCoeffs;
+//         LineSolver m_lineSolver;
+// };
 
 
 
-class LineSolver
-{
-    public:
+// class LineSolver
+// {
+//     public:
 
-        LineSolver( ArrayAllocator<Fields, array3D> &fields,
-                    FVCoefficients &fvCoeffs,
-                    const InputData::LineSolverSettings &lineSolverSettings) :
-        m_fields( fields ),
-        m_fvCoeffs( fvCoeffs ),
-        m_maxIterations( lineSolverSettings.maxIterations ),
-        m_maxResiduals( lineSolverSettings.maxResiduals )
-        {}
+//         LineSolver( ArrayAllocator<Fields, array3D> &fields,
+//                     FVCoefficients &fvCoeffs,
+//                     const InputData::LineSolverSettings &lineSolverSettings) :
+//         m_fields( fields ),
+//         m_fvCoeffs( fvCoeffs ),
+//         m_maxIterations( lineSolverSettings.maxIterations ),
+//         m_maxResiduals( lineSolverSettings.maxResiduals )
+//         {}
 
-        void SolveLineForwardStagger(const intType j, const intType k)
-        {
+//         void SolveLineForwardStagger(const intType j, const intType k)
+//         {
 
-        }
+//         }
 
-        void SolveLineBackwardStagger(const intType j, const intType k)
-        {
+//         void SolveLineBackwardStagger(const intType j, const intType k)
+//         {
 
-        }
+//         }
 
-    private:
-        intType m_maxIterations;
-        EnumVector<Fields, floatType> m_maxResiduals;
-        ArrayAllocator<Fields, array3D> &m_fields;
-        const FVCoefficients &m_fvCoeffs;
+//     private:
+//         intType m_maxIterations;
+//         EnumVector<Fields, floatType> m_maxResiduals;
+//         ArrayAllocator<Fields, array3D> &m_fields;
+//         const FVCoefficients &m_fvCoeffs;
 
-};
+// };
 
 
 

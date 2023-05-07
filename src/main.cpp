@@ -64,16 +64,11 @@ int main(int argc, char const *argv[])
     CFD::TransformToUserCoordinates(mesh, fields, faceVelocities, inputData.axisTransformation);
 
     // Data to pass to writer
-    VTK::dataType VTKDataType = VTK::DOUBLE;
-    if (std::is_same<CFD::floatType, float>::value)
-    {
-        VTKDataType = VTK::FLOAT;
-    }
-    VTK::VTKWriterConfig config(mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z], VTKDataType);
+    VTK::VTKWriterConfig config(mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z]);
         config.SetWriteMode("binary");
-    VTK::gridVectorType gridVector = {mesh.cellCenters[AX::X].data(), mesh.cellCenters[AX::Y].data(), mesh.cellCenters[AX::Z].data()};
-    VTK::scalarMapType scalarMap = {};
-    VTK::vectorMapType vectorMap = {};
+    VTK::gridVectorType<CFD::floatType> gridVector = {mesh.cellCenters[AX::X].data(), mesh.cellCenters[AX::Y].data(), mesh.cellCenters[AX::Z].data()};
+    VTK::scalarMapType<CFD::floatType> scalarMap = {};
+    VTK::vectorMapType<CFD::floatType> vectorMap = {};
 
     // Write output
     VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
