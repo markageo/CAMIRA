@@ -1,6 +1,5 @@
 # Add libraries
 add_library(libs InputProcessing.cpp
-                 VTKWriter.cpp
                  FiniteVolumeStructures.cpp
                  FaceVelocities.cpp
                  FiniteVolumeCoefficients.cpp
