@@ -25,6 +25,14 @@ namespace VTK
 #define DEFAULT_WRITE_MODE          MODE_ASCII       
 #define DEFAULT_ASCII_PRECISION     6
 
+
+// Data writing mdoes
+enum WriteModes {
+    ASCII, BINARY
+};
+std::array<std::string, 2> writeModeStrings{MODE_ASCII, MODE_BINARY};
+
+
 // Type aliases
 using sizeType = int long;
 template<typename T> using gridVectorType = std::vector<const T *>;
@@ -35,17 +43,8 @@ template<typename T> using vectorMapType = std::map<std::string, std::vector<con
 // Utility functions
 namespace
 {
-    // Return input string with all characters in lower case
-    std::string StringLower(const std::string &str) {
-        std::string strLower;
-        for (std::string::const_iterator istr = str.begin(); istr != str.end(); ++istr) {
-            strLower += std::tolower(*istr);
-        }
-        return strLower;
-    }
-
     // Swap between big endian and little endian representation
-    // Credit to: Michael Klimenko
+    // Credit to Michael Klimenko
     // https://mklimenko.github.io/english/2018/08/22/robust-endian-swap/
     template <typename T>
     T SwapEndian(const T &val) {
@@ -58,7 +57,8 @@ namespace
         std::reverse_copy(src.raw.begin(), src.raw.end(), dst.raw.begin());
         return dst.val;
     }
-}
+    
+}   // end anonymous namespace
 
 
 /*-------------------------------------------------------------------------------------*\
@@ -70,12 +70,12 @@ class VTKWriterConfig
 {
     public:
 
-        VTKWriterConfig(const sizeType &, const sizeType &, const sizeType &);
+        VTKWriterConfig(sizeType, sizeType, sizeType);
 
-        void SetWriteMode(const std::string &);
-        void SetASCIIPrecision(const unsigned &);
+        void SetWriteMode(WriteModes);
+        void SetASCIIPrecision(unsigned);
 
-        const sizeType &dim(const sizeType &) const;
+        const sizeType &dim(sizeType) const;
         const std::string &WriteMode() const;
         const int &ASCIIPrecision() const;
 
@@ -91,7 +91,7 @@ class VTKWriterConfig
 // ------------------------------------- Class Member Definitions ------------------------------------- //
 
 // Constructor sets default values
-VTKWriterConfig::VTKWriterConfig(const sizeType &dimX, const sizeType &dimY, const sizeType &dimZ) :
+VTKWriterConfig::VTKWriterConfig(sizeType dimX,sizeType dimY, sizeType dimZ) :
     m_dims{dimX, dimY, dimZ},
     m_writeMode(DEFAULT_WRITE_MODE), 
     m_ASCIIPrecision(DEFAULT_ASCII_PRECISION)
@@ -99,27 +99,19 @@ VTKWriterConfig::VTKWriterConfig(const sizeType &dimX, const sizeType &dimY, con
 
 
 // Dimensions
-const sizeType &VTKWriterConfig::dim(const sizeType &i) const
+const sizeType &VTKWriterConfig::dim(sizeType i) const
 { return m_dims[i]; }
 
 // Write mode set
-void VTKWriterConfig::SetWriteMode(const std::string &writeMode) 
-{
-    std::string writeModeLower = StringLower(writeMode);
-    if (writeModeLower != MODE_ASCII && writeModeLower != MODE_BINARY) {
-        std::cout << "WARNING: Invalid write mode given, writing to ASCII..." << std::endl;
-        m_writeMode = MODE_ASCII;
-    } else {
-        m_writeMode = writeModeLower;
-    }
-}
+void VTKWriterConfig::SetWriteMode(WriteModes writeMode) 
+{ m_writeMode = writeModeStrings[ writeMode ]; }
 
 // Write mode get
 const std::string &VTKWriterConfig::WriteMode() const
 { return m_writeMode; }
 
 // ASCII precision set
-void VTKWriterConfig::SetASCIIPrecision(const unsigned &ASCIIPrecision) 
+void VTKWriterConfig::SetASCIIPrecision(unsigned ASCIIPrecision) 
 { m_ASCIIPrecision = ASCIIPrecision; }
 
 // ASCII precision get
@@ -137,7 +129,7 @@ class VTKWriter
 {
     static_assert(std::is_same<T, float>::value ||
                   std::is_same<T, double>::value,
-                  "Invalid data type for VTK writer!");
+                  "Data must be either double or float type!");
 
     public:
         VTKWriter(const gridVectorType<T> &, const scalarMapType<T> &, const vectorMapType<T> &, const VTKWriterConfig &);
@@ -192,7 +184,6 @@ VTKWriter<T>::VTKWriter(const gridVectorType<T> &gridVector,
                 T tmp = SwapEndian(data);  // Legacy VTK uses big endian
                 m_outputFileStream.write(reinterpret_cast<const char *>(&tmp), sizeof(tmp)); 
             };
-            m_outputDataType = TYPE_DOUBLE;
         } 
 
         // Set the datatype
