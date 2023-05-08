@@ -57,7 +57,7 @@ namespace
         std::reverse_copy(src.raw.begin(), src.raw.end(), dst.raw.begin());
         return dst.val;
     }
-    
+
 }   // end anonymous namespace
 
 
@@ -164,9 +164,9 @@ class VTKWriter
 // Constructors
 template<typename T>
 VTKWriter<T>::VTKWriter(const gridVectorType<T> &gridVector, 
-                     const scalarMapType<T> &scalarMap, 
-                     const vectorMapType<T> &vectorMap, 
-                     const VTKWriterConfig &config) : 
+                        const scalarMapType<T> &scalarMap, 
+                        const vectorMapType<T> &vectorMap, 
+                        const VTKWriterConfig &config) : 
     m_config(config),
     m_gridVector(gridVector), 
     m_scalarMap(scalarMap),
@@ -222,7 +222,8 @@ VTKWriter(gridVector, {}, {}, config) {}
 // return 0 for success
 // return -1 for failure
 template<typename T>
-int VTKWriter<T>::WriteData(const std::string &filename, const std::string &title)
+int VTKWriter<T>::WriteData(const std::string &filename, 
+                            const std::string &title)
 {
     // Add .vtk file extension to file if it is not already there
     std::string ext = "";
@@ -280,7 +281,8 @@ int VTKWriter<T>::WriteData(const std::string &filename, const std::string &titl
 
 // Iterate raw data pointer and write 1D data
 template<typename T>
-void VTKWriter<T>::WriteDataArray(const T *dataPtr, const sizeType &iterLength) const {
+void VTKWriter<T>::WriteDataArray(const T *dataPtr, 
+                                  const sizeType &iterLength) const {
     for (sizeType i = 0; i != iterLength; i++) {
         DataProperWriteFunc( dataPtr[i] );
     }
@@ -288,7 +290,8 @@ void VTKWriter<T>::WriteDataArray(const T *dataPtr, const sizeType &iterLength) 
 
 // Iteratre raw data pointer and write 3D data
 template<typename T>
-void VTKWriter<T>::WriteDataArray(const std::vector<const T *> dataPtrVec, const sizeType &iterLength) const {
+void VTKWriter<T>::WriteDataArray(const std::vector<const T *> dataPtrVec, 
+                                  const sizeType &iterLength) const {
     auto dataPtr1 = dataPtrVec[0];
     auto dataPtr2 = dataPtrVec[1];
     auto dataPtr3 = dataPtrVec[2];
@@ -337,7 +340,8 @@ void VTKWriter<T>::WriteDatasetRectilinearGrid()
 
 // Write scalar data attribute to file
 template<typename T>
-void VTKWriter<T>::WriteDataAttributeScalar(const std::string &scalarFieldName, const T *pScalarField)
+void VTKWriter<T>::WriteDataAttributeScalar(const std::string &scalarFieldName, 
+                                            const T *pScalarField)
 {
     m_outputFileStream << "SCALARS" 
                            << " " << scalarFieldName
@@ -352,7 +356,8 @@ void VTKWriter<T>::WriteDataAttributeScalar(const std::string &scalarFieldName, 
 
 // Write vector data attribute to file
 template<typename T>
-void VTKWriter<T>::WriteDataAttributeVector(const std::string &vectorFieldName, const std::vector<const T *> &vectorField)
+void VTKWriter<T>::WriteDataAttributeVector(const std::string &vectorFieldName, 
+                                            const std::vector<const T *> &vectorField)
 {
     m_outputFileStream << "VECTORS" 
                            << " " << vectorFieldName
@@ -363,5 +368,6 @@ void VTKWriter<T>::WriteDataAttributeVector(const std::string &vectorFieldName, 
 
 
 } // end namespace VTK
+
 
 #endif // VTK_WRITER
