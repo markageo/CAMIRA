@@ -47,97 +47,174 @@ bool MetResidualTolerence( const EnumVector<Fields, floatType> &residuals,
 
 
 
-// // Performs a single local update of block coupled equations
-// class BlockSolver
-// {
+// Performs a single local update of block coupled equations
+class BlockSolver
+{
+    using TC = TransportCoefficients::ENUMDATA;
 
-//     public:
+    public:
 
-//         void UpdateBlock(const intType i, const intType j, const intType k)
-//         {
-//             using enum Fields::ENUMDATA;
-//             using enum TransportCoefficients::ENUMDATA;
+        template<TC Ustag, TC Vstag, TC Wstag >
+        void UpdateBlock(const intType i, const intType j, const intType k)
+        {
+            using enum Fields::ENUMDATA;
+            using enum TransportCoefficients::ENUMDATA;
 
-//             // Precompute momentum RHS, divided by AP coefficients
-//             floatType bu = ( m_fvCoeffs.Umom.B(i+1, j, k)
+            // Staggering must be valid
+            static_assert( std::is_same<Ustag, e>::value || std::is_same<Ustag, w>::value, "Invalid U momentum staggering" );
+            static_assert( std::is_same<Vstag, n>::value || std::is_same<Vstag, s>::value, "Invalid V momentum staggering" );
+            static_assert( std::is_same<Wstag, t>::value || std::is_same<Wstag, b>::value, "Invalid W momentum staggering" );
 
-//                            - m_fvCoeffs.Umom.AU[n](i+1, j, k) * m_fields[U]( G(i+1, j+1, k  ) )
-//                            - m_fvCoeffs.Umom.AU[e](i+1, j, k) * m_fields[U]( G(i+2, j  , k  ) )
-//                            - m_fvCoeffs.Umom.AU[s](i+1, j, k) * m_fields[U]( G(i+1, j-1, k  ) )
-//                            - m_fvCoeffs.Umom.AU[w](i+1, j, k) * m_fields[U]( G(i+1, j+1, k  ) )
-//                            - m_fvCoeffs.Umom.AU[t](i+1, j, k) * m_fields[U]( G(i+1, j+1, k+1) )
-//                            - m_fvCoeffs.Umom.AU[b](i+1, j, k) * m_fields[U]( G(i+1, j+1, k-1) )
+            // For indexing the staggered cells
+            intType iU(i), jU(j), kU(k); // U momentum
+            intType iV(i), jV(j), kV(k); // V momentum
+            intType iW(i), jW(j), kW(k); // W momentum
 
-//                            - m_fvCoeffs.Umom.AP[p](i+1, j, k) * m_fields[P]( G(i+1, j  , k  ) )
-//                            - m_fvCoeffs.Umom.AP[e](i+1, j, k) * m_fields[P]( G(i+2, j  , k  ) )
-//                            //- m_fvCoeffs.Umom.AP[w](i+1, j, k) * m_fields[P]( G(i  , j  , k  ) )
+            // U momentum 
+            if        constexpr ( std::is_same<Ustag, e>::value ) {
+                iU++;
+            } else if constexpr ( std::is_same<Ustag, w>::value ) {
+                iU--;
+            }
 
-//                            ) / m_fvCoeffs.Umom.AU[p](i+1, j, k);
+            // V momentum
+            if        constexpr ( std::is_same<Vstag, n>::value ) {
+                jV++;
+            } else if constexpr ( std::is_same<Vstag, s>::value ) {
+                jV--;
+            }
+
+            // W momentum
+            if        constexpr ( std::is_same<Wstag, t>::value ) {
+                kW++;
+            } else if constexpr ( std::is_same<Wstag, b>::value ) {
+                kW--;
+            }
+
+
+            // Precompute momentum RHS, divided by AP coefficients
+            // U momentum
+            floatType bU = ( m_fvCoeffs.Umom.B(iU, jU, kU)
+
+                           - m_fvCoeffs.Umom.AU[n](iU, jU, kU) * m_fields[U]( G(iU  , jU+1, kU  ) )
+                           - m_fvCoeffs.Umom.AU[e](iU, jU, kU) * m_fields[U]( G(iU+1, jU  , kU  ) )
+                           - m_fvCoeffs.Umom.AU[s](iU, jU, kU) * m_fields[U]( G(iU  , jU-1, kU  ) )
+                           - m_fvCoeffs.Umom.AU[w](iU, jU, kU) * m_fields[U]( G(iU-1, jU  , kU  ) )
+                           - m_fvCoeffs.Umom.AU[t](iU, jU, kU) * m_fields[U]( G(iU  , jU  , kU+1) )
+                           - m_fvCoeffs.Umom.AU[b](iU, jU, kU) * m_fields[U]( G(iU  , jU  , kU-1) )
+
+                           - m_fvCoeffs.Umom.AP[p](iU, jU, kU) * m_fields[P]( G(iU  , jU  , kU  ) )
+                           - m_fvCoeffs.Umom.AP[e](iU, jU, kU) * m_fields[P]( G(iU+1, jU  , kU  ) )
+                           //- m_fvCoeffs.Umom.AP[w](iU, jU, kU) * m_fields[P]( G(iU-1, jU  , kU  ) )
+
+                           ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
+
+
+            // V momentum 
+            floatType bV = ( m_fvCoeffs.Vmom.B(iV, jV, kV)
+
+                           - m_fvCoeffs.Vmom.AV[n](iV, jV, kV) * m_fields[V]( G(iV  , jV+1, kV  ) )
+                           - m_fvCoeffs.Vmom.AV[e](iV, jV, kV) * m_fields[V]( G(iV+1, jV  , kV  ) )
+                           - m_fvCoeffs.Vmom.AV[s](iV, jV, kV) * m_fields[V]( G(iV  , jV-1, kV  ) )
+                           - m_fvCoeffs.Vmom.AV[w](iV, jV, kV) * m_fields[V]( G(iV-1, jV  , kV  ) )
+                           - m_fvCoeffs.Vmom.AV[t](iV, jV, kV) * m_fields[V]( G(iV  , jV  , kV+1) )
+                           - m_fvCoeffs.Vmom.AV[b](iV, jV, kV) * m_fields[V]( G(iV  , jV  , kV-1) )
+
+                           - m_fvCoeffs.Vmom.AP[p](iV, jV, kV) * m_fields[P]( G(iV  , jV  , kV  ) )
+                           - m_fvCoeffs.Vmom.AP[n](iV, jV, kV) * m_fields[P]( G(iV  , jV+1, kV  ) )
+                           //- m_fvCoeffs.Umom.AP[s](iV, jV, kV) * m_fields[P]( G(iV  , jV-1, kV  ) )
+
+                           ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
+
+
+            // W momentum
+            floatType bW = ( m_fvCoeffs.Wmom.B(iW, jW, kW)
+
+                           - m_fvCoeffs.Wmom.AW[n](iW, jW, kW) * m_fields[W]( G(iW  , jW+1, kW  ) )
+                           - m_fvCoeffs.Wmom.AW[e](iW, jW, kW) * m_fields[W]( G(iW+1, jW  , kW  ) )
+                           - m_fvCoeffs.Wmom.AW[s](iW, jW, kW) * m_fields[W]( G(iW  , jW-1, kW  ) )
+                           - m_fvCoeffs.Wmom.AW[w](iW, jW, kW) * m_fields[W]( G(iW-1, jW  , kW  ) )
+                           - m_fvCoeffs.Wmom.AW[t](iW, jW, kW) * m_fields[W]( G(iW  , jW  , kW+1) )
+                           - m_fvCoeffs.Wmom.AW[b](iW, jW, kW) * m_fields[W]( G(iW  , jW  , kW-1) )
+
+                           - m_fvCoeffs.Wmom.AP[p](iW, jW, kW) * m_fields[P]( G(iW  , jW  , kW  ) )
+                           - m_fvCoeffs.Wmom.AP[t](iW, jW, kW) * m_fields[P]( G(iW  , jW  , kW  ) )
+                           //- m_fvCoeffs.Wmom.AP[b](iW, jW, kW) * m_fields[P]( G(iW  , jW  , kW  ) )
+
+                           ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
 
 
 
-//             // Continuity for pressure
-//             floatType bp = (m_fvCoeffs.Cont.B(i, j, k)
+            // Continuity for pressure
+            floatType bP = (m_fvCoeffs.Cont.B(i, j, k)
                             
-//                           //- m_fvCoeffs.Cont.AV[n](i, j, k) * m_fields[V]( G(i, j+1, k) )
-//                           - m_fvCoeffs.Cont.AV[p](i, j, k) * m_fields[V]( G(i, j  , k) )
-//                           - m_fvCoeffs.Cont.AV[s](i, j, k) * m_fields[V]( G(i, j-1, k) )
+                          //- m_fvCoeffs.Cont.AV[n](i, j, k) * m_fields[V]( G(i, j+1, k) )
+                          - m_fvCoeffs.Cont.AV[p](i, j, k) * m_fields[V]( G(i, j  , k) )
+                          - m_fvCoeffs.Cont.AV[s](i, j, k) * m_fields[V]( G(i, j-1, k) )
                           
-//                           //- m_fvCoeffs.Cont.AU[e](i, j, k) * m_fields[U]( G(i+1, j, k) )
-//                           - m_fvCoeffs.Cont.AU[p](i, j, k) * m_fields[U]( G(i  , j, k) )
-//                           - m_fvCoeffs.Cont.AU[w](i, j, k) * m_fields[U]( G(i-1, j, k) )
+                          //- m_fvCoeffs.Cont.AU[e](i, j, k) * m_fields[U]( G(i+1, j, k) )
+                          - m_fvCoeffs.Cont.AU[p](i, j, k) * m_fields[U]( G(i  , j, k) )
+                          - m_fvCoeffs.Cont.AU[w](i, j, k) * m_fields[U]( G(i-1, j, k) )
                           
-//                           //- m_fvCoeffs.Cont.AW[t](i, j, k) * m_fields[W]( G(i, j, k+1) )
-//                           - m_fvCoeffs.Cont.AW[p](i, j, k) * m_fields[W]( G(i, j, k  ) )
-//                           - m_fvCoeffs.Cont.AW[b](i, j, k) * m_fields[W]( G(i, j, k-1) )
+                          //- m_fvCoeffs.Cont.AW[t](i, j, k) * m_fields[W]( G(i, j, k+1) )
+                          - m_fvCoeffs.Cont.AW[p](i, j, k) * m_fields[W]( G(i, j, k  ) )
+                          - m_fvCoeffs.Cont.AW[b](i, j, k) * m_fields[W]( G(i, j, k-1) )
                           
-//                           - m_fvCoeffs.Cont.AP[n](i, j, k) * m_fields[P]( G(i  , j+1, k  ) )
-//                           - m_fvCoeffs.Cont.AP[e](i, j, k) * m_fields[P]( G(i+1, j  , k  ) )
-//                           - m_fvCoeffs.Cont.AP[s](i, j, k) * m_fields[P]( G(i  , j-1, k  ) )
-//                           - m_fvCoeffs.Cont.AP[w](i, j, k) * m_fields[P]( G(i-1, j  , k  ) )
-//                           - m_fvCoeffs.Cont.AP[t](i, j, k) * m_fields[P]( G(i  , j  , k+1) )
-//                           - m_fvCoeffs.Cont.AP[b](i, j, k) * m_fields[P]( G(i  , j  , k-1) )
+                          - m_fvCoeffs.Cont.AP[n](i, j, k) * m_fields[P]( G(i  , j+1, k  ) )
+                          - m_fvCoeffs.Cont.AP[e](i, j, k) * m_fields[P]( G(i+1, j  , k  ) )
+                          - m_fvCoeffs.Cont.AP[s](i, j, k) * m_fields[P]( G(i  , j-1, k  ) )
+                          - m_fvCoeffs.Cont.AP[w](i, j, k) * m_fields[P]( G(i-1, j  , k  ) )
+                          - m_fvCoeffs.Cont.AP[t](i, j, k) * m_fields[P]( G(i  , j  , k+1) )
+                          - m_fvCoeffs.Cont.AP[b](i, j, k) * m_fields[P]( G(i  , j  , k-1) )
 
-//                           - m_fvCoeffs.Cont.AP[nn](i, j, k) * m_fields[P]( G(i  , j+2, k  ) )
-//                           - m_fvCoeffs.Cont.AP[ee](i, j, k) * m_fields[P]( G(i+2, j  , k  ) )
-//                           - m_fvCoeffs.Cont.AP[ss](i, j, k) * m_fields[P]( G(i  , j-2, k  ) )
-//                           - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields[P]( G(i-2, j  , k  ) )
-//                           - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields[P]( G(i  , j  , k+2) )
-//                           - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields[P]( G(i  , j  , k-2) )
+                          - m_fvCoeffs.Cont.AP[nn](i, j, k) * m_fields[P]( G(i  , j+2, k  ) )
+                          - m_fvCoeffs.Cont.AP[ee](i, j, k) * m_fields[P]( G(i+2, j  , k  ) )
+                          - m_fvCoeffs.Cont.AP[ss](i, j, k) * m_fields[P]( G(i  , j-2, k  ) )
+                          - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields[P]( G(i-2, j  , k  ) )
+                          - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields[P]( G(i  , j  , k+2) )
+                          - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields[P]( G(i  , j  , k-2) )
 
-//                           ) / m_fvCoeffs.Cont.AP[p](i, j, k);
+                          ) / m_fvCoeffs.Cont.AP[p](i, j, k);
 
-//             // This only needs to be updated at linearisation
-//             floatType K1 = m_fvCoeffs.Cont.AP[p](i, j, k)
-//                          - m_fvCoeffs.Cont.AU[e](i, j, k) * m_fvCoeffs.Umom.AP[w](i+1, j  , k  ) / m_fvCoeffs.Umom.AU[p](i+1, j  , k  )
-//                          - m_fvCoeffs.Cont.AV[n](i, j, k) * m_fvCoeffs.Vmom.AP[s](i  , j+1, k  ) / m_fvCoeffs.Vmom.AV[p](i  , j+1, k  )
-//                          - m_fvCoeffs.Cont.AW[t](i, j, k) * m_fvCoeffs.Wmom.AP[b](i  , j  , k+1) / m_fvCoeffs.Umom.AW[p](i  , j  , k+1);
-
-
-//             // Update P continuity
-//             m_fields[P]( G(i, j, k) ) = ( bp
-//                                         - m_fvCoeffs.Cont.AU[e](i, j, k) * bu
-//                                         //- m_fvCoeffs.Cont.AV[n](i, j, k) * bv
-//                                         //- m_fvCoeffs.Cont.AW[t](i, j, k) * bw
-//                                         ) / K1;
+            // This only needs to be updated at linearisation
+            floatType K = m_fvCoeffs.Cont.AP[p](i, j, k)
+                        - m_fvCoeffs.Cont.AU[e](i, j, k) * m_fvCoeffs.Umom.AP[w](iU, jU, kU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
+                        - m_fvCoeffs.Cont.AV[n](i, j, k) * m_fvCoeffs.Vmom.AP[s](iV, jV, kV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
+                        - m_fvCoeffs.Cont.AW[t](i, j, k) * m_fvCoeffs.Wmom.AP[b](iW, jW, kW) / m_fvCoeffs.Umom.AW[p](iW, jW, kW);
+            K = 1.0 / K;
 
 
+            // Update P continuity
+            m_fields[P]( G(i, j, k) ) = ( bP
+                                        - m_fvCoeffs.Cont.AU[e](i, j, k) * bU
+                                        - m_fvCoeffs.Cont.AV[n](i, j, k) * bV
+                                        - m_fvCoeffs.Cont.AW[t](i, j, k) * bW
+                                        ) * K;
 
-//             // Update U momentum 
-//             m_fields[U]( G(i+1, j, k) ) = bu 
-//                                         - m_fvCoeffs.Umom.AP[w](i+1, j, k) * m_fields[P]( G(i  , j  , k  ) ) / m_fvCoeffs.Umom.AU[p](i+1, j, k);
 
 
-//             // Update V momentum
+            // Update U momentum 
+            m_fields[U]( G(iU, jU, kU) ) = bU 
+                                         - m_fvCoeffs.Umom.AP[w](iU, jU, kU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
 
-//             // Update W momentum
 
-//         }
+            // Update V momentum
+            m_fields[V]( G(iV, jV, kV) ) = bV 
+                                         - m_fvCoeffs.Vmom.AP[s](iV, jV, kV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
 
-//     private:
-//         ArrayAllocator<Fields, array3D> &m_fields;
-//         const FVCoefficients &m_fvCoeffs;
-// };
+            // Update W momentum
+            m_fields[W]( G(iW, jW, kW) ) = bW 
+                                         - m_fvCoeffs.Wmom.AP[b](iW, jW, kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+
+        }
+
+
+
+
+    private:
+        ArrayAllocator<Fields, array3D> &m_fields;
+        const FVCoefficients &m_fvCoeffs;
+};
 
 
 
