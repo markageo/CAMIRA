@@ -61,9 +61,9 @@ class BlockSolver
             using enum TransportCoefficients::ENUMDATA;
 
             // Staggering must be valid
-            static_assert( std::is_same<Ustag, e>::value || std::is_same<Ustag, w>::value, "Invalid U momentum staggering" );
-            static_assert( std::is_same<Vstag, n>::value || std::is_same<Vstag, s>::value, "Invalid V momentum staggering" );
-            static_assert( std::is_same<Wstag, t>::value || std::is_same<Wstag, b>::value, "Invalid W momentum staggering" );
+            static_assert( (Ustag == e) || (Ustag == w), "Invalid U momentum staggering" );
+            static_assert( (Vstag == n) || (Vstag == s), "Invalid V momentum staggering" );
+            static_assert( (Wstag == t) || (Wstag == b), "Invalid W momentum staggering" );
 
             // For indexing the staggered cells
             intType iU(i), jU(j), kU(k); // U momentum
@@ -71,23 +71,23 @@ class BlockSolver
             intType iW(i), jW(j), kW(k); // W momentum
 
             // U momentum 
-            if        constexpr ( std::is_same<Ustag, e>::value ) {
+            if        constexpr ( Ustag == e ) {
                 iU++;
-            } else if constexpr ( std::is_same<Ustag, w>::value ) {
+            } else if constexpr ( Ustag == w ) {
                 iU--;
             }
 
             // V momentum
-            if        constexpr ( std::is_same<Vstag, n>::value ) {
+            if        constexpr ( Vstag == n ) {
                 jV++;
-            } else if constexpr ( std::is_same<Vstag, s>::value ) {
+            } else if constexpr ( Vstag == s) {
                 jV--;
             }
 
             // W momentum
-            if        constexpr ( std::is_same<Wstag, t>::value ) {
+            if        constexpr ( Wstag == t ) {
                 kW++;
-            } else if constexpr ( std::is_same<Wstag, b>::value ) {
+            } else if constexpr ( Wstag == b ) {
                 kW--;
             }
 
