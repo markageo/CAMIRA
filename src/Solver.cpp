@@ -46,99 +46,160 @@ bool MetResidualTolerence( const EnumVector<Fields, floatType> &residuals,
 
 
 
-// class PlaneSolver
+
+// // Performs a single local update of block coupled equations
+// class BlockSolver
 // {
+
 //     public:
 
-//         PlaneSolver( ArrayAllocator<Fields, array3D> &fields,
-//                      FVCoefficients &fvCoeffs,
-//                      const InputData::PlaneSolverSettings &planeSolverSettings,
-//                      const InputData::LineSolverSettings &lineSolverSettings) :
-//         m_fields( fields ),
-//         m_fvCoeffs( fvCoeffs ),
-//         m_maxIterations( planeSolverSettings.maxIterations ),
-//         m_maxResiduals( planeSolverSettings.maxResiduals ),
-//         m_lineSolver( fields, fvCoeffs, lineSolverSettings )
-//         {}
-
-//         void SolvePlaneForwardStagger(const intType k)
+//         void UpdateBlock(const intType i, const intType j, const intType k)
 //         {
-//             using enum Axis::ENUMDATA;
-//             intType nLines = m_fields[Fields::ENUMDATA::P].dimension(Z) - 2*nGhost;    // All fields should have the same dimensions
+//             using enum Fields::ENUMDATA;
+//             using enum TransportCoefficients::ENUMDATA;
 
-//             // Forwards sweep RED cells
-//             for (intType j = 0; j != nLines-1; j = j + 2) {
-//                 m_lineSolver.SolveLineForwardStagger(j, k);
-//             }
+//             // Precompute momentum RHS, divided by AP coefficients
+//             floatType bu = ( m_fvCoeffs.Umom.B(i+1, j, k)
 
+//                            - m_fvCoeffs.Umom.AU[n](i+1, j, k) * m_fields[U]( G(i+1, j+1, k  ) )
+//                            - m_fvCoeffs.Umom.AU[e](i+1, j, k) * m_fields[U]( G(i+2, j  , k  ) )
+//                            - m_fvCoeffs.Umom.AU[s](i+1, j, k) * m_fields[U]( G(i+1, j-1, k  ) )
+//                            - m_fvCoeffs.Umom.AU[w](i+1, j, k) * m_fields[U]( G(i+1, j+1, k  ) )
+//                            - m_fvCoeffs.Umom.AU[t](i+1, j, k) * m_fields[U]( G(i+1, j+1, k+1) )
+//                            - m_fvCoeffs.Umom.AU[b](i+1, j, k) * m_fields[U]( G(i+1, j+1, k-1) )
 
-//             // Backwards sweep BLACK cells
-//             for (intType j = nLines-1; j != 0; j = j - 2) {
-//                 m_lineSolver.SolveLineBackwardStagger(j, k);
-//             }
-//         }
+//                            - m_fvCoeffs.Umom.AP[p](i+1, j, k) * m_fields[P]( G(i+1, j  , k  ) )
+//                            - m_fvCoeffs.Umom.AP[e](i+1, j, k) * m_fields[P]( G(i+2, j  , k  ) )
+//                            //- m_fvCoeffs.Umom.AP[w](i+1, j, k) * m_fields[P]( G(i  , j  , k  ) )
 
-//         void SolvePlaneBackwardStagger(const intType k)
-//         {
-//             using enum Axis::ENUMDATA;
-//             intType nLines = m_fields[Fields::ENUMDATA::P].dimension(Z) - 2*nGhost;    // All fields should have the same dimensions
-
-//             // Forwards sweep RED cells
-//             for (intType j = 0; j != nLines-1; j = j + 2) {
-                
-                
-
-//             }
+//                            ) / m_fvCoeffs.Umom.AU[p](i+1, j, k);
 
 
-//             // Backwards sweep BLACK cells
-//             for (intType j = nLines-1; j != 0; j = j - 2) {
-                
+
+//             // Continuity for pressure
+//             floatType bp = (m_fvCoeffs.Cont.B(i, j, k)
+                            
+//                           //- m_fvCoeffs.Cont.AV[n](i, j, k) * m_fields[V]( G(i, j+1, k) )
+//                           - m_fvCoeffs.Cont.AV[p](i, j, k) * m_fields[V]( G(i, j  , k) )
+//                           - m_fvCoeffs.Cont.AV[s](i, j, k) * m_fields[V]( G(i, j-1, k) )
+                          
+//                           //- m_fvCoeffs.Cont.AU[e](i, j, k) * m_fields[U]( G(i+1, j, k) )
+//                           - m_fvCoeffs.Cont.AU[p](i, j, k) * m_fields[U]( G(i  , j, k) )
+//                           - m_fvCoeffs.Cont.AU[w](i, j, k) * m_fields[U]( G(i-1, j, k) )
+                          
+//                           //- m_fvCoeffs.Cont.AW[t](i, j, k) * m_fields[W]( G(i, j, k+1) )
+//                           - m_fvCoeffs.Cont.AW[p](i, j, k) * m_fields[W]( G(i, j, k  ) )
+//                           - m_fvCoeffs.Cont.AW[b](i, j, k) * m_fields[W]( G(i, j, k-1) )
+                          
+//                           - m_fvCoeffs.Cont.AP[n](i, j, k) * m_fields[P]( G(i  , j+1, k  ) )
+//                           - m_fvCoeffs.Cont.AP[e](i, j, k) * m_fields[P]( G(i+1, j  , k  ) )
+//                           - m_fvCoeffs.Cont.AP[s](i, j, k) * m_fields[P]( G(i  , j-1, k  ) )
+//                           - m_fvCoeffs.Cont.AP[w](i, j, k) * m_fields[P]( G(i-1, j  , k  ) )
+//                           - m_fvCoeffs.Cont.AP[t](i, j, k) * m_fields[P]( G(i  , j  , k+1) )
+//                           - m_fvCoeffs.Cont.AP[b](i, j, k) * m_fields[P]( G(i  , j  , k-1) )
+
+//                           - m_fvCoeffs.Cont.AP[nn](i, j, k) * m_fields[P]( G(i  , j+2, k  ) )
+//                           - m_fvCoeffs.Cont.AP[ee](i, j, k) * m_fields[P]( G(i+2, j  , k  ) )
+//                           - m_fvCoeffs.Cont.AP[ss](i, j, k) * m_fields[P]( G(i  , j-2, k  ) )
+//                           - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields[P]( G(i-2, j  , k  ) )
+//                           - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields[P]( G(i  , j  , k+2) )
+//                           - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields[P]( G(i  , j  , k-2) )
+
+//                           ) / m_fvCoeffs.Cont.AP[p](i, j, k);
+
+//             // This only needs to be updated at linearisation
+//             floatType K1 = m_fvCoeffs.Cont.AP[p](i, j, k)
+//                          - m_fvCoeffs.Cont.AU[e](i, j, k) * m_fvCoeffs.Umom.AP[w](i+1, j  , k  ) / m_fvCoeffs.Umom.AU[p](i+1, j  , k  )
+//                          - m_fvCoeffs.Cont.AV[n](i, j, k) * m_fvCoeffs.Vmom.AP[s](i  , j+1, k  ) / m_fvCoeffs.Vmom.AV[p](i  , j+1, k  )
+//                          - m_fvCoeffs.Cont.AW[t](i, j, k) * m_fvCoeffs.Wmom.AP[b](i  , j  , k+1) / m_fvCoeffs.Umom.AW[p](i  , j  , k+1);
 
 
-//             }
+//             // Update P continuity
+//             m_fields[P]( G(i, j, k) ) = ( bp
+//                                         - m_fvCoeffs.Cont.AU[e](i, j, k) * bu
+//                                         //- m_fvCoeffs.Cont.AV[n](i, j, k) * bv
+//                                         //- m_fvCoeffs.Cont.AW[t](i, j, k) * bw
+//                                         ) / K1;
+
+
+
+//             // Update U momentum 
+//             m_fields[U]( G(i+1, j, k) ) = bu 
+//                                         - m_fvCoeffs.Umom.AP[w](i+1, j, k) * m_fields[P]( G(i  , j  , k  ) ) / m_fvCoeffs.Umom.AU[p](i+1, j, k);
+
+
+//             // Update V momentum
+
+//             // Update W momentum
+
 //         }
 
 //     private:
-//         intType m_maxIterations;
-//         EnumVector<Fields, floatType> m_maxResiduals;
 //         ArrayAllocator<Fields, array3D> &m_fields;
 //         const FVCoefficients &m_fvCoeffs;
-//         LineSolver m_lineSolver;
 // };
 
 
 
-// class LineSolver
-// {
-//     public:
+// Solves line
+class LineSolver
+{
+    public:
 
-//         LineSolver( ArrayAllocator<Fields, array3D> &fields,
-//                     FVCoefficients &fvCoeffs,
-//                     const InputData::LineSolverSettings &lineSolverSettings) :
-//         m_fields( fields ),
-//         m_fvCoeffs( fvCoeffs ),
-//         m_maxIterations( lineSolverSettings.maxIterations ),
-//         m_maxResiduals( lineSolverSettings.maxResiduals )
-//         {}
+        LineSolver( ArrayAllocator<Fields, array3D> &fields,
+                    FVCoefficients &fvCoeffs,
+                    const InputData::LineSolverSettings &lineSolverSettings) :
+        m_fields( fields ),
+        m_fvCoeffs( fvCoeffs ),
+        m_maxIterations( lineSolverSettings.maxIterations ),
+        m_maxResiduals( lineSolverSettings.maxResiduals )
+        {}
 
-//         void SolveLineForwardStagger(const intType j, const intType k)
-//         {
+        void SolveLine(const intType j, const intType k)
+        {
 
-//         }
+        }
 
-//         void SolveLineBackwardStagger(const intType j, const intType k)
-//         {
 
-//         }
+    private:
+        intType m_maxIterations;
+        EnumVector<Fields, floatType> m_maxResiduals;
+        ArrayAllocator<Fields, array3D> &m_fields;
+        const FVCoefficients &m_fvCoeffs;
 
-//     private:
-//         intType m_maxIterations;
-//         EnumVector<Fields, floatType> m_maxResiduals;
-//         ArrayAllocator<Fields, array3D> &m_fields;
-//         const FVCoefficients &m_fvCoeffs;
+};
 
-// };
+
+// Solves plane
+class PlaneSolver
+{
+    public:
+
+        PlaneSolver( ArrayAllocator<Fields, array3D> &fields,
+                     FVCoefficients &fvCoeffs,
+                     const InputData::PlaneSolverSettings &planeSolverSettings,
+                     const InputData::LineSolverSettings &lineSolverSettings) :
+        m_fields( fields ),
+        m_fvCoeffs( fvCoeffs ),
+        m_maxIterations( planeSolverSettings.maxIterations ),
+        m_maxResiduals( planeSolverSettings.maxResiduals ),
+        m_lineSolver( fields, fvCoeffs, lineSolverSettings )
+        {}
+
+        void SolvePlane(const intType k)
+        {
+
+        }
+
+
+    private:
+        intType m_maxIterations;
+        EnumVector<Fields, floatType> m_maxResiduals;
+        ArrayAllocator<Fields, array3D> &m_fields;
+        const FVCoefficients &m_fvCoeffs;
+        LineSolver m_lineSolver;
+};
+
 
 
 

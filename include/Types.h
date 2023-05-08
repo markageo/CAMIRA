@@ -12,7 +12,7 @@ namespace CFD
 {
 
 using floatType = double;
-using intType = long int;
+using intType = Eigen::Index;
 using array1D = Eigen::Tensor<floatType, 1>;    // Column major
 using array2D = Eigen::Tensor<floatType, 2>;    // Column major
 using array3D = Eigen::Tensor<floatType, 3>;    // Column major
@@ -25,7 +25,7 @@ using floatVector2 = Eigen::Array<floatType, 2, 1>;
 // Number of ghost cells in solution field
 constexpr intType nGhost = 2;
 
-// Convert regular indexing to ghost cell indexing, to use with Eigen::Tensor
+// Eigen::Tensor ghost cell indexing - list indexing
 inline Eigen::Index G(const Eigen::Index i) 
     { return {i + nGhost}; };
 
@@ -34,6 +34,17 @@ inline Eigen::array<Eigen::Index, 2> G(const Eigen::Index i, const Eigen::Index 
 
 inline Eigen::array<Eigen::Index, 3> G(const Eigen::Index i, const Eigen::Index j, const Eigen::Index k) 
     { return {i + nGhost, j + nGhost, k + nGhost}; };
+
+
+// Eigen::Tensor ghost cell indexing - array indexing
+inline Eigen::Index G(const Eigen::array<Eigen::Index, 1> idx) 
+    { return {idx[0] + nGhost}; };
+
+inline Eigen::array<Eigen::Index, 2> G(const Eigen::array<Eigen::Index, 2> idx) 
+    { return {idx[0] + nGhost, idx[1] + nGhost}; };
+
+inline Eigen::array<Eigen::Index, 3> G(const Eigen::array<Eigen::Index, 3> idx) 
+    { return {idx[0] + nGhost, idx[1] + nGhost, idx[2] + nGhost}; };
 
 
 

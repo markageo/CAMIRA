@@ -13,12 +13,12 @@ namespace
 
 std::vector<floatType> CalculateGrowthRates(const std::vector<InputData::MeshSegment> &meshSegments)
 {
-    int nSegments = meshSegments.size();
+    size_t nSegments = meshSegments.size();
     std::vector<floatType> growthRates(nSegments);
 
     // Negative growth rate means shrinking grid
-    for (int i = 0; i != nSegments; i++) {
-        growthRates[i] = std::pow( std::abs(meshSegments[i].biasFactor) , 1.0/( meshSegments[i].nCells - 1 ) );
+    for (size_t i = 0; i != nSegments; i++) {
+        growthRates[i] = std::pow( std::abs(meshSegments[i].biasFactor) , 1.0 / static_cast<floatType>( meshSegments[i].nCells - 1 ) );
         if (meshSegments[i].biasFactor < 0 )   
             growthRates[i] = 1.0/growthRates[i];
     }
@@ -31,16 +31,16 @@ void CalculateCellLengths(array1D &cellLengths,
                           const std::vector<InputData::MeshSegment> &meshSegments, 
                           const std::vector<floatType> &growthRates)
 {
-    int nSegments = meshSegments.size();
+    size_t nSegments = meshSegments.size();
 
     floatType segmentLength, firstCellLength, geometricFactor;
     int cellIndex = 0;
-    for (int s = 0; s != nSegments; s++) {    // Segments
+    for (size_t s = 0; s != nSegments; s++) {    // Segments
 
         if (growthRates[s] != 1.0) { 
             geometricFactor = (1.0 - std::pow( growthRates[s], meshSegments[s].nCells )) / (1.0 - growthRates[s]);   // geometric series formula
         } else {
-            geometricFactor = meshSegments[s].nCells;
+            geometricFactor = static_cast<floatType>( meshSegments[s].nCells );
         }
         segmentLength = meshSegments[s].upperBound - meshSegments[s].lowerBound;
         firstCellLength = segmentLength / geometricFactor; 
@@ -58,10 +58,10 @@ void CalculateCellCenters(array1D &cellCenters,
                           const array1D &cellLengths,
                           const floatType startPosition)
 {
-    int nCellsTotal = cellLengths.size();
+    intType nCellsTotal = cellLengths.size();
 
     floatType previousCellPosition = startPosition, previousCellLength = 0.0;
-    for (int i = 0; i != nCellsTotal; i++) {
+    for (intType i = 0; i != nCellsTotal; i++) {
         cellCenters(i) = previousCellPosition + previousCellLength/2.0 + cellLengths(i)/2.0;
         previousCellPosition = cellCenters(i);
         previousCellLength = cellLengths(i);
@@ -74,9 +74,9 @@ void CalculateCellCenterDiffInv(array1D &cellCenterDiffInv,
                                 const array1D &cellCenters)
 {
     // First and last element dont correspond to valid values
-    int nFaces = cellCenters.size() + 1;
+    intType nFaces = cellCenters.size() + 1;
 
-    for (int i = 1; i != nFaces-1; i++) {
+    for (intType i = 1; i != nFaces-1; i++) {
         cellCenterDiffInv(i) = 1.0/( cellCenters(i) - cellCenters(i-1) );
     }
 }
@@ -86,10 +86,10 @@ void CalculateCellFaces(array1D &cellFaces,
                         const array1D &cellLengths,
                         const floatType startPosition)
 {
-    int nFaces = cellLengths.size() + 1;
+    intType nFaces = cellLengths.size() + 1;
 
     cellFaces(0) = startPosition;
-    for (int i = 1; i != nFaces; i++) {
+    for (intType i = 1; i != nFaces; i++) {
         cellFaces(i) = cellFaces(i-1) + cellLengths(i-1);
     }
 }
@@ -106,8 +106,8 @@ void CalculateInterpolationFactors(array1D &interpFactors,
 
 
 Mesh::ExtrapFactorsStruct GetExtrapolationFactors(const array1D &cellLengths, 
-                                                  const int fieldIndex_p, 
-                                                  const int fieldIndex_a)
+                                                  const intType fieldIndex_p, 
+                                                  const intType fieldIndex_a)
 {
     floatType extrapFactor_p = ( 2.0*cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) )
                                 / ( cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) );
@@ -139,7 +139,7 @@ void CalculateExtrapolationFactors(EnumVector<BoundaryPatches, Mesh::ExtrapFacto
         patchNegative = zNegative;
     }
 
-    int fieldIndex_p, fieldIndex_a; // Boundary cell node and the adjacent one
+    intType fieldIndex_p, fieldIndex_a; // Boundary cell node and the adjacent one
 
     // Positive patch boundary
     fieldIndex_p = cellLengths[axis].dimension(0) - 1;
