@@ -54,6 +54,10 @@ class BlockSolver
 
     public:
 
+        BlockSolver(ArrayAllocator<Fields, array3D> &fields, const FVCoefficients &fvCoeffs) :
+            m_fields( fields ), m_fvCoeffs( fvCoeffs ) {};
+
+
         template<TC Ustag, TC Vstag, TC Wstag >
         void UpdateBlock(const intType i, const intType j, const intType k)
         {
@@ -184,7 +188,7 @@ class BlockSolver
             K = 1.0 / K;
 
 
-            // Update P continuity
+            // Update P from continuity
             m_fields[P]( G(i, j, k) ) = ( bP
                                         - m_fvCoeffs.Cont.AU[e](i, j, k) * bU
                                         - m_fvCoeffs.Cont.AV[n](i, j, k) * bV
@@ -192,23 +196,20 @@ class BlockSolver
                                         ) * K;
 
 
-
-            // Update U momentum 
+            // Update U from momentum 
             m_fields[U]( G(iU, jU, kU) ) = bU 
                                          - m_fvCoeffs.Umom.AP[w](iU, jU, kU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
 
 
-            // Update V momentum
+            // Update V from momentum
             m_fields[V]( G(iV, jV, kV) ) = bV 
                                          - m_fvCoeffs.Vmom.AP[s](iV, jV, kV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
 
-            // Update W momentum
+            // Update W from momentum
             m_fields[W]( G(iW, jW, kW) ) = bW 
                                          - m_fvCoeffs.Wmom.AP[b](iW, jW, kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
 
         }
-
-
 
 
     private:
