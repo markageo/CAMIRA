@@ -69,31 +69,19 @@ class BlockSolver
             static_assert( (Vstag == n) || (Vstag == s), "Invalid V momentum staggering" );
             static_assert( (Wstag == t) || (Wstag == b), "Invalid W momentum staggering" );
 
+            static constexpr intType iUoffset = Ustaggering(Ustag), 
+                                     jVoffset = Vstaggering(Vstag), 
+                                     kWoffset = Wstaggering(Wstag);
+
+            // Forces compile time evaluation
+            static_assert( (iUoffset == 1) || (iUoffset == -1));        
+            static_assert( (jVoffset == 1) || (jVoffset == -1));  
+            static_assert( (kWoffset == 1) || (kWoffset == -1));      
+
             // For indexing the staggered cells
-            intType iU(i), jU(j), kU(k); // U momentum
-            intType iV(i), jV(j), kV(k); // V momentum
-            intType iW(i), jW(j), kW(k); // W momentum
-
-            // U momentum 
-            if        constexpr ( Ustag == e ) {
-                iU++;
-            } else if constexpr ( Ustag == w ) {
-                iU--;
-            }
-
-            // V momentum
-            if        constexpr ( Vstag == n ) {
-                jV++;
-            } else if constexpr ( Vstag == s) {
-                jV--;
-            }
-
-            // W momentum
-            if        constexpr ( Wstag == t ) {
-                kW++;
-            } else if constexpr ( Wstag == b ) {
-                kW--;
-            }
+            intType iU(i + iUoffset), jU(j           ), kU(k           ); // U momentum
+            intType iV(i           ), jV(j + jVoffset), kV(k           ); // V momentum
+            intType iW(i           ), jW(j           ), kW(k + kWoffset); // W momentum
 
 
             // Precompute momentum RHS, divided by AP coefficients
@@ -107,9 +95,9 @@ class BlockSolver
                            - m_fvCoeffs.Umom.AU[t](iU, jU, kU) * m_fields[U]( G(iU  , jU  , kU+1) )
                            - m_fvCoeffs.Umom.AU[b](iU, jU, kU) * m_fields[U]( G(iU  , jU  , kU-1) )
 
-                           - m_fvCoeffs.Umom.AP[p](iU, jU, kU) * m_fields[P]( G(iU  , jU  , kU  ) )
-                           - m_fvCoeffs.Umom.AP[e](iU, jU, kU) * m_fields[P]( G(iU+1, jU  , kU  ) )
-                           //- m_fvCoeffs.Umom.AP[w](iU, jU, kU) * m_fields[P]( G(iU-1, jU  , kU  ) )
+                           - m_fvCoeffs.Umom.AP[p](iU) * m_fields[P]( G(iU  , jU  , kU  ) )
+                           - m_fvCoeffs.Umom.AP[e](iU) * m_fields[P]( G(iU+1, jU  , kU  ) )
+                           //- m_fvCoeffs.Umom.AP[w](iU) * m_fields[P]( G(iU-1, jU  , kU  ) )
 
                            ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
 
@@ -124,9 +112,9 @@ class BlockSolver
                            - m_fvCoeffs.Vmom.AV[t](iV, jV, kV) * m_fields[V]( G(iV  , jV  , kV+1) )
                            - m_fvCoeffs.Vmom.AV[b](iV, jV, kV) * m_fields[V]( G(iV  , jV  , kV-1) )
 
-                           - m_fvCoeffs.Vmom.AP[p](iV, jV, kV) * m_fields[P]( G(iV  , jV  , kV  ) )
-                           - m_fvCoeffs.Vmom.AP[n](iV, jV, kV) * m_fields[P]( G(iV  , jV+1, kV  ) )
-                           //- m_fvCoeffs.Umom.AP[s](iV, jV, kV) * m_fields[P]( G(iV  , jV-1, kV  ) )
+                           - m_fvCoeffs.Vmom.AP[p](jV) * m_fields[P]( G(iV  , jV  , kV  ) )
+                           - m_fvCoeffs.Vmom.AP[n](jV) * m_fields[P]( G(iV  , jV+1, kV  ) )
+                           //- m_fvCoeffs.Umom.AP[s](jV) * m_fields[P]( G(iV  , jV-1, kV  ) )
 
                            ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
 
@@ -141,9 +129,9 @@ class BlockSolver
                            - m_fvCoeffs.Wmom.AW[t](iW, jW, kW) * m_fields[W]( G(iW  , jW  , kW+1) )
                            - m_fvCoeffs.Wmom.AW[b](iW, jW, kW) * m_fields[W]( G(iW  , jW  , kW-1) )
 
-                           - m_fvCoeffs.Wmom.AP[p](iW, jW, kW) * m_fields[P]( G(iW  , jW  , kW  ) )
-                           - m_fvCoeffs.Wmom.AP[t](iW, jW, kW) * m_fields[P]( G(iW  , jW  , kW  ) )
-                           //- m_fvCoeffs.Wmom.AP[b](iW, jW, kW) * m_fields[P]( G(iW  , jW  , kW  ) )
+                           - m_fvCoeffs.Wmom.AP[p](kW) * m_fields[P]( G(iW  , jW  , kW  ) )
+                           - m_fvCoeffs.Wmom.AP[t](kW) * m_fields[P]( G(iW  , jW  , kW+1) )
+                           //- m_fvCoeffs.Wmom.AP[b](kW) * m_fields[P]( G(iW  , jW  , kW-1) )
 
                            ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
 
@@ -152,17 +140,17 @@ class BlockSolver
             // Continuity for pressure
             floatType bP = (m_fvCoeffs.Cont.B(i, j, k)
                             
-                          //- m_fvCoeffs.Cont.AV[n](i, j, k) * m_fields[V]( G(i, j+1, k) )
-                          - m_fvCoeffs.Cont.AV[p](i, j, k) * m_fields[V]( G(i, j  , k) )
-                          - m_fvCoeffs.Cont.AV[s](i, j, k) * m_fields[V]( G(i, j-1, k) )
+                          //- m_fvCoeffs.Cont.AV[n](j) * m_fields[V]( G(i, j+1, k) )
+                          - m_fvCoeffs.Cont.AV[p](j) * m_fields[V]( G(i, j  , k) )
+                          - m_fvCoeffs.Cont.AV[s](j) * m_fields[V]( G(i, j-1, k) )
                           
-                          //- m_fvCoeffs.Cont.AU[e](i, j, k) * m_fields[U]( G(i+1, j, k) )
-                          - m_fvCoeffs.Cont.AU[p](i, j, k) * m_fields[U]( G(i  , j, k) )
-                          - m_fvCoeffs.Cont.AU[w](i, j, k) * m_fields[U]( G(i-1, j, k) )
+                          //- m_fvCoeffs.Cont.AU[e](i) * m_fields[U]( G(i+1, j, k) )
+                          - m_fvCoeffs.Cont.AU[p](i) * m_fields[U]( G(i  , j, k) )
+                          - m_fvCoeffs.Cont.AU[w](i) * m_fields[U]( G(i-1, j, k) )
                           
-                          //- m_fvCoeffs.Cont.AW[t](i, j, k) * m_fields[W]( G(i, j, k+1) )
-                          - m_fvCoeffs.Cont.AW[p](i, j, k) * m_fields[W]( G(i, j, k  ) )
-                          - m_fvCoeffs.Cont.AW[b](i, j, k) * m_fields[W]( G(i, j, k-1) )
+                          //- m_fvCoeffs.Cont.AW[t](k) * m_fields[W]( G(i, j, k+1) )
+                          - m_fvCoeffs.Cont.AW[p](k) * m_fields[W]( G(i, j, k  ) )
+                          - m_fvCoeffs.Cont.AW[b](k) * m_fields[W]( G(i, j, k-1) )
                           
                           - m_fvCoeffs.Cont.AP[n](i, j, k) * m_fields[P]( G(i  , j+1, k  ) )
                           - m_fvCoeffs.Cont.AP[e](i, j, k) * m_fields[P]( G(i+1, j  , k  ) )
@@ -182,32 +170,32 @@ class BlockSolver
 
             // This only needs to be updated at linearisation
             floatType K = m_fvCoeffs.Cont.AP[p](i, j, k)
-                        - m_fvCoeffs.Cont.AU[e](i, j, k) * m_fvCoeffs.Umom.AP[w](iU, jU, kU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
-                        - m_fvCoeffs.Cont.AV[n](i, j, k) * m_fvCoeffs.Vmom.AP[s](iV, jV, kV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
-                        - m_fvCoeffs.Cont.AW[t](i, j, k) * m_fvCoeffs.Wmom.AP[b](iW, jW, kW) / m_fvCoeffs.Umom.AW[p](iW, jW, kW);
+                        - m_fvCoeffs.Cont.AU[e](i) * m_fvCoeffs.Umom.AP[w](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
+                        - m_fvCoeffs.Cont.AV[n](j) * m_fvCoeffs.Vmom.AP[s](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
+                        - m_fvCoeffs.Cont.AW[t](k) * m_fvCoeffs.Wmom.AP[b](kW) / m_fvCoeffs.Umom.AW[p](iW, jW, kW);
             K = 1.0 / K;
 
 
             // Update P from continuity
             m_fields[P]( G(i, j, k) ) = ( bP
-                                        - m_fvCoeffs.Cont.AU[e](i, j, k) * bU
-                                        - m_fvCoeffs.Cont.AV[n](i, j, k) * bV
-                                        - m_fvCoeffs.Cont.AW[t](i, j, k) * bW
+                                        - m_fvCoeffs.Cont.AU[e](i) * bU
+                                        - m_fvCoeffs.Cont.AV[n](j) * bV
+                                        - m_fvCoeffs.Cont.AW[t](k) * bW
                                         ) * K;
 
 
             // Update U from momentum 
             m_fields[U]( G(iU, jU, kU) ) = bU 
-                                         - m_fvCoeffs.Umom.AP[w](iU, jU, kU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
+                                         - m_fvCoeffs.Umom.AP[w](iU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
 
 
             // Update V from momentum
             m_fields[V]( G(iV, jV, kV) ) = bV 
-                                         - m_fvCoeffs.Vmom.AP[s](iV, jV, kV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
+                                         - m_fvCoeffs.Vmom.AP[s](jV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
 
             // Update W from momentum
             m_fields[W]( G(iW, jW, kW) ) = bW 
-                                         - m_fvCoeffs.Wmom.AP[b](iW, jW, kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+                                         - m_fvCoeffs.Wmom.AP[b](kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
 
         }
 
@@ -215,6 +203,35 @@ class BlockSolver
     private:
         ArrayAllocator<Fields, array3D> &m_fields;
         const FVCoefficients &m_fvCoeffs;
+
+        // Return the index by which the momentum is staggered
+        static constexpr intType Ustaggering(TC coeff)
+        {
+            if        ( coeff == TC::e ) {
+                return 1;
+            } else if ( coeff ==  TC::w ) {
+                return -1;
+            }
+        }
+
+        static constexpr intType Vstaggering(TC coeff)
+        {
+            if        ( coeff == TC::n ) {
+                return 1;
+            } else if ( coeff ==  TC::s ) {
+                return -1;
+            }
+        }
+
+        static constexpr intType Wstaggering(TC coeff)
+        {
+            if        ( coeff == TC::t ) {
+                return 1;
+            } else if ( coeff ==  TC::b ) {
+                return -1;
+            }
+        }
+    
 };
 
 
@@ -235,6 +252,9 @@ class LineSolver
 
         void SolveLine(const intType j, const intType k)
         {
+            BlockSolver blockSolver(m_fields, m_fvCoeffs);
+            using enum TransportCoefficients::ENUMDATA;
+            blockSolver.UpdateBlock<e, n, t>(1, 2, 3);
 
         }
 
