@@ -237,7 +237,7 @@ namespace
             biasFactorString = segment.second.get<std::string>("biasFactor");
             tempBoundsVector = ParseVectorString(boundsString, 2);
 
-            tempMeshSegment.nCells = String2Type<CFD::floatType>(nCellsString);
+            tempMeshSegment.nCells = String2Type<CFD::intType>(nCellsString);
             tempMeshSegment.biasFactor = String2Type<CFD::floatType>(biasFactorString);
             tempMeshSegment.lowerBound = tempBoundsVector[0];
             tempMeshSegment.upperBound = tempBoundsVector[1];

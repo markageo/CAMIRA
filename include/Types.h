@@ -11,7 +11,12 @@
 namespace CFD 
 {
 
-using floatType = double;
+#ifdef DOUBLE_PRECISION
+    using floatType = double;
+#else
+    using floatType = float;   // Some things need to be fixed before float can be used!
+#endif
+
 using intType = Eigen::Index;
 using array1D = Eigen::Tensor<floatType, 1>;    // Column major
 using array2D = Eigen::Tensor<floatType, 2>;    // Column major

@@ -18,9 +18,9 @@ std::vector<floatType> CalculateGrowthRates(const std::vector<InputData::MeshSeg
 
     // Negative growth rate means shrinking grid
     for (size_t i = 0; i != nSegments; i++) {
-        growthRates[i] = std::pow( std::abs(meshSegments[i].biasFactor) , 1.0 / static_cast<floatType>( meshSegments[i].nCells - 1 ) );
+        growthRates[i] = std::pow( std::abs(meshSegments[i].biasFactor) , 1.0f / static_cast<floatType>( meshSegments[i].nCells - 1 ) );
         if (meshSegments[i].biasFactor < 0 )   
-            growthRates[i] = 1.0/growthRates[i];
+            growthRates[i] = 1.0f/growthRates[i];
     }
 
     return growthRates;
@@ -37,8 +37,8 @@ void CalculateCellLengths(array1D &cellLengths,
     int cellIndex = 0;
     for (size_t s = 0; s != nSegments; s++) {    // Segments
 
-        if (growthRates[s] != 1.0) { 
-            geometricFactor = (1.0 - std::pow( growthRates[s], meshSegments[s].nCells )) / (1.0 - growthRates[s]);   // geometric series formula
+        if (growthRates[s] != 1.0f) { 
+            geometricFactor = (1.0f - std::pow( growthRates[s], static_cast<floatType>(meshSegments[s].nCells) )) / (1.0f - growthRates[s]);   // geometric series formula
         } else {
             geometricFactor = static_cast<floatType>( meshSegments[s].nCells );
         }
@@ -60,9 +60,9 @@ void CalculateCellCenters(array1D &cellCenters,
 {
     intType nCellsTotal = cellLengths.size();
 
-    floatType previousCellPosition = startPosition, previousCellLength = 0.0;
+    floatType previousCellPosition = startPosition, previousCellLength = 0.0f;
     for (intType i = 0; i != nCellsTotal; i++) {
-        cellCenters(i) = previousCellPosition + previousCellLength/2.0 + cellLengths(i)/2.0;
+        cellCenters(i) = previousCellPosition + previousCellLength/2.0f + cellLengths(i)/2.0f;
         previousCellPosition = cellCenters(i);
         previousCellLength = cellLengths(i);
     }
@@ -77,7 +77,7 @@ void CalculateCellCenterDiffInv(array1D &cellCenterDiffInv,
     intType nFaces = cellCenters.size() + 1;
 
     for (intType i = 1; i != nFaces-1; i++) {
-        cellCenterDiffInv(i) = 1.0/( cellCenters(i) - cellCenters(i-1) );
+        cellCenterDiffInv(i) = 1.0f/( cellCenters(i) - cellCenters(i-1) );
     }
 }
 
@@ -109,7 +109,7 @@ Mesh::ExtrapFactorsStruct GetExtrapolationFactors(const array1D &cellLengths,
                                                   const intType fieldIndex_p, 
                                                   const intType fieldIndex_a)
 {
-    floatType extrapFactor_p = ( 2.0*cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) )
+    floatType extrapFactor_p = ( 2.0f*cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) )
                                 / ( cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) );
 
     floatType extrapFactor_a = - ( cellLengths(fieldIndex_p) )

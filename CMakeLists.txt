@@ -37,6 +37,16 @@ if (PROFILING)
 endif()
 
 
+# Run in double precision
+option (DOUBLE_PRECISION "Double precision" on)
+if (DOUBLE_PRECISION)
+	message(STATUS "Compiling in double precision")
+	add_compile_definitions(DOUBLE_PRECISION)
+else()
+	message(STATUS "Compiling in single precision")
+endif()
+
+
 # include directories
 include_directories(include)
 include_directories(libraries)
