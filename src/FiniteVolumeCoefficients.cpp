@@ -247,11 +247,11 @@ void UpwindXnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
                 coeff_e = - uf * mesh.cellLengthsInv[X](i);
 
                 // Cell on west side
-                coeffs[e](i-1, j, k) = std::min( coeff_w, 0.0 );
+                coeffs[e](i-1, j, k) = std::min( coeff_w, static_cast<floatType>(0.0f) );
                 coeffs[p](i-1, j, k) += coeff_w - coeffs[e](i, j, k);
 
                 // Cell on east side
-                coeffs[w](i, j, k)  = std::min( coeff_e, 0.0 );      // The sign of this coefficient is negative
+                coeffs[w](i, j, k)  = std::min( coeff_e, static_cast<floatType>(0.0f) );      // The sign of this coefficient is negative
                 coeffs[p](i, j, k)  = coeff_e - coeffs[w](i, j, k);  // Shouldn't be += since this is the first time it is touched
 
             }
@@ -281,11 +281,11 @@ void UpwindYnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
                 coeff_n = - uf * mesh.cellLengthsInv[Y](j);
 
                 // Cell on south side
-                coeffs[n](i, j-1, k) = std::min( coeff_s, 0.0 );
+                coeffs[n](i, j-1, k) = std::min( coeff_s, static_cast<floatType>(0.0f) );
                 coeffs[p](i, j-1, k) += coeff_s - coeffs[n](i, j, k);
 
                 // Cell on north side
-                coeffs[s](i, j, k)  = std::min( coeff_n, 0.0 );     // The sign of this coefficient is negative
+                coeffs[s](i, j, k)  = std::min( coeff_n, static_cast<floatType>(0.0f) );     // The sign of this coefficient is negative
                 coeffs[p](i, j, k)  += coeff_n - coeffs[s](i, j, k); 
 
             }
@@ -315,11 +315,11 @@ void UpwindZnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
                 coeff_t = - uf * mesh.cellLengthsInv[Z](k);
 
                 // Cell on bottom side 
-                coeffs[t](i, j, k-1) = std::min( coeff_b, 0.0 );
+                coeffs[t](i, j, k-1) = std::min( coeff_b, static_cast<floatType>(0.0f) );
                 coeffs[p](i, j, k-1) += coeff_b - coeffs[t](i, j, k); 
 
                 // Cell on top side
-                coeffs[b](i, j, k)  = std::min( coeff_t, 0.0 );      // The sign of this coefficient is negative
+                coeffs[b](i, j, k)  = std::min( coeff_t, static_cast<floatType>(0.0f) );      // The sign of this coefficient is negative
                 coeffs[p](i, j, k)  += coeff_t - coeffs[b](i, j, k);
 
             }
@@ -655,7 +655,7 @@ std::vector<floatType> MWICoeffs( const indexVector3 &idx,
     indexVector3 idxn( idx );
     const intType i = idx( axis );
     idxn(axis) -= 1;
-    const floatType d = 1.0 / ( AUU[p]( idx(X), idx(Y), idx(Z) )  +  AUU[p]( idxn(X), idxn(Y), idxn(Z) ) ); 
+    const floatType d = 1.0f/ ( AUU[p]( idx(X), idx(Y), idx(Z) )  +  AUU[p]( idxn(X), idxn(Y), idxn(Z) ) ); 
 
     // These coefficients assume that the momentum equations have been divided through by the cell volume
     coeffs[0] = d * (1 - mesh.interpFactors[axis](i))   * AUP[west](i-1);
