@@ -77,19 +77,6 @@ class StaggerIndexing
 
     private:
 
-        
-        constexpr void SetIndex()
-        {
-            iPcoupled = CoeffIndex[cPcoupled];
-            iPleft    = CoeffIndex[cPleft];
-            iPright   = CoeffIndex[cPright];
-
-            iMcoupled = CoeffIndex[cMcoupled];
-            iMleft    = CoeffIndex[cMleft];
-            iMright   = CoeffIndex[cMright];
-        }           
-
-
         constexpr void SetCompassU(TC staggeredCoeff)
         { 
             if        ( staggeredCoeff == TC::w ) {
@@ -186,6 +173,18 @@ class StaggerIndexing
             }
         } 
 
+
+        constexpr void SetIndex()
+        {
+            iPcoupled = CoeffIndex[cPcoupled];
+            iPleft    = CoeffIndex[cPleft];
+            iPright   = CoeffIndex[cPright];
+
+            iMcoupled = CoeffIndex[cMcoupled];
+            iMleft    = CoeffIndex[cMleft];
+            iMright   = CoeffIndex[cMright];
+        }  
+
 };
 
 
@@ -202,7 +201,7 @@ class BlockSolver
 
         // Core function which updates the local coupled system. Templated by staggering direction.
         template<TC Ustag, TC Vstag, TC Wstag >
-        void UpdateBlock(const intType i, const intType j, const intType k)
+        EnumVector<Fields, floatType> UpdateBlock(const intType i, const intType j, const intType k)
         {
             using enum Fields::ENUMDATA;
             using enum TransportCoefficients::ENUMDATA;
@@ -216,9 +215,11 @@ class BlockSolver
             static constexpr StaggerIndexing sU( U, Ustag );
             static constexpr StaggerIndexing sV( V, Vstag );
             static constexpr StaggerIndexing sW( W, Wstag );
-            
-            // Force compile time evaluation
             AssertIndexing<sU, sV, sW>();
+
+
+            // New values to return
+            EnumVector<Fields, floatType> newBlock;
 
             // For indexing the staggered cells
             intType iU(i + sU.iMcoupled), jU(j               ), kU(k               ); // U momentum
@@ -313,39 +314,39 @@ class BlockSolver
 
 
             // Update P from continuity
-            m_fields[P]( G(i, j, k) ) = ( bP
-                                        - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * bU
-                                        - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * bV
-                                        - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * bW
-                                        ) * K;
+            newBlock[P] = ( bP
+                        - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * bU
+                        - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * bV
+                        - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * bW
+                          ) * K;
 
 
             // Update U from momentum 
-            m_fields[U]( G(iU, jU, kU) ) = bU 
-                                         - m_fvCoeffs.Umom.AP[sU.cPcoupled](iU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
+            newBlock[U]= bU 
+                        - m_fvCoeffs.Umom.AP[sU.cPcoupled](iU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
 
 
             // Update V from momentum
-            m_fields[V]( G(iV, jV, kV) ) = bV 
-                                         - m_fvCoeffs.Vmom.AP[sV.cPcoupled](jV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
+            newBlock[V] = bV 
+                        - m_fvCoeffs.Vmom.AP[sV.cPcoupled](jV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
 
             // Update W from momentum
-            m_fields[W]( G(iW, jW, kW) ) = bW 
-                                         - m_fvCoeffs.Wmom.AP[sW.cPcoupled](kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+            newBlock[W] = bW 
+                        - m_fvCoeffs.Wmom.AP[sW.cPcoupled](kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
 
+            return newBlock;
         }
 
 
     private:
 
-        ArrayAllocator<Fields, array3D> &m_fields;
+        const ArrayAllocator<Fields, array3D> &m_fields;
         const FVCoefficients &m_fvCoeffs;
 
         // Static assert on all members of StaggerIndexing class to check compile time evaluation
         template< StaggerIndexing sU, StaggerIndexing sV, StaggerIndexing sW >
         constexpr void AssertIndexing()
         {
-
             // sU
             static_assert( sU.cPcoupled == TC::w || sU.cPcoupled == TC::p || sU.cPcoupled == TC::e);
             static_assert( sU.cPleft    == TC::w || sU.cPleft    == TC::p || sU.cPleft    == TC::e);
@@ -392,9 +393,7 @@ class BlockSolver
             static_assert( sW.iMcoupled == -1    || sW.iMcoupled == 0     || sW.iMcoupled == 1);
             static_assert( sW.iMleft    == -1    || sW.iMleft    == 0     || sW.iMleft    == 1);
             static_assert( sW.iMright   == -1    || sW.iMright   == 0     || sW.iMright   == 1);
-
         }
-
 };
 
 
@@ -423,19 +422,40 @@ class LineSolver
         void SolveLine(const intType j, const intType k)
         {
             using enum TransportCoefficients::ENUMDATA;
+            using enum Fields::ENUMDATA;
             intType ni = m_fields[Fields::ENUMDATA::U].dimension(Axis::ENUMDATA::X);
+
+            // Temporary for storing new block update
+            EnumVector<Fields, floatType> newBlock;
+            TC Ustag = e;
 
             intType nIterations = 0;
             while ( nIterations < m_maxIterations ) 
             {
-                 // Forward sweep
+                // Forward sweep
+                Ustag = e;
                 for (intType i = 0; i != ni-1; i++) {
-                    m_blockSolver.UpdateBlock<e, Vstag, Wstag>(i, j, k);
+
+                    newBlock = m_blockSolver.UpdateBlock<Ustag, Vstag, Wstag>(i, j, k);
+                    m_fields[U](i+CoeffIndex[Ustag], j, k) = newBlock[U];
+                    m_fields[V](i, j+CoeffIndex[Vstag], k) = newBlock[V];
+                    m_fields[W](i, j, k+CoeffIndex[Wstag]) = newBlock[W];
+                    m_fields[P](i, j, k) = newBlock[P];
+                    // ***Update with relaxation
+
                 }
 
                 // Backward sweep
+                Ustag = w;
                 for (intType i = ni-1; i != 0; i--) {
-                    m_blockSolver.UpdateBlock<w, Vstag, Wstag>(i, j, k);
+
+                    newBlock = m_blockSolver.UpdateBlock<Ustag, Vstag, Wstag>(i, j, k);
+                    m_fields[U](i+CoeffIndex[Ustag], j, k) = newBlock[U];
+                    m_fields[V](i, j+CoeffIndex[Vstag], k) = newBlock[V];
+                    m_fields[W](i, j, k+CoeffIndex[Wstag]) = newBlock[W];
+                    m_fields[P](i, j, k) = newBlock[P];
+                    // ***Update with relaxation
+
                 }
 
                 nIterations++;
@@ -449,6 +469,7 @@ class LineSolver
 
 
     private:
+
         ArrayAllocator<Fields, array3D> &m_fields;
         const FVCoefficients &m_fvCoeffs;
         intType m_maxIterations;
