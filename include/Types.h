@@ -11,6 +11,8 @@
 namespace CFD 
 {
 
+// ----------------------------------------------------- Type Aliases ----------------------------------------------------- //
+
 #ifdef DOUBLE_PRECISION
     using floatType = double;
 #else
@@ -26,6 +28,11 @@ using indexVector2 = Eigen::Array<intType, 2, 1>;
 using floatVector3 = Eigen::Array<floatType, 3, 1>;
 using floatVector2 = Eigen::Array<floatType, 2, 1>;
 
+
+
+
+
+// -------------------------------------------------- Ghost Cell Indexing ------------------------------------------------- //
 
 // Number of ghost cells in solution field
 constexpr intType nGhost = 2;
@@ -53,8 +60,11 @@ inline Eigen::array<Eigen::Index, 3> G(const Eigen::array<Eigen::Index, 3> idx)
 
 
 
-// Enums to be used as indices for containers
+
+
+// --------------------------------------------------------- Enums -------------------------------------------------------- //
 // Place inside structs to avoid name conflicts with "count"
+
 struct Axis
 {
     enum ENUMDATA
@@ -129,34 +139,60 @@ struct TransportCoefficients
 };
 
 
-// Lookup arrays for coefficients and patches coerresponding to each axis
-// *** Should maybe move these to the FVCoefficients.cpp implementation file if they are not used anywhere else ***
-constexpr std::array<BoundaryPatches::ENUMDATA, 3> positivePatches = {BoundaryPatches::ENUMDATA::xPositive,
-                                                                      BoundaryPatches::ENUMDATA::yPositive,
-                                                                      BoundaryPatches::ENUMDATA::zPositive};
-
-constexpr std::array<BoundaryPatches::ENUMDATA, 3> negativePatches{BoundaryPatches::ENUMDATA::xNegative,
-                                                                   BoundaryPatches::ENUMDATA::yNegative,
-                                                                   BoundaryPatches::ENUMDATA::zNegative};
-
-constexpr std::array<TransportCoefficients::ENUMDATA, 3> eastCoefficients{TransportCoefficients::ENUMDATA::e,
-                                                                          TransportCoefficients::ENUMDATA::n,
-                                                                          TransportCoefficients::ENUMDATA::t};
 
 
-constexpr std::array<TransportCoefficients::ENUMDATA, 3> westCoefficients{TransportCoefficients::ENUMDATA::w,
-                                                                          TransportCoefficients::ENUMDATA::s,
-                                                                          TransportCoefficients::ENUMDATA::b};
+
+// ----------------------------------------------------- Enum Lookups ----------------------------------------------------- //
+
+// Get index offset from TransportCoeffienct
+constexpr std::array<intType, TransportCoefficients::count> CoeffIndex = {2,     // tt
+                                                                          2,     // nn    
+                                                                          2,     // ee
+                                                                          1,     // t
+                                                                          1,     // n
+                                                                          1,     // e
+                                                                          0,     // p
+                                                                          -1,    // w
+                                                                          -1,    // s
+                                                                          -1,    // b
+                                                                          -2,    // ww
+                                                                          -2,    // ss
+                                                                          -2};   // bb
 
 
-// Lookup array for determining Axis based on BoundaryPatch
-constexpr std::array<Axis::ENUMDATA, 6> boundaryPatchAxis{Axis::ENUMDATA::X,    // xPositive
+// Get BoundaryPatches from Axis
+constexpr std::array<BoundaryPatches::ENUMDATA, 3> PositivePatch = {BoundaryPatches::ENUMDATA::xPositive,
+                                                                    BoundaryPatches::ENUMDATA::yPositive,
+                                                                    BoundaryPatches::ENUMDATA::zPositive};
+
+constexpr std::array<BoundaryPatches::ENUMDATA, 3> NegativePatch{BoundaryPatches::ENUMDATA::xNegative,
+                                                                 BoundaryPatches::ENUMDATA::yNegative,
+                                                                 BoundaryPatches::ENUMDATA::zNegative};
+
+// Get TransportCoefficient from Axis
+constexpr std::array<TransportCoefficients::ENUMDATA, 3> PositiveCoeff{TransportCoefficients::ENUMDATA::e,
+                                                                       TransportCoefficients::ENUMDATA::n,
+                                                                       TransportCoefficients::ENUMDATA::t};
+
+
+constexpr std::array<TransportCoefficients::ENUMDATA, 3> NegativeCoeff{TransportCoefficients::ENUMDATA::w,
+                                                                       TransportCoefficients::ENUMDATA::s,
+                                                                       TransportCoefficients::ENUMDATA::b};
+
+
+// Get Axis from BoundaryPatches
+constexpr std::array<Axis::ENUMDATA, 6> BoundaryPatchAxis{Axis::ENUMDATA::X,    // xPositive
                                                           Axis::ENUMDATA::X,    // xNegative
                                                           Axis::ENUMDATA::Y,    // yPositive
                                                           Axis::ENUMDATA::Y,    // yNegative
                                                           Axis::ENUMDATA::Z,    // zPositive
                                                           Axis::ENUMDATA::Z};   // zNegative
 
+
+
+
+
+// ---------------------------------------------------- Solver Parameters -------------------------------------------------- //
 
 // Solver settings
 enum class PlaneSolvers {
@@ -171,6 +207,11 @@ enum class Linearisation {
     Picard, Newton
 };
 
+
+
+
+
+// ------------------------------------------------------- Containers ----------------------------------------------------- //
 
 // Wrapper for std::vector that can only be indexed using enums
 template <typename enumStruct, typename T>

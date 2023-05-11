@@ -364,8 +364,8 @@ namespace
         std::swap( mesh.interpFactors[axis1]    , mesh.interpFactors[axis2] );
         std::swap( mesh.interpFactors[axis1]    , mesh.interpFactors[axis2] );
 
-        std::swap( mesh.extrapFactors[ positivePatches[axis1] ] , mesh.extrapFactors[ positivePatches[axis2] ] );
-        std::swap( mesh.extrapFactors[ negativePatches[axis1] ] , mesh.extrapFactors[ negativePatches[axis2] ] );
+        std::swap( mesh.extrapFactors[ PositivePatch[axis1] ] , mesh.extrapFactors[ PositivePatch[axis2] ] );
+        std::swap( mesh.extrapFactors[ NegativePatch[axis1] ] , mesh.extrapFactors[ NegativePatch[axis2] ] );
     }
 
 
@@ -378,7 +378,7 @@ namespace
             mesh.cellLengthsInv[axis]    = mesh.cellLengthsInv[axis].reverse(rev);
             mesh.cellCenterDiffInv[axis] = mesh.cellCenterDiffInv[axis].reverse(rev);
             mesh.interpFactors[axis]     = 1 - mesh.interpFactors[axis].reverse(rev);
-            std::swap( mesh.extrapFactors[ positivePatches[axis] ], mesh.extrapFactors[ negativePatches[axis] ] );
+            std::swap( mesh.extrapFactors[ PositivePatch[axis] ], mesh.extrapFactors[ NegativePatch[axis] ] );
     }
 
 
@@ -399,23 +399,23 @@ void CFD::TransformToUserCoordinates(Mesh &mesh,
     // Mesh
     for (int a = 0; a != Axis::count; a++) {
         codeAxis = static_cast<Axis::ENUMDATA>(a);
-        codePositivePatch = positivePatches[codeAxis];
+        codePositivePatch = PositivePatch[codeAxis];
 
         userPatchFromPositive = axisTransformation.UserPatch(codePositivePatch);
-        userAxis = boundaryPatchAxis[userPatchFromPositive];
+        userAxis = BoundaryPatchAxis[userPatchFromPositive];
 
         if ( shuffleOrder[userAxis] != codeAxis ) {     // Only if it needs to be swapped
             std::swap( shuffleOrder[codeAxis], shuffleOrder[userAxis]  );
             SwapMesh(mesh, codeAxis, userAxis);
         }
 
-        if ( userPatchFromPositive == negativePatches[userAxis] ) {
+        if ( userPatchFromPositive == NegativePatch[userAxis] ) {
             ReverseMeshAxis(mesh, userAxis);
         }
 
         // Fill the shuffle and revsere arrays, used for 3D arrays
-        shuffleArray[codeAxis] = boundaryPatchAxis[ axisTransformation.CodePatch( codePositivePatch ) ];
-        reverseArray[codeAxis] = axisTransformation.CodePatch( codePositivePatch ) == negativePatches[ shuffleArray[codeAxis] ];    // This reverse is after the shufflinf
+        shuffleArray[codeAxis] = BoundaryPatchAxis[ axisTransformation.CodePatch( codePositivePatch ) ];
+        reverseArray[codeAxis] = axisTransformation.CodePatch( codePositivePatch ) == NegativePatch[ shuffleArray[codeAxis] ];    // This reverse is after the shufflinf
     }
 
 

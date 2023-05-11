@@ -28,7 +28,7 @@ BoundaryConditions::ENUMDATA GetDiffusionBC( const InputData::BoundaryConditionD
     Fields::ENUMDATA fieldToCheck;
     Fields::ENUMDATA orthogonalField1; 
     Fields::ENUMDATA orthogonalField2;
-    const Axis::ENUMDATA axis = boundaryPatchAxis[boundaryPatch];
+    const Axis::ENUMDATA axis = BoundaryPatchAxis[boundaryPatch];
 
     // Set the field we need to check based on the axis
     if        (axis == X) {
@@ -72,8 +72,8 @@ void DiffusionPositiveBoundary( EnumVector< Axis,  ArrayAllocator<TransportCoeff
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    const BoundaryPatches::ENUMDATA boundaryPatch = positivePatches[axis];
-    const TransportCoefficients::ENUMDATA west = westCoefficients[axis];
+    const BoundaryPatches::ENUMDATA boundaryPatch = PositivePatch[axis];
+    const TransportCoefficients::ENUMDATA west = NegativeCoeff[axis];
     const intType iCellBound = mesh.nCells(axis) - 1;
 
     switch ( boundaryConditionStructs[boundaryPatch].type ) {
@@ -111,8 +111,8 @@ void DiffusionNegativeBoundary( EnumVector< Axis, ArrayAllocator<TransportCoeffi
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    const BoundaryPatches::ENUMDATA boundaryPatch = negativePatches[axis];
-    const TransportCoefficients::ENUMDATA east = eastCoefficients[axis];
+    const BoundaryPatches::ENUMDATA boundaryPatch = NegativePatch[axis];
+    const TransportCoefficients::ENUMDATA east = PositiveCoeff[axis];
     const intType iCellBound = 0;
 
     switch ( boundaryConditionStructs[boundaryPatch].type ) {
@@ -163,10 +163,10 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
     for (int a = 0; a != Axis::count; a++) {
         axis = static_cast<Axis::ENUMDATA>(a);
 
-        positivePatch = positivePatches[axis];
-        negativePatch = negativePatches[axis];
-        east = eastCoefficients[axis];
-        west = westCoefficients[axis];     
+        positivePatch = PositivePatch[axis];
+        negativePatch = NegativePatch[axis];
+        east = PositiveCoeff[axis];
+        west = NegativeCoeff[axis];     
 
         // Internal faces
         for (intType i = 1; i != mesh.nCells(axis); i++) {
@@ -343,8 +343,8 @@ void AdvectionPositiveBoundary( ArrayAllocator<TransportCoefficients, array3D> &
 
     static const std::array<Fields::ENUMDATA, 3> faceVelocityFields = {F::U, F::V, F::W}; // Used to get corresponding velocity field from axis
     
-    const BoundaryPatches::ENUMDATA boundaryPatch = positivePatches[axis];
-    const TransportCoefficients::ENUMDATA west = westCoefficients[axis];
+    const BoundaryPatches::ENUMDATA boundaryPatch = PositivePatch[axis];
+    const TransportCoefficients::ENUMDATA west = NegativeCoeff[axis];
     const Fields::ENUMDATA axisVel = faceVelocityFields[axis];
     const intType iCellBound = mesh.nCells(axis) - 1;   // Index of cell at the boundary
     const intType iFaceBound = iCellBound + 1;          // Index of face at the boundary
@@ -389,8 +389,8 @@ void AdvectionNegativeBoundary( ArrayAllocator<TransportCoefficients, array3D> &
 
     static const std::array<Fields::ENUMDATA, 3> faceVelocityFields = {F::U, F::V, F::W}; // Used to get corresponding velocity field from axis
     
-    const BoundaryPatches::ENUMDATA boundaryPatch = negativePatches[axis];
-    const TransportCoefficients::ENUMDATA east = eastCoefficients[axis];
+    const BoundaryPatches::ENUMDATA boundaryPatch = NegativePatch[axis];
+    const TransportCoefficients::ENUMDATA east = PositiveCoeff[axis];
     const Fields::ENUMDATA axisVel = faceVelocityFields[axis];
     const intType iCellBound = 0;   // Index of cell at the boundary 
     const intType iFaceBound = 0;   // Index of face at the boundary
@@ -511,8 +511,8 @@ void InterpolationPositiveBoundary( ArrayAllocator< TransportCoefficients, array
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    const BoundaryPatches::ENUMDATA boundaryPatch = positivePatches[axis];
-    const TransportCoefficients::ENUMDATA west = westCoefficients[axis];
+    const BoundaryPatches::ENUMDATA boundaryPatch = PositivePatch[axis];
+    const TransportCoefficients::ENUMDATA west = NegativeCoeff[axis];
     const intType iCellBound = mesh.nCells(axis) - 1;
 
     switch ( boundaryConditionStructs[boundaryPatch].type ) {
@@ -551,8 +551,8 @@ void InterpolationNegativeBoundary( ArrayAllocator< TransportCoefficients, array
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    const BoundaryPatches::ENUMDATA boundaryPatch = negativePatches[axis];
-    const TransportCoefficients::ENUMDATA east = eastCoefficients[axis];
+    const BoundaryPatches::ENUMDATA boundaryPatch = NegativePatch[axis];
+    const TransportCoefficients::ENUMDATA east = PositiveCoeff[axis];
     const intType iCellBound = 0;
 
     switch ( boundaryConditionStructs[boundaryPatch].type ) {
@@ -594,8 +594,8 @@ void SetFaceInterpolatedCoefficients( ArrayAllocator<CFD::TransportCoefficients,
 
     const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
 
-    TransportCoefficients::ENUMDATA east = eastCoefficients[axis],    // These are just names, they can be north, south etc.
-                                    west = westCoefficients[axis];  
+    TransportCoefficients::ENUMDATA east = PositiveCoeff[axis],    // These are just names, they can be north, south etc.
+                                    west = NegativeCoeff[axis];  
 
     // Internal faces
     for (intType i = 1; i != mesh.nCells(axis); i++) {
@@ -648,8 +648,8 @@ std::vector<floatType> MWICoeffs( const indexVector3 &idx,
     using enum TransportCoefficients::ENUMDATA;
     using enum Axis::ENUMDATA;
     std::vector<floatType> coeffs(4);
-    const TransportCoefficients::ENUMDATA east = eastCoefficients[axis];
-    const TransportCoefficients::ENUMDATA west = westCoefficients[axis];
+    const TransportCoefficients::ENUMDATA east = PositiveCoeff[axis];
+    const TransportCoefficients::ENUMDATA west = NegativeCoeff[axis];
 
     // Temporary index vector that has the correct indices for the neighbouring cell of the current axis
     indexVector3 idxn( idx );
@@ -843,8 +843,8 @@ void AddMomentumBoundaryConstants( FVCoefficients::MomentumEquation &momCoeffs )
     // Each axis
     for (int axis = 0; axis != Axis::count; axis++) {
 
-        positivePatch = positivePatches[axis];
-        negativePatch = negativePatches[axis];
+        positivePatch = PositivePatch[axis];
+        negativePatch = NegativePatch[axis];
         iEnd = momCoeffs.B.dimension(axis)-1;
 
         // Negative side boundary
@@ -867,8 +867,8 @@ void AddContinuityBoundaryConstants( FVCoefficients::ContinuityEquation &contCoe
     // Each axis
     for (int axis = 0; axis != Axis::count; axis++) {
 
-        positivePatch = positivePatches[axis];
-        negativePatch = negativePatches[axis];
+        positivePatch = PositivePatch[axis];
+        negativePatch = NegativePatch[axis];
         iEnd = contCoeffs.B.dimension(axis)-1;
 
         // Negative side boundary
