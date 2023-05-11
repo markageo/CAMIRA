@@ -61,7 +61,7 @@ class StaggerIndexing
 
         constexpr StaggerIndexing(F field, TC staggeredCoeff)
         { 
-            SetIndex(staggeredCoeff);
+           
             if        ( field == F::U ) {
                 SetCompassU(staggeredCoeff);
 
@@ -72,139 +72,119 @@ class StaggerIndexing
                 SetCompassW(staggeredCoeff);
 
             }
+            SetIndex();
         } 
 
     private:
 
         
-        constexpr void SetIndex(TC staggeredCoeff)
+        constexpr void SetIndex()
         {
+            iPcoupled = CoeffIndex[cPcoupled];
+            iPleft    = CoeffIndex[cPleft];
+            iPright   = CoeffIndex[cPright];
 
-            if        ( (staggeredCoeff == TC::w) || (staggeredCoeff == TC::s) || (staggeredCoeff == TC::b) ) {
-                iPcoupled = 1;
-                iPleft = -1;
-                iPright = 0;
-
-                iMcoupled = -1;
-                iMleft = 0;
-                iMright = 1;
-
-            } else if ( staggeredCoeff == TC::p ) {
-                iPcoupled = 0;
-                iPleft = -1;
-                iPright = 1;
-
-                iMcoupled = 0;
-                iMleft = -1;
-                iMright = 1;
-
-            } else if ( (staggeredCoeff == TC::e) || (staggeredCoeff == TC::n) || (staggeredCoeff == TC::t) ) {
-                iPcoupled = -1;
-                iPleft = 0;
-                iPright = 1;
-
-                iMcoupled = 1;
-                iMleft = -1;
-                iMright = 0;
-            }
+            iMcoupled = CoeffIndex[cMcoupled];
+            iMleft    = CoeffIndex[cMleft];
+            iMright   = CoeffIndex[cMright];
         }           
 
 
-    constexpr void SetCompassU(TC staggeredCoeff)
-    { 
-        if        ( staggeredCoeff == TC::w ) {
-            cPcoupled = TC::e;
-            cPleft = TC::w;
-            cPright = TC::p;
+        constexpr void SetCompassU(TC staggeredCoeff)
+        { 
+            if        ( staggeredCoeff == TC::w ) {
+                cPcoupled = TC::e;
+                cPleft = TC::w;
+                cPright = TC::p;
 
-            cMcoupled = TC::w;
-            cMleft = TC::p;
-            cMright = TC::e;
+                cMcoupled = TC::w;
+                cMleft = TC::p;
+                cMright = TC::e;
 
-        } else if ( staggeredCoeff == TC::p ) {
-            cPcoupled = TC::p;
-            cPleft = TC::w;
-            cPright = TC::e;
+            } else if ( staggeredCoeff == TC::p ) {
+                cPcoupled = TC::p;
+                cPleft = TC::w;
+                cPright = TC::e;
 
-            cMcoupled = TC::p;
-            cMleft = TC::w;
-            cMright = TC::e;
+                cMcoupled = TC::p;
+                cMleft = TC::w;
+                cMright = TC::e;
 
-        } else if ( staggeredCoeff == TC::e) {
-            cPcoupled = TC::w;
-            cPleft = TC::p;
-            cPright = TC::e;
+            } else if ( staggeredCoeff == TC::e) {
+                cPcoupled = TC::w;
+                cPleft = TC::p;
+                cPright = TC::e;
 
-            cMcoupled = TC::e;
-            cMleft = TC::w;
-            cMright = TC::p;
+                cMcoupled = TC::e;
+                cMleft = TC::w;
+                cMright = TC::p;
 
-        }
+            }
 
-    } 
+        } 
 
-    constexpr void SetCompassV(TC staggeredCoeff)
-    { 
-        if        ( staggeredCoeff == TC::s ) {
-            cPcoupled = TC::n;
-            cPleft = TC::s;
-            cPright = TC::p;
+        constexpr void SetCompassV(TC staggeredCoeff)
+        { 
+            if        ( staggeredCoeff == TC::s ) {
+                cPcoupled = TC::n;
+                cPleft = TC::s;
+                cPright = TC::p;
 
-            cMcoupled = TC::s;
-            cMleft = TC::p;
-            cMright = TC::n;
+                cMcoupled = TC::s;
+                cMleft = TC::p;
+                cMright = TC::n;
 
-        } else if ( staggeredCoeff == TC::p ) {
-            cPcoupled = TC::p;
-            cPleft = TC::s;
-            cPright = TC::n;
+            } else if ( staggeredCoeff == TC::p ) {
+                cPcoupled = TC::p;
+                cPleft = TC::s;
+                cPright = TC::n;
 
-            cMcoupled = TC::p;
-            cMleft = TC::s;
-            cMright = TC::n;
+                cMcoupled = TC::p;
+                cMleft = TC::s;
+                cMright = TC::n;
 
-        } else if ( staggeredCoeff == TC::n) {
-            cPcoupled = TC::s;
-            cPleft = TC::p;
-            cPright = TC::n;
+            } else if ( staggeredCoeff == TC::n) {
+                cPcoupled = TC::s;
+                cPleft = TC::p;
+                cPright = TC::n;
 
-            cMcoupled = TC::n;
-            cMleft = TC::s;
-            cMright = TC::p;
+                cMcoupled = TC::n;
+                cMleft = TC::s;
+                cMright = TC::p;
 
-        }
-    } 
+            }
+        } 
 
-    constexpr void SetCompassW(TC staggeredCoeff)
-    { 
-        if        ( staggeredCoeff == TC::b ) {
-            cPcoupled = TC::t;
-            cPleft = TC::b;
-            cPright = TC::p;
+        constexpr void SetCompassW(TC staggeredCoeff)
+        { 
+            if        ( staggeredCoeff == TC::b ) {
+                cPcoupled = TC::t;
+                cPleft = TC::b;
+                cPright = TC::p;
 
-            cMcoupled = TC::b;
-            cMleft = TC::p;
-            cMright = TC::t;
+                cMcoupled = TC::b;
+                cMleft = TC::p;
+                cMright = TC::t;
 
-        } else if ( staggeredCoeff == TC::p ) {
-            cPcoupled = TC::p;
-            cPleft = TC::b;
-            cPright = TC::t;
+            } else if ( staggeredCoeff == TC::p ) {
+                cPcoupled = TC::p;
+                cPleft = TC::b;
+                cPright = TC::t;
 
-            cMcoupled = TC::p;
-            cMleft = TC::b;
-            cMright = TC::t;
+                cMcoupled = TC::p;
+                cMleft = TC::b;
+                cMright = TC::t;
 
-        } else if ( staggeredCoeff == TC::t) {
-            cPcoupled = TC::b;
-            cPleft = TC::p;
-            cPright = TC::t;
+            } else if ( staggeredCoeff == TC::t) {
+                cPcoupled = TC::b;
+                cPleft = TC::p;
+                cPright = TC::t;
 
-            cMcoupled = TC::t;
-            cMleft = TC::b;
-            cMright = TC::p;
-        }
-    } 
+                cMcoupled = TC::t;
+                cMleft = TC::b;
+                cMright = TC::p;
+            }
+        } 
 
 };
 
