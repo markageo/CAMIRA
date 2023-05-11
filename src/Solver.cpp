@@ -3,9 +3,6 @@
 #include "FiniteVolume.h"
 #include "Solver.h"
 
-#include <array>
-
-
 namespace
 {
 
@@ -422,9 +419,13 @@ class BlockSolver
 
 
 
+
+
 // Solves line
 class LineSolver
 {
+    using TC = TransportCoefficients::ENUMDATA; 
+
     public:
 
         LineSolver( ArrayAllocator<Fields, array3D> &fields,
@@ -433,30 +434,69 @@ class LineSolver
         m_fields( fields ),
         m_fvCoeffs( fvCoeffs ),
         m_maxIterations( lineSolverSettings.maxIterations ),
-        m_maxResiduals( lineSolverSettings.maxResiduals )
+        m_maxResiduals( lineSolverSettings.maxResiduals ),
+        m_blockSolver( fields, fvCoeffs )
         {}
 
+
+        template< TC Vstag, TC Wstag >
         void SolveLine(const intType j, const intType k)
         {
-            BlockSolver blockSolver(m_fields, m_fvCoeffs);
             using enum TransportCoefficients::ENUMDATA;
-            blockSolver.UpdateBlock<e, n, t>(1, j, k);
+            intType ni = m_fields[Fields::ENUMDATA::U].dimension(Axis::ENUMDATA::X);
+
+            intType nIterations = 0;
+            while ( nIterations < m_maxIterations ) 
+            {
+                 // Forward sweep
+                for (intType i = 0; i != ni-1; i++) {
+                    m_blockSolver.UpdateBlock<e, Vstag, Wstag>(i, j, k);
+                }
+
+                // Backward sweep
+                for (intType i = ni-1; i != 0; i--) {
+                    m_blockSolver.UpdateBlock<w, Vstag, Wstag>(i, j, k);
+                }
+
+                nIterations++;
+                // Check residual
+                if ( MetLineResidualTolerence() ) {
+
+                }
+            }
 
         }
 
 
     private:
-        intType m_maxIterations;
-        EnumVector<Fields, floatType> m_maxResiduals;
         ArrayAllocator<Fields, array3D> &m_fields;
         const FVCoefficients &m_fvCoeffs;
+        intType m_maxIterations;
+        EnumVector<Fields, floatType> m_maxResiduals;
+        BlockSolver m_blockSolver;
+
+        void UpdateLineResidual()
+        {
+
+        }
+
+        bool MetLineResidualTolerence()
+        {
+            return false;
+        }
+
 
 };
+
+
+
 
 
 // Solves plane
 class PlaneSolver
 {
+    using TC = TransportCoefficients::ENUMDATA;
+
     public:
 
         PlaneSolver( ArrayAllocator<Fields, array3D> &fields,
@@ -470,6 +510,7 @@ class PlaneSolver
         m_lineSolver( fields, fvCoeffs, lineSolverSettings )
         {}
 
+        template<TC Wstag>
         void SolvePlane(const intType k)
         {
 
@@ -477,12 +518,13 @@ class PlaneSolver
 
 
     private:
-        intType m_maxIterations;
-        EnumVector<Fields, floatType> m_maxResiduals;
         ArrayAllocator<Fields, array3D> &m_fields;
         const FVCoefficients &m_fvCoeffs;
+        intType m_maxIterations;
+        EnumVector<Fields, floatType> m_maxResiduals;
         LineSolver m_lineSolver;
 };
+
 
 
 
@@ -516,11 +558,9 @@ void CFD::SweepSolve(ArrayAllocator<CFD::Fields, CFD::array3D>  &fields,
         nInnerIterations = 0;
         while ( nInnerIterations < planeSweepSettings.maxInnerIterations ) {
         
-            // Coupled sweep for RED nodes in +z direction
+            // Forward sweep
 
-
-
-            // Coupled sweep for BLACK nodes in -z direction
+            // Backward sweep
 
 
             // Update residuals
@@ -564,6 +604,5 @@ void CFD::SweepSolve(ArrayAllocator<CFD::Fields, CFD::array3D>  &fields,
 
     // Strip unused data
     residualsHistory.resize( nOuterIterations );
-
-        
+ 
 }

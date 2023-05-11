@@ -175,10 +175,10 @@ void TEST::WriteMesh(const CFD::Mesh &mesh,
         UTIL::WriteArray(Fname("interp_factors"), mesh.interpFactors[axis], precision);
 
         // Put the extrapolation factors in an array and write it out
-        extrapFactorsArray(0, 0) = mesh.extrapFactors[CFD::positivePatches[axis]].p;
-        extrapFactorsArray(1, 0) = mesh.extrapFactors[CFD::positivePatches[axis]].a;
-        extrapFactorsArray(0, 1) = mesh.extrapFactors[CFD::negativePatches[axis]].p;
-        extrapFactorsArray(1, 1) = mesh.extrapFactors[CFD::negativePatches[axis]].a;
+        extrapFactorsArray(0, 0) = mesh.extrapFactors[CFD::PositivePatch[axis]].p;
+        extrapFactorsArray(1, 0) = mesh.extrapFactors[CFD::PositivePatch[axis]].a;
+        extrapFactorsArray(0, 1) = mesh.extrapFactors[CFD::NegativePatch[axis]].p;
+        extrapFactorsArray(1, 1) = mesh.extrapFactors[CFD::NegativePatch[axis]].a;
         UTIL::WriteArray(Fname("extrap_factors"), extrapFactorsArray, precision);
 
     }

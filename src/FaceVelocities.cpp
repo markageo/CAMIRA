@@ -125,8 +125,8 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
 
     for (int axis = 0; axis != Axis::count; axis++) {
 
-        positivePatch = positivePatches[axis];
-        negativePatch = negativePatches[axis];
+        positivePatch = PositivePatch[axis];
+        negativePatch = NegativePatch[axis];
         axisVel = faceVelocityFields[axis];
 
         // Axis positive boundary

@@ -589,10 +589,10 @@ namespace
 
         for (int i = 0; i != Axis::count; i++) {
             codeAxis = static_cast<Axis::ENUMDATA>(i);
-            codePositivePatch = positivePatches[codeAxis];
+            codePositivePatch = PositivePatch[codeAxis];
 
             userBoundaryPatch = inputData.axisTransformation.UserPatch(codePositivePatch);
-            userAxis = boundaryPatchAxis[ userBoundaryPatch ];
+            userAxis = BoundaryPatchAxis[ userBoundaryPatch ];
 
             // Axis are transformed by swapping the data
             if ( shuffleOrder[codeAxis] != userAxis ) {     // Only if it needs to be swapped
@@ -601,7 +601,7 @@ namespace
                 std::swap( inputData.domainSize( codeAxis ), inputData.domainSize( userAxis ) );
             }
 
-            if ( userBoundaryPatch == negativePatches[ userAxis ] ) {
+            if ( userBoundaryPatch == NegativePatch[ userAxis ] ) {
                 ReverseMesh(inputData.meshSegments[ codeAxis ]);
             }
 
