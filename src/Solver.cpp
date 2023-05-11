@@ -3,6 +3,7 @@
 #include "FiniteVolume.h"
 #include "Solver.h"
 
+#include <array>
 
 
 namespace
@@ -45,6 +46,170 @@ bool MetResidualTolerence( const EnumVector<Fields, floatType> &residuals,
 }   // end anonymous namespace
 
 
+// Helper class for staggered indexing
+class StaggerIndexing 
+{   
+    using TC = TransportCoefficients::ENUMDATA;
+    using F = Fields::ENUMDATA;
+
+    public:
+
+        // Pressure coupled in the momentum equation
+        TC cPcoupled, cPleft, cPright;
+        intType iPcoupled, iPleft, iPright;
+
+        // Momentum coupled in the continuity equation
+        TC cMcoupled, cMleft, cMright;
+        intType iMcoupled, iMleft, iMright;
+
+        constexpr StaggerIndexing(F field, TC staggeredCoeff)
+        { 
+            SetIndex(staggeredCoeff);
+            if        ( field == F::U ) {
+                SetCompassU(staggeredCoeff);
+
+            } else if ( field == F::V ) {
+                SetCompassV(staggeredCoeff);
+
+            } else if ( field == F::W ) {
+                SetCompassW(staggeredCoeff);
+
+            }
+        } 
+
+    private:
+
+        
+        constexpr void SetIndex(TC staggeredCoeff)
+        {
+
+            if        ( (staggeredCoeff == TC::w) || (staggeredCoeff == TC::s) || (staggeredCoeff == TC::b) ) {
+                iPcoupled = 1;
+                iPleft = -1;
+                iPright = 0;
+
+                iMcoupled = -1;
+                iMleft = 0;
+                iMright = 1;
+
+            } else if ( staggeredCoeff == TC::p ) {
+                iPcoupled = 0;
+                iPleft = -1;
+                iPright = 1;
+
+                iMcoupled = 0;
+                iMleft = -1;
+                iMright = 1;
+
+            } else if ( (staggeredCoeff == TC::e) || (staggeredCoeff == TC::n) || (staggeredCoeff == TC::t) ) {
+                iPcoupled = -1;
+                iPleft = 0;
+                iPright = 1;
+
+                iMcoupled = 1;
+                iMleft = -1;
+                iMright = 0;
+            }
+        }           
+
+
+    constexpr void SetCompassU(TC staggeredCoeff)
+    { 
+        if        ( staggeredCoeff == TC::w ) {
+            cPcoupled = TC::e;
+            cPleft = TC::w;
+            cPright = TC::p;
+
+            cMcoupled = TC::w;
+            cMleft = TC::p;
+            cMright = TC::e;
+
+        } else if ( staggeredCoeff == TC::p ) {
+            cPcoupled = TC::p;
+            cPleft = TC::w;
+            cPright = TC::e;
+
+            cMcoupled = TC::p;
+            cMleft = TC::w;
+            cMright = TC::e;
+
+        } else if ( staggeredCoeff == TC::e) {
+            cPcoupled = TC::w;
+            cPleft = TC::p;
+            cPright = TC::e;
+
+            cMcoupled = TC::e;
+            cMleft = TC::w;
+            cMright = TC::p;
+
+        }
+
+    } 
+
+    constexpr void SetCompassV(TC staggeredCoeff)
+    { 
+        if        ( staggeredCoeff == TC::s ) {
+            cPcoupled = TC::n;
+            cPleft = TC::s;
+            cPright = TC::p;
+
+            cMcoupled = TC::s;
+            cMleft = TC::p;
+            cMright = TC::n;
+
+        } else if ( staggeredCoeff == TC::p ) {
+            cPcoupled = TC::p;
+            cPleft = TC::s;
+            cPright = TC::n;
+
+            cMcoupled = TC::p;
+            cMleft = TC::s;
+            cMright = TC::n;
+
+        } else if ( staggeredCoeff == TC::n) {
+            cPcoupled = TC::s;
+            cPleft = TC::p;
+            cPright = TC::n;
+
+            cMcoupled = TC::n;
+            cMleft = TC::s;
+            cMright = TC::p;
+
+        }
+    } 
+
+    constexpr void SetCompassW(TC staggeredCoeff)
+    { 
+        if        ( staggeredCoeff == TC::b ) {
+            cPcoupled = TC::t;
+            cPleft = TC::b;
+            cPright = TC::p;
+
+            cMcoupled = TC::b;
+            cMleft = TC::p;
+            cMright = TC::t;
+
+        } else if ( staggeredCoeff == TC::p ) {
+            cPcoupled = TC::p;
+            cPleft = TC::b;
+            cPright = TC::t;
+
+            cMcoupled = TC::p;
+            cMleft = TC::b;
+            cMright = TC::t;
+
+        } else if ( staggeredCoeff == TC::t) {
+            cPcoupled = TC::b;
+            cPleft = TC::p;
+            cPright = TC::t;
+
+            cMcoupled = TC::t;
+            cMleft = TC::b;
+            cMright = TC::p;
+        }
+    } 
+
+};
 
 
 // Performs a single local update of block coupled equations
@@ -70,57 +235,18 @@ class BlockSolver
             static_assert( (Vstag == n) || (Vstag == s) || (Vstag == p), "Invalid V momentum staggering" );
             static_assert( (Wstag == t) || (Wstag == b) || (Wstag == p), "Invalid W momentum staggering" );
 
-            // Index offset for the coupled cell
-            static constexpr intType iUoffset = UoffsetCoupled(Ustag), 
-                                     jVoffset = VoffsetCoupled(Vstag), 
-                                     kWoffset = WoffsetCoupled(Wstag);
-
-            // Index offset for the uncoupled pressure coordinates
-            static constexpr intType iUleft = OffsetLeft(iUoffset), iUright = OffsetRight(iUoffset),
-                                     jVleft = OffsetLeft(jVoffset), jVright = OffsetRight(jVoffset),
-                                     kWleft = OffsetLeft(kWoffset), kWright = OffsetRight(kWoffset);
-                                    
-
-            // Compass coordinate of the pressure that is coupled into the continuity equation for each equation
-            static constexpr TC cUcoupled = UcompassCoupled(Ustag),
-                                cVcoupled = VcompassCoupled(Vstag), 
-                                cWcoupled = WcompassCoupled(Wstag);
-
-            // Compass coordinate of the uncoupled pressure coordinates for each equation
-            static constexpr TC cUleft = UcompassLeft(cUcoupled), cUright = UcompassRight(cUcoupled),
-                                cVleft = VcompassLeft(cVcoupled), cVright = VcompassRight(cVcoupled),
-                                cWleft = WcompassLeft(cWcoupled), cWright = WcompassRight(cWcoupled);
-
-            // Forces compile time evaluation
-            static_assert( (iUoffset == 1) || (iUoffset == -1) || (iUoffset == 0) );        
-            static_assert( (jVoffset == 1) || (jVoffset == -1) || (jVoffset == 0) );  
-            static_assert( (kWoffset == 1) || (kWoffset == -1) || (kWoffset == 0) );  
-
-            static_assert( (iUleft == -1) || (iUleft == 0) ); 
-            static_assert( (jVleft == -1) || (jVleft == 0) ); 
-            static_assert( (kWleft == -1) || (kWleft == 0) );  
-
-            static_assert( (iUright == 1) || (iUright == 0) ); 
-            static_assert( (jVright == 1) || (jVright == 0) ); 
-            static_assert( (kWright == 1) || (kWright == 0) ); 
-
-            static_assert( (cUcoupled == w) || (cUcoupled == p) || (cUcoupled == e) );  
-            static_assert( (cUleft == w) || (cUleft == p) );  
-            static_assert( (cUright == e) || (cUright == p) ); 
-
-            static_assert( (cVcoupled == s) || (cVcoupled == p) || (cVcoupled == n) );  
-            static_assert( (cVleft == s) || (cVleft == p) );  
-            static_assert( (cVright == n) || (cVright == p) );  
-
-            static_assert( (cWcoupled == b) || (cWcoupled == p) || (cWcoupled == t) );  
-            static_assert( (cWleft == b) || (cWleft == p) );  
-            static_assert( (cWright == t) || (cWright == p) );     
-
+            // Indexing variables to take care of staggering
+            static constexpr StaggerIndexing sU( U, Ustag );
+            static constexpr StaggerIndexing sV( V, Vstag );
+            static constexpr StaggerIndexing sW( W, Wstag );
+            
+            // Force compile time evaluation
+            AssertIndexing<sU, sV, sW>();
 
             // For indexing the staggered cells
-            intType iU(i + iUoffset), jU(j           ), kU(k           ); // U momentum
-            intType iV(i           ), jV(j + jVoffset), kV(k           ); // V momentum
-            intType iW(i           ), jW(j           ), kW(k + kWoffset); // W momentum
+            intType iU(i + sU.iMcoupled), jU(j               ), kU(k               ); // U momentum
+            intType iV(i               ), jV(j + sV.iMcoupled), kV(k               ); // V momentum
+            intType iW(i               ), jW(j               ), kW(k + sW.iMcoupled); // W momentum
 
 
             // Precompute momentum RHS divided by AP coefficients
@@ -134,8 +260,8 @@ class BlockSolver
                            - m_fvCoeffs.Umom.AU[t](iU, jU, kU) * m_fields[U]( G(iU  , jU  , kU+1) )
                            - m_fvCoeffs.Umom.AU[b](iU, jU, kU) * m_fields[U]( G(iU  , jU  , kU-1) )
 
-                           - m_fvCoeffs.Umom.AP[cUleft ](iU) * m_fields[P]( G(iU+iUleft , jU  , kU  ) )
-                           - m_fvCoeffs.Umom.AP[cUright](iU) * m_fields[P]( G(iU+iUright, jU  , kU  ) )
+                           - m_fvCoeffs.Umom.AP[sU.cPleft ](iU) * m_fields[P]( G(iU+sU.iPleft , jU  , kU  ) )
+                           - m_fvCoeffs.Umom.AP[sU.cPright](iU) * m_fields[P]( G(iU+sU.iPright, jU  , kU  ) )
 
                            ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
 
@@ -150,8 +276,8 @@ class BlockSolver
                            - m_fvCoeffs.Vmom.AV[t](iV, jV, kV) * m_fields[V]( G(iV  , jV  , kV+1) )
                            - m_fvCoeffs.Vmom.AV[b](iV, jV, kV) * m_fields[V]( G(iV  , jV  , kV-1) )
 
-                           - m_fvCoeffs.Vmom.AP[cVleft ](jV) * m_fields[P]( G(iV  , jV+jVleft , kV  ) )
-                           - m_fvCoeffs.Vmom.AP[cVright](jV) * m_fields[P]( G(iV  , jV+jVright, kV  ) )
+                           - m_fvCoeffs.Vmom.AP[sV.cPleft ](jV) * m_fields[P]( G(iV  , jV+sV.iPleft , kV  ) )
+                           - m_fvCoeffs.Vmom.AP[sV.cPright](jV) * m_fields[P]( G(iV  , jV+sV.iPright, kV  ) )
 
                            ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
 
@@ -166,8 +292,8 @@ class BlockSolver
                            - m_fvCoeffs.Wmom.AW[t](iW, jW, kW) * m_fields[W]( G(iW  , jW  , kW+1) )
                            - m_fvCoeffs.Wmom.AW[b](iW, jW, kW) * m_fields[W]( G(iW  , jW  , kW-1) )
 
-                           - m_fvCoeffs.Wmom.AP[cWleft ](kW) * m_fields[P]( G(iW  , jW  , kW+kWleft ) )
-                           - m_fvCoeffs.Wmom.AP[cWright](kW) * m_fields[P]( G(iW  , jW  , kW+kWright) )
+                           - m_fvCoeffs.Wmom.AP[sW.cPleft ](kW) * m_fields[P]( G(iW  , jW  , kW+sW.iPleft ) )
+                           - m_fvCoeffs.Wmom.AP[sW.cPright](kW) * m_fields[P]( G(iW  , jW  , kW+sW.iPright) )
 
                            ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
 
@@ -176,29 +302,14 @@ class BlockSolver
             // Continuity for pressure
             floatType bP = (m_fvCoeffs.Cont.B(i, j, k)
                             
-                          //- m_fvCoeffs.Cont.AU[e](i) * m_fields[U]( G(i+1, j, k) )
-                          - m_fvCoeffs.Cont.AU[p](i) * m_fields[U]( G(i  , j, k) )
-                          - m_fvCoeffs.Cont.AU[w](i) * m_fields[U]( G(i-1, j, k) )
+                          - m_fvCoeffs.Cont.AU[sU.cMleft ](i) * m_fields[U]( G(i+sU.iMleft , j, k) )
+                          - m_fvCoeffs.Cont.AU[sU.cMright](i) * m_fields[U]( G(i+sU.iMright, j, k) )
 
-                          - m_fvCoeffs.Cont.AU[e](i) * m_fields[U]( G(i+1, j, k) )
-                          //- m_fvCoeffs.Cont.AU[p](i) * m_fields[U]( G(i  , j, k) )
-                          - m_fvCoeffs.Cont.AU[w](i) * m_fields[U]( G(i-1, j, k) )
-
-                          - m_fvCoeffs.Cont.AU[e](i) * m_fields[U]( G(i+1, j, k) )
-                          - m_fvCoeffs.Cont.AU[p](i) * m_fields[U]( G(i  , j, k) )
-                          //- m_fvCoeffs.Cont.AU[w](i) * m_fields[U]( G(i-1, j, k) )
-
-
-
-
-                    
-                          //- m_fvCoeffs.Cont.AV[n](j) * m_fields[V]( G(i, j+1, k) )
-                          - m_fvCoeffs.Cont.AV[p](j) * m_fields[V]( G(i, j  , k) )
-                          - m_fvCoeffs.Cont.AV[s](j) * m_fields[V]( G(i, j-1, k) )
+                          - m_fvCoeffs.Cont.AV[sV.cMleft ](j) * m_fields[V]( G(i, j+sV.iMleft , k) )
+                          - m_fvCoeffs.Cont.AV[sV.cMright](j) * m_fields[V]( G(i, j+sV.iMright, k) )
                           
-                          //- m_fvCoeffs.Cont.AW[t](k) * m_fields[W]( G(i, j, k+1) )
-                          - m_fvCoeffs.Cont.AW[p](k) * m_fields[W]( G(i, j, k  ) )
-                          - m_fvCoeffs.Cont.AW[b](k) * m_fields[W]( G(i, j, k-1) )
+                          - m_fvCoeffs.Cont.AW[sW.cMleft ](k) * m_fields[W]( G(i, j, k+sW.iMleft ) )
+                          - m_fvCoeffs.Cont.AW[sW.cMright](k) * m_fields[W]( G(i, j, k+sW.iMright) )
                           
                           - m_fvCoeffs.Cont.AP[n](i, j, k) * m_fields[P]( G(i  , j+1, k  ) )
                           - m_fvCoeffs.Cont.AP[e](i, j, k) * m_fields[P]( G(i+1, j  , k  ) )
@@ -218,32 +329,32 @@ class BlockSolver
 
             // This only needs to be updated at linearisation
             floatType K = m_fvCoeffs.Cont.AP[p](i, j, k)
-                        - m_fvCoeffs.Cont.AU[e](i) * m_fvCoeffs.Umom.AP[w](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
-                        - m_fvCoeffs.Cont.AV[n](j) * m_fvCoeffs.Vmom.AP[s](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
-                        - m_fvCoeffs.Cont.AW[t](k) * m_fvCoeffs.Wmom.AP[b](kW) / m_fvCoeffs.Umom.AW[p](iW, jW, kW);
+                        - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * m_fvCoeffs.Umom.AP[sU.cPcoupled](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
+                        - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * m_fvCoeffs.Vmom.AP[sV.cPcoupled](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
+                        - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * m_fvCoeffs.Wmom.AP[sW.cPcoupled](kW) / m_fvCoeffs.Umom.AW[p](iW, jW, kW);
             K = 1.0f / K;
 
 
             // Update P from continuity
             m_fields[P]( G(i, j, k) ) = ( bP
-                                        - m_fvCoeffs.Cont.AU[e](i) * bU
-                                        - m_fvCoeffs.Cont.AV[n](j) * bV
-                                        - m_fvCoeffs.Cont.AW[t](k) * bW
+                                        - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * bU
+                                        - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * bV
+                                        - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * bW
                                         ) * K;
 
 
             // Update U from momentum 
             m_fields[U]( G(iU, jU, kU) ) = bU 
-                                         - m_fvCoeffs.Umom.AP[w](iU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
+                                         - m_fvCoeffs.Umom.AP[sU.cPcoupled](iU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
 
 
             // Update V from momentum
             m_fields[V]( G(iV, jV, kV) ) = bV 
-                                         - m_fvCoeffs.Vmom.AP[s](jV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
+                                         - m_fvCoeffs.Vmom.AP[sV.cPcoupled](jV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
 
             // Update W from momentum
             m_fields[W]( G(iW, jW, kW) ) = bW 
-                                         - m_fvCoeffs.Wmom.AP[b](kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+                                         - m_fvCoeffs.Wmom.AP[sW.cPcoupled](kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
 
         }
 
@@ -253,194 +364,60 @@ class BlockSolver
         ArrayAllocator<Fields, array3D> &m_fields;
         const FVCoefficients &m_fvCoeffs;
 
-
-        // Return the index by which the momentum is staggered
-        static constexpr intType UoffsetCoupled(TC coeff)
-        {   
-            if        ( coeff == TC::p ) {
-                return 0;
-            } else if ( coeff == TC::e ) {
-                return 1;
-            } else if ( coeff == TC::w ) {
-                return -1;
-            }
-        }
-
-        static constexpr intType VoffsetCoupled(TC coeff)
+        // Static assert on all members of StaggerIndexing class to check compile time evaluation
+        template< StaggerIndexing sU, StaggerIndexing sV, StaggerIndexing sW >
+        constexpr void AssertIndexing()
         {
-            if        ( coeff == TC::p ) {
-                return 0;
-            } else if ( coeff == TC::n ) {
-                return 1;
-            } else if ( coeff == TC::s ) {
-                return -1;
-            }
+
+            // sU
+            static_assert( sU.cPcoupled == TC::w || sU.cPcoupled == TC::p || sU.cPcoupled == TC::e);
+            static_assert( sU.cPleft    == TC::w || sU.cPleft    == TC::p || sU.cPleft    == TC::e);
+            static_assert( sU.cPright   == TC::w || sU.cPright   == TC::p || sU.cPright   == TC::e);
+            static_assert( sU.cMcoupled == TC::w || sU.cMcoupled == TC::p || sU.cMcoupled == TC::e);
+            static_assert( sU.cMleft    == TC::w || sU.cMleft    == TC::p || sU.cMleft    == TC::e);
+            static_assert( sU.cMright   == TC::w || sU.cMright   == TC::p || sU.cMright   == TC::e);
+
+            static_assert( sU.iPcoupled == -1    || sU.iPcoupled == 0     || sU.iPcoupled == 1);
+            static_assert( sU.iPleft    == -1    || sU.iPleft    == 0     || sU.iPleft    == 1);
+            static_assert( sU.iPright   == -1    || sU.iPright   == 0     || sU.iPright   == 1);
+            static_assert( sU.iMcoupled == -1    || sU.iMcoupled == 0     || sU.iMcoupled == 1);
+            static_assert( sU.iMleft    == -1    || sU.iMleft    == 0     || sU.iMleft    == 1);
+            static_assert( sU.iMright   == -1    || sU.iMright   == 0     || sU.iMright   == 1);
+
+
+            // sV
+            static_assert( sV.cPcoupled == TC::s || sV.cPcoupled == TC::p || sV.cPcoupled == TC::n);
+            static_assert( sV.cPleft    == TC::s || sV.cPleft    == TC::p || sV.cPleft    == TC::n);
+            static_assert( sV.cPright   == TC::s || sV.cPright   == TC::p || sV.cPright   == TC::n);
+            static_assert( sV.cMcoupled == TC::s || sV.cMcoupled == TC::p || sV.cMcoupled == TC::n);
+            static_assert( sV.cMleft    == TC::s || sV.cMleft    == TC::p || sV.cMleft    == TC::n);
+            static_assert( sV.cMright   == TC::s || sV.cMright   == TC::p || sV.cMright   == TC::n);
+
+            static_assert( sV.iPcoupled == -1    || sV.iPcoupled == 0     || sV.iPcoupled == 1);
+            static_assert( sV.iPleft    == -1    || sV.iPleft    == 0     || sV.iPleft    == 1);
+            static_assert( sV.iPright   == -1    || sV.iPright   == 0     || sV.iPright   == 1);
+            static_assert( sV.iMcoupled == -1    || sV.iMcoupled == 0     || sV.iMcoupled == 1);
+            static_assert( sV.iMleft    == -1    || sV.iMleft    == 0     || sV.iMleft    == 1);
+            static_assert( sV.iMright   == -1    || sV.iMright   == 0     || sV.iMright   == 1);
+
+
+            // sW
+            static_assert( sW.cPcoupled == TC::b || sW.cPcoupled == TC::p || sW.cPcoupled == TC::t);
+            static_assert( sW.cPleft    == TC::b || sW.cPleft    == TC::p || sW.cPleft    == TC::t);
+            static_assert( sW.cPright   == TC::b || sW.cPright   == TC::p || sW.cPright   == TC::t);
+            static_assert( sW.cMcoupled == TC::b || sW.cMcoupled == TC::p || sW.cMcoupled == TC::t);
+            static_assert( sW.cMleft    == TC::b || sW.cMleft    == TC::p || sW.cMleft    == TC::t);
+            static_assert( sW.cMright   == TC::b || sW.cMright   == TC::p || sW.cMright   == TC::t);
+
+            static_assert( sW.iPcoupled == -1    || sW.iPcoupled == 0     || sW.iPcoupled == 1);
+            static_assert( sW.iPleft    == -1    || sW.iPleft    == 0     || sW.iPleft    == 1);
+            static_assert( sW.iPright   == -1    || sW.iPright   == 0     || sW.iPright   == 1);
+            static_assert( sW.iMcoupled == -1    || sW.iMcoupled == 0     || sW.iMcoupled == 1);
+            static_assert( sW.iMleft    == -1    || sW.iMleft    == 0     || sW.iMleft    == 1);
+            static_assert( sW.iMright   == -1    || sW.iMright   == 0     || sW.iMright   == 1);
+
         }
 
-        static constexpr intType WoffsetCoupled(TC coeff)
-        {
-            if        ( coeff == TC::p ) {
-                return 0;
-            } else if ( coeff == TC::t ) {
-                return 1;
-            } else if ( coeff == TC::b ) {
-                return -1;
-            }
-        }
-
-
-        // Returns staggering index for left and right uncoupled coordinates
-        static constexpr intType OffsetLeft(intType offset)
-        {
-            if ( offset == 1 ) {
-                return 0;
-            } else if ( offset == 0 ) {
-                return -1;
-            } else if ( offset == -1 ) {
-                return -1;
-            }
-        }
-
-        static constexpr intType OffsetRight(intType offset)
-        {
-            if ( offset == 1 ) {
-                return 1;
-            } else if ( offset == 0 ) {
-                return 1;
-            } else if ( offset == -1 ) {
-                return 0;
-            }
-        }
-
-
-        // Return coupled, left, and right compass corrdinates if non staggered coordinates
-        static constexpr TC UcompassCoupled(TC coeff)
-        {   
-            if        ( coeff == TC::p ) {
-                return TC::p;
-
-            } else if ( coeff == TC::e ) {
-                return TC::w;
-
-            } else if ( coeff == TC::w ) {
-                return TC::e;
-
-            }
-        }
-
-        static constexpr TC UcompassLeft(TC coeff)
-        {   
-            if        ( coeff == TC::p ) {
-                return TC::w;
-
-            } else if ( coeff == TC::e ) {
-                return TC::w;
-
-            } else if ( coeff == TC::w ) {
-                return TC::p;
-
-            }
-        }
-
-        static constexpr TC UcompassRight(TC coeff)
-        {   
-            if        ( coeff == TC::p ) {
-                return TC::e;
-
-            } else if ( coeff == TC::e ) {
-                return TC::p;
-
-            } else if ( coeff == TC::w ) {
-                return TC::e;
-                
-            }
-        }
-
-
-        static constexpr TC VcompassCoupled(TC coeff)
-        {   
-            if        ( coeff == TC::p ) {
-                return TC::p;
-
-            } else if ( coeff == TC::n ) {
-                return TC::s;
-
-            } else if ( coeff == TC::s ) {
-                return TC::n;
-
-            }
-        }
-
-        static constexpr TC VcompassLeft(TC coeff)
-        {   
-            if        ( coeff == TC::p ) {
-                return TC::s;
-
-            } else if ( coeff == TC::n ) {
-                return TC::s;
-
-            } else if ( coeff == TC::s ) {
-                return TC::p;
-
-            }
-        }
-
-        static constexpr TC VcompassRight(TC coeff)
-        {   
-            if        ( coeff == TC::p ) {
-                return TC::n;
-
-            } else if ( coeff == TC::n ) {
-                return TC::p;
-
-            } else if ( coeff == TC::s ) {
-                return TC::n;
-                
-            }
-        }
-
-
-        static constexpr TC WcompassCoupled(TC coeff)
-        {   
-            if        ( coeff == TC::p ) {
-                return TC::p;
-
-            } else if ( coeff == TC::t ) {
-                return TC::b;
-
-            } else if ( coeff == TC::b ) {
-                return TC::t;
-
-            }
-        }
-
-        static constexpr TC WcompassLeft(TC coeff)
-        {   
-            if        ( coeff == TC::p ) {
-                return TC::b;
-
-            } else if ( coeff == TC::t ) {
-                return TC::b;
-
-            } else if ( coeff == TC::b ) {
-                return TC::p;
-
-            }
-        }
-
-        static constexpr TC WcompassRight(TC coeff)
-        {   
-            if        ( coeff == TC::p ) {
-                return TC::t;
-
-            } else if ( coeff == TC::t ) {
-                return TC::p;
-
-            } else if ( coeff == TC::b ) {
-                return TC::t;
-                
-            }
-        }
 };
 
 
@@ -463,7 +440,7 @@ class LineSolver
         {
             BlockSolver blockSolver(m_fields, m_fvCoeffs);
             using enum TransportCoefficients::ENUMDATA;
-            blockSolver.UpdateBlock<e, n, t>(1, 2, 3);
+            blockSolver.UpdateBlock<e, n, t>(1, j, k);
 
         }
 
