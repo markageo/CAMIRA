@@ -190,6 +190,53 @@ class StaggerIndexing
 };
 
 
+
+
+// Static assert on all members of StaggerIndexing class to check compile time evaluation
+template< StaggerIndexing sI, Fields::ENUMDATA field >
+constexpr void AssertStaggerIndexing()
+{
+    using TC = TransportCoefficients::ENUMDATA;
+    using F = Fields::ENUMDATA;
+
+    if        ( field == F::U ) {
+        static_assert( sI.cPcoupled == TC::w || sI.cPcoupled == TC::p || sI.cPcoupled == TC::e );
+        static_assert( sI.cPleft    == TC::w || sI.cPleft    == TC::p || sI.cPleft    == TC::e );
+        static_assert( sI.cPright   == TC::w || sI.cPright   == TC::p || sI.cPright   == TC::e );
+        static_assert( sI.cMcoupled == TC::w || sI.cMcoupled == TC::p || sI.cMcoupled == TC::e );
+        static_assert( sI.cMleft    == TC::w || sI.cMleft    == TC::p || sI.cMleft    == TC::e );
+        static_assert( sI.cMright   == TC::w || sI.cMright   == TC::p || sI.cMright   == TC::e );
+
+    } else if (field == F::V) {
+        static_assert( sI.cPcoupled == TC::s || sI.cPcoupled == TC::p || sI.cPcoupled == TC::n );
+        static_assert( sI.cPleft    == TC::s || sI.cPleft    == TC::p || sI.cPleft    == TC::n );
+        static_assert( sI.cPright   == TC::s || sI.cPright   == TC::p || sI.cPright   == TC::n );
+        static_assert( sI.cMcoupled == TC::s || sI.cMcoupled == TC::p || sI.cMcoupled == TC::n );
+        static_assert( sI.cMleft    == TC::s || sI.cMleft    == TC::p || sI.cMleft    == TC::n );
+        static_assert( sI.cMright   == TC::s || sI.cMright   == TC::p || sI.cMright   == TC::n );
+
+    } else if (field == F::W) {
+        static_assert( sI.cPcoupled == TC::b || sI.cPcoupled == TC::p || sI.cPcoupled == TC::t );
+        static_assert( sI.cPleft    == TC::b || sI.cPleft    == TC::p || sI.cPleft    == TC::t );
+        static_assert( sI.cPright   == TC::b || sI.cPright   == TC::p || sI.cPright   == TC::t );
+        static_assert( sI.cMcoupled == TC::b || sI.cMcoupled == TC::p || sI.cMcoupled == TC::t );
+        static_assert( sI.cMleft    == TC::b || sI.cMleft    == TC::p || sI.cMleft    == TC::t );
+        static_assert( sI.cMright   == TC::b || sI.cMright   == TC::p || sI.cMright   == TC::t );
+
+    }
+
+    static_assert( sI.iPcoupled == -1    || sI.iPcoupled == 0     || sI.iPcoupled == 1);
+    static_assert( sI.iPleft    == -1    || sI.iPleft    == 0     || sI.iPleft    == 1);
+    static_assert( sI.iPright   == -1    || sI.iPright   == 0     || sI.iPright   == 1);
+    static_assert( sI.iMcoupled == -1    || sI.iMcoupled == 0     || sI.iMcoupled == 1);
+    static_assert( sI.iMleft    == -1    || sI.iMleft    == 0     || sI.iMleft    == 1);
+    static_assert( sI.iMright   == -1    || sI.iMright   == 0     || sI.iMright   == 1);
+}
+
+
+
+
+
 // Performs a single local update of block coupled equations
 class BlockSolver
 {
@@ -217,7 +264,9 @@ class BlockSolver
             static constexpr StaggerIndexing sU( U, Ustag );
             static constexpr StaggerIndexing sV( V, Vstag );
             static constexpr StaggerIndexing sW( W, Wstag );
-            AssertIndexing<sU, sV, sW>();
+            AssertStaggerIndexing<sU, U>();
+            AssertStaggerIndexing<sV, V>();
+            AssertStaggerIndexing<sW, W>();
 
 
             // New values to return
@@ -344,58 +393,6 @@ class BlockSolver
 
         const ArrayAllocator<Fields, array3D> &m_fields;
         const FVCoefficients &m_fvCoeffs;
-
-        // Static assert on all members of StaggerIndexing class to check compile time evaluation
-        template< StaggerIndexing sU, StaggerIndexing sV, StaggerIndexing sW >
-        constexpr void AssertIndexing()
-        {
-            // sU
-            static_assert( sU.cPcoupled == TC::w || sU.cPcoupled == TC::p || sU.cPcoupled == TC::e);
-            static_assert( sU.cPleft    == TC::w || sU.cPleft    == TC::p || sU.cPleft    == TC::e);
-            static_assert( sU.cPright   == TC::w || sU.cPright   == TC::p || sU.cPright   == TC::e);
-            static_assert( sU.cMcoupled == TC::w || sU.cMcoupled == TC::p || sU.cMcoupled == TC::e);
-            static_assert( sU.cMleft    == TC::w || sU.cMleft    == TC::p || sU.cMleft    == TC::e);
-            static_assert( sU.cMright   == TC::w || sU.cMright   == TC::p || sU.cMright   == TC::e);
-
-            static_assert( sU.iPcoupled == -1    || sU.iPcoupled == 0     || sU.iPcoupled == 1);
-            static_assert( sU.iPleft    == -1    || sU.iPleft    == 0     || sU.iPleft    == 1);
-            static_assert( sU.iPright   == -1    || sU.iPright   == 0     || sU.iPright   == 1);
-            static_assert( sU.iMcoupled == -1    || sU.iMcoupled == 0     || sU.iMcoupled == 1);
-            static_assert( sU.iMleft    == -1    || sU.iMleft    == 0     || sU.iMleft    == 1);
-            static_assert( sU.iMright   == -1    || sU.iMright   == 0     || sU.iMright   == 1);
-
-
-            // sV
-            static_assert( sV.cPcoupled == TC::s || sV.cPcoupled == TC::p || sV.cPcoupled == TC::n);
-            static_assert( sV.cPleft    == TC::s || sV.cPleft    == TC::p || sV.cPleft    == TC::n);
-            static_assert( sV.cPright   == TC::s || sV.cPright   == TC::p || sV.cPright   == TC::n);
-            static_assert( sV.cMcoupled == TC::s || sV.cMcoupled == TC::p || sV.cMcoupled == TC::n);
-            static_assert( sV.cMleft    == TC::s || sV.cMleft    == TC::p || sV.cMleft    == TC::n);
-            static_assert( sV.cMright   == TC::s || sV.cMright   == TC::p || sV.cMright   == TC::n);
-
-            static_assert( sV.iPcoupled == -1    || sV.iPcoupled == 0     || sV.iPcoupled == 1);
-            static_assert( sV.iPleft    == -1    || sV.iPleft    == 0     || sV.iPleft    == 1);
-            static_assert( sV.iPright   == -1    || sV.iPright   == 0     || sV.iPright   == 1);
-            static_assert( sV.iMcoupled == -1    || sV.iMcoupled == 0     || sV.iMcoupled == 1);
-            static_assert( sV.iMleft    == -1    || sV.iMleft    == 0     || sV.iMleft    == 1);
-            static_assert( sV.iMright   == -1    || sV.iMright   == 0     || sV.iMright   == 1);
-
-
-            // sW
-            static_assert( sW.cPcoupled == TC::b || sW.cPcoupled == TC::p || sW.cPcoupled == TC::t);
-            static_assert( sW.cPleft    == TC::b || sW.cPleft    == TC::p || sW.cPleft    == TC::t);
-            static_assert( sW.cPright   == TC::b || sW.cPright   == TC::p || sW.cPright   == TC::t);
-            static_assert( sW.cMcoupled == TC::b || sW.cMcoupled == TC::p || sW.cMcoupled == TC::t);
-            static_assert( sW.cMleft    == TC::b || sW.cMleft    == TC::p || sW.cMleft    == TC::t);
-            static_assert( sW.cMright   == TC::b || sW.cMright   == TC::p || sW.cMright   == TC::t);
-
-            static_assert( sW.iPcoupled == -1    || sW.iPcoupled == 0     || sW.iPcoupled == 1);
-            static_assert( sW.iPleft    == -1    || sW.iPleft    == 0     || sW.iPleft    == 1);
-            static_assert( sW.iPright   == -1    || sW.iPright   == 0     || sW.iPright   == 1);
-            static_assert( sW.iMcoupled == -1    || sW.iMcoupled == 0     || sW.iMcoupled == 1);
-            static_assert( sW.iMleft    == -1    || sW.iMleft    == 0     || sW.iMleft    == 1);
-            static_assert( sW.iMright   == -1    || sW.iMright   == 0     || sW.iMright   == 1);
-        }
 };
 
 
