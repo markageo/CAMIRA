@@ -9,7 +9,7 @@ Mesh {
 
     domain = (5, 6, 7)
 
-    Grid X {
+    Grid x {
         Segment {
             bounds     = (0, 1)
             nCells     = 5
@@ -18,7 +18,7 @@ Mesh {
     }
 
 
-    Grid Y {
+    Grid y {
         Segment {
             bounds     = (0, 1)
             nCells     = 6
@@ -27,7 +27,7 @@ Mesh {
     }
 
 
-    Grid Z {
+    Grid z {
         Segment {
             bounds     = (0, 1)
             nCells     = 7
@@ -90,34 +90,34 @@ Solver {
     planeSweepDirection = +y
     lineSweepDirection = +x
 
-    schemes {
-        Linearisation = Picard
+    Schemes {
+        linearisation = Picard
     }
 
-    planeSweeping {
-        maxSweeps = 1000;
-        maxResidual = 1e-4;
+    PlaneSweeping {
+        maxOuterIterations = 1000;
+        maxOuterResiduals = 1e-5;
 
         momentumImplicitRelaxation = (0.5, 0.5, 0.5)
         pressureImplicitRelaxation = 1
 
-        maxLinearSweeps = 10;
-        maxLinearResidual = 1e-3;
+        maxInnerIterations = 10;
+        maxInnerResiduals = 1e-3;
     }
     
-    planeSolver {
+    PlaneSolver {
         type = SUGS
         maxIterations = 100
-        maxResidual = 1e-3
+        maxResiduals = 1e-3
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
     }
 
-    lineSolver {
+    LineSolver {
         type = SUGS
         maxIterations = 100
-        maxResidual = 1e-3
+        maxResiduals = 1e-3
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1

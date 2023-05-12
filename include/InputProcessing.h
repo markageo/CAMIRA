@@ -45,35 +45,28 @@ struct InputData
     // Solver
     struct Schemes {
         Linearisation linearisation;
-    };
+    } schemes;
 
     struct PlaneSweepSettings {
         intType maxOuterIterations;
         EnumVector<Fields, floatType> maxOuterResiduals;
-
         intType maxInnerIterations;
         EnumVector<Fields, floatType> maxInnerResiduals;
-
-        floatVector3 momentumImplicitRelaxation;
-        floatType pressureImplicitRelaxation;
+        EnumVector<Fields, floatType> implicitRelaxation;
     } planeSweepSettings;
 
     struct PlaneSolverSettings {
         PlaneSolvers type;
         intType maxIterations;
         EnumVector<Fields, floatType> maxResiduals;
-
-        floatVector3 momentumRelaxation;
-        floatType pressureRelaxation;
+        EnumVector<Fields, floatType> relaxation;
     } planeSolverSettings;
 
     struct LineSolverSettings {
         LineSolvers type;
         intType maxIterations;
         EnumVector<Fields, floatType> maxResiduals;
-
-        floatVector3 momentumRelaxation;
-        floatType pressureRelaxation;
+        EnumVector<Fields, floatType> relaxation;
     } lineSolverSettings;
 
 

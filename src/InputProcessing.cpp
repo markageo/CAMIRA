@@ -262,9 +262,9 @@ namespace
         inputData.domainSize(2) = domainSizeTemp[2];
 
         // Grids
-        ReadGrid(inputData.meshSegments[X], meshTree, "GridX");
-        ReadGrid(inputData.meshSegments[Y], meshTree, "GridY");
-        ReadGrid(inputData.meshSegments[Z], meshTree, "GridZ");
+        ReadGrid(inputData.meshSegments[X], meshTree, "Gridx");
+        ReadGrid(inputData.meshSegments[Y], meshTree, "Gridy");
+        ReadGrid(inputData.meshSegments[Z], meshTree, "Gridz");
 
         // Sort in increasing order of lower bound
         auto sortComparison = [](const auto& i, const auto& j) { return i.lowerBound < j.lowerBound; };
@@ -474,8 +474,8 @@ namespace
     }
 
 
-    void ReadSweepDirections(InputData &inputData, 
-                             const pt::ptree &solverTree) 
+    void ReadSweepDirections( InputData &inputData, 
+                              const pt::ptree &solverTree) 
     {
         using BP = CFD::BoundaryPatches::ENUMDATA;
 
@@ -514,15 +514,158 @@ namespace
     }
 
 
+    void ReadSchemes( InputData &inputData, 
+                      const pt::ptree &solverTree) 
+    {
+        const pt::ptree &schemesTree = solverTree.get_child("Schemes");
+
+        // Linearisation
+        std::string valueString;
+        valueString = schemesTree.get<std::string>("linearisation");
+        if        ( valueString == "Picard" ) {
+            inputData.schemes.linearisation = Linearisation::Picard;
+        } else if ( valueString == "Newton" ) {
+            inputData.schemes.linearisation = Linearisation::Newton;
+        } else {
+            // THROW ERROR - invalid linearisation
+        }
+
+    }
+
+
+    void ReadPlaneSweepSettings( InputData &inputData, 
+                                 const pt::ptree & solverTree) 
+    {
+        const pt::ptree &schemesTree = solverTree.get_child("PlaneSweeping");
+        using F = Fields::ENUMDATA;
+        std::string valueString;
+
+        // Outer iterations
+        valueString = schemesTree.get<std::string>("maxOuterIterations");
+        inputData.planeSweepSettings.maxOuterIterations = String2Type<intType>(valueString);
+
+        // Outer residuals
+        valueString = schemesTree.get<std::string>("maxOuterResiduals");
+        inputData.planeSweepSettings.maxOuterResiduals = String2Type<floatType>(valueString);
+
+        // Inner iterations
+        valueString = schemesTree.get<std::string>("maxInnerIterations");
+        inputData.planeSweepSettings.maxInnerIterations = String2Type<intType>(valueString);
+
+        // Inner residuals
+        valueString = schemesTree.get<std::string>("maxInnerResiduals");
+        inputData.planeSweepSettings.maxInnerResiduals = String2Type<floatType>(valueString);
+        
+        // Momentum relaxation
+        valueString = schemesTree.get<std::string>("momentumImplicitRelaxation");
+        std::vector<floatType> momentumRelaxation = ParseVectorString(valueString, 3);
+        inputData.planeSweepSettings.implicitRelaxation[F::U] = momentumRelaxation[0];
+        inputData.planeSweepSettings.implicitRelaxation[F::V] = momentumRelaxation[1];
+        inputData.planeSweepSettings.implicitRelaxation[F::W] = momentumRelaxation[2];
+
+        // Pressure relaxation
+        valueString = schemesTree.get<std::string>("pressureImplicitRelaxation");
+        inputData.planeSweepSettings.implicitRelaxation[F::P] = String2Type<floatType>(valueString);
+
+    }
+
+
+
+    void ReadPlaneSolverSettings( InputData &inputData, 
+                                 const pt::ptree & solverTree) 
+    {
+        const pt::ptree &schemesTree = solverTree.get_child("PlaneSolver");
+        using F = Fields::ENUMDATA;
+        std::string valueString;
+
+        // Solver type
+        valueString = schemesTree.get<std::string>("type");
+        if        ( valueString == "SUGS" ) {
+            inputData.planeSolverSettings.type = PlaneSolvers::SUGS;
+        } else {
+            // THROW ERROR - invalid plane solver type
+        }
+
+        // Max iterations
+        valueString = schemesTree.get<std::string>("maxIterations");
+        inputData.planeSolverSettings.maxIterations = String2Type<intType>(valueString);
+
+        // Max residuals
+        valueString = schemesTree.get<std::string>("maxResiduals");
+        inputData.planeSolverSettings.maxResiduals = String2Type<floatType>(valueString);
+        
+        // Momentum relaxation
+        valueString = schemesTree.get<std::string>("momentumRelaxation");
+        std::vector<floatType> momentumRelaxation = ParseVectorString(valueString, 3);
+        inputData.planeSolverSettings.relaxation[F::U] = momentumRelaxation[0];
+        inputData.planeSolverSettings.relaxation[F::V] = momentumRelaxation[1];
+        inputData.planeSolverSettings.relaxation[F::W] = momentumRelaxation[2];
+
+        // Pressure relaxation
+        valueString = schemesTree.get<std::string>("pressureRelaxation");
+        inputData.planeSolverSettings.relaxation[F::P] = String2Type<floatType>(valueString);
+
+    }
+
+
+
+    void ReadLineSolverSettings( InputData &inputData, 
+                                 const pt::ptree & solverTree) 
+    {
+        const pt::ptree &schemesTree = solverTree.get_child("LineSolver");
+        using F = Fields::ENUMDATA;
+        std::string valueString;
+
+        // Solver type
+        valueString = schemesTree.get<std::string>("type");
+        if        ( valueString == "SUGS" ) {
+            inputData.lineSolverSettings.type = LineSolvers::SUGS;
+        } else {
+            // THROW ERROR - invalid line solver type
+        }
+
+        // Max iterations
+        valueString = schemesTree.get<std::string>("maxIterations");
+        inputData.lineSolverSettings.maxIterations = String2Type<intType>(valueString);
+
+        // Max residuals
+        valueString = schemesTree.get<std::string>("maxResiduals");
+        inputData.lineSolverSettings.maxResiduals = String2Type<floatType>(valueString);
+        
+        // Momentum relaxation
+        valueString = schemesTree.get<std::string>("momentumRelaxation");
+        std::vector<floatType> momentumRelaxation = ParseVectorString(valueString, 3);
+        inputData.lineSolverSettings.relaxation[F::U] = momentumRelaxation[0];
+        inputData.lineSolverSettings.relaxation[F::V] = momentumRelaxation[1];
+        inputData.lineSolverSettings.relaxation[F::W] = momentumRelaxation[2];
+
+        // Pressure relaxation
+        valueString = schemesTree.get<std::string>("pressureRelaxation");
+        inputData.lineSolverSettings.relaxation[F::P] = String2Type<floatType>(valueString);
+
+    }
+
+
+
     void ReadSolver(InputData &inputData, 
                     const pt::ptree &tree)
     {
-        
         const pt::ptree &solverTree = tree.get_child("Solver");
 
         // Sweep direction transformation data
         ReadSweepDirections(inputData, solverTree);
 
+        // Read discretisation schemes
+        ReadSchemes(inputData, solverTree);
+
+        // Plane sweep settings
+        ReadPlaneSweepSettings(inputData, solverTree);
+
+        // Plane solver settings
+        ReadPlaneSolverSettings(inputData, solverTree);
+
+        // Line solver settings
+        ReadLineSolverSettings(inputData, solverTree);
     }
 
 
