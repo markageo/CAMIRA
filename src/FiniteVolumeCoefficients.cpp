@@ -5,12 +5,11 @@
 #include <algorithm>
 #include <iostream>
 
-// Implementation file for finite volume coefficient structure and update functions
+namespace CFD
+{
  
 namespace
 {
-
-using namespace CFD;
 
 /*---------------------------------------------------------------------------------------------------------------*\
                                                     Diffusion
@@ -883,13 +882,9 @@ void AddContinuityBoundaryConstants( FVCoefficients::ContinuityEquation &contCoe
 }   // end anonymous namespace
 
 
-
-namespace CFD 
-{
-
 // Allocate and initialise finite volume coefficients for momentum and continuity equations
 FVCoefficients InitialiseFVCoefficients( const Mesh &mesh, 
-                                         const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
+                                         const ArrayAllocator<Fields, array3D> &faceVelocities, 
                                          const InputData &inputData)
 {
     // Default construct the coefficients class

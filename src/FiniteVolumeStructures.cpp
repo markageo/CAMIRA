@@ -2,7 +2,8 @@
 
 #include <cmath>
 
-using namespace CFD;
+namespace CFD
+{
 
 /*-------------------------------------------------------------------------------------*\
                                          Mesh
@@ -166,7 +167,7 @@ intType TotalCells(const std::vector<InputData::MeshSegment> &meshSegments)
 
 
 // Constructor, creates the mesh
-CFD::Mesh::Mesh(const InputData &inputData) :
+Mesh::Mesh(const InputData &inputData) :
     nCells( { TotalCells(inputData.meshSegments[Axis::X]),  TotalCells(inputData.meshSegments[Axis::Y]), TotalCells(inputData.meshSegments[Axis::Z])} ),
 
     cellCenters( {{Axis::ENUMDATA::X, nCells(0)},
@@ -306,8 +307,8 @@ using F = Fields::ENUMDATA;
 using enum Axis::ENUMDATA;
 
 // Momentum equations constructor
-CFD::FVCoefficients::MomentumEquation::MomentumEquation(const Fields::ENUMDATA field, 
-                                                        const indexVector3 &dims) :
+FVCoefficients::MomentumEquation::MomentumEquation( const Fields::ENUMDATA field, 
+                                                    const indexVector3 &dims) :
     AU( EquationEnums(field, F::U), dims ),
     AV( EquationEnums(field, F::V), dims ),
     AW( EquationEnums(field, F::W), dims ),
@@ -385,10 +386,10 @@ namespace
 }   // end anonymous namespace
 
 
-void CFD::TransformToUserCoordinates(Mesh &mesh, 
-                                     ArrayAllocator<Fields, array3D> &fields, 
-                                     ArrayAllocator<Fields, array3D> &faceVelocities, 
-                                     const InputData::AxisTransformationMap &axisTransformation)
+void TransformToUserCoordinates( Mesh &mesh, 
+                                 ArrayAllocator<Fields, array3D> &fields, 
+                                 ArrayAllocator<Fields, array3D> &faceVelocities, 
+                                 const InputData::AxisTransformationMap &axisTransformation)                                  
 {
     Axis::ENUMDATA codeAxis, userAxis;
     BoundaryPatches::ENUMDATA codePositivePatch, userPatchFromPositive;
@@ -436,3 +437,6 @@ void CFD::TransformToUserCoordinates(Mesh &mesh,
     }
 
 }
+
+
+}   // end namespace CFD

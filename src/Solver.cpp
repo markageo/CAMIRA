@@ -3,10 +3,12 @@
 #include "FiniteVolume.h"
 #include "Solver.h"
 
-namespace
+
+namespace CFD
 {
 
-using namespace CFD;
+namespace
+{
 
 // Update the residual of the fields. Calculated as the L1 norm between current and previous iterations
 void UpdateResiduals( EnumVector<Fields, floatType> &residuals,
@@ -530,9 +532,9 @@ class PlaneSolver
 
 
 
-void CFD::SweepSolve(ArrayAllocator<CFD::Fields, CFD::array3D>  &fields, 
-                     const Mesh &mesh, 
-                     const InputData &inputData) 
+void SweepSolve( ArrayAllocator<CFD::Fields, CFD::array3D>  &fields, 
+                 const Mesh &mesh, 
+                 const InputData &inputData) 
 {
     // Extract from input data
     const InputData::PlaneSweepSettings  planeSweepSettings  = inputData.planeSweepSettings;
@@ -607,3 +609,6 @@ void CFD::SweepSolve(ArrayAllocator<CFD::Fields, CFD::array3D>  &fields,
     residualsHistory.resize( nOuterIterations );
  
 }
+
+
+}   // end namespace CFD

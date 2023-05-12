@@ -96,13 +96,13 @@ Solver {
 
     PlaneSweeping {
         maxOuterIterations = 1000;
-        maxOuterResiduals = 1e-5;
+        maxOuterResiduals = 1e-5
 
         momentumImplicitRelaxation = (0.5, 0.5, 0.5)
         pressureImplicitRelaxation = 1
 
-        maxInnerIterations = 10;
-        maxInnerResiduals = 1e-3;
+        maxInnerIterations = 10
+        maxInnerResiduals = 1e-3
     }
     
     PlaneSolver {
