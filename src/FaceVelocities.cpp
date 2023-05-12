@@ -1,15 +1,15 @@
 #include "FiniteVolume.h"
 
-// Implementation file for face velocity update functions
+namespace CFD
+{
 
 namespace
 {
 
-void FaceVelocityXnormal( CFD::array3D &faceVel, 
-                          const CFD::array3D &cellVel, 
-                          const CFD::Mesh &mesh)
+void FaceVelocityXnormal( array3D &faceVel, 
+                          const array3D &cellVel, 
+                          const Mesh &mesh)
 {
-    using namespace CFD;
     using enum Axis::ENUMDATA;
 
     floatType interpFactor;
@@ -26,11 +26,10 @@ void FaceVelocityXnormal( CFD::array3D &faceVel,
 }
 
 
-void FaceVelocityYnormal( CFD::array3D &faceVel, 
-                          const CFD::array3D &cellVel, 
-                          const CFD::Mesh &mesh)
+void FaceVelocityYnormal( array3D &faceVel, 
+                          const array3D &cellVel, 
+                          const Mesh &mesh)
 {
-    using namespace CFD;
     using enum Axis::ENUMDATA;
 
     floatType interpFactor;
@@ -47,11 +46,10 @@ void FaceVelocityYnormal( CFD::array3D &faceVel,
 }
 
 
-void FaceVelocityZnormal( CFD::array3D &faceVel, 
-                          const CFD::array3D &cellVel, 
-                          const CFD::Mesh &mesh)
+void FaceVelocityZnormal( array3D &faceVel, 
+                          const array3D &cellVel, 
+                          const Mesh &mesh)
 {
-    using namespace CFD;
     using enum Axis::ENUMDATA;
 
     floatType interpFactor;
@@ -71,8 +69,7 @@ void FaceVelocityZnormal( CFD::array3D &faceVel,
 }   // end anonymous namespace
 
 
-namespace CFD
-{
+
 
 
 ArrayAllocator<Fields, array3D> InitialiseFaceVelocities(const Mesh &mesh, 
