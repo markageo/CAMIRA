@@ -126,10 +126,11 @@ namespace
     }
 
     // Parse vector string into an std::vector
-    std::vector<CFD::floatType> ParseVectorString(const std::string &vecString, 
-                                                  const int &dim)
+    template<typename T>
+    std::vector<T> ParseVectorString( const std::string &vecString, 
+                                      const int &dim)
     {
-        std::vector<CFD::floatType> vec;
+        std::vector<T> vec;
         std::string::const_iterator stringIterator = vecString.begin();
         std::string valueString;
         int dimCount = 0;
@@ -139,14 +140,14 @@ namespace
         }
         ++stringIterator;
         
-        while(stringIterator != vecString.end()) {
-            if (*stringIterator == VECTOR_END_CHAR) {
-                vec.push_back( String2Type<CFD::floatType>(valueString) );
+        while ( stringIterator != vecString.end() ) {
+            if ( *stringIterator == VECTOR_END_CHAR ) {
+                vec.push_back( String2Type<T>(valueString) );
                 break;
             }
 
-            if (*stringIterator == VECTOR_DELIMITER_CHAR) {
-                vec.push_back( String2Type<CFD::floatType>(valueString) );
+            if ( *stringIterator == VECTOR_DELIMITER_CHAR ) {
+                vec.push_back( String2Type<T>(valueString) );
                 valueString.clear();
                 dimCount++;
             } else {
@@ -235,7 +236,7 @@ namespace
             nCellsString     = segment.second.get<std::string>("nCells");
             boundsString     = segment.second.get<std::string>("bounds");
             biasFactorString = segment.second.get<std::string>("biasFactor");
-            tempBoundsVector = ParseVectorString(boundsString, 2);
+            tempBoundsVector = ParseVectorString<floatType>(boundsString, 2);
 
             tempMeshSegment.nCells = String2Type<CFD::intType>(nCellsString);
             tempMeshSegment.biasFactor = String2Type<CFD::floatType>(biasFactorString);
@@ -256,7 +257,7 @@ namespace
 
         // Domain
         const std::string &domainSizeString = meshTree.get<std::string>("domain");
-        std::vector<CFD::floatType> domainSizeTemp = ParseVectorString(domainSizeString, 3);
+        std::vector<floatType> domainSizeTemp = ParseVectorString<floatType>(domainSizeString, 3);
         inputData.domainSize(0) = domainSizeTemp[0];
         inputData.domainSize(1) = domainSizeTemp[1];
         inputData.domainSize(2) = domainSizeTemp[2];
@@ -558,7 +559,7 @@ namespace
         
         // Momentum relaxation
         valueString = schemesTree.get<std::string>("momentumImplicitRelaxation");
-        std::vector<floatType> momentumRelaxation = ParseVectorString(valueString, 3);
+        std::vector<floatType> momentumRelaxation = ParseVectorString<floatType>(valueString, 3);
         inputData.planeSweepSettings.implicitRelaxation[F::U] = momentumRelaxation[0];
         inputData.planeSweepSettings.implicitRelaxation[F::V] = momentumRelaxation[1];
         inputData.planeSweepSettings.implicitRelaxation[F::W] = momentumRelaxation[2];
@@ -596,7 +597,7 @@ namespace
         
         // Momentum relaxation
         valueString = schemesTree.get<std::string>("momentumRelaxation");
-        std::vector<floatType> momentumRelaxation = ParseVectorString(valueString, 3);
+        std::vector<floatType> momentumRelaxation = ParseVectorString<floatType>(valueString, 3);
         inputData.planeSolverSettings.relaxation[F::U] = momentumRelaxation[0];
         inputData.planeSolverSettings.relaxation[F::V] = momentumRelaxation[1];
         inputData.planeSolverSettings.relaxation[F::W] = momentumRelaxation[2];
@@ -634,7 +635,7 @@ namespace
         
         // Momentum relaxation
         valueString = schemesTree.get<std::string>("momentumRelaxation");
-        std::vector<floatType> momentumRelaxation = ParseVectorString(valueString, 3);
+        std::vector<floatType> momentumRelaxation = ParseVectorString<floatType>(valueString, 3);
         inputData.lineSolverSettings.relaxation[F::U] = momentumRelaxation[0];
         inputData.lineSolverSettings.relaxation[F::V] = momentumRelaxation[1];
         inputData.lineSolverSettings.relaxation[F::W] = momentumRelaxation[2];
