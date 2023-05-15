@@ -441,10 +441,7 @@ class ArrayAllocator
 
 
         // Move assignment
-        ArrayAllocator &operator=(ArrayAllocator &&that) noexcept
-        {
-            return ArrayAllocator( std::move( that ) );
-        }    
+        // No need due to copy-swap used above  
 
         // Destructor
         ~ArrayAllocator() = default;
