@@ -428,7 +428,7 @@ class LineSolver
 
 
         template< TC Vstag, TC Wstag >
-        ArrayAllocator<Fields, array1D> SolveLine(const intType j, const intType k)
+        void SolveLine(const intType j, const intType k)
         {
             using enum TransportCoefficients::ENUMDATA;
             using enum Fields::ENUMDATA;
@@ -437,36 +437,73 @@ class LineSolver
             // Temporary for storing new block update
             EnumVector<Fields, floatType> newBlock;
 
-            // Line solution and residuals, maybe make these member functions to avoid allocation/deallocation cost 
-            ArrayAllocator<Fields, array1D> solutionLine( {U, V, W, P}, {ni} ),
-                                            solutionLineOld( {U, V, W, P}, {ni} );
-            EnumVector<Fields, floatType> residuals, residualsInitial;
+            // Residuals 
+            EnumVector<Fields, floatType> delta, residuals, residualsInitialInv;
 
             intType nIterations = 0;
             while ( nIterations < m_maxIterations ) 
             {
+                residuals = {0.0f, 0.0f, 0.0f, 0.0f};
+
                 // Forward sweep
                 for (intType i = 0; i != ni-1; i++) {
 
-                    // newBlock = m_blockSolver.UpdateBlock<e, Vstag, Wstag>(i, j, k);
-                    // ***Update with relaxation
+                    newBlock = m_blockSolver.UpdateBlock<e, Vstag, Wstag>(i, j, k);
+
+                    delta[U] = newBlock[U] - m_fields[U]( G(i+1, j, k) );
+                    delta[V] = newBlock[V] - m_fields[V]( G(i  , j, k) );
+                    delta[W] = newBlock[W] - m_fields[W]( G(i  , j, k) ); 
+                    delta[P] = newBlock[P] - m_fields[P]( G(i  , j, k) ); 
+
+                    m_fields[U]( G(i+1, j, k) ) += m_relaxation[U] * ( delta[U] ); 
+                    m_fields[V]( G(i  , j, k) ) += m_relaxation[V] * ( delta[V] ); 
+                    m_fields[W]( G(i  , j, k) ) += m_relaxation[W] * ( delta[W] ); 
+                    m_fields[P]( G(i  , j, k) ) += m_relaxation[P] * ( delta[P] ); 
+
+                    residuals[U] += abs( delta[U] );
+                    residuals[V] += abs( delta[V] );
+                    residuals[W] += abs( delta[W] );
+                    residuals[P] += abs( delta[P] );
                 }
 
                 // Backward sweep
                 for (intType i = ni-1; i != 0; i--) {
 
-                    // newBlock = m_blockSolver.UpdateBlock<w, Vstag, Wstag>(i, j, k);
-                    // ***Update with relaxation
+                    newBlock = m_blockSolver.UpdateBlock<w, Vstag, Wstag>(i, j, k);
+                    
+                    delta[U] = newBlock[U] - m_fields[U]( G(i-1, j, k) );
+                    delta[V] = newBlock[V] - m_fields[V]( G(i  , j, k) );
+                    delta[W] = newBlock[W] - m_fields[W]( G(i  , j, k) ); 
+                    delta[P] = newBlock[P] - m_fields[P]( G(i  , j, k) ); 
+
+                    m_fields[U]( G(i-1, j, k) ) += m_relaxation[U] * ( delta[U] ); 
+                    m_fields[V]( G(i  , j, k) ) += m_relaxation[V] * ( delta[V] ); 
+                    m_fields[W]( G(i  , j, k) ) += m_relaxation[W] * ( delta[W] ); 
+                    m_fields[P]( G(i  , j, k) ) += m_relaxation[P] * ( delta[P] ); 
+
+
+
+                    residuals[U] += abs( delta[U] );
+                    residuals[V] += abs( delta[V] );
+                    residuals[W] += abs( delta[W] );
+                    residuals[P] += abs( delta[P] );
                 }
 
 
-                // Update residuals
+                // Normalise residuals
                 if ( nIterations == 0 ) {
-                    UpdateResiduals(residualsInitial, solutionLine, solutionLineOld);
+                    residualsInitialInv[U] = 1.0f / residuals[U];
+                    residualsInitialInv[V] = 1.0f / residuals[V];
+                    residualsInitialInv[W] = 1.0f / residuals[W];
+                    residualsInitialInv[P] = 1.0f / residuals[P];
                 }
-                UpdateResiduals(residuals, solutionLine, solutionLineOld, residualsInitial);
+                residuals[U] *= residualsInitial[U];
+                residuals[V] *= residualsInitial[V];
+                residuals[W] *= residualsInitial[W];
+                residuals[P] *= residualsInitial[P];
                 nIterations++;
 
+                // ********Update the old solution vector
 
                 // Check residual
                 if ( MetResidualTolerence( residuals, m_maxResiduals ) ) {
@@ -474,8 +511,6 @@ class LineSolver
                 }
 
             }
-
-            return solutionLine;
 
         }
 
@@ -542,7 +577,7 @@ class PlaneSolver
                 // Forward sweep
                 for (intType j = 0; j != nj-1; j++) {
 
-                    newLine = m_lineSolver.SolveLine<n, Wstag>(j, k);
+                    m_lineSolver.SolveLine<n, Wstag>(j, k);
                     solutionPlane[U].chip(j  , Y) += m_relaxation[U] * ( newLine[U] - solutionPlane[U].chip(j  , Y) ); 
                     solutionPlane[V].chip(j+1, Y) += m_relaxation[V] * ( newLine[V] - solutionPlane[V].chip(j+1, Y) ); 
                     solutionPlane[W].chip(j  , Y) += m_relaxation[W] * ( newLine[W] - solutionPlane[W].chip(j  , Y) ); 
@@ -552,7 +587,7 @@ class PlaneSolver
                 // Backward sweep
                 for (intType j = nj-1; j != 0; j--) {
 
-                    newLine = m_lineSolver.SolveLine<s, Wstag>(j, k);
+                    m_lineSolver.SolveLine<s, Wstag>(j, k);
                     solutionPlane[U].chip(j  , Y) += m_relaxation[U] * ( newLine[U] - solutionPlane[U].chip(j  , Y) ); 
                     solutionPlane[V].chip(j-1, Y) += m_relaxation[V] * ( newLine[V] - solutionPlane[V].chip(j-1, Y) ); 
                     solutionPlane[W].chip(j  , Y) += m_relaxation[W] * ( newLine[W] - solutionPlane[W].chip(j  , Y) ); 
