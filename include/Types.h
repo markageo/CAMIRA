@@ -20,6 +20,7 @@ namespace CFD
 #endif
 
 using intType = Eigen::Index;
+using array0D = Eigen::Tensor<floatType, 0>;    // Colum major
 using array1D = Eigen::Tensor<floatType, 1>;    // Column major
 using array2D = Eigen::Tensor<floatType, 2>;    // Column major
 using array3D = Eigen::Tensor<floatType, 3>;    // Column major
@@ -137,6 +138,24 @@ struct TransportCoefficients
     };
     const static int count = 13;
 };
+
+
+// For looping through enum and applying lambda to each element
+template<typename enumStruct, typename L>
+void EnumFor(L&& f)
+{
+    static_assert(std::is_same<enumStruct, Axis                 >::value ||
+                  std::is_same<enumStruct, Fields               >::value ||
+                  std::is_same<enumStruct, BoundaryConditions   >::value ||
+                  std::is_same<enumStruct, BoundaryPatches      >::value ||
+                  std::is_same<enumStruct, TransportCoefficients>::value);
+
+    typename enumStruct::ENUMDATA enumName;
+    for (int i = 0; i != enumStruct::count; i++) {
+        enumName = static_cast<enumStruct::ENUMDATA>(i);
+        f(enumName);
+    }
+}
 
 
 
