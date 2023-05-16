@@ -519,10 +519,11 @@ namespace
     void ReadSchemes( InputData &inputData, 
                       const pt::ptree &solverTree) 
     {
+        using F = Fields::ENUMDATA;
         const pt::ptree &schemesTree = solverTree.get_child("Schemes");
+        std::string valueString;
 
         // Linearisation
-        std::string valueString;
         valueString = schemesTree.get<std::string>("linearisation");
         if        ( valueString == "Picard" ) {
             inputData.schemes.linearisation = Linearisation::Picard;
@@ -532,6 +533,17 @@ namespace
             // THROW ERROR - invalid linearisation
         }
 
+
+        // Momentum implicit relaxation
+        valueString = schemesTree.get<std::string>("implicitMomentumRelaxation");
+        std::vector<floatType> momentumRelaxation = ParseVectorString<floatType>(valueString, 3);
+        inputData.schemes.implicitRelaxation[F::U] = momentumRelaxation[0];
+        inputData.schemes.implicitRelaxation[F::V] = momentumRelaxation[1];
+        inputData.schemes.implicitRelaxation[F::W] = momentumRelaxation[2];
+
+        // Pressure implicit relaxation
+        valueString = schemesTree.get<std::string>("implicitPressureRelaxation");
+        inputData.schemes.implicitRelaxation[F::P] = String2Type<floatType>(valueString);
     }
 
 
@@ -559,15 +571,15 @@ namespace
         inputData.planeSweepSettings.maxInnerResiduals = String2Type<floatType>(valueString);
         
         // Momentum relaxation
-        valueString = schemesTree.get<std::string>("momentumImplicitRelaxation");
+        valueString = schemesTree.get<std::string>("momentumRelaxation");
         std::vector<floatType> momentumRelaxation = ParseVectorString<floatType>(valueString, 3);
-        inputData.planeSweepSettings.implicitRelaxation[F::U] = momentumRelaxation[0];
-        inputData.planeSweepSettings.implicitRelaxation[F::V] = momentumRelaxation[1];
-        inputData.planeSweepSettings.implicitRelaxation[F::W] = momentumRelaxation[2];
+        inputData.planeSweepSettings.relaxation[F::U] = momentumRelaxation[0];
+        inputData.planeSweepSettings.relaxation[F::V] = momentumRelaxation[1];
+        inputData.planeSweepSettings.relaxation[F::W] = momentumRelaxation[2];
 
         // Pressure relaxation
-        valueString = schemesTree.get<std::string>("pressureImplicitRelaxation");
-        inputData.planeSweepSettings.implicitRelaxation[F::P] = String2Type<floatType>(valueString);
+        valueString = schemesTree.get<std::string>("pressureRelaxation");
+        inputData.planeSweepSettings.relaxation[F::P] = String2Type<floatType>(valueString);
 
     }
 
