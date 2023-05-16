@@ -92,14 +92,16 @@ Solver {
 
     Schemes {
         linearisation = Picard
+        implicitMomentumRelaxation = (0.5, 0.5, 0.5)
+        implicitPressureRelaxation = 1
     }
 
     PlaneSweeping {
         maxOuterIterations = 1000;
         maxOuterResiduals = 1e-5
 
-        momentumImplicitRelaxation = (0.5, 0.5, 0.5)
-        pressureImplicitRelaxation = 1
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
 
         maxInnerIterations = 10
         maxInnerResiduals = 1e-3
