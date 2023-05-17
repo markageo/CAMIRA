@@ -122,7 +122,7 @@ int main(int argc, char const *argv[])
     for (int i = 0; i != CFD::BoundaryConditions::count; i++) {
         boundaryCondition = static_cast<CFD::BoundaryConditions::ENUMDATA>(i);
         CFD::UpdateFaceVelocities(testFaceVelocities[boundaryCondition], mesh, fields, velTestInputData[boundaryCondition]);
-        testFVCoeffs[boundaryCondition] = CFD::InitialiseFVCoefficients( mesh, testFaceVelocities[boundaryCondition], velTestInputData[boundaryCondition] );
+        testFVCoeffs[boundaryCondition] = CFD::InitialiseFVCoefficients( mesh, fields, testFaceVelocities[boundaryCondition], velTestInputData[boundaryCondition] );
     }
 
     // Face velocities

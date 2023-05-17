@@ -827,6 +827,24 @@ void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
 }
  
 
+/*---------------------------------------------------------------------------------------------------------------*\
+                                                Implicit Relaxation
+\*---------------------------------------------------------------------------------------------------------------*/
+
+
+void AddRelaxation( array3D &diagonalCoeffs,
+                    array3D &sourceTerms,
+                    const array3D &oldField,
+                    const floatType &relaxationFactor )
+{
+    using enum TransportCoefficients::ENUMDATA;
+
+    // Add to the diagonal coefficient
+    diagonalCoeffs *= diagonalCoeffs.constant( 1.0f / relaxationFactor );
+
+    // Add to the source term
+    sourceTerms += oldField * diagonalCoeffs * sourceTerms.constant( (1 - relaxationFactor) / relaxationFactor );
+}
 
 
 
@@ -884,21 +902,26 @@ void AddContinuityBoundaryConstants( FVCoefficients::ContinuityEquation &contCoe
 
 // Allocate and initialise finite volume coefficients for momentum and continuity equations
 FVCoefficients InitialiseFVCoefficients( const Mesh &mesh, 
+                                         const ArrayAllocator<Fields, array3D> &fieldsInitial,
                                          const ArrayAllocator<Fields, array3D> &faceVelocities, 
                                          const InputData &inputData)
 {
+    using TC = TransportCoefficients::ENUMDATA;
+    using F = Fields::ENUMDATA;
+    using A = Axis::ENUMDATA;
+
     // Default construct the coefficients class
     FVCoefficients fvCoeffs(mesh.nCells);
 
     // Diffusion coefficients
-    SetDiffusionCoeffients(fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh, inputData, Fields::U);
-    SetDiffusionCoeffients(fvCoeffs.Vmom.diff, fvCoeffs.Vmom.boundaryDiff, mesh, inputData, Fields::V);
-    SetDiffusionCoeffients(fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh, inputData, Fields::W);
+    SetDiffusionCoeffients(fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh, inputData, F::U);
+    SetDiffusionCoeffients(fvCoeffs.Vmom.diff, fvCoeffs.Vmom.boundaryDiff, mesh, inputData, F::V);
+    SetDiffusionCoeffients(fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh, inputData, F::W);
 
     // Momentum velocity terms
-    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, Fields::U);
-    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, Fields::V);
-    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, Fields::W);
+    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
+    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
+    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
 
     // Add diffusion to the velocity coefficients in momentum equations
     AddDiffusion(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh);
@@ -906,14 +929,14 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     AddDiffusion(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh);
 
     // Momentum pressure terms
-    SetFaceInterpolatedCoefficients(fvCoeffs.Umom.AP, fvCoeffs.Umom.boundaryP, mesh, inputData, Fields::P, Axis::X);
-    SetFaceInterpolatedCoefficients(fvCoeffs.Vmom.AP, fvCoeffs.Vmom.boundaryP, mesh, inputData, Fields::P, Axis::Y);
-    SetFaceInterpolatedCoefficients(fvCoeffs.Wmom.AP, fvCoeffs.Wmom.boundaryP, mesh, inputData, Fields::P, Axis::Z);
+    SetFaceInterpolatedCoefficients(fvCoeffs.Umom.AP, fvCoeffs.Umom.boundaryP, mesh, inputData, F::P, A::X);
+    SetFaceInterpolatedCoefficients(fvCoeffs.Vmom.AP, fvCoeffs.Vmom.boundaryP, mesh, inputData, F::P, A::Y);
+    SetFaceInterpolatedCoefficients(fvCoeffs.Wmom.AP, fvCoeffs.Wmom.boundaryP, mesh, inputData, F::P, A::Z);
 
     // Continuity velocity terms
-    SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AU, fvCoeffs.Cont.boundaryVel, mesh, inputData, Fields::U, Axis::X);
-    SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AV, fvCoeffs.Cont.boundaryVel, mesh, inputData, Fields::V, Axis::Y);
-    SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AW, fvCoeffs.Cont.boundaryVel, mesh, inputData, Fields::W, Axis::Z);
+    SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AU, fvCoeffs.Cont.boundaryVel, mesh, inputData, F::U, A::X);
+    SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AV, fvCoeffs.Cont.boundaryVel, mesh, inputData, F::V, A::Y);
+    SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AW, fvCoeffs.Cont.boundaryVel, mesh, inputData, F::W, A::Z);
 
     // Continuity pressure terms (from momentum weighted interpolation)
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
@@ -928,7 +951,10 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
     // Add implicit relaxation to the equations
-    /* TODO */
+    AddRelaxation(fvCoeffs.Umom.AU[TC::p], fvCoeffs.Umom.B, fieldsInitial[F::U], inputData.schemes.implicitRelaxation[F::U]);
+    AddRelaxation(fvCoeffs.Vmom.AV[TC::p], fvCoeffs.Vmom.B, fieldsInitial[F::V], inputData.schemes.implicitRelaxation[F::V]);
+    AddRelaxation(fvCoeffs.Wmom.AW[TC::p], fvCoeffs.Wmom.B, fieldsInitial[F::W], inputData.schemes.implicitRelaxation[F::W]);
+    AddRelaxation(fvCoeffs.Cont.AP[TC::p], fvCoeffs.Cont.B, fieldsInitial[F::P], inputData.schemes.implicitRelaxation[F::P]);
 
     return fvCoeffs;
 }
@@ -937,14 +963,17 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
 // Update linearisation in momenum and continuity equations
 void UpdateFVCoefficients(FVCoefficients &fvCoeffs, 
                           const Mesh &mesh, 
+                          const ArrayAllocator<Fields, CFD::array3D> &fieldsOld,
                           const ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
                           const InputData &inputData)
 {
+    using TC = TransportCoefficients::ENUMDATA;
+    using F = Fields::ENUMDATA;
 
     // Set the advection terms
-    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, Fields::U);
-    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, Fields::V);
-    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, Fields::W);
+    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
+    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
+    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
 
     // Add in the diffusion
     AddDiffusion(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh);
@@ -954,7 +983,7 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     // Set the momentum interpolation coefficients
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
 
-    // Set the source terms, just set them back to zero for now, since there are no source terms
+    // Set the source terms to zero... there may be amore efficient way to do this
     fvCoeffs.Umom.B.setZero();
     fvCoeffs.Vmom.B.setZero();
     fvCoeffs.Wmom.B.setZero();
@@ -967,8 +996,10 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
     // Add implicit relaxation to the equations
-    /* TODO */
-
+    AddRelaxation(fvCoeffs.Umom.AU[TC::p], fvCoeffs.Umom.B, fieldsOld[F::U], inputData.schemes.implicitRelaxation[F::U]);
+    AddRelaxation(fvCoeffs.Vmom.AV[TC::p], fvCoeffs.Vmom.B, fieldsOld[F::V], inputData.schemes.implicitRelaxation[F::V]);
+    AddRelaxation(fvCoeffs.Wmom.AW[TC::p], fvCoeffs.Wmom.B, fieldsOld[F::W], inputData.schemes.implicitRelaxation[F::W]);
+    AddRelaxation(fvCoeffs.Cont.AP[TC::p], fvCoeffs.Cont.B, fieldsOld[F::P], inputData.schemes.implicitRelaxation[F::P]);
 }
 
 
