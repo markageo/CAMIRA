@@ -388,7 +388,6 @@ namespace
 
 void TransformToUserCoordinates( Mesh &mesh, 
                                  ArrayAllocator<Fields, array3D> &fields, 
-                                 ArrayAllocator<Fields, array3D> &faceVelocities, 
                                  const InputData::AxisTransformationMap &axisTransformation)                                  
 {
     Axis::ENUMDATA codeAxis, userAxis;
@@ -428,11 +427,11 @@ void TransformToUserCoordinates( Mesh &mesh,
         // Cell center values
         fields[field] = array3D(fields[field]).shuffle(shuffleArray).reverse(reverseArray);
 
-        if (field == F::P) 
-            continue;
+        // if (field == F::P) 
+        //     continue;
 
-        // Face velocities
-        faceVelocities[field] = array3D(faceVelocities[field]).shuffle(shuffleArray).reverse(reverseArray);
+        // // Face velocities
+        // faceVelocities[field] = array3D(faceVelocities[field]).shuffle(shuffleArray).reverse(reverseArray);
 
     }
 

@@ -65,11 +65,27 @@ struct FVCoefficients
 
 
 // Transform back to the coordinates consistentent with the input file 
-void TransformToUserCoordinates(Mesh &, ArrayAllocator<Fields, array3D> &, ArrayAllocator<Fields, array3D> &, const InputData::AxisTransformationMap &);
+void TransformToUserCoordinates(Mesh &, ArrayAllocator<Fields, array3D> &, const InputData::AxisTransformationMap &);
 
 
+// Remove ghost cells from 3D arrays
+template<typename E>
+void RemoveGhostCells( ArrayAllocator<E, array3D> &arrays, const intType nGhostCells)
+{
+    Eigen::array<Eigen::Index, 3> offsets = { nGhostCells, nGhostCells, nGhostCells },
+                                  extents;  // Extents may be different between each array 
 
+    typename E::ENUMDATA enumName;
+    for (int e = 0; e != E::count; e++) {
+        enumName = static_cast<E::ENUMDATA>( e );
 
+        extents = { arrays[enumName].dimension(0) - 2*nGhostCells, 
+                    arrays[enumName].dimension(1) - 2*nGhostCells,
+                    arrays[enumName].dimension(2) - 2*nGhostCells };
+
+        arrays[enumName] = arrays[enumName].slice(offsets, extents);
+    }
+}
 
 // -------------------------------------- Definition in FaceVelocities.cpp -------------------------------------- //
 
