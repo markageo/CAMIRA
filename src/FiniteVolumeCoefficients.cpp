@@ -844,7 +844,7 @@ void AddRelaxation( array3D &diagonalCoeffs,
     diagonalCoeffs *= diagonalCoeffs.constant( 1.0f / relaxationFactor );
 
     // Coefficients do not have ghost cells, so need to add padding so we can operator with them
-    Eigen::array< std::pair<intType, intType>, 2 > paddings;
+    Eigen::array< std::pair<intType, intType>, 3 > paddings;
     paddings[0] = {nGhost, nGhost};
     paddings[1] = {nGhost, nGhost};
     paddings[2] = {nGhost, nGhost};
