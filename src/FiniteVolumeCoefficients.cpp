@@ -927,6 +927,9 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     AddMomentumBoundaryConstants(fvCoeffs.Wmom);
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
+    // Add implicit relaxation to the equations
+    /* TODO */
+
     return fvCoeffs;
 }
 
@@ -962,6 +965,9 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     AddMomentumBoundaryConstants(fvCoeffs.Vmom);
     AddMomentumBoundaryConstants(fvCoeffs.Wmom);
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
+
+    // Add implicit relaxation to the equations
+    /* TODO */
 
 }
 

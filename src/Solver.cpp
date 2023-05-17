@@ -11,25 +11,26 @@ namespace CFD
 namespace
 {
 
-// Update the residual of the fields. Calculated as the L1 norm between current and previous iterations
-// Template so different dimension arrays can be used
-template< typename arrayType >
-void UpdateResiduals( EnumVector<Fields, floatType> &residuals,
-                      const ArrayAllocator<Fields, arrayType> &fields,
-                      const ArrayAllocator<Fields, arrayType> &fieldsOld,
-                      const EnumVector<Fields, floatType> &residualsInitial = EnumVector<Fields, floatType>({1.0f, 1.0f, 1.0f, 1.0f}))
+// Calculated as the L1 norm of the difference between two arrays.
+template< typename arrayType, typename enumStruct >
+void L1ArrayDiff( EnumVector<enumStruct, floatType> &result,
+                      const ArrayAllocator<enumStruct, arrayType> &array1,
+                      const ArrayAllocator<enumStruct, arrayType> &array2,
+                      const EnumVector<enumStruct, floatType> &normalisation = EnumVector<enumStruct, floatType>({1.0f, 1.0f, 1.0f, 1.0f}))
 {
     static_assert( std::is_same<arrayType, array1D>::value || 
                    std::is_same<arrayType, array2D>::value ||
                    std::is_same<arrayType, array3D>::value );
 
-    Fields::ENUMDATA field;
-    for (int f = 0; f != Fields::count; f++) {
-        field = static_cast<Fields::ENUMDATA>(f);
+    typename enumStruct::ENUMDATA enumName;
+    for (int f = 0; f != enumStruct::count; f++) {
+        enumName = static_cast<enumStruct::ENUMDATA>(f);
 
-        auto fieldDiff = fields[field] - fieldsOld[field];  // auto delays calculation
+        auto fieldDiff = array1[enumName] - array2[enumName];  // auto lazily evaluates
         array0D temp = fieldDiff.abs().mean();
-        residuals[field] = temp(0) / residualsInitial[field];
+        result[enumName] = temp(0) * normalisation[enumName];
+
+        // result[enumName] = static_cast<array0D>( ( array1[enumName] - array2[enumName] ).abs().mean() ) / normalisation[enumName];
     }
 }
 
@@ -206,7 +207,8 @@ constexpr void AssertStaggerIndexing()
     using TC = TransportCoefficients::ENUMDATA;
     using F = Fields::ENUMDATA;
 
-    if        ( field == F::U ) {
+    if constexpr        ( field == F::U ) {
+
         static_assert( sI.cPcoupled == TC::w || sI.cPcoupled == TC::p || sI.cPcoupled == TC::e );
         static_assert( sI.cPleft    == TC::w || sI.cPleft    == TC::p || sI.cPleft    == TC::e );
         static_assert( sI.cPright   == TC::w || sI.cPright   == TC::p || sI.cPright   == TC::e );
@@ -214,7 +216,8 @@ constexpr void AssertStaggerIndexing()
         static_assert( sI.cMleft    == TC::w || sI.cMleft    == TC::p || sI.cMleft    == TC::e );
         static_assert( sI.cMright   == TC::w || sI.cMright   == TC::p || sI.cMright   == TC::e );
 
-    } else if (field == F::V) {
+    } else if constexpr (field == F::V) {
+
         static_assert( sI.cPcoupled == TC::s || sI.cPcoupled == TC::p || sI.cPcoupled == TC::n );
         static_assert( sI.cPleft    == TC::s || sI.cPleft    == TC::p || sI.cPleft    == TC::n );
         static_assert( sI.cPright   == TC::s || sI.cPright   == TC::p || sI.cPright   == TC::n );
@@ -222,7 +225,8 @@ constexpr void AssertStaggerIndexing()
         static_assert( sI.cMleft    == TC::s || sI.cMleft    == TC::p || sI.cMleft    == TC::n );
         static_assert( sI.cMright   == TC::s || sI.cMright   == TC::p || sI.cMright   == TC::n );
 
-    } else if (field == F::W) {
+    } else if constexpr (field == F::W) {
+
         static_assert( sI.cPcoupled == TC::b || sI.cPcoupled == TC::p || sI.cPcoupled == TC::t );
         static_assert( sI.cPleft    == TC::b || sI.cPleft    == TC::p || sI.cPleft    == TC::t );
         static_assert( sI.cPright   == TC::b || sI.cPright   == TC::p || sI.cPright   == TC::t );
@@ -402,7 +406,6 @@ class BlockSolver
 
 
 
-// Solves line
 class LineSolver
 {
     using TC = TransportCoefficients::ENUMDATA; 
@@ -430,68 +433,62 @@ class LineSolver
             intType ni = m_fields[U].dimension(X) - 2*nGhost;
 
             // Staggering must be valid
-            static_assert( (Wstag == n) || (Wstag == s) || (Wstag == p), "Invalid V momentum staggering" );
+            static_assert( (Vstag == n) || (Vstag == s) || (Vstag == p), "Invalid V momentum staggering" );
             static_assert( (Wstag == t) || (Wstag == b) || (Wstag == p), "Invalid W momentum staggering" );
 
             // Temporary for storing new block update
-            EnumVector<Fields, array1D> oldLine( array1D( m_fields[U].dimension(X) ) );
+            EnumVector<Fields, floatType> oldBlock;
 
             // Residuals 
             EnumVector<Fields, floatType> delta, residuals, residualsInitialInv;
 
             // Staggered indexing
             EnumVector<Fields, intType> iS( {0, 0, 0, 0} ), 
-                                        jS( {j, j+coeffIndex[Vstag], j, j} ), 
-                                        kS( {k, k, k+coeffIndex[Wstag], k} );
+                                        jS( {j, j+CoeffIndex[Vstag], j, j} ), 
+                                        kS( {k, k, k+CoeffIndex[Wstag], k} );
 
+
+            // Lambda to update block in place, relax, and update residual
+            auto UpdateAndRelax = [&]<TransportCoefficients::ENUMDATA Ustag>(intType i) {
+
+                EnumFor<Fields>( [&] (Fields::ENUMDATA f) { iS[f] = i; } );      // Set iterating coefficient
+                iS[U] += CoeffIndex[Ustag];                                     // U momentum is staggered    
+
+                EnumFor<Fields>( [&] (Fields::ENUMDATA f) { oldBlock[f] = m_fields[f]( G(iS[f], jS[f], kS[f]) ); } );  // Set old block values
+
+                m_blockSolver.UpdateBlock<e, n, t>(i, j, k);
+
+                EnumFor<Fields>( [&] (Fields::ENUMDATA f) 
+                { 
+                    delta[f] = m_relaxation[f] * ( m_fields[f]( G(iS[f], jS[f], kS[f]) ) - oldBlock[f] );   // Relaxed change in solution      
+                    m_fields[f]( G(iS[f], jS[f], kS[f]) ) = oldBlock[f] + delta[f];                         // Apply relaxation
+                    residuals[f] += abs( delta[f] );                                                        // Add to residual count
+                } );
+            };
+
+
+            // Solver loop
             intType nIterations = 0;
             while ( nIterations < m_maxIterations ) 
             {
-                residuals = {0.0f, 0.0f, 0.0f, 0.0f};
-
-                // Set the old line values
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { oldLine[field] = m_fields[field].chip(k, Z).chip(j, Y); } );
-
+                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] = 0.0f; } );
 
                 // Update in place and relax
                 for (intType i = 0; i != ni-1; i++) {   // Forward sweep
-
-                    m_blockSolver.UpdateBlock<e, Vstag, Wstag>(i, j, k);
-
-                    EnumFor<Fields>( [&] (Fields::ENUMDATA f) { iS[field] = i } );
-                    iS[U] = i + coeffIndex[e];
-
-                    EnumFor<Fields>( [&] (Fields::ENUMDATA f) 
-                    { 
-                         delta[f] = m_relaxation[f] * ( m_fields[f]( G(iS[f], jS[f], kS[f]) ) - oldLine[f]( G(iS[f]) ) );   
-                         m_fields[f]( G(iS[f], jS[f], kS[f]) ) = oldLine[f]( G(iS[f]) ) + delta[f];                        
-                         residuals[f] += abs( delta[f] );                                                                
-                    } );
+                    UpdateAndRelax.template operator()<e>(i);
                 }
 
-
                 for (intType i = ni-1; i != 0; i--) {   // Backward sweep
-                    
-                    m_blockSolver.UpdateBlock<w, Vstag, Wstag>(i, j, k);
-
-                    EnumFor<Fields>( [&] (Fields::ENUMDATA f) { iS[field] = i } );
-                    iS[U] = i + coeffIndex[w];
-
-                    EnumFor<Fields>( [&] (Fields::ENUMDATA f) 
-                    { 
-                         delta[f] = m_relaxation[f] * ( m_fields[f]( G(iS[f], jS[f], kS[f]) ) - oldLine[f]( G(iS[f]) ) );   
-                         m_fields[f]( G(iS[f], jS[f], kS[f]) ) = oldLine[f]( G(iS[f]) ) + delta[f];                         
-                         residuals[f] += abs( delta[f] );                                                                  
-                    } );
+                    UpdateAndRelax.template operator()<w>(i);
                 }
 
 
                 // Normalise residuals
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] /= ni; } );
+                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] /= static_cast<floatType>( ni ); } );
                 if ( nIterations == 0 ) {
                     EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInitialInv[field] = 1.0f / residuals[field]; } );
                 }
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] *= residualsInitialInv[field];} );
+                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] *= residualsInitialInv[field]; } );
                 nIterations++;
 
                 // Check residual
@@ -506,9 +503,9 @@ class LineSolver
 
         ArrayAllocator<Fields, array3D> &m_fields;
         const FVCoefficients &m_fvCoeffs;
-        intType m_maxIterations;
-        EnumVector<Fields, floatType> m_maxResiduals;
-        EnumVector<Fields, floatType> m_relaxation;
+        const intType m_maxIterations;
+        const EnumVector<Fields, floatType> m_maxResiduals;
+        const EnumVector<Fields, floatType> m_relaxation;
         BlockSolver m_blockSolver;
 };
 
@@ -516,7 +513,6 @@ class LineSolver
 
 
 
-// Solves plane
 class PlaneSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -537,7 +533,7 @@ class PlaneSolver
 
 
         template<TC Wstag>
-        ArrayAllocator<Fields, array2D> SolvePlane(const intType k)
+        void SolvePlane(const intType k)
         {
             using enum Fields::ENUMDATA;
             using enum Axis::ENUMDATA;
@@ -549,59 +545,50 @@ class PlaneSolver
             static_assert( (Wstag == t) || (Wstag == b) || (Wstag == p), "Invalid W momentum staggering" );
 
             // Old plane solution
-            EnumVector<Fields, array2D> oldPlane( array2D( m_fields[U].dimension(X) , m_fields[U].dimension(Y) ) );
+            EnumVector<Fields, array1D> oldLine( array1D( m_fields[U].dimension(X) ) );
 
             // Residuals
             EnumVector<Fields, floatType> residuals, residualsInitialInv;
             EnumVector<Fields, array1D> delta( array1D( m_fields[U].dimension(X) ) );
 
+            // Staggered indexing
+            EnumVector<Fields, intType> jS( {0, 0, 0, 0} ), 
+                                        kS( {k, k, k+CoeffIndex[Wstag], k} );
+
+
+            // Lambda to update line in place, relax, and update residual
+            auto UpdateAndRelax = [&]<TransportCoefficients::ENUMDATA Vstag>(intType j) {
+
+                EnumFor<Fields>( [&] (Fields::ENUMDATA f) { jS[f] = j; } );      // Set iterating coefficient
+                jS[V] += CoeffIndex[Vstag];                                     // V momentum is staggered   
+
+                EnumFor<Fields>( [&] (Fields::ENUMDATA f) { oldLine[f] = m_fields[f].chip(kS[f], Z).chip(jS[f], Y); } );      // Set old line
+
+                m_lineSolver.SolveLine<Vstag, Wstag>(j, k);
+
+                EnumFor<Fields> ( [&] (Fields::ENUMDATA f) {
+                    delta[f] = delta[f].constant( m_relaxation[f] ) * ( m_fields[f].chip(kS[f], Z).chip(jS[f], Y) - oldLine[f] );   // Relaxed change in line
+                    m_fields[f].chip(kS[f], Z).chip(jS[f], Y) = oldLine[f] + delta[f];                                              // Relax
+                    residuals[f] += static_cast<array0D>( delta[f].abs().sum() )(0);                                                // Add to residual count
+                } );
+            };
+
+            // Solver loop
             intType nIterations = 0;
             while ( nIterations < m_maxIterations ) 
             {
-                residuals = {0.0f, 0.0f, 0.0f, 0.0f};
-
-                // Set value of old plane
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { oldPlane[field] = m_fields[field].chip(k, Z); } );
-
+                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] = 0.0f; } );
 
                 for (intType j = 0; j != nj-1; j++) {   // Forward sweep
-
-                    m_lineSolver.SolveLine<n, Wstag>(j, k);
-
-                    delta[U] = delta[U].constant( m_relaxation[U] ) * ( m_fields[U].chip(k, Z).chip(j  , Y) - oldPlane[U].chip(j, Y) );
-                    delta[V] = delta[V].constant( m_relaxation[V] ) * ( m_fields[V].chip(k, Z).chip(j+1, Y) - oldPlane[V].chip(j+1, Y) );
-                    delta[W] = delta[W].constant( m_relaxation[W] ) * ( m_fields[W].chip(k, Z).chip(j  , Y) - oldPlane[W].chip(j, Y) );
-                    delta[P] = delta[P].constant( m_relaxation[P] ) * ( m_fields[P].chip(k, Z).chip(j  , Y) - oldPlane[P].chip(j, Y) );
-
-                    m_fields[U].chip(k, Z).chip(j  , Y) = oldPlane[U].chip(j  , Y) + delta[U];
-                    m_fields[V].chip(k, Z).chip(j+1, Y) = oldPlane[U].chip(j+1, Y) + delta[V];
-                    m_fields[W].chip(k, Z).chip(j  , Y) = oldPlane[U].chip(j  , Y) + delta[W];
-                    m_fields[P].chip(k, Z).chip(j  , Y) = oldPlane[U].chip(j  , Y) + delta[P];
-
-                    EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] += static_cast<array0D>( delta[field].abs().sum() )(0); } );
-
+                    UpdateAndRelax.template operator()<n>(j);
                 }
 
                 for (intType j = nj-1; j != 0; j--) {   // Backward sweep
-
-                    m_lineSolver.SolveLine<s, Wstag>(j, k);
-                    
-                    delta[U] = delta[U].constant( m_relaxation[U] ) * ( m_fields[U].chip(k, Z).chip(j  , Y) - oldPlane[U].chip(j, Y) );
-                    delta[V] = delta[V].constant( m_relaxation[V] ) * ( m_fields[V].chip(k, Z).chip(j-1, Y) - oldPlane[V].chip(j-1, Y) );
-                    delta[W] = delta[W].constant( m_relaxation[W] ) * ( m_fields[W].chip(k, Z).chip(j  , Y) - oldPlane[W].chip(j, Y) );
-                    delta[P] = delta[P].constant( m_relaxation[P] ) * ( m_fields[P].chip(k, Z).chip(j  , Y) - oldPlane[P].chip(j, Y) );
-
-                    m_fields[U].chip(k, Z).chip(j  , Y) = oldPlane[U].chip(j  , Y) + delta[U];
-                    m_fields[V].chip(k, Z).chip(j-1, Y) = oldPlane[U].chip(j-1, Y) + delta[V];
-                    m_fields[W].chip(k, Z).chip(j  , Y) = oldPlane[U].chip(j  , Y) + delta[W];
-                    m_fields[P].chip(k, Z).chip(j  , Y) = oldPlane[U].chip(j  , Y) + delta[P];
-
-                    EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] += static_cast<array0D>( delta[field].abs().sum() )(0); } );
-
+                    UpdateAndRelax.template operator()<n>(j);
                 }
 
                 // Normalise residuals
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] /= ni*nj; } );
+                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] /= static_cast<floatType>( ni*nj ); } );
                 if ( nIterations == 0 ) {
                     EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInitialInv[field] = 1.0f / residuals[field]; } );
                 }
@@ -612,19 +599,16 @@ class PlaneSolver
                 if ( MetResidualTolerence( residuals, m_maxResiduals ) ) {
                     break;
                 }
-
             }
-
-            return solutionPlane;
         }
 
 
     private:
         ArrayAllocator<Fields, array3D> &m_fields;
         const FVCoefficients &m_fvCoeffs;
-        intType m_maxIterations;
-        EnumVector<Fields, floatType> m_maxResiduals;
-        EnumVector<Fields, floatType> m_relaxation;
+        const intType m_maxIterations;
+        const EnumVector<Fields, floatType> m_maxResiduals;
+        const EnumVector<Fields, floatType> m_relaxation;
         LineSolver m_lineSolver;
 };
 
@@ -632,7 +616,7 @@ class PlaneSolver
 
 
 
-void SweepSolve( ArrayAllocator<CFD::Fields, CFD::array3D>  &fields, 
+void SweepSolve( ArrayAllocator<Fields, array3D>  &fields, 
                  const Mesh &mesh, 
                  const InputData &inputData) 
 {
@@ -654,17 +638,39 @@ void SweepSolve( ArrayAllocator<CFD::Fields, CFD::array3D>  &fields,
     PlaneSolver planeSolver(fields, fvCoeffs, planeSolverSettings, lineSolverSettings);
 
     // Counters and residuals
-    intType nOuterIterations, nInnerIterations;
-    EnumVector<Fields, floatType> residualsInner, residualsOuter, residualsOuterInitial, residualsInnerInitial;
+    const EnumVector<Fields, floatType> &relaxation  = planeSweepSettings.relaxation;
+    intType nOuterIterations, 
+            nInnerIterations;
+    EnumVector<Fields, floatType> residualsInner, 
+                                  residualsOuter, 
+                                  residualsOuterInitialInv, 
+                                  residualsInnerInitialInv;
     std::vector< EnumVector<Fields, floatType> > residualsHistory( planeSweepSettings.maxOuterIterations );
+    EnumVector<Fields, array2D> delta( array2D( fields[U].dimension(X), fields[U].dimension(Y) ) ),
+                                oldPlane( array2D( fields[U].dimension(X), fields[U].dimension(Y) ) );
+    intType ni = mesh.nCells[X],
+            nj = mesh.nCells[Y],
+            nk = mesh.nCells[Z];
+    EnumVector<Fields, intType> kS( {0, 0, 0, 0} );
 
-    // Useful data
-    intType nk = mesh.nCells[Z];
-    ArrayAllocator<Fields, array2D> newPlane( {U, V, P, W}, {mesh.nCells(X), mesh.nCells(Y)} );
 
-    // For slicing ghost cells
-    Eigen::array<intType, 2> offsets = { nGhost, nGhost };
-    Eigen::array<intType, 2> extents = { mesh.nCells(X), mesh.nCells(Y) };
+    // Lambda to update plane in place, relax, and update residual
+    auto UpdateAndRelax = [&]<TransportCoefficients::ENUMDATA Wstag>(intType k) {
+        
+        EnumFor<Fields>( [&] (Fields::ENUMDATA f) { kS[f] = k; } );       // Set iterating coefficient
+        kS[W] += CoeffIndex[Wstag];                                       // W momentum is staggered
+
+        EnumFor<Fields>( [&] (Fields::ENUMDATA f) { oldPlane[f] = fields[f].chip(kS[f], Z); } );    // Set old plane
+
+        planeSolver.SolvePlane<Wstag>(k);   // Solve in place
+
+        EnumFor<Fields> ( [&] (Fields::ENUMDATA f) {
+            delta[f] = delta[f].constant( relaxation[f] ) * ( fields[f].chip(kS[f], Z) - oldPlane[f] );     // Relaxed change in plane
+            fields[f].chip(kS[f], Z) = oldPlane[f] + delta[f];                                              // Relax
+            residualsInner[f] += static_cast<array0D>( delta[f].abs().sum() )(0);                           // Add to residual count
+        } );
+    };
+
 
     // Outer iterations
     nOuterIterations = 0;
@@ -675,39 +681,27 @@ void SweepSolve( ArrayAllocator<CFD::Fields, CFD::array3D>  &fields,
         nInnerIterations = 0;
         while ( nInnerIterations < planeSweepSettings.maxInnerIterations ) {
         
-            // Forward sweep
-            for (intType k = 0; k != nk-1; k++) {
+            EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInner[field] = 0.0f; } );
 
-                newPlane = planeSolver.SolvePlane<t>(k);
-                fields[U].chip(k  , Z).slice(offsets, extents) = newPlane[U];
-                fields[V].chip(k  , Z).slice(offsets, extents) = newPlane[V];
-                fields[W].chip(k+1, Z).slice(offsets, extents) = newPlane[W];
-                fields[P].chip(k  , Z).slice(offsets, extents) = newPlane[P];
-                // ***Update with relaxation
+            // Update plane
+            for (intType k = 0; k != nk-1; k++) {   // Forward sweep
+                UpdateAndRelax.template operator()<t>(k);
             }
 
-            // Backward sweep
-            for (intType k = nk-1; k != 1; k--) {
-
-                newPlane = planeSolver.SolvePlane<b>(k);
-                fields[U].chip(k  , Z).slice(offsets, extents) = newPlane[U];
-                fields[V].chip(k  , Z).slice(offsets, extents) = newPlane[V];
-                fields[W].chip(k-1, Z).slice(offsets, extents) = newPlane[W];
-                fields[P].chip(k  , Z).slice(offsets, extents) = newPlane[P];
-                // ***Update with relaxation
+            for (intType k = nk-1; k != 1; k--) {   // Backward sweep
+                UpdateAndRelax.template operator()<b>(k);
             }
 
 
-            // Update residuals
+            // Normalise residuals
+            EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInner[field] /= static_cast<floatType>( ni*nj*nk ); } );
             if ( nInnerIterations == 0 ) {
-                UpdateResiduals(residualsInnerInitial, fields, fieldsOld);
+                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInnerInitialInv[field] = 1.0f / residualsInner[field]; } );
             }
-            UpdateResiduals(residualsInner, fields, fieldsOld);
+            EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInner[field] *= residualsInnerInitialInv[field];} );
             nInnerIterations++;
 
-            // Update fields
-            fieldsOld = fields;
-
+            
             // Check residual tolerence
             if ( MetResidualTolerence(residualsInner, planeSweepSettings.maxInnerResiduals) ) {
                 break;
@@ -717,18 +711,20 @@ void SweepSolve( ArrayAllocator<CFD::Fields, CFD::array3D>  &fields,
 
         // Update residuals
         if ( nOuterIterations == 0 ) {
-            UpdateResiduals(residualsOuterInitial, fields, fieldsOld);
+            L1ArrayDiff(residualsOuterInitialInv, fields, fieldsOld);
+            EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsOuterInitialInv[field] = 1.0f / residualsOuterInitialInv[field]; } );
         }
-        UpdateResiduals(residualsOuter, fields, fieldsOld, residualsOuterInitial);
+        L1ArrayDiff(residualsOuter, fields, fieldsOld, residualsOuterInitialInv);
         residualsHistory[nOuterIterations] = residualsOuter;
         nOuterIterations++;
 
+        // Set old fields
+        fieldsOld = fields;
 
         // Check residual tolerence
         if ( MetResidualTolerence(residualsOuter, planeSweepSettings.maxOuterResiduals) ) {
             break;
         }
-
 
         // Update nonlinear coefficients
         UpdateFaceVelocities( faceVelocities, mesh, fields, inputData );
