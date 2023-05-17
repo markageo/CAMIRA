@@ -86,10 +86,10 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, array3D> &, const Mesh &, cons
 // ---------------------------------- Definition in FiniteVolumeCoefficients.cpp --------------------------------- //
 
 // Allocate and initialise finite volume coefficients
-FVCoefficients InitialiseFVCoefficients(const Mesh &, const ArrayAllocator<Fields, array3D> &, const InputData &);
+FVCoefficients InitialiseFVCoefficients(const Mesh &, const ArrayAllocator<Fields, array3D> &, const ArrayAllocator<Fields, array3D> &, const InputData &);
 
 // Update finite volume coefficients (Picard linearisation)
-void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields, array3D> &, const InputData &);
+void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields, array3D> &, const ArrayAllocator<Fields, array3D> &, const InputData &);
 
 
 

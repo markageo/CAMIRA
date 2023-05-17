@@ -632,12 +632,11 @@ void SweepSolve( ArrayAllocator<Fields, array3D>  &fields,
     // Initialise 
     ArrayAllocator<Fields, array3D> faceVelocities = InitialiseFaceVelocities( mesh, fields, inputData );
     ArrayAllocator<Fields, array3D> fieldsOld( fields );
-    FVCoefficients fvCoeffs = InitialiseFVCoefficients( mesh, fields, inputData );
+    FVCoefficients fvCoeffs = InitialiseFVCoefficients( mesh, fields, faceVelocities, inputData );
     
     // Plane solver
     PlaneSolver planeSolver(fields, fvCoeffs, planeSolverSettings, lineSolverSettings);
 
-    // Counters and residuals
     const EnumVector<Fields, floatType> &relaxation  = planeSweepSettings.relaxation;
     intType nOuterIterations, 
             nInnerIterations;
@@ -728,7 +727,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D>  &fields,
 
         // Update nonlinear coefficients
         UpdateFaceVelocities( faceVelocities, mesh, fields, inputData );
-        UpdateFVCoefficients( fvCoeffs, mesh, fields, inputData );
+        UpdateFVCoefficients( fvCoeffs, mesh, fields, faceVelocities, inputData );
     }
 
 
