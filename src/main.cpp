@@ -34,7 +34,6 @@ int main(int argc, char const *argv[])
                                            Solve
     \*-------------------------------------------------------------------------------------*/
 
-    using AX = CFD::Axis::ENUMDATA;
     using F = CFD::Fields::ENUMDATA;
 
     TIC("Meshing");
@@ -43,37 +42,36 @@ int main(int argc, char const *argv[])
 
     TIC("Field Allocation");
     CFD::ArrayAllocator<CFD::Fields, CFD::array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells + 2*CFD::nGhost);
-
-    // Faces are staggered in the negative direction:
-    //   cellFaceVelocity_x(i, j, k) -> u(i-1/2, j    , k    )
-    //   cellFaceVelocity_y(i, j, k) -> u(i    , j-1/2, k    )
-    //   cellFaceVelocity_z(i, j, k) -> u(i    , j    , k-1/2)
-    // Subscript indicates the normal direction of the face.
-    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> faceVelocities( {{F::U, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
-                                                                    {F::V, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},
-                                                                    {F::W, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} );
     TOC();
 
-    CFD::UpdateFaceVelocities( faceVelocities, mesh, fields, inputData);
+    TIC("Solver");
+    CFD::SweepSolve(fields, mesh, inputData);
+    TOC();
 
     /*-------------------------------------------------------------------------------------*\
                                            Output
     \*-------------------------------------------------------------------------------------*/
 
+    using AX = CFD::Axis::ENUMDATA;
+
     // Undo the boundary condition transformation
-    CFD::TransformToUserCoordinates(mesh, fields, faceVelocities, inputData.axisTransformation);
+    CFD::TransformToUserCoordinates(mesh, fields, inputData.axisTransformation);
+
+    // Remove ghost cells from the fields
+    CFD::RemoveGhostCells(fields, CFD::nGhost);
+
 
     // Data to pass to writer
     VTK::VTKWriterConfig config(mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z]);
         config.SetWriteMode(VTK::ASCII);
     VTK::gridVectorType<CFD::floatType> gridVector = {mesh.cellCenters[AX::X].data(), mesh.cellCenters[AX::Y].data(), mesh.cellCenters[AX::Z].data()};
-    VTK::scalarMapType<CFD::floatType> scalarMap = {};
-    VTK::vectorMapType<CFD::floatType> vectorMap = {};
+    VTK::scalarMapType<CFD::floatType> scalarMap = { {"Pressure", fields[F::P].data()} };
+    VTK::vectorMapType<CFD::floatType> vectorMap = { {"Velocity", { fields[F::U].data(), fields[F::V].data(), fields[F::W].data() } } };
 
     // Write output
     VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
     TIC("Writer");
-    writer.WriteData("mesh.vtk", "3D Rectilinear Grid");
+    writer.WriteData("fields.vtk", "CFD simulation");
     TOC();
 
     // Display profiling information

@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <utility>
 
 namespace CFD
 {
@@ -842,8 +843,14 @@ void AddRelaxation( array3D &diagonalCoeffs,
     // Add to the diagonal coefficient
     diagonalCoeffs *= diagonalCoeffs.constant( 1.0f / relaxationFactor );
 
+    // Coefficients do not have ghost cells, so need to add padding so we can operator with them
+    Eigen::array< std::pair<intType, intType>, 2 > paddings;
+    paddings[0] = {nGhost, nGhost};
+    paddings[1] = {nGhost, nGhost};
+    paddings[2] = {nGhost, nGhost};
+
     // Add to the source term
-    sourceTerms += oldField * diagonalCoeffs * sourceTerms.constant( (1 - relaxationFactor) / relaxationFactor );
+    sourceTerms += diagonalCoeffs.pad(paddings) * oldField * sourceTerms.constant( (1 - relaxationFactor) / relaxationFactor );
 }
 
 

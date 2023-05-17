@@ -2,35 +2,35 @@
 
 Model {
     rho  = 1
-    nu   = 1
+    nu   = 1e3
 }
 
 Mesh {
 
-    domain = (5, 6, 7)
+    domain = (1, 0.5, 0.5)
 
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 5
-            biasFactor = 2
+            nCells     = 10
+            biasFactor = 1
         }
     }
 
 
     Grid y {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 6
-            biasFactor = 3
+            bounds     = (0, 0.5)
+            nCells     = 5
+            biasFactor = 1
         }
     }
 
 
     Grid z {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 7
+            bounds     = (0, 0.5)
+            nCells     = 5
             biasFactor = 1
         }
     }
@@ -39,47 +39,52 @@ Mesh {
 
 BoundaryConditions
 {
-
+    // Inflow
     +x {
-        u = extrapolated
+        u = zeroGradient
         v = zeroGradient
-        w = zeroGradient
-        p = zeroGradient
-    }
-
-    -x {
-        u = uniform, 1
-        v = uniform, 2
-        w = uniform, 3
-        p = zeroGradient
-    }
-
-    +y {
-        u = uniform, 1
-        v = extrapolated
         w = zeroGradient
         p = uniform, 0
     }
 
-    -y {
-        u = uniform, 0
-        v = extrapolated
-        w = uniform, 0
-        p = extrapolated
-    }
-
-    +z {
-        u = zeroGradient
-        v = zeroGradient
-        w = extrapolated
-        p = zeroGradient
-    }
-
-    -z {
-        u = zeroGradient
+    // Outflow
+    -x {
+        u = uniform, 1
         v = zeroGradient
         w = zeroGradient
         p = zeroGradient
+    }
+
+    // Symmetry
+    +y {
+        u = zeroGradient
+        v = uniform, 0
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    // Symmetry
+    -y {
+        u = zeroGradient
+        v = uniform, 0
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    // Freestream
+    +z {
+        u = uniform, 1
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform, 0
+    }
+
+    // Wall
+    -z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = extrapolated
     }
 }
 
@@ -87,8 +92,8 @@ BoundaryConditions
 
 Solver {
 
-    planeSweepDirection = +y
-    lineSweepDirection = +x
+    planeSweepDirection = +z
+    lineSweepDirection = +y
 
     Schemes {
         linearisation = Picard
@@ -97,19 +102,19 @@ Solver {
     }
 
     PlaneSweeping {
-        maxOuterIterations = 1000;
+        maxOuterIterations = 1;
         maxOuterResiduals = 1e-5
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
-        maxInnerIterations = 10
+        maxInnerIterations = 1
         maxInnerResiduals = 1e-3
     }
     
     PlaneSolver {
         type = SUGS
-        maxIterations = 100
+        maxIterations = 1
         maxResiduals = 1e-3
 
         momentumRelaxation = (1, 1, 1)
@@ -118,7 +123,7 @@ Solver {
 
     LineSolver {
         type = SUGS
-        maxIterations = 100
+        maxIterations = 1
         maxResiduals = 1e-3
 
         momentumRelaxation = (1, 1, 1)

@@ -214,7 +214,7 @@ VTKWriter<T>::VTKWriter(const gridVectorType<T> &gridVector,
 template<typename T>
 VTKWriter<T>::VTKWriter(const gridVectorType<T> &gridVector, 
                         const VTKWriterConfig &config) : 
-VTKWriter(gridVector, {}, {}, config) {}
+    VTKWriter(gridVector, {}, {}, config) {}
 
 
 

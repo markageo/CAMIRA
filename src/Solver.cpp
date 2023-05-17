@@ -616,7 +616,7 @@ class PlaneSolver
 
 
 
-void SweepSolve( ArrayAllocator<Fields, array3D>  &fields, 
+void SweepSolve( ArrayAllocator<Fields, array3D> &fields, 
                  const Mesh &mesh, 
                  const InputData &inputData) 
 {
