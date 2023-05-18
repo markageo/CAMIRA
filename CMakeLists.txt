@@ -8,6 +8,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 # specify the C++ standard
 add_library(compiler_flags INTERFACE)
+set (CMAKE_CXX_STANDARD 20)
 target_compile_features(compiler_flags INTERFACE cxx_std_20)
 
 # Add compiler flags

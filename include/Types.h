@@ -318,12 +318,12 @@ class EnumVector
 
 
         // Strong type indexing
-        T &operator[](const enumStruct::ENUMDATA idx)
+        T &operator[](const typename enumStruct::ENUMDATA idx)
         {
             return m_dataVector[idx];
         }
 
-        const T &operator[](const enumStruct::ENUMDATA idx) const 
+        const T &operator[](const typename enumStruct::ENUMDATA idx) const 
         {
             return m_dataVector[idx];
         }
@@ -461,31 +461,28 @@ class ArrayAllocator
 
 
         // Move assignment
-        // No need due to copy-swap used above  
-
-        // Destructor
-        ~ArrayAllocator() = default;
+        // No need due to copy-swap 
 
 
         // Indexing operators
-        arrayType &operator[](const enumStruct::ENUMDATA idx)
+        arrayType &operator[](const typename enumStruct::ENUMDATA idx)
         {
             return *m_coeffPointers[idx];
         }
 
-        const arrayType &operator[](const enumStruct::ENUMDATA idx) const 
+        const arrayType &operator[](const typename enumStruct::ENUMDATA idx) const 
         {
             return *m_coeffPointers[idx];
         }
 
 
         // Return the pointer to the enumed object
-        std::unique_ptr<arrayType> &get(const enumStruct::ENUMDATA idx)
+        std::unique_ptr<arrayType> &get(const typename enumStruct::ENUMDATA idx)
         {
             return m_coeffPointers[idx];
         }
 
-        const std::unique_ptr<arrayType> &get(const enumStruct::ENUMDATA idx) const
+        const std::unique_ptr<arrayType> &get(const typename enumStruct::ENUMDATA idx) const
         {
             return m_coeffPointers[idx];
         }
