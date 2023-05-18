@@ -41,7 +41,7 @@ int main(int argc, char const *argv[])
     TOC();
 
     TIC("Field Allocation");
-    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells + 2*CFD::nGhost);
+    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> fields = CFD::InitialiseFields(mesh, inputData);
     TOC();
 
     TIC("Solver");

@@ -37,6 +37,15 @@ Mesh {
 }
 
 
+InitialConditions
+{
+    u = 1
+    v = 0
+    w = 0
+    p = 0
+}
+
+
 BoundaryConditions
 {
     // Inflow
@@ -93,7 +102,7 @@ BoundaryConditions
 Solver {
 
     planeSweepDirection = +z
-    lineSweepDirection = +y
+    lineSweepDirection = -x
 
     Schemes {
         linearisation = Picard

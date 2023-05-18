@@ -684,6 +684,29 @@ namespace
 
 
     /*-------------------------------------------------------------------------------------*\
+                                     Initial Conditions
+    \*-------------------------------------------------------------------------------------*/
+
+    void ReadInitialConditions( InputData &inputData,
+                                const pt::ptree &tree )
+    {
+        const pt::ptree &initialConditionsTree = tree.get_child("InitialConditions");
+        std::string valueString;
+
+        EnumVector<Fields, std::string> fieldKeys( {"u", "v", "w", "p"} );
+
+        Fields::ENUMDATA field;
+        for ( int f = 0; f != Fields::count; f++ ) {
+            field = static_cast<Fields::ENUMDATA>( f );
+
+            valueString = initialConditionsTree.get<std::string>( fieldKeys[field] );        
+            inputData.initialConditions[field] = String2Type<CFD::floatType>( valueString );
+        }
+
+    }
+
+
+    /*-------------------------------------------------------------------------------------*\
                                     Axis Transformations
     \*-------------------------------------------------------------------------------------*/
 
@@ -745,10 +768,10 @@ namespace
         std::array<Axis::ENUMDATA, Axis::count> shuffleOrder = {X, Y, Z}; // Tracks where the user axis have been shuffled to
 
         for (int i = 0; i != Axis::count; i++) {
-            codeAxis = static_cast<Axis::ENUMDATA>(i);
+            codeAxis = static_cast<Axis::ENUMDATA>( i );
             codePositivePatch = PositivePatch[codeAxis];
 
-            userBoundaryPatch = inputData.axisTransformation.UserPatch(codePositivePatch);
+            userBoundaryPatch = inputData.axisTransformation.UserPatch( codePositivePatch );
             userAxis = BoundaryPatchAxis[ userBoundaryPatch ];
 
             // Axis are transformed by swapping the data
@@ -767,6 +790,29 @@ namespace
     }
 
 
+    // Remaps the initial conditions
+    void TransformInitialConditions( InputData &inputData )
+    {
+        using F = Fields::ENUMDATA;
+        EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
+
+        // Create temporary copy to move data from 
+        EnumVector<Fields, floatType> initialConditionsUser = inputData.initialConditions;
+
+        BoundaryPatches::ENUMDATA userPatch;
+        Axis::ENUMDATA userAxis;
+
+        EnumFor<Axis>([&] (Axis::ENUMDATA axis) { 
+
+            userPatch = inputData.axisTransformation.UserPatch( PositivePatch[ axis ] );
+            userAxis = BoundaryPatchAxis[ userPatch ];
+
+            inputData.initialConditions[ axisField[axis] ] = initialConditionsUser[ axisField[userAxis] ];
+
+        } );
+    }
+
+
 }   // end anonymous namepsace
 
 
@@ -779,9 +825,11 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFileName)
     ReadModel(inputData, tree);
     ReadMesh(inputData, tree);
     ReadBoundaryConditions(inputData, tree);
+    ReadInitialConditions(inputData, tree);
     ReadSolver(inputData, tree);
     
     TransformBoundaryConditions(inputData);
+    TransformInitialConditions(inputData);
     TransformMesh(inputData);
 
     return inputData;

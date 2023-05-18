@@ -68,6 +68,10 @@ struct FVCoefficients
 void TransformToUserCoordinates(Mesh &, ArrayAllocator<Fields, array3D> &, const InputData::AxisTransformationMap &);
 
 
+// Allocate and initialise the fields
+ArrayAllocator<Fields, array3D> InitialiseFields(const Mesh &, const InputData &);
+
+
 // Remove ghost cells from 3D arrays
 template<typename E>
 void RemoveGhostCells( ArrayAllocator<E, array3D> &arrays, const intType nGhostCells)

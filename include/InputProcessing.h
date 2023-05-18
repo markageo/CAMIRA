@@ -41,6 +41,8 @@ struct InputData
     using BoundaryConditionData = EnumVector< Fields, EnumVector< BoundaryPatches, BoundaryConditionStruct > >;
     BoundaryConditionData boundaryConditions;
 
+    // Initial conditions
+    EnumVector<Fields, floatType> initialConditions;
 
     // Solver
     struct Schemes {
