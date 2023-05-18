@@ -369,7 +369,7 @@ class BlockSolver
             floatType K = m_fvCoeffs.Cont.AP[p](i, j, k)
                         - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * m_fvCoeffs.Umom.AP[sU.cPcoupled](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
                         - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * m_fvCoeffs.Vmom.AP[sV.cPcoupled](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
-                        - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * m_fvCoeffs.Wmom.AP[sW.cPcoupled](kW) / m_fvCoeffs.Umom.AW[p](iW, jW, kW);
+                        - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * m_fvCoeffs.Wmom.AP[sW.cPcoupled](kW) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
             K = 1.0f / K;
 
 
@@ -452,11 +452,11 @@ class LineSolver
             auto UpdateAndRelax = [&]<TransportCoefficients::ENUMDATA Ustag>(intType i) {
 
                 EnumFor<Fields>( [&] (Fields::ENUMDATA f) { iS[f] = i; } );      // Set iterating coefficient
-                iS[U] += CoeffIndex[Ustag];                                     // U momentum is staggered    
+                iS[U] += CoeffIndex[Ustag];                                      // U momentum is staggered    
 
                 EnumFor<Fields>( [&] (Fields::ENUMDATA f) { oldBlock[f] = m_fields[f]( G(iS[f], jS[f], kS[f]) ); } );  // Set old block values
 
-                m_blockSolver.UpdateBlock<e, n, t>(i, j, k);
+                m_blockSolver.UpdateBlock<Ustag, Vstag, Wstag>(i, j, k);
 
                 EnumFor<Fields>( [&] (Fields::ENUMDATA f) 
                 { 
@@ -584,7 +584,7 @@ class PlaneSolver
                 }
 
                 for (intType j = nj-1; j != 0; j--) {   // Backward sweep
-                    UpdateAndRelax.template operator()<n>(j);
+                    UpdateAndRelax.template operator()<s>(j);
                 }
 
                 // Normalise residuals

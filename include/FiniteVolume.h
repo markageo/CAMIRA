@@ -83,7 +83,7 @@ void RemoveGhostCells( ArrayAllocator<E, array3D> &arrays, const intType nGhostC
                     arrays[enumName].dimension(1) - 2*nGhostCells,
                     arrays[enumName].dimension(2) - 2*nGhostCells };
 
-        arrays[enumName] = arrays[enumName].slice(offsets, extents);
+        arrays[enumName] = array3D( arrays[enumName] ).slice(offsets, extents);
     }
 }
 

@@ -425,13 +425,13 @@ void TransformToUserCoordinates( Mesh &mesh,
         field = static_cast<F>(f);
 
         // Cell center values
-        fields[field] = array3D(fields[field]).shuffle(shuffleArray).reverse(reverseArray);
+        fields[field] = array3D( fields[field] ).shuffle(shuffleArray).reverse(reverseArray);   // Have to make a copy
 
         // if (field == F::P) 
         //     continue;
 
         // // Face velocities
-        // faceVelocities[field] = array3D(faceVelocities[field]).shuffle(shuffleArray).reverse(reverseArray);
+        // faceVelocities[field] = array3D( faceVelocities[field] ).shuffle(shuffleArray).reverse(reverseArray);    // Have to make a copy
 
     }
 
