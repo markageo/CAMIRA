@@ -438,4 +438,24 @@ void TransformToUserCoordinates( Mesh &mesh,
 }
 
 
+
+
+
+ArrayAllocator<Fields, array3D> InitialiseFields(const Mesh &mesh, const InputData &inputData)
+{
+    // Create fields
+    ArrayAllocator<Fields, array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells + 2*CFD::nGhost);
+
+    Eigen::array<Eigen::Index, 3> offsets = {nGhost, nGhost, nGhost},
+                                  extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
+
+    // Set initial values
+    EnumFor<Fields>( [&] (Fields::ENUMDATA f) {
+        fields[f].slice( offsets, extents ).setConstant( inputData.initialConditions[f] );  // Don't set the ghost cells
+    } );
+
+    return fields;
+}
+
+
 }   // end namespace CFD
