@@ -14,25 +14,31 @@ namespace
 // Calculated as the L1 norm of the difference between two arrays.
 template< typename arrayType, typename enumStruct >
 void L1ArrayDiff( EnumVector<enumStruct, floatType> &result,
-                      const ArrayAllocator<enumStruct, arrayType> &array1,
-                      const ArrayAllocator<enumStruct, arrayType> &array2,
-                      const EnumVector<enumStruct, floatType> &normalisation = EnumVector<enumStruct, floatType>({1.0f, 1.0f, 1.0f, 1.0f}))
+                  const ArrayAllocator<enumStruct, arrayType> &array1,
+                  const ArrayAllocator<enumStruct, arrayType> &array2)
 {
     static_assert( std::is_same<arrayType, array1D>::value || 
                    std::is_same<arrayType, array2D>::value ||
                    std::is_same<arrayType, array3D>::value );
 
-    typename enumStruct::ENUMDATA enumName;
-    for (int f = 0; f != enumStruct::count; f++) {
-        enumName = static_cast<enumStruct::ENUMDATA>(f);
-
+    EnumFor<enumStruct>( [&] (enumStruct::ENUMDATA enumName) { 
         auto fieldDiff = array1[enumName] - array2[enumName];  // auto lazily evaluates
-        array0D temp = fieldDiff.abs().mean();
-        result[enumName] = temp(0) * normalisation[enumName];
-
-        // result[enumName] = static_cast<array0D>( ( array1[enumName] - array2[enumName] ).abs().mean() ) / normalisation[enumName];
-    }
+        result[enumName] = static_cast<array0D>( fieldDiff.abs().mean() )(0);
+    } );
 }
+
+
+// Turn the residual into a relative residual
+void RelativeResidual( EnumVector<Fields, floatType> &residuals,
+                       EnumVector<Fields, floatType> &residualsInitialInv,
+                       const intType nIterations )
+{
+    if ( nIterations == 0 ) {
+        EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInitialInv[field] = 1.0f / residuals[field]; } );
+    }
+    EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] *= residualsInitialInv[field];} );
+}
+
 
 
 // Check if residual tolerence is met
@@ -485,10 +491,7 @@ class LineSolver
 
                 // Normalise residuals
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] /= static_cast<floatType>( ni ); } );
-                if ( nIterations == 0 ) {
-                    EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInitialInv[field] = 1.0f / residuals[field]; } );
-                }
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] *= residualsInitialInv[field]; } );
+                RelativeResidual( residuals, residualsInitialInv, nIterations );
                 nIterations++;
 
                 // Check residual
@@ -589,10 +592,7 @@ class PlaneSolver
 
                 // Normalise residuals
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] /= static_cast<floatType>( ni*nj ); } );
-                if ( nIterations == 0 ) {
-                    EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInitialInv[field] = 1.0f / residuals[field]; } );
-                }
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] *= residualsInitialInv[field];} );
+                RelativeResidual( residuals, residualsInitialInv, nIterations );
                 nIterations++;
 
                 // Check residual tolerence
@@ -694,10 +694,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
 
             // Normalise residuals
             EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInner[field] /= static_cast<floatType>( ni*nj*nk ); } );
-            if ( nInnerIterations == 0 ) {
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInnerInitialInv[field] = 1.0f / residualsInner[field]; } );
-            }
-            EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInner[field] *= residualsInnerInitialInv[field];} );
+            RelativeResidual( residualsInner, residualsInnerInitialInv, nInnerIterations );
             nInnerIterations++;
 
             
@@ -709,11 +706,8 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         
 
         // Update residuals
-        if ( nOuterIterations == 0 ) {
-            L1ArrayDiff(residualsOuterInitialInv, fields, fieldsOld);
-            EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsOuterInitialInv[field] = 1.0f / residualsOuterInitialInv[field]; } );
-        }
-        L1ArrayDiff(residualsOuter, fields, fieldsOld, residualsOuterInitialInv);
+        L1ArrayDiff( residualsOuter, fields, fieldsOld );
+        RelativeResidual( residualsOuter, residualsOuterInitialInv, nOuterIterations );
         residualsHistory[nOuterIterations] = residualsOuter;
         nOuterIterations++;
 
