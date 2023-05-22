@@ -116,7 +116,7 @@ Mesh::ExtrapFactorsStruct GetExtrapolationFactors(const array1D &cellLengths,
     floatType extrapFactor_a = - ( cellLengths(fieldIndex_p) )
                                 / ( cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) );
     
-    return Mesh::ExtrapFactorsStruct( extrapFactor_p, extrapFactor_a );
+    return Mesh::ExtrapFactorsStruct{ extrapFactor_p, extrapFactor_a };
 }
 
 
@@ -128,7 +128,8 @@ void CalculateExtrapolationFactors(EnumVector<BoundaryPatches, Mesh::ExtrapFacto
     using enum BoundaryPatches::ENUMDATA;
     using enum Axis::ENUMDATA;
 
-    BoundaryPatches::ENUMDATA patchPositive, patchNegative;
+    BoundaryPatches::ENUMDATA patchPositive = xPositive, 
+                              patchNegative = xNegative;
     if         (axis == X) {
         patchPositive = xPositive;
         patchNegative = xNegative;
@@ -138,6 +139,8 @@ void CalculateExtrapolationFactors(EnumVector<BoundaryPatches, Mesh::ExtrapFacto
     } else if  (axis == Z) {
         patchPositive = zPositive;
         patchNegative = zNegative;
+    } else {
+        /* NULL */
     }
 
     intType fieldIndex_p, fieldIndex_a; // Boundary cell node and the adjacent one

@@ -81,7 +81,7 @@ void RemoveGhostCells( ArrayAllocator<E, array3D> &arrays, const intType nGhostC
 
     typename E::ENUMDATA enumName;
     for (int e = 0; e != E::count; e++) {
-        enumName = static_cast<E::ENUMDATA>( e );
+        enumName = static_cast<typename E::ENUMDATA>( e );
 
         extents = { arrays[enumName].dimension(0) - 2*nGhostCells, 
                     arrays[enumName].dimension(1) - 2*nGhostCells,

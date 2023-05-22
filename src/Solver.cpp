@@ -21,7 +21,7 @@ void L1ArrayDiff( EnumVector<enumStruct, floatType> &result,
                    std::is_same<arrayType, array2D>::value ||
                    std::is_same<arrayType, array3D>::value );
 
-    EnumFor<enumStruct>( [&] (enumStruct::ENUMDATA enumName) { 
+    EnumFor<enumStruct>( [&] (typename enumStruct::ENUMDATA enumName) { 
         auto fieldDiff = array1[enumName] - array2[enumName];  // auto lazily evaluates
         result[enumName] = static_cast<array0D>( fieldDiff.abs().mean() )(0);
     } );
@@ -422,7 +422,6 @@ class LineSolver
                     FVCoefficients &fvCoeffs,
                     const InputData::LineSolverSettings &lineSolverSettings) :
         m_fields( fields ),
-        m_fvCoeffs( fvCoeffs ),
         m_maxIterations( lineSolverSettings.maxIterations ),
         m_maxResiduals( lineSolverSettings.maxResiduals ),
         m_relaxation( lineSolverSettings.relaxation ),
@@ -505,7 +504,6 @@ class LineSolver
     private:
 
         ArrayAllocator<Fields, array3D> &m_fields;
-        const FVCoefficients &m_fvCoeffs;
         const intType m_maxIterations;
         const EnumVector<Fields, floatType> m_maxResiduals;
         const EnumVector<Fields, floatType> m_relaxation;
@@ -527,7 +525,6 @@ class PlaneSolver
                      const InputData::PlaneSolverSettings &planeSolverSettings,
                      const InputData::LineSolverSettings &lineSolverSettings) :
         m_fields( fields ),
-        m_fvCoeffs( fvCoeffs ),
         m_maxIterations( planeSolverSettings.maxIterations ),
         m_maxResiduals( planeSolverSettings.maxResiduals ),
         m_relaxation( planeSolverSettings.relaxation ),
@@ -605,7 +602,6 @@ class PlaneSolver
 
     private:
         ArrayAllocator<Fields, array3D> &m_fields;
-        const FVCoefficients &m_fvCoeffs;
         const intType m_maxIterations;
         const EnumVector<Fields, floatType> m_maxResiduals;
         const EnumVector<Fields, floatType> m_relaxation;
@@ -620,9 +616,9 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
                  const Mesh &mesh, 
                  const InputData &inputData) 
 {
-    using enum TransportCoefficients::ENUMDATA;
     using enum Axis::ENUMDATA;
     using enum Fields::ENUMDATA;
+    using TC = TransportCoefficients::ENUMDATA;
 
     // Extract from input data
     const InputData::PlaneSweepSettings  planeSweepSettings  = inputData.planeSweepSettings;
@@ -671,6 +667,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
     };
 
 
+
     // Outer iterations
     nOuterIterations = 0;
     while ( nOuterIterations < planeSweepSettings.maxOuterIterations ) 
@@ -684,11 +681,11 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
 
             // Update plane
             for (intType k = 0; k != nk-1; k++) {   // Forward sweep
-                UpdateAndRelax.template operator()<t>(k);
+                UpdateAndRelax.template operator()<TC::t>(k);
             }
 
             for (intType k = nk-1; k != 1; k--) {   // Backward sweep
-                UpdateAndRelax.template operator()<b>(k);
+                UpdateAndRelax.template operator()<TC::b>(k);
             }
 
 
