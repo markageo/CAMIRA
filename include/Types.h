@@ -40,7 +40,7 @@ constexpr intType nGhost = 2;
 
 // Eigen::Tensor ghost cell indexing - list indexing
 inline Eigen::Index G(const Eigen::Index i) 
-    { return {i + nGhost}; };
+    { return i + nGhost; };
 
 inline Eigen::array<Eigen::Index, 2> G(const Eigen::Index i, const Eigen::Index j) 
     { return {i + nGhost, j + nGhost}; };
@@ -51,7 +51,7 @@ inline Eigen::array<Eigen::Index, 3> G(const Eigen::Index i, const Eigen::Index 
 
 // Eigen::Tensor ghost cell indexing - array indexing
 inline Eigen::Index G(const Eigen::array<Eigen::Index, 1> idx) 
-    { return {idx[0] + nGhost}; };
+    { return idx[0] + nGhost; };
 
 inline Eigen::array<Eigen::Index, 2> G(const Eigen::array<Eigen::Index, 2> idx) 
     { return {idx[0] + nGhost, idx[1] + nGhost}; };
@@ -152,7 +152,7 @@ void EnumFor(L&& f)
 
     typename enumStruct::ENUMDATA enumName;
     for (int i = 0; i != enumStruct::count; i++) {
-        enumName = static_cast<enumStruct::ENUMDATA>(i);
+        enumName = static_cast<typename enumStruct::ENUMDATA>(i);
         f(enumName);
     }
 }

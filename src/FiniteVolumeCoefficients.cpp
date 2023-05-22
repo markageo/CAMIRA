@@ -24,9 +24,9 @@ BoundaryConditions::ENUMDATA GetDiffusionBC( const InputData::BoundaryConditionD
     using F = Fields::ENUMDATA;
     using enum Axis::ENUMDATA;
 
-    Fields::ENUMDATA fieldToCheck;
-    Fields::ENUMDATA orthogonalField1; 
-    Fields::ENUMDATA orthogonalField2;
+    Fields::ENUMDATA fieldToCheck = F::U;
+    Fields::ENUMDATA orthogonalField1 = F::V; 
+    Fields::ENUMDATA orthogonalField2 = F::W;
     const Axis::ENUMDATA axis = BoundaryPatchAxis[boundaryPatch];
 
     // Set the field we need to check based on the axis
@@ -45,6 +45,9 @@ BoundaryConditions::ENUMDATA GetDiffusionBC( const InputData::BoundaryConditionD
         orthogonalField1 = F::U;
         orthogonalField2 = F::V;
 
+    } else {
+        /* NULL */
+        
     }
 
     // Only check the field that in the direction of the current axis
