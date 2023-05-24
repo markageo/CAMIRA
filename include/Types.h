@@ -233,6 +233,45 @@ enum class Linearisation {
 
 // ------------------------------------------------------- Containers ----------------------------------------------------- //
 
+// Namespace for internal implementation.
+namespace Internal
+{
+
+// Contain the types needed when constructing multidimensional arrays. 1D arrays are not constructed using arrays for
+// their indices.
+template<class B>
+struct dimTypes
+{ 
+    using dimsArray = intType;
+    using dimsArrayInternal = intType;
+
+    static dimsArrayInternal ConvertDimsArrayInternal( dimsArray dims ) 
+    { return dims; }
+};
+
+template<class B>
+requires( std::is_same< B, array2D >::value || std::is_same< B, array3D >::value )
+struct dimTypes<B>
+{ 
+    using dimsArray = Eigen::Array<intType, B::NumDimensions, 1>;
+    using dimsArrayInternal = Eigen::array<intType, B::NumDimensions>;
+
+    // For converting Eigen::Array to Eigen::array. 
+    // Only Eigen::array<Eigen::Index, ...> can be used to construct tensors.
+    static dimsArrayInternal ConvertDimsArrayInternal( const dimsArray &dims ) 
+    {
+        dimsArrayInternal dimsInternal;
+        for ( Eigen::Index i = 0; i != B::NumDimensions; i++ ) {
+            dimsInternal[i] = dims(i);
+        }
+        return dimsInternal;
+    }
+    
+};
+
+}   //  end namespace Internal
+
+
 // Wrapper for std::vector that can only be indexed using enums
 template <typename enumStruct, typename T>
 class EnumVector
@@ -246,6 +285,18 @@ class EnumVector
 
     typedef typename enumStruct::ENUMDATA ENUMDATA;
 
+    static constexpr bool isArray = std::is_same< T, CFD::array3D >::value || 
+                                    std::is_same< T, CFD::array2D >::value || 
+                                    std::is_same< T, CFD::array1D >::value;
+
+
+    // Construction for 1D arrays is handeled a bit differently
+    static constexpr bool isArrayND = std::is_same< T, CFD::array2D >::value ||
+                                      std::is_same< T, CFD::array3D >::value;
+
+    using dimsArray =  typename Internal::dimTypes<T>::dimsArray;
+    using dimsArrayInternal =  typename Internal::dimTypes<T>::dimsArrayInternal;
+
     public:
 
         // Constructors for general types
@@ -253,86 +304,39 @@ class EnumVector
         EnumVector( const T &data ) : m_dataVector( enumStruct::count, data )  { };
         EnumVector( const std::array<T, enumStruct::count> &arr ) : m_dataVector( arr.begin(), arr.end() ) { };
 
-        // Special constructors for array3D, array2D, and array1D objects, all having same dimenions
-        EnumVector(const std::vector< ENUMDATA > &coeffs, const indexVector3 &dims) // 3D
-        requires ( std::is_same< T, CFD::array3D >::value ) :
+        // Special constructors for array objects, all having same dimenions
+        EnumVector(const std::vector< ENUMDATA > &coeffs, const dimsArray &dims) 
+        requires( isArray ) :
             m_dataVector(enumStruct::count)
         {
+            dimsArrayInternal dimsInternal = Internal::dimTypes<T>::ConvertDimsArrayInternal( dims );
             for (const auto &index : coeffs) {
-                m_dataVector[index] = CFD::array3D( dims(0), dims(1), dims(2) ).setZero();
+                m_dataVector[index] = T( dimsInternal ).setZero();
             }
         }
 
-        EnumVector(const std::vector< ENUMDATA > &coeffs, const indexVector2 &dims) // 2D
-        requires ( std::is_same< T, CFD::array2D >::value ) :
+        // Special constructors for array objects, can have different dimensions
+        EnumVector( const std::vector< std::pair< ENUMDATA, dimsArray > > &arraySpec)  
+        requires ( isArray ) :
             m_dataVector(enumStruct::count)
         {
-            for (const auto &index : coeffs) {
-                m_dataVector[index] = CFD::array2D( dims(0), dims(1) ).setZero();
-            }
-        }
-
-        EnumVector(const std::vector< ENUMDATA > &coeffs, const intType &dim) // 1D
-        requires ( std::is_same< T, CFD::array1D >::value ) :
-            m_dataVector(enumStruct::count)
-        {
-            for (const auto &index : coeffs) {
-                m_dataVector[index] = CFD::array1D( dim ).setZero();
-            }
-        }
-
-
-        // Special constructors for array3D, array2D, and array1D objects, can have different dimensions
-        EnumVector( const std::vector< std::pair< ENUMDATA, CFD::indexVector3 > > &arraySpec)   // 3D
-        requires ( std::is_same< T, CFD::array3D >::value ) : 
-            m_dataVector(enumStruct::count)
-        {
-            CFD::indexVector3 dims;
+            dimsArrayInternal dimsInternal;
             for (size_t i = 0; i != arraySpec.size(); i++) {
-                dims = arraySpec[i].second;
-                m_dataVector[ arraySpec[i].first ] = CFD::array3D( dims(0), dims(1), dims(2) ).setZero();
+                dimsInternal = Internal::dimTypes<T>::ConvertDimsArrayInternal( arraySpec[i].second );
+                m_dataVector[ arraySpec[i].first ] = T( dimsInternal ).setZero();
             }
         }
-
-        EnumVector( const std::vector< std::pair< ENUMDATA, CFD::indexVector2 > > &arraySpec)   // 2D
-        requires ( std::is_same< T, CFD::array2D >::value ) : 
-            m_dataVector(enumStruct::count)
-        {
-            CFD::indexVector2 dims;
-            for (size_t i = 0; i != arraySpec.size(); i++) {
-                dims = arraySpec[i].second;
-                m_dataVector[ arraySpec[i].first ] = CFD::array2D( dims(0), dims(1) ).setZero();
-            }
-        }
-
-        EnumVector( const std::vector< std::pair< ENUMDATA, CFD::intType > > &arraySpec)   // 1D
-        requires ( std::is_same< T, CFD::array1D >::value ) : 
-            m_dataVector(enumStruct::count)
-        {
-            CFD::intType dim;
-            for (size_t i = 0; i != arraySpec.size(); i++) {
-                dim = arraySpec[i].second;
-                m_dataVector[ arraySpec[i].first ] = CFD::array1D( dim ).setZero();
-            }
-        }
-
 
         // Strong type indexing
         T &operator[](const typename enumStruct::ENUMDATA idx)
-        {
-            return m_dataVector[idx];
-        }
+        { return m_dataVector[idx]; }
 
         const T &operator[](const typename enumStruct::ENUMDATA idx) const 
-        {
-            return m_dataVector[idx];
-        }
+        { return m_dataVector[idx]; }
 
         // Get underlying data vector
         std::vector<T> &get()
-        {
-            return m_dataVector;
-        }
+        { return m_dataVector; }
 
     private:
         std::vector<T> m_dataVector;
@@ -361,74 +365,35 @@ class ArrayAllocator
 
     typedef typename enumStruct::ENUMDATA ENUMDATA;
 
+    // Construction for 1D arrays is handeled a bit differently
+    static constexpr bool isArrayND = std::is_same< arrayType, CFD::array2D >::value ||
+                                      std::is_same< arrayType, CFD::array3D >::value;
+
+    using dimsArray =  typename Internal::dimTypes<arrayType>::dimsArray;
+    using dimsArrayInternal = typename Internal::dimTypes<arrayType>::dimsArrayInternal;
+
     public:
 
-        // Constructor, all arrays have the same dimensions
-        // 3D
-        ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const indexVector3 &dims) 
-        requires ( std::is_same< arrayType, CFD::array3D >::value ) : 
+        // Constructor, All arrays have same dimensions 
+        ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const dimsArray &dims ) :
             m_coeffPointers(enumStruct::count)
         {
+            dimsArrayInternal dimsInternal = Internal::dimTypes<arrayType>::ConvertDimsArrayInternal( dims );
+
             for (const auto &index : coeffs) {
-                m_coeffPointers[index] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ).setZero() );
-            }
-        }
-
-        // 2D
-        ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const indexVector2 &dims) 
-        requires ( std::is_same< arrayType, CFD::array2D >::value ) : 
-            m_coeffPointers(enumStruct::count)
-        {
-            for (const auto &index : coeffs) {
-                m_coeffPointers[index] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ).setZero() );
-            }
-        }
-
-        // 1D
-        ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const intType &dim) 
-        requires ( std::is_same< arrayType, CFD::array1D >::value ) : 
-            m_coeffPointers(enumStruct::count)
-        {
-            for (const auto &index : coeffs) {
-                m_coeffPointers[index] = std::make_unique<CFD::array1D>( CFD::array1D( dim ).setZero() );
+                m_coeffPointers[index] = std::make_unique<arrayType>( arrayType( dimsInternal ).setZero() );
             }
         }
 
 
-        // Constructor, array can have difference dimensions
-        // 3D
-        ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::indexVector3 > > &arraySpec) 
-        requires ( std::is_same< arrayType, CFD::array3D >::value ) : 
+        // Constructor, arrays can have different dimensions
+        ArrayAllocator( const std::vector< std::pair< ENUMDATA, dimsArray > > &arraySpec) : 
             m_coeffPointers(enumStruct::count)
         {
-            CFD::indexVector3 dims;
+            dimsArrayInternal dimsInternal;
             for (size_t i = 0; i != arraySpec.size(); i++) {
-                dims = arraySpec[i].second;
-                m_coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array3D>( CFD::array3D( dims(0), dims(1), dims(2) ).setZero() );
-            }
-        }
-
-        // 2D
-        ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::indexVector2 > > &arraySpec) 
-        requires ( std::is_same< arrayType, CFD::array2D >::value ) : 
-            m_coeffPointers(enumStruct::count)
-        {
-            CFD::indexVector2 dims;
-            for (size_t i = 0; i != arraySpec.size(); i++) {
-                dims = arraySpec[i].second;
-                m_coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array2D>( CFD::array2D( dims(0), dims(1) ).setZero() );
-            }
-        }
-
-        // 1D
-        ArrayAllocator( const std::vector< std::pair< ENUMDATA, CFD::intType > > &arraySpec) 
-        requires ( std::is_same< arrayType, CFD::array1D >::value ) : 
-            m_coeffPointers(enumStruct::count)
-        {
-            CFD::intType dim;
-            for (size_t i = 0; i != arraySpec.size(); i++) {
-                dim = arraySpec[i].second;
-                m_coeffPointers[ arraySpec[i].first ] = std::make_unique<CFD::array1D>( CFD::array1D( dim ).setZero() );
+                dimsInternal =  Internal::dimTypes<arrayType>::ConvertDimsArrayInternal( arraySpec[i].second );
+                m_coeffPointers[ arraySpec[i].first ] = std::make_unique<arrayType>( arrayType( dimsInternal ).setZero() );
             }
         }
 
@@ -466,26 +431,18 @@ class ArrayAllocator
 
         // Indexing operators
         arrayType &operator[](const typename enumStruct::ENUMDATA idx)
-        {
-            return *m_coeffPointers[idx];
-        }
+        { return *m_coeffPointers[idx]; }
 
         const arrayType &operator[](const typename enumStruct::ENUMDATA idx) const 
-        {
-            return *m_coeffPointers[idx];
-        }
+        { return *m_coeffPointers[idx]; }
 
 
         // Return the pointer to the enumed object
         std::unique_ptr<arrayType> &get(const typename enumStruct::ENUMDATA idx)
-        {
-            return m_coeffPointers[idx];
-        }
+        { return m_coeffPointers[idx]; }
 
         const std::unique_ptr<arrayType> &get(const typename enumStruct::ENUMDATA idx) const
-        {
-            return m_coeffPointers[idx];
-        }
+        { return m_coeffPointers[idx]; }
 
 
 
