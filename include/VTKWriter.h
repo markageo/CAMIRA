@@ -73,7 +73,7 @@ class VTKWriterConfig
         VTKWriterConfig(sizeType, sizeType, sizeType);
 
         void SetWriteMode(WriteModes);
-        void SetASCIIPrecision(unsigned);
+        void SetASCIIPrecision(int);
 
         const sizeType &dim(sizeType) const;
         const std::string &WriteMode() const;
@@ -111,7 +111,7 @@ const std::string &VTKWriterConfig::WriteMode() const
 { return m_writeMode; }
 
 // ASCII precision set
-void VTKWriterConfig::SetASCIIPrecision(unsigned ASCIIPrecision) 
+void VTKWriterConfig::SetASCIIPrecision(int ASCIIPrecision) 
 { m_ASCIIPrecision = ASCIIPrecision; }
 
 // ASCII precision get

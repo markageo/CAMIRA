@@ -162,7 +162,7 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
 
     // Diffusion in each axis is calculated in the same way
     Axis::ENUMDATA axis;
-    for (int a = 0; a != Axis::count; a++) {
+    for (intType a = 0; a != Axis::count; a++) {
         axis = static_cast<Axis::ENUMDATA>(a);
 
         positivePatch = PositivePatch[axis];
@@ -868,11 +868,11 @@ void AddMomentumBoundaryConstants( FVCoefficients::MomentumEquation &momCoeffs )
     intType iEnd;
 
     // Each axis
-    for (int axis = 0; axis != Axis::count; axis++) {
+    for (intType axis = 0; axis != Axis::count; axis++) {
 
-        positivePatch = PositivePatch[axis];
-        negativePatch = NegativePatch[axis];
-        iEnd = momCoeffs.B.dimension(axis)-1;
+        positivePatch = PositivePatch[ static_cast<size_t>( axis ) ];
+        negativePatch = NegativePatch[ static_cast<size_t>( axis ) ];
+        iEnd = momCoeffs.B.dimension( static_cast<size_t>( axis ) ) - 1;
 
         // Negative side boundary
         momCoeffs.B.chip( 0   , axis ) += momCoeffs.boundaryVel[negativePatch]
@@ -892,11 +892,11 @@ void AddContinuityBoundaryConstants( FVCoefficients::ContinuityEquation &contCoe
     intType iEnd;
 
     // Each axis
-    for (int axis = 0; axis != Axis::count; axis++) {
+    for (intType axis = 0; axis != Axis::count; axis++) {
 
-        positivePatch = PositivePatch[axis];
-        negativePatch = NegativePatch[axis];
-        iEnd = contCoeffs.B.dimension(axis)-1;
+        positivePatch = PositivePatch[ static_cast<size_t>( axis ) ];
+        negativePatch = NegativePatch[ static_cast<size_t>( axis ) ];
+        iEnd = contCoeffs.B.dimension( static_cast<size_t>( axis ) ) - 1;
 
         // Negative side boundary
         contCoeffs.B.chip( 0   , axis ) += - contCoeffs.B.chip( 0   , axis ).constant( contCoeffs.boundaryVel[negativePatch] + contCoeffs.boundaryP[negativePatch] );

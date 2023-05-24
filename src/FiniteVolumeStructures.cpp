@@ -397,7 +397,7 @@ void TransformToUserCoordinates( Mesh &mesh,
     Axis::ENUMDATA codeAxis, userAxis;
     BoundaryPatches::ENUMDATA codePositivePatch, userPatchFromPositive;
     std::array<Axis::ENUMDATA, Axis::count> shuffleOrder = {X, Y, Z}; // Tracks where the user axis have been shuffled to when transforming mesh
-    Eigen::array<int , Axis::count> shuffleArray;
+    Eigen::array<intType , Axis::count> shuffleArray;
     Eigen::array<bool, Axis::count> reverseArray;
 
     // Mesh
@@ -419,7 +419,7 @@ void TransformToUserCoordinates( Mesh &mesh,
 
         // Fill the shuffle and revsere arrays, used for 3D arrays
         shuffleArray[codeAxis] = BoundaryPatchAxis[ axisTransformation.CodePatch( codePositivePatch ) ];
-        reverseArray[codeAxis] = axisTransformation.CodePatch( codePositivePatch ) == NegativePatch[ shuffleArray[codeAxis] ];    // This reverse is after the shufflinf
+        reverseArray[codeAxis] = axisTransformation.CodePatch( codePositivePatch ) == NegativePatch[ static_cast<size_t>( shuffleArray[codeAxis] ) ];    // This reverse is after the shuffling
     }
 
 

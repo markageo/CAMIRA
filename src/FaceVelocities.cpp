@@ -120,11 +120,11 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
     Eigen::array<intType, 3> offsets = {nGhost, nGhost, nGhost};
     Eigen::array<intType, 3> extents = {mesh.nCells(X), mesh.nCells(Y), mesh.nCells(Z)};
 
-    for (int axis = 0; axis != Axis::count; axis++) {
+    for (intType axis = 0; axis != Axis::count; axis++) {
 
-        positivePatch = PositivePatch[axis];
-        negativePatch = NegativePatch[axis];
-        axisVel = faceVelocityFields[axis];
+        positivePatch = PositivePatch[ static_cast<size_t>( axis ) ];
+        negativePatch = NegativePatch[ static_cast<size_t>( axis ) ];
+        axisVel = faceVelocityFields[ static_cast<size_t>( axis ) ];
 
         // Axis positive boundary
         faceEndIndex = mesh.nCells(axis);

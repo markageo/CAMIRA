@@ -640,7 +640,9 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
                                   residualsOuter, 
                                   residualsOuterInitialInv, 
                                   residualsInnerInitialInv;
-    std::vector< EnumVector<Fields, floatType> > residualsHistory( planeSweepSettings.maxOuterIterations );
+    std::vector< EnumVector<Fields, floatType> > residualsHistory;
+    residualsHistory.reserve( static_cast<size_t>( planeSweepSettings.maxOuterIterations ) );
+    
     EnumVector<Fields, array2D> delta( array2D( fields[U].dimension(X), fields[U].dimension(Y) ) ),
                                 oldPlane( array2D( fields[U].dimension(X), fields[U].dimension(Y) ) );
     intType ni = mesh.nCells[X],
@@ -705,7 +707,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         // Update residuals
         L1ArrayDiff( residualsOuter, fields, fieldsOld );
         RelativeResidual( residualsOuter, residualsOuterInitialInv, nOuterIterations );
-        residualsHistory[nOuterIterations] = residualsOuter;
+        residualsHistory.push_back( residualsOuter );
         nOuterIterations++;
 
         // Set old fields
@@ -723,7 +725,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
 
 
     // Strip unused data
-    residualsHistory.resize( nOuterIterations );
+    residualsHistory.shrink_to_fit();
  
 }
 
