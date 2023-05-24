@@ -38,28 +38,25 @@ using floatVector2 = Eigen::Array<floatType, 2, 1>;
 // Number of ghost cells in solution field
 constexpr intType nGhost = 2;
 
-// Eigen::Tensor ghost cell indexing - list indexing
-inline Eigen::Index G(const Eigen::Index i) 
-    { return i + nGhost; };
-
-inline Eigen::array<Eigen::Index, 2> G(const Eigen::Index i, const Eigen::Index j) 
-    { return {i + nGhost, j + nGhost}; };
-
-inline Eigen::array<Eigen::Index, 3> G(const Eigen::Index i, const Eigen::Index j, const Eigen::Index k) 
-    { return {i + nGhost, j + nGhost, k + nGhost}; };
-
 
 // Eigen::Tensor ghost cell indexing - array indexing
-inline Eigen::Index G(const Eigen::array<Eigen::Index, 1> idx) 
-    { return idx[0] + nGhost; };
+template<std::size_t dim>
+inline Eigen::array<Eigen::Index, dim> G(Eigen::array<Eigen::Index, dim> idx)
+{
+    for (auto it = idx.begin(); it != idx.end(); it++) {
+        *it += nGhost;                               
+    }
+    return idx;
+}
 
-inline Eigen::array<Eigen::Index, 2> G(const Eigen::array<Eigen::Index, 2> idx) 
-    { return {idx[0] + nGhost, idx[1] + nGhost}; };
 
-inline Eigen::array<Eigen::Index, 3> G(const Eigen::array<Eigen::Index, 3> idx) 
-    { return {idx[0] + nGhost, idx[1] + nGhost, idx[2] + nGhost}; };
-
-
+// Eigen::Tensor ghost cell indexing - list indexing
+template<class ...Args> 
+inline Eigen::array< Eigen::Index, sizeof...(Args) > G( Args... args )
+{  
+    Eigen::array< Eigen::Index, sizeof...(Args) > idx( {args...} );
+    return G( idx ); 
+}
 
 
 
