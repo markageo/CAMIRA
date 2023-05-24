@@ -81,6 +81,8 @@
         "__config": "cpp",
         "__tuple": "cpp",
         "shared_mutex": "cpp",
-        "*.ipp": "cpp"
+        "*.ipp": "cpp",
+        "core": "cpp",
+        "specialfunctions": "cpp"
     }
 }

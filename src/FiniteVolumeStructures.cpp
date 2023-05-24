@@ -290,16 +290,17 @@ std::vector< TransportCoefficients::ENUMDATA > EquationEnums(const Fields::ENUMD
 }
 
 // Returns the dimension axis corresponding to the U, V, or W direction
-intType EquationDim(const Fields::ENUMDATA field) {
+Axis::ENUMDATA EquationDim(const Fields::ENUMDATA field) {
     using F = Fields::ENUMDATA;
+    using enum Axis::ENUMDATA;
     if (field == F::U) {
-        return 0;
+        return X;
     } else if (field == F::V) {
-        return 1;
+        return Y;
     } else if (field == F::W) {
-        return 2;
+        return Z;
     }
-    return -1;
+    return X;
 }
 
 }   // end anonymous namespace

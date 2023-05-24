@@ -15,8 +15,7 @@ target_compile_features(compiler_flags INTERFACE cxx_std_20)
 set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 target_compile_options(compiler_flags INTERFACE
-    #"$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic;-std=c++2a>>"
-	"$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wunused;-Wpedantic;-std=c++2a>>"
+    "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic;-std=c++2a>>"
     "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
 )
 
@@ -51,7 +50,7 @@ endif()
 
 # include directories
 include_directories(include)
-include_directories(libraries)
+include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings
 
 # Add directories
 add_subdirectory(libraries/fmt)
