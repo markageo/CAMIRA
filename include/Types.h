@@ -41,7 +41,7 @@ constexpr intType nGhost = 2;
 
 // Eigen::Tensor ghost cell indexing - array indexing
 template<std::size_t dim>
-inline Eigen::array<Eigen::Index, dim> G(Eigen::array<Eigen::Index, dim> idx)
+inline Eigen::array<Eigen::Index, dim> G( Eigen::array<Eigen::Index, dim> idx )
 {
     for (auto it = idx.begin(); it != idx.end(); it++) {
         *it += nGhost;                               
@@ -259,7 +259,7 @@ struct dimTypes<B>
     {
         dimsArrayInternal dimsInternal;
         for ( Eigen::Index i = 0; i != B::NumDimensions; i++ ) {
-            dimsInternal[i] = dims(i);
+            dimsInternal[ static_cast<size_t>( i ) ] = dims(i);
         }
         return dimsInternal;
     }

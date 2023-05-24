@@ -115,7 +115,7 @@ T ReadArray(const std::string &filename)
                   std::is_same< T, CFD::array3D >::value,
                   "Array type invalid.");
 
-    using dimType = long int;
+    using dimType = size_t;
 
     std::ifstream fileStream(filename);
 
