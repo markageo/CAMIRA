@@ -132,7 +132,7 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
         switch ( boundaryConditions[axisVel][positivePatch].type ) {
             
             case BC::zeroGradient:
-                faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].slice(offsets, extents).chip(fieldEndIndex , axis);          
+                faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].slice(offsets, extents).chip(fieldEndIndex, axis);          
                 break;
 
             case BC::uniform:
