@@ -8,7 +8,7 @@ namespace
 
 void FaceVelocityXnormal( array3D &faceVel, 
                           const array3D &cellVel, 
-                          const Mesh &mesh)
+                          const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;
 
@@ -28,7 +28,7 @@ void FaceVelocityXnormal( array3D &faceVel,
 
 void FaceVelocityYnormal( array3D &faceVel, 
                           const array3D &cellVel, 
-                          const Mesh &mesh)
+                          const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;
 
@@ -48,7 +48,7 @@ void FaceVelocityYnormal( array3D &faceVel,
 
 void FaceVelocityZnormal( array3D &faceVel, 
                           const array3D &cellVel, 
-                          const Mesh &mesh)
+                          const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;
 
@@ -124,7 +124,7 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
 
         positivePatch = PositivePatch[ static_cast<size_t>( axis ) ];
         negativePatch = NegativePatch[ static_cast<size_t>( axis ) ];
-        axisVel = faceVelocityFields[ static_cast<size_t>( axis ) ];
+        axisVel  = faceVelocityFields[ static_cast<size_t>( axis ) ];
 
         // Axis positive boundary
         faceEndIndex = mesh.nCells(axis);
@@ -170,9 +170,9 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
                 extrapFactor_p = mesh.extrapFactors[negativePatch].p;
                 extrapFactor_a = mesh.extrapFactors[negativePatch].a;
                 faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].slice(offsets, extents).chip(fieldEndIndex  , axis) 
-                                                                                * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex, axis).constant( extrapFactor_p )
+                                                                 * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
                                                                  + fields[axisVel].slice(offsets, extents).chip(fieldEndIndex+1, axis) 
-                                                                                * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
+                                                                 * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
                 break;
 
             default:

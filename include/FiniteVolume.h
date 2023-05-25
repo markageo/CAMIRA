@@ -56,7 +56,8 @@ struct FVCoefficients
         ArrayAllocator<TransportCoefficients, array1D> AU, AV, AW;          // Velocity coefficients (LHS)
         ArrayAllocator<TransportCoefficients, array3D> AP;                  // Pressure coefficients (LHS)
         array3D B;                                                          // Source term (RHS)
-        EnumVector< BoundaryPatches, floatType > boundaryVel, boundaryP;    // Constant terms that come from uniform BC (LHS)
+        EnumVector< BoundaryPatches, array2D > boundaryP;                   // Constant terms that come from uniform BC (LHS)
+        EnumVector< BoundaryPatches, floatType > boundaryVel;
     };
 
     MomentumEquation Umom, Vmom, Wmom;

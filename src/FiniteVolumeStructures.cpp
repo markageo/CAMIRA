@@ -2,6 +2,8 @@
 
 #include <cmath>
 
+#include <iostream>
+
 namespace CFD
 {
 
@@ -325,19 +327,21 @@ FVCoefficients::MomentumEquation::MomentumEquation( const Fields::ENUMDATA field
     boundaryP(),
     boundaryVel( {array2D( dims(Y), dims(Z) ), array2D( dims(Y), dims(Z) ),
                   array2D( dims(X), dims(Z) ), array2D( dims(X), dims(Z) ),
-                  array2D( dims(X), dims(Y) ), array2D( dims(X), dims(Y) )} )   // This doesnt follow right hand rule
+                  array2D( dims(X), dims(Y) ), array2D( dims(X), dims(Y) )} )    // This doesn't follow right hand rule
 {};
 
 
 // Continuity equations constructor
-FVCoefficients::ContinuityEquation::ContinuityEquation(const indexVector3 &dims) :
+FVCoefficients::ContinuityEquation::ContinuityEquation( const indexVector3 &dims ) :
     AU( EquationEnums(F::P, F::U), dims( EquationDim(F::U) ) ),
     AV( EquationEnums(F::P, F::V), dims( EquationDim(F::V) ) ),
     AW( EquationEnums(F::P, F::W), dims( EquationDim(F::W) ) ),
     AP( EquationEnums(F::P, F::P), dims ),
     B( dims(X), dims(Y), dims(Z) ),
-    boundaryVel(),
-    boundaryP()
+    boundaryP( {array2D( dims(Y), dims(Z) ), array2D( dims(Y), dims(Z) ),
+                array2D( dims(X), dims(Z) ), array2D( dims(X), dims(Z) ),
+                array2D( dims(X), dims(Y) ), array2D( dims(X), dims(Y) )} ),     // This doesn't follow right hand rule
+    boundaryVel()
 {};
 
 
