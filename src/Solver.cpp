@@ -3,6 +3,8 @@
 #include "FiniteVolume.h"
 #include "Solver.h"
 
+#include "Utils.h"
+
 #include <type_traits>
 
 namespace CFD
@@ -344,7 +346,7 @@ class BlockSolver
 
 
             // Continuity for pressure
-            floatType bP = (m_fvCoeffs.Cont.B(i, j, k)
+            floatType bP = m_fvCoeffs.Cont.B(i, j, k)
                             
                           - m_fvCoeffs.Cont.AU[sU.cMleft ](i) * m_fields[U]( G(i+sU.iMleft , j, k) )
                           - m_fvCoeffs.Cont.AU[sU.cMright](i) * m_fields[U]( G(i+sU.iMright, j, k) )
@@ -367,9 +369,8 @@ class BlockSolver
                           - m_fvCoeffs.Cont.AP[ss](i, j, k) * m_fields[P]( G(i  , j-2, k  ) )
                           - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields[P]( G(i-2, j  , k  ) )
                           - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields[P]( G(i  , j  , k+2) )
-                          - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields[P]( G(i  , j  , k-2) )
+                          - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields[P]( G(i  , j  , k-2) );
 
-                          ) / m_fvCoeffs.Cont.AP[p](i, j, k);
 
             // This only needs to be updated at linearisation
             floatType K = m_fvCoeffs.Cont.AP[p](i, j, k)
@@ -481,10 +482,22 @@ class LineSolver
                 // Update in place and relax
                 for (intType i = 0; i != ni-1; i++) {   // Forward sweep
                     UpdateAndRelax.template operator()<e>(i);
+
+                    UTIL::WriteArray("U_velocity.dbg", m_fields[U]);
+                    UTIL::WriteArray("V_velocity.dbg", m_fields[V]);
+                    UTIL::WriteArray("W_velocity.dbg", m_fields[W]);
+                    UTIL::WriteArray("Pressure.dbg", m_fields[P]);
+                    
                 }
 
                 for (intType i = ni-1; i != 0; i--) {   // Backward sweep
                     UpdateAndRelax.template operator()<w>(i);
+
+                    UTIL::WriteArray("U_velocity.dbg", m_fields[U]);
+                    UTIL::WriteArray("V_velocity.dbg", m_fields[V]);
+                    UTIL::WriteArray("W_velocity.dbg", m_fields[W]);
+                    UTIL::WriteArray("Pressure.dbg", m_fields[P]);
+
                 }
 
 

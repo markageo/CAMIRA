@@ -723,19 +723,16 @@ namespace
         // Temporary for boundary conditions as user specifies them
         InputData::BoundaryConditionData boundaryConditionsUser = inputData.boundaryConditions;
         
-        // Iterate fields, they all have the same trasformation
-        F field;
-        BP patch;
-        for ( int f = 0; f != Fields::count; f++ ) {
-            field = static_cast<F>(f);
 
-            // Transform using the axisTransformation map
-            for ( int p = 0; p != BoundaryPatches::count; p++ ) {
-                patch = static_cast<BP>(p);
-                inputData.boundaryConditions[field][patch] = boundaryConditionsUser[field][ inputData.axisTransformation.UserPatch( patch ) ];
-            }
+        EnumFor<Fields>([&] (F field) {
             
-        }
+            EnumFor<BoundaryPatches>([&] (BP patch) { 
+
+                inputData.boundaryConditions[field][patch] = boundaryConditionsUser[field][ inputData.axisTransformation.UserPatch( patch ) ];
+
+            } );
+
+        } );
 
     }
 
@@ -790,28 +787,45 @@ namespace
     }
 
 
-    // Remaps the initial conditions
-    void TransformInitialConditions( InputData &inputData )
+    // Transform an EnumVector of fields data. Only transforms the momentum equations part.
+    void TransformFieldVector( EnumVector<Fields, floatType> &fieldsVector,
+                               const InputData::AxisTransformationMap& axisTransformation )
     {
         using F = Fields::ENUMDATA;
         EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
 
         // Create temporary copy to move data from 
-        EnumVector<Fields, floatType> initialConditionsUser = inputData.initialConditions;
+        EnumVector<Fields, floatType> userFieldsVector = fieldsVector;
 
         BoundaryPatches::ENUMDATA userPatch;
         Axis::ENUMDATA userAxis;
 
         EnumFor<Axis>([&] (Axis::ENUMDATA axis) { 
 
-            userPatch = inputData.axisTransformation.UserPatch( PositivePatch[ axis ] );
+            userPatch = axisTransformation.UserPatch( PositivePatch[ axis ] );
             userAxis = BoundaryPatchAxis[ userPatch ];
 
-            inputData.initialConditions[ axisField[axis] ] = initialConditionsUser[ axisField[userAxis] ];
+            fieldsVector[ axisField[axis] ] = userFieldsVector[ axisField[userAxis] ];
 
         } );
     }
 
+
+    // Remaps the initial conditions
+    void TransformInitialConditions( InputData &inputData )
+    {
+        TransformFieldVector( inputData.initialConditions, inputData.axisTransformation );
+    }
+
+
+    // Remaps any solver settings that have direction dependence
+    void TransformSolver( InputData &inputData )
+    {
+        TransformFieldVector( inputData.schemes.implicitRelaxation    , inputData.axisTransformation );
+        TransformFieldVector( inputData.planeSweepSettings.relaxation , inputData.axisTransformation );
+        TransformFieldVector( inputData.planeSolverSettings.relaxation, inputData.axisTransformation );
+        TransformFieldVector( inputData.lineSolverSettings.relaxation , inputData.axisTransformation );
+    }
 
 }   // end anonymous namepsace
 
@@ -831,6 +845,7 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFileName)
     TransformBoundaryConditions(inputData);
     TransformInitialConditions(inputData);
     TransformMesh(inputData);
+    TransformSolver(inputData);
 
     return inputData;
 }

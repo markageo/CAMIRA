@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 10
+            nCells     = 5
             biasFactor = 1
         }
     }
@@ -106,7 +106,7 @@ Solver {
 
     Schemes {
         linearisation = Picard
-        implicitMomentumRelaxation = (0.5, 0.5, 0.5)
+        implicitMomentumRelaxation = (0.5, 0.4, 0.3)
         implicitPressureRelaxation = 1
     }
 

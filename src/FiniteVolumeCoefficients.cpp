@@ -966,7 +966,7 @@ void AddMomentumBoundaryConstants( FVCoefficients::MomentumEquation &momCoeffs )
 
         positivePatch = PositivePatch[ static_cast<size_t>( axis ) ];
         negativePatch = NegativePatch[ static_cast<size_t>( axis ) ];
-        iEnd = momCoeffs.B.dimension( static_cast<size_t>( axis ) ) - 1;
+        iEnd  = momCoeffs.B.dimension( static_cast<size_t>( axis ) ) - 1;
 
         // Negative side boundary
         momCoeffs.B.chip( 0   , axis ) -= momCoeffs.boundaryVel[negativePatch]
@@ -1004,6 +1004,9 @@ void AddContinuityBoundaryConstants( FVCoefficients::ContinuityEquation &contCoe
 
 
 }   // end anonymous namespace
+
+
+
 
 
 // Allocate and initialise finite volume coefficients for momentum and continuity equations
@@ -1048,10 +1051,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
     
     // Set source terms
-    fvCoeffs.Umom.B.setZero();
-    fvCoeffs.Vmom.B.setZero();
-    fvCoeffs.Wmom.B.setZero();
-    fvCoeffs.Cont.B.setZero();
+    /* NULL */
 
     // Add boundary constants to source terms
     AddMomentumBoundaryConstants(fvCoeffs.Umom);

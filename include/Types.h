@@ -246,6 +246,7 @@ struct dimTypes
     { return dims; }
 };
 
+// Specialisation for multidimensional arrays, which are constructed using arrays for thier dimensions
 template<class B>
 requires( std::is_same< B, array2D >::value || std::is_same< B, array3D >::value )
 struct dimTypes<B>
