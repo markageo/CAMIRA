@@ -102,7 +102,7 @@ BoundaryConditions
 Solver {
 
     planeSweepDirection = +z
-    lineSweepDirection = -x
+    lineSweepDirection = +y
 
     Schemes {
         linearisation = Picard
