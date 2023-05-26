@@ -8,3 +8,4 @@ tests/face_velocities/output/*
 tests/fv_coefficients/output/*
 
 *.vtk
+*.dbg
