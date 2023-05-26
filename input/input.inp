@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 1e-3
+    nu   = 0.1
 }
 
 Mesh {
@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 10
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -111,13 +111,13 @@ Solver {
     }
 
     PlaneSweeping {
-        maxOuterIterations = 10;
+        maxOuterIterations = 1
         maxOuterResiduals = 1e-5
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
-        maxInnerIterations = 1
+        maxInnerIterations = 10
         maxInnerResiduals = 1e-3
     }
     
@@ -132,10 +132,10 @@ Solver {
 
     LineSolver {
         type = SUGS
-        maxIterations = 1000
-        maxResiduals = 1e-8
+        maxIterations = 10
+        maxResiduals = 1e-3
 
-        momentumRelaxation = (0.5, 0.5, 0.5)
+        momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
     }
 

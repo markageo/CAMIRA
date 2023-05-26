@@ -15,7 +15,7 @@ target_compile_features(compiler_flags INTERFACE cxx_std_20)
 set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 target_compile_options(compiler_flags INTERFACE
-    "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic;-std=c++2a>>"
+    "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic;-std=c++2a;-O1>>"
     "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
 )
 
@@ -24,7 +24,7 @@ target_compile_options(compiler_flags INTERFACE
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")
 set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=address")
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+if (CMAKE_BUILD_TYPE STREQUAL "DEBUG")
 	message (WARNING "THE BUILD TYPE IS DEBUG. ADDRESS SANITIZER WILL BE USED")
 endif()
 

@@ -6,6 +6,7 @@
 #include "Utils.h"
 
 #include <type_traits>
+#include <iostream>
 
 namespace CFD
 {
@@ -210,7 +211,7 @@ class StaggerIndexing
 
 // Static assert on all members of StaggerIndexing class to check compile time evaluation
 template< StaggerIndexing sI, Fields::ENUMDATA field >
-constexpr void AssertStaggerIndexing()
+consteval void AssertStaggerIndexing()
 {
     using TC = TransportCoefficients::ENUMDATA;
     using F = Fields::ENUMDATA;
@@ -497,10 +498,12 @@ class LineSolver
 
                 // Check residual
                 if ( MetResidualTolerence( residuals, m_maxResiduals ) ) {
+                    std::cout << "*** LINE SOLVER CONVERGED ***" << "\n";
                     break;
                 }
 
             }
+            // std::cout << "Line solver iterations: " << nIterations << "\n\n";
         }
 
     private:
@@ -597,9 +600,11 @@ class PlaneSolver
 
                 // Check residual tolerence
                 if ( MetResidualTolerence( residuals, m_maxResiduals ) ) {
+                    std::cout << "*** PLANE SOLVER CONVERGED ***" << "\n\n";
                     break;
                 }
             }
+            // std::cout << "Plane solver iterations: " << nIterations << "\n\n";
         }
 
 
@@ -678,17 +683,6 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
     nOuterIterations = 0;
     while ( nOuterIterations < planeSweepSettings.maxOuterIterations ) 
     {
-        
-
-        UTIL::WriteArray("U_face_velocity.dbg", faceVelocities[U]);
-        UTIL::WriteArray("V_face_velocity.dbg", faceVelocities[V]);
-        UTIL::WriteArray("W_face_velocity.dbg", faceVelocities[W]);
-
-        UTIL::WriteArray("U_velocity.dbg", fields[U]);
-        UTIL::WriteArray("V_velocity.dbg", fields[V]);
-        UTIL::WriteArray("W_velocity.dbg", fields[W]);
-        UTIL::WriteArray("Pressure.dbg", fields[P]);
-
 
         // Inner iterations
         nInnerIterations = 0;
@@ -701,10 +695,14 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
                 UpdateAndRelax.template operator()<TC::t>(k);
             }
 
-            for (intType k = nk-1; k != 1; k--) {   // Backward sweep
+            for (intType k = nk-1; k != 0; k--) {   // Backward sweep
                 UpdateAndRelax.template operator()<TC::b>(k);
             }
 
+            UTIL::WriteArray("U_velocity.dbg", fields[U]);
+            UTIL::WriteArray("V_velocity.dbg", fields[V]);
+            UTIL::WriteArray("W_velocity.dbg", fields[W]);
+            UTIL::WriteArray("Pressure.dbg", fields[P]);
 
             // Normalise residuals
             EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInner[field] /= static_cast<floatType>( ni*nj*nk ); } );
@@ -714,9 +712,11 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
             
             // Check residual tolerence
             if ( MetResidualTolerence(residualsInner, planeSweepSettings.maxInnerResiduals) ) {
+                std::cout << "*** INNER ITERATIONS CONVERGED ***" << "\n\n";
                 break;
             }
         }
+        // std::cout << "Inner iterations: " << nInnerIterations << "\n\n";
         
 
         // Update residuals
@@ -730,12 +730,14 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
 
         // Check residual tolerence
         if ( MetResidualTolerence(residualsOuter, planeSweepSettings.maxOuterResiduals) ) {
+            std::cout << "*** OUTER ITERATIONS CONVERGED ***" << "\n\n";
             break;
         }
 
         // Update nonlinear coefficients
         UpdateFaceVelocities( faceVelocities, mesh, fields, inputData );
         UpdateFVCoefficients( fvCoeffs, mesh, fields, faceVelocities, inputData );
+
     }
 
 
