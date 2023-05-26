@@ -90,7 +90,6 @@ void DiffusionPositiveBoundary( EnumVector< Axis,  ArrayAllocator<TransportCoeff
             break;
 
         case BC::extrapolated:
-            // These work out to zero, since for linear extrapolation, the gradients will be equal on both cell faces
             diff[axis][p   ](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * (mesh.extrapFactors[boundaryPatch].p - 1);  
             diff[axis][west](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * mesh.extrapFactors[boundaryPatch].a;
             break;
@@ -129,7 +128,6 @@ void DiffusionNegativeBoundary( EnumVector< Axis, ArrayAllocator<TransportCoeffi
             break;
 
         case BC::extrapolated:
-            // These work out to zero, since for linear extrapolation, the gradients will be equal on both cell faces
             diff[axis][p   ](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * (mesh.extrapFactors[boundaryPatch].p - 1);
             diff[axis][east](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * mesh.extrapFactors[boundaryPatch].a;
             break;
@@ -1048,7 +1046,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AW, fvCoeffs.Cont.boundaryVel, mesh, inputData, F::W, A::Z);
 
     // Continuity pressure terms (from momentum weighted interpolation)
-    SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
+    // SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
     
     // Set source terms
     /* NULL */
@@ -1090,7 +1088,7 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     AddDiffusion(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh);
 
     // Set the momentum interpolation coefficients
-    SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
+    // SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
 
     // Set the source terms to zero... there may be amore efficient way to do this
     fvCoeffs.Umom.B.setZero();

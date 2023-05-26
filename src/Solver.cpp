@@ -99,30 +99,30 @@ class StaggerIndexing
         { 
             if        ( staggeredCoeff == TC::w ) {
                 cPcoupled = TC::e;
-                cPleft = TC::w;
-                cPright = TC::p;
+                cPleft    = TC::w;
+                cPright   = TC::p;
 
                 cMcoupled = TC::w;
-                cMleft = TC::p;
-                cMright = TC::e;
+                cMleft    = TC::p;
+                cMright   = TC::e;
 
             } else if ( staggeredCoeff == TC::p ) {
                 cPcoupled = TC::p;
-                cPleft = TC::w;
-                cPright = TC::e;
+                cPleft    = TC::w;
+                cPright   = TC::e;
 
                 cMcoupled = TC::p;
-                cMleft = TC::w;
-                cMright = TC::e;
+                cMleft    = TC::w;
+                cMright   = TC::e;
 
             } else if ( staggeredCoeff == TC::e) {
                 cPcoupled = TC::w;
-                cPleft = TC::p;
-                cPright = TC::e;
+                cPleft    = TC::p;
+                cPright   = TC::e;
 
                 cMcoupled = TC::e;
-                cMleft = TC::w;
-                cMright = TC::p;
+                cMleft    = TC::w;
+                cMright   = TC::p;
 
             }
 
@@ -132,30 +132,30 @@ class StaggerIndexing
         { 
             if        ( staggeredCoeff == TC::s ) {
                 cPcoupled = TC::n;
-                cPleft = TC::s;
-                cPright = TC::p;
+                cPleft    = TC::s;
+                cPright   = TC::p;
 
                 cMcoupled = TC::s;
-                cMleft = TC::p;
-                cMright = TC::n;
+                cMleft    = TC::p;
+                cMright   = TC::n;
 
             } else if ( staggeredCoeff == TC::p ) {
                 cPcoupled = TC::p;
-                cPleft = TC::s;
-                cPright = TC::n;
+                cPleft    = TC::s;
+                cPright   = TC::n;
 
                 cMcoupled = TC::p;
-                cMleft = TC::s;
-                cMright = TC::n;
+                cMleft    = TC::s;
+                cMright   = TC::n;
 
             } else if ( staggeredCoeff == TC::n) {
                 cPcoupled = TC::s;
-                cPleft = TC::p;
-                cPright = TC::n;
+                cPleft   = TC::p;
+                cPright  = TC::n;
 
                 cMcoupled = TC::n;
-                cMleft = TC::s;
-                cMright = TC::p;
+                cMleft    = TC::s;
+                cMright   = TC::p;
 
             }
         } 
@@ -164,30 +164,30 @@ class StaggerIndexing
         { 
             if        ( staggeredCoeff == TC::b ) {
                 cPcoupled = TC::t;
-                cPleft = TC::b;
-                cPright = TC::p;
+                cPleft    = TC::b;
+                cPright   = TC::p;
 
                 cMcoupled = TC::b;
-                cMleft = TC::p;
-                cMright = TC::t;
+                cMleft    = TC::p;
+                cMright   = TC::t;
 
             } else if ( staggeredCoeff == TC::p ) {
                 cPcoupled = TC::p;
-                cPleft = TC::b;
-                cPright = TC::t;
+                cPleft    = TC::b;
+                cPright   = TC::t;
 
                 cMcoupled = TC::p;
-                cMleft = TC::b;
-                cMright = TC::t;
+                cMleft    = TC::b;
+                cMright   = TC::t;
 
             } else if ( staggeredCoeff == TC::t) {
                 cPcoupled = TC::b;
-                cPleft = TC::p;
-                cPright = TC::t;
+                cPleft    = TC::p;
+                cPright   = TC::t;
 
                 cMcoupled = TC::t;
-                cMleft = TC::b;
-                cMright = TC::p;
+                cMleft    = TC::b;
+                cMright   = TC::p;
             }
         } 
 
@@ -482,22 +482,10 @@ class LineSolver
                 // Update in place and relax
                 for (intType i = 0; i != ni-1; i++) {   // Forward sweep
                     UpdateAndRelax.template operator()<e>(i);
-
-                    UTIL::WriteArray("U_velocity.dbg", m_fields[U]);
-                    UTIL::WriteArray("V_velocity.dbg", m_fields[V]);
-                    UTIL::WriteArray("W_velocity.dbg", m_fields[W]);
-                    UTIL::WriteArray("Pressure.dbg", m_fields[P]);
-                    
                 }
 
                 for (intType i = ni-1; i != 0; i--) {   // Backward sweep
                     UpdateAndRelax.template operator()<w>(i);
-
-                    UTIL::WriteArray("U_velocity.dbg", m_fields[U]);
-                    UTIL::WriteArray("V_velocity.dbg", m_fields[V]);
-                    UTIL::WriteArray("W_velocity.dbg", m_fields[W]);
-                    UTIL::WriteArray("Pressure.dbg", m_fields[P]);
-
                 }
 
 
@@ -580,8 +568,9 @@ class PlaneSolver
                 m_lineSolver.SolveLine<Vstag, Wstag>(j, k);
 
                 EnumFor<Fields> ( [&] (Fields::ENUMDATA f) {
-                    delta[f] = delta[f].constant( m_relaxation[f] ) * ( m_fields[f].chip(kS[f], Z).chip(jS[f], Y) - oldLine[f] );   // Relaxed change in line
-                    m_fields[f].chip(kS[f], Z).chip(jS[f], Y) = oldLine[f] + delta[f];                                              // Relax
+                    auto fieldLine = m_fields[f].chip( G(kS[f]), Z).chip( G(jS[f]), Y);
+                    delta[f] = delta[f].constant( m_relaxation[f] ) * ( fieldLine - oldLine[f] );   // Relaxed change in line
+                    fieldLine = oldLine[f] + delta[f];                                              // Relax
                     residuals[f] += static_cast<array0D>( delta[f].abs().sum() )(0);                                                // Add to residual count
                 } );
             };
@@ -675,9 +664,21 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         planeSolver.SolvePlane<Wstag>(k);   // Solve in place
 
         EnumFor<Fields> ( [&] (Fields::ENUMDATA f) {
-            delta[f] = delta[f].constant( relaxation[f] ) * ( fields[f].chip(kS[f], Z) - oldPlane[f] );     // Relaxed change in plane
-            fields[f].chip(kS[f], Z) = oldPlane[f] + delta[f];                                              // Relax
-            residualsInner[f] += static_cast<array0D>( delta[f].abs().sum() )(0);                           // Add to residual count
+
+            UTIL::WriteArray("U_velocity.dbg", fields[U]);
+            UTIL::WriteArray("V_velocity.dbg", fields[V]);
+            UTIL::WriteArray("W_velocity.dbg", fields[W]);
+            UTIL::WriteArray("Pressure.dbg", fields[P]);
+            auto fieldPlane = fields[f].chip( G(kS[f]), Z);
+            delta[f] = delta[f].constant( relaxation[f] ) * ( fieldPlane - oldPlane[f] );     // Relaxed change in plane
+            fieldPlane = oldPlane[f] + delta[f];                                              // Relax
+
+            UTIL::WriteArray("U_velocity.dbg", fields[U]);
+            UTIL::WriteArray("V_velocity.dbg", fields[V]);
+            UTIL::WriteArray("W_velocity.dbg", fields[W]);
+            UTIL::WriteArray("Pressure.dbg", fields[P]);
+
+            residualsInner[f] += static_cast<array0D>( delta[f].abs().sum() )(0);             // Add to residual count
         } );
     };
 
@@ -688,6 +689,17 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
     while ( nOuterIterations < planeSweepSettings.maxOuterIterations ) 
     {
         
+
+        UTIL::WriteArray("U_face_velocity.dbg", faceVelocities[U]);
+        UTIL::WriteArray("V_face_velocity.dbg", faceVelocities[V]);
+        UTIL::WriteArray("W_face_velocity.dbg", faceVelocities[W]);
+
+        UTIL::WriteArray("U_velocity.dbg", fields[U]);
+        UTIL::WriteArray("V_velocity.dbg", fields[V]);
+        UTIL::WriteArray("W_velocity.dbg", fields[W]);
+        UTIL::WriteArray("Pressure.dbg", fields[P]);
+
+
         // Inner iterations
         nInnerIterations = 0;
         while ( nInnerIterations < planeSweepSettings.maxInnerIterations ) {

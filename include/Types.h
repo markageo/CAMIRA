@@ -52,10 +52,17 @@ inline Eigen::array<Eigen::Index, dim> G( Eigen::array<Eigen::Index, dim> idx )
 
 // Eigen::Tensor ghost cell indexing - list indexing
 template<class ...Args> 
+requires( sizeof...(Args) > 1 )
 inline Eigen::array< Eigen::Index, sizeof...(Args) > G( Args... args )
 {  
     Eigen::array< Eigen::Index, sizeof...(Args) > idx( {args...} );
     return G( idx ); 
+}
+
+// Special case for 1D, should just return a number
+inline Eigen::Index G( Eigen::Index idx )
+{
+    return idx + nGhost;
 }
 
 

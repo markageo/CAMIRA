@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 1e3
+    nu   = 1e-3
 }
 
 Mesh {
@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 5
+            nCells     = 10
             biasFactor = 1
         }
     }
@@ -48,7 +48,7 @@ InitialConditions
 
 BoundaryConditions
 {
-    // Inflow
+    // Outflow
     +x {
         u = zeroGradient
         v = zeroGradient
@@ -56,7 +56,7 @@ BoundaryConditions
         p = uniform, 0
     }
 
-    // Outflow
+    // Inflow
     -x {
         u = uniform, 1
         v = zeroGradient
@@ -93,7 +93,7 @@ BoundaryConditions
         u = uniform, 0
         v = uniform, 0
         w = uniform, 0
-        p = extrapolated
+        p = zeroGradient
     }
 }
 
@@ -106,15 +106,15 @@ Solver {
 
     Schemes {
         linearisation = Picard
-        implicitMomentumRelaxation = (0.5, 0.4, 0.3)
+        implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
     }
 
     PlaneSweeping {
-        maxOuterIterations = 1;
+        maxOuterIterations = 10;
         maxOuterResiduals = 1e-5
 
-        momentumRelaxation = (1, 1, 1)
+        momentumRelaxation = (0.5, 0.5, 0.5)
         pressureRelaxation = 1
 
         maxInnerIterations = 1
@@ -123,17 +123,17 @@ Solver {
     
     PlaneSolver {
         type = SUGS
-        maxIterations = 1
+        maxIterations = 100
         maxResiduals = 1e-3
 
-        momentumRelaxation = (1, 1, 1)
+        momentumRelaxation = (0.5, 0.5, 0.5)
         pressureRelaxation = 1
     }
 
     LineSolver {
         type = SUGS
-        maxIterations = 1
-        maxResiduals = 1e-3
+        maxIterations = 1000
+        maxResiduals = 1e-8
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
