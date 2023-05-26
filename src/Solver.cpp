@@ -466,9 +466,10 @@ class LineSolver
 
                 EnumFor<Fields>( [&] (Fields::ENUMDATA f) 
                 { 
-                    delta[f] = m_relaxation[f] * ( m_fields[f]( G(iS[f], jS[f], kS[f]) ) - oldBlock[f] );   // Relaxed change in solution      
-                    m_fields[f]( G(iS[f], jS[f], kS[f]) ) = oldBlock[f] + delta[f];                         // Apply relaxation
-                    residuals[f] += abs( delta[f] );                                                        // Add to residual count
+                    auto &fieldBlock = m_fields[f]( G(iS[f], jS[f], kS[f]) );
+                    delta[f] = m_relaxation[f] * ( fieldBlock - oldBlock[f] );   // Relaxed change in solution      
+                    fieldBlock = oldBlock[f] + delta[f];                         // Apply relaxation
+                    residuals[f] += abs( delta[f] );                             // Add to residual count
                 } );
             };
 
@@ -664,20 +665,9 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         planeSolver.SolvePlane<Wstag>(k);   // Solve in place
 
         EnumFor<Fields> ( [&] (Fields::ENUMDATA f) {
-
-            UTIL::WriteArray("U_velocity.dbg", fields[U]);
-            UTIL::WriteArray("V_velocity.dbg", fields[V]);
-            UTIL::WriteArray("W_velocity.dbg", fields[W]);
-            UTIL::WriteArray("Pressure.dbg", fields[P]);
             auto fieldPlane = fields[f].chip( G(kS[f]), Z);
             delta[f] = delta[f].constant( relaxation[f] ) * ( fieldPlane - oldPlane[f] );     // Relaxed change in plane
             fieldPlane = oldPlane[f] + delta[f];                                              // Relax
-
-            UTIL::WriteArray("U_velocity.dbg", fields[U]);
-            UTIL::WriteArray("V_velocity.dbg", fields[V]);
-            UTIL::WriteArray("W_velocity.dbg", fields[W]);
-            UTIL::WriteArray("Pressure.dbg", fields[P]);
-
             residualsInner[f] += static_cast<array0D>( delta[f].abs().sum() )(0);             // Add to residual count
         } );
     };
