@@ -82,7 +82,7 @@ int main(int argc, char const *argv[])
     velTestInputData[BC::zeroGradient] = CFD::ReadInputData(testConfig.testInputDirectory + testConfig.velZeroGradientTestInputFilename);
     velTestInputData[BC::extrapolated] = CFD::ReadInputData(testConfig.testInputDirectory + testConfig.velExtrapolatedTestInputFilename);
 
-    // Generate mesh
+    // Generate new mesh
     mesh = CFD::Mesh(velTestInputData[BC::uniform]);
 
     // Allocate fields
@@ -148,13 +148,13 @@ int main(int argc, char const *argv[])
         std::cout << "Finite volume coefficients written to output directory" << "\n";
     } 
 
-    // if (testConfig.fvCoeffTest == TEST::test) {
-    //     if ( TEST::CompareFVCoeffs(testConfig.fvCoeffTestOutputDirectory, testConfig.fvCoeffTestReferenceDirectory) ){
-    //         std::cout << "Finite volume coefficients test: PASSED!" << "\n";
-    //     } else {
-    //         std::cout << "Finite volume coefficients test: FAILED! Face velocities do not match reference!" << "\n";
-    //     }
-    // } 
+    if (testConfig.fvCoeffTest == TEST::test) {
+        if ( TEST::CompareFVCoeffs(testConfig.fvCoeffTestOutputDirectory, testConfig.fvCoeffTestReferenceDirectory) ){
+            std::cout << "Finite volume coefficients test: PASSED!" << "\n";
+        } else {
+            std::cout << "Finite volume coefficients test: FAILED! Face velocities do not match reference!" << "\n";
+        }
+    } 
     std::cout << "\n";
 
 

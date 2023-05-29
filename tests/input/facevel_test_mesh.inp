@@ -4,7 +4,7 @@ Mesh {
 
     domain = (2, 2, 2)
 
-    Grid X {
+    Grid x {
         Segment {
             bounds     = (0, 2)
             nCells     = 7
@@ -13,7 +13,7 @@ Mesh {
     }
 
 
-    Grid Y {
+    Grid y {
         Segment {
             bounds     = (0, 2)
             nCells     = 7
@@ -22,7 +22,7 @@ Mesh {
     }
 
 
-    Grid Z {
+    Grid z {
         Segment {
             bounds     = (0, 2)
             nCells     = 7
