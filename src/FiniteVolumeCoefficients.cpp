@@ -943,9 +943,10 @@ void AddRelaxation( array3D &diagonalCoeffs,
                                                oldField.dimension(1) - 2*nGhost,
                                                oldField.dimension(2) - 2*nGhost }; 
 
-    // Add to the source term
-    sourceTerms += diagonalCoeffs * sourceTerms.constant( (1 - relaxationFactor) / relaxationFactor )
+    // Add to the source term, note the diagonal coefficient is already relaxed
+    sourceTerms += diagonalCoeffs * sourceTerms.constant( 1 - relaxationFactor  )
                  * oldField.slice( offsets, extents );
+
 }
 
 
@@ -1026,9 +1027,9 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     SetDiffusionCoeffients(fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh, inputData, F::W);
 
     // Momentum velocity terms
-    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
-    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
-    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
+    // SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
+    // SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
+    // SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
 
     // Add diffusion to the velocity coefficients in momentum equations
     AddDiffusion(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh);
@@ -1046,7 +1047,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AW, fvCoeffs.Cont.boundaryVel, mesh, inputData, F::W, A::Z);
 
     // Continuity pressure terms (from momentum weighted interpolation)
-    SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
+    // SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
     
     // Set source terms
     /* NULL */
@@ -1077,10 +1078,10 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     using TC = TransportCoefficients::ENUMDATA;
     using F = Fields::ENUMDATA;
 
-    // Set the advection terms
-    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
-    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
-    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
+    // // Set the advection terms
+    // SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
+    // SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
+    // SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
 
     // Add in the diffusion
     AddDiffusion(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh);
@@ -1088,7 +1089,7 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     AddDiffusion(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh);
 
     // Set the momentum interpolation coefficients
-    SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
+    // SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
 
     // Set the source terms to zero... there may be a more efficient way to do this
     fvCoeffs.Umom.B.setZero();
