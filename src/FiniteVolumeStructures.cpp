@@ -319,15 +319,15 @@ FVCoefficients::MomentumEquation::MomentumEquation( const Fields::ENUMDATA field
     AV( EquationEnums(field, F::V), dims ),
     AW( EquationEnums(field, F::W), dims ),
     AP( EquationEnums(field, F::P), dims( EquationDim(field) ) ),
-    B( dims(X), dims(Y), dims(Z) ),
+    B( CFD::array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
     diff({ ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims(X) ),
            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims(Y) ),
            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims(Z) ) }),
     boundaryDiff(),
     boundaryP(),
-    boundaryVel( {array2D( dims(Y), dims(Z) ), array2D( dims(Y), dims(Z) ),
-                  array2D( dims(X), dims(Z) ), array2D( dims(X), dims(Z) ),
-                  array2D( dims(X), dims(Y) ), array2D( dims(X), dims(Y) )} )    // This doesn't follow right hand rule
+    boundaryVel( {array2D( dims(Y), dims(Z) ).setZero(), array2D( dims(Y), dims(Z) ).setZero(),
+                  array2D( dims(X), dims(Z) ).setZero(), array2D( dims(X), dims(Z) ).setZero(),
+                  array2D( dims(X), dims(Y) ).setZero(), array2D( dims(X), dims(Y) ).setZero()} )    // This doesn't follow right hand rule
 {};
 
 
@@ -337,10 +337,10 @@ FVCoefficients::ContinuityEquation::ContinuityEquation( const indexVector3 &dims
     AV( EquationEnums(F::P, F::V), dims( EquationDim(F::V) ) ),
     AW( EquationEnums(F::P, F::W), dims( EquationDim(F::W) ) ),
     AP( EquationEnums(F::P, F::P), dims ),
-    B( dims(X), dims(Y), dims(Z) ),
-    boundaryP( {array2D( dims(Y), dims(Z) ), array2D( dims(Y), dims(Z) ),
-                array2D( dims(X), dims(Z) ), array2D( dims(X), dims(Z) ),
-                array2D( dims(X), dims(Y) ), array2D( dims(X), dims(Y) )} ),     // This doesn't follow right hand rule
+    B( CFD::array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
+    boundaryP( {array2D( dims(Y), dims(Z) ).setZero(), array2D( dims(Y), dims(Z) ).setZero(),
+                array2D( dims(X), dims(Z) ).setZero(), array2D( dims(X), dims(Z) ).setZero(),
+                array2D( dims(X), dims(Y) ).setZero(), array2D( dims(X), dims(Y) ).setZero()} ),     // This doesn't follow right hand rule
     boundaryVel()
 {};
 
