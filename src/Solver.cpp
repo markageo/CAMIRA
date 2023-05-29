@@ -378,7 +378,6 @@ class BlockSolver
                         - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * m_fvCoeffs.Umom.AP[sU.cPcoupled](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
                         - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * m_fvCoeffs.Vmom.AP[sV.cPcoupled](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
                         - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * m_fvCoeffs.Wmom.AP[sW.cPcoupled](kW) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
-            K = 1.0f / K;
 
 
             // Update P from continuity
@@ -386,21 +385,21 @@ class BlockSolver
                                         - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * bU
                                         - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * bV
                                         - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * bW
-                                        ) * K;
-
+                                        ) / K;
 
             // Update U from momentum 
-            m_fields[U]( G(iU, jU, kU) ) = bU 
+            m_fields[U]( G(iU, jU, kU) ) = bU
                                          - m_fvCoeffs.Umom.AP[sU.cPcoupled](iU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
 
 
             // Update V from momentum
-            m_fields[V]( G(iV, jV, kV) ) = bV 
+            m_fields[V]( G(iV, jV, kV) ) = bV
                                          - m_fvCoeffs.Vmom.AP[sV.cPcoupled](jV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
 
             // Update W from momentum
             m_fields[W]( G(iW, jW, kW) ) = bW 
                                          - m_fvCoeffs.Wmom.AP[sW.cPcoupled](kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+
         }
 
 
@@ -498,12 +497,11 @@ class LineSolver
 
                 // Check residual
                 if ( MetResidualTolerence( residuals, m_maxResiduals ) ) {
-                    std::cout << "*** LINE SOLVER CONVERGED ***" << "\n";
                     break;
                 }
 
             }
-            // std::cout << "Line solver iterations: " << nIterations << "\n\n";
+
         }
 
     private:
@@ -583,7 +581,7 @@ class PlaneSolver
             intType nIterations = 0;
             while ( nIterations < m_maxIterations ) 
             {
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] = 0.0f; } );
+                // EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] = 0.0f; } );
 
                 for (intType j = 0; j != nj-1; j++) {   // Forward sweep
                     UpdateAndRelax.template operator()<n>(j);
@@ -600,11 +598,10 @@ class PlaneSolver
 
                 // Check residual tolerence
                 if ( MetResidualTolerence( residuals, m_maxResiduals ) ) {
-                    std::cout << "*** PLANE SOLVER CONVERGED ***" << "\n\n";
                     break;
                 }
             }
-            // std::cout << "Plane solver iterations: " << nIterations << "\n\n";
+
         }
 
 
@@ -677,8 +674,6 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         } );
     };
 
-
-
     // Outer iterations
     nOuterIterations = 0;
     while ( nOuterIterations < planeSweepSettings.maxOuterIterations ) 
@@ -702,21 +697,22 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
             UTIL::WriteArray("U_velocity.dbg", fields[U]);
             UTIL::WriteArray("V_velocity.dbg", fields[V]);
             UTIL::WriteArray("W_velocity.dbg", fields[W]);
-            UTIL::WriteArray("Pressure.dbg", fields[P]);
+            UTIL::WriteArray("Pressure.dbg"  , fields[P]);
 
             // Normalise residuals
             EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInner[field] /= static_cast<floatType>( ni*nj*nk ); } );
             RelativeResidual( residualsInner, residualsInnerInitialInv, nInnerIterations );
             nInnerIterations++;
 
-            
+            std::cout << "Inner iteration: " << nInnerIterations << ", U residual: " << residualsInner[U] << "\n\n";
+
             // Check residual tolerence
             if ( MetResidualTolerence(residualsInner, planeSweepSettings.maxInnerResiduals) ) {
                 std::cout << "*** INNER ITERATIONS CONVERGED ***" << "\n\n";
                 break;
             }
         }
-        // std::cout << "Inner iterations: " << nInnerIterations << "\n\n";
+    
         
 
         // Update residuals
@@ -729,10 +725,10 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         fieldsOld = fields;
 
         // Check residual tolerence
-        if ( MetResidualTolerence(residualsOuter, planeSweepSettings.maxOuterResiduals) ) {
-            std::cout << "*** OUTER ITERATIONS CONVERGED ***" << "\n\n";
-            break;
-        }
+        // if ( MetResidualTolerence(residualsOuter, planeSweepSettings.maxOuterResiduals) ) {
+        //     std::cout << "*** OUTER ITERATIONS CONVERGED ***" << "\n\n";
+        //     break;
+        // }
 
         // Update nonlinear coefficients
         UpdateFaceVelocities( faceVelocities, mesh, fields, inputData );
