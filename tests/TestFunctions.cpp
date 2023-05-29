@@ -370,9 +370,8 @@ bool TEST::CompareMesh(const std::string &outputDir,
 
     AX axis;
     std::string ext = TEST::testFileExtension;
-    CFD::EnumVector<CFD::Axis, std::string> axisSuffix{ {"_x", "_y", "_z"} };
-    std::string fname;
-    auto Fname = [&] (const std::string &name, const std::string &dir) -> std::string { return dir + name + axisSuffix[axis] + ext; };
+    CFD::EnumVector<CFD::Axis, std::string> axisSuffix{ {"x", "y", "z"} };
+    bool comparisonResult = true;
 
     // Temporary array for extrapolation factors
     // rows  : extrapFactors.p, extrapFactors.a
@@ -383,54 +382,44 @@ bool TEST::CompareMesh(const std::string &outputDir,
     CFD::array1D outputArray1D, referenceArray1D;
     CFD::array2D outputArray2D, referenceArray2D;
 
-    for (int a = 0; a != 3; a++) {
+    // Lambda for getting to filename
+    auto Fname = [&] ( const std::string &name, 
+                       const std::string &dir) 
+                    -> std::string { 
+        return dir + name + "_" + axisSuffix[axis] + ext; 
+    };
+
+    // Lambda for performing the check
+    auto PerformCheck1D = [&] ( const std::string &meshQuantityName ) {
+        outputArray1D = UTIL::ReadArray<CFD::array1D>( Fname( meshQuantityName, outputDir ) );
+        referenceArray1D = UTIL::ReadArray<CFD::array1D>( Fname( meshQuantityName, referenceDir ) );
+        if ( !ArraysSame( outputArray1D, referenceArray1D ) )
+            comparisonResult = false;
+    };
+
+    auto PerformCheck2D = [&] ( const std::string &meshQuantityName ) {
+        outputArray2D = UTIL::ReadArray<CFD::array2D>( Fname( meshQuantityName, outputDir ) );
+        referenceArray2D = UTIL::ReadArray<CFD::array2D>( Fname( meshQuantityName, referenceDir ) );
+        if ( !ArraysSame( outputArray1D, referenceArray1D ) )
+            comparisonResult = false;
+    };
+            
+    for (int a = 0; a != CFD::Axis::count; a++) {
         axis = static_cast<AX>(a);
 
-        // Cell Lengths
-        outputArray1D = UTIL::ReadArray<CFD::array1D>(Fname("cell_lengths", outputDir));
-        referenceArray1D = UTIL::ReadArray<CFD::array1D>(Fname("cell_lengths", referenceDir));
-        if (!ArraysSame(outputArray1D, referenceArray1D))
-            return false;
-
-        // Inverse cell lengths
-        outputArray1D = UTIL::ReadArray<CFD::array1D>(Fname("inv_cell_lengths", outputDir));
-        referenceArray1D = UTIL::ReadArray<CFD::array1D>(Fname("inv_cell_lengths", referenceDir));
-        if (!ArraysSame(outputArray1D, referenceArray1D))
-            return false;  
-
-        // Cell centers
-        outputArray1D = UTIL::ReadArray<CFD::array1D>(Fname("cell_centers", outputDir));
-        referenceArray1D = UTIL::ReadArray<CFD::array1D>(Fname("cell_centers", referenceDir));
-        if (!ArraysSame(outputArray1D, referenceArray1D))
-            return false;
-
-        // Inverse of cell center difference
-        outputArray1D = UTIL::ReadArray<CFD::array1D>(Fname("inv_cell_center_diff", outputDir));
-        referenceArray1D = UTIL::ReadArray<CFD::array1D>(Fname("inv_cell_center_diff", referenceDir));
-        if (!ArraysSame(outputArray1D, referenceArray1D))
-            return false;
-
-        // Cell faces
-        outputArray1D = UTIL::ReadArray<CFD::array1D>(Fname("cell_faces", outputDir));
-        referenceArray1D = UTIL::ReadArray<CFD::array1D>(Fname("cell_faces", referenceDir));
-        if (!ArraysSame(outputArray1D, referenceArray1D))
-            return false;
-
-        // Write interpolation factors to a file
-        outputArray1D = UTIL::ReadArray<CFD::array1D>(Fname("interp_factors", outputDir));
-        referenceArray1D = UTIL::ReadArray<CFD::array1D>(Fname("interp_factors", referenceDir));
-        if (!ArraysSame(outputArray1D, referenceArray1D))
-            return false;
-
-        // Put the extrapolation factors in an array and write it out
-        outputArray2D = UTIL::ReadArray<CFD::array2D>(Fname("extrap_factors", outputDir));
-        referenceArray2D = UTIL::ReadArray<CFD::array2D>(Fname("extrap_factors", referenceDir));
-        if (!ArraysSame(outputArray2D, referenceArray2D))
-            return false;
+        // Check each part of the mesh
+        PerformCheck1D( "cell_lengths" );
+        PerformCheck1D( "inv_cell_lengths" );
+        PerformCheck1D( "cell_centers" );
+        PerformCheck1D( "inv_cell_center_diff" );
+        PerformCheck1D( "cell_faces" );
+        PerformCheck1D( "interp_factors" );
+        PerformCheck2D( "extrap_factors" );
 
     }
 
-    return true;
+
+    return comparisonResult;
 }
 
 
@@ -442,34 +431,165 @@ bool TEST::CompareFaceVels(const std::string &outputDir,
 
     BC boundaryCondition;
     std::string ext = TEST::testFileExtension;
-    CFD::EnumVector<CFD::BoundaryConditions, std::string> boundaryConditionSuffix{ {"_zeroGradient", "_uniform", "_extrapolated"} };
-    auto Fname = [&] (const std::string &s, const std::string &dir) -> std::string { return dir + "face_velocities" + boundaryConditionSuffix[boundaryCondition] + "_" + s + ext; };
+    CFD::EnumVector<CFD::BoundaryConditions, std::string> boundaryConditionSuffix{ {"zeroGradient", "uniform", "extrapolated"} };
+    bool comparisonResult = true;
+    
     
     // Temporary variable for output and reference directories
     CFD::array3D outputArray, referenceArray;
 
+    // Lambda for getting filename
+    auto Fname = [&] ( const std::string &s, 
+                       const std::string &dir) 
+                    -> std::string { 
+        return dir + "face_velocities" + "_" + boundaryConditionSuffix[boundaryCondition] + "_" + s + ext; 
+    };
+
+    // Lambda for performing the check
+    auto PerformCheck = [&] ( const std::string &fieldName ) {
+        outputArray = UTIL::ReadArray<CFD::array3D>( Fname( fieldName, outputDir ) );
+        referenceArray = UTIL::ReadArray<CFD::array3D>( Fname( fieldName, referenceDir ) );
+        if (!ArraysSame(outputArray, referenceArray))
+            comparisonResult = false;;
+    };
+
     for (int bc = 0; bc != CFD::BoundaryConditions::count; bc++) {
         boundaryCondition = static_cast<BC>(bc);
 
-        // U velocity 
-        outputArray = UTIL::ReadArray<CFD::array3D>(Fname("u", outputDir));
-        referenceArray = UTIL::ReadArray<CFD::array3D>(Fname("u", referenceDir));
-        if (!ArraysSame(outputArray, referenceArray))
-            return false;
-
-        // V velocity 
-        outputArray = UTIL::ReadArray<CFD::array3D>(Fname("v", outputDir));
-        referenceArray = UTIL::ReadArray<CFD::array3D>(Fname("v", referenceDir));
-        if (!ArraysSame(outputArray, referenceArray))
-            return false;
-
-        // W velocity 
-        outputArray = UTIL::ReadArray<CFD::array3D>(Fname("w", outputDir));
-        referenceArray = UTIL::ReadArray<CFD::array3D>(Fname("w", referenceDir));
-        if (!ArraysSame(outputArray, referenceArray))
-            return false;
+        // Check each field with each boundary condition
+        PerformCheck( "u" );
+        PerformCheck( "v" );
+        PerformCheck( "w" );
 
     }
 
-    return true;
+    return comparisonResult;
+}
+
+
+
+
+bool TEST::CompareFVCoeffs( const std::string &outputDir, 
+                            const std::string &referenceDir )
+{
+
+    using BC = CFD::BoundaryConditions::ENUMDATA;
+    using enum CFD::TransportCoefficients::ENUMDATA;
+
+    BC boundaryCondition;
+    std::string ext = TEST::testFileExtension;
+    CFD::EnumVector<CFD::BoundaryConditions, std::string> boundaryConditionSuffix{ {"zeroGradient", "uniform", "extrapolated"} };
+    CFD::EnumVector<CFD::TransportCoefficients, std::string> transportCoefficientSuffix{ {"tt", "nn", "ee", "t", "n", "e", "p", "w", "s", "b", "ww", "ss", "bb"} };
+    bool comparisonResult = true;
+    
+    
+    // Temporary variable for output and reference directories
+    CFD::array3D outputArray3D, referenceArray3D;
+    CFD::array1D outputArray1D, referenceArray1D;
+
+    // Lambda for getting filename
+    auto Fname = [&] (const std::string &s, 
+                      const CFD::TransportCoefficients::ENUMDATA tc, 
+                      const std::string &dir) 
+                      -> std::string { 
+        return dir + "fvCoeffs" + "_" + boundaryConditionSuffix[boundaryCondition] + "_" + s + "_" + transportCoefficientSuffix[tc] + ext; 
+    };
+
+    // Lambda for performing the check
+    auto PerformCheck1D = [&] ( const std::string &coeffName, 
+                              const CFD::TransportCoefficients::ENUMDATA tc) {
+        outputArray1D = UTIL::ReadArray<CFD::array1D>( Fname( coeffName, tc, outputDir ) );
+        referenceArray1D = UTIL::ReadArray<CFD::array1D>( Fname( coeffName, tc, referenceDir ) );
+        if ( !ArraysSame(outputArray1D, referenceArray1D) )
+            comparisonResult = false;
+    };
+
+    auto PerformCheck3D = [&] ( const std::string &coeffName, 
+                              const CFD::TransportCoefficients::ENUMDATA tc) {
+        outputArray3D = UTIL::ReadArray<CFD::array3D>( Fname( coeffName, tc, outputDir ) );
+        referenceArray3D = UTIL::ReadArray<CFD::array3D>( Fname( coeffName, tc, referenceDir ) );
+        if ( !ArraysSame(outputArray3D, referenceArray3D) )
+            comparisonResult = false;
+    };
+
+    for (int bc = 0; bc != CFD::BoundaryConditions::count; bc++) {
+        boundaryCondition = static_cast<BC>(bc);
+
+        // Continuity velocity coefficients
+        PerformCheck1D("Cont_AU", p);
+        PerformCheck1D("Cont_AU", e);
+        PerformCheck1D("Cont_AU", w);
+
+        PerformCheck1D("Cont_AV", p);
+        PerformCheck1D("Cont_AV", n);
+        PerformCheck1D("Cont_AV", s);
+
+        PerformCheck1D("Cont_AW", p);
+        PerformCheck1D("Cont_AW", t);
+        PerformCheck1D("Cont_AW", b);
+
+        // Continuity pressure coefficients
+        PerformCheck3D("Cont_AP", n);
+        PerformCheck3D("Cont_AP", e);
+        PerformCheck3D("Cont_AP", s);
+        PerformCheck3D("Cont_AP", w);
+        PerformCheck3D("Cont_AP", t);
+        PerformCheck3D("Cont_AP", b);
+        PerformCheck3D("Cont_AP", p);
+        PerformCheck3D("Cont_AP", nn);
+        PerformCheck3D("Cont_AP", ee);
+        PerformCheck3D("Cont_AP", ss);
+        PerformCheck3D("Cont_AP", ww);
+        PerformCheck3D("Cont_AP", tt);
+        PerformCheck3D("Cont_AP", bb);
+
+
+        // U momentum velocity
+        PerformCheck3D("Umom_AU", p);
+        PerformCheck3D("Umom_AU", n);
+        PerformCheck3D("Umom_AU", e);
+        PerformCheck3D("Umom_AU", s);
+        PerformCheck3D("Umom_AU", w);
+        PerformCheck3D("Umom_AU", t);
+        PerformCheck3D("Umom_AU", b);
+
+        // U momentum presuure
+        PerformCheck1D("Umom_AP", p);
+        PerformCheck1D("Umom_AP", e);
+        PerformCheck1D("Umom_AP", w);
+
+
+        // V momentum velocity
+        PerformCheck3D("Vmom_AV", p);
+        PerformCheck3D("Vmom_AV", n);
+        PerformCheck3D("Vmom_AV", e);
+        PerformCheck3D("Vmom_AV", s);
+        PerformCheck3D("Vmom_AV", w);
+        PerformCheck3D("Vmom_AV", t);
+        PerformCheck3D("Vmom_AV", b);
+
+        // V momentum presuure
+        PerformCheck1D("Vmom_AP", p);
+        PerformCheck1D("Vmom_AP", n);
+        PerformCheck1D("Vmom_AP", s);
+
+
+        // W momentum velocity
+        PerformCheck3D("Wmom_AW", p);
+        PerformCheck3D("Wmom_AW", n);
+        PerformCheck3D("Wmom_AW", e);
+        PerformCheck3D("Wmom_AW", s);
+        PerformCheck3D("Wmom_AW", w);
+        PerformCheck3D("Wmom_AW", t);
+        PerformCheck3D("Wmom_AW", b);
+
+        // W momentum presuure
+        PerformCheck1D("Wmom_AP", p);
+        PerformCheck1D("Wmom_AP", t);
+        PerformCheck1D("Wmom_AP", b);
+
+    }
+
+    return comparisonResult;
+
 }

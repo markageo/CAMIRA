@@ -54,9 +54,53 @@ Model {
 }
 
 
+InitialConditions
+{
+    u = 0
+    v = 0
+    w = 0
+    p = 0
+}
+
+
 Solver {
 
     planeSweepDirection = +z
     lineSweepDirection = +y
+
+    Schemes {
+        linearisation = Picard
+        implicitMomentumRelaxation = (1, 1, 1)
+        implicitPressureRelaxation = 1
+    }
+
+    PlaneSweeping {
+        maxOuterIterations = 1
+        maxOuterResiduals = 1e-5
+
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
+
+        maxInnerIterations = 10
+        maxInnerResiduals = 1e-3
+    }
+    
+    PlaneSolver {
+        type = SUGS
+        maxIterations = 100
+        maxResiduals = 1e-3
+
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
+    }
+
+    LineSolver {
+        type = SUGS
+        maxIterations = 10
+        maxResiduals = 1e-3
+
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
+    }
 
 }

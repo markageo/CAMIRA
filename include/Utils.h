@@ -82,22 +82,22 @@ namespace
 
     // Template specialization for constructing array
     template<typename T> inline
-    T ConstructArray(const std::array<long int, 3> &dims) = delete;
+    T ConstructArray(const std::array<CFD::intType, 3> &dims) = delete;
 
     template<> inline
-    CFD::array1D ConstructArray<CFD::array1D>(const std::array<long int, 3> &dims)
+    CFD::array1D ConstructArray<CFD::array1D>(const std::array<CFD::intType, 3> &dims)
     {
         return CFD::array1D(dims[0]);
     }
 
     template<> inline
-    CFD::array2D ConstructArray<CFD::array2D>(const std::array<long int, 3> &dims)
+    CFD::array2D ConstructArray<CFD::array2D>(const std::array<CFD::intType, 3> &dims)
     {
         return CFD::array2D(dims[0], dims[1]);
     }
 
     template<> inline
-    CFD::array3D ConstructArray<CFD::array3D>(const std::array<long int, 3> &dims)
+    CFD::array3D ConstructArray<CFD::array3D>(const std::array<CFD::intType, 3> &dims)
     {
         return CFD::array3D(dims[0], dims[1], dims[2]);
     }
@@ -115,14 +115,12 @@ T ReadArray(const std::string &filename)
                   std::is_same< T, CFD::array3D >::value,
                   "Array type invalid.");
 
-    using dimType = size_t;
-
     std::ifstream fileStream(filename);
 
     // Get dimensions from first line
     std::string line, word;                  // Some temporary variables
-    dimType dim, ndims = 0;
-    std::array<dimType, 3> dims = {1, 1, 1}; // Unused dimensions have size 1   
+    CFD::intType dim, ndims = 0;
+    std::array<CFD::intType, 3> dims = {1, 1, 1}; // Unused dimensions have size 1   
     std::getline(fileStream, line);          // First line of file contains dimension information
     std::istringstream lineStream(line);     // For tokenizing line and casting 
     lineStream >> word;
@@ -131,7 +129,7 @@ T ReadArray(const std::string &filename)
         return emptyArray;   
     }
     while (lineStream >> dim ) {             // Read in dimensions
-        dims[ndims] = dim;
+        dims[ static_cast<size_t>( ndims ) ] = dim;
         ndims++;
     }
 
@@ -141,11 +139,11 @@ T ReadArray(const std::string &filename)
     // Read into the tensor, tensor must be column major, stride by number of columns to account 
     // for reading order not being continguous.
     auto *dataPointer = array.data();
-    dimType idx;
+    CFD::intType idx;
 
-    for (dimType k = 0; k != dims[2]; k++) {
-        for (dimType i = 0; i != dims[0]; i++) {
-            for (dimType j = 0; j != dims[1]; j++) {
+    for (CFD::intType k = 0; k != dims[2]; k++) {
+        for (CFD::intType i = 0; i != dims[0]; i++) {
+            for (CFD::intType j = 0; j != dims[1]; j++) {
 
                 idx = i + j*dims[0] + k*dims[0]*dims[1];
                 fileStream >> dataPointer[idx];
