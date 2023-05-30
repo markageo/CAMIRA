@@ -37,7 +37,14 @@ void RelativeResidual( EnumVector<Fields, floatType> &residuals,
                        const intType nIterations )
 {
     if ( nIterations == 0 ) {
-        EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInitialInv[field] = 1.0f / residuals[field]; } );
+        EnumFor<Fields>( [&] (Fields::ENUMDATA field) { 
+            if ( residuals[field] != 0 ) {  // Division by zero
+                residualsInitialInv[field] = 1.0f / residuals[field]; 
+            } else {
+                residualsInitialInv[field] = 1.0f;
+            }
+            
+        } );
     }
     EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] *= residualsInitialInv[field];} );
 }
@@ -295,7 +302,6 @@ class BlockSolver
             intType iV(i               ), jV(j + sV.iMcoupled), kV(k               ); // V momentum
             intType iW(i               ), jW(j               ), kW(k + sW.iMcoupled); // W momentum
 
-
             // Precompute momentum RHS divided by AP coefficients
             // U momentum
             floatType bU = ( m_fvCoeffs.Umom.B(iU, jU, kU)
@@ -380,12 +386,13 @@ class BlockSolver
                         - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * m_fvCoeffs.Wmom.AP[sW.cPcoupled](kW) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
 
 
-            // Update P from continuity
-            m_fields[P]( G(i, j, k) ) = ( bP
-                                        - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * bU
-                                        - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * bV
-                                        - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * bW
-                                        ) / K;
+            // // Update P from continuity
+            // m_fields[P]( G(i, j, k) ) = ( bP
+            //                             - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * bU
+            //                             - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * bV
+            //                             - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * bW
+            //                             ) / K;
+            m_fields[P]( G(i, j, k) ) = 0;
 
             // Update U from momentum 
             m_fields[U]( G(iU, jU, kU) ) = bU
@@ -480,13 +487,17 @@ class LineSolver
             {
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] = 0.0f; } );
 
-                // Update in place and relax
-                for (intType i = 0; i != ni-1; i++) {   // Forward sweep
-                    UpdateAndRelax.template operator()<e>(i);
-                }
+                // // Update in place and relax
+                // for (intType i = 0; i != ni-1; i++) {   // Forward sweep
+                //     UpdateAndRelax.template operator()<e>(i);
+                // }
 
-                for (intType i = ni-1; i != 0; i--) {   // Backward sweep
-                    UpdateAndRelax.template operator()<w>(i);
+                // for (intType i = ni-1; i != 0; i--) {   // Backward sweep
+                //     UpdateAndRelax.template operator()<w>(i);
+                // }
+
+                for (intType i = 0; i != ni; i++) {   // Forward sweep
+                    UpdateAndRelax.template operator()<p>(i);
                 }
 
 
@@ -565,7 +576,7 @@ class PlaneSolver
                 EnumFor<Fields>( [&] (Fields::ENUMDATA f) { jS[f] = j; } );      // Set iterating coefficient
                 jS[V] += CoeffIndex[Vstag];                                     // V momentum is staggered   
 
-                EnumFor<Fields>( [&] (Fields::ENUMDATA f) { oldLine[f] = m_fields[f].chip(kS[f], Z).chip(jS[f], Y); } );      // Set old line
+                EnumFor<Fields>( [&] (Fields::ENUMDATA f) { oldLine[f] = m_fields[f].chip( G(kS[f]), Z).chip( G(jS[f]), Y); } );      // Set old line
 
                 m_lineSolver.SolveLine<Vstag, Wstag>(j, k);
 
@@ -581,14 +592,19 @@ class PlaneSolver
             intType nIterations = 0;
             while ( nIterations < m_maxIterations ) 
             {
-                // EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] = 0.0f; } );
+                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] = 0.0f; } );
 
-                for (intType j = 0; j != nj-1; j++) {   // Forward sweep
-                    UpdateAndRelax.template operator()<n>(j);
-                }
+                // for (intType j = 0; j != nj-1; j++) {   // Forward sweep
+                //     UpdateAndRelax.template operator()<n>(j);
+                // }
 
-                for (intType j = nj-1; j != 0; j--) {   // Backward sweep
-                    UpdateAndRelax.template operator()<s>(j);
+                // for (intType j = nj-1; j != 0; j--) {   // Backward sweep
+                //     UpdateAndRelax.template operator()<s>(j);
+                // }
+
+
+                for (intType j = 0; j != nj; j++) {   // Forward sweep
+                    UpdateAndRelax.template operator()<p>(j);
                 }
 
                 // Normalise residuals
@@ -662,7 +678,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         EnumFor<Fields>( [&] (Fields::ENUMDATA f) { kS[f] = k; } );       // Set iterating coefficient
         kS[W] += CoeffIndex[Wstag];                                       // W momentum is staggered
 
-        EnumFor<Fields>( [&] (Fields::ENUMDATA f) { oldPlane[f] = fields[f].chip(kS[f], Z); } );    // Set old plane
+        EnumFor<Fields>( [&] (Fields::ENUMDATA f) { oldPlane[f] = fields[f].chip( G(kS[f]), Z); } );    // Set old plane
 
         planeSolver.SolvePlane<Wstag>(k);   // Solve in place
 
@@ -685,26 +701,33 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         
             EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInner[field] = 0.0f; } );
 
-            // Update plane
-            for (intType k = 0; k != nk-1; k++) {   // Forward sweep
-                UpdateAndRelax.template operator()<TC::t>(k);
-            }
+            // // Update plane
+            // for (intType k = 0; k != nk-1; k++) {   // Forward sweep
+            //     UpdateAndRelax.template operator()<TC::t>(k);
+            // }
 
-            for (intType k = nk-1; k != 0; k--) {   // Backward sweep
-                UpdateAndRelax.template operator()<TC::b>(k);
+            // for (intType k = nk-1; k != 0; k--) {   // Backward sweep
+            //     UpdateAndRelax.template operator()<TC::b>(k);
+            // }
+
+            for (intType k = 0; k != nk; k++) {   // Backward sweep
+                UpdateAndRelax.template operator()<TC::p>(k);
             }
 
             UTIL::WriteArray("U_velocity.dbg", fields[U]);
-            UTIL::WriteArray("V_velocity.dbg", fields[V]);
-            UTIL::WriteArray("W_velocity.dbg", fields[W]);
-            UTIL::WriteArray("Pressure.dbg"  , fields[P]);
+            // UTIL::WriteArray("V_velocity.dbg", fields[V]);
+            // UTIL::WriteArray("W_velocity.dbg", fields[W]);
+            // UTIL::WriteArray("Pressure.dbg"  , fields[P]);
 
             // Normalise residuals
             EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residualsInner[field] /= static_cast<floatType>( ni*nj*nk ); } );
-            RelativeResidual( residualsInner, residualsInnerInitialInv, nInnerIterations );
+            // RelativeResidual( residualsInner, residualsInnerInitialInv, nInnerIterations );
             nInnerIterations++;
 
-            std::cout << "Inner iteration: " << nInnerIterations << ", U residual: " << residualsInner[U] << "\n\n";
+            std::cout << "Inner iteration: " << nInnerIterations << ", U residual: " << residualsInner[U]
+                                                                 << ", V residual: " << residualsInner[V]
+                                                                 << ", W residual: " << residualsInner[W]
+                                                                 << "\n\n";
 
             // Check residual tolerence
             if ( MetResidualTolerence(residualsInner, planeSweepSettings.maxInnerResiduals) ) {
@@ -714,7 +737,6 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         }
     
         
-
         // Update residuals
         L1ArrayDiff( residualsOuter, fields, fieldsOld );
         RelativeResidual( residualsOuter, residualsOuterInitialInv, nOuterIterations );
@@ -725,10 +747,10 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         fieldsOld = fields;
 
         // Check residual tolerence
-        // if ( MetResidualTolerence(residualsOuter, planeSweepSettings.maxOuterResiduals) ) {
-        //     std::cout << "*** OUTER ITERATIONS CONVERGED ***" << "\n\n";
-        //     break;
-        // }
+        if ( MetResidualTolerence(residualsOuter, planeSweepSettings.maxOuterResiduals) ) {
+            std::cout << "*** OUTER ITERATIONS CONVERGED ***" << "\n\n";
+            break;
+        }
 
         // Update nonlinear coefficients
         UpdateFaceVelocities( faceVelocities, mesh, fields, inputData );
