@@ -199,13 +199,14 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
         }
 
 
-        // Divide by inverse cell length
+        // Multiply by inverse cell length
         for (intType i = 0; i != mesh.nCells(axis); i++) {
             diff[axis][p   ](i) *= mesh.cellLengthsInv[axis](i);
             diff[axis][east](i) *= mesh.cellLengthsInv[axis](i);
             diff[axis][west](i) *= mesh.cellLengthsInv[axis](i);
         }
-
+        boundaryConstants[ PositivePatch[axis] ] *= mesh.cellLengthsInv[axis]( mesh.nCells(axis)-1 );
+        boundaryConstants[ NegativePatch[axis] ] *= mesh.cellLengthsInv[axis]( 0 );
 
         // Multiply by viscosity
         for (intType i = 0; i != mesh.nCells(axis); i++) {
@@ -213,6 +214,9 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
             diff[axis][east](i) *= inputData.nu;
             diff[axis][west](i) *= inputData.nu;
         }
+        boundaryConstants[ PositivePatch[axis] ] *= inputData.nu;
+        boundaryConstants[ NegativePatch[axis] ] *= inputData.nu;
+
 
     }
 
@@ -468,6 +472,7 @@ void AddDiffusion( ArrayAllocator< TransportCoefficients, array3D > &velCoeffs,
     for (intType k = 0; k != mesh.nCells(Z); k++) {
         for (intType j = 0; j != mesh.nCells(Y); j++) {
             for (intType i = 0; i != mesh.nCells(X); i++) {
+
                 velCoeffs[p](i, j, k) += diffCoeffs[X][p](i) + diffCoeffs[Y][p](j) + diffCoeffs[Z][p](k);
 
                 velCoeffs[e](i, j, k) += diffCoeffs[X][e](i);
@@ -486,6 +491,7 @@ void AddDiffusion( ArrayAllocator< TransportCoefficients, array3D > &velCoeffs,
     BoundaryPatches::ENUMDATA patch;
     for (int p = 0; p != BoundaryPatches::count; p++) {
         patch = static_cast<BoundaryPatches::ENUMDATA>(p);
+
         boundaryVel[patch] += boundaryVel[patch].constant( boundaryDiff[patch] );
     }
 

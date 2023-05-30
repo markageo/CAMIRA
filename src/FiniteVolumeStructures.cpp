@@ -323,8 +323,8 @@ FVCoefficients::MomentumEquation::MomentumEquation( const Fields::ENUMDATA field
     diff({ ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims(X) ),
            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims(Y) ),
            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims(Z) ) }),
-    boundaryDiff(),
-    boundaryP(),
+    boundaryDiff( 0.0f ),
+    boundaryP( 0.0f ),
     boundaryVel( {array2D( dims(Y), dims(Z) ).setZero(), array2D( dims(Y), dims(Z) ).setZero(),
                   array2D( dims(X), dims(Z) ).setZero(), array2D( dims(X), dims(Z) ).setZero(),
                   array2D( dims(X), dims(Y) ).setZero(), array2D( dims(X), dims(Y) ).setZero()} )    // This doesn't follow right hand rule
@@ -341,7 +341,7 @@ FVCoefficients::ContinuityEquation::ContinuityEquation( const indexVector3 &dims
     boundaryP( {array2D( dims(Y), dims(Z) ).setZero(), array2D( dims(Y), dims(Z) ).setZero(),
                 array2D( dims(X), dims(Z) ).setZero(), array2D( dims(X), dims(Z) ).setZero(),
                 array2D( dims(X), dims(Y) ).setZero(), array2D( dims(X), dims(Y) ).setZero()} ),     // This doesn't follow right hand rule
-    boundaryVel()
+    boundaryVel( 0.0f )
 {};
 
 

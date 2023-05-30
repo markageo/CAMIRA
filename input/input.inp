@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.1
+    nu   = 10
 }
 
 Mesh {
@@ -21,7 +21,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 5
+            nCells     = 12
             biasFactor = 1
         }
     }
@@ -30,7 +30,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 10
+            nCells     = 12
             biasFactor = 1
         }
     }
@@ -118,7 +118,7 @@ Solver {
         pressureRelaxation = 1
 
         maxInnerIterations = 1000
-        maxInnerResiduals = 1e-3
+        maxInnerResiduals = 1e-6
     }
     
     PlaneSolver {
