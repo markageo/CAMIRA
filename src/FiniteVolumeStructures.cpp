@@ -378,16 +378,24 @@ namespace
     }
 
 
-    void ReverseMeshAxis(Mesh &mesh, const Axis::ENUMDATA axis)
+    // Returns a copy of a 1D array that has been reversed 
+    array1D ReversedArray( array1D &array )
     {
         Eigen::array<bool, 1> rev({true});
-            mesh.cellCenters[axis]       = - mesh.cellCenters[axis].reverse(rev);
-            mesh.cellCenters[axis]       = - mesh.cellFaces[axis].reverse(rev);
-            mesh.cellLengths[axis]       = mesh.cellLengths[axis].reverse(rev);
-            mesh.cellLengthsInv[axis]    = mesh.cellLengthsInv[axis].reverse(rev);
-            mesh.cellCenterDiffInv[axis] = mesh.cellCenterDiffInv[axis].reverse(rev);
-            mesh.interpFactors[axis]     = 1 - mesh.interpFactors[axis].reverse(rev);
-            std::swap( mesh.extrapFactors[ PositivePatch[axis] ], mesh.extrapFactors[ NegativePatch[axis] ] );
+        return array.reverse( rev );
+    };
+
+
+    void ReverseMeshAxis(Mesh &mesh, const Axis::ENUMDATA axis)
+    {
+        // Eigen .reverse is done in place, so need to made a copy!
+        mesh.cellCenters[axis]       = - ReversedArray( mesh.cellCenters[axis] );
+        mesh.cellFaces[axis]         = - ReversedArray( mesh.cellFaces[axis] );
+        mesh.cellLengths[axis]       = ReversedArray( mesh.cellLengths[axis] );
+        mesh.cellLengthsInv[axis]    = ReversedArray( mesh.cellLengthsInv[axis] );
+        mesh.cellCenterDiffInv[axis] = ReversedArray( mesh.cellCenterDiffInv[axis] );
+        mesh.interpFactors[axis]     = 1 - ReversedArray( mesh.interpFactors[axis] );
+        std::swap( mesh.extrapFactors[ PositivePatch[axis] ], mesh.extrapFactors[ NegativePatch[axis] ] );
     }
 
 
