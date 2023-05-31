@@ -759,30 +759,27 @@ namespace
         using enum Axis::ENUMDATA;
         using enum BoundaryPatches::ENUMDATA;
 
-        // Temporary for the axis being transformed from the user input
-        Axis::ENUMDATA codeAxis, userAxis;
-        BoundaryPatches::ENUMDATA codePositivePatch, userBoundaryPatch;
-        std::array<Axis::ENUMDATA, Axis::count> shuffleOrder = {X, Y, Z}; // Tracks where the user axis have been shuffled to
 
-        for (int i = 0; i != Axis::count; i++) {
-            codeAxis = static_cast<Axis::ENUMDATA>( i );
-            codePositivePatch = PositivePatch[codeAxis];
+        // Create temporary copy of mesh data to take data from
+        EnumVector<Axis, std::vector<InputData::MeshSegment> > userMeshSegments = inputData.meshSegments;
+        floatVector3 userDomainSize;
 
-            userBoundaryPatch = inputData.axisTransformation.UserPatch( codePositivePatch );
-            userAxis = BoundaryPatchAxis[ userBoundaryPatch ];
+        BoundaryPatches::ENUMDATA userPatch;
+        Axis::ENUMDATA userAxis;
 
-            // Axis are transformed by swapping the data
-            if ( shuffleOrder[codeAxis] != userAxis ) {     // Only if it needs to be swapped
-                std::swap( shuffleOrder[codeAxis], shuffleOrder[userAxis]  );
-                std::swap( inputData.meshSegments[ codeAxis ], inputData.meshSegments[ userAxis ] );
-                std::swap( inputData.domainSize( codeAxis ), inputData.domainSize( userAxis ) );
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+            userPatch = inputData.axisTransformation.UserPatch( PositivePatch[ axis ] );
+            userAxis = BoundaryPatchAxis[ userPatch ];
+
+            inputData.meshSegments[ axis ] = userMeshSegments[ userAxis ];
+            inputData.domainSize( axis )   = userDomainSize[ userAxis ];
+
+            if ( userPatch == NegativePatch[ userAxis ] ) {
+                ReverseMesh(inputData.meshSegments[ axis ]);
             }
 
-            if ( userBoundaryPatch == NegativePatch[ userAxis ] ) {
-                ReverseMesh(inputData.meshSegments[ codeAxis ]);
-            }
-
-        }
+        } );
 
     }
 
