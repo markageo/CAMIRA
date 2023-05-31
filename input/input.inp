@@ -101,42 +101,46 @@ BoundaryConditions
 
 Solver {
 
-    planeSweepDirection = -x
-    lineSweepDirection = -z
+    planeSweepDirection = +z
+    lineSweepDirection = +y
 
     Schemes {
         linearisation = Picard
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
-    }
 
-    PlaneSweeping {
         maxOuterIterations = 1
         maxOuterResiduals = 1e-5
-
-        momentumRelaxation = (1, 1, 1)
-        pressureRelaxation = 1
-
-        maxInnerIterations = 1000
-        maxInnerResiduals = 1e-6
     }
     
-    PlaneSolver {
+    LinearSolver {
+
         type = SUGS
-        maxIterations = 1
-        maxResiduals = 1e-3
+        maxIterations = 1000
+        maxResiduals = 1e-4
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
+
+        PlaneSolver {
+            type = SUGS
+            maxIterations = 1
+            maxResiduals = 1e-3
+
+            momentumRelaxation = (1, 1, 1)
+            pressureRelaxation = 1
+        }
+
+        LineSolver {
+            type = SUGS
+            maxIterations = 1
+            maxResiduals = 1e-3
+
+            momentumRelaxation = (1, 1, 1)
+            pressureRelaxation = 1
+        }
+
     }
 
-    LineSolver {
-        type = SUGS
-        maxIterations = 1
-        maxResiduals = 1e-3
-
-        momentumRelaxation = (1, 1, 1)
-        pressureRelaxation = 1
-    }
 
 }
