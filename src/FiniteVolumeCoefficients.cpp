@@ -189,14 +189,14 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
 
         // Boundary conditions only need to be set if it is not zero gradient
         // Axis positive boundary
-        if (positivePatchBC != BC::zeroGradient) {
+        //if (positivePatchBC != BC::zeroGradient) {
             DiffusionPositiveBoundary(diff, boundaryConstants, mesh, boundaryConditions[field], static_cast<Axis::ENUMDATA>(axis));
-        }
+        //}
 
         // Axis negative boundary
-        if (negativePatchBC != BC::zeroGradient) {
+        //if (negativePatchBC != BC::zeroGradient) {
             DiffusionNegativeBoundary(diff, boundaryConstants, mesh, boundaryConditions[field], static_cast<Axis::ENUMDATA>(axis));
-        }
+        //}
 
 
         // Multiply by inverse cell length

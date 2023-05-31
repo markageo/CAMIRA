@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 25
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -21,7 +21,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 12
+            nCells     = 25
             biasFactor = 1
         }
     }
@@ -30,7 +30,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 12
+            nCells     = 25
             biasFactor = 1
         }
     }
@@ -40,8 +40,8 @@ Mesh {
 InitialConditions
 {
     u = 1
-    v = 0
-    w = 0
+    v = 1
+    w = 1
     p = 0
 }
 
@@ -59,15 +59,15 @@ BoundaryConditions
     // Inflow
     -x {
         u = uniform, 1
-        v = zeroGradient
-        w = zeroGradient
+        v = uniform, 1
+        w = uniform, 1
         p = zeroGradient
     }
 
     // Symmetry
     +y {
         u = zeroGradient
-        v = uniform, 0
+        v = zeroGradient
         w = zeroGradient
         p = zeroGradient
     }
@@ -75,7 +75,7 @@ BoundaryConditions
     // Symmetry
     -y {
         u = zeroGradient
-        v = uniform, 0
+        v = zeroGradient
         w = zeroGradient
         p = zeroGradient
     }
@@ -83,8 +83,8 @@ BoundaryConditions
     // Freestream
     +z {
         u = uniform, 1
-        v = zeroGradient
-        w = zeroGradient
+        v = uniform, 1
+        w = uniform, 1
         p = uniform, 0
     }
 
@@ -101,8 +101,8 @@ BoundaryConditions
 
 Solver {
 
-    planeSweepDirection = +z
-    lineSweepDirection = +y
+    planeSweepDirection = +x
+    lineSweepDirection = +z
 
     Schemes {
         linearisation = Picard
