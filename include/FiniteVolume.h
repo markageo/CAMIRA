@@ -48,7 +48,6 @@ struct FVCoefficients
         EnumVector< Axis, ArrayAllocator<TransportCoefficients, array1D> > diff;    // Diffusion coefficients (LHS)
         EnumVector< BoundaryPatches, floatType > boundaryDiff, boundaryP;           // Constant terms that come from uniform BC (LHS)
         EnumVector< BoundaryPatches, array2D > boundaryVel;       
-
     };
 
     struct ContinuityEquation {
@@ -65,32 +64,20 @@ struct FVCoefficients
 };
 
 
-// Transform back to the coordinates consistentent with the input file 
-void TransformToUserCoordinates(Mesh &, ArrayAllocator<Fields, array3D> &, const InputData::AxisTransformationMap &);
-
-
 // Allocate and initialise the fields
 ArrayAllocator<Fields, array3D> InitialiseFields(const Mesh &, const InputData &);
 
 
-// Remove ghost cells from 3D arrays
-template<typename E>
-void RemoveGhostCells( ArrayAllocator<E, array3D> &arrays, const intType nGhostCells)
-{
-    Eigen::array<Eigen::Index, 3> offsets = { nGhostCells, nGhostCells, nGhostCells },
-                                  extents;  // Extents may be different between each array 
+// Transform back to the coordinates consistentent with the input file 
+void TransformToUserCoordinates(Mesh &, ArrayAllocator<Fields, array3D> &, const InputData::AxisTransformationMap &);
 
-    typename E::ENUMDATA enumName;
-    for (int e = 0; e != E::count; e++) {
-        enumName = static_cast<typename E::ENUMDATA>( e );
 
-        extents = { arrays[enumName].dimension(0) - 2*nGhostCells, 
-                    arrays[enumName].dimension(1) - 2*nGhostCells,
-                    arrays[enumName].dimension(2) - 2*nGhostCells };
+// Remove ghost cells from a 3D array
+void RemoveGhostCells( array3D &, const intType);
 
-        arrays[enumName] = array3D( arrays[enumName] ).slice(offsets, extents);
-    }
-}
+
+
+
 
 // -------------------------------------- Definition in FaceVelocities.cpp -------------------------------------- //
 

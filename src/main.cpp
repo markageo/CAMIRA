@@ -59,8 +59,9 @@ int main(int argc, char const *argv[])
     CFD::TransformToUserCoordinates(mesh, fields, inputData.axisTransformation);
 
     // Remove ghost cells from the fields
-    CFD::RemoveGhostCells(fields, CFD::nGhost);
-
+    CFD::EnumFor<CFD::Fields>( [&] ( CFD::Fields::ENUMDATA field ) {
+        CFD::RemoveGhostCells( fields[field], CFD::nGhost );
+    } );
 
     // Data to pass to writer
     VTK::VTKWriterConfig config(mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z]);
