@@ -56,7 +56,7 @@ int main(int argc, char const *argv[])
     using AX = CFD::Axis::ENUMDATA;
 
     // Undo the boundary condition transformation
-    // CFD::TransformToUserCoordinates(mesh, fields, inputData.axisTransformation);
+    CFD::TransformToUserCoordinates(mesh, fields, inputData.axisTransformation);
 
     // Remove ghost cells from the fields
     CFD::RemoveGhostCells(fields, CFD::nGhost);

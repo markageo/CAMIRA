@@ -361,40 +361,43 @@ FVCoefficients::FVCoefficients(const indexVector3 &dims) :
 
 namespace
 {
-
-    void SwapMesh(Mesh &mesh, const Axis::ENUMDATA axis1, const Axis::ENUMDATA axis2)
+    // Copies the mesh data from the axis of one mesh to the specified axis of another mesh.
+    void CopyMeshAxis( Mesh &targetMesh,
+                       const Mesh &sourceMesh,
+                       const Axis::ENUMDATA &targetAxis,
+                       const Axis::ENUMDATA &sourceAxis )
     {
-        std::swap( mesh.nCells(axis1)           , mesh.nCells(axis2) );
-        std::swap( mesh.cellCenters[axis1]      , mesh.cellCenters[axis2] );
-        std::swap( mesh.cellFaces[axis1]        , mesh.cellFaces[axis2] );
-        std::swap( mesh.cellLengths[axis1]      , mesh.cellLengths[axis2] );
-        std::swap( mesh.cellLengthsInv[axis1]   , mesh.cellLengthsInv[axis2] );
-        std::swap( mesh.cellCenterDiffInv[axis1], mesh.cellCenterDiffInv[axis2] );
-        std::swap( mesh.interpFactors[axis1]    , mesh.interpFactors[axis2] );
-        std::swap( mesh.interpFactors[axis1]    , mesh.interpFactors[axis2] );
+        targetMesh.nCells( targetAxis ) = sourceMesh.nCells( sourceAxis );
+        targetMesh.cellCenters[ targetAxis ] = sourceMesh.cellCenters[ sourceAxis ];
+        targetMesh.cellFaces[ targetAxis ] = sourceMesh.cellFaces[ sourceAxis ];
+        targetMesh.cellLengths[ targetAxis ] = sourceMesh.cellLengths[ sourceAxis ];
+        targetMesh.cellLengthsInv[ targetAxis ] = sourceMesh.cellLengthsInv[ sourceAxis ];
+        targetMesh.cellCenterDiffInv[ targetAxis ] = sourceMesh.cellCenterDiffInv[ sourceAxis ];
+        targetMesh.interpFactors[ targetAxis ] = sourceMesh.interpFactors[ sourceAxis ];
 
-        std::swap( mesh.extrapFactors[ PositivePatch[axis1] ] , mesh.extrapFactors[ PositivePatch[axis2] ] );
-        std::swap( mesh.extrapFactors[ NegativePatch[axis1] ] , mesh.extrapFactors[ NegativePatch[axis2] ] );
+        targetMesh.extrapFactors[ PositivePatch[ targetAxis ] ] = sourceMesh.extrapFactors[ PositivePatch[ sourceAxis ] ];
+        targetMesh.extrapFactors[ NegativePatch[ targetAxis ] ] = sourceMesh.extrapFactors[ NegativePatch[ sourceAxis ] ];
     }
 
 
     // Returns a copy of a 1D array that has been reversed 
-    array1D ReversedArray( array1D &array )
+    array1D ReversedArray1D( array1D &array )
     {
         Eigen::array<bool, 1> rev({true});
         return array.reverse( rev );
     };
 
 
+    // Reverses a mesh along a coordinate direction
     void ReverseMeshAxis(Mesh &mesh, const Axis::ENUMDATA axis)
     {
-        // Eigen .reverse is done in place, so need to made a copy!
-        mesh.cellCenters[axis]       = - ReversedArray( mesh.cellCenters[axis] );
-        mesh.cellFaces[axis]         = - ReversedArray( mesh.cellFaces[axis] );
-        mesh.cellLengths[axis]       = ReversedArray( mesh.cellLengths[axis] );
-        mesh.cellLengthsInv[axis]    = ReversedArray( mesh.cellLengthsInv[axis] );
-        mesh.cellCenterDiffInv[axis] = ReversedArray( mesh.cellCenterDiffInv[axis] );
-        mesh.interpFactors[axis]     = 1 - ReversedArray( mesh.interpFactors[axis] );
+        // Eigen .reverse is done in place, so need to made a copy
+        mesh.cellCenters[axis]       = - ReversedArray1D( mesh.cellCenters[axis] );
+        mesh.cellFaces[axis]         = - ReversedArray1D( mesh.cellFaces[axis] );
+        mesh.cellLengths[axis]       = ReversedArray1D( mesh.cellLengths[axis] );
+        mesh.cellLengthsInv[axis]    = ReversedArray1D( mesh.cellLengthsInv[axis] );
+        mesh.cellCenterDiffInv[axis] = ReversedArray1D( mesh.cellCenterDiffInv[axis] );
+        mesh.interpFactors[axis]     = 1 - ReversedArray1D( mesh.interpFactors[axis] );
         std::swap( mesh.extrapFactors[ PositivePatch[axis] ], mesh.extrapFactors[ NegativePatch[axis] ] );
     }
 
@@ -406,55 +409,43 @@ void TransformToUserCoordinates( Mesh &mesh,
                                  ArrayAllocator<Fields, array3D> &fields, 
                                  const InputData::AxisTransformationMap &axisTransformation)                                  
 {
-    Axis::ENUMDATA codeAxis, userAxis;
-    BoundaryPatches::ENUMDATA codePositivePatch, userPatchFromPositive;
-    std::array<Axis::ENUMDATA, Axis::count> shuffleOrder = {X, Y, Z}; // Tracks where the user axis have been shuffled to when transforming mesh
     Eigen::array<intType , Axis::count> shuffleArray;
     Eigen::array<bool, Axis::count> reverseArray;
 
-    // Mesh
-    for (int a = 0; a != Axis::count; a++) {
-        codeAxis = static_cast<Axis::ENUMDATA>(a);
-        codePositivePatch = PositivePatch[codeAxis];
+    // Temporary copy of the mesh to take data from 
+    Mesh codeMesh = mesh;
 
-        userPatchFromPositive = axisTransformation.UserPatch(codePositivePatch);
-        userAxis = BoundaryPatchAxis[userPatchFromPositive];
+    BoundaryPatches::ENUMDATA codePatch;
+    Axis::ENUMDATA codeAxis;
+    bool reverseAxis;
 
-        if ( shuffleOrder[userAxis] != codeAxis ) {     // Only if it needs to be swapped
-            std::swap( shuffleOrder[codeAxis], shuffleOrder[userAxis]  );
-            SwapMesh(mesh, codeAxis, userAxis);
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+        codePatch = axisTransformation.CodePatch( PositivePatch[ axis ] );
+        codeAxis = BoundaryPatchAxis[ codePatch ];
+        reverseAxis = ( codePatch == NegativePatch[ codeAxis ] );
+
+        CopyMeshAxis( mesh, codeMesh, axis, codeAxis );
+
+        if ( reverseAxis ) {
+            ReverseMeshAxis(mesh, axis);
         }
 
-        if ( userPatchFromPositive == NegativePatch[userAxis] ) {
-            ReverseMeshAxis(mesh, userAxis);
-        }
+        // Shuffle and reverse arrays used for 3D arrays
+        shuffleArray[ codeAxis ] = axis;
+        // reverseArray[ axis ] = reverseAxis;
+        reverseArray[ axis ] = false;
 
-        // Fill the shuffle and revsere arrays, used for 3D arrays
-        shuffleArray[codeAxis] = BoundaryPatchAxis[ axisTransformation.CodePatch( codePositivePatch ) ];
-        reverseArray[codeAxis] = axisTransformation.CodePatch( codePositivePatch ) == NegativePatch[ static_cast<size_t>( shuffleArray[codeAxis] ) ];    // This reverse is after the shuffling
-    }
-
+    } );
 
     // 3D arrays
-    Fields::ENUMDATA field;
-    for (int f = 0; f != Fields::count; f++) {
-        field = static_cast<F>(f);
+    EnumFor<Fields>( [&] (Fields::ENUMDATA field) {
 
-        // Cell center values
         fields[field] = array3D( fields[field] ).shuffle(shuffleArray).reverse(reverseArray);   // Have to make a copy
 
-        // if (field == F::P) 
-        //     continue;
-
-        // // Face velocities
-        // faceVelocities[field] = array3D( faceVelocities[field] ).shuffle(shuffleArray).reverse(reverseArray);    // Have to make a copy
-
-    }
+    } );
 
 }
-
-
-
 
 
 ArrayAllocator<Fields, array3D> InitialiseFields(const Mesh &mesh, const InputData &inputData)

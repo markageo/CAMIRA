@@ -496,10 +496,9 @@ class LineSolver
                 //     UpdateAndRelax.template operator()<w>(i);
                 // }
 
-                for (intType i = 0; i != ni; i++) {   // Forward sweep
+                for (intType i = 0; i != ni; i++) {
                     UpdateAndRelax.template operator()<p>(i);
                 }
-
 
                 // Normalise residuals
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] /= static_cast<floatType>( ni ); } );
@@ -602,8 +601,7 @@ class PlaneSolver
                 //     UpdateAndRelax.template operator()<s>(j);
                 // }
 
-
-                for (intType j = 0; j != nj; j++) {   // Forward sweep
+                for (intType j = 0; j != nj; j++) {   
                     UpdateAndRelax.template operator()<p>(j);
                 }
 
@@ -710,11 +708,11 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
             //     UpdateAndRelax.template operator()<TC::b>(k);
             // }
 
-            for (intType k = 0; k != nk; k++) {   // Backward sweep
+            for (intType k = 0; k != nk; k++) { 
                 UpdateAndRelax.template operator()<TC::p>(k);
             }
 
-            UTIL::WriteArray("U_velocity.dbg", fields[U]);
+            // UTIL::WriteArray("U_velocity.dbg", fields[U]);
             // UTIL::WriteArray("V_velocity.dbg", fields[V]);
             // UTIL::WriteArray("W_velocity.dbg", fields[W]);
             // UTIL::WriteArray("Pressure.dbg"  , fields[P]);
