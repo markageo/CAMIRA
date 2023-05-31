@@ -48,15 +48,17 @@ struct InputData
     struct Schemes {
         Linearisation linearisation;
         EnumVector<Fields, floatType> implicitRelaxation;
-    } schemes;
 
-    struct PlaneSweepSettings {
         intType maxOuterIterations;
         EnumVector<Fields, floatType> maxOuterResiduals;
-        intType maxInnerIterations;
-        EnumVector<Fields, floatType> maxInnerResiduals;
+    } schemes;
+
+    struct LinearSolverSettings {
+        LinearSolvers type;
+        intType maxIterations;
+        EnumVector<Fields, floatType> maxResiduals;
         EnumVector<Fields, floatType> relaxation;
-    } planeSweepSettings;
+    } linearSolverSettings;
 
     struct PlaneSolverSettings {
         PlaneSolvers type;

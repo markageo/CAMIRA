@@ -219,6 +219,10 @@ constexpr std::array<Axis::ENUMDATA, 6> BoundaryPatchAxis{Axis::ENUMDATA::X,    
 // ---------------------------------------------------- Solver Parameters -------------------------------------------------- //
 
 // Solver settings
+enum class LinearSolvers {
+    SUGS
+};
+
 enum class PlaneSolvers {
     SUGS
 };
