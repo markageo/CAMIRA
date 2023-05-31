@@ -130,21 +130,8 @@ void CalculateExtrapolationFactors(EnumVector<BoundaryPatches, Mesh::ExtrapFacto
     using enum BoundaryPatches::ENUMDATA;
     using enum Axis::ENUMDATA;
 
-    BoundaryPatches::ENUMDATA patchPositive = xPositive, 
-                              patchNegative = xNegative;
-    if         (axis == X) {
-        patchPositive = xPositive;
-        patchNegative = xNegative;
-    } else if  (axis == Y) {
-        patchPositive = yPositive;
-        patchNegative = yNegative;
-    } else if  (axis == Z) {
-        patchPositive = zPositive;
-        patchNegative = zNegative;
-    } else {
-        /* NULL */
-    }
-
+    BoundaryPatches::ENUMDATA patchPositive = PositivePatch[ axis ], 
+                              patchNegative = NegativePatch[ axis ];
     intType fieldIndex_p, fieldIndex_a; // Boundary cell node and the adjacent one
 
     // Positive patch boundary
@@ -202,12 +189,10 @@ Mesh::Mesh(const InputData &inputData) :
     extrapFactors()
 
     { 
-        using enum Axis::ENUMDATA;
-
         std::vector< std::vector<floatType> > growthRates(Axis::count);
 
-        for (int i = 0; i != Axis::count; i++) {
-            Axis::ENUMDATA axis = static_cast<Axis::ENUMDATA>(i);
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
             growthRates[axis] = CalculateGrowthRates(inputData.meshSegments[axis]);
 
             CalculateCellLengths(cellLengths[axis], inputData.meshSegments[axis], growthRates[axis]);
@@ -219,7 +204,8 @@ Mesh::Mesh(const InputData &inputData) :
             CalculateCellFaces(cellFaces[axis], cellLengths[axis], inputData.meshSegments[axis].front().lowerBound);
             CalculateInterpolationFactors(interpFactors[axis], cellCenters[axis], cellFaces[axis]);
             CalculateExtrapolationFactors(extrapFactors, cellLengths, axis);
-        }
+
+        } );
 
     };
 
@@ -361,45 +347,47 @@ FVCoefficients::FVCoefficients(const indexVector3 &dims) :
 
 namespace
 {
-    // Copies the mesh data from the axis of one mesh to the specified axis of another mesh.
-    void CopyMeshAxis( Mesh &targetMesh,
-                       const Mesh &sourceMesh,
-                       const Axis::ENUMDATA &targetAxis,
-                       const Axis::ENUMDATA &sourceAxis )
-    {
-        targetMesh.nCells( targetAxis ) = sourceMesh.nCells( sourceAxis );
-        targetMesh.cellCenters[ targetAxis ] = sourceMesh.cellCenters[ sourceAxis ];
-        targetMesh.cellFaces[ targetAxis ] = sourceMesh.cellFaces[ sourceAxis ];
-        targetMesh.cellLengths[ targetAxis ] = sourceMesh.cellLengths[ sourceAxis ];
-        targetMesh.cellLengthsInv[ targetAxis ] = sourceMesh.cellLengthsInv[ sourceAxis ];
-        targetMesh.cellCenterDiffInv[ targetAxis ] = sourceMesh.cellCenterDiffInv[ sourceAxis ];
-        targetMesh.interpFactors[ targetAxis ] = sourceMesh.interpFactors[ sourceAxis ];
 
-        targetMesh.extrapFactors[ PositivePatch[ targetAxis ] ] = sourceMesh.extrapFactors[ PositivePatch[ sourceAxis ] ];
-        targetMesh.extrapFactors[ NegativePatch[ targetAxis ] ] = sourceMesh.extrapFactors[ NegativePatch[ sourceAxis ] ];
-    }
+// Copies the mesh data from the axis of one mesh to the specified axis of another mesh.
+void CopyMeshAxis( Mesh &targetMesh,
+                    const Mesh &sourceMesh,
+                    const Axis::ENUMDATA &targetAxis,
+                    const Axis::ENUMDATA &sourceAxis )
+{
+    targetMesh.nCells( targetAxis )            = sourceMesh.nCells( sourceAxis );
+    targetMesh.cellCenters[ targetAxis ]       = sourceMesh.cellCenters[ sourceAxis ];
+    targetMesh.cellFaces[ targetAxis ]         = sourceMesh.cellFaces[ sourceAxis ];
+    targetMesh.cellLengths[ targetAxis ]       = sourceMesh.cellLengths[ sourceAxis ];
+    targetMesh.cellLengthsInv[ targetAxis ]    = sourceMesh.cellLengthsInv[ sourceAxis ];
+    targetMesh.cellCenterDiffInv[ targetAxis ] = sourceMesh.cellCenterDiffInv[ sourceAxis ];
+    targetMesh.interpFactors[ targetAxis ]     = sourceMesh.interpFactors[ sourceAxis ];
 
-
-    // Returns a copy of a 1D array that has been reversed 
-    array1D ReversedArray1D( array1D &array )
-    {
-        Eigen::array<bool, 1> rev({true});
-        return array.reverse( rev );
-    };
+    targetMesh.extrapFactors[ PositivePatch[ targetAxis ] ] = sourceMesh.extrapFactors[ PositivePatch[ sourceAxis ] ];
+    targetMesh.extrapFactors[ NegativePatch[ targetAxis ] ] = sourceMesh.extrapFactors[ NegativePatch[ sourceAxis ] ];
+}
 
 
-    // Reverses a mesh along a coordinate direction
-    void ReverseMeshAxis(Mesh &mesh, const Axis::ENUMDATA axis)
-    {
-        // Eigen .reverse is done in place, so need to made a copy
-        mesh.cellCenters[axis]       = - ReversedArray1D( mesh.cellCenters[axis] );
-        mesh.cellFaces[axis]         = - ReversedArray1D( mesh.cellFaces[axis] );
-        mesh.cellLengths[axis]       = ReversedArray1D( mesh.cellLengths[axis] );
-        mesh.cellLengthsInv[axis]    = ReversedArray1D( mesh.cellLengthsInv[axis] );
-        mesh.cellCenterDiffInv[axis] = ReversedArray1D( mesh.cellCenterDiffInv[axis] );
-        mesh.interpFactors[axis]     = 1 - ReversedArray1D( mesh.interpFactors[axis] );
-        std::swap( mesh.extrapFactors[ PositivePatch[axis] ], mesh.extrapFactors[ NegativePatch[axis] ] );
-    }
+// Returns a copy of a 1D array that has been reversed 
+array1D ReversedArray1D( array1D &array )
+{
+    Eigen::array<bool, 1> rev({true});
+    return array.reverse( rev );
+};
+
+
+// Reverses a mesh along a coordinate direction
+void ReverseMeshAxis(Mesh &mesh, const Axis::ENUMDATA axis)
+{
+    // Eigen .reverse is done in place, so need to made a copy
+    mesh.cellCenters[axis]       = - ReversedArray1D( mesh.cellCenters[axis] );
+    mesh.cellFaces[axis]         = - ReversedArray1D( mesh.cellFaces[axis] );
+    mesh.cellLengths[axis]       = ReversedArray1D( mesh.cellLengths[axis] );
+    mesh.cellLengthsInv[axis]    = ReversedArray1D( mesh.cellLengthsInv[axis] );
+    mesh.cellCenterDiffInv[axis] = ReversedArray1D( mesh.cellCenterDiffInv[axis] );
+    mesh.interpFactors[axis]     = 1 - ReversedArray1D( mesh.interpFactors[axis] );
+
+    std::swap( mesh.extrapFactors[ PositivePatch[axis] ], mesh.extrapFactors[ NegativePatch[axis] ] );
+}
 
 
 }   // end anonymous namespace
@@ -407,7 +395,7 @@ namespace
 
 void TransformToUserCoordinates( Mesh &mesh, 
                                  ArrayAllocator<Fields, array3D> &fields, 
-                                 const InputData::AxisTransformationMap &axisTransformation)                                  
+                                 const InputData::AxisTransformationMap &axisTransformation )                                  
 {
     Eigen::array<intType , Axis::count> shuffleArray;
     Eigen::array<bool, Axis::count> reverseArray;
@@ -432,9 +420,8 @@ void TransformToUserCoordinates( Mesh &mesh,
         }
 
         // Shuffle and reverse arrays used for 3D arrays
-        shuffleArray[ codeAxis ] = axis;
-        // reverseArray[ axis ] = reverseAxis;
-        reverseArray[ axis ] = false;
+        shuffleArray[ axis ] = codeAxis;
+        reverseArray[ axis ] = reverseAxis;
 
     } );
 
@@ -448,7 +435,20 @@ void TransformToUserCoordinates( Mesh &mesh,
 }
 
 
-ArrayAllocator<Fields, array3D> InitialiseFields(const Mesh &mesh, const InputData &inputData)
+void RemoveGhostCells( array3D &array, 
+                       const intType nGhostCells)
+{
+    Eigen::array<Eigen::Index, 3> offsets = { nGhostCells, nGhostCells, nGhostCells },
+                                  extents = { array.dimension(0) - 2*nGhostCells, 
+                                              array.dimension(1) - 2*nGhostCells,
+                                              array.dimension(2) - 2*nGhostCells };
+                                              
+    array = array3D( array ).slice(offsets, extents);
+}
+
+
+ArrayAllocator<Fields, array3D> InitialiseFields( const Mesh &mesh, 
+                                                  const InputData &inputData )
 {
     // Create fields
     ArrayAllocator<Fields, array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells + 2*CFD::nGhost);
