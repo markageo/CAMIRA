@@ -13,7 +13,7 @@ namespace CFD
 struct InputData
 {
     // Constructor
-    InputData();
+    Inputcd ..Data();
 
     // Model
     floatType rho, nu;
@@ -65,6 +65,7 @@ struct InputData
         intType maxIterations;
         EnumVector<Fields, floatType> maxResiduals;
         EnumVector<Fields, floatType> relaxation;
+        BoundaryPatches::ENUMDATA sweepDirection;
     } planeSolverSettings;
 
     struct LineSolverSettings {
@@ -72,6 +73,7 @@ struct InputData
         intType maxIterations;
         EnumVector<Fields, floatType> maxResiduals;
         EnumVector<Fields, floatType> relaxation;
+        BoundaryPatches::ENUMDATA sweepDirection;
     } lineSolverSettings;
 
 

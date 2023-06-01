@@ -386,6 +386,7 @@ class BlockSolver
                         - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * m_fvCoeffs.Umom.AP[sU.cPcoupled](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
                         - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * m_fvCoeffs.Vmom.AP[sV.cPcoupled](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
                         - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * m_fvCoeffs.Wmom.AP[sW.cPcoupled](kW) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+            K  = 1.0f / K;
 
 
             // Update P from continuity
@@ -393,7 +394,7 @@ class BlockSolver
                                         - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * bU
                                         - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * bV
                                         - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * bW
-                                        ) / K;
+                                        ) * K;
 
             // Update U from momentum 
             m_fields[U]( G(iU, jU, kU) ) = bU
