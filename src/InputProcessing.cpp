@@ -92,7 +92,10 @@ CFD::InputData::InputData() :
     meshSegments(),
     boundaryConditions(),
     axisTransformation()
-    {};
+    {
+        planeSolverSettings.sweepDirection = CFD::BoundaryPatches::zPositive;
+        lineSolverSettings.sweepDirection = CFD::BoundaryPatches::yPositive;
+    };
 
 CFD::InputData::AxisTransformationMap::AxisTransformationMap() :
     m_codeMap({ {CFD::BoundaryPatches::ENUMDATA::xPositive, CFD::BoundaryPatches::ENUMDATA::xPositive},
@@ -476,46 +479,6 @@ namespace
     }
 
 
-    void ReadSweepDirections( InputData &inputData, 
-                              const pt::ptree &solverTree) 
-    {
-        using BP = CFD::BoundaryPatches::ENUMDATA;
-
-        std::string valueString;
-        BP planeSweepDirection, lineSweepDirection, pointSweepDirection;
-        Eigen::Matrix<CFD::intType, 3, 1> planeSweepVector, lineSweepVector, pointSweepVector;
-
-        // User input for plane sweep direction
-        valueString = solverTree.get<std::string>("planeSweepDirection");
-        planeSweepDirection = ReadAxisDirection( valueString );
-        planeSweepVector = Axis2Vector( planeSweepDirection );
-
-        // User input for line sweep direction
-        valueString = solverTree.get<std::string>("lineSweepDirection");
-        lineSweepDirection = ReadAxisDirection( valueString );
-        lineSweepVector = Axis2Vector( lineSweepDirection );
-
-        // Plane and line sweep direction must be orthogonal
-        if ( abs( planeSweepVector.dot( lineSweepVector ) ) == 1 ) {
-            // throw ERROR - plane and line sweep directions cannot be the same
-        }
-
-        // Point sweep direction, chosen to make right handed coordinate system
-        pointSweepVector = lineSweepVector.cross( planeSweepVector );
-        pointSweepDirection = Vector2Axis( pointSweepVector );
-
-        // Update the axisTransformation map
-        inputData.axisTransformation.Set( BP::xPositive, pointSweepDirection);
-        inputData.axisTransformation.Set( BP::xNegative, Vector2Axis( -pointSweepVector ));
-
-        inputData.axisTransformation.Set( BP::yPositive, lineSweepDirection);
-        inputData.axisTransformation.Set( BP::yNegative, Vector2Axis( -lineSweepVector ));
-
-        inputData.axisTransformation.Set( BP::zPositive, planeSweepDirection);
-        inputData.axisTransformation.Set( BP::zNegative, Vector2Axis( -planeSweepVector ));
-    }
-
-
 
     void ReadSchemes( InputData &inputData, 
                       const pt::ptree &solverTree) 
@@ -557,10 +520,52 @@ namespace
 
 
 
-    void ReadPlaneSolverSettings( InputData &inputData, 
-                                 const pt::ptree & solverTree) 
+    void ReadLineSolverSettings( InputData &inputData, 
+                                 const pt::ptree &planeSolverTree) 
     {
-        const pt::ptree &planeSolverTree = solverTree.get_child("PlaneSolver");
+        const pt::ptree &lineSolverTree = planeSolverTree.get_child("LineSolver");
+        using F = Fields::ENUMDATA;
+        std::string valueString;
+
+        // Solver type
+        valueString = lineSolverTree.get<std::string>("type");
+        if        ( valueString == "SUGS" ) {
+            inputData.lineSolverSettings.type = LineSolvers::SUGS;
+        } else {
+            // THROW ERROR - invalid line solver type
+        }
+
+        // Max iterations
+        valueString = lineSolverTree.get<std::string>("maxIterations");
+        inputData.lineSolverSettings.maxIterations = String2Type<intType>(valueString);
+
+        // Max residuals
+        valueString = lineSolverTree.get<std::string>("maxResiduals");
+        inputData.lineSolverSettings.maxResiduals = String2Type<floatType>(valueString);
+        
+        // Momentum relaxation
+        valueString = lineSolverTree.get<std::string>("momentumRelaxation");
+        std::vector<floatType> momentumRelaxation = ParseVectorString<floatType>(valueString, 3);
+        inputData.lineSolverSettings.relaxation[F::U] = momentumRelaxation[0];
+        inputData.lineSolverSettings.relaxation[F::V] = momentumRelaxation[1];
+        inputData.lineSolverSettings.relaxation[F::W] = momentumRelaxation[2];
+
+        // Pressure relaxation
+        valueString = lineSolverTree.get<std::string>("pressureRelaxation");
+        inputData.lineSolverSettings.relaxation[F::P] = String2Type<floatType>(valueString);
+
+        // Line sweep direction
+        valueString = lineSolverTree.get<std::string>("lineSweepDirection");
+        inputData.lineSolverSettings.sweepDirection = ReadAxisDirection( valueString );
+
+    }
+
+
+
+    void ReadPlaneSolverSettings( InputData &inputData, 
+                                 const pt::ptree &linearSolverTree) 
+    {
+        const pt::ptree &planeSolverTree = linearSolverTree.get_child("PlaneSolver");
         using F = Fields::ENUMDATA;
         std::string valueString;
 
@@ -591,43 +596,12 @@ namespace
         valueString = planeSolverTree.get<std::string>("pressureRelaxation");
         inputData.planeSolverSettings.relaxation[F::P] = String2Type<floatType>(valueString);
 
-    }
+        // Plane sweep direction
+        valueString = planeSolverTree.get<std::string>("planeSweepDirection");
+        inputData.planeSolverSettings.sweepDirection = ReadAxisDirection( valueString );
 
-
-
-    void ReadLineSolverSettings( InputData &inputData, 
-                                 const pt::ptree & solverTree) 
-    {
-        const pt::ptree &lineSolverTree = solverTree.get_child("LineSolver");
-        using F = Fields::ENUMDATA;
-        std::string valueString;
-
-        // Solver type
-        valueString = lineSolverTree.get<std::string>("type");
-        if        ( valueString == "SUGS" ) {
-            inputData.lineSolverSettings.type = LineSolvers::SUGS;
-        } else {
-            // THROW ERROR - invalid line solver type
-        }
-
-        // Max iterations
-        valueString = lineSolverTree.get<std::string>("maxIterations");
-        inputData.lineSolverSettings.maxIterations = String2Type<intType>(valueString);
-
-        // Max residuals
-        valueString = lineSolverTree.get<std::string>("maxResiduals");
-        inputData.lineSolverSettings.maxResiduals = String2Type<floatType>(valueString);
-        
-        // Momentum relaxation
-        valueString = lineSolverTree.get<std::string>("momentumRelaxation");
-        std::vector<floatType> momentumRelaxation = ParseVectorString<floatType>(valueString, 3);
-        inputData.lineSolverSettings.relaxation[F::U] = momentumRelaxation[0];
-        inputData.lineSolverSettings.relaxation[F::V] = momentumRelaxation[1];
-        inputData.lineSolverSettings.relaxation[F::W] = momentumRelaxation[2];
-
-        // Pressure relaxation
-        valueString = lineSolverTree.get<std::string>("pressureRelaxation");
-        inputData.lineSolverSettings.relaxation[F::P] = String2Type<floatType>(valueString);
+        // Line solver
+        ReadLineSolverSettings(inputData, planeSolverTree);
 
     }
 
@@ -667,12 +641,8 @@ namespace
         valueString = linearSolverTree.get<std::string>("pressureRelaxation");
         inputData.linearSolverSettings.relaxation[F::P] = String2Type<floatType>(valueString);
 
-
         // Plane solver settings
         ReadPlaneSolverSettings(inputData, linearSolverTree);
-
-        // Line solver settings
-        ReadLineSolverSettings(inputData, linearSolverTree);
 
     }
 
@@ -682,9 +652,6 @@ namespace
                     const pt::ptree &tree)
     {
         const pt::ptree &solverTree = tree.get_child("Solver");
-
-        // Sweep direction transformation data
-        ReadSweepDirections(inputData, solverTree);
 
         // Read discretisation schemes
         ReadSchemes(inputData, solverTree);
@@ -726,6 +693,42 @@ namespace
     // the line sweeping direction is always in the y direction (in the code). This is more memory
     // efficient and is simpler to implement.
 
+    // Sets the axis transformation map based on the sweeping directions
+    void SetAxisTransformation( InputData &inputData) 
+    {
+        using BP = CFD::BoundaryPatches::ENUMDATA;
+        using directionVector = Eigen::Matrix<CFD::intType, 3, 1>;
+
+        // User input for plane sweep direction
+        BP planeSweepDirection = inputData.planeSolverSettings.sweepDirection;
+        directionVector planeSweepVector = Axis2Vector( planeSweepDirection );
+
+        // User input for line sweep direction
+        BP lineSweepDirection = inputData.lineSolverSettings.sweepDirection;
+        directionVector lineSweepVector = Axis2Vector( lineSweepDirection );
+
+        // Plane and line sweep direction must be orthogonal
+        if ( abs( planeSweepVector.dot( lineSweepVector ) ) == 1 ) {
+            // throw ERROR - plane and line sweep directions cannot be the same
+        }
+
+        // Point sweep direction, chosen to make right handed coordinate system
+        directionVector pointSweepVector = lineSweepVector.cross( planeSweepVector );
+        BP pointSweepDirection = Vector2Axis( pointSweepVector );
+
+        // Update the axisTransformation map
+        inputData.axisTransformation.Set( BP::xPositive, pointSweepDirection);
+        inputData.axisTransformation.Set( BP::xNegative, Vector2Axis( -pointSweepVector ));
+
+        inputData.axisTransformation.Set( BP::yPositive, lineSweepDirection);
+        inputData.axisTransformation.Set( BP::yNegative, Vector2Axis( -lineSweepVector ));
+
+        inputData.axisTransformation.Set( BP::zPositive, planeSweepDirection);
+        inputData.axisTransformation.Set( BP::zNegative, Vector2Axis( -planeSweepVector ));
+    }
+
+
+
     // Remaps the users boundary conditions
     void TransformBoundaryConditions(InputData &inputData)
     {
@@ -749,6 +752,7 @@ namespace
     }
 
 
+
     // Reverse a mesh in a given axis
     void ReverseMesh(std::vector< InputData::MeshSegment > &meshSegments)
     {
@@ -763,6 +767,7 @@ namespace
             segment.biasFactor = - segment.biasFactor;
         }
     }
+
 
 
     // Remaps the user mesh
@@ -796,6 +801,7 @@ namespace
     }
 
 
+
     // Transform an EnumVector of fields data. Only transforms the momentum equations part.
     void TransformFieldVector( EnumVector<Fields, floatType> &fieldsVector,
                                const InputData::AxisTransformationMap& axisTransformation )
@@ -820,11 +826,13 @@ namespace
     }
 
 
+
     // Remaps the initial conditions
     void TransformInitialConditions( InputData &inputData )
     {
         TransformFieldVector( inputData.initialConditions, inputData.axisTransformation );
     }
+
 
 
     // Remaps any solver settings that have direction dependence
@@ -851,6 +859,8 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFileName)
     ReadInitialConditions(inputData, tree);
     ReadSolver(inputData, tree);
     
+    SetAxisTransformation(inputData);
+
     TransformBoundaryConditions(inputData);
     TransformInitialConditions(inputData);
     TransformMesh(inputData);

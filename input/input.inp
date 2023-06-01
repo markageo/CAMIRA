@@ -13,7 +13,7 @@ Mesh {
         Segment {
             bounds     = (0, 0.2)
             nCells     = 50
-            biasFactor = 1
+            biasFactor = 3
         }
     }
 
@@ -21,7 +21,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 0.1)
-            nCells     = 5
+            nCells     = 10
             biasFactor = 1
         }
     }
@@ -29,9 +29,15 @@ Mesh {
 
     Grid z {
         Segment {
-            bounds     = (0, 0.1)
+            bounds     = (0, 0.05)
             nCells     = 25
-            biasFactor = 1
+            biasFactor = 5
+        }
+
+        Segment {
+            bounds     = (0.05, 0.1)
+            nCells     = 25
+            biasFactor = -5
         }
     }
 }
@@ -101,15 +107,12 @@ BoundaryConditions
 
 Solver {
 
-    planeSweepDirection = +z
-    lineSweepDirection = +y
-
     Schemes {
         linearisation = Picard
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 1000
+        maxOuterIterations = 500
         maxOuterResiduals = 1e-5
     }
     
@@ -129,18 +132,21 @@ Solver {
 
             momentumRelaxation = (1, 1, 1)
             pressureRelaxation = 1
+
+            planeSweepDirection = -x
+
+
+            LineSolver {
+                type = SUGS
+                maxIterations = 100
+                maxResiduals = 1e-3
+
+                momentumRelaxation = (1, 1, 1)
+                pressureRelaxation = 1
+
+                lineSweepDirection = +z
+            }
         }
-
-        LineSolver {
-            type = SUGS
-            maxIterations = 100
-            maxResiduals = 1e-3
-
-            momentumRelaxation = (1, 1, 1)
-            pressureRelaxation = 1
-        }
-
     }
-
 
 }
