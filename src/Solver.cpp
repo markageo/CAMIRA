@@ -388,13 +388,12 @@ class BlockSolver
                         - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * m_fvCoeffs.Wmom.AP[sW.cPcoupled](kW) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
 
 
-            // // Update P from continuity
-            // m_fields[P]( G(i, j, k) ) = ( bP
-            //                             - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * bU
-            //                             - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * bV
-            //                             - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * bW
-            //                             ) / K;
-            m_fields[P]( G(i, j, k) ) = 0;
+            // Update P from continuity
+            m_fields[P]( G(i, j, k) ) = ( bP
+                                        - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * bU
+                                        - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * bV
+                                        - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * bW
+                                        ) / K;
 
             // Update U from momentum 
             m_fields[U]( G(iU, jU, kU) ) = bU
@@ -441,8 +440,7 @@ class LineSolver
         m_maxResiduals( lineSolverSettings.maxResiduals ),
         m_relaxation( lineSolverSettings.relaxation ),
         m_blockSolverEast( fields, fvCoeffs ),
-        m_blockSolverWest( fields, fvCoeffs),
-        m_blockSolverCentered( fields, fvCoeffs )
+        m_blockSolverWest( fields, fvCoeffs)
         {}
 
 
@@ -500,10 +498,6 @@ class LineSolver
                     UpdateAndRelax( m_blockSolverWest, i );
                 }
 
-                // for (intType i = 0; i != ni; i++) {
-                //     UpdateAndRelax( m_blockSolverCentered, i );
-                // }
-
                 // Normalise residuals
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] /= static_cast<floatType>( ni ); } );
                 RelativeResidual( residuals, residualsInitialInv, nIterations );
@@ -527,7 +521,6 @@ class LineSolver
 
         BlockSolver< TC::e, Vstag, Wstag > m_blockSolverEast;
         BlockSolver< TC::w, Vstag, Wstag > m_blockSolverWest; 
-        BlockSolver< TC::p, Vstag, Wstag > m_blockSolverCentered;
 };
 
 
@@ -553,8 +546,7 @@ class PlaneSolver
         m_maxResiduals( planeSolverSettings.maxResiduals ),
         m_relaxation( planeSolverSettings.relaxation ),
         m_lineSolverNorth( fields, fvCoeffs, lineSolverSettings ),
-        m_lineSolverSouth( fields, fvCoeffs, lineSolverSettings ),
-        m_lineSolverCentered( fields, fvCoeffs, lineSolverSettings )
+        m_lineSolverSouth( fields, fvCoeffs, lineSolverSettings )
         {}
 
 
@@ -610,10 +602,6 @@ class PlaneSolver
                     UpdateAndRelax( m_lineSolverSouth, j );
                 }
 
-                // for (intType j = 0; j != nj; j++) {   
-                //     UpdateAndRelax( m_lineSolverCentered, j );
-                // }
-
                 // Normalise residuals
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] /= static_cast<floatType>( ni*nj ); } );
                 RelativeResidual( residuals, residualsInitialInv, nIterations );
@@ -636,7 +624,6 @@ class PlaneSolver
 
         LineSolver< TC::n, Wstag > m_lineSolverNorth;
         LineSolver< TC::s, Wstag > m_lineSolverSouth;
-        LineSolver< TC::p, Wstag > m_lineSolverCentered;
 };
 
 
@@ -659,8 +646,7 @@ class LinearSolver
         m_maxResiduals( linearSolverSettings.maxResiduals ),
         m_relaxation( linearSolverSettings.relaxation ),
         m_planeSolverTop( fields, fvCoeffs, planeSolverSettings, lineSolverSettings ),
-        m_planeSolverBottom( fields, fvCoeffs, planeSolverSettings, lineSolverSettings ),
-        m_planeSolverCentered( fields, fvCoeffs, planeSolverSettings, lineSolverSettings )
+        m_planeSolverBottom( fields, fvCoeffs, planeSolverSettings, lineSolverSettings )
         {}
 
 
@@ -714,20 +700,10 @@ class LinearSolver
                     UpdateAndRelax( m_planeSolverBottom, k );
                 }
 
-                // for (intType k = 0; k != nk; k++) { 
-                //     UpdateAndRelax( m_planeSolverCentered, k );
-                // }
-
-
                 // Normalise residuals
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] /= static_cast<floatType>( ni*nj*nk ); } );
                 RelativeResidual( residuals, residualsInitialInv, nIterations );
                 nIterations++;
-
-                std::cout << "Inner iteration: " << nIterations << ", U inner residual: " << residuals[U]
-                                                                << ", V inner residual: " << residuals[V]
-                                                                << ", W inner residual: " << residuals[W]
-                                                                << "\n\n";
 
                 // Check residual tolerence
                 if ( MetResidualTolerence( residuals, m_maxResiduals ) ) {
@@ -747,7 +723,6 @@ class LinearSolver
 
         PlaneSolver< TC::t > m_planeSolverTop;
         PlaneSolver< TC::b > m_planeSolverBottom;
-        PlaneSolver< TC::p > m_planeSolverCentered;
 
 };
 
@@ -800,11 +775,16 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         // Set old fields
         fieldsOld = fields;
 
+        std::cout << "Outer iteration: " << nOuterIterations << ", U outer residual: " << residualsOuter[U]
+                                                             << ", V outer residual: " << residualsOuter[V]
+                                                             << ", W outer residual: " << residualsOuter[W]
+                                                             << "\n\n";
+
         // Check residual tolerence
-        if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
-            std::cout << "*** OUTER ITERATIONS CONVERGED ***" << "\n\n";
-            break;
-        }
+        // if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
+        //     std::cout << "*** OUTER ITERATIONS CONVERGED ***" << "\n\n";
+        //     break;
+        // }
 
         // Update nonlinear coefficients
         UpdateFaceVelocities( faceVelocities, mesh, fields, inputData );

@@ -488,12 +488,11 @@ void AddDiffusion( ArrayAllocator< TransportCoefficients, array3D > &velCoeffs,
     }
 
     // Constant terms
-    BoundaryPatches::ENUMDATA patch;
-    for (int p = 0; p != BoundaryPatches::count; p++) {
-        patch = static_cast<BoundaryPatches::ENUMDATA>(p);
+    EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA patch) {
 
         boundaryVel[patch] += boundaryVel[patch].constant( boundaryDiff[patch] );
-    }
+        
+    } );
 
 }
 
@@ -626,12 +625,17 @@ void SetFaceInterpolatedCoefficients( ArrayAllocator<CFD::TransportCoefficients,
         coeffs[east](i) *= mesh.cellLengthsInv[axis](i);
         coeffs[west](i) *= mesh.cellLengthsInv[axis](i); 
     }
+    boundaryConstants[ PositivePatch[axis] ] *= mesh.cellLengthsInv[axis]( mesh.nCells(axis)-1 );
+    boundaryConstants[ NegativePatch[axis] ] *= mesh.cellLengthsInv[axis]( 0 );
 
     // Divide pressure terms by density
     if (field == F::P) {
         coeffs[p   ] /= coeffs[p   ].constant( inputData.rho );
         coeffs[east] /= coeffs[west].constant( inputData.rho );
         coeffs[west] /= coeffs[west].constant( inputData.rho );
+
+        boundaryConstants[ PositivePatch[axis] ] /= inputData.rho;
+        boundaryConstants[ NegativePatch[axis] ] /= inputData.rho;
     }
 }
 
@@ -1055,9 +1059,6 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     // Continuity pressure terms (from momentum weighted interpolation)
     // SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
     
-    // Set source terms
-    /* NULL */
-
     // Add boundary constants to source terms
     AddMomentumBoundaryConstants(fvCoeffs.Umom);
     AddMomentumBoundaryConstants(fvCoeffs.Vmom);
@@ -1084,6 +1085,32 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     using TC = TransportCoefficients::ENUMDATA;
     using F = Fields::ENUMDATA;
 
+
+    // Zero the momentum coefficients and the boundary constants
+    // *** remove this when advection is added back in.
+    EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
+        if ( fvCoeffs.Umom.AU.get(tc) )
+            fvCoeffs.Umom.AU[tc].setZero();
+
+        if ( fvCoeffs.Vmom.AV.get(tc) )
+            fvCoeffs.Vmom.AV[tc].setZero();
+
+        if ( fvCoeffs.Wmom.AW.get(tc) )
+            fvCoeffs.Wmom.AW[tc].setZero();
+    } );
+
+    EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
+        fvCoeffs.Umom.boundaryP[bp] = 0;
+        fvCoeffs.Vmom.boundaryP[bp] = 0;
+        fvCoeffs.Wmom.boundaryP[bp] = 0;
+
+        fvCoeffs.Umom.boundaryVel[bp].setZero();
+        fvCoeffs.Vmom.boundaryVel[bp].setZero();
+        fvCoeffs.Wmom.boundaryVel[bp].setZero();
+    } );
+
+
+
     // // Set the advection terms
     // SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
     // SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
@@ -1103,7 +1130,7 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     fvCoeffs.Wmom.B.setZero();
     fvCoeffs.Cont.B.setZero();
 
-    // Add in the boundary constants
+    // Add in the boundary constants to the source terms
     AddMomentumBoundaryConstants(fvCoeffs.Umom);
     AddMomentumBoundaryConstants(fvCoeffs.Vmom);
     AddMomentumBoundaryConstants(fvCoeffs.Wmom);
