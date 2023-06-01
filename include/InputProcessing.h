@@ -13,7 +13,7 @@ namespace CFD
 struct InputData
 {
     // Constructor
-    Inputcd ..Data();
+    InputData();
 
     // Model
     floatType rho, nu;
