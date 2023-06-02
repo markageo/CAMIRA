@@ -13,6 +13,7 @@ target_link_libraries(model INTERFACE compiler_flags)
 target_link_libraries(libs PUBLIC compiler_flags)
 
 target_link_libraries(libs PUBLIC inputparser)
+target_link_libraries(libs PUBLIC fmt::fmt)
 target_link_libraries(model INTERFACE libs)
 target_link_libraries(model INTERFACE fmt::fmt)
 

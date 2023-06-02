@@ -49,8 +49,8 @@ endif()
 
 
 # include directories
-include_directories(include)
 include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings
+include_directories(include)
 
 # Add directories
 add_subdirectory(libraries/fmt)

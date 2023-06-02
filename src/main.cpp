@@ -4,22 +4,16 @@
     Mark George
 \*---------------------------------------------------------------------------*/
 
+
 #include "Types.h"
-#include "Utils.h"
 #include "InputProcessing.h"
 #include "FiniteVolume.h"
 #include "VTKWriter.h"
 #include "Solver.h"
-
+#include "Utils.h"
 #include <iostream>
 #include <fmt/core.h>
 
-#ifdef PROFILING
-#include "profiler/profiler.h"
-    namespace PROF {
-        profiler<perf_counter::clock<time_units::SECONDS>> prof;
-    }
-#endif
 
 int main(int argc, char const *argv[])
 {

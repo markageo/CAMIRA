@@ -291,7 +291,7 @@ class BlockSolver
             using enum Fields::ENUMDATA;
             using enum TransportCoefficients::ENUMDATA;
 
-            // Indexing variables to take care of staggering - TODO: these should be made member variables
+            // Indexing variables to take care of staggering - TODO: these should be made member variables, maybe
             static constexpr StaggerIndexing sU( U, Ustag );
             static constexpr StaggerIndexing sV( V, Vstag );
             static constexpr StaggerIndexing sW( W, Wstag );
@@ -304,6 +304,9 @@ class BlockSolver
             intType iV(i               ), jV(j + sV.iMcoupled), kV(k               ); // V momentum
             intType iW(i               ), jW(j               ), kW(k + sW.iMcoupled); // W momentum
 
+            TIC("Computation")
+            
+            TIC("U momentum off diagonal")
             // Precompute momentum RHS divided by AP coefficients
             // U momentum
             floatType bU = ( m_fvCoeffs.Umom.B(iU, jU, kU)
@@ -320,7 +323,9 @@ class BlockSolver
 
                            ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
 
+            TOC()
 
+            TIC("V momentum off diagonal")
             // V momentum 
             floatType bV = ( m_fvCoeffs.Vmom.B(iV, jV, kV)
 
@@ -336,7 +341,9 @@ class BlockSolver
 
                            ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
 
+            TOC()
 
+            TIC("W momentum off diagonal")
             // W momentum
             floatType bW = ( m_fvCoeffs.Wmom.B(iW, jW, kW)
 
@@ -351,9 +358,9 @@ class BlockSolver
                            - m_fvCoeffs.Wmom.AP[sW.cPright](kW) * m_fields[P]( G(iW  , jW  , kW+sW.iPright) )
 
                            ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+            TOC()
 
-
-
+            TIC("Continuity off diagonal")
             // Continuity for pressure
             floatType bP = m_fvCoeffs.Cont.B(i, j, k)
                             
@@ -379,16 +386,19 @@ class BlockSolver
                           - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields[P]( G(i-2, j  , k  ) )
                           - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields[P]( G(i  , j  , k+2) )
                           - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields[P]( G(i  , j  , k-2) );
+            TOC()
 
-
+            TIC("Constant K")
             // This only needs to be updated at linearisation
             floatType K = m_fvCoeffs.Cont.AP[p](i, j, k)
                         - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * m_fvCoeffs.Umom.AP[sU.cPcoupled](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
                         - m_fvCoeffs.Cont.AV[sV.cMcoupled](j) * m_fvCoeffs.Vmom.AP[sV.cPcoupled](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
                         - m_fvCoeffs.Cont.AW[sW.cMcoupled](k) * m_fvCoeffs.Wmom.AP[sW.cPcoupled](kW) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
             K  = 1.0f / K;
+            TOC()
 
 
+            TIC("Updates")
             // Update P from continuity
             m_fields[P]( G(i, j, k) ) = ( bP
                                         - m_fvCoeffs.Cont.AU[sU.cMcoupled](i) * bU
@@ -408,12 +418,14 @@ class BlockSolver
             // Update W from momentum
             m_fields[W]( G(iW, jW, kW) ) = bW 
                                          - m_fvCoeffs.Wmom.AP[sW.cPcoupled](kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+            TOC()
+
+            TOC()
 
         }
 
 
     private:
-
         ArrayAllocator<Fields, array3D> &m_fields;
         const FVCoefficients &m_fvCoeffs;
 };
@@ -452,60 +464,37 @@ class LineSolver
             using enum Axis::ENUMDATA;
             intType ni = m_fields[U].dimension(X) - 2*nGhost;
 
-            // Temporary for storing new block update
-            EnumVector<Fields, floatType> oldBlock;
-
-            // Residuals 
-            EnumVector<Fields, floatType> delta, residuals, residualsInitialInv;
-
             // Staggered indexing
-            EnumVector<Fields, intType> iS( {0, 0, 0, 0} ), 
-                                        jS( {j, j+CoeffIndex[Vstag], j, j} ), 
-                                        kS( {k, k, k+CoeffIndex[Wstag], k} );
-
-
-            // Lambda to update block in place, relax, and update residual
-            auto UpdateAndRelax = [&]<TC Ustag>(BlockSolver< Ustag, Vstag, Wstag > &blockSolver, intType i ) {
-
-                EnumFor<Fields>( [&] (Fields::ENUMDATA f) { iS[f] = i; } );      // Set iterating coefficient
-                iS[U] += CoeffIndex[Ustag];                                      // U momentum is staggered    
-
-                EnumFor<Fields>( [&] (Fields::ENUMDATA f) { oldBlock[f] = m_fields[f]( G(iS[f], jS[f], kS[f]) ); } );  // Set old block values
-
-                blockSolver.UpdateBlock(i, j, k);
-
-                EnumFor<Fields>( [&] (Fields::ENUMDATA f) 
-                { 
-                    auto &fieldBlock = m_fields[f]( G(iS[f], jS[f], kS[f]) );
-                    delta[f] = m_relaxation[f] * ( fieldBlock - oldBlock[f] );   // Relaxed change in solution      
-                    fieldBlock = oldBlock[f] + delta[f];                         // Apply relaxation
-                    residuals[f] += abs( delta[f] );                             // Add to residual count
-                } );
-            };
+            EnumFor<Fields>( [&] (Fields::ENUMDATA f) {
+                m_jS[f] = j; 
+                m_kS[f] = k;
+            } );
+            m_kS[V] += CoeffIndex[Vstag];
+            m_kS[W] += CoeffIndex[Wstag];
 
 
             // Solver loop
             intType nIterations = 0;
             while ( nIterations < m_maxIterations ) 
             {
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] = 0.0f; } );
+                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] = 0.0f; } );
 
                 // Update in place and relax
                 for (intType i = 0; i != ni-1; i++) {   // Forward sweep
-                    UpdateAndRelax( m_blockSolverEast, i );
+                    UpdateAndRelax( m_blockSolverEast, i, j, k );
                 }
 
                 for (intType i = ni-1; i != 0; i--) {   // Backward sweep
-                    UpdateAndRelax( m_blockSolverWest, i );
+                    UpdateAndRelax( m_blockSolverWest, i, j, k );
                 }
 
                 // Normalise residuals
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] /= static_cast<floatType>( ni ); } );
-                RelativeResidual( residuals, residualsInitialInv, nIterations );
+                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] /= static_cast<floatType>( ni ); } );
+                RelativeResidual( m_residuals, m_residualsInitialInv, nIterations );
                 nIterations++;
 
                 // Check residual
-                if ( MetResidualTolerence( residuals, m_maxResiduals ) ) {
+                if ( MetResidualTolerence( m_residuals, m_maxResiduals ) ) {
                     break;
                 }
 
@@ -522,6 +511,33 @@ class LineSolver
 
         BlockSolver< TC::e, Vstag, Wstag > m_blockSolverEast;
         BlockSolver< TC::w, Vstag, Wstag > m_blockSolverWest; 
+
+        EnumVector<Fields, floatType> m_oldBlock, m_delta, m_residuals, m_residualsInitialInv;
+        EnumVector<Fields, intType> m_iS, m_jS, m_kS;
+
+        template< TC Ustag >
+        void UpdateAndRelax( BlockSolver< Ustag, Vstag, Wstag > &blockSolver, intType i, intType j, intType k )
+        {
+            using enum TransportCoefficients::ENUMDATA;
+            using enum Fields::ENUMDATA;
+            using enum Axis::ENUMDATA;
+            
+            EnumFor<Fields>( [&] (Fields::ENUMDATA f) { m_iS[f] = i; } );      // Set iterating coefficient
+            m_iS[U] += CoeffIndex[Ustag];                                      // U momentum is staggered    
+
+            EnumFor<Fields>( [&] (Fields::ENUMDATA f) { m_oldBlock[f] = m_fields[f]( G(m_iS[f], m_jS[f], m_kS[f]) ); } );  // Set old block values
+
+            blockSolver.UpdateBlock(i, j, k);
+
+            EnumFor<Fields>( [&] (Fields::ENUMDATA f) 
+            { 
+                auto &fieldBlock = m_fields[f]( G(m_iS[f], m_jS[f], m_kS[f]) );
+                m_delta[f] = m_relaxation[f] * ( fieldBlock - m_oldBlock[f] );   // Relaxed change in solution      
+                fieldBlock = m_oldBlock[f] + m_delta[f];                         // Apply relaxation
+                m_residuals[f] += abs( m_delta[f] );                             // Add to residual count
+            } );
+        }
+
 };
 
 
@@ -532,6 +548,8 @@ template< TransportCoefficients::ENUMDATA Wstag >
 class PlaneSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
+    using F = Fields::ENUMDATA;
+    using A = Axis::ENUMDATA;
 
     // Staggering must be valid
     static_assert( (Wstag == TC::t) || (Wstag == TC::b) || (Wstag == TC::p), "Invalid W momentum staggering" );
@@ -547,7 +565,10 @@ class PlaneSolver
         m_maxResiduals( planeSolverSettings.maxResiduals ),
         m_relaxation( planeSolverSettings.relaxation ),
         m_lineSolverNorth( fields, fvCoeffs, lineSolverSettings ),
-        m_lineSolverSouth( fields, fvCoeffs, lineSolverSettings )
+        m_lineSolverSouth( fields, fvCoeffs, lineSolverSettings ),
+        
+        m_oldLine( array1D( m_fields[F::U].dimension(A::X) ) ),
+        m_delta( array1D( m_fields[F::U].dimension(A::X) ) )
         {}
 
 
@@ -559,57 +580,31 @@ class PlaneSolver
             intType ni = m_fields[U].dimension(X) - 2*nGhost;
             intType nj = m_fields[U].dimension(Y) - 2*nGhost;
 
-            // Old plane solution
-            EnumVector<Fields, array1D> oldLine( array1D( m_fields[U].dimension(X) ) );
-
-            // Residuals
-            EnumVector<Fields, floatType> residuals, residualsInitialInv;
-            EnumVector<Fields, array1D> delta( array1D( m_fields[U].dimension(X) ) );
-
             // Staggered indexing
-            EnumVector<Fields, intType> jS( {0, 0, 0, 0} ), 
-                                        kS( {k, k, k+CoeffIndex[Wstag], k} );
-
-
-            // Lambda to update line in place, relax, and update residual
-            auto UpdateAndRelax = [&]<TC Vstag>( LineSolver< Vstag, Wstag > &lineSolver, intType j) {
-
-                EnumFor<Fields>( [&] (Fields::ENUMDATA f) { jS[f] = j; } );      // Set iterating coefficient
-                jS[V] += CoeffIndex[Vstag];                                     // V momentum is staggered   
-
-                EnumFor<Fields>( [&] (Fields::ENUMDATA f) { oldLine[f] = m_fields[f].chip( G(kS[f]), Z).chip( G(jS[f]), Y); } );      // Set old line
-
-                lineSolver.SolveLine(j, k);
-
-                EnumFor<Fields> ( [&] (Fields::ENUMDATA f) {
-                    auto fieldLine = m_fields[f].chip( G(kS[f]), Z).chip( G(jS[f]), Y);
-                    delta[f] = delta[f].constant( m_relaxation[f] ) * ( fieldLine - oldLine[f] );   // Relaxed change in line
-                    fieldLine = oldLine[f] + delta[f];                                              // Relax
-                    residuals[f] += static_cast<array0D>( delta[f].abs().sum() )(0);                                                // Add to residual count
-                } );
-            };
+            EnumFor<Fields>( [&] (Fields::ENUMDATA f) { m_kS[f] = k; } );
+            m_kS[W] += CoeffIndex[Wstag];
 
             // Solver loop
             intType nIterations = 0;
             while ( nIterations < m_maxIterations ) 
             {
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] = 0.0f; } );
+                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] = 0.0f; } );
 
                 for (intType j = 0; j != nj-1; j++) {   // Forward sweep
-                    UpdateAndRelax( m_lineSolverNorth, j );
+                    UpdateAndRelax( m_lineSolverNorth, j, k );
                 }
 
                 for (intType j = nj-1; j != 0; j--) {   // Backward sweep
-                    UpdateAndRelax( m_lineSolverSouth, j );
+                    UpdateAndRelax( m_lineSolverSouth, j, k );
                 }
 
                 // Normalise residuals
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] /= static_cast<floatType>( ni*nj ); } );
-                RelativeResidual( residuals, residualsInitialInv, nIterations );
+                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] /= static_cast<floatType>( ni*nj ); } );
+                RelativeResidual( m_residuals, m_residualsInitialInv, nIterations );
                 nIterations++;
 
                 // Check residual tolerence
-                if ( MetResidualTolerence( residuals, m_maxResiduals ) ) {
+                if ( MetResidualTolerence( m_residuals, m_maxResiduals ) ) {
                     break;
                 }
             }
@@ -625,6 +620,33 @@ class PlaneSolver
 
         LineSolver< TC::n, Wstag > m_lineSolverNorth;
         LineSolver< TC::s, Wstag > m_lineSolverSouth;
+
+        EnumVector<Fields, array1D> m_oldLine, m_delta;
+        EnumVector<Fields, floatType> m_residuals, m_residualsInitialInv;
+        EnumVector<Fields, intType> m_jS, m_kS;
+
+        template< TC Vstag >
+        void UpdateAndRelax( LineSolver< Vstag, Wstag > &lineSolver, intType j, intType k )
+        {
+            using enum Fields::ENUMDATA;
+            using enum Axis::ENUMDATA;
+            using enum TransportCoefficients::ENUMDATA;
+
+            EnumFor<Fields>( [&] (Fields::ENUMDATA f) { m_jS[f] = j; } );      // Set iterating coefficient
+            m_jS[V] += CoeffIndex[Vstag];                                     // V momentum is staggered   
+
+            EnumFor<Fields>( [&] (Fields::ENUMDATA f) { m_oldLine[f] = m_fields[f].chip( G(m_kS[f]), Z).chip( G(m_jS[f]), Y); } );      // Set old line
+
+            lineSolver.SolveLine(j, k);
+
+            EnumFor<Fields> ( [&] (Fields::ENUMDATA f) {
+                auto fieldLine = m_fields[f].chip( G(m_kS[f]), Z).chip( G(m_jS[f]), Y);
+                m_delta[f] = m_delta[f].constant( m_relaxation[f] ) * ( fieldLine - m_oldLine[f] );   // Relaxed change in line
+                fieldLine = m_oldLine[f] + m_delta[f];                                                // Relax
+                m_residuals[f] += static_cast<array0D>( m_delta[f].abs().sum() )(0);                  // Add to residual count
+            } );
+
+        }
 };
 
 
@@ -634,6 +656,8 @@ class PlaneSolver
 class LinearSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
+    using F = Fields::ENUMDATA;
+    using A = Axis::ENUMDATA;
 
     public:
 
@@ -647,7 +671,10 @@ class LinearSolver
         m_maxResiduals( linearSolverSettings.maxResiduals ),
         m_relaxation( linearSolverSettings.relaxation ),
         m_planeSolverTop( fields, fvCoeffs, planeSolverSettings, lineSolverSettings ),
-        m_planeSolverBottom( fields, fvCoeffs, planeSolverSettings, lineSolverSettings )
+        m_planeSolverBottom( fields, fvCoeffs, planeSolverSettings, lineSolverSettings ),
+
+        m_delta( array2D( m_fields[F::U].dimension(A::X), m_fields[F::U].dimension(A::Y) ) ),
+        m_oldPlane( array2D( m_fields[F::U].dimension(A::X), m_fields[F::U].dimension(A::Y) ) )
         {}
 
 
@@ -656,41 +683,15 @@ class LinearSolver
             using enum Fields::ENUMDATA;
             using enum Axis::ENUMDATA;
             using enum TransportCoefficients::ENUMDATA;
+            
             intType ni = m_fields[U].dimension(X) - 2*nGhost;
             intType nj = m_fields[U].dimension(Y) - 2*nGhost;
             intType nk = m_fields[U].dimension(Z) - 2*nGhost;
 
-            EnumVector<Fields, array2D> delta( array2D( m_fields[U].dimension(X), m_fields[U].dimension(Y) ) ),
-                                        oldPlane( array2D( m_fields[U].dimension(X), m_fields[U].dimension(Y) ) );
-
-            EnumVector<Fields, floatType> residuals, residualsInitialInv;
-
-            EnumVector<Fields, intType> kS( {0, 0, 0, 0} );
-
-
-            // Lambda to update plane in place, relax, and update residual
-            auto UpdateAndRelax = [&]<TC Wstag>( PlaneSolver< Wstag > &planeSolver, intType k) {
-                
-                EnumFor<Fields>( [&] (Fields::ENUMDATA f) { kS[f] = k; } );       // Set iterating coefficient
-                kS[W] += CoeffIndex[Wstag];                                       // W momentum is staggered
-
-                EnumFor<Fields>( [&] (Fields::ENUMDATA f) { oldPlane[f] = m_fields[f].chip( G(kS[f]), Z); } );    // Set old plane
-
-                planeSolver.SolvePlane(k);
-
-                EnumFor<Fields> ( [&] (Fields::ENUMDATA f) {
-                    auto fieldPlane = m_fields[f].chip( G(kS[f]), Z);
-                    delta[f] = delta[f].constant( m_relaxation[f] ) * ( fieldPlane - oldPlane[f] );     // Relaxed change in plane
-                    fieldPlane = oldPlane[f] + delta[f];                                              // Relax
-                    residuals[f] += static_cast<array0D>( delta[f].abs().sum() )(0);                  // Add to residual count
-                } );
-            };
-
-
             intType nIterations = 0;
             while ( nIterations < m_maxIterations ) {
             
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] = 0.0f; } );
+                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] = 0.0f; } );
 
                 // Update plane
                 for (intType k = 0; k != nk-1; k++) {   // Forward sweep
@@ -702,12 +703,12 @@ class LinearSolver
                 }
 
                 // Normalise residuals
-                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] /= static_cast<floatType>( ni*nj*nk ); } );
-                RelativeResidual( residuals, residualsInitialInv, nIterations );
+                EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] /= static_cast<floatType>( ni*nj*nk ); } );
+                RelativeResidual( m_residuals, m_residualsInitialInv, nIterations );
                 nIterations++;
 
                 // Check residual tolerence
-                if ( MetResidualTolerence( residuals, m_maxResiduals ) ) {
+                if ( MetResidualTolerence( m_residuals, m_maxResiduals ) ) {
                     std::cout << "*** INNER ITERATIONS CONVERGED ***" << "\n\n";
                     break;
                 }
@@ -724,6 +725,33 @@ class LinearSolver
 
         PlaneSolver< TC::t > m_planeSolverTop;
         PlaneSolver< TC::b > m_planeSolverBottom;
+
+        EnumVector<Fields, array2D> m_delta, m_oldPlane;
+        EnumVector<Fields, floatType> m_residuals, m_residualsInitialInv;
+        EnumVector<Fields, intType> m_kS;
+
+
+        template< TC Wstag >
+        void UpdateAndRelax( PlaneSolver< Wstag > &planeSolver, intType k )
+        {
+            using enum Fields::ENUMDATA;
+            using enum TransportCoefficients::ENUMDATA;
+            using enum Axis::ENUMDATA;
+
+            EnumFor<Fields>( [&] (Fields::ENUMDATA f) {m_kS[f] = k; } );       // Set iterating coefficient
+            m_kS[W] += CoeffIndex[Wstag];                                       // W momentum is staggered
+
+            EnumFor<Fields>( [&] (Fields::ENUMDATA f) { m_oldPlane[f] = m_fields[f].chip( G(m_kS[f]), Z); } );    // Set old plane
+
+            planeSolver.SolvePlane(k);
+
+            EnumFor<Fields> ( [&, this] (Fields::ENUMDATA f) {
+                auto fieldPlane = m_fields[f].chip( G(m_kS[f]), Z);
+                m_delta[f] = m_delta[f].constant( m_relaxation[f] ) * ( fieldPlane - m_oldPlane[f] );     // Relaxed change in plane
+                fieldPlane = m_oldPlane[f] + m_delta[f];                                                  // Relax
+                m_residuals[f] += static_cast<array0D>( m_delta[f].abs().sum() )(0);                      // Add to residual count
+            } );
+        }
 
 };
 
@@ -749,7 +777,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
     ArrayAllocator<Fields, array3D> faceVelocities = InitialiseFaceVelocities( mesh, fields, inputData );
     ArrayAllocator<Fields, array3D> fieldsOld( fields );
     FVCoefficients fvCoeffs = InitialiseFVCoefficients( mesh, fields, faceVelocities, inputData );
-    
+ 
     intType nOuterIterations;
     EnumVector<Fields, floatType> residualsOuter, residualsOuterInitialInv;
     std::vector< EnumVector<Fields, floatType> > residualsHistory;
@@ -782,10 +810,10 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
                                                              << "\n\n";
 
         // Check residual tolerence
-        // if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
-        //     std::cout << "*** OUTER ITERATIONS CONVERGED ***" << "\n\n";
-        //     break;
-        // }
+        if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
+            std::cout << "*** OUTER ITERATIONS CONVERGED ***" << "\n\n";
+            break;
+        }
 
         // Update nonlinear coefficients
         UpdateFaceVelocities( faceVelocities, mesh, fields, inputData );
