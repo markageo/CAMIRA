@@ -16,6 +16,11 @@
 #       define TIC(name) PROF::prof.tic(name);
 #       define TOC(name) PROF::prof.toc(name);
 #   endif
+
+    namespace PROF {
+        inline profiler<perf_counter::clock<time_units::SECONDS>> prof;
+    }
+
 #else
 #   ifndef TIC
 #       define TIC(name)
