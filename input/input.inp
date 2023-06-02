@@ -7,13 +7,13 @@ Model {
 
 Mesh {
 
-    domain = (0.2, 0.1, 0.1)
+    domain = (0.2, 0.1, 0.5)
 
     Grid x {
         Segment {
             bounds     = (0, 0.2)
             nCells     = 50
-            biasFactor = 3
+            biasFactor = 1
         }
     }
 
@@ -29,15 +29,15 @@ Mesh {
 
     Grid z {
         Segment {
-            bounds     = (0, 0.05)
-            nCells     = 25
-            biasFactor = 5
+            bounds     = (0, 0.25)
+            nCells     = 10
+            biasFactor = 3
         }
 
         Segment {
-            bounds     = (0.05, 0.1)
-            nCells     = 25
-            biasFactor = -5
+            bounds     = (0.25, 0.5)
+            nCells     = 10
+            biasFactor = -3
         }
     }
 }
@@ -112,7 +112,7 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 500
+        maxOuterIterations = 10
         maxOuterResiduals = 1e-5
     }
     
@@ -133,7 +133,7 @@ Solver {
             momentumRelaxation = (1, 1, 1)
             pressureRelaxation = 1
 
-            planeSweepDirection = -x
+            planeSweepDirection = +z
 
 
             LineSolver {
@@ -144,7 +144,7 @@ Solver {
                 momentumRelaxation = (1, 1, 1)
                 pressureRelaxation = 1
 
-                lineSweepDirection = +z
+                lineSweepDirection = +y
             }
         }
     }
