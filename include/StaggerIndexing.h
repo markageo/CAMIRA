@@ -22,6 +22,89 @@ class StaggerIndexing
                    ( field == F::W && staggeredCoeff == TC::t ) ||
                    ( field == F::W && staggeredCoeff == TC::b ) ||
                    ( field == F::W && staggeredCoeff == TC::p )  );
+    
+    static constexpr TC OppositeCoeff(TC coeff)
+    {
+        using enum TransportCoefficients::ENUMDATA;
+
+        if      ( coeff == p )
+            return p;
+        else if ( coeff == n )
+            return s;
+        else if ( coeff == s )
+            return n;
+        else if ( coeff == e)
+            return w;
+        else if ( coeff == w )
+            return e;
+        else if ( coeff == t )
+            return b;
+        else if ( coeff == b )
+            return t;   
+        else    
+            return p;
+    }
+
+
+    static constexpr TC LeftCoeff(TC coeff)
+    {
+        using enum TransportCoefficients::ENUMDATA;
+        using enum Fields::ENUMDATA;
+
+        if     ( coeff == p ) { 
+            if      ( field == U )
+                return w;
+            else if ( field == V)
+                return s;
+            else if ( field == W )
+                return b;
+        } 
+        else if ( coeff == n )
+            return s;
+        else if ( coeff == s )
+            return p;
+        else if ( coeff == e )
+            return w;
+        else if ( coeff == w )
+            return p;
+        else if ( coeff == t )
+            return b;
+        else if ( coeff == b )
+            return p;
+        else 
+            return p;
+    }
+
+
+    static constexpr TC RightCoeff(TC coeff)
+    {
+        using enum TransportCoefficients::ENUMDATA;
+        using enum Fields::ENUMDATA;
+
+        if     ( coeff == p ) { 
+            if      ( field == U )
+                return e;
+            else if ( field == V)
+                return n;
+            else if ( field == W )
+                return t;
+        } 
+        else if ( coeff == n )
+            return p;
+        else if ( coeff == s )
+            return n;
+        else if ( coeff == e )
+            return p;
+        else if ( coeff == w )
+            return e;
+        else if ( coeff == t )
+            return p;
+        else if ( coeff == b )
+            return t;
+        else 
+            return p;
+    }
+
 
     public:
 
@@ -49,85 +132,6 @@ class StaggerIndexing
                                      iLeft    = CoeffIndex[ cLeft ], 
                                      iRight   = CoeffIndex[ cRight ];
         };
-
-        
-    private:
-
-        static consteval TC OppositeCoeff(TC coeff)
-        {
-            using enum TransportCoefficients::ENUMDATA;
-
-            if      ( coeff == p )
-                return p;
-            else if ( coeff == n )
-                return s;
-            else if ( coeff == s )
-                return n;
-            else if ( coeff == e)
-                return w;
-            else if ( coeff == w )
-                return e;
-            else if ( coeff == t )
-                return b;
-            else if ( coeff == b )
-                return t;
-        }
-
-
-        static consteval TC LeftCoeff(TC coeff)
-        {
-            using enum TransportCoefficients::ENUMDATA;
-            using enum Fields::ENUMDATA;
-
-            if     ( coeff == p ) { 
-                if      ( field == U )
-                    return w;
-                else if ( field == V)
-                    return s;
-                else if ( field == W )
-                    return b;
-            } 
-            else if ( coeff == n )
-                return s;
-            else if ( coeff == s )
-                return p;
-            else if ( coeff == e )
-                return w;
-            else if ( coeff == w )
-                return p;
-            else if ( coeff == t )
-                return b;
-            else if ( coeff == b )
-                return p;
-        }
-
-
-        static consteval TC RightCoeff(TC coeff)
-        {
-            using enum TransportCoefficients::ENUMDATA;
-            using enum Fields::ENUMDATA;
-
-            if     ( coeff == p ) { 
-                if      ( field == U )
-                    return e;
-                else if ( field == V)
-                    return n;
-                else if ( field == W )
-                    return t;
-            } 
-            else if ( coeff == n )
-                return p;
-            else if ( coeff == s )
-                return n;
-            else if ( coeff == e )
-                return p;
-            else if ( coeff == w )
-                return e;
-            else if ( coeff == t )
-                return p;
-            else if ( coeff == b )
-                return t;
-        }
 
 };
 
