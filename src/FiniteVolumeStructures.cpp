@@ -336,7 +336,8 @@ FVCoefficients::FVCoefficients(const indexVector3 &dims) :
     Umom(F::U, dims),
     Vmom(F::V, dims),
     Wmom(F::W, dims),
-    Cont(dims)
+    Cont(dims),
+    nCells( dims )
 {};
 
 
