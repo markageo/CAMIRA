@@ -84,14 +84,14 @@ class BlockSolver
     static_assert( (Wstag == TC::t) || (Wstag == TC::b) || (Wstag == TC::p), "Invalid W momentum staggering" );
 
     // Aliases for the staggering offsets
-    using sCU = StaggerIndexing< F::U, Ustag >::ContinuityVelocity;
-    using sUP = StaggerIndexing< F::U, Ustag >::MomentumPressure;
+    using sCU = typename StaggerIndexing< F::U, Ustag >::ContinuityVelocity;
+    using sUP = typename StaggerIndexing< F::U, Ustag >::MomentumPressure;
 
-    using sCV = StaggerIndexing< F::V, Vstag >::ContinuityVelocity;
-    using sVP = StaggerIndexing< F::V, Vstag >::MomentumPressure;
+    using sCV = typename StaggerIndexing< F::V, Vstag >::ContinuityVelocity;
+    using sVP = typename StaggerIndexing< F::V, Vstag >::MomentumPressure;
 
-    using sCW = StaggerIndexing< F::W, Wstag >::ContinuityVelocity;
-    using sWP = StaggerIndexing< F::W, Wstag >::MomentumPressure;
+    using sCW = typename StaggerIndexing< F::W, Wstag >::ContinuityVelocity;
+    using sWP = typename StaggerIndexing< F::W, Wstag >::MomentumPressure;
 
     public:
 
@@ -101,7 +101,7 @@ class BlockSolver
             m_ni( fvCoeffs.nCells(0) ), 
             m_nj( fvCoeffs.nCells(1) ), 
             m_nk( fvCoeffs.nCells(2) ),
-            m_K( m_ni, m_nj, m_nk )
+            m_K( array3D(m_ni, m_nj, m_nk).setZero() )
         {
             UpdateGlobalConstants();
         };
@@ -202,11 +202,6 @@ class BlockSolver
                           - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields[P]( G(i  , j  , k-2) );
             TOC()
 
-            floatType K = m_fvCoeffs.Cont.AP[p](i, j, k)
-                        - m_fvCoeffs.Cont.AU[sCU::cCoupled](i) * m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
-                        - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
-                        - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
-            K = 1.0f / K;
 
             TIC("Pressure update")
             // Update P from continuity
@@ -214,7 +209,7 @@ class BlockSolver
                                         - m_fvCoeffs.Cont.AU[sCU::cCoupled](i) * bU
                                         - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * bV
                                         - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * bW
-                                        ) * K;
+                                        ) * m_K(i, j, k);
             TOC()
 
             TIC("U update")
@@ -243,40 +238,51 @@ class BlockSolver
         // Constants which are global to the linear solver
         void UpdateGlobalConstants()
         {
-            // using enum TransportCoefficients::ENUMDATA;
+            using enum TransportCoefficients::ENUMDATA;
 
-            // // Staggered indexing for fields
-            // intType iU, jU, kU,
-            //         iV, jV, kV,
-            //         iW, jW, kW;
+            // Staggered indexing for fields
+            intType iU, jU, kU,
+                    iV, jV, kV,
+                    iW, jW, kW;
 
-            // for ( intType k = 0; k != m_nk; k++ ) {
 
-            //     kU = k;
-            //     kV = k;
-            //     kW = k + sCW::iCoupled;
+            // Starting and ending indices, since K cannot be calculated on some boundaries due to the staggering
+            intType iStart  = 1 + sCU::iLeft,
+                    iLength = m_ni - 1 + sCU::iRight,
 
-            //     for ( intType j = 0; j != m_nj; j++ ) {
+                    jStart  = 1 + sCV::iLeft,
+                    jLength = m_nj - 1 + sCV::iRight,
 
-            //         jU = j;
-            //         jV = j + sCV::iCoupled;
-            //         jW = j;
+                    kStart = 1 + sCW::iLeft,
+                    kLength = m_nk - 1 + sCW::iRight;
 
-            //         for ( intType i = 0; i != m_ni; i++ ) {
+            for ( intType k = kStart; k != kLength; k++ ) {
 
-            //             iU = i + sCU::iCoupled;
-            //             iV = i;
-            //             iW = i;
+                kU = k;
+                kV = k;
+                kW = k + sCW::iCoupled;
 
-            //             m_K(i, j, k) = m_fvCoeffs.Cont.AP[p](i, j, k)
-            //                          - m_fvCoeffs.Cont.AU[sCU::cCoupled](i) * m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
-            //                          - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
-            //                          - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
-            //             m_K(i, j, k)  = 1.0f / m_K(i, j, k);
+                for ( intType j = jStart; j != jLength; j++ ) {
 
-            //         }
-            //     }
-            // }
+                    jU = j;
+                    jV = j + sCV::iCoupled;
+                    jW = j;
+
+                    for ( intType i = iStart; i != iLength; i++ ) {
+
+                        iU = i + sCU::iCoupled;
+                        iV = i;
+                        iW = i;
+
+                        m_K(i, j, k) = m_fvCoeffs.Cont.AP[p](i, j, k)
+                                     - m_fvCoeffs.Cont.AU[sCU::cCoupled](i) * m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
+                                     - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
+                                     - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+                        m_K(i, j, k)  = 1.0f / m_K(i, j, k);
+
+                    }
+                }
+            }
 
         }
 

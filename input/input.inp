@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 0.2)
-            nCells     = 20
+            nCells     = 100
             biasFactor = 1
         }
     }
@@ -21,7 +21,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 0.1)
-            nCells     = 10
+            nCells     = 100
             biasFactor = 1
         }
     }
@@ -30,8 +30,8 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.3)
-            nCells     = 30
-            biasFactor = -2
+            nCells     = 100
+            biasFactor = 1
         }
     }
 }
@@ -121,7 +121,7 @@ Solver {
 
         PlaneSolver {
             type = SUGS
-            maxIterations = 3
+            maxIterations = 10
             maxResiduals = 1e-3
 
             momentumRelaxation = (1, 1, 1)
