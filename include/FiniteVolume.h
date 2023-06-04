@@ -61,6 +61,7 @@ struct FVCoefficients
 
     MomentumEquation Umom, Vmom, Wmom;
     ContinuityEquation Cont;
+    indexVector3 nCells;
 };
 
 
