@@ -83,7 +83,7 @@ class BlockSolver
     static_assert( (Vstag == TC::n) || (Vstag == TC::s) || (Vstag == TC::p), "Invalid V momentum staggering" );
     static_assert( (Wstag == TC::t) || (Wstag == TC::b) || (Wstag == TC::p), "Invalid W momentum staggering" );
 
-    // Typedef the staggering offset
+    // Aliases for the staggering offsets
     using sCU = StaggerIndexing< F::U, Ustag >::ContinuityVelocity;
     using sUP = StaggerIndexing< F::U, Ustag >::MomentumPressure;
 
@@ -100,8 +100,11 @@ class BlockSolver
             m_fvCoeffs( fvCoeffs ),
             m_ni( fvCoeffs.nCells(0) ), 
             m_nj( fvCoeffs.nCells(1) ), 
-            m_nk( fvCoeffs.nCells(2) )
-        {};
+            m_nk( fvCoeffs.nCells(2) ),
+            m_K( m_ni, m_nj, m_nk )
+        {
+            UpdateGlobalConstants();
+        };
 
 
         // Core function which updates the local coupled system. Templated by staggering direction.
@@ -199,13 +202,19 @@ class BlockSolver
                           - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields[P]( G(i  , j  , k-2) );
             TOC()
 
+            floatType K = m_fvCoeffs.Cont.AP[p](i, j, k)
+                        - m_fvCoeffs.Cont.AU[sCU::cCoupled](i) * m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
+                        - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
+                        - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+            K = 1.0f / K;
+
             TIC("Pressure update")
             // Update P from continuity
             m_fields[P]( G(i, j, k) ) = ( bP
                                         - m_fvCoeffs.Cont.AU[sCU::cCoupled](i) * bU
                                         - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * bV
                                         - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * bW
-                                        ) * m_K(i, j, k);
+                                        ) * K;
             TOC()
 
             TIC("U update")
@@ -234,40 +243,40 @@ class BlockSolver
         // Constants which are global to the linear solver
         void UpdateGlobalConstants()
         {
-            using enum TransportCoefficients::ENUMDATA;
+            // using enum TransportCoefficients::ENUMDATA;
 
-            // Staggered indexing for fields
-            intType iU, jU, kU,
-                    iV, jV, kV,
-                    iW, jW, kW;
+            // // Staggered indexing for fields
+            // intType iU, jU, kU,
+            //         iV, jV, kV,
+            //         iW, jW, kW;
 
-            for ( intType k = 0; k != m_nk; k++ ) {
+            // for ( intType k = 0; k != m_nk; k++ ) {
 
-                kU = k;
-                kV = k;
-                kW = k + sCW::iCoupled;
+            //     kU = k;
+            //     kV = k;
+            //     kW = k + sCW::iCoupled;
 
-                for ( intType j = 0; j != m_nj; j++ ) {
+            //     for ( intType j = 0; j != m_nj; j++ ) {
 
-                    jU = j;
-                    jV = j + sCV::iCoupled;
-                    jW = j;
+            //         jU = j;
+            //         jV = j + sCV::iCoupled;
+            //         jW = j;
 
-                    for ( intType i = 0; i != m_ni; i++ ) {
+            //         for ( intType i = 0; i != m_ni; i++ ) {
 
-                        iU = i + sCU::iCoupled;
-                        iV = i;
-                        iW = i;
+            //             iU = i + sCU::iCoupled;
+            //             iV = i;
+            //             iW = i;
 
-                        m_K(i, j, k) = m_fvCoeffs.Cont.AP[p](i, j, k)
-                                     - m_fvCoeffs.Cont.AU[sCU::cCoupled](i) * m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
-                                     - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
-                                     - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
-                        m_K(i, j, k)  = 1.0f / m_K(i, j, k);
+            //             m_K(i, j, k) = m_fvCoeffs.Cont.AP[p](i, j, k)
+            //                          - m_fvCoeffs.Cont.AU[sCU::cCoupled](i) * m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU)
+            //                          - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV)
+            //                          - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+            //             m_K(i, j, k)  = 1.0f / m_K(i, j, k);
 
-                    }
-                }
-            }
+            //         }
+            //     }
+            // }
 
         }
 
@@ -504,8 +513,9 @@ class PlaneSolver
 
             EnumFor<Fields>( [&] (Fields::ENUMDATA f) { m_oldLine[f] = m_fields[f].chip( G(m_kS[f]), Z).chip( G(m_jS[f]), Y); } );      // Set old line
 
+            
             lineSolver.SolveLine(j, k);
-
+            
             EnumFor<Fields> ( [&] (Fields::ENUMDATA f) {
                 auto fieldLine = m_fields[f].chip( G(m_kS[f]), Z).chip( G(m_jS[f]), Y);
                 m_delta[f] = m_delta[f].constant( m_relaxation[f] ) * ( fieldLine - m_oldLine[f] );   // Relaxed change in line
@@ -540,8 +550,8 @@ class LinearSolver
         m_planeSolverTop( fields, fvCoeffs, planeSolverSettings, lineSolverSettings ),
         m_planeSolverBottom( fields, fvCoeffs, planeSolverSettings, lineSolverSettings ),
 
-        m_delta( array2D( fvCoeffs.nCells(A::X), fvCoeffs.nCells(A::Y) ) ),
-        m_oldPlane( array2D( fvCoeffs.nCells(A::X), fvCoeffs.nCells(A::Y) ) ),
+        m_delta( array2D( m_fields[F::U].dimension(A::X), m_fields[F::U].dimension(A::Y) ) ),
+        m_oldPlane( array2D( m_fields[F::U].dimension(A::X), m_fields[F::U].dimension(A::Y) ) ),
 
         m_ni( fvCoeffs.nCells(A::X) ),
         m_nj( fvCoeffs.nCells(A::Y) ),
@@ -557,7 +567,7 @@ class LinearSolver
             
             intType nIterations = 0;
             while ( nIterations < m_maxIterations ) {
-            
+                
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] = 0.0f; } );
 
                 // Update plane
@@ -579,6 +589,8 @@ class LinearSolver
                     std::cout << "*** INNER ITERATIONS CONVERGED ***" << "\n\n";
                     break;
                 }
+
+                
             }
 
         }
@@ -622,7 +634,7 @@ class LinearSolver
 
             planeSolver.SolvePlane(k);
 
-            EnumFor<Fields> ( [&, this] (Fields::ENUMDATA f) {
+            EnumFor<Fields> ( [&] (Fields::ENUMDATA f) {
                 auto fieldPlane = m_fields[f].chip( G(m_kS[f]), Z);
                 m_delta[f] = m_delta[f].constant( m_relaxation[f] ) * ( fieldPlane - m_oldPlane[f] );     // Relaxed change in plane
                 fieldPlane = m_oldPlane[f] + m_delta[f];                                                  // Relax
@@ -668,7 +680,6 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
     nOuterIterations = 0;
     while ( nOuterIterations < maxOuterIterations ) 
     {
-
         // Solve linearised equations    
         linearSolver.Solve();
 
@@ -697,7 +708,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         UpdateFaceVelocities( faceVelocities, mesh, fields, inputData );
         UpdateFVCoefficients( fvCoeffs, mesh, fields, faceVelocities, inputData );
         linearSolver.UpdateState();
-
+        
     }
 
 
