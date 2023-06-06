@@ -124,7 +124,7 @@ Solver {
 
         PlaneSolver {
             type = SUGS
-            maxIterations = 5
+            maxIterations = 1
             maxResiduals = 1e-2
 
             momentumRelaxation = (1, 1, 1)

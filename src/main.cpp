@@ -21,11 +21,12 @@ int main(int argc, char const *argv[])
                                          Input Processing
     \*-------------------------------------------------------------------------------------*/
 
-    CFD::InputData userInputData = CFD::InputDataFromCommandLine(argc, argv);
-    CFD::InputData inputData = CFD::TransformUserInputData( userInputData );
+    CFD::InputData inputData = CFD::InputDataFromCommandLine(argc, argv);
+    CFD::AxisTransformationMap axisTransformation = CFD::TransformUserInputData( inputData );
+
 
     /*-------------------------------------------------------------------------------------*\
-                                           Solve
+                                              Solve
     \*-------------------------------------------------------------------------------------*/
 
     using F = CFD::Fields::ENUMDATA;
@@ -42,6 +43,7 @@ int main(int argc, char const *argv[])
     CFD::SweepSolve(fields, mesh, inputData);
     TOC();
 
+
     /*-------------------------------------------------------------------------------------*\
                                          Post-Processing
     \*-------------------------------------------------------------------------------------*/
@@ -49,11 +51,12 @@ int main(int argc, char const *argv[])
     using AX = CFD::Axis::ENUMDATA;
 
     // Undo the boundary condition transformation
-    CFD::TransformToUserCoordinates(mesh, fields, inputData.axisTransformation);
+    CFD::TransformToUserCoordinates(mesh, fields, axisTransformation);
 
     // Remove ghost cells from the fields
     CFD::EnumFor<CFD::Fields>([&](CFD::Fields::ENUMDATA field)
                               { CFD::RemoveGhostCells(fields[field], CFD::nGhost); });
+
 
     /*-------------------------------------------------------------------------------------*\
                                              Output

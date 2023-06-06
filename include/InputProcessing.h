@@ -80,60 +80,12 @@ struct InputData
         BoundaryPatches::ENUMDATA sweepDirection;
     } lineSolverSettings;
 
-
-    // Structure for storing axis transformation, is just a one-to-one map
-    class AxisTransformationMap
-    {
-        using BP = BoundaryPatches::ENUMDATA;
-        public:
-            AxisTransformationMap();
-
-            // Setting values
-            void Set(const BP codePatch, const BP userPatch)
-            {
-                m_codeMap[codePatch] = userPatch;
-                m_userMap[userPatch] = codePatch; 
-            }
-
-            // Code patch from user patch
-            const BP &CodePatch(const BP userPatch) const 
-            { return m_userMap.at( userPatch ); }
-
-            // User patch from the code patch
-            const BP &UserPatch(const BP codePatch) const
-            { return m_codeMap.at( codePatch ); }
-
-        private:
-            std::map< BP, BP> m_codeMap;    // Code patch -> user patch
-            std::map< BP, BP> m_userMap;    // User patch -> code patch
-    };
-    AxisTransformationMap axisTransformation;
-
 };
-
 
 
 InputData ReadInputData(const std::string &);
 
 InputData InputDataFromCommandLine(int, char const **);
-
-
-
-
-
-// -------------------------------------- Definition in OutputProcessing.cpp -------------------------------------- //
-
-// // Transform back to the coordinates consistentent with the input file 
-// void TransformToUserCoordinates(Mesh &, ArrayAllocator<Fields, array3D> &,const InputData::AxisTransformationMap &);
-
-
-// // Remove ghost cells from a 3D array
-// void RemoveGhostCells( array3D &, const intType);
-
-
-
-
-
 
 
 } // end namespace CFD
