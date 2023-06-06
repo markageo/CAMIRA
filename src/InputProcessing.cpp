@@ -90,23 +90,11 @@ CFD::InputData CFD::InputDataFromCommandLine(int argc, char const *argv[])
 // InputData constructor
 CFD::InputData::InputData() :
     meshSegments(),
-    boundaryConditions(),
-    axisTransformation()
+    boundaryConditions()
     {
         planeSolverSettings.sweepDirection = CFD::BoundaryPatches::zPositive;
         lineSolverSettings.sweepDirection = CFD::BoundaryPatches::yPositive;
     };
-
-CFD::InputData::AxisTransformationMap::AxisTransformationMap() :
-    m_codeMap({ {CFD::BoundaryPatches::ENUMDATA::xPositive, CFD::BoundaryPatches::ENUMDATA::xPositive},
-                {CFD::BoundaryPatches::ENUMDATA::xNegative, CFD::BoundaryPatches::ENUMDATA::xNegative},
-                {CFD::BoundaryPatches::ENUMDATA::yPositive, CFD::BoundaryPatches::ENUMDATA::yPositive},
-                {CFD::BoundaryPatches::ENUMDATA::yNegative, CFD::BoundaryPatches::ENUMDATA::yNegative},
-                {CFD::BoundaryPatches::ENUMDATA::zPositive, CFD::BoundaryPatches::ENUMDATA::zPositive},
-                {CFD::BoundaryPatches::ENUMDATA::zNegative, CFD::BoundaryPatches::ENUMDATA::zNegative} }),
-    m_userMap( m_codeMap )
-    {};
-
 
 namespace
 {
@@ -626,105 +614,6 @@ namespace
     }
 
 
-    /*-------------------------------------------------------------------------------------*\
-                                    Axis Transformations
-    \*-------------------------------------------------------------------------------------*/
-
-    Eigen::Matrix<CFD::intType, 3, 1> Axis2Vector(const CFD::BoundaryPatches::ENUMDATA axis)
-    {
-        using BP = CFD::BoundaryPatches::ENUMDATA;
-        switch (axis)
-        {
-            case (BP::xPositive):
-                return {1, 0, 0};
-                
-            case (BP::xNegative):
-                return {-1, 0, 0};
-
-            case (BP::yPositive):
-                return {0, 1, 0};
-
-            case (BP::yNegative):
-                return {0, -1, 0};
-
-            case (BP::zPositive):
-                return {0, 0, 1};
-
-            case (BP::zNegative):
-                return {0, 0, -1};
-
-            default:
-                // throw ERROR - invalud axis enum
-                return {0, 0, 0};
-        }
-    }
-
-
-
-    CFD::BoundaryPatches::ENUMDATA Vector2Axis(const Eigen::Matrix<CFD::intType, 3, 1> &vector)
-    {
-        using BP = CFD::BoundaryPatches::ENUMDATA;
-        if        ( ( vector.array() ==  Axis2Vector(BP::xPositive).array() ).all() ) {
-            return BP::xPositive;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::xNegative).array() ).all() ) {
-            return BP::xNegative;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::yPositive).array() ).all() ) {
-            return BP::yPositive;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::yNegative).array() ).all() ) {
-            return BP::yNegative;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::zPositive).array() ).all() ) {
-            return BP::zPositive;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::zNegative).array() ).all() ) {
-            return BP::zNegative;
-
-        } else {
-            // throw ERROR - invalid unit vector
-            return BP::xPositive;
-        }
-    }
-
-
-
-    // Sets the axis transformation map based on the sweeping directions
-    void SetAxisTransformation( InputData &inputData) 
-    {
-        using BP = CFD::BoundaryPatches::ENUMDATA;
-        using directionVector = Eigen::Matrix<CFD::intType, 3, 1>;
-
-        // User input for plane sweep direction
-        BP planeSweepDirection = inputData.planeSolverSettings.sweepDirection;
-        directionVector planeSweepVector = Axis2Vector( planeSweepDirection );
-
-        // User input for line sweep direction
-        BP lineSweepDirection = inputData.lineSolverSettings.sweepDirection;
-        directionVector lineSweepVector = Axis2Vector( lineSweepDirection );
-
-        // Plane and line sweep direction must be orthogonal
-        if ( abs( planeSweepVector.dot( lineSweepVector ) ) == 1 ) {
-            // throw ERROR - plane and line sweep directions cannot be the same
-        }
-
-        // Point sweep direction, chosen to make right handed coordinate system
-        directionVector pointSweepVector = lineSweepVector.cross( planeSweepVector );
-        BP pointSweepDirection = Vector2Axis( pointSweepVector );
-
-        // Update the axisTransformation map
-        inputData.axisTransformation.Set( BP::xPositive, pointSweepDirection);
-        inputData.axisTransformation.Set( BP::xNegative, Vector2Axis( -pointSweepVector ));
-
-        inputData.axisTransformation.Set( BP::yPositive, lineSweepDirection);
-        inputData.axisTransformation.Set( BP::yNegative, Vector2Axis( -lineSweepVector ));
-
-        inputData.axisTransformation.Set( BP::zPositive, planeSweepDirection);
-        inputData.axisTransformation.Set( BP::zNegative, Vector2Axis( -planeSweepVector ));
-    }
-
-
 }   // end anonymous namepsace
 
 
@@ -739,8 +628,6 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFileName)
     ReadBoundaryConditions(inputData, tree);
     ReadInitialConditions(inputData, tree);
     ReadSolver(inputData, tree);
-    
-    SetAxisTransformation(inputData);
 
     return inputData;
 }

@@ -1,15 +1,132 @@
 #include "SweepTransformations.h"
+#include "Eigen/Geometry"
 
 namespace CFD
 {
 
-namespace
+AxisTransformationMap::AxisTransformationMap() :
+    m_codeMap({ {CFD::BoundaryPatches::ENUMDATA::xPositive, CFD::BoundaryPatches::ENUMDATA::xPositive},
+                {CFD::BoundaryPatches::ENUMDATA::xNegative, CFD::BoundaryPatches::ENUMDATA::xNegative},
+                {CFD::BoundaryPatches::ENUMDATA::yPositive, CFD::BoundaryPatches::ENUMDATA::yPositive},
+                {CFD::BoundaryPatches::ENUMDATA::yNegative, CFD::BoundaryPatches::ENUMDATA::yNegative},
+                {CFD::BoundaryPatches::ENUMDATA::zPositive, CFD::BoundaryPatches::ENUMDATA::zPositive},
+                {CFD::BoundaryPatches::ENUMDATA::zNegative, CFD::BoundaryPatches::ENUMDATA::zNegative} }),
+    m_userMap( m_codeMap )
+    {};
+
+
+
+namespace 
 {
+
+    Eigen::Matrix<CFD::intType, 3, 1> Axis2Vector(const CFD::BoundaryPatches::ENUMDATA axis)
+    {
+        using BP = CFD::BoundaryPatches::ENUMDATA;
+        switch (axis)
+        {
+            case (BP::xPositive):
+                return {1, 0, 0};
+                
+            case (BP::xNegative):
+                return {-1, 0, 0};
+
+            case (BP::yPositive):
+                return {0, 1, 0};
+
+            case (BP::yNegative):
+                return {0, -1, 0};
+
+            case (BP::zPositive):
+                return {0, 0, 1};
+
+            case (BP::zNegative):
+                return {0, 0, -1};
+
+            default:
+                // throw ERROR - invalud axis enum
+                return {0, 0, 0};
+        }
+    }
+
+
+
+    CFD::BoundaryPatches::ENUMDATA Vector2Axis(const Eigen::Matrix<CFD::intType, 3, 1> &vector)
+    {
+        using BP = CFD::BoundaryPatches::ENUMDATA;
+        if        ( ( vector.array() ==  Axis2Vector(BP::xPositive).array() ).all() ) {
+            return BP::xPositive;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::xNegative).array() ).all() ) {
+            return BP::xNegative;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::yPositive).array() ).all() ) {
+            return BP::yPositive;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::yNegative).array() ).all() ) {
+            return BP::yNegative;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::zPositive).array() ).all() ) {
+            return BP::zPositive;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::zNegative).array() ).all() ) {
+            return BP::zNegative;
+
+        } else {
+            // throw ERROR - invalid unit vector
+            return BP::xPositive;
+        }
+    }
+
+
+
+    // Sets the axis transformation map based on the sweeping directions
+    AxisTransformationMap SetAxisTransformation( InputData &inputData) 
+    {
+        using BP = CFD::BoundaryPatches::ENUMDATA;
+        using directionVector = Eigen::Matrix<CFD::intType, 3, 1>;
+
+        AxisTransformationMap axisTransformation;
+
+        // User input for plane sweep direction
+        BP planeSweepDirection = inputData.planeSolverSettings.sweepDirection;
+        directionVector planeSweepVector = Axis2Vector( planeSweepDirection );
+
+        // User input for line sweep direction
+        BP lineSweepDirection = inputData.lineSolverSettings.sweepDirection;
+        directionVector lineSweepVector = Axis2Vector( lineSweepDirection );
+
+        // Plane and line sweep direction must be orthogonal
+        if ( abs( planeSweepVector.dot( lineSweepVector ) ) == 1 ) {
+            // throw ERROR - plane and line sweep directions cannot be the same
+        }
+
+        // Point sweep direction, chosen to make right handed coordinate system
+        directionVector pointSweepVector = lineSweepVector.cross( planeSweepVector );
+        BP pointSweepDirection = Vector2Axis( pointSweepVector );
+
+        // Update the axisTransformation map
+        axisTransformation.Set( BP::xPositive, pointSweepDirection);
+        axisTransformation.Set( BP::xNegative, Vector2Axis( -pointSweepVector ));
+
+        axisTransformation.Set( BP::yPositive, lineSweepDirection);
+        axisTransformation.Set( BP::yNegative, Vector2Axis( -lineSweepVector ));
+
+        axisTransformation.Set( BP::zPositive, planeSweepDirection);
+        axisTransformation.Set( BP::zNegative, Vector2Axis( -planeSweepVector ));
+
+        // Change the sweep direction
+        inputData.planeSolverSettings.sweepDirection = BP::zPositive;
+        inputData.lineSolverSettings.sweepDirection  = BP::yPositive;
+
+        return axisTransformation;
+    }
+
+
 
     // Transform an EnumVector of fields data to code coordinates. Only transforms the momentum equations part.
     template< typename T >
     void TransformFieldVectorToCode( EnumVector<Fields, T> &fieldsVector,
-                                        const InputData::AxisTransformationMap& axisTransformation )
+                                     const AxisTransformationMap& axisTransformation )
     {
         using F = Fields::ENUMDATA;
         EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
@@ -33,13 +150,13 @@ namespace
 
 
     // Remaps the users boundary conditions
-    void TransformBoundaryConditions(InputData &inputData)
+    void TransformBoundaryConditions( InputData &inputData, 
+                                      const AxisTransformationMap &axisTransformation )
     {
         using BP = CFD::BoundaryPatches::ENUMDATA;
         using F = CFD::Fields::ENUMDATA;
         using A = CFD::Axis::ENUMDATA;
 
-        const InputData::AxisTransformationMap &axisTransformation = inputData.axisTransformation;
         InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
 
         // Temporary for boundary conditions as user specifies them
@@ -94,7 +211,8 @@ namespace
 
 
     // Remaps the user mesh
-    void TransformMesh(InputData &inputData)
+    void TransformMesh(InputData &inputData, 
+                       const AxisTransformationMap &axisTransformation )
     {
         using enum Axis::ENUMDATA;
         using enum BoundaryPatches::ENUMDATA;
@@ -109,7 +227,7 @@ namespace
 
         EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-            userPatch = inputData.axisTransformation.UserPatch( PositivePatch[ axis ] );
+            userPatch = axisTransformation.UserPatch( PositivePatch[ axis ] );
             userAxis = BoundaryPatchAxis[ userPatch ];
 
             inputData.meshSegments[ axis ] = userMeshSegments[ userAxis ];
@@ -124,35 +242,38 @@ namespace
     }
 
     // Remaps the initial conditions
-    void TransformInitialConditions( InputData &inputData )
+    void TransformInitialConditions( InputData &inputData,
+                                     const AxisTransformationMap &axisTransformation )
     {
-        TransformFieldVectorToCode( inputData.initialConditions, inputData.axisTransformation );
+        TransformFieldVectorToCode( inputData.initialConditions, axisTransformation );
     }
 
 
     // Remaps any solver settings that have direction dependence
-    void TransformSolver( InputData &inputData )
+    void TransformSolver( InputData &inputData,
+                          const AxisTransformationMap &axisTransformation )
     {
-        TransformFieldVectorToCode( inputData.schemes.implicitRelaxation      , inputData.axisTransformation );
-        TransformFieldVectorToCode( inputData.linearSolverSettings.relaxation , inputData.axisTransformation );
-        TransformFieldVectorToCode( inputData.planeSolverSettings.relaxation  , inputData.axisTransformation );
-        TransformFieldVectorToCode( inputData.lineSolverSettings.relaxation   , inputData.axisTransformation );
+        TransformFieldVectorToCode( inputData.schemes.implicitRelaxation      , axisTransformation );
+        TransformFieldVectorToCode( inputData.linearSolverSettings.relaxation , axisTransformation );
+        TransformFieldVectorToCode( inputData.planeSolverSettings.relaxation  , axisTransformation );
+        TransformFieldVectorToCode( inputData.lineSolverSettings.relaxation   , axisTransformation );
     }
 
 }   // end anonymous namespace
 
 
 
-InputData TransformUserInputData(const InputData &userInputData )
+AxisTransformationMap TransformUserInputData(InputData &inputData )
 {
-    InputData codeInputData = userInputData;
+    
+    AxisTransformationMap axisTransformation = SetAxisTransformation( inputData );
 
-    TransformBoundaryConditions(codeInputData);
-    TransformInitialConditions(codeInputData);
-    TransformMesh(codeInputData);
-    TransformSolver(codeInputData);
+    TransformBoundaryConditions( inputData, axisTransformation );
+    TransformInitialConditions( inputData, axisTransformation );
+    TransformMesh( inputData, axisTransformation );
+    TransformSolver( inputData, axisTransformation );
 
-    return codeInputData;
+    return axisTransformation;
 }
 
 
@@ -205,7 +326,7 @@ namespace
     // Transform an EnumVector of fields data to user coordinates. Only transforms the momentum equations part.
     template< typename T >
     void TransformFieldVectorToUser( EnumVector<Fields, T> &fieldsVector,
-                                    const InputData::AxisTransformationMap& axisTransformation )
+                                    const AxisTransformationMap& axisTransformation )
     {
         using F = Fields::ENUMDATA;
         EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
@@ -228,7 +349,7 @@ namespace
 
     template< typename T >
     void TransformFieldVectorToUser( ArrayAllocator<Fields, T> &fieldsVector,
-                                    const InputData::AxisTransformationMap& axisTransformation )
+                                    const AxisTransformationMap& axisTransformation )
     {
         using F = Fields::ENUMDATA;
         EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
@@ -255,7 +376,7 @@ namespace
 
 void TransformToUserCoordinates( Mesh &mesh, 
                                  ArrayAllocator<Fields, array3D> &fields, 
-                                 const InputData::AxisTransformationMap &axisTransformation )                                  
+                                 const AxisTransformationMap &axisTransformation )                                  
 {
     Eigen::array<intType , Axis::count> shuffleArray;
     Eigen::array<bool, Axis::count> reverseArray;
