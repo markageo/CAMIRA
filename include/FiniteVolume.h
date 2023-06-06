@@ -68,16 +68,8 @@ struct FVCoefficients
 // Allocate and initialise the fields
 ArrayAllocator<Fields, array3D> InitialiseFields(const Mesh &, const InputData &);
 
-
-// Transform back to the coordinates consistentent with the input file 
-void TransformToUserCoordinates(Mesh &, ArrayAllocator<Fields, array3D> &, const InputData::AxisTransformationMap &);
-
-
 // Remove ghost cells from a 3D array
 void RemoveGhostCells( array3D &, const intType);
-
-
-
 
 
 // -------------------------------------- Definition in FaceVelocities.cpp -------------------------------------- //

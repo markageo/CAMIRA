@@ -10,6 +10,10 @@
 namespace CFD
 {
 
+
+// -------------------------------------- Definition in InputProcessing.cpp -------------------------------------- //
+
+
 struct InputData
 {
     // Constructor
@@ -112,6 +116,24 @@ struct InputData
 InputData ReadInputData(const std::string &);
 
 InputData InputDataFromCommandLine(int, char const **);
+
+
+
+
+
+// -------------------------------------- Definition in OutputProcessing.cpp -------------------------------------- //
+
+// // Transform back to the coordinates consistentent with the input file 
+// void TransformToUserCoordinates(Mesh &, ArrayAllocator<Fields, array3D> &,const InputData::AxisTransformationMap &);
+
+
+// // Remove ghost cells from a 3D array
+// void RemoveGhostCells( array3D &, const intType);
+
+
+
+
+
 
 
 } // end namespace CFD

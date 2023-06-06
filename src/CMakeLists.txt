@@ -1,5 +1,6 @@
 # Add libraries
 add_library(libs InputProcessing.cpp
+                 SweepTransformations.cpp
                  FiniteVolumeStructures.cpp
                  FaceVelocities.cpp
                  FiniteVolumeCoefficients.cpp
