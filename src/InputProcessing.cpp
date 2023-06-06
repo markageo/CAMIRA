@@ -729,25 +729,62 @@ namespace
 
 
 
+    // Transform an EnumVector of fields data. Only transforms the momentum equations part.
+    template< typename T >
+    void TransformFieldVector( EnumVector<Fields, T> &fieldsVector,
+                               const InputData::AxisTransformationMap& axisTransformation )
+    {
+        using F = Fields::ENUMDATA;
+        EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
+
+        // Create temporary copy to move data from 
+        EnumVector<Fields, T> userFieldsVector = fieldsVector;
+
+        BoundaryPatches::ENUMDATA userPatch;
+        Axis::ENUMDATA userAxis;
+
+        EnumFor<Axis>([&] (Axis::ENUMDATA axis) { 
+
+            userPatch = axisTransformation.UserPatch( PositivePatch[ axis ] );
+            userAxis = BoundaryPatchAxis[ userPatch ];
+
+            fieldsVector[ axisField[axis] ] = userFieldsVector[ axisField[userAxis] ];
+
+        } );
+    }
+
+
+
     // Remaps the users boundary conditions
     void TransformBoundaryConditions(InputData &inputData)
     {
         using BP = CFD::BoundaryPatches::ENUMDATA;
         using F = CFD::Fields::ENUMDATA;
+        // using A = CFD::Axis::ENUMDATA;
 
         // Temporary for boundary conditions as user specifies them
         InputData::BoundaryConditionData boundaryConditionsUser = inputData.boundaryConditions;
+        // floatVector3 domainSizeUser = inputData.domainSize;
         
+        // TODO
+        // EnumFor<Axis>( [&] (A axis) {
 
-        EnumFor<Fields>([&] (F field) {
+        //     inputData.domainSize( axis ) = domainSizeUser(  ); 
+
+        // } );
+
+        EnumFor<Fields>( [&] (F field) {
             
-            EnumFor<BoundaryPatches>([&] (BP patch) { 
+            EnumFor<BoundaryPatches>( [&] (BP patch) { 
 
                 inputData.boundaryConditions[field][patch] = boundaryConditionsUser[field][ inputData.axisTransformation.UserPatch( patch ) ];
 
             } );
 
         } );
+
+
+        TransformFieldVector( inputData.boundaryConditions, inputData.axisTransformation );
 
     }
 
@@ -799,33 +836,6 @@ namespace
         } );
 
     }
-
-
-
-    // Transform an EnumVector of fields data. Only transforms the momentum equations part.
-    void TransformFieldVector( EnumVector<Fields, floatType> &fieldsVector,
-                               const InputData::AxisTransformationMap& axisTransformation )
-    {
-        using F = Fields::ENUMDATA;
-        EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
-
-        // Create temporary copy to move data from 
-        EnumVector<Fields, floatType> userFieldsVector = fieldsVector;
-
-        BoundaryPatches::ENUMDATA userPatch;
-        Axis::ENUMDATA userAxis;
-
-        EnumFor<Axis>([&] (Axis::ENUMDATA axis) { 
-
-            userPatch = axisTransformation.UserPatch( PositivePatch[ axis ] );
-            userAxis = BoundaryPatchAxis[ userPatch ];
-
-            fieldsVector[ axisField[axis] ] = userFieldsVector[ axisField[userAxis] ];
-
-        } );
-    }
-
-
 
     // Remaps the initial conditions
     void TransformInitialConditions( InputData &inputData )

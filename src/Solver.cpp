@@ -7,6 +7,7 @@
 
 #include <type_traits>
 #include <iostream>
+#include <memory>
 
 namespace CFD
 {
@@ -316,10 +317,19 @@ class LineSolver
         m_maxIterations( lineSolverSettings.maxIterations ),
         m_maxResiduals( lineSolverSettings.maxResiduals ),
         m_relaxation( lineSolverSettings.relaxation ),
-        m_blockSolverEast( fields, fvCoeffs ),
-        m_blockSolverWest( fields, fvCoeffs),
         m_ni( fvCoeffs.nCells(0) )
-        {}
+        {
+            if ( m_ni == 1 ) {
+                m_blockSolverCenter = std::make_unique< BlockSolver<TC::p, Vstag, Wstag> >( fields, fvCoeffs );
+                SolutionUpdater = &LineSolver::Sweep2D;
+                StateUpdater    = &LineSolver::UpdateState2D;
+            } else {
+                m_blockSolverEast = std::make_unique< BlockSolver<TC::e, Vstag, Wstag> >( fields, fvCoeffs );
+                m_blockSolverWest = std::make_unique< BlockSolver<TC::w, Vstag, Wstag> >( fields, fvCoeffs );
+                SolutionUpdater = &LineSolver::Sweep3D;
+                StateUpdater    = &LineSolver::UpdateState3D;
+            } 
+        }
 
 
         void SolveLine(const intType j, const intType k)
@@ -343,14 +353,8 @@ class LineSolver
             {
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] = 0.0f; } );
 
-                // Update in place and relax
-                for (intType i = 0; i != m_ni-1; i++) {   // Forward sweep
-                    UpdateAndRelax( m_blockSolverEast, i, j, k );
-                }
-
-                for (intType i = m_ni-1; i != 0; i--) {   // Backward sweep
-                    UpdateAndRelax( m_blockSolverWest, i, j, k );
-                }
+                // Update block
+                (this->*SolutionUpdater)( j, k );
 
                 // Normalise residuals
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] /= static_cast<floatType>( m_ni ); } );
@@ -367,10 +371,7 @@ class LineSolver
 
 
         void UpdateState()
-        {
-            m_blockSolverEast.UpdateGlobalConstants();
-            m_blockSolverWest.UpdateGlobalConstants();
-        }
+        { (this->*StateUpdater)(); }
 
     private:
 
@@ -379,15 +380,48 @@ class LineSolver
         const EnumVector<Fields, floatType> m_maxResiduals;
         const EnumVector<Fields, floatType> m_relaxation;
 
-        BlockSolver< TC::e, Vstag, Wstag > m_blockSolverEast;
-        BlockSolver< TC::w, Vstag, Wstag > m_blockSolverWest; 
+        std::unique_ptr< BlockSolver<TC::e, Vstag, Wstag> > m_blockSolverEast;
+        std::unique_ptr< BlockSolver<TC::w, Vstag, Wstag> > m_blockSolverWest; 
+        std::unique_ptr< BlockSolver<TC::p, Vstag, Wstag> > m_blockSolverCenter; 
+
+        void (LineSolver::*SolutionUpdater)(intType, intType);
+        void (LineSolver::*StateUpdater)(void);
 
         EnumVector<Fields, floatType> m_oldBlock, m_delta, m_residuals, m_residualsInitialInv;
         EnumVector<Fields, intType> m_iS, m_jS, m_kS;
         intType m_ni;
 
+
+        // For 3D simulations
+        void Sweep3D(intType j, intType k)
+        { 
+            for (intType i = 0; i != m_ni-1; i++) {   // Forward sweep
+                UpdateAndRelax( m_blockSolverEast, i, j, k );
+            }
+
+            for (intType i = m_ni-1; i != 0; i--) {   // Backward sweep
+                UpdateAndRelax( m_blockSolverWest, i, j, k );
+            }
+        }
+
+        void UpdateState3D()
+        {
+            m_blockSolverEast->UpdateGlobalConstants();
+            m_blockSolverWest->UpdateGlobalConstants();
+        }
+
+
+        // For 2D simulations
+        void Sweep2D(intType j, intType k)
+        { UpdateAndRelax( m_blockSolverCenter, 0, j, k ); }
+
+        void UpdateState2D()
+        { m_blockSolverCenter->UpdateGlobalConstants(); }
+
+
+
         template< TC Ustag >
-        void UpdateAndRelax( BlockSolver< Ustag, Vstag, Wstag > &blockSolver, intType i, intType j, intType k )
+        void UpdateAndRelax( std::unique_ptr< BlockSolver<Ustag, Vstag, Wstag> > &blockSolver, intType i, intType j, intType k )
         {
             using enum TransportCoefficients::ENUMDATA;
             using enum Fields::ENUMDATA;
@@ -398,7 +432,7 @@ class LineSolver
 
             EnumFor<Fields>( [&] (Fields::ENUMDATA f) { m_oldBlock[f] = m_fields[f]( G(m_iS[f], m_jS[f], m_kS[f]) ); } );  // Set old block values
 
-            blockSolver.UpdateBlock(i, j, k);
+            blockSolver->UpdateBlock(i, j, k);
 
             EnumFor<Fields>( [&] (Fields::ENUMDATA f) 
             { 
@@ -435,15 +469,24 @@ class PlaneSolver
         m_maxIterations( planeSolverSettings.maxIterations ),
         m_maxResiduals( planeSolverSettings.maxResiduals ),
         m_relaxation( planeSolverSettings.relaxation ),
-        m_lineSolverNorth( fields, fvCoeffs, lineSolverSettings ),
-        m_lineSolverSouth( fields, fvCoeffs, lineSolverSettings ),
         
         m_oldLine( array1D( m_fields[F::U].dimension(A::X) ) ),
         m_delta( array1D( m_fields[F::U].dimension(A::X) ) ),
 
         m_ni( fvCoeffs.nCells(A::X) ),
         m_nj( fvCoeffs.nCells(A::Y) )
-        {}
+        {
+            if ( m_nj == 1 ) {
+                m_lineSolverCenter = std::make_unique< LineSolver<TC::p, Wstag> >( fields, fvCoeffs, lineSolverSettings );
+                SolutionUpdater = &PlaneSolver::Sweep2D;
+                StateUpdater    = &PlaneSolver::UpdateState2D;
+            } else {
+                m_lineSolverNorth = std::make_unique< LineSolver<TC::n, Wstag> >( fields, fvCoeffs, lineSolverSettings );
+                m_lineSolverSouth = std::make_unique< LineSolver<TC::s, Wstag> >( fields, fvCoeffs, lineSolverSettings );
+                SolutionUpdater = &PlaneSolver::Sweep3D;
+                StateUpdater    = &PlaneSolver::UpdateState3D;
+            }            
+        }
 
 
         void SolvePlane(const intType k)
@@ -462,13 +505,8 @@ class PlaneSolver
             {
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] = 0.0f; } );
 
-                for (intType j = 0; j != m_nj-1; j++) {   // Forward sweep
-                    UpdateAndRelax( m_lineSolverNorth, j, k );
-                }
-
-                for (intType j = m_nj-1; j != 0; j--) {   // Backward sweep
-                    UpdateAndRelax( m_lineSolverSouth, j, k );
-                }
+                // Update Line
+                (this->*SolutionUpdater)( k );
 
                 // Normalise residuals
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] /= static_cast<floatType>( m_ni * m_nj ); } );
@@ -484,12 +522,8 @@ class PlaneSolver
         }
 
 
-
         void UpdateState()
-        {
-            m_lineSolverNorth.UpdateState();
-            m_lineSolverSouth.UpdateState();
-        }
+        { (this->*StateUpdater)(); }
 
 
     private:
@@ -498,8 +532,12 @@ class PlaneSolver
         const EnumVector<Fields, floatType> m_maxResiduals;
         const EnumVector<Fields, floatType> m_relaxation;
 
-        LineSolver< TC::n, Wstag > m_lineSolverNorth;
-        LineSolver< TC::s, Wstag > m_lineSolverSouth;
+        std::unique_ptr< LineSolver<TC::n, Wstag> > m_lineSolverNorth;
+        std::unique_ptr< LineSolver<TC::s, Wstag> > m_lineSolverSouth;
+        std::unique_ptr< LineSolver<TC::p, Wstag> > m_lineSolverCenter;
+
+        void (PlaneSolver::*SolutionUpdater)(intType);
+        void (PlaneSolver::*StateUpdater)();
 
         EnumVector<Fields, array1D> m_oldLine, m_delta;
         EnumVector<Fields, floatType> m_residuals, m_residualsInitialInv;
@@ -507,8 +545,37 @@ class PlaneSolver
 
         intType m_ni, m_nj;
 
+
+        // For 3D simulations
+        void Sweep3D(intType k)
+        {
+            for (intType j = 0; j != m_nj-1; j++) {   // Forward sweep
+                UpdateAndRelax( m_lineSolverNorth, j, k );
+            }
+
+            for (intType j = m_nj-1; j != 0; j--) {   // Backward sweep
+                UpdateAndRelax( m_lineSolverSouth, j, k );
+            }
+        }
+
+        void UpdateState3D()
+        {
+            m_lineSolverNorth->UpdateState();
+            m_lineSolverSouth->UpdateState();
+        }
+
+
+        // For 2D simulations
+        void Sweep2D(intType k)
+        { UpdateAndRelax( m_lineSolverCenter, 0, k ); }
+
+        void UpdateState2D()
+        { m_lineSolverCenter->UpdateState(); }
+
+
+
         template< TC Vstag >
-        void UpdateAndRelax( LineSolver< Vstag, Wstag > &lineSolver, intType j, intType k )
+        void UpdateAndRelax( std::unique_ptr< LineSolver<Vstag, Wstag> > &lineSolver, intType j, intType k )
         {
             using enum Fields::ENUMDATA;
             using enum Axis::ENUMDATA;
@@ -520,7 +587,7 @@ class PlaneSolver
             EnumFor<Fields>( [&] (Fields::ENUMDATA f) { m_oldLine[f] = m_fields[f].chip( G(m_kS[f]), Z).chip( G(m_jS[f]), Y); } );      // Set old line
 
             
-            lineSolver.SolveLine(j, k);
+            lineSolver->SolveLine(j, k);
             
             EnumFor<Fields> ( [&] (Fields::ENUMDATA f) {
                 auto fieldLine = m_fields[f].chip( G(m_kS[f]), Z).chip( G(m_jS[f]), Y);
@@ -553,8 +620,6 @@ class LinearSolver
         m_maxIterations( linearSolverSettings.maxIterations ),
         m_maxResiduals( linearSolverSettings.maxResiduals ),
         m_relaxation( linearSolverSettings.relaxation ),
-        m_planeSolverTop( fields, fvCoeffs, planeSolverSettings, lineSolverSettings ),
-        m_planeSolverBottom( fields, fvCoeffs, planeSolverSettings, lineSolverSettings ),
 
         m_delta( array2D( m_fields[F::U].dimension(A::X), m_fields[F::U].dimension(A::Y) ) ),
         m_oldPlane( array2D( m_fields[F::U].dimension(A::X), m_fields[F::U].dimension(A::Y) ) ),
@@ -562,7 +627,19 @@ class LinearSolver
         m_ni( fvCoeffs.nCells(A::X) ),
         m_nj( fvCoeffs.nCells(A::Y) ),
         m_nk( fvCoeffs.nCells(A::Z) )
-        {}
+        {
+            if ( m_nk == 1 ) {
+                m_planeSolverCenter = std::make_unique< PlaneSolver<TC::p> >( fields, fvCoeffs, planeSolverSettings, lineSolverSettings );
+                SolutionUpdater = &LinearSolver::Sweep2D;
+                StateUpdater    = &LinearSolver::UpdateState2D;
+            } else {
+                m_planeSolverTop    = std::make_unique< PlaneSolver<TC::t> >( fields, fvCoeffs, planeSolverSettings, lineSolverSettings );
+                m_planeSolverBottom = std::make_unique< PlaneSolver<TC::b> >( fields, fvCoeffs, planeSolverSettings, lineSolverSettings );
+                SolutionUpdater = &LinearSolver::Sweep3D;
+                StateUpdater    = &LinearSolver::UpdateState3D;
+            }
+
+        }
 
 
         void Solve()
@@ -574,16 +651,11 @@ class LinearSolver
             intType nIterations = 0;
             while ( nIterations < m_maxIterations ) {
                 
+                // Reset residuals
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] = 0.0f; } );
 
                 // Update plane
-                for (intType k = 0; k != m_nk-1; k++) {   // Forward sweep
-                    UpdateAndRelax( m_planeSolverTop, k );
-                }
-
-                for (intType k = m_nk-1; k != 0; k--) {   // Backward sweep
-                    UpdateAndRelax( m_planeSolverBottom, k );
-                }
+                (this->*SolutionUpdater)();
 
                 // Normalise residuals
                 EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] /= static_cast<floatType>( m_ni * m_nj * m_nk ); } );
@@ -596,7 +668,6 @@ class LinearSolver
                     break;
                 }
 
-                
             }
 
         }
@@ -604,10 +675,7 @@ class LinearSolver
 
         // Update any precomputed values
         void UpdateState()
-        {
-            m_planeSolverTop.UpdateState();
-            m_planeSolverBottom.UpdateState();
-        }
+        { (this->*StateUpdater)(); }
 
 
     private:
@@ -616,8 +684,12 @@ class LinearSolver
         const EnumVector<Fields, floatType> m_maxResiduals;
         const EnumVector<Fields, floatType> m_relaxation;
 
-        PlaneSolver< TC::t > m_planeSolverTop;
-        PlaneSolver< TC::b > m_planeSolverBottom;
+        std::unique_ptr< PlaneSolver< TC::t > > m_planeSolverTop;
+        std::unique_ptr< PlaneSolver< TC::b > > m_planeSolverBottom;
+        std::unique_ptr< PlaneSolver< TC::p > > m_planeSolverCenter;
+
+        void (LinearSolver::*SolutionUpdater)(void);
+        void (LinearSolver::*StateUpdater)(void);
 
         EnumVector<Fields, array2D> m_delta, m_oldPlane;
         EnumVector<Fields, floatType> m_residuals, m_residualsInitialInv;
@@ -626,8 +698,36 @@ class LinearSolver
         intType m_ni, m_nj, m_nk;
 
 
+        // For 3D simulations
+        void Sweep3D()
+        {
+            for (intType k = 0; k != m_nk-1; k++) {   // Forward sweep
+                UpdateAndRelax( m_planeSolverTop, k );
+            }
+
+            for (intType k = m_nk-1; k != 0; k--) {   // Backward sweep
+                UpdateAndRelax( m_planeSolverBottom, k );
+            }
+        }
+
+        void UpdateState3D()
+        {
+            m_planeSolverTop->UpdateState();
+            m_planeSolverBottom->UpdateState();
+        }
+
+
+        // For 2D simulations
+        void Sweep2D()
+        { UpdateAndRelax( m_planeSolverCenter, 0 ); }
+
+        void UpdateState2D()
+        { m_planeSolverCenter->UpdateState(); }
+
+
+
         template< TC Wstag >
-        void UpdateAndRelax( PlaneSolver< Wstag > &planeSolver, intType k )
+        void UpdateAndRelax( std::unique_ptr< PlaneSolver< Wstag > > &planeSolver, intType k )
         {
             using enum Fields::ENUMDATA;
             using enum TransportCoefficients::ENUMDATA;
@@ -638,7 +738,7 @@ class LinearSolver
 
             EnumFor<Fields>( [&] (Fields::ENUMDATA f) { m_oldPlane[f] = m_fields[f].chip( G(m_kS[f]), Z); } );    // Set old plane
 
-            planeSolver.SolvePlane(k);
+            planeSolver->SolvePlane(k);
 
             EnumFor<Fields> ( [&] (Fields::ENUMDATA f) {
                 auto fieldPlane = m_fields[f].chip( G(m_kS[f]), Z);

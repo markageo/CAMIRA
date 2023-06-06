@@ -89,7 +89,7 @@ void CalculateCellFaces(array1D &cellFaces,
                         const array1D &cellLengths,
                         const floatType startPosition)
 {
-    intType nFaces = cellLengths.size() + 1;
+    intType nFaces = cellFaces.size();
 
     cellFaces(0) = startPosition;
     for (intType i = 1; i != nFaces; i++) {
@@ -102,8 +102,9 @@ void CalculateInterpolationFactors(array1D &interpFactors,
                                    const array1D &cellCenters, 
                                    const array1D &cellFaces) 
 {
-    for (int i = 1; i != interpFactors.dimension(0)-1; i++) {
-        interpFactors(i) = ( cellFaces(i) - cellCenters(i-1) ) / ( cellCenters(i) - cellCenters(i-1) );
+    for (int i = 1; i != interpFactors.size()-1; i++) {
+        interpFactors(i) = ( cellFaces(i) - cellCenters(i-1) ) 
+                         / ( cellCenters(i) - cellCenters(i-1) );
     }
 }
 
@@ -132,10 +133,23 @@ void CalculateExtrapolationFactors(EnumVector<BoundaryPatches, Mesh::ExtrapFacto
 
     BoundaryPatches::ENUMDATA patchPositive = PositivePatch[ axis ], 
                               patchNegative = NegativePatch[ axis ];
+
+    // If mesh is only 1 cell think (such as in a 2D simulation), make the extrapolatino equal to the single cell
+    if ( cellLengths[axis].size() == 1 ) {
+        extrapFactors[patchPositive].a = 0.0f;
+        extrapFactors[patchPositive].p = 1.0f;
+
+        extrapFactors[patchNegative].a = 0.0f;
+        extrapFactors[patchNegative].p = 1.0f;
+        return;
+    }
+
+
+    
     intType fieldIndex_p, fieldIndex_a; // Boundary cell node and the adjacent one
 
     // Positive patch boundary
-    fieldIndex_p = cellLengths[axis].dimension(0) - 1;
+    fieldIndex_p = cellLengths[axis].size() - 1;
     fieldIndex_a = fieldIndex_p - 1;
     extrapFactors[patchPositive] = GetExtrapolationFactors(cellLengths[axis], fieldIndex_p, fieldIndex_a);
 
