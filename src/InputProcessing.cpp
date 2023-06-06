@@ -760,32 +760,41 @@ namespace
     {
         using BP = CFD::BoundaryPatches::ENUMDATA;
         using F = CFD::Fields::ENUMDATA;
-        // using A = CFD::Axis::ENUMDATA;
+        using A = CFD::Axis::ENUMDATA;
+
+        const InputData::AxisTransformationMap &axisTransformation = inputData.axisTransformation;
+        InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
 
         // Temporary for boundary conditions as user specifies them
-        InputData::BoundaryConditionData boundaryConditionsUser = inputData.boundaryConditions;
-        // floatVector3 domainSizeUser = inputData.domainSize;
+        InputData::BoundaryConditionData boundaryConditionsUser = boundaryConditions;
+        floatVector3 domainSizeUser = inputData.domainSize;
         
-        // TODO
-        // EnumFor<Axis>( [&] (A axis) {
 
-        //     inputData.domainSize( axis ) = domainSizeUser(  ); 
+        BoundaryPatches::ENUMDATA userPatch;
+        Axis::ENUMDATA userAxis;
+        EnumFor<Axis>( [&] (A axis) {
 
-        // } );
+            userPatch = axisTransformation.UserPatch( PositivePatch[ axis ] );
+            userAxis = BoundaryPatchAxis[ userPatch ];
 
+            inputData.domainSize( axis ) = domainSizeUser( userAxis ); 
+
+        } );
+
+
+        // Transform just the boundary conditions
         EnumFor<Fields>( [&] (F field) {
             
             EnumFor<BoundaryPatches>( [&] (BP patch) { 
 
-                inputData.boundaryConditions[field][patch] = boundaryConditionsUser[field][ inputData.axisTransformation.UserPatch( patch ) ];
+                boundaryConditions[field][patch] = boundaryConditionsUser[field][ axisTransformation.UserPatch( patch ) ];
 
             } );
 
         } );
 
-
-        TransformFieldVector( inputData.boundaryConditions, inputData.axisTransformation );
-
+        // Now the momentum directions
+        TransformFieldVector( boundaryConditions, axisTransformation );
     }
 
 
