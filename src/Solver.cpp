@@ -754,8 +754,8 @@ class LinearSolver
 
 
 void SweepSolve( ArrayAllocator<Fields, array3D> &fields, 
-                 const Mesh &mesh, 
-                 const InputData &inputData) 
+                            const Mesh &mesh, 
+                            const InputData &inputData) 
 {
     using enum Axis::ENUMDATA;
     using enum Fields::ENUMDATA;
@@ -775,8 +775,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
  
     intType nOuterIterations;
     EnumVector<Fields, floatType> residualsOuter, residualsOuterInitialInv;
-    std::vector< EnumVector<Fields, floatType> > residualsHistory;
-    residualsHistory.reserve( static_cast<size_t>( inputData.schemes.maxOuterIterations ) );
+    // ConvergenceData convergenceData;
     
     // Instantiate linear solver
     LinearSolver linearSolver( fields, fvCoeffs, linearSolverSettings, planeSolverSettings, lineSolverSettings );
@@ -792,12 +791,13 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         // Update residuals
         L1ArrayDiff( residualsOuter, fields, fieldsOld );
         RelativeResidual( residualsOuter, residualsOuterInitialInv, nOuterIterations );
-        residualsHistory.push_back( residualsOuter );
+        // convergenceData.residuals.push_back( residualsOuter );
         nOuterIterations++;
 
         // Set old fields
         fieldsOld = fields;
 
+        // *** These are not in user coordinates! ***
         std::cout << "Outer iteration: " << nOuterIterations << ", U outer residual: " << residualsOuter[U]
                                                              << ", V outer residual: " << residualsOuter[V]
                                                              << ", W outer residual: " << residualsOuter[W]
@@ -819,7 +819,9 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
 
 
     // Strip unused data
-    residualsHistory.shrink_to_fit();
+    // convergenceData.shrink_to_fit();
+
+    // return convergenceData;
  
 }
 

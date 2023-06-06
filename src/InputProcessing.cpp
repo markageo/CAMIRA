@@ -421,65 +421,6 @@ namespace
     }
 
 
-    Eigen::Matrix<CFD::intType, 3, 1> Axis2Vector(const CFD::BoundaryPatches::ENUMDATA axis)
-    {
-        using BP = CFD::BoundaryPatches::ENUMDATA;
-        switch (axis)
-        {
-            case (BP::xPositive):
-                return {1, 0, 0};
-                
-            case (BP::xNegative):
-                return {-1, 0, 0};
-
-            case (BP::yPositive):
-                return {0, 1, 0};
-
-            case (BP::yNegative):
-                return {0, -1, 0};
-
-            case (BP::zPositive):
-                return {0, 0, 1};
-
-            case (BP::zNegative):
-                return {0, 0, -1};
-
-            default:
-                // throw ERROR - invalud axis enum
-                return {0, 0, 0};
-        }
-    }
-
-
-    CFD::BoundaryPatches::ENUMDATA Vector2Axis(const Eigen::Matrix<CFD::intType, 3, 1> &vector)
-    {
-        using BP = CFD::BoundaryPatches::ENUMDATA;
-        if        ( ( vector.array() ==  Axis2Vector(BP::xPositive).array() ).all() ) {
-            return BP::xPositive;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::xNegative).array() ).all() ) {
-            return BP::xNegative;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::yPositive).array() ).all() ) {
-            return BP::yPositive;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::yNegative).array() ).all() ) {
-            return BP::yNegative;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::zPositive).array() ).all() ) {
-            return BP::zPositive;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::zNegative).array() ).all() ) {
-            return BP::zNegative;
-
-        } else {
-            // throw ERROR - invalid unit vector
-            return BP::xPositive;
-        }
-    }
-
-
-
     void ReadSchemes( InputData &inputData, 
                       const pt::ptree &solverTree) 
     {
@@ -689,9 +630,65 @@ namespace
                                     Axis Transformations
     \*-------------------------------------------------------------------------------------*/
 
-    // The problem is remapped so that the plane sweeping direction is always in the z direction and
-    // the line sweeping direction is always in the y direction (in the code). This is more memory
-    // efficient and is simpler to implement.
+    Eigen::Matrix<CFD::intType, 3, 1> Axis2Vector(const CFD::BoundaryPatches::ENUMDATA axis)
+    {
+        using BP = CFD::BoundaryPatches::ENUMDATA;
+        switch (axis)
+        {
+            case (BP::xPositive):
+                return {1, 0, 0};
+                
+            case (BP::xNegative):
+                return {-1, 0, 0};
+
+            case (BP::yPositive):
+                return {0, 1, 0};
+
+            case (BP::yNegative):
+                return {0, -1, 0};
+
+            case (BP::zPositive):
+                return {0, 0, 1};
+
+            case (BP::zNegative):
+                return {0, 0, -1};
+
+            default:
+                // throw ERROR - invalud axis enum
+                return {0, 0, 0};
+        }
+    }
+
+
+
+    CFD::BoundaryPatches::ENUMDATA Vector2Axis(const Eigen::Matrix<CFD::intType, 3, 1> &vector)
+    {
+        using BP = CFD::BoundaryPatches::ENUMDATA;
+        if        ( ( vector.array() ==  Axis2Vector(BP::xPositive).array() ).all() ) {
+            return BP::xPositive;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::xNegative).array() ).all() ) {
+            return BP::xNegative;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::yPositive).array() ).all() ) {
+            return BP::yPositive;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::yNegative).array() ).all() ) {
+            return BP::yNegative;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::zPositive).array() ).all() ) {
+            return BP::zPositive;
+
+        } else if ( ( vector.array() ==  Axis2Vector(BP::zNegative).array() ).all() ) {
+            return BP::zNegative;
+
+        } else {
+            // throw ERROR - invalid unit vector
+            return BP::xPositive;
+        }
+    }
+
+
 
     // Sets the axis transformation map based on the sweeping directions
     void SetAxisTransformation( InputData &inputData) 
@@ -728,141 +725,6 @@ namespace
     }
 
 
-
-    // Transform an EnumVector of fields data. Only transforms the momentum equations part.
-    template< typename T >
-    void TransformFieldVector( EnumVector<Fields, T> &fieldsVector,
-                               const InputData::AxisTransformationMap& axisTransformation )
-    {
-        using F = Fields::ENUMDATA;
-        EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
-
-        // Create temporary copy to move data from 
-        EnumVector<Fields, T> userFieldsVector = fieldsVector;
-
-        BoundaryPatches::ENUMDATA userPatch;
-        Axis::ENUMDATA userAxis;
-
-        EnumFor<Axis>([&] (Axis::ENUMDATA axis) { 
-
-            userPatch = axisTransformation.UserPatch( PositivePatch[ axis ] );
-            userAxis = BoundaryPatchAxis[ userPatch ];
-
-            fieldsVector[ axisField[axis] ] = userFieldsVector[ axisField[userAxis] ];
-
-        } );
-    }
-
-
-
-    // Remaps the users boundary conditions
-    void TransformBoundaryConditions(InputData &inputData)
-    {
-        using BP = CFD::BoundaryPatches::ENUMDATA;
-        using F = CFD::Fields::ENUMDATA;
-        using A = CFD::Axis::ENUMDATA;
-
-        const InputData::AxisTransformationMap &axisTransformation = inputData.axisTransformation;
-        InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
-
-        // Temporary for boundary conditions as user specifies them
-        InputData::BoundaryConditionData boundaryConditionsUser = boundaryConditions;
-        floatVector3 domainSizeUser = inputData.domainSize;
-        
-
-        BoundaryPatches::ENUMDATA userPatch;
-        Axis::ENUMDATA userAxis;
-        EnumFor<Axis>( [&] (A axis) {
-
-            userPatch = axisTransformation.UserPatch( PositivePatch[ axis ] );
-            userAxis = BoundaryPatchAxis[ userPatch ];
-
-            inputData.domainSize( axis ) = domainSizeUser( userAxis ); 
-
-        } );
-
-
-        // Transform just the boundary conditions
-        EnumFor<Fields>( [&] (F field) {
-            
-            EnumFor<BoundaryPatches>( [&] (BP patch) { 
-
-                boundaryConditions[field][patch] = boundaryConditionsUser[field][ axisTransformation.UserPatch( patch ) ];
-
-            } );
-
-        } );
-
-        // Now the momentum directions
-        TransformFieldVector( boundaryConditions, axisTransformation );
-    }
-
-
-
-    // Reverse a mesh in a given axis
-    void ReverseMesh(std::vector< InputData::MeshSegment > &meshSegments)
-    {
-        // Reverse the order of the segments
-        std::reverse(meshSegments.begin(), meshSegments.end());
-
-        // Now flip each segment
-        for (auto &segment : meshSegments) {
-            std::swap(segment.upperBound, segment.lowerBound);
-            segment.upperBound = - segment.upperBound;
-            segment.lowerBound = - segment.lowerBound;
-            segment.biasFactor = - segment.biasFactor;
-        }
-    }
-
-
-
-    // Remaps the user mesh
-    void TransformMesh(InputData &inputData)
-    {
-        using enum Axis::ENUMDATA;
-        using enum BoundaryPatches::ENUMDATA;
-
-
-        // Create temporary copy of mesh data to take data from
-        EnumVector<Axis, std::vector<InputData::MeshSegment> > userMeshSegments = inputData.meshSegments;
-        floatVector3 userDomainSize;
-
-        BoundaryPatches::ENUMDATA userPatch;
-        Axis::ENUMDATA userAxis;
-
-        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-
-            userPatch = inputData.axisTransformation.UserPatch( PositivePatch[ axis ] );
-            userAxis = BoundaryPatchAxis[ userPatch ];
-
-            inputData.meshSegments[ axis ] = userMeshSegments[ userAxis ];
-            inputData.domainSize( axis )   = userDomainSize[ userAxis ];
-
-            if ( userPatch == NegativePatch[ userAxis ] ) {
-                ReverseMesh(inputData.meshSegments[ axis ]);
-            }
-
-        } );
-
-    }
-
-    // Remaps the initial conditions
-    void TransformInitialConditions( InputData &inputData )
-    {
-        TransformFieldVector( inputData.initialConditions, inputData.axisTransformation );
-    }
-
-
-
-    // Remaps any solver settings that have direction dependence
-    void TransformSolver( InputData &inputData )
-    {
-        TransformFieldVector( inputData.schemes.implicitRelaxation      , inputData.axisTransformation );
-        TransformFieldVector( inputData.linearSolverSettings.relaxation , inputData.axisTransformation );
-        TransformFieldVector( inputData.planeSolverSettings.relaxation  , inputData.axisTransformation );
-        TransformFieldVector( inputData.lineSolverSettings.relaxation   , inputData.axisTransformation );
-    }
-
 }   // end anonymous namepsace
 
 
@@ -880,11 +742,5 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFileName)
     
     SetAxisTransformation(inputData);
 
-    TransformBoundaryConditions(inputData);
-    TransformInitialConditions(inputData);
-    TransformMesh(inputData);
-    TransformSolver(inputData);
-
     return inputData;
 }
-

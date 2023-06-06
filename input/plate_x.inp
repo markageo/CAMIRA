@@ -1,4 +1,4 @@
-// Laminar duct in z direction
+// Laminar flat plate in x direction
 
 Model {
     rho  = 1
@@ -7,14 +7,14 @@ Model {
 
 Mesh {
 
-    domain = (0.5, 0.1, 0.3)
+    domain = (0.5, 0.1, 0.5)
 
     // Streamwise
     Grid x {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 50
-            biasFactor = 1
+            nCells     = 100
+            biasFactor = -5
         }
     }
 
@@ -32,8 +32,8 @@ Mesh {
     // Cross stream
     Grid z {
         Segment {
-            bounds     = (0, 0.3)
-            nCells     = 30
+            bounds     = (0, 0.5)
+            nCells     = 100
             biasFactor = 1
         }
     }
@@ -56,7 +56,7 @@ BoundaryConditions
         u = zeroGradient
         v = zeroGradient
         w = zeroGradient
-        p = uniform, 0
+        p = zeroGradient
     }
 
     // Inflow
@@ -83,12 +83,12 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Wall
+    // Freestream
     +z {
-        u = uniform, 0
-        v = uniform, 0
-        w = uniform, 0
-        p = zeroGradient
+        u = uniform, 1
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform, 0
     }
 
     // Wall
@@ -141,7 +141,7 @@ Solver {
                 momentumRelaxation = (1, 1, 1)
                 pressureRelaxation = 1
 
-                lineSweepDirection = +x
+                lineSweepDirection = +y
             }
         }
     }

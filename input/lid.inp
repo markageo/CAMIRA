@@ -1,39 +1,34 @@
-// Laminar duct in z direction
+// Lid driven cavity
 
 Model {
     rho  = 1
-    nu   = 1
+    nu   = 100
 }
 
 Mesh {
 
-    domain = (0.5, 0.1, 0.3)
+    domain = (0.5, 0.5, 0.5)
 
-    // Streamwise
     Grid x {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 50
+            nCells     = 25
             biasFactor = 1
         }
     }
 
-
-    // Symmetry
     Grid y {
         Segment {
-            bounds     = (0, 0.1)
-            nCells     = 1
+            bounds     = (0, 0.5)
+            nCells     = 25
             biasFactor = 1
         }
     }
 
-
-    // Cross stream
     Grid z {
         Segment {
-            bounds     = (0, 0.3)
-            nCells     = 30
+            bounds     = (0, 0.5)
+            nCells     = 10
             biasFactor = 1
         }
     }
@@ -42,7 +37,7 @@ Mesh {
 
 InitialConditions
 {
-    u = 1
+    u = 0
     v = 0
     w = 0
     p = 0
@@ -51,50 +46,50 @@ InitialConditions
 
 BoundaryConditions
 {
-    // Outflow
+    // Wall
     +x {
-        u = zeroGradient
-        v = zeroGradient
-        w = zeroGradient
-        p = uniform, 0
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
     }
 
-    // Inflow
+    // Wall
     -x {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Driven
+    +y {
         u = uniform, 1
         v = uniform, 0
         w = uniform, 0
-        p = zeroGradient
-    }
-
-    // Symmetry
-    +y {
-        u = zeroGradient
-        v = uniform, 0
-        w = zeroGradient
-        p = zeroGradient
-    }
-
-    // Symmetry
-    -y {
-        u = zeroGradient
-        v = uniform, 0
-        w = zeroGradient
-        p = zeroGradient
+        p = uniform, 0
     }
 
     // Wall
-    +z {
+    -y {
         u = uniform, 0
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
     }
 
-    // Wall
+    // Symmetry
+    +z {
+        u = zeroGradient
+        v = zeroGradient
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Symmetry
     -z {
-        u = uniform, 0
-        v = uniform, 0
+        u = zeroGradient
+        v = zeroGradient
         w = uniform, 0
         p = zeroGradient
     }
@@ -106,7 +101,7 @@ Solver {
 
     Schemes {
         linearisation = Picard
-        implicitMomentumRelaxation = (1, 1, 1)
+        implicitMomentumRelaxation = (0.2, 0.2, 0.2)
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 10000

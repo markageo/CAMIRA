@@ -612,7 +612,7 @@ void SetFaceInterpolatedCoefficients( ArrayAllocator<CFD::TransportCoefficients,
         // Cell on east side
         coeffs[p   ](i) += - mesh.interpFactors[axis](i);
         coeffs[west](i) += - ( 1 - mesh.interpFactors[axis](i) ); 
-        
+
     }
 
     // Boundary faces
