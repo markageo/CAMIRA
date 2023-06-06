@@ -811,9 +811,9 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         }
 
         // Update nonlinear coefficients
-        UpdateFaceVelocities( faceVelocities, mesh, fields, inputData );
-        UpdateFVCoefficients( fvCoeffs, mesh, fields, faceVelocities, inputData );
-        linearSolver.UpdateState();
+        // UpdateFaceVelocities( faceVelocities, mesh, fields, inputData );
+        // UpdateFVCoefficients( fvCoeffs, mesh, fields, faceVelocities, inputData );
+        // linearSolver.UpdateState();
         
     }
 
