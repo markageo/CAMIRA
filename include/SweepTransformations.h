@@ -17,46 +17,40 @@ class AxisTransformationMap
 {
     using BP = BoundaryPatches::ENUMDATA;
     using A = Axis::ENUMDATA;
+    using F = Fields::ENUMDATA;
 
     public:
         AxisTransformationMap();
 
         // Setting values
-        void Set(const BP codePatch, const BP userPatch)
-        {
-            m_codeMap[codePatch] = userPatch;
-            m_userMap[userPatch] = codePatch; 
-        }
-
+        void Set(const BP, const BP);
 
         // Code patch from user patch
-        const BP &CodePatch(const BP userPatch) const 
-        { return m_userMap.at( userPatch ); }
+        const BP &CodePatch(const BP) const;
 
         // Code axis from user axis
-        const A &CodeAxis(const A userAxis) const
-        { 
-            BP userPatch = PositivePatch[ userAxis ];
-            BP codePatch = CodePatch( userPatch );
-            return BoundaryPatchAxis[ codePatch ];
-        }
-
-
+        const A &CodeAxis(const A) const;
+       
         // User patch from code patch
-        const BP &UserPatch(const BP codePatch) const
-        { return m_codeMap.at( codePatch ); }
+        const BP &UserPatch(const BP) const;
 
         // User axis from code axis
-        const A &UserAxis(const A codeAxis) const
-        {
-            BP codePatch = PositivePatch[ codeAxis ];
-            BP userPatch = UserPatch( codePatch );
-            return BoundaryPatchAxis[ userPatch ];
-        }
+        const A &UserAxis(const A) const;
 
     private:
-        std::map< BP, BP> m_codeMap;    // Code patch -> user patch
-        std::map< BP, BP> m_userMap;    // User patch -> code patch
+
+        // Lookups for patches
+        EnumVector<BoundaryPatches, BP> m_codeBoundaryPatches;   // Code patch -> user patch
+        EnumVector<BoundaryPatches, BP> m_userBoundaryPatches;   // User patch -> code patch
+
+        // Lookups for axis
+        EnumVector<Axis, A> m_codeAxis;    // Code axis -> user axis
+        EnumVector<Axis, A> m_userAxis;    // User axis -> code axis
+
+        // Lookups for fields
+        EnumVector<Fields, F> m_codeFields;  // Code field -> user field
+        EnumVector<Fields, F> m_userFields;  // User field -> code field
+
 };
 
 

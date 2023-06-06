@@ -124,7 +124,7 @@ Solver {
 
         PlaneSolver {
             type = SUGS
-            maxIterations = 1
+            maxIterations = 10
             maxResiduals = 1e-2
 
             momentumRelaxation = (1, 1, 1)
@@ -135,13 +135,13 @@ Solver {
 
             LineSolver {
                 type = SUGS
-                maxIterations = 1
+                maxIterations = 5
                 maxResiduals = 1e-2
 
                 momentumRelaxation = (1, 1, 1)
                 pressureRelaxation = 1
 
-                lineSweepDirection = +x
+                lineSweepDirection = +y
             }
         }
     }
