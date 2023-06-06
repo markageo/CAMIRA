@@ -1,4 +1,4 @@
-// Laminar flat plate main input file
+// Laminar duct in z direction
 
 Model {
     rho  = 1
@@ -7,30 +7,31 @@ Model {
 
 Mesh {
 
-    domain = (0.2, 0.1, 0.3)
+    domain = (0.1, 0.3, 0.5)
 
+    // Symmetry
     Grid x {
         Segment {
-            bounds     = (0, 0.2)
-            nCells     = 100
+            bounds     = (0, 0.1)
+            nCells     = 1
             biasFactor = 1
         }
     }
 
-
+    // Cross stream
     Grid y {
         Segment {
-            bounds     = (0, 0.1)
-            nCells     = 100
+            bounds     = (0, 0.3)
+            nCells     = 30
             biasFactor = 1
         }
     }
 
-
+    // Streamwise
     Grid z {
         Segment {
-            bounds     = (0, 0.3)
-            nCells     = 100
+            bounds     = (0, 0.5)
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -39,17 +40,49 @@ Mesh {
 
 InitialConditions
 {
-    u = 1
+    u = 0
     v = 0
-    w = 0
+    w = 1
     p = 0
 }
 
 
 BoundaryConditions
 {
-    // Outflow
+    // Symmetry
     +x {
+        u = uniform, 0
+        v = zeroGradient
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    // Symmetry
+    -x {
+        u = uniform, 0
+        v = zeroGradient
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    // Wall
+    +y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Outflow
+    +z {
         u = zeroGradient
         v = zeroGradient
         w = zeroGradient
@@ -57,42 +90,10 @@ BoundaryConditions
     }
 
     // Inflow
-    -x {
-        u = uniform, 1
-        v = uniform, 0
-        w = uniform, 0
-        p = zeroGradient
-    }
-
-    // Symmetry
-    +y {
-        u = zeroGradient
-        v = uniform, 0
-        w = zeroGradient
-        p = zeroGradient
-    }
-
-    // Symmetry
-    -y {
-        u = zeroGradient
-        v = uniform, 0
-        w = zeroGradient
-        p = zeroGradient
-    }
-
-    // Freestream
-    +z {
-        u = uniform, 1
-        v = zeroGradient
-        w = zeroGradient
-        p = uniform, 0
-    }
-
-    // Wall
     -z {
         u = uniform, 0
         v = uniform, 0
-        w = uniform, 0
+        w = uniform, 1
         p = zeroGradient
     }
 }
@@ -106,39 +107,39 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 1000
-        maxOuterResiduals = 0
+        maxOuterIterations = 10000
+        maxOuterResiduals = 1e-3
     }
     
     LinearSolver {
 
         type = SUGS
         maxIterations = 1
-        maxResiduals = 1e-5
+        maxResiduals = 1e-3
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
         PlaneSolver {
             type = SUGS
-            maxIterations = 10
-            maxResiduals = 1e-3
+            maxIterations = 5
+            maxResiduals = 1e-2
 
             momentumRelaxation = (1, 1, 1)
             pressureRelaxation = 1
 
-            planeSweepDirection = +z
+            planeSweepDirection = +y
 
 
             LineSolver {
                 type = SUGS
                 maxIterations = 1
-                maxResiduals = 1e-3
+                maxResiduals = 1e-2
 
                 momentumRelaxation = (1, 1, 1)
                 pressureRelaxation = 1
 
-                lineSweepDirection = +y
+                lineSweepDirection = +x
             }
         }
     }
