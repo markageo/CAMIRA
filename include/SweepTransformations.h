@@ -30,12 +30,20 @@ class AxisTransformationMap
 
         // Code axis from user axis
         const A &CodeAxis(const A) const;
+
+        // If code axis is mapped to the negative direction of a user axis
+        bool IsCodeAxisReversed( const A ) const;
        
+
         // User patch from code patch
         const BP &UserPatch(const BP) const;
 
         // User axis from code axis
         const A &UserAxis(const A) const;
+
+        // If user axis is mapped to the negative direction of a code axis
+        bool IsUserAxisReversed( const A ) const;
+
 
     private:
 

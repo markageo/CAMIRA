@@ -4,6 +4,10 @@
 namespace CFD
 {
 
+/*-------------------------------------------------------------------------------------*\
+                          AxisTransformationMap Definitions
+\*-------------------------------------------------------------------------------------*/
+
 AxisTransformationMap::AxisTransformationMap() :
     m_codeBoundaryPatches( { BoundaryPatches::xPositive,
                              BoundaryPatches::xNegative,
@@ -24,8 +28,6 @@ AxisTransformationMap::AxisTransformationMap() :
 void AxisTransformationMap::Set( const BoundaryPatches::ENUMDATA codePatch,
                                  const BoundaryPatches::ENUMDATA userPatch )
 {
-    EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
-
     A codeAxis = BoundaryPatchAxis[ codePatch ];
     A userAxis = BoundaryPatchAxis[ userPatch ];
 
@@ -56,10 +58,6 @@ void AxisTransformationMap::Set( const BoundaryPatches::ENUMDATA codePatch,
     // Update the axis
     m_codeAxis[ codeAxis ] = userAxis;
     m_userAxis[ userAxis ] = codeAxis;
-
-    // Update the fields
-    m_codeFields[ axisField[codeAxis] ] = axisField[userAxis];
-    m_userFields[ axisField[userAxis] ] = axisField[codeAxis];
 }
 
 
@@ -75,6 +73,18 @@ const Axis::ENUMDATA &AxisTransformationMap::CodeAxis(const A userAxis) const
     return BoundaryPatchAxis[ codePatch ];
 }
 
+// If code axis is mapped to the negative direction of a user axis
+bool AxisTransformationMap::IsCodeAxisReversed( const A codeAxis ) const
+{
+    BP positiveCodePatch = PositivePatch[ codeAxis ];
+    BP mappedUserPatch   = UserPatch( positiveCodePatch );
+    A  mappedUserAxis    = BoundaryPatchAxis[ mappedUserPatch ];
+    if ( mappedUserPatch == NegativePatch[ mappedUserAxis ] ) {
+        return true;
+    }
+    return false;
+}
+
 
 // User patch from code patch
 const BoundaryPatches::ENUMDATA &AxisTransformationMap::UserPatch(const BP codePatch) const
@@ -88,6 +98,23 @@ const Axis::ENUMDATA &AxisTransformationMap::UserAxis(const A codeAxis) const
     return BoundaryPatchAxis[ userPatch ];
 }
 
+// If user axis is mapped to the negative direction of a code axis
+bool AxisTransformationMap::IsUserAxisReversed( const A userAxis ) const
+{
+    BP positiveUserPatch = PositivePatch[ userAxis ];
+    BP mappedCodePatch   = CodePatch( positiveUserPatch );
+    A  mappedCodeAxis    = BoundaryPatchAxis[ mappedCodePatch ];
+    if ( mappedCodePatch == NegativePatch[ mappedCodeAxis ] ) {
+        return true;
+    }
+    return false;
+}
+
+
+
+/*-------------------------------------------------------------------------------------*\
+                            User -> Code Axis Transformations
+\*-------------------------------------------------------------------------------------*/
 
 
 namespace 
@@ -208,15 +235,9 @@ namespace
         // Create temporary copy to move data from 
         EnumVector<Fields, T> userFieldsVector = fieldsVector;
 
-        BoundaryPatches::ENUMDATA userPatch;
-        Axis::ENUMDATA userAxis;
+        EnumFor<Axis>([&] (Axis::ENUMDATA codeAxis) { // Code axis
 
-        EnumFor<Axis>([&] (Axis::ENUMDATA axis) { // Code axis
-
-            userPatch = axisTransformation.UserPatch( PositivePatch[ axis ] );
-            userAxis = BoundaryPatchAxis[ userPatch ];
-
-            fieldsVector[ axisField[axis] ] = userFieldsVector[ axisField[userAxis] ];
+            fieldsVector[ axisField[codeAxis] ] = userFieldsVector[ axisField[ axisTransformation.UserAxis(codeAxis) ] ];
 
         } );
     }
@@ -237,15 +258,9 @@ namespace
         InputData::BoundaryConditionData boundaryConditionsUser = boundaryConditions;
         floatVector3 domainSizeUser = inputData.domainSize;
         
+        EnumFor<Axis>( [&] (A codeAxis) {
 
-        BoundaryPatches::ENUMDATA userPatch;
-        Axis::ENUMDATA userAxis;
-        EnumFor<Axis>( [&] (A axis) {
-
-            userPatch = axisTransformation.UserPatch( PositivePatch[ axis ] );
-            userAxis = BoundaryPatchAxis[ userPatch ];
-
-            inputData.domainSize( axis ) = domainSizeUser( userAxis ); 
+            inputData.domainSize( codeAxis ) = domainSizeUser( axisTransformation.UserAxis( codeAxis ) ); 
 
         } );
 
@@ -296,19 +311,13 @@ namespace
         EnumVector<Axis, std::vector<InputData::MeshSegment> > userMeshSegments = inputData.meshSegments;
         floatVector3 userDomainSize;
 
-        BoundaryPatches::ENUMDATA userPatch;
-        Axis::ENUMDATA userAxis;
+        EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
 
-        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            inputData.meshSegments[ codeAxis ] = userMeshSegments[ axisTransformation.UserAxis( codeAxis ) ];
+            inputData.domainSize( codeAxis )   = userDomainSize[ axisTransformation.UserAxis( codeAxis ) ];
 
-            userPatch = axisTransformation.UserPatch( PositivePatch[ axis ] );
-            userAxis = BoundaryPatchAxis[ userPatch ];
-
-            inputData.meshSegments[ axis ] = userMeshSegments[ userAxis ];
-            inputData.domainSize( axis )   = userDomainSize[ userAxis ];
-
-            if ( userPatch == NegativePatch[ userAxis ] ) {
-                ReverseMesh(inputData.meshSegments[ axis ]);
+            if ( axisTransformation.IsCodeAxisReversed( codeAxis ) ) {
+                ReverseMesh(inputData.meshSegments[ codeAxis ]);
             }
 
         } );
@@ -350,6 +359,13 @@ AxisTransformationMap TransformUserInputData(InputData &inputData )
     return axisTransformation;
 }
 
+
+
+
+
+/*-------------------------------------------------------------------------------------*\
+                            Code -> User Axis Transformations
+\*-------------------------------------------------------------------------------------*/
 
 
 namespace
@@ -412,68 +428,12 @@ namespace
         // Create temporary copy to move data from 
         Container<Fields, T> codeFieldsVector = fieldsVector;
 
-        BoundaryPatches::ENUMDATA codepatch;
-        Axis::ENUMDATA codeAxis;
+        EnumFor<Axis>([&] (Axis::ENUMDATA userAxis) { // User axis
 
-        EnumFor<Axis>([&] (Axis::ENUMDATA axis) { // User axis
-
-            codepatch = axisTransformation.CodePatch( PositivePatch[ axis ] );
-            codeAxis = BoundaryPatchAxis[ codepatch ];
-
-            fieldsVector[ axisField[axis] ] = codeFieldsVector[ axisField[codeAxis] ];
+            fieldsVector[ axisField[userAxis] ] = codeFieldsVector[ axisField[ axisTransformation.CodeAxis( userAxis ) ] ];
 
         } );
     }
-
-
-
-
-    // // Transform an EnumVector of fields data to user coordinates. Only transforms the momentum equations part.
-    // template< typename T >
-    // void TransformFieldVectorToUser( EnumVector<Fields, T> &fieldsVector,
-    //                                 const AxisTransformationMap& axisTransformation )
-    // {
-    //     using F = Fields::ENUMDATA;
-    //     EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
-
-    //     // Create temporary copy to move data from 
-    //     EnumVector<Fields, T> codeFieldsVector = fieldsVector;
-
-    //     BoundaryPatches::ENUMDATA codepatch;
-    //     Axis::ENUMDATA codeAxis;
-
-    //     EnumFor<Axis>([&] (Axis::ENUMDATA axis) { // User axis
-
-    //         codepatch = axisTransformation.CodePatch( PositivePatch[ axis ] );
-    //         codeAxis = BoundaryPatchAxis[ codepatch ];
-
-    //         fieldsVector[ axisField[axis] ] = codeFieldsVector[ axisField[codeAxis] ];
-
-    //     } );
-    // }
-
-    // template< typename T >
-    // void TransformFieldVectorToUser( ArrayAllocator<Fields, T> &fieldsVector,
-    //                                 const AxisTransformationMap& axisTransformation )
-    // {
-    //     using F = Fields::ENUMDATA;
-    //     EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
-
-    //     // Create temporary copy to move data from 
-    //     ArrayAllocator<Fields, T> codeFieldsVector = fieldsVector;
-
-    //     BoundaryPatches::ENUMDATA codepatch;
-    //     Axis::ENUMDATA codeAxis;
-
-    //     EnumFor<Axis>([&] (Axis::ENUMDATA axis) { // User axis
-
-    //         codepatch = axisTransformation.CodePatch( PositivePatch[ axis ] );
-    //         codeAxis = BoundaryPatchAxis[ codepatch ];
-
-    //         fieldsVector[ axisField[axis] ] = codeFieldsVector[ axisField[codeAxis] ];
-
-    //     } );
-    // }
 
 }   // end anonymous namespace
 
@@ -489,25 +449,23 @@ void TransformToUserCoordinates( Mesh &mesh,
     // Temporary copy of the mesh to take data from 
     Mesh codeMesh = mesh;
 
-    BoundaryPatches::ENUMDATA codePatch;
     Axis::ENUMDATA codeAxis;
     bool reverseAxis;
 
-    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+    EnumFor<Axis>( [&] (Axis::ENUMDATA userAxis) {
 
-        codePatch = axisTransformation.CodePatch( PositivePatch[ axis ] );
-        codeAxis = BoundaryPatchAxis[ codePatch ];
-        reverseAxis = ( codePatch == NegativePatch[ codeAxis ] );
+        codeAxis = axisTransformation.CodeAxis( userAxis );
+        reverseAxis = axisTransformation.IsUserAxisReversed( userAxis );
 
-        CopyMeshAxis( mesh, codeMesh, axis, codeAxis );
+        CopyMeshAxis( mesh, codeMesh, userAxis, codeAxis );
 
         if ( reverseAxis ) {
-            ReverseMeshAxis(mesh, axis);
+            ReverseMeshAxis(mesh, userAxis);
         }
 
         // Shuffle and reverse arrays used for 3D arrays
-        shuffleArray[ axis ] = codeAxis;
-        reverseArray[ axis ] = reverseAxis;
+        shuffleArray[ userAxis ] = codeAxis;
+        reverseArray[ userAxis ] = reverseAxis;
 
     } );
 
