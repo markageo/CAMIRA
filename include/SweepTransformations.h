@@ -54,11 +54,6 @@ class AxisTransformationMap
         // Lookups for axis
         EnumVector<Axis, A> m_codeAxis;    // Code axis -> user axis
         EnumVector<Axis, A> m_userAxis;    // User axis -> code axis
-
-        // Lookups for fields
-        EnumVector<Fields, F> m_codeFields;  // Code field -> user field
-        EnumVector<Fields, F> m_userFields;  // User field -> code field
-
 };
 
 
