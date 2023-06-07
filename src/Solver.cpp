@@ -1,7 +1,9 @@
+#include "Solver.h"
 #include "Types.h"
 #include "InputProcessing.h"
+#include "SweepTransformations.h"
 #include "FiniteVolume.h"
-#include "Solver.h"
+#include "SolverLogging.h"
 #include "StaggerIndexing.h"
 #include "Utils.h"
 
@@ -754,8 +756,9 @@ class LinearSolver
 
 
 void SweepSolve( ArrayAllocator<Fields, array3D> &fields, 
-                            const Mesh &mesh, 
-                            const InputData &inputData) 
+                 const Mesh &mesh, 
+                 const InputData &inputData,
+                 const AxisTransformationMap &axisTransformation ) 
 {
     using enum Axis::ENUMDATA;
     using enum Fields::ENUMDATA;
@@ -775,36 +778,27 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
  
     intType nOuterIterations;
     EnumVector<Fields, floatType> residualsOuter, residualsOuterInitialInv;
-    // ConvergenceData convergenceData;
+    ConvergenceLogger logger( "convergence_history.csv", axisTransformation );
     
     // Instantiate linear solver
     LinearSolver linearSolver( fields, fvCoeffs, linearSolverSettings, planeSolverSettings, lineSolverSettings );
 
-
     // Outer iterations
     nOuterIterations = 0;
     while ( nOuterIterations < maxOuterIterations ) 
-    {
-        // Solve linearised equations    
+    {  
         linearSolver.Solve();
 
         // Update residuals
         L1ArrayDiff( residualsOuter, fields, fieldsOld );
         RelativeResidual( residualsOuter, residualsOuterInitialInv, nOuterIterations );
-        // convergenceData.residuals.push_back( residualsOuter );
         nOuterIterations++;
 
-        // Set old fields
         fieldsOld = fields;
 
-        // *** These are not in user coordinates! ***
-        std::cout << "Outer iteration: " << nOuterIterations << ", U outer residual: " << residualsOuter[U]
-                                                             << ", V outer residual: " << residualsOuter[V]
-                                                             << ", W outer residual: " << residualsOuter[W]
-                                                             << ", P outer residual: " << residualsOuter[P]
-                                                             << "\n\n";
+        logger.WriteResidualsToScreen( residualsOuter, nOuterIterations );
+        logger.WriteResidualsToFile( residualsOuter, nOuterIterations );
 
-        // Check residual tolerence
         if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
             std::cout << "*** OUTER ITERATIONS CONVERGED ***" << "\n\n";
             break;
@@ -816,12 +810,6 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         // linearSolver.UpdateState();
         
     }
-
-
-    // Strip unused data
-    // convergenceData.shrink_to_fit();
-
-    // return convergenceData;
  
 }
 
