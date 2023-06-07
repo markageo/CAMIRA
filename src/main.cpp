@@ -40,7 +40,7 @@ int main(int argc, char const *argv[])
     TOC();
 
     TIC("Solver");
-    CFD::SweepSolve(fields, mesh, inputData);
+    CFD::SweepSolve(fields, mesh, inputData, axisTransformation);
     TOC();
 
 
