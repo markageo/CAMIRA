@@ -18,10 +18,7 @@ AxisTransformationMap::AxisTransformationMap() :
     m_userBoundaryPatches( m_codeBoundaryPatches ),
 
     m_codeAxis( { Axis::X, Axis::Y, Axis::Z } ),
-    m_userAxis( m_codeAxis ),
-
-    m_codeFields( { Fields::U, Fields::V, Fields::W, Fields::P } ),
-    m_userFields( m_codeFields )
+    m_userAxis( m_codeAxis )
     {};
 
 
