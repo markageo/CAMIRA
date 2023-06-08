@@ -7,13 +7,13 @@ Model {
 
 Mesh {
 
-    domain = (0.5, 0.1, 0.3)
+    domain = (0.5, 0.5, 0.5)
 
     // Streamwise
     Grid x {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 50
+            nCells     = 25
             biasFactor = 1
         }
     }
@@ -22,8 +22,8 @@ Mesh {
     // Symmetry
     Grid y {
         Segment {
-            bounds     = (0, 0.1)
-            nCells     = 4
+            bounds     = (0, 0.5)
+            nCells     = 25
             biasFactor = 1
         }
     }
@@ -32,8 +32,8 @@ Mesh {
     // Cross stream
     Grid z {
         Segment {
-            bounds     = (0, 0.3)
-            nCells     = 30
+            bounds     = (0, 0.5)
+            nCells     = 25
             biasFactor = 1
         }
     }
@@ -109,8 +109,8 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 50
-        maxOuterResiduals = 1e-3
+        maxOuterIterations = 1000
+        maxOuterResiduals = 1e-6
     }
     
     LinearSolver {
@@ -130,18 +130,18 @@ Solver {
             momentumRelaxation = (1, 1, 1)
             pressureRelaxation = 1
 
-            planeSweepDirection = +z
+            planeSweepDirection = +y
 
 
             LineSolver {
                 type = SUGS
-                maxIterations = 5
+                maxIterations = 1
                 maxResiduals = 1e-3
 
                 momentumRelaxation = (1, 1, 1)
                 pressureRelaxation = 1
 
-                lineSweepDirection = +y
+                lineSweepDirection = +z
             }
         }
     }

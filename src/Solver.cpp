@@ -68,6 +68,32 @@ bool MetResidualTolerence( const EnumVector<Fields, floatType> &residuals,
     return true;
 }
 
+
+// Calculate global mass flux residual at the domain boundary
+floatType BoundaryMassFluxResidual( const ArrayAllocator<Fields, array3D> &faceVelocities,
+                                    const Mesh &mesh )
+{
+    using F = Fields::ENUMDATA;
+    floatType massFluxResidual = 0.0f;
+    EnumVector<Axis, F> axisField( {F::U, F::V, F::W} );
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+        // Positive face, area normal is in positive direction
+        auto faceFluxesPositive = faceVelocities[ axisField[axis] ].chip(mesh.nCells(axis), axis) * mesh.cellFaceAreas[axis];
+        massFluxResidual += static_cast<array0D>( faceFluxesPositive.sum() )(0);
+
+        // Negative face, area normal is in negative direction
+        auto faceFluxesNegative = - faceVelocities[ axisField[axis] ].chip(0, axis) * mesh.cellFaceAreas[axis];
+        massFluxResidual += static_cast<array0D>( faceFluxesNegative.sum() )(0);
+
+    } );
+
+    return massFluxResidual;
+}
+
+
+
 }   // end anonymous namespace
 
 
@@ -778,6 +804,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
  
     intType nOuterIterations;
     EnumVector<Fields, floatType> residualsOuter, residualsOuterInitialInv;
+    floatType massFluxResidual;
     ConvergenceLogger logger( "convergence_history.csv", axisTransformation );
     
     // Instantiate linear solver
@@ -788,16 +815,18 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
     while ( nOuterIterations < maxOuterIterations ) 
     {  
         linearSolver.Solve();
+        UpdateFaceVelocities( faceVelocities, mesh, fields, inputData );
 
         // Update residuals
         L1ArrayDiff( residualsOuter, fields, fieldsOld );
         RelativeResidual( residualsOuter, residualsOuterInitialInv, nOuterIterations );
+        massFluxResidual = BoundaryMassFluxResidual( faceVelocities, mesh );
         nOuterIterations++;
 
         fieldsOld = fields;
 
-        logger.WriteResidualsToScreen( residualsOuter, nOuterIterations );
-        logger.WriteResidualsToFile( residualsOuter, nOuterIterations );
+        logger.WriteResidualsToScreen( residualsOuter, massFluxResidual, nOuterIterations );
+        logger.WriteResidualsToFile( residualsOuter, massFluxResidual, nOuterIterations );
 
         if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
             std::cout << "*** OUTER ITERATIONS CONVERGED ***" << "\n\n";
@@ -805,7 +834,6 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         }
 
         // Update nonlinear coefficients
-        // UpdateFaceVelocities( faceVelocities, mesh, fields, inputData );
         // UpdateFVCoefficients( fvCoeffs, mesh, fields, faceVelocities, inputData );
         // linearSolver.UpdateState();
         
