@@ -1,4 +1,4 @@
-#ifndef SOVLER_LOGGING
+#ifndef SOLVER_LOGGING
 #define SOLVER_LOGGING
 
 #include "Types.h"
