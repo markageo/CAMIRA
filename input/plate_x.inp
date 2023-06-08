@@ -1,4 +1,4 @@
-// Laminar flat plate in x direction
+// Laminar duct in z direction
 
 Model {
     rho  = 1
@@ -13,8 +13,8 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 100
-            biasFactor = -5
+            nCells     = 25
+            biasFactor = 1
         }
     }
 
@@ -23,7 +23,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 0.1)
-            nCells     = 1
+            nCells     = 10
             biasFactor = 1
         }
     }
@@ -33,8 +33,8 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 100
-            biasFactor = 1
+            nCells     = 25
+            biasFactor = 5
         }
     }
 }
@@ -83,7 +83,7 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Freestream
+    // Free stream
     +z {
         u = uniform, 1
         v = zeroGradient
@@ -109,8 +109,8 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 10000
-        maxOuterResiduals = 1e-3
+        maxOuterIterations = 100
+        maxOuterResiduals = 1e-6
     }
     
     LinearSolver {
@@ -125,23 +125,23 @@ Solver {
         PlaneSolver {
             type = SUGS
             maxIterations = 5
-            maxResiduals = 1e-2
+            maxResiduals = 1e-3
 
             momentumRelaxation = (1, 1, 1)
             pressureRelaxation = 1
 
-            planeSweepDirection = +z
+            planeSweepDirection = +y
 
 
             LineSolver {
                 type = SUGS
-                maxIterations = 1
-                maxResiduals = 1e-2
+                maxIterations = 10
+                maxResiduals = 1e-3
 
                 momentumRelaxation = (1, 1, 1)
                 pressureRelaxation = 1
 
-                lineSweepDirection = +y
+                lineSweepDirection = +x
             }
         }
     }

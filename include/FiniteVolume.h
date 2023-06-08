@@ -21,6 +21,7 @@ struct Mesh
                                   cellLengthsInv,       // inverse of cell lengths
                                   cellCenterDiffInv,    // inverse of distance between cell centers, same convention as cell faces
                                   interpFactors;        // faceValue(i) = (1 - interpFactor(i))*cellValue(i-1) + interpFactor(i)*cellValue(i)
+    ArrayAllocator<Axis, array2D> cellFaceAreas;        // Index by right hand rule
 
     struct ExtrapFactorsStruct {
         floatType p,    // Boundary cell 

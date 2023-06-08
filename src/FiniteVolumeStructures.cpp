@@ -98,6 +98,18 @@ void CalculateCellFaces(array1D &cellFaces,
 }
 
 
+void CalculateCellFaceAreas(array2D &cellFaceAreas, 
+                            const array1D &cellLengths_x, 
+                            const array1D &cellLengths_y)
+{
+    for (int j = 0; j != cellLengths_y.dimension(0); j++) {
+        for (int i = 0; i != cellLengths_x.dimension(0); i++) {
+            cellFaceAreas(i, j) = cellLengths_x(i) * cellLengths_y(j);
+        }
+    }
+}
+
+
 void CalculateInterpolationFactors(array1D &interpFactors, 
                                    const array1D &cellCenters, 
                                    const array1D &cellFaces) 
@@ -200,6 +212,10 @@ Mesh::Mesh(const InputData &inputData) :
                     {Axis::ENUMDATA::Y, nCells(1) + 1},
                     {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
 
+    cellFaceAreas( {{Axis::ENUMDATA::X, {nCells(1), nCells(2)} },
+                    {Axis::ENUMDATA::Y, {nCells(2), nCells(0)} },
+                    {Axis::ENUMDATA::Z, {nCells(0), nCells(1)} }} ),
+
     extrapFactors()
 
     { 
@@ -218,6 +234,17 @@ Mesh::Mesh(const InputData &inputData) :
             CalculateCellFaces(cellFaces[axis], cellLengths[axis], inputData.meshSegments[axis].front().lowerBound);
             CalculateInterpolationFactors(interpFactors[axis], cellCenters[axis], cellFaces[axis]);
             CalculateExtrapolationFactors(extrapFactors, cellLengths, axis);
+
+        } );
+
+
+        // Cell face areas should be calculated on their own since they depend o other axis
+        EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
+
+            // Cyclic permutations to get correct order of axis for area, which is indexed by right hand rule
+            Axis::ENUMDATA axis1 = static_cast<Axis::ENUMDATA>( (axis+1) % Axis::count );
+            Axis::ENUMDATA axis2 = static_cast<Axis::ENUMDATA>( (axis+2) % Axis::count );
+            CalculateCellFaceAreas(cellFaceAreas[axis], cellLengths[axis1], cellLengths[axis2]);
 
         } );
 
