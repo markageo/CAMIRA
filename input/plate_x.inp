@@ -7,7 +7,7 @@ Model {
 
 Mesh {
 
-    domain = (0.5, 0.1, 0.5)
+    domain = (0.5, 0.3, 0.1)
 
     // Streamwise
     Grid x {
@@ -19,22 +19,22 @@ Mesh {
     }
 
 
-    // Symmetry
+    // Cross stream
     Grid y {
         Segment {
-            bounds     = (0, 0.1)
-            nCells     = 10
+            bounds     = (0, 0.6)
+            nCells     = 25
             biasFactor = 1
         }
     }
 
 
-    // Cross stream
+    // Symmetry
     Grid z {
         Segment {
-            bounds     = (0, 0.5)
+            bounds     = (0, 0.1)
             nCells     = 25
-            biasFactor = 5
+            biasFactor = 1
         }
     }
 }
@@ -67,24 +67,8 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Symmetry
+    // Freestream
     +y {
-        u = zeroGradient
-        v = uniform, 0
-        w = zeroGradient
-        p = zeroGradient
-    }
-
-    // Symmetry
-    -y {
-        u = zeroGradient
-        v = uniform, 0
-        w = zeroGradient
-        p = zeroGradient
-    }
-
-    // Free stream
-    +z {
         u = uniform, 1
         v = zeroGradient
         w = zeroGradient
@@ -92,9 +76,25 @@ BoundaryConditions
     }
 
     // Wall
-    -z {
+    -y {
         u = uniform, 0
         v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Symmetry
+    +z {
+        u = zeroGradient
+        v = zeroGradient
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Symmetry
+    -z {
+        u = zeroGradient
+        v = zeroGradient
         w = uniform, 0
         p = zeroGradient
     }
@@ -109,7 +109,7 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 1000
+        maxOuterIterations = 100
         maxOuterResiduals = 1e-6
     }
     
@@ -124,7 +124,7 @@ Solver {
 
         PlaneSolver {
             type = SUGS
-            maxIterations = 5
+            maxIterations = 1
             maxResiduals = 1e-3
 
             momentumRelaxation = (1, 1, 1)
@@ -138,7 +138,7 @@ Solver {
                 maxIterations = 10
                 maxResiduals = 1e-3
 
-                momentumRelaxation = (1, 1, 1)
+                momentumRelaxation = (0.6, 0.6, 0.6)
                 pressureRelaxation = 1
 
                 lineSweepDirection = +x

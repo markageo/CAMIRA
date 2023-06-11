@@ -944,6 +944,9 @@ void AddRelaxation( array3D &diagonalCoeffs,
 {
     using enum TransportCoefficients::ENUMDATA;
 
+    if ( relaxationFactor == 1.0f )
+        return;
+
     // Add to the diagonal coefficient
     diagonalCoeffs *= diagonalCoeffs.constant( 1.0f / relaxationFactor );
 

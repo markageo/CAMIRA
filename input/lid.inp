@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 100
+    nu   = 1
 }
 
 Mesh {
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 10
+            nCells     = 1
             biasFactor = 1
         }
     }
@@ -101,10 +101,10 @@ Solver {
 
     Schemes {
         linearisation = Picard
-        implicitMomentumRelaxation = (0.2, 0.2, 0.2)
+        implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 10000
+        maxOuterIterations = 1000
         maxOuterResiduals = 1e-3
     }
     
@@ -133,10 +133,10 @@ Solver {
                 maxIterations = 1
                 maxResiduals = 1e-2
 
-                momentumRelaxation = (1, 1, 1)
+                momentumRelaxation = (0.5, 0.5, 0.5)
                 pressureRelaxation = 1
 
-                lineSweepDirection = +x
+                lineSweepDirection = +y
             }
         }
     }
