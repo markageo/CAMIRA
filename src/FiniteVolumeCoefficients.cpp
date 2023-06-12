@@ -243,7 +243,6 @@ void UpwindXnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
     floatType uf, coeff_e, coeff_w;
     for (intType k = 0; k != faceVelocities[F::U].dimension(Z); k++) {
         for (intType j = 0; j != faceVelocities[F::U].dimension(Y); j++) {
-            coeffs[p](0, j, k) = 0;     // This one doesn't get reset in the loop
             for (intType i = 1; i != faceVelocities[F::U].dimension(X)-1; i++) {    // Boundary condition in the x direction
                 
                 uf = faceVelocities[F::U](i, j, k);
@@ -256,7 +255,7 @@ void UpwindXnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
 
                 // Cell on east side
                 coeffs[w](i, j, k)  = std::min( coeff_e, static_cast<floatType>(0.0f) );      // The sign of this coefficient is negative
-                coeffs[p](i, j, k)  = coeff_e - coeffs[w](i, j, k);  // Shouldn't be += since this is the first time it is touched
+                coeffs[p](i, j, k) += coeff_e - coeffs[w](i, j, k);  
 
             }
         }
@@ -290,7 +289,7 @@ void UpwindYnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
 
                 // Cell on north side
                 coeffs[s](i, j, k)  = std::min( coeff_n, static_cast<floatType>(0.0f) );     // The sign of this coefficient is negative
-                coeffs[p](i, j, k)  += coeff_n - coeffs[s](i, j, k); 
+                coeffs[p](i, j, k) += coeff_n - coeffs[s](i, j, k); 
 
             }
         }
@@ -324,7 +323,7 @@ void UpwindZnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &co
 
                 // Cell on top side
                 coeffs[b](i, j, k)  = std::min( coeff_t, static_cast<floatType>(0.0f) );      // The sign of this coefficient is negative
-                coeffs[p](i, j, k)  += coeff_t - coeffs[b](i, j, k);
+                coeffs[p](i, j, k) += coeff_t - coeffs[b](i, j, k);
 
             }
         }
@@ -436,18 +435,20 @@ void SetAdvectionCoefficients( ArrayAllocator<TransportCoefficients, array3D> &c
 
     const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
     
+    // For now assumes that all coefficiencients are set to zero
+
     // Upwind internal faces
     UpwindXnormal(coeffs, faceVelocities, mesh);
     UpwindYnormal(coeffs, faceVelocities, mesh);
     UpwindZnormal(coeffs, faceVelocities, mesh);
 
     // Boundary conditions by axis
-    Axis::ENUMDATA axis;
-    for (int a = 0; a != Axis::count; a++) {
-        axis = static_cast<Axis::ENUMDATA>(a);
+    EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
+
         AdvectionPositiveBoundary(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], axis);
         AdvectionNegativeBoundary(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], axis);
-    }
+
+    } );
 
 }
 
@@ -1021,6 +1022,11 @@ void AddContinuityBoundaryConstants( FVCoefficients::ContinuityEquation &contCoe
 
 
 
+/*---------------------------------------------------------------------------------------------------------------*\
+                                            Set and Update Functions
+\*---------------------------------------------------------------------------------------------------------------*/
+
+
 // Allocate and initialise finite volume coefficients for momentum and continuity equations
 FVCoefficients InitialiseFVCoefficients( const Mesh &mesh, 
                                          const ArrayAllocator<Fields, array3D> &fieldsInitial,
@@ -1039,10 +1045,10 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     SetDiffusionCoeffients(fvCoeffs.Vmom.diff, fvCoeffs.Vmom.boundaryDiff, mesh, inputData, F::V);
     SetDiffusionCoeffients(fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh, inputData, F::W);
 
-    // Momentum velocity terms
-    // SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
-    // SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
-    // SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
+    // Momentum advection terms
+    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
+    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
+    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
 
     // Add diffusion to the velocity coefficients in momentum equations
     AddDiffusion(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh);
@@ -1113,11 +1119,10 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     } );
 
 
-
-    // // Set the advection terms
-    // SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
-    // SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
-    // SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
+    // Set the advection terms
+    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
+    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
+    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
 
     // Add in the diffusion
     AddDiffusion(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh);

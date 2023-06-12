@@ -115,8 +115,9 @@ void CalculateInterpolationFactors(array1D &interpFactors,
                                    const array1D &cellFaces) 
 {
     for (int i = 1; i != interpFactors.size()-1; i++) {
-        interpFactors(i) = ( cellFaces(i) - cellCenters(i-1) ) 
-                         / ( cellCenters(i) - cellCenters(i-1) );
+        // interpFactors(i) = ( cellFaces(i) - cellCenters(i-1) ) 
+        //                  / ( cellCenters(i) - cellCenters(i-1) );
+        interpFactors(i) = 0.5f;
     }
 }
 
