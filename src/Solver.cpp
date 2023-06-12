@@ -49,7 +49,7 @@ void RelativeResidual( EnumVector<Fields, floatType> &residuals,
             
         } );
     }
-    EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] *= residualsInitialInv[field];} );
+    // EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] *= residualsInitialInv[field];} );
 }
 
 
@@ -834,8 +834,8 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         }
 
         // Update nonlinear coefficients
-        // UpdateFVCoefficients( fvCoeffs, mesh, fields, faceVelocities, inputData );
-        // linearSolver.UpdateState();
+        UpdateFVCoefficients( fvCoeffs, mesh, fields, faceVelocities, inputData );
+        linearSolver.UpdateState();
         
     }
  

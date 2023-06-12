@@ -7,13 +7,13 @@ Model {
 
 Mesh {
 
-    domain = (0.5, 0.5, 0.5)
+    domain = (1, 0.1, 0.5)
 
     // Streamwise
     Grid x {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 25
+            bounds     = (0, 1)
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -22,8 +22,8 @@ Mesh {
     // Symmetry
     Grid y {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 25
+            bounds     = (0, 0.1)
+            nCells     = 5
             biasFactor = 1
         }
     }
@@ -106,6 +106,7 @@ Solver {
 
     Schemes {
         linearisation = Picard
+
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
@@ -124,13 +125,13 @@ Solver {
 
         PlaneSolver {
             type = SUGS
-            maxIterations = 10
+            maxIterations = 5
             maxResiduals = 1e-3
 
             momentumRelaxation = (1, 1, 1)
             pressureRelaxation = 1
 
-            planeSweepDirection = +y
+            planeSweepDirection = +x
 
 
             LineSolver {

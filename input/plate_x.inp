@@ -2,18 +2,18 @@
 
 Model {
     rho  = 1
-    nu   = 1
+    nu   = 0.0001
 }
 
 Mesh {
 
-    domain = (0.5, 0.3, 0.1)
+    domain = (0.5, 0.2, 0.1)
 
     // Streamwise
     Grid x {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 25
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -22,9 +22,9 @@ Mesh {
     // Cross stream
     Grid y {
         Segment {
-            bounds     = (0, 0.6)
-            nCells     = 25
-            biasFactor = 1
+            bounds     = (0, 0.2)
+            nCells     = 50
+            biasFactor = 8
         }
     }
 
@@ -33,7 +33,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.1)
-            nCells     = 25
+            nCells     = 1
             biasFactor = 1
         }
     }
@@ -109,39 +109,39 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 100
-        maxOuterResiduals = 1e-6
+        maxOuterIterations = 1000
+        maxOuterResiduals = 0
     }
     
     LinearSolver {
 
         type = SUGS
         maxIterations = 1
-        maxResiduals = 1e-3
+        maxResiduals = 1e-5
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
         PlaneSolver {
             type = SUGS
-            maxIterations = 1
+            maxIterations = 10
             maxResiduals = 1e-3
 
             momentumRelaxation = (1, 1, 1)
             pressureRelaxation = 1
 
-            planeSweepDirection = +y
+            planeSweepDirection = +z
 
 
             LineSolver {
                 type = SUGS
-                maxIterations = 10
-                maxResiduals = 1e-3
+                maxIterations = 100
+                maxResiduals = 1e-5
 
-                momentumRelaxation = (0.6, 0.6, 0.6)
+                momentumRelaxation = (1, 1, 1)
                 pressureRelaxation = 1
 
-                lineSweepDirection = +x
+                lineSweepDirection = +y
             }
         }
     }
