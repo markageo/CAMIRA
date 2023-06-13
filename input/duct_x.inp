@@ -2,18 +2,18 @@
 
 Model {
     rho  = 1
-    nu   = 1
+    nu   = 0.001
 }
 
 Mesh {
 
-    domain = (1, 0.1, 0.5)
+    domain = (4, 0.1, 0.5)
 
     // Streamwise
     Grid x {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 50
+            bounds     = (0, 4)
+            nCells     = 400
             biasFactor = 1
         }
     }
@@ -32,9 +32,15 @@ Mesh {
     // Cross stream
     Grid z {
         Segment {
-            bounds     = (0, 0.5)
+            bounds     = (0, 0.25)
             nCells     = 25
-            biasFactor = 1
+            biasFactor = 5
+        }
+
+        Segment {
+            bounds     = (0.25, 0.5)
+            nCells     = 25
+            biasFactor = -5
         }
     }
 }
@@ -110,8 +116,11 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 1000
-        maxOuterResiduals = 1e-6
+        advectionScheme = upwind
+        faceInterpolationScheme = average
+
+        maxOuterIterations = 500
+        maxOuterResiduals = 1e-8
     }
     
     LinearSolver {
@@ -125,13 +134,13 @@ Solver {
 
         PlaneSolver {
             type = SUGS
-            maxIterations = 5
-            maxResiduals = 1e-3
+            maxIterations = 10
+            maxResiduals = 1e-5
 
             momentumRelaxation = (1, 1, 1)
             pressureRelaxation = 1
 
-            planeSweepDirection = +x
+            planeSweepDirection = +z
 
 
             LineSolver {
@@ -142,7 +151,7 @@ Solver {
                 momentumRelaxation = (1, 1, 1)
                 pressureRelaxation = 1
 
-                lineSweepDirection = +z
+                lineSweepDirection = +x
             }
         }
     }

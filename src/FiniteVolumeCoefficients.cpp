@@ -230,105 +230,58 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
                                          Momentum Advection Coefficients
 \*---------------------------------------------------------------------------------------------------------------*/
 
-// Upwind coefficients for X normal faces
-void UpwindXnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
-                    const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
-                    const Mesh &mesh)
-{
 
+// Upwind coefficients
+void Upwind( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
+             const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
+             const Mesh &mesh,
+             const Axis::ENUMDATA axis )
+{
     using F  = Fields::ENUMDATA;
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    floatType uf, coeff_e, coeff_w;
-    for (intType k = 0; k != faceVelocities[F::U].dimension(Z); k++) {
-        for (intType j = 0; j != faceVelocities[F::U].dimension(Y); j++) {
-            for (intType i = 1; i != faceVelocities[F::U].dimension(X)-1; i++) {    // Boundary condition in the x direction
+    static constexpr std::array<Fields::ENUMDATA, 3> axisFields = {F::U, F::V, F::W}; 
+    Fields::ENUMDATA field = axisFields[axis];
+
+    // Starting index and number of faces to iterate over
+    indexVector3 startIndex, nFaces;
+    EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
+        startIndex[a] = 0;
+        nFaces[a] = faceVelocities[ field ].dimension(a);
+    } );
+    startIndex[axis] += 1;
+    nFaces[axis] -= 1;
+
+    std::array<Eigen::Index, 3> HiIndex, LoIndex;
+    TransportCoefficients::ENUMDATA east = PositiveCoeff[axis], 
+                                    west = NegativeCoeff[axis];
+    floatType uf;
+
+    for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+        for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
                 
-                uf = faceVelocities[F::U](i, j, k);
-                coeff_w =   uf * mesh.cellLengthsInv[X](i-1);
-                coeff_e = - uf * mesh.cellLengthsInv[X](i);
+                HiIndex = { i, j, k };
+                LoIndex = { i, j, k };
+                LoIndex[axis] -= 1;
 
-                // Cell on west side
-                coeffs[e](i-1, j, k) = std::min( coeff_w, static_cast<floatType>(0.0f) );
-                coeffs[p](i-1, j, k) += coeff_w - coeffs[e](i, j, k);
+                uf = faceVelocities[ field ](i, j, k);
+                if ( uf >= 0 ) {
+                    
+                    coeffs[p   ](LoIndex) +=   uf * mesh.cellLengthsInv[axis]( LoIndex[axis] );
+                    coeffs[west](HiIndex)  = - uf * mesh.cellLengthsInv[axis]( HiIndex[axis] );
 
-                // Cell on east side
-                coeffs[w](i, j, k)  = std::min( coeff_e, static_cast<floatType>(0.0f) );      // The sign of this coefficient is negative
-                coeffs[p](i, j, k) += coeff_e - coeffs[w](i, j, k);  
+                } else {
+
+                    coeffs[east](LoIndex)  =   uf * mesh.cellLengthsInv[axis]( LoIndex[axis] );
+                    coeffs[p   ](HiIndex) += - uf * mesh.cellLengthsInv[axis]( HiIndex[axis] );
+
+                }
 
             }
         }
     }
-
-}
-
-
-// Upwind coefficients Y normal faces
-void UpwindYnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
-                    const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
-                    const Mesh &mesh)
-{
-
-    using F  = Fields::ENUMDATA;
-    using enum Axis::ENUMDATA;
-    using enum TransportCoefficients::ENUMDATA;
-
-    floatType uf, coeff_n, coeff_s;
-    for (intType k = 0; k != faceVelocities[F::V].dimension(Z); k++) {
-        for (intType j = 1; j != faceVelocities[F::V].dimension(Y)-1; j++) {    // Boundary condition in the y direction
-            for (intType i = 0; i != faceVelocities[F::V].dimension(X); i++) {
-                
-                uf = faceVelocities[F::V](i, j, k);
-                coeff_s =   uf * mesh.cellLengthsInv[Y](j-1);
-                coeff_n = - uf * mesh.cellLengthsInv[Y](j);
-
-                // Cell on south side
-                coeffs[n](i, j-1, k) = std::min( coeff_s, static_cast<floatType>(0.0f) );
-                coeffs[p](i, j-1, k) += coeff_s - coeffs[n](i, j, k);
-
-                // Cell on north side
-                coeffs[s](i, j, k)  = std::min( coeff_n, static_cast<floatType>(0.0f) );     // The sign of this coefficient is negative
-                coeffs[p](i, j, k) += coeff_n - coeffs[s](i, j, k); 
-
-            }
-        }
-    }
-
-}
-
-
-// Upwind coefficients for Z normal faces
-void UpwindZnormal( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
-                    const ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
-                    const Mesh &mesh)
-{
-
-    using F  = Fields::ENUMDATA;
-    using enum Axis::ENUMDATA;
-    using enum TransportCoefficients::ENUMDATA;
-
-    floatType uf, coeff_t, coeff_b;
-    for (intType k = 1; k != faceVelocities[F::W].dimension(Z)-1; k++) {    // Boundary condition in the z direction
-        for (intType j = 0; j != faceVelocities[F::W].dimension(Y); j++) {
-            for (intType i = 0; i != faceVelocities[F::W].dimension(X); i++) {
-                
-                uf = faceVelocities[F::W](i, j, k);
-                coeff_b =   uf * mesh.cellLengthsInv[Z](k-1);
-                coeff_t = - uf * mesh.cellLengthsInv[Z](k);
-
-                // Cell on bottom side 
-                coeffs[t](i, j, k-1) = std::min( coeff_b, static_cast<floatType>(0.0f) );
-                coeffs[p](i, j, k-1) += coeff_b - coeffs[t](i, j, k); 
-
-                // Cell on top side
-                coeffs[b](i, j, k)  = std::min( coeff_t, static_cast<floatType>(0.0f) );      // The sign of this coefficient is negative
-                coeffs[p](i, j, k) += coeff_t - coeffs[b](i, j, k);
-
-            }
-        }
-    }
-
 }
 
 
@@ -438,9 +391,10 @@ void SetAdvectionCoefficients( ArrayAllocator<TransportCoefficients, array3D> &c
     // For now assumes that all coefficiencients are set to zero
 
     // Upwind internal faces
-    UpwindXnormal(coeffs, faceVelocities, mesh);
-    UpwindYnormal(coeffs, faceVelocities, mesh);
-    UpwindZnormal(coeffs, faceVelocities, mesh);
+    EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
+        Upwind(coeffs, faceVelocities, mesh, axis);
+    } );
+
 
     // Boundary conditions by axis
     EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
