@@ -49,7 +49,7 @@ void RelativeResidual( EnumVector<Fields, floatType> &residuals,
             
         } );
     }
-    // EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] *= residualsInitialInv[field];} );
+    EnumFor<Fields>( [&] (Fields::ENUMDATA field) { residuals[field] *= residualsInitialInv[field];} );
 }
 
 
