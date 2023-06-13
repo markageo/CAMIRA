@@ -235,7 +235,13 @@ enum class Linearisation {
     Picard, Newton
 };
 
+enum class AdvectionSchemes {
+    Upwind
+};
 
+enum class FaceInterpolationSchemes {
+    WeightedLinear, Average
+};
 
 
 

@@ -435,6 +435,26 @@ namespace
             // THROW ERROR - invalid linearisation
         }
 
+
+        // Advection scheme
+        valueString = schemesTree.get<std::string>( "advectionScheme" );
+        if        ( valueString == "upwind" ) {
+            inputData.schemes.advectionScheme = AdvectionSchemes::Upwind;
+        } else {
+            // THROW ERROR - invalid advection scheme
+        }
+
+        // Face interpolation scheme
+        valueString = schemesTree.get<std::string>( "faceInterpolationScheme" );
+        if        ( valueString == "weightedLinear" ) {
+            inputData.schemes.faceInterpolationScheme = FaceInterpolationSchemes::WeightedLinear;
+        } else if ( valueString == "average" ) {
+            inputData.schemes.faceInterpolationScheme = FaceInterpolationSchemes::Average;   
+        } else {
+            // THROW ERROR - invalid face interpolation scheme
+        }
+
+
         // Momentum implicit relaxation
         std::vector<floatType> momentumRelaxation = schemesTree.get< std::vector<floatType> >( "implicitMomentumRelaxation" );
         inputData.schemes.implicitRelaxation[F::U] = momentumRelaxation[0];
