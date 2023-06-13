@@ -53,6 +53,9 @@ struct InputData
         Linearisation linearisation;
         EnumVector<Fields, floatType> implicitRelaxation;
 
+        AdvectionSchemes advectionScheme;
+        FaceInterpolationSchemes faceInterpolationScheme;
+
         intType maxOuterIterations;
         EnumVector<Fields, floatType> maxOuterResiduals;
     } schemes;

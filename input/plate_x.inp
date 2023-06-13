@@ -7,7 +7,7 @@ Model {
 
 Mesh {
 
-    domain = (0.5, 0.2, 0.1)
+    domain = (0.5, 0.1, 0.1)
 
     // Streamwise
     Grid x {
@@ -22,7 +22,7 @@ Mesh {
     // Cross stream
     Grid y {
         Segment {
-            bounds     = (0, 0.2)
+            bounds     = (0, 0.1)
             nCells     = 50
             biasFactor = 8
         }
@@ -108,6 +108,9 @@ Solver {
         linearisation = Picard
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
+
+        advectionScheme = upwind
+        faceInterpolationScheme = average
 
         maxOuterIterations = 1000
         maxOuterResiduals = 0

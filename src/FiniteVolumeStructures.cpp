@@ -110,13 +110,20 @@ void CalculateCellFaceAreas(array2D &cellFaceAreas,
 }
 
 
-void CalculateInterpolationFactors(array1D &interpFactors, 
-                                   const array1D &cellCenters, 
-                                   const array1D &cellFaces) 
+void CalculateInterpolationFactors_WeightedLinear( array1D &interpFactors, 
+                                                   const array1D &cellCenters, 
+                                                   const array1D &cellFaces) 
 {
     for (int i = 1; i != interpFactors.size()-1; i++) {
-        // interpFactors(i) = ( cellFaces(i) - cellCenters(i-1) ) 
-        //                  / ( cellCenters(i) - cellCenters(i-1) );
+        interpFactors(i) = ( cellFaces(i) - cellCenters(i-1) ) 
+                         / ( cellCenters(i) - cellCenters(i-1) );
+    }
+}
+
+
+void CalculateInterpolationFactors_Average( array1D &interpFactors ) 
+{
+    for (int i = 1; i != interpFactors.size()-1; i++) {
         interpFactors(i) = 0.5f;
     }
 }
@@ -233,7 +240,17 @@ Mesh::Mesh(const InputData &inputData) :
             CalculateCellCenterDiffInv(cellCenterDiffInv[axis], cellCenters[axis]);
 
             CalculateCellFaces(cellFaces[axis], cellLengths[axis], inputData.meshSegments[axis].front().lowerBound);
-            CalculateInterpolationFactors(interpFactors[axis], cellCenters[axis], cellFaces[axis]);
+
+            switch ( inputData.schemes.faceInterpolationScheme ) {
+                case FaceInterpolationSchemes::Average:
+                    CalculateInterpolationFactors_Average(interpFactors[axis]);
+                    break;
+
+                case FaceInterpolationSchemes::WeightedLinear:
+                    CalculateInterpolationFactors_WeightedLinear(interpFactors[axis], cellCenters[axis], cellFaces[axis]);
+                    break;
+            }
+                        
             CalculateExtrapolationFactors(extrapFactors, cellLengths, axis);
 
         } );
