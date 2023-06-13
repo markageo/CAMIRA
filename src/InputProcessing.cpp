@@ -96,70 +96,89 @@ CFD::InputData::InputData() :
         lineSolverSettings.sweepDirection = CFD::BoundaryPatches::yPositive;
     };
 
+
+/*-------------------------------------------------------------------------------------*\
+                                      Translators
+\*-------------------------------------------------------------------------------------*/
+
+// Convert string to given numeric type T.
+template <typename T> T 
+String2Type(const std::string &str)
+{
+    // NOTE: This does not work for ints in scientific notation.
+    std::istringstream strstream(str);
+    T num;
+    strstream >> num;
+    return num;
+}
+
+
+// Parse vector string into an std::vector
+template<typename T>
+std::vector<T> ParseVectorString( const std::string &vecString )
+{
+    std::vector<T> vec;
+    std::string::const_iterator stringIterator = vecString.begin();
+    std::string valueString;
+
+    if (*stringIterator != VECTOR_START_CHAR) {
+        // throw ERROR - expecting vector
+    }
+    ++stringIterator;
+    
+    while ( stringIterator != vecString.end() ) {
+        if ( *stringIterator == VECTOR_END_CHAR ) {
+            vec.push_back( String2Type<T>(valueString) );
+            break;
+        }
+
+        if ( *stringIterator == VECTOR_DELIMITER_CHAR ) {
+            vec.push_back( String2Type<T>(valueString) );
+            valueString.clear();
+        } else {
+            valueString += *stringIterator;
+        }
+        stringIterator++;
+    }
+
+    if (*stringIterator != VECTOR_END_CHAR) {
+        // throw ERROR - vector not closed
+    }
+
+    return vec;
+}
+
+
+template< typename T >
+struct VectorTranslator
+{
+    typedef std::string     internal_type;
+    typedef std::vector<T>  external_type;
+
+    external_type get_value( internal_type const &s ) {
+        return ParseVectorString<T>( s );
+    }
+};
+
+
+ // Specialization allows the translator to be used with ptree internally
+namespace boost { namespace property_tree {
+
+    template< typename T > 
+    struct translator_between< std::string, std::vector< T > > 
+    {
+        typedef VectorTranslator< T > type;
+    };
+
+}   // end namespace property_tree  
+}   // end namespace boost
+
+
+
 namespace
 {
 
     using namespace CFD;
-
-    /*-------------------------------------------------------------------------------------*\
-                                         Helper Functions
-    \*-------------------------------------------------------------------------------------*/
-
-    // Convert string to given numeric type T.
-    template <typename T> T 
-    String2Type(const std::string &str)
-    {
-        // NOTE: This does not work for ints in scientific notation.
-        std::istringstream strstream(str);
-        T num;
-        strstream >> num;
-        return num;
-    }
-
-
-    // Parse vector string into an std::vector
-    template<typename T>
-    std::vector<T> ParseVectorString( const std::string &vecString, 
-                                      const int &dim)
-    {
-        std::vector<T> vec;
-        std::string::const_iterator stringIterator = vecString.begin();
-        std::string valueString;
-        int dimCount = 0;
-
-        if (*stringIterator != VECTOR_START_CHAR) {
-            // throw ERROR - expecting vector
-        }
-        ++stringIterator;
-        
-        while ( stringIterator != vecString.end() ) {
-            if ( *stringIterator == VECTOR_END_CHAR ) {
-                vec.push_back( String2Type<T>(valueString) );
-                break;
-            }
-
-            if ( *stringIterator == VECTOR_DELIMITER_CHAR ) {
-                vec.push_back( String2Type<T>(valueString) );
-                valueString.clear();
-                dimCount++;
-            } else {
-                valueString += *stringIterator;
-            }
-            stringIterator++;
-        }
-
-        if (*stringIterator != VECTOR_END_CHAR) {
-            // throw ERROR - vector not closed
-        }
-
-        if (dimCount != dim) {
-            // throw ERROR - expecting vector of size dim
-        }
-
-        return vec;
-
-    }
-
 
     /*-------------------------------------------------------------------------------------*\
                                                Model
@@ -213,7 +232,7 @@ namespace
     {
         const pt::ptree &gridTree = meshTree.get_child(gridString);
         std::string boundsString, nCellsString, biasFactorString;
-        std::vector<CFD::floatType> tempBoundsVector;
+        std::vector<floatType> tempBoundsVector;
         InputData::MeshSegment tempMeshSegment;
         for (auto segment : gridTree) {
             if (segment.first != "Segment") {
@@ -222,9 +241,7 @@ namespace
             
             tempMeshSegment.nCells     = segment.second.get<intType>( "nCells" );
             tempMeshSegment.biasFactor = segment.second.get<floatType>( "biasFactor" );
-
-            boundsString     = segment.second.get<std::string>( "bounds" );
-            tempBoundsVector = ParseVectorString<floatType>(boundsString, 2);
+            tempBoundsVector           = segment.second.get< std::vector<floatType> >( "bounds" );
             tempMeshSegment.lowerBound = tempBoundsVector[0];
             tempMeshSegment.upperBound = tempBoundsVector[1];
 
@@ -241,8 +258,7 @@ namespace
         const pt::ptree &meshTree = tree.get_child( "Mesh" );
 
         // Domain
-        const std::string &domainSizeString = meshTree.get<std::string>( "domain" );
-        std::vector<floatType> domainSizeTemp = ParseVectorString<floatType>(domainSizeString, 3);
+        std::vector<floatType> domainSizeTemp = meshTree.get< std::vector<floatType> >( "domain" );
         inputData.domainSize(0) = domainSizeTemp[0];
         inputData.domainSize(1) = domainSizeTemp[1];
         inputData.domainSize(2) = domainSizeTemp[2];
@@ -420,8 +436,7 @@ namespace
         }
 
         // Momentum implicit relaxation
-        valueString = schemesTree.get<std::string>( "implicitMomentumRelaxation" );
-        std::vector<floatType> momentumRelaxation = ParseVectorString<floatType>(valueString, 3);
+        std::vector<floatType> momentumRelaxation = schemesTree.get< std::vector<floatType> >( "implicitMomentumRelaxation" );
         inputData.schemes.implicitRelaxation[F::U] = momentumRelaxation[0];
         inputData.schemes.implicitRelaxation[F::V] = momentumRelaxation[1];
         inputData.schemes.implicitRelaxation[F::W] = momentumRelaxation[2];
@@ -461,8 +476,7 @@ namespace
         inputData.lineSolverSettings.maxResiduals = lineSolverTree.get<floatType>( "maxResiduals" );
         
         // Momentum relaxation
-        valueString = lineSolverTree.get<std::string>( "momentumRelaxation" );
-        std::vector<floatType> momentumRelaxation = ParseVectorString<floatType>(valueString, 3);
+        std::vector<floatType> momentumRelaxation = lineSolverTree.get< std::vector<floatType> >( "momentumRelaxation" );
         inputData.lineSolverSettings.relaxation[F::U] = momentumRelaxation[0];
         inputData.lineSolverSettings.relaxation[F::V] = momentumRelaxation[1];
         inputData.lineSolverSettings.relaxation[F::W] = momentumRelaxation[2];
@@ -500,8 +514,7 @@ namespace
         inputData.planeSolverSettings.maxResiduals = planeSolverTree.get<floatType>( "maxResiduals" );
         
         // Momentum relaxation
-        valueString = planeSolverTree.get<std::string>( "momentumRelaxation" );
-        std::vector<floatType> momentumRelaxation = ParseVectorString<floatType>(valueString, 3);
+        std::vector<floatType> momentumRelaxation = planeSolverTree.get< std::vector<floatType> >( "momentumRelaxation" );
         inputData.planeSolverSettings.relaxation[F::U] = momentumRelaxation[0];
         inputData.planeSolverSettings.relaxation[F::V] = momentumRelaxation[1];
         inputData.planeSolverSettings.relaxation[F::W] = momentumRelaxation[2];
@@ -542,8 +555,7 @@ namespace
         inputData.linearSolverSettings.maxResiduals = linearSolverTree.get<floatType>( "maxResiduals" );
 
         // Momentum relaxation
-        valueString = linearSolverTree.get<std::string>( "momentumRelaxation" );
-        std::vector<floatType> momentumRelaxation = ParseVectorString<floatType>(valueString, 3);
+        std::vector<floatType> momentumRelaxation = linearSolverTree.get< std::vector<floatType> >( "momentumRelaxation" );
         inputData.linearSolverSettings.relaxation[F::U] = momentumRelaxation[0];
         inputData.linearSolverSettings.relaxation[F::V] = momentumRelaxation[1];
         inputData.linearSolverSettings.relaxation[F::W] = momentumRelaxation[2];
