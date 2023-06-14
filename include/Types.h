@@ -194,14 +194,14 @@ constexpr std::array<BoundaryPatches::ENUMDATA, 3> NegativePatch{BoundaryPatches
                                                                  BoundaryPatches::ENUMDATA::zNegative};
 
 // Get TransportCoefficient from Axis
-constexpr std::array<TransportCoefficients::ENUMDATA, 3> PositiveCoeff{TransportCoefficients::ENUMDATA::e,
-                                                                       TransportCoefficients::ENUMDATA::n,
-                                                                       TransportCoefficients::ENUMDATA::t};
+constexpr std::array<TransportCoefficients::ENUMDATA, 3> HiCoeff{TransportCoefficients::ENUMDATA::e,
+                                                                 TransportCoefficients::ENUMDATA::n,
+                                                                 TransportCoefficients::ENUMDATA::t};
 
 
-constexpr std::array<TransportCoefficients::ENUMDATA, 3> NegativeCoeff{TransportCoefficients::ENUMDATA::w,
-                                                                       TransportCoefficients::ENUMDATA::s,
-                                                                       TransportCoefficients::ENUMDATA::b};
+constexpr std::array<TransportCoefficients::ENUMDATA, 3> LoCoeff{TransportCoefficients::ENUMDATA::w,
+                                                                 TransportCoefficients::ENUMDATA::s,
+                                                                 TransportCoefficients::ENUMDATA::b};
 
 
 // Get Axis from BoundaryPatches

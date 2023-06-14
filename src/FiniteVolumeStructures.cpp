@@ -392,10 +392,10 @@ FVCoefficients::ContinuityEquation::ContinuityEquation( const indexVector3 &dims
 
 // Coefficients class constructor
 FVCoefficients::FVCoefficients(const indexVector3 &dims) :
-    Umom(F::U, dims),
-    Vmom(F::V, dims),
-    Wmom(F::W, dims),
-    Cont(dims),
+    Umom( F::U, dims ),
+    Vmom( F::V, dims ),
+    Wmom( F::W, dims ),
+    Cont( dims ),
     nCells( dims )
 {};
 

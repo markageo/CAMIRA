@@ -75,7 +75,7 @@ void DiffusionPositiveBoundary( EnumVector< Axis,  ArrayAllocator<TransportCoeff
     using enum TransportCoefficients::ENUMDATA;
 
     const BoundaryPatches::ENUMDATA boundaryPatch = PositivePatch[axis];
-    const TransportCoefficients::ENUMDATA west = NegativeCoeff[axis];
+    const TransportCoefficients::ENUMDATA west = LoCoeff[axis];
     const intType iCellBound = mesh.nCells(axis) - 1;
 
     switch ( boundaryConditionStructs[boundaryPatch].type ) {
@@ -113,7 +113,7 @@ void DiffusionNegativeBoundary( EnumVector< Axis, ArrayAllocator<TransportCoeffi
     using enum TransportCoefficients::ENUMDATA;
 
     const BoundaryPatches::ENUMDATA boundaryPatch = NegativePatch[axis];
-    const TransportCoefficients::ENUMDATA east = PositiveCoeff[axis];
+    const TransportCoefficients::ENUMDATA east = HiCoeff[axis];
     const intType iCellBound = 0;
 
     switch ( boundaryConditionStructs[boundaryPatch].type ) {
@@ -159,14 +159,12 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
 
 
     // Diffusion in each axis is calculated in the same way
-    Axis::ENUMDATA axis;
-    for (intType a = 0; a != Axis::count; a++) {
-        axis = static_cast<Axis::ENUMDATA>(a);
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
         positivePatch = PositivePatch[axis];
         negativePatch = NegativePatch[axis];
-        east = PositiveCoeff[axis];
-        west = NegativeCoeff[axis];     
+        east = HiCoeff[axis];
+        west = LoCoeff[axis];     
 
         // Internal faces
         for (intType i = 1; i != mesh.nCells(axis); i++) {
@@ -190,12 +188,12 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
         // Boundary conditions only need to be set if it is not zero gradient
         // Axis positive boundary
         if (positivePatchBC != BC::zeroGradient) {
-            DiffusionPositiveBoundary(diff, boundaryConstants, mesh, boundaryConditions[field], static_cast<Axis::ENUMDATA>(axis));
+            DiffusionPositiveBoundary(diff, boundaryConstants, mesh, boundaryConditions[field], axis);
         }
 
         // Axis negative boundary
         if (negativePatchBC != BC::zeroGradient) {
-            DiffusionNegativeBoundary(diff, boundaryConstants, mesh, boundaryConditions[field], static_cast<Axis::ENUMDATA>(axis));
+            DiffusionNegativeBoundary(diff, boundaryConstants, mesh, boundaryConditions[field], axis);
         }
 
 
@@ -217,9 +215,7 @@ void SetDiffusionCoeffients(EnumVector< Axis, ArrayAllocator<TransportCoefficien
         boundaryConstants[ PositivePatch[axis] ] *= inputData.nu;
         boundaryConstants[ NegativePatch[axis] ] *= inputData.nu;
 
-
-    }
-
+    } );
 }
 
 
@@ -254,8 +250,8 @@ void Upwind( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs,
     nFaces[axis] -= 1;
 
     std::array<Eigen::Index, 3> HiIndex, LoIndex;
-    TransportCoefficients::ENUMDATA east = PositiveCoeff[axis], 
-                                    west = NegativeCoeff[axis];
+    TransportCoefficients::ENUMDATA east = HiCoeff[axis], 
+                                    west = LoCoeff[axis];
     floatType uf;
 
     for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
@@ -300,7 +296,7 @@ void AdvectionPositiveBoundary( ArrayAllocator<TransportCoefficients, array3D> &
     static const std::array<Fields::ENUMDATA, 3> faceVelocityFields = {F::U, F::V, F::W}; // Used to get corresponding velocity field from axis
     
     const BoundaryPatches::ENUMDATA boundaryPatch = PositivePatch[axis];
-    const TransportCoefficients::ENUMDATA west = NegativeCoeff[axis];
+    const TransportCoefficients::ENUMDATA west = LoCoeff[axis];
     const Fields::ENUMDATA axisVel = faceVelocityFields[axis];
     const intType iCellBound = mesh.nCells(axis) - 1;   // Index of cell at the boundary
     const intType iFaceBound = iCellBound + 1;          // Index of face at the boundary
@@ -346,7 +342,7 @@ void AdvectionNegativeBoundary( ArrayAllocator<TransportCoefficients, array3D> &
     static const std::array<Fields::ENUMDATA, 3> faceVelocityFields = {F::U, F::V, F::W}; // Used to get corresponding velocity field from axis
     
     const BoundaryPatches::ENUMDATA boundaryPatch = NegativePatch[axis];
-    const TransportCoefficients::ENUMDATA east = PositiveCoeff[axis];
+    const TransportCoefficients::ENUMDATA east = HiCoeff[axis];
     const Fields::ENUMDATA axisVel = faceVelocityFields[axis];
     const intType iCellBound = 0;   // Index of cell at the boundary 
     const intType iFaceBound = 0;   // Index of face at the boundary
@@ -472,7 +468,7 @@ void InterpolationPositiveBoundary( ArrayAllocator< TransportCoefficients, array
     using enum TransportCoefficients::ENUMDATA;
 
     const BoundaryPatches::ENUMDATA boundaryPatch = PositivePatch[axis];
-    const TransportCoefficients::ENUMDATA west = NegativeCoeff[axis];
+    const TransportCoefficients::ENUMDATA west = LoCoeff[axis];
     const intType iCellBound = mesh.nCells(axis) - 1;
 
     switch ( boundaryConditionStructs[boundaryPatch].type ) {
@@ -512,7 +508,7 @@ void InterpolationNegativeBoundary( ArrayAllocator< TransportCoefficients, array
     using enum TransportCoefficients::ENUMDATA;
 
     const BoundaryPatches::ENUMDATA boundaryPatch = NegativePatch[axis];
-    const TransportCoefficients::ENUMDATA east = PositiveCoeff[axis];
+    const TransportCoefficients::ENUMDATA east = HiCoeff[axis];
     const intType iCellBound = 0;
 
     switch ( boundaryConditionStructs[boundaryPatch].type ) {
@@ -554,8 +550,8 @@ void SetFaceInterpolatedCoefficients( ArrayAllocator<CFD::TransportCoefficients,
 
     const InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
 
-    TransportCoefficients::ENUMDATA east = PositiveCoeff[axis],    // These are just names, they can be north, south etc.
-                                    west = NegativeCoeff[axis];  
+    TransportCoefficients::ENUMDATA east = HiCoeff[axis],    // These are just names, they can be north, south etc.
+                                    west = LoCoeff[axis];  
 
     // Internal faces
     for (intType i = 1; i != mesh.nCells(axis); i++) {
@@ -630,8 +626,8 @@ std::vector<floatType> MWICoeffs( const indexVector3 &idx,
     using enum TransportCoefficients::ENUMDATA;
     using enum Axis::ENUMDATA;
     std::vector<floatType> coeffs(4);
-    const TransportCoefficients::ENUMDATA east = PositiveCoeff[axis];
-    const TransportCoefficients::ENUMDATA west = NegativeCoeff[axis];
+    const TransportCoefficients::ENUMDATA east = HiCoeff[axis];
+    const TransportCoefficients::ENUMDATA west = LoCoeff[axis];
 
     const intType i = idx( axis );
     const floatType d = MWIWeightingCoeff(idx, AUU, axis);
@@ -1000,9 +996,9 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     SetDiffusionCoeffients(fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh, inputData, F::W);
 
     // Momentum advection terms
-    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
-    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
-    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
+    // SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
+    // SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
+    // SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
 
     // Add diffusion to the velocity coefficients in momentum equations
     AddDiffusion(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh);
@@ -1063,20 +1059,18 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     } );
 
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
-        fvCoeffs.Umom.boundaryP[bp] = 0;
-        fvCoeffs.Vmom.boundaryP[bp] = 0;
-        fvCoeffs.Wmom.boundaryP[bp] = 0;
 
         fvCoeffs.Umom.boundaryVel[bp].setZero();
         fvCoeffs.Vmom.boundaryVel[bp].setZero();
         fvCoeffs.Wmom.boundaryVel[bp].setZero();
+        
     } );
 
 
     // Set the advection terms
-    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
-    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
-    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
+    // SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
+    // SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
+    // SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
 
     // Add in the diffusion
     AddDiffusion(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh);
