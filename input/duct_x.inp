@@ -2,17 +2,17 @@
 
 Model {
     rho  = 1
-    nu   = 1
+    nu   = 0.05
 }
 
 Mesh {
 
-    domain = (1, 0.5, 0.1)
+    domain = (5, 0.5, 0.5)
 
     // Streamwise
     Grid x {
         Segment {
-            bounds     = (0, 1)
+            bounds     = (0, 5)
             nCells     = 100
             biasFactor = 1
         }
@@ -21,14 +21,8 @@ Mesh {
     // Cross stream
     Grid y {
         Segment {
-            bounds     = (0, 0.25)
-            nCells     = 16
-            biasFactor = 1
-        }
-
-        Segment {
-            bounds     = (0.25, 0.5)
-            nCells     = 16
+            bounds     = (0, 0.5)
+            nCells     = 20
             biasFactor = 1
         }
     }
@@ -36,14 +30,8 @@ Mesh {
     // Cross stream
     Grid z {
         Segment {
-            bounds     = (0, 0.25)
-            nCells     = 16
-            biasFactor = 1
-        }
-
-        Segment {
-            bounds     = (0.25, 0.5)
-            nCells     = 16
+            bounds     = (0, 0.5)
+            nCells     = 20
             biasFactor = 1
         }
     }
@@ -124,7 +112,7 @@ Solver {
         advectionScheme = upwind
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 10000
+        maxOuterIterations = 1000
         maxOuterResiduals = 1e-12
     }
     
@@ -132,20 +120,20 @@ Solver {
 
         type = SUGS
         maxIterations = 1
-        maxResiduals = 1e-3
+        maxResiduals = 1e-4
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
         PlaneSolver {
             type = SUGS
-            maxIterations = 10
+            maxIterations = 5
             maxResiduals = 1e-5
 
             momentumRelaxation = (1, 1, 1)
             pressureRelaxation = 1
 
-            planeSweepDirection = +z
+            planeSweepDirection = +x
 
 
             LineSolver {
@@ -153,10 +141,10 @@ Solver {
                 maxIterations = 1
                 maxResiduals = 1e-3
 
-                momentumRelaxation = (1, 1, 1)
+                momentumRelaxation = (0.5, 0.5, 0.5)
                 pressureRelaxation = 1
 
-                lineSweepDirection = +y
+                lineSweepDirection = +z
             }
         }
     }

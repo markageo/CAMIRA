@@ -391,7 +391,6 @@ void SetAdvectionCoefficients( ArrayAllocator<TransportCoefficients, array3D> &c
         Upwind(coeffs, faceVelocities, mesh, axis);
     } );
 
-
     // Boundary conditions by axis
     EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
 
@@ -399,7 +398,6 @@ void SetAdvectionCoefficients( ArrayAllocator<TransportCoefficients, array3D> &c
         AdvectionNegativeBoundary(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], axis);
 
     } );
-
 }
 
 
@@ -996,9 +994,9 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     SetDiffusionCoeffients(fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh, inputData, F::W);
 
     // Momentum advection terms
-    // SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
-    // SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
-    // SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
+    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
+    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
+    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
 
     // Add diffusion to the velocity coefficients in momentum equations
     AddDiffusion(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh);
@@ -1063,14 +1061,14 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
         fvCoeffs.Umom.boundaryVel[bp].setZero();
         fvCoeffs.Vmom.boundaryVel[bp].setZero();
         fvCoeffs.Wmom.boundaryVel[bp].setZero();
-        
+
     } );
 
 
     // Set the advection terms
-    // SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
-    // SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
-    // SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
+    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
+    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
+    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
 
     // Add in the diffusion
     AddDiffusion(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh);
