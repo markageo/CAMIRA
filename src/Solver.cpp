@@ -168,6 +168,24 @@ class BlockSolver
 
             TOC()
 
+            
+            // floatType offDiagVelocity = abs( m_fvCoeffs.Umom.AU[n](iU, jU, kU) )
+            //                           + abs( m_fvCoeffs.Umom.AU[e](iU, jU, kU) )
+            //                           + abs( m_fvCoeffs.Umom.AU[s](iU, jU, kU) )
+            //                           + abs( m_fvCoeffs.Umom.AU[w](iU, jU, kU) )
+            //                           + abs( m_fvCoeffs.Umom.AU[t](iU, jU, kU) )
+            //                           + abs( m_fvCoeffs.Umom.AU[b](iU, jU, kU) );
+
+            // floatType offDiagPressure = abs( m_fvCoeffs.Umom.AP[p](iU) )
+            //                           + abs( m_fvCoeffs.Umom.AP[e](iU) )
+            //                           + abs( m_fvCoeffs.Umom.AP[w](iU) );
+
+            // std::cout << "U momentum:\n"
+            //           << "Diagonal coefficient: " <<  m_fvCoeffs.Umom.AU[p](iU, jU, kU) << "\n"
+            //           << "Off diagonal velocity coefficients: " << offDiagVelocity << "\n"
+            //           << "Off diagonal pressure coefficients: " << offDiagPressure << "\n"
+            //           << "\n";
+
             TIC("V momentum off diagonal")
             // V momentum 
             floatType bV = ( m_fvCoeffs.Vmom.B(iV, jV, kV)
