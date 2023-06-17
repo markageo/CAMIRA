@@ -2,7 +2,7 @@
 #define UTILS
 
 #include "Types.h"
-#include "Eigen/unsupported/CXX11/Tensor"
+#include <unsupported/Eigen/CXX11/Tensor>
 
 #include <fstream>
 #include <iomanip>

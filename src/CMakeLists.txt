@@ -1,5 +1,6 @@
 # Add libraries
-add_library(libs InputProcessing.cpp
+add_library(libs InputParser.cpp
+                 InputProcessing.cpp
                  SweepTransformations.cpp
                  FiniteVolumeStructures.cpp
                  FaceVelocities.cpp
@@ -13,10 +14,12 @@ add_library(model INTERFACE)
 target_link_libraries(model INTERFACE compiler_flags)
 target_link_libraries(libs PUBLIC compiler_flags)
 
-target_link_libraries(libs PUBLIC inputparser)
 target_link_libraries(libs PUBLIC fmt::fmt)
+target_link_libraries(libs PUBLIC eigen)
+
 target_link_libraries(model INTERFACE libs)
 target_link_libraries(model INTERFACE fmt::fmt)
+target_link_libraries(model INTERFACE eigen)
 
 # Main executable
 add_executable(main main.cpp)
