@@ -30,31 +30,30 @@ endif()
 
 
 # Ankith's profiler
-option (PROFILING "Enable Profiling Tickers" off)
-if (PROFILING)
-	message(STATUS "Profiling tickers are on!")
+option (CFD_PROFILING "Enable CFD Profiling Tickers" off)
+if (CFD_PROFILING)
+	message(STATUS "CFD profiling tickers are on!")
 	add_compile_definitions(PROFILING)
-	# target_compile_definitions(main PRIVATE PROFILING)
 endif()
 
 
-# Run in double precision
-option (DOUBLE_PRECISION "Double precision" on)
-if (DOUBLE_PRECISION)
+# Option for compiling with double precision
+option (CFD_DOUBLE_PRECISION "Double precision for CFD." on)
+if (CFD_DOUBLE_PRECISION)
 	message(STATUS "Compiling in double precision")
 	add_compile_definitions(DOUBLE_PRECISION)
 else()
 	message(STATUS "Compiling in single precision")
 endif()
 
-
 # include directories
-include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings
 include_directories(include)
 
-# Add directories
-add_subdirectory(libraries/fmt)
-add_subdirectory(libraries/InputParser)
+# Add libraries
+include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings
+add_subdirectory(libraries/fmt-10.0.0)
+add_subdirectory(libraries/eigen-3.4.0)
+
 add_subdirectory(src)
 add_subdirectory(tests)
 

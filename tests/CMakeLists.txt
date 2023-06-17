@@ -1,6 +1,6 @@
-option (TESTS "Create test executable" off)
-if (TESTS)
-	message(STATUS "Test executable will be created")
+option (CFD_TESTS "Create CFD debugging tests executable" off)
+if (CFD_TESTS)
+	message(STATUS "CFD debugging tests executable will be created")
 
     # Library used by tests
     add_library(test_libs TestFunctions.cpp)

@@ -1,11 +1,10 @@
+#include "InputParser.h"
 #include "InputProcessing.h"
-
-#include "InputParser/InputParser.h"
 #include "FiniteVolume.h"
 #include "Types.h"
 
 #include "Boost/boost/property_tree/ptree.hpp"
-#include "Eigen/Geometry"
+#include <Eigen/Geometry>
 
 #include <utility>
 #include <optional>
