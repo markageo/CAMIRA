@@ -74,4 +74,3 @@ add_subdirectory(libraries/eigen-3.4.0)
 
 add_subdirectory(src)
 add_subdirectory(tests)
-
