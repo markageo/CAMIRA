@@ -221,7 +221,7 @@ Mesh::Mesh(const InputData &inputData) :
                     {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
 
     cellFaceAreas( {{Axis::ENUMDATA::X, {nCells(1), nCells(2)} },
-                    {Axis::ENUMDATA::Y, {nCells(2), nCells(0)} },
+                    {Axis::ENUMDATA::Y, {nCells(0), nCells(2)} },
                     {Axis::ENUMDATA::Z, {nCells(0), nCells(1)} }} ),
 
     extrapFactors()
@@ -256,12 +256,15 @@ Mesh::Mesh(const InputData &inputData) :
         } );
 
 
-        // Cell face areas should be calculated on their own since they depend o other axis
+        // Cell face areas should be calculated on their own since they depend on other axis
         EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
 
-            // Cyclic permutations to get correct order of axis for area, which is indexed by right hand rule
+            // Axis are ordered by numbering
             Axis::ENUMDATA axis1 = static_cast<Axis::ENUMDATA>( (axis+1) % Axis::count );
             Axis::ENUMDATA axis2 = static_cast<Axis::ENUMDATA>( (axis+2) % Axis::count );
+            if ( axis1 >= axis2 ) {
+                std::swap( axis1, axis2 );
+            }
             CalculateCellFaceAreas(cellFaceAreas[axis], cellLengths[axis1], cellLengths[axis2]);
 
         } );
