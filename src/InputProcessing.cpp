@@ -121,7 +121,7 @@ std::vector<T> ParseVectorString( const std::string &vecString )
     std::string valueString;
 
     if (*stringIterator != VECTOR_START_CHAR) {
-        // throw ERROR - expecting vector
+        throw std::runtime_error( "'" + vecString + "' is not a valid input. Expected a vector." );
     }
     ++stringIterator;
     
@@ -141,7 +141,7 @@ std::vector<T> ParseVectorString( const std::string &vecString )
     }
 
     if (*stringIterator != VECTOR_END_CHAR) {
-        // throw ERROR - vector not closed
+        throw std::runtime_error( "'" + vecString + "' vector not closed." );
     }
 
     return vec;
@@ -206,19 +206,19 @@ namespace
 
         // The first one must start at zero
         if (meshSegment.front().lowerBound != 0.0) {
-            // throw ERROR - must have mesh segment starting at coordinate 0
+            throw std::runtime_error( "Mesh segments must start at coordinate 0." );
         }
 
         // Must end at the given domain size
         if (meshSegment.back().upperBound != domainSize ) {
-            // throw ERROR - segments dont match given domain bounds
+            throw std::runtime_error( "Mesh segments to not match given domain bounds." );
         }
 
 
         // Must be no gaps or overlaps in the segments
         for (size_t i = 1; i != meshSegment.size(); i++) {
             if ( meshSegment[i].lowerBound != meshSegment[i-1].upperBound ) {
-                // throw ERROR - segments must not overlap or have gaps
+                throw std::runtime_error( "Mesh segments must not overlap or have gaps." );
             }
         }
 
@@ -235,7 +235,7 @@ namespace
         InputData::MeshSegment tempMeshSegment;
         for (auto segment : gridTree) {
             if (segment.first != "Segment") {
-                // throw ERROR invalid child name
+                throw std::runtime_error(  "'" + segment.first + "' is not a valid grid child name" );
             }
             
             tempMeshSegment.nCells     = segment.second.get<intType>( "nCells" );
@@ -322,13 +322,13 @@ namespace
             bcStruct.value = 0.0;
             return bcStruct;
         } else {
-            // throw ERROR -  invalid BC type
+            throw std::runtime_error( "'" + bcTypeString + "' is not a valid boundary condition type." );
         }
 
 
         // Check for expected value
         if (*stringIterator != MULTI_DELIMITER_CHAR) {
-            // throw ERROR - expected value for boudnary condition
+            throw std::runtime_error( "Expected value for " + bcTypeString + " boundary condition."  );
         }
         stringIterator++;
 
@@ -431,7 +431,7 @@ namespace
         } else if ( valueString == "Newton" ) {
             inputData.schemes.linearisation = Linearisation::Newton;
         } else {
-            // THROW ERROR - invalid linearisation
+            throw std::runtime_error( "'" + valueString + "' is not a valid linearisation." );
         }
 
 
@@ -440,7 +440,7 @@ namespace
         if        ( valueString == "upwind" ) {
             inputData.schemes.advectionScheme = AdvectionSchemes::Upwind;
         } else {
-            // THROW ERROR - invalid advection scheme
+            throw std::runtime_error( "'" + valueString + "' is not a valid advection scheme." );
         }
 
         // Face interpolation scheme
@@ -450,7 +450,7 @@ namespace
         } else if ( valueString == "average" ) {
             inputData.schemes.faceInterpolationScheme = FaceInterpolationSchemes::Average;   
         } else {
-            // THROW ERROR - invalid face interpolation scheme
+            throw std::runtime_error( "'" + valueString + "' is not a valid face interpolation scheme." );
         }
 
 
@@ -485,7 +485,7 @@ namespace
         if        ( valueString == "SUGS" ) {
             inputData.lineSolverSettings.type = LineSolvers::SUGS;
         } else {
-            // THROW ERROR - invalid line solver type
+            throw std::runtime_error( "'" + valueString + "' is not a line solver type." );
         }
 
         // Max iterations
@@ -523,7 +523,7 @@ namespace
         if        ( valueString == "SUGS" ) {
             inputData.planeSolverSettings.type = PlaneSolvers::SUGS;
         } else {
-            // THROW ERROR - invalid plane solver type
+            throw std::runtime_error( "'" + valueString + "' is not a plane solver type." );
         }
 
         // Max iterations
@@ -564,7 +564,7 @@ namespace
         if        ( valueString == "SUGS" ) {
             inputData.linearSolverSettings.type = LinearSolvers::SUGS;
         } else {
-            // THROW ERROR - invalid plane solver type
+            throw std::runtime_error( "'" + valueString + "' is not a linear solver type." );
         }
 
         // Max iterations
@@ -615,13 +615,10 @@ namespace
 
         EnumVector<Fields, std::string> fieldKeys( {"u", "v", "w", "p"} );
 
-        Fields::ENUMDATA field;
-        for ( int f = 0; f != Fields::count; f++ ) {
-            field = static_cast<Fields::ENUMDATA>( f );
-
+        EnumFor<Fields>( [&] (Fields::ENUMDATA field) {
             valueString = initialConditionsTree.get<std::string>( fieldKeys[field] );        
             inputData.initialConditions[field] = String2Type<CFD::floatType>( valueString );
-        }
+        } );
 
     }
 
