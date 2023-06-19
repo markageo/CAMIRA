@@ -60,12 +60,13 @@ struct InputData
         EnumVector<Fields, floatType> maxOuterResiduals;
     } schemes;
 
-    struct LinearSolverSettings {
-        LinearSolvers type;
+    struct LineSolverSettings {
+        LineSolvers type;
         intType maxIterations;
         EnumVector<Fields, floatType> maxResiduals;
         EnumVector<Fields, floatType> relaxation;
-    } linearSolverSettings;
+        BoundaryPatches::ENUMDATA sweepDirection;
+    };
 
     struct PlaneSolverSettings {
         PlaneSolvers type;
@@ -73,15 +74,22 @@ struct InputData
         EnumVector<Fields, floatType> maxResiduals;
         EnumVector<Fields, floatType> relaxation;
         BoundaryPatches::ENUMDATA sweepDirection;
-    } planeSolverSettings;
 
-    struct LineSolverSettings {
-        LineSolvers type;
+        LineSolverSettings lineSolverSettings;
+    };
+
+    
+    struct LinearSolverSettings {
+        LinearSolvers type;
         intType maxIterations;
         EnumVector<Fields, floatType> maxResiduals;
         EnumVector<Fields, floatType> relaxation;
-        BoundaryPatches::ENUMDATA sweepDirection;
-    } lineSolverSettings;
+
+        PlaneSolverSettings planeSolverSettings;
+    }; 
+    LinearSolverSettings linearSolverSettings;
+
+    
 
 };
 
