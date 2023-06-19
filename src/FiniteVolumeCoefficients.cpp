@@ -885,7 +885,7 @@ void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
                                                 Implicit Relaxation
 \*---------------------------------------------------------------------------------------------------------------*/
 
-
+[[ maybe_unused ]]
 void AddRelaxation( array3D &diagonalCoeffs,
                     array3D &sourceTerms,
                     const array3D &oldField,
@@ -976,12 +976,10 @@ void AddContinuityBoundaryConstants( FVCoefficients::ContinuityEquation &contCoe
 
 
 // Allocate and initialise finite volume coefficients for momentum and continuity equations
-FVCoefficients InitialiseFVCoefficients( const Mesh &mesh, 
-                                         const ArrayAllocator<Fields, array3D> &fieldsInitial,
+FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
                                          const ArrayAllocator<Fields, array3D> &faceVelocities, 
                                          const InputData &inputData)
 {
-    using TC = TransportCoefficients::ENUMDATA;
     using F = Fields::ENUMDATA;
     using A = Axis::ENUMDATA;
 
@@ -1022,11 +1020,11 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     AddMomentumBoundaryConstants(fvCoeffs.Wmom);
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
-    // Add implicit relaxation to the equations
-    AddRelaxation(fvCoeffs.Umom.AU[TC::p], fvCoeffs.Umom.B, fieldsInitial[F::U], inputData.schemes.implicitRelaxation[F::U]);
-    AddRelaxation(fvCoeffs.Vmom.AV[TC::p], fvCoeffs.Vmom.B, fieldsInitial[F::V], inputData.schemes.implicitRelaxation[F::V]);
-    AddRelaxation(fvCoeffs.Wmom.AW[TC::p], fvCoeffs.Wmom.B, fieldsInitial[F::W], inputData.schemes.implicitRelaxation[F::W]);
-    AddRelaxation(fvCoeffs.Cont.AP[TC::p], fvCoeffs.Cont.B, fieldsInitial[F::P], inputData.schemes.implicitRelaxation[F::P]);
+    // Set implicit under relaxation
+    fvCoeffs.Umom.relaxation = inputData.schemes.implicitRelaxation[F::U];
+    fvCoeffs.Vmom.relaxation = inputData.schemes.implicitRelaxation[F::V];
+    fvCoeffs.Wmom.relaxation = inputData.schemes.implicitRelaxation[F::W];
+    fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation[F::P];
 
     return fvCoeffs;
 }
@@ -1034,12 +1032,10 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
 
 // Update linearisation in momenum and continuity equations
 void UpdateFVCoefficients(FVCoefficients &fvCoeffs, 
-                          const Mesh &mesh, 
-                          const ArrayAllocator<Fields, CFD::array3D> &fieldsOld,
+                          const Mesh &mesh,
                           const ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
                           const InputData &inputData)
 {
-    using TC = TransportCoefficients::ENUMDATA;
     using F = Fields::ENUMDATA;
 
 
@@ -1090,11 +1086,6 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     AddMomentumBoundaryConstants(fvCoeffs.Wmom);
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
-    // Add implicit relaxation to the equations
-    AddRelaxation(fvCoeffs.Umom.AU[TC::p], fvCoeffs.Umom.B, fieldsOld[F::U], inputData.schemes.implicitRelaxation[F::U]);
-    AddRelaxation(fvCoeffs.Vmom.AV[TC::p], fvCoeffs.Vmom.B, fieldsOld[F::V], inputData.schemes.implicitRelaxation[F::V]);
-    AddRelaxation(fvCoeffs.Wmom.AW[TC::p], fvCoeffs.Wmom.B, fieldsOld[F::W], inputData.schemes.implicitRelaxation[F::W]);
-    AddRelaxation(fvCoeffs.Cont.AP[TC::p], fvCoeffs.Cont.B, fieldsOld[F::P], inputData.schemes.implicitRelaxation[F::P]);
 }
 
 
