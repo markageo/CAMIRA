@@ -375,7 +375,8 @@ FVCoefficients::MomentumEquation::MomentumEquation( const Fields::ENUMDATA field
     boundaryP( 0.0f ),
     boundaryVel( {array2D( dims(Y), dims(Z) ).setZero(), array2D( dims(Y), dims(Z) ).setZero(),
                   array2D( dims(X), dims(Z) ).setZero(), array2D( dims(X), dims(Z) ).setZero(),
-                  array2D( dims(X), dims(Y) ).setZero(), array2D( dims(X), dims(Y) ).setZero()} )    // This doesn't follow right hand rule
+                  array2D( dims(X), dims(Y) ).setZero(), array2D( dims(X), dims(Y) ).setZero()} ),    // This doesn't follow right hand rule
+    relaxation( 1.0f )
 {};
 
 
@@ -389,7 +390,8 @@ FVCoefficients::ContinuityEquation::ContinuityEquation( const indexVector3 &dims
     boundaryP( {array2D( dims(Y), dims(Z) ).setZero(), array2D( dims(Y), dims(Z) ).setZero(),
                 array2D( dims(X), dims(Z) ).setZero(), array2D( dims(X), dims(Z) ).setZero(),
                 array2D( dims(X), dims(Y) ).setZero(), array2D( dims(X), dims(Y) ).setZero()} ),     // This doesn't follow right hand rule
-    boundaryVel( 0.0f )
+    boundaryVel( 0.0f ),
+    relaxation( 1.0f )
 {};
 
 

@@ -49,6 +49,7 @@ struct FVCoefficients
         EnumVector< Axis, ArrayAllocator<TransportCoefficients, array1D> > diff;    // Diffusion coefficients (LHS)
         EnumVector< BoundaryPatches, floatType > boundaryDiff, boundaryP;           // Constant terms that come from uniform BC (LHS)
         EnumVector< BoundaryPatches, array2D > boundaryVel;       
+        floatType relaxation;
     };
 
     struct ContinuityEquation {
@@ -58,6 +59,7 @@ struct FVCoefficients
         array3D B;                                                          // Source term (RHS)
         EnumVector< BoundaryPatches, array2D > boundaryP;                   // Constant terms that come from uniform BC (LHS)
         EnumVector< BoundaryPatches, floatType > boundaryVel;
+        floatType relaxation;
     };
 
     MomentumEquation Umom, Vmom, Wmom;
@@ -91,10 +93,10 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, array3D> &, const Mesh &, cons
 // ---------------------------------- Definition in FiniteVolumeCoefficients.cpp --------------------------------- //
 
 // Allocate and initialise finite volume coefficients
-FVCoefficients InitialiseFVCoefficients(const Mesh &, const ArrayAllocator<Fields, array3D> &, const ArrayAllocator<Fields, array3D> &, const InputData &);
+FVCoefficients InitialiseFVCoefficients(const Mesh &, const ArrayAllocator<Fields, array3D> &, const InputData &);
 
 // Update finite volume coefficients (Picard linearisation)
-void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields, array3D> &, const ArrayAllocator<Fields, array3D> &, const InputData &);
+void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields, array3D> &, const InputData &);
 
 
 

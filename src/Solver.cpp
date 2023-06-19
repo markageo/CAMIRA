@@ -124,9 +124,11 @@ class BlockSolver
     using sWP = typename StaggerIndexing< F::W, Wstag >::MomentumPressure;
 
 public:
-    BlockSolver(ArrayAllocator<Fields, array3D> &fields,
-                const FVCoefficients &fvCoeffs) : 
+    BlockSolver( ArrayAllocator<Fields, array3D> &fields,
+                 const ArrayAllocator<Fields, array3D> &fieldsOld,
+                 const FVCoefficients &fvCoeffs ) : 
                     m_fields( fields ),
+                    m_fieldsOld( fieldsOld ),
                     m_fvCoeffs( fvCoeffs ),
                     m_ni( fvCoeffs.nCells(0) ),
                     m_nj( fvCoeffs.nCells(1) ),
@@ -148,21 +150,22 @@ public:
         TIC("Computation")
 
         // For indexing the staggered cells
-        intType iU( i + sCU::iCoupled ), jU( j )                , kU( k )                ; // U momentum
-        intType iV( i )                , jV( j + sCV::iCoupled ), kV( k )                ; // V momentum
-        intType iW( i )                , jW( j )                , kW( k + sCW::iCoupled ); // W momentum
+        intType iU( i + sCU::iCoupled ), jU( j                 ), kU( k                 ); // U momentum
+        intType iV( i                 ), jV( j + sCV::iCoupled ), kV( k                 ); // V momentum
+        intType iW( i                 ), jW( j                 ), kW( k + sCW::iCoupled ); // W momentum
+
 
         TIC("U momentum off diagonal")
         // Precompute momentum RHS divided by AP coefficients
         // U momentum
         floatType bU = ( m_fvCoeffs.Umom.B(iU, jU, kU)
 
-                       - m_fvCoeffs.Umom.AU[n](iU, jU, kU) * m_fields[U]( G(iU    , jU + 1, kU    ) ) 
-                       - m_fvCoeffs.Umom.AU[e](iU, jU, kU) * m_fields[U]( G(iU + 1, jU    , kU    ) ) 
-                       - m_fvCoeffs.Umom.AU[s](iU, jU, kU) * m_fields[U]( G(iU    , jU - 1, kU    ) ) 
-                       - m_fvCoeffs.Umom.AU[w](iU, jU, kU) * m_fields[U]( G(iU - 1, jU    , kU    ) ) 
-                       - m_fvCoeffs.Umom.AU[t](iU, jU, kU) * m_fields[U]( G(iU    , jU    , kU + 1) ) 
-                       - m_fvCoeffs.Umom.AU[b](iU, jU, kU) * m_fields[U]( G(iU    , jU    , kU - 1) )
+                       - m_fvCoeffs.Umom.AU[n](iU, jU, kU) * m_fields[U]( G(iU  , jU+1, kU  ) ) 
+                       - m_fvCoeffs.Umom.AU[e](iU, jU, kU) * m_fields[U]( G(iU+1, jU  , kU  ) ) 
+                       - m_fvCoeffs.Umom.AU[s](iU, jU, kU) * m_fields[U]( G(iU  , jU-1, kU  ) ) 
+                       - m_fvCoeffs.Umom.AU[w](iU, jU, kU) * m_fields[U]( G(iU-1, jU  , kU  ) ) 
+                       - m_fvCoeffs.Umom.AU[t](iU, jU, kU) * m_fields[U]( G(iU  , jU  , kU+1) ) 
+                       - m_fvCoeffs.Umom.AU[b](iU, jU, kU) * m_fields[U]( G(iU  , jU  , kU-1) )
 
                        - m_fvCoeffs.Umom.AP[sUP::cLeft ](iU) * m_fields[P]( G(iU + sUP::iLeft , jU, kU) ) 
                        - m_fvCoeffs.Umom.AP[sUP::cRight](iU) * m_fields[P]( G(iU + sUP::iRight, jU, kU) ) 
@@ -171,22 +174,6 @@ public:
 
         TOC()
 
-        // floatType offDiagVelocity = abs( m_fvCoeffs.Umom.AU[n](iU, jU, kU) )
-        //                           + abs( m_fvCoeffs.Umom.AU[e](iU, jU, kU) )
-        //                           + abs( m_fvCoeffs.Umom.AU[s](iU, jU, kU) )
-        //                           + abs( m_fvCoeffs.Umom.AU[w](iU, jU, kU) )
-        //                           + abs( m_fvCoeffs.Umom.AU[t](iU, jU, kU) )
-        //                           + abs( m_fvCoeffs.Umom.AU[b](iU, jU, kU) );
-
-        // floatType offDiagPressure = abs( m_fvCoeffs.Umom.AP[p](iU) )
-        //                           + abs( m_fvCoeffs.Umom.AP[e](iU) )
-        //                           + abs( m_fvCoeffs.Umom.AP[w](iU) );
-
-        // std::cout << "U momentum:\n"
-        //           << "Diagonal coefficient: " <<  m_fvCoeffs.Umom.AU[p](iU, jU, kU) << "\n"
-        //           << "Off diagonal velocity coefficients: " << offDiagVelocity << "\n"
-        //           << "Off diagonal pressure coefficients: " << offDiagPressure << "\n"
-        //           << "\n";
 
         TIC("V momentum off diagonal")
         // V momentum
@@ -253,29 +240,29 @@ public:
 
         TIC("Pressure update")
         // Update P from continuity
-        m_fields[P](G(i, j, k)) = ( bP 
-                                  - m_fvCoeffs.Cont.AU[sCU::cCoupled](i) * bU 
-                                  - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * bV 
-                                  - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * bW 
-                                  ) * m_K(i, j, k);
+        m_fields[P]( G(i, j, k) ) = ( bP 
+                                    - m_fvCoeffs.Cont.AU[sCU::cCoupled](i) * bU 
+                                    - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * bV 
+                                    - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * bW 
+                                    ) * m_K(i, j, k);
         TOC()
 
         TIC("U update")
         // Update U from momentum
-        m_fields[U](G(iU, jU, kU)) = bU 
-                                   - m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
+        m_fields[U]( G(iU, jU, kU) ) = bU 
+                                     - m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
         TOC()
 
         TIC("V update")
         // Update V from momentum
-        m_fields[V](G(iV, jV, kV)) = bV 
-                                   - m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
+        m_fields[V]( G(iV, jV, kV) ) = bV 
+                                     - m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
         TOC()
 
         TIC("W update")
         // Update W from momentum
-        m_fields[W](G(iW, jW, kW)) = bW 
-                                   - m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+        m_fields[W]( G(iW, jW, kW) ) = bW 
+                                     - m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
         TOC()
 
         TOC()
@@ -332,6 +319,7 @@ public:
 
 private:
     ArrayAllocator<Fields, array3D> &m_fields;
+    const ArrayAllocator<Fields, array3D> &m_fieldsOld;
     const FVCoefficients &m_fvCoeffs;
     intType m_ni, m_nj, m_nk;
     array3D m_K;
@@ -349,28 +337,30 @@ class LineSolver
     using TC = TransportCoefficients::ENUMDATA;
 
     // Staggering must be valid
-    static_assert((Vstag == TC::n) || (Vstag == TC::s) || (Vstag == TC::p), "Invalid V momentum staggering");
-    static_assert((Wstag == TC::t) || (Wstag == TC::b) || (Wstag == TC::p), "Invalid W momentum staggering");
+    static_assert( (Vstag == TC::n) || (Vstag == TC::s) || (Vstag == TC::p), "Invalid V momentum staggering" );
+    static_assert( (Wstag == TC::t) || (Wstag == TC::b) || (Wstag == TC::p), "Invalid W momentum staggering" );
 
 public:
     LineSolver( ArrayAllocator<Fields, array3D> &fields,
+                const ArrayAllocator<Fields, array3D> &fieldsOld,
                 const FVCoefficients &fvCoeffs,
                 const InputData::LineSolverSettings &lineSolverSettings) : 
-                    m_fields(fields),
-                    m_maxIterations(lineSolverSettings.maxIterations),
-                    m_maxResiduals(lineSolverSettings.maxResiduals),
-                    m_relaxation(lineSolverSettings.relaxation),
-                    m_ni(fvCoeffs.nCells(0))
+                    m_fields( fields ),
+                    m_fieldsOld( fieldsOld ),
+                    m_maxIterations( lineSolverSettings.maxIterations ),
+                    m_maxResiduals( lineSolverSettings.maxResiduals ),
+                    m_relaxation( lineSolverSettings.relaxation ),
+                    m_ni( fvCoeffs.nCells(0) )
     {
         if (m_ni == 1) {
 
-            m_blockSolverCenter = std::make_unique<BlockSolver<TC::p, Vstag, Wstag>>(fields, fvCoeffs);
+            m_blockSolverCenter = std::make_unique<BlockSolver<TC::p, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep2D;
             StateUpdater = &LineSolver::UpdateState2D;
 
         } else {
-            m_blockSolverEast = std::make_unique<BlockSolver<TC::e, Vstag, Wstag>>(fields, fvCoeffs);
-            m_blockSolverWest = std::make_unique<BlockSolver<TC::w, Vstag, Wstag>>(fields, fvCoeffs);
+            m_blockSolverEast = std::make_unique<BlockSolver<TC::e, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
+            m_blockSolverWest = std::make_unique<BlockSolver<TC::w, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep3D;
             StateUpdater = &LineSolver::UpdateState3D;
 
@@ -421,6 +411,7 @@ public:
 
 private:
     ArrayAllocator<Fields, array3D> &m_fields;
+    const ArrayAllocator<Fields, array3D> &m_fieldsOld;
     const intType m_maxIterations;
     const EnumVector<Fields, floatType> m_maxResiduals;
     const EnumVector<Fields, floatType> m_relaxation;
@@ -502,13 +493,15 @@ class PlaneSolver
     using A = Axis::ENUMDATA;
 
     // Staggering must be valid
-    static_assert((Wstag == TC::t) || (Wstag == TC::b) || (Wstag == TC::p), "Invalid W momentum staggering");
+    static_assert( (Wstag == TC::t) || (Wstag == TC::b) || (Wstag == TC::p), "Invalid W momentum staggering" );
 
 public:
-    PlaneSolver(ArrayAllocator<Fields, array3D> &fields,
-                const FVCoefficients &fvCoeffs,
-                const InputData::PlaneSolverSettings &planeSolverSettings) : 
+    PlaneSolver( ArrayAllocator<Fields, array3D> &fields,
+                 const ArrayAllocator<Fields, array3D> &fieldsOld,
+                 const FVCoefficients &fvCoeffs,
+                 const InputData::PlaneSolverSettings &planeSolverSettings) : 
                     m_fields( fields ),
+                    m_fieldsOld( fieldsOld ),
                     m_maxIterations( planeSolverSettings.maxIterations ),
                     m_maxResiduals( planeSolverSettings.maxResiduals ),
                     m_relaxation( planeSolverSettings.relaxation ),
@@ -521,14 +514,14 @@ public:
     {
         if (m_nj == 1) {
 
-            m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag>>(fields, fvCoeffs, planeSolverSettings.lineSolverSettings);
+            m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag>>(fields, fieldsOld, fvCoeffs, planeSolverSettings.lineSolverSettings);
             SolutionUpdater = &PlaneSolver::Sweep2D;
             StateUpdater = &PlaneSolver::UpdateState2D;
 
         } else {
 
-            m_lineSolverNorth = std::make_unique<LineSolver<TC::n, Wstag>>(fields, fvCoeffs, planeSolverSettings.lineSolverSettings);
-            m_lineSolverSouth = std::make_unique<LineSolver<TC::s, Wstag>>(fields, fvCoeffs, planeSolverSettings.lineSolverSettings);
+            m_lineSolverNorth = std::make_unique<LineSolver<TC::n, Wstag>>(fields, fieldsOld, fvCoeffs, planeSolverSettings.lineSolverSettings);
+            m_lineSolverSouth = std::make_unique<LineSolver<TC::s, Wstag>>(fields, fieldsOld, fvCoeffs, planeSolverSettings.lineSolverSettings);
             SolutionUpdater = &PlaneSolver::Sweep3D;
             StateUpdater = &PlaneSolver::UpdateState3D;
 
@@ -577,6 +570,7 @@ public:
 private:
 
     ArrayAllocator<Fields, array3D> &m_fields;
+    const ArrayAllocator<Fields, array3D> &m_fieldsOld;
     const intType m_maxIterations;
     const EnumVector<Fields, floatType> m_maxResiduals;
     const EnumVector<Fields, floatType> m_relaxation;
@@ -661,9 +655,11 @@ class LinearSolver
 
 public:
     LinearSolver( ArrayAllocator<Fields, array3D> &fields,
-                  FVCoefficients &fvCoeffs,
+                  const ArrayAllocator<Fields, array3D> &fieldsOld,
+                  const FVCoefficients &fvCoeffs, 
                   const InputData::LinearSolverSettings &linearSolverSettings) : 
                     m_fields( fields ),
+                    m_fieldsOld( fieldsOld ),
                     m_maxIterations( linearSolverSettings.maxIterations ),
                     m_maxResiduals( linearSolverSettings.maxResiduals ),
                     m_relaxation( linearSolverSettings.relaxation ),
@@ -677,14 +673,14 @@ public:
     {
         if (m_nk == 1) {
 
-            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p>>(fields, fvCoeffs, linearSolverSettings.planeSolverSettings);
+            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p>>(fields, fieldsOld, fvCoeffs, linearSolverSettings.planeSolverSettings);
             SolutionUpdater = &LinearSolver::Sweep2D;
             StateUpdater = &LinearSolver::UpdateState2D;
 
         } else {
 
-            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t>>(fields, fvCoeffs, linearSolverSettings.planeSolverSettings);
-            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b>>(fields, fvCoeffs, linearSolverSettings.planeSolverSettings);
+            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t>>(fields, fieldsOld, fvCoeffs, linearSolverSettings.planeSolverSettings);
+            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b>>(fields, fieldsOld, fvCoeffs, linearSolverSettings.planeSolverSettings);
             SolutionUpdater = &LinearSolver::Sweep3D;
             StateUpdater = &LinearSolver::UpdateState3D;
 
@@ -733,6 +729,7 @@ public:
 private:
 
     ArrayAllocator<Fields, array3D> &m_fields;
+    const ArrayAllocator<Fields, array3D> &m_fieldsOld;
     const intType m_maxIterations;
     const EnumVector<Fields, floatType> m_maxResiduals;
     const EnumVector<Fields, floatType> m_relaxation;
@@ -818,22 +815,21 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
 
     // Extract from input data
     const InputData::LinearSolverSettings linearSolverSettings = inputData.linearSolverSettings;
-
     const intType maxOuterIterations = inputData.schemes.maxOuterIterations;
     const EnumVector<Fields, floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
 
     // Initialise
     ArrayAllocator<Fields, array3D> faceVelocities = InitialiseFaceVelocities(mesh, fields, inputData);
     ArrayAllocator<Fields, array3D> fieldsOld(fields);
-    FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceVelocities, inputData);
+    FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, faceVelocities, inputData);
 
     intType nOuterIterations;
     EnumVector<Fields, floatType> residualsOuter, residualsOuterInitialInv;
     floatType massFluxResidual;
     ConvergenceLogger logger("convergence_history.csv", axisTransformation);
 
-    // Instantiate linear solver
-    LinearSolver linearSolver(fields, fvCoeffs, linearSolverSettings);
+    // Instantiate linear solver, this holds references to the fields
+    LinearSolver linearSolver(fields, fieldsOld, fvCoeffs, linearSolverSettings);
 
     // Outer iterations
     nOuterIterations = 0;
@@ -860,7 +856,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         }
 
         // Update nonlinear coefficients
-        UpdateFVCoefficients(fvCoeffs, mesh, fields, faceVelocities, inputData);
+        UpdateFVCoefficients(fvCoeffs, mesh, faceVelocities, inputData);
         linearSolver.UpdateState();
     }
 }
