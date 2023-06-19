@@ -157,12 +157,12 @@ public:
         // U momentum
         floatType bU = ( m_fvCoeffs.Umom.B(iU, jU, kU)
 
-                       - m_fvCoeffs.Umom.AU[n](iU, jU, kU) * m_fields[U]( G(iU, jU + 1, kU) ) 
-                       - m_fvCoeffs.Umom.AU[e](iU, jU, kU) * m_fields[U]( G(iU + 1, jU, kU) ) 
-                       - m_fvCoeffs.Umom.AU[s](iU, jU, kU) * m_fields[U]( G(iU, jU - 1, kU) ) 
-                       - m_fvCoeffs.Umom.AU[w](iU, jU, kU) * m_fields[U]( G(iU - 1, jU, kU) ) 
-                       - m_fvCoeffs.Umom.AU[t](iU, jU, kU) * m_fields[U]( G(iU, jU, kU + 1) ) 
-                       - m_fvCoeffs.Umom.AU[b](iU, jU, kU) * m_fields[U]( G(iU, jU, kU - 1) )
+                       - m_fvCoeffs.Umom.AU[n](iU, jU, kU) * m_fields[U]( G(iU    , jU + 1, kU    ) ) 
+                       - m_fvCoeffs.Umom.AU[e](iU, jU, kU) * m_fields[U]( G(iU + 1, jU    , kU    ) ) 
+                       - m_fvCoeffs.Umom.AU[s](iU, jU, kU) * m_fields[U]( G(iU    , jU - 1, kU    ) ) 
+                       - m_fvCoeffs.Umom.AU[w](iU, jU, kU) * m_fields[U]( G(iU - 1, jU    , kU    ) ) 
+                       - m_fvCoeffs.Umom.AU[t](iU, jU, kU) * m_fields[U]( G(iU    , jU    , kU + 1) ) 
+                       - m_fvCoeffs.Umom.AU[b](iU, jU, kU) * m_fields[U]( G(iU    , jU    , kU - 1) )
 
                        - m_fvCoeffs.Umom.AP[sUP::cLeft ](iU) * m_fields[P]( G(iU + sUP::iLeft , jU, kU) ) 
                        - m_fvCoeffs.Umom.AP[sUP::cRight](iU) * m_fields[P]( G(iU + sUP::iRight, jU, kU) ) 
@@ -192,12 +192,12 @@ public:
         // V momentum
         floatType bV = ( m_fvCoeffs.Vmom.B(iV, jV, kV)
 
-                       - m_fvCoeffs.Vmom.AV[n](iV, jV, kV) * m_fields[V]( G(iV, jV + 1, kV) ) 
-                       - m_fvCoeffs.Vmom.AV[e](iV, jV, kV) * m_fields[V]( G(iV + 1, jV, kV) ) 
-                       - m_fvCoeffs.Vmom.AV[s](iV, jV, kV) * m_fields[V]( G(iV, jV - 1, kV) ) 
-                       - m_fvCoeffs.Vmom.AV[w](iV, jV, kV) * m_fields[V]( G(iV - 1, jV, kV) ) 
-                       - m_fvCoeffs.Vmom.AV[t](iV, jV, kV) * m_fields[V]( G(iV, jV, kV + 1) ) 
-                       - m_fvCoeffs.Vmom.AV[b](iV, jV, kV) * m_fields[V]( G(iV, jV, kV - 1) )
+                       - m_fvCoeffs.Vmom.AV[n](iV, jV, kV) * m_fields[V]( G(iV  , jV+1, kV  ) ) 
+                       - m_fvCoeffs.Vmom.AV[e](iV, jV, kV) * m_fields[V]( G(iV+1, jV  , kV  ) ) 
+                       - m_fvCoeffs.Vmom.AV[s](iV, jV, kV) * m_fields[V]( G(iV  , jV-1, kV  ) ) 
+                       - m_fvCoeffs.Vmom.AV[w](iV, jV, kV) * m_fields[V]( G(iV-1, jV  , kV  ) ) 
+                       - m_fvCoeffs.Vmom.AV[t](iV, jV, kV) * m_fields[V]( G(iV  , jV  , kV+1) ) 
+                       - m_fvCoeffs.Vmom.AV[b](iV, jV, kV) * m_fields[V]( G(iV  , jV  , kV-1) )
 
                        - m_fvCoeffs.Vmom.AP[sVP::cLeft ](jV) * m_fields[P]( G(iV, jV + sVP::iLeft , kV) ) 
                        - m_fvCoeffs.Vmom.AP[sVP::cRight](jV) * m_fields[P]( G(iV, jV + sVP::iRight, kV) )
@@ -210,12 +210,12 @@ public:
         // W momentum
         floatType bW = ( m_fvCoeffs.Wmom.B(iW, jW, kW)
 
-                       - m_fvCoeffs.Wmom.AW[n](iW, jW, kW) * m_fields[W]( G(iW, jW + 1, kW) ) 
-                       - m_fvCoeffs.Wmom.AW[e](iW, jW, kW) * m_fields[W]( G(iW + 1, jW, kW) ) 
-                       - m_fvCoeffs.Wmom.AW[s](iW, jW, kW) * m_fields[W]( G(iW, jW - 1, kW) ) 
-                       - m_fvCoeffs.Wmom.AW[w](iW, jW, kW) * m_fields[W]( G(iW - 1, jW, kW) ) 
-                       - m_fvCoeffs.Wmom.AW[t](iW, jW, kW) * m_fields[W]( G(iW, jW, kW + 1) ) 
-                       - m_fvCoeffs.Wmom.AW[b](iW, jW, kW) * m_fields[W]( G(iW, jW, kW - 1) )
+                       - m_fvCoeffs.Wmom.AW[n](iW, jW, kW) * m_fields[W]( G(iW  , jW+1, kW  ) ) 
+                       - m_fvCoeffs.Wmom.AW[e](iW, jW, kW) * m_fields[W]( G(iW+1, jW  , kW  ) ) 
+                       - m_fvCoeffs.Wmom.AW[s](iW, jW, kW) * m_fields[W]( G(iW  , jW-1, kW  ) ) 
+                       - m_fvCoeffs.Wmom.AW[w](iW, jW, kW) * m_fields[W]( G(iW-1, jW  , kW  ) ) 
+                       - m_fvCoeffs.Wmom.AW[t](iW, jW, kW) * m_fields[W]( G(iW  , jW  , kW+1) ) 
+                       - m_fvCoeffs.Wmom.AW[b](iW, jW, kW) * m_fields[W]( G(iW  , jW  , kW-1) )
 
                        - m_fvCoeffs.Wmom.AP[sWP::cLeft ](kW) * m_fields[P]( G(iW, jW, kW + sWP::iLeft) ) 
                        - m_fvCoeffs.Wmom.AP[sWP::cRight](kW) * m_fields[P]( G(iW, jW, kW + sWP::iRight) )
@@ -236,19 +236,19 @@ public:
                      - m_fvCoeffs.Cont.AW[sCW::cLeft ](k) * m_fields[W]( G(i, j, k + sCW::iLeft ) )
                      - m_fvCoeffs.Cont.AW[sCW::cRight](k) * m_fields[W]( G(i, j, k + sCW::iRight) )
 
-                     - m_fvCoeffs.Cont.AP[n](i, j, k) * m_fields[P]( G(i, j + 1, k)) 
-                     - m_fvCoeffs.Cont.AP[e](i, j, k) * m_fields[P]( G(i + 1, j, k)) 
-                     - m_fvCoeffs.Cont.AP[s](i, j, k) * m_fields[P]( G(i, j - 1, k)) 
-                     - m_fvCoeffs.Cont.AP[w](i, j, k) * m_fields[P]( G(i - 1, j, k)) 
-                     - m_fvCoeffs.Cont.AP[t](i, j, k) * m_fields[P]( G(i, j, k + 1)) 
-                     - m_fvCoeffs.Cont.AP[b](i, j, k) * m_fields[P]( G(i, j, k - 1))
+                     - m_fvCoeffs.Cont.AP[n](i, j, k) * m_fields[P]( G(i  , j+1, k  )) 
+                     - m_fvCoeffs.Cont.AP[e](i, j, k) * m_fields[P]( G(i+1, j  , k  )) 
+                     - m_fvCoeffs.Cont.AP[s](i, j, k) * m_fields[P]( G(i  , j-1, k  )) 
+                     - m_fvCoeffs.Cont.AP[w](i, j, k) * m_fields[P]( G(i-1, j  , k  )) 
+                     - m_fvCoeffs.Cont.AP[t](i, j, k) * m_fields[P]( G(i  , j  , k+1)) 
+                     - m_fvCoeffs.Cont.AP[b](i, j, k) * m_fields[P]( G(i  , j  , k-1))
 
-                     - m_fvCoeffs.Cont.AP[nn](i, j, k) * m_fields[P]( G(i, j + 2, k) ) 
-                     - m_fvCoeffs.Cont.AP[ee](i, j, k) * m_fields[P]( G(i + 2, j, k) ) 
-                     - m_fvCoeffs.Cont.AP[ss](i, j, k) * m_fields[P]( G(i, j - 2, k) ) 
-                     - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields[P]( G(i - 2, j, k) ) 
-                     - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields[P]( G(i, j, k + 2) ) 
-                     - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields[P]( G(i, j, k - 2) );
+                     - m_fvCoeffs.Cont.AP[nn](i, j, k) * m_fields[P]( G(i  , j+2, k  ) ) 
+                     - m_fvCoeffs.Cont.AP[ee](i, j, k) * m_fields[P]( G(i+2, j  , k  ) ) 
+                     - m_fvCoeffs.Cont.AP[ss](i, j, k) * m_fields[P]( G(i  , j-2, k  ) ) 
+                     - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields[P]( G(i-2, j  , k  ) ) 
+                     - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields[P]( G(i  , j  , k+2) ) 
+                     - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields[P]( G(i  , j  , k-2) );
         TOC()
 
         TIC("Pressure update")
