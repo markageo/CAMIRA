@@ -91,8 +91,8 @@ CFD::InputData::InputData() :
     meshSegments(),
     boundaryConditions()
     {
-        planeSolverSettings.sweepDirection = CFD::BoundaryPatches::zPositive;
-        lineSolverSettings.sweepDirection = CFD::BoundaryPatches::yPositive;
+        linearSolverSettings.planeSolverSettings.sweepDirection = CFD::BoundaryPatches::zPositive;
+        linearSolverSettings.planeSolverSettings.lineSolverSettings.sweepDirection = CFD::BoundaryPatches::yPositive;
     };
 
 
@@ -473,7 +473,7 @@ namespace
 
 
 
-    void ReadLineSolverSettings( InputData &inputData, 
+    void ReadLineSolverSettings( InputData::LineSolverSettings &lineSolverSettings, 
                                  const pt::ptree &planeSolverTree) 
     {
         const pt::ptree &lineSolverTree = planeSolverTree.get_child( "LineSolver" );
@@ -483,35 +483,35 @@ namespace
         // Solver type
         valueString = lineSolverTree.get<std::string>( "type" );
         if        ( valueString == "SUGS" ) {
-            inputData.lineSolverSettings.type = LineSolvers::SUGS;
+            lineSolverSettings.type = LineSolvers::SUGS;
         } else {
             throw std::runtime_error( "'" + valueString + "' is not a line solver type." );
         }
 
         // Max iterations
-        inputData.lineSolverSettings.maxIterations = lineSolverTree.get<intType>( "maxIterations" );
+        lineSolverSettings.maxIterations = lineSolverTree.get<intType>( "maxIterations" );
 
         // Max residuals
-        inputData.lineSolverSettings.maxResiduals = lineSolverTree.get<floatType>( "maxResiduals" );
+        lineSolverSettings.maxResiduals = lineSolverTree.get<floatType>( "maxResiduals" );
         
         // Momentum relaxation
         std::vector<floatType> momentumRelaxation = lineSolverTree.get< std::vector<floatType> >( "momentumRelaxation" );
-        inputData.lineSolverSettings.relaxation[F::U] = momentumRelaxation[0];
-        inputData.lineSolverSettings.relaxation[F::V] = momentumRelaxation[1];
-        inputData.lineSolverSettings.relaxation[F::W] = momentumRelaxation[2];
+        lineSolverSettings.relaxation[F::U] = momentumRelaxation[0];
+        lineSolverSettings.relaxation[F::V] = momentumRelaxation[1];
+        lineSolverSettings.relaxation[F::W] = momentumRelaxation[2];
 
         // Pressure relaxation
-        inputData.lineSolverSettings.relaxation[F::P] = lineSolverTree.get<floatType>( "pressureRelaxation" );
+        lineSolverSettings.relaxation[F::P] = lineSolverTree.get<floatType>( "pressureRelaxation" );
 
         // Line sweep direction
         valueString = lineSolverTree.get<std::string>( "lineSweepDirection" );
-        inputData.lineSolverSettings.sweepDirection = ReadAxisDirection( valueString );
+        lineSolverSettings.sweepDirection = ReadAxisDirection( valueString );
 
     }
 
 
 
-    void ReadPlaneSolverSettings( InputData &inputData, 
+    void ReadPlaneSolverSettings( InputData::PlaneSolverSettings &planeSolverSettings, 
                                  const pt::ptree &linearSolverTree) 
     {
         const pt::ptree &planeSolverTree = linearSolverTree.get_child( "PlaneSolver" );
@@ -521,32 +521,32 @@ namespace
         // Solver type
         valueString = planeSolverTree.get<std::string>( "type" );
         if        ( valueString == "SUGS" ) {
-            inputData.planeSolverSettings.type = PlaneSolvers::SUGS;
+            planeSolverSettings.type = PlaneSolvers::SUGS;
         } else {
             throw std::runtime_error( "'" + valueString + "' is not a plane solver type." );
         }
 
         // Max iterations
-        inputData.planeSolverSettings.maxIterations = planeSolverTree.get<intType>( "maxIterations" );
+        planeSolverSettings.maxIterations = planeSolverTree.get<intType>( "maxIterations" );
 
         // Max residuals
-        inputData.planeSolverSettings.maxResiduals = planeSolverTree.get<floatType>( "maxResiduals" );
+        planeSolverSettings.maxResiduals = planeSolverTree.get<floatType>( "maxResiduals" );
         
         // Momentum relaxation
         std::vector<floatType> momentumRelaxation = planeSolverTree.get< std::vector<floatType> >( "momentumRelaxation" );
-        inputData.planeSolverSettings.relaxation[F::U] = momentumRelaxation[0];
-        inputData.planeSolverSettings.relaxation[F::V] = momentumRelaxation[1];
-        inputData.planeSolverSettings.relaxation[F::W] = momentumRelaxation[2];
+        planeSolverSettings.relaxation[F::U] = momentumRelaxation[0];
+        planeSolverSettings.relaxation[F::V] = momentumRelaxation[1];
+        planeSolverSettings.relaxation[F::W] = momentumRelaxation[2];
 
         // Pressure relaxation
-        inputData.planeSolverSettings.relaxation[F::P] = planeSolverTree.get<floatType>( "pressureRelaxation" );
+        planeSolverSettings.relaxation[F::P] = planeSolverTree.get<floatType>( "pressureRelaxation" );
 
         // Plane sweep direction
         valueString = planeSolverTree.get<std::string>( "planeSweepDirection" );
-        inputData.planeSolverSettings.sweepDirection = ReadAxisDirection( valueString );
+        planeSolverSettings.sweepDirection = ReadAxisDirection( valueString );
 
         // Line solver
-        ReadLineSolverSettings(inputData, planeSolverTree);
+        ReadLineSolverSettings(planeSolverSettings.lineSolverSettings, planeSolverTree);
 
     }
 
@@ -583,7 +583,7 @@ namespace
         inputData.linearSolverSettings.relaxation[F::P] = linearSolverTree.get<floatType>( "pressureRelaxation" );
 
         // Plane solver settings
-        ReadPlaneSolverSettings(inputData, linearSolverTree);
+        ReadPlaneSolverSettings(inputData.linearSolverSettings.planeSolverSettings, linearSolverTree);
 
     }
 

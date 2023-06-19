@@ -186,11 +186,11 @@ namespace
         AxisTransformationMap axisTransformation;
 
         // User input for plane sweep direction
-        BP planeSweepDirection = inputData.planeSolverSettings.sweepDirection;
+        BP planeSweepDirection = inputData.linearSolverSettings.planeSolverSettings.sweepDirection;
         directionVector planeSweepVector = Axis2Vector( planeSweepDirection );
 
         // User input for line sweep direction
-        BP lineSweepDirection = inputData.lineSolverSettings.sweepDirection;
+        BP lineSweepDirection = inputData.linearSolverSettings.planeSolverSettings.lineSolverSettings.sweepDirection;
         directionVector lineSweepVector = Axis2Vector( lineSweepDirection );
 
         // Plane and line sweep direction must be orthogonal
@@ -213,8 +213,8 @@ namespace
         axisTransformation.Set( BP::zNegative, Vector2Axis( -planeSweepVector ));
 
         // Change the sweep direction
-        inputData.planeSolverSettings.sweepDirection = BP::zPositive;
-        inputData.lineSolverSettings.sweepDirection  = BP::yPositive;
+        inputData.linearSolverSettings.planeSolverSettings.sweepDirection = BP::zPositive;
+        inputData.linearSolverSettings.planeSolverSettings.lineSolverSettings.sweepDirection  = BP::yPositive;
 
         return axisTransformation;
     }
@@ -335,8 +335,8 @@ namespace
     {
         TransformFieldVectorToCode( inputData.schemes.implicitRelaxation      , axisTransformation );
         TransformFieldVectorToCode( inputData.linearSolverSettings.relaxation , axisTransformation );
-        TransformFieldVectorToCode( inputData.planeSolverSettings.relaxation  , axisTransformation );
-        TransformFieldVectorToCode( inputData.lineSolverSettings.relaxation   , axisTransformation );
+        TransformFieldVectorToCode( inputData.linearSolverSettings.planeSolverSettings.relaxation, axisTransformation );
+        TransformFieldVectorToCode( inputData.linearSolverSettings.planeSolverSettings.lineSolverSettings.relaxation, axisTransformation );
     }
 
 }   // end anonymous namespace
