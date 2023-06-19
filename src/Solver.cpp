@@ -240,7 +240,9 @@ public:
 
         TIC("Pressure update")
         // Update P from continuity
-        m_fields[P]( G(i, j, k) ) = ( bP 
+        m_fields[P]( G(i, j, k) ) = ( 1 - m_fvCoeffs.Cont.relaxation ) * m_fieldsOld[P]( G(i, j, k) )
+                                  + m_fvCoeffs.Cont.relaxation * 
+                                    ( bP 
                                     - m_fvCoeffs.Cont.AU[sCU::cCoupled](i) * bU 
                                     - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * bV 
                                     - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * bW 
@@ -249,20 +251,20 @@ public:
 
         TIC("U update")
         // Update U from momentum
-        m_fields[U]( G(iU, jU, kU) ) = bU 
-                                     - m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
+        m_fields[U]( G(iU, jU, kU) ) = ( 1 - m_fvCoeffs.Umom.relaxation ) * m_fieldsOld[U]( G(iU, jU, kU) )
+                                     + m_fvCoeffs.Umom.relaxation * ( bU - m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU) );
         TOC()
 
         TIC("V update")
         // Update V from momentum
-        m_fields[V]( G(iV, jV, kV) ) = bV 
-                                     - m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
+        m_fields[V]( G(iV, jV, kV) ) = ( 1 - m_fvCoeffs.Vmom.relaxation ) * m_fieldsOld[V]( G(iV, jV, kV) )
+                                     + m_fvCoeffs.Vmom.relaxation * ( bV - m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV) );
         TOC()
 
         TIC("W update")
         // Update W from momentum
-        m_fields[W]( G(iW, jW, kW) ) = bW 
-                                     - m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+        m_fields[W]( G(iW, jW, kW) ) = ( 1 - m_fvCoeffs.Wmom.relaxation ) * m_fieldsOld[W]( G(iW, jW, kW) ) 
+                                     + m_fvCoeffs.Wmom.relaxation * ( bW - m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW) );
         TOC()
 
         TOC()
