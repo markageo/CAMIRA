@@ -49,7 +49,7 @@ class ConvergenceLogger
                          << std::left << std::setw(m_columnWidth) << residuals[ m_userFields[F::V] ] << ", "
                          << std::left << std::setw(m_columnWidth) << residuals[ m_userFields[F::W] ] << ", "
                          << std::left << std::setw(m_columnWidth) << residuals[ m_userFields[F::P] ] << ", "
-                         << std::left << std::setw(m_columnWidth) << massFluxResidual                << "\n";
+                         << std::left << std::setw(m_columnWidth) << massFluxResidual                << std::endl;
         }
 
         void WriteResidualsToScreen( const EnumVector<Fields, floatType> &residuals, 

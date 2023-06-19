@@ -368,6 +368,7 @@ FVCoefficients::MomentumEquation::MomentumEquation( const Fields::ENUMDATA field
     AW( EquationEnums(field, F::W), dims ),
     AP( EquationEnums(field, F::P), dims( EquationDim(field) ) ),
     B( CFD::array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
+    diagCoeffInv( CFD::array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
     diff({ ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims(X) ),
            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims(Y) ),
            ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims(Z) ) }),

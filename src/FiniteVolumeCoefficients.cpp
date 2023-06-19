@@ -913,6 +913,8 @@ void AddRelaxation( array3D &diagonalCoeffs,
 
 
 
+
+
 /*---------------------------------------------------------------------------------------------------------------*\
                                         Boundary Constants to Source Term
 \*---------------------------------------------------------------------------------------------------------------*/
@@ -991,10 +993,10 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     SetDiffusionCoeffients(fvCoeffs.Vmom.diff, fvCoeffs.Vmom.boundaryDiff, mesh, inputData, F::V);
     SetDiffusionCoeffients(fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh, inputData, F::W);
 
-    // // Momentum advection terms
-    // SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
-    // SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
-    // SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
+    // Momentum advection terms
+    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
+    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
+    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
 
     // Add diffusion to the velocity coefficients in momentum equations
     AddDiffusion(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh);
@@ -1020,6 +1022,12 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     AddMomentumBoundaryConstants(fvCoeffs.Wmom);
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
+    // Inverse of AP coefficient
+    using TC = TransportCoefficients::ENUMDATA;
+    fvCoeffs.Umom.diagCoeffInv = fvCoeffs.Umom.AU[TC::p].inverse();
+    fvCoeffs.Vmom.diagCoeffInv = fvCoeffs.Vmom.AV[TC::p].inverse();
+    fvCoeffs.Wmom.diagCoeffInv = fvCoeffs.Wmom.AW[TC::p].inverse();
+
     // Set implicit under relaxation
     fvCoeffs.Umom.relaxation = inputData.schemes.implicitRelaxation[F::U];
     fvCoeffs.Vmom.relaxation = inputData.schemes.implicitRelaxation[F::V];
@@ -1040,7 +1048,6 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
 
 
     // Zero the momentum coefficients and the boundary constants
-    // *** remove this when advection is added back in.
     EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
         if ( fvCoeffs.Umom.AU.get(tc) )
             fvCoeffs.Umom.AU[tc].setZero();
@@ -1061,10 +1068,10 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     } );
 
 
-    // // Set the advection terms
-    // SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
-    // SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
-    // SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
+    // Set the advection terms
+    SetAdvectionCoefficients(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, faceVelocities, mesh, inputData, F::U);
+    SetAdvectionCoefficients(fvCoeffs.Vmom.AV, fvCoeffs.Vmom.boundaryVel, faceVelocities, mesh, inputData, F::V);
+    SetAdvectionCoefficients(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, faceVelocities, mesh, inputData, F::W);
 
     // Add in the diffusion
     AddDiffusion(fvCoeffs.Umom.AU, fvCoeffs.Umom.boundaryVel, fvCoeffs.Umom.diff, fvCoeffs.Umom.boundaryDiff, mesh);
@@ -1085,6 +1092,12 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     AddMomentumBoundaryConstants(fvCoeffs.Vmom);
     AddMomentumBoundaryConstants(fvCoeffs.Wmom);
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
+
+    // Inverse of AP coefficient
+    using TC = TransportCoefficients::ENUMDATA;
+    fvCoeffs.Umom.diagCoeffInv = fvCoeffs.Umom.AU[TC::p].inverse();
+    fvCoeffs.Vmom.diagCoeffInv = fvCoeffs.Vmom.AV[TC::p].inverse();
+    fvCoeffs.Wmom.diagCoeffInv = fvCoeffs.Wmom.AW[TC::p].inverse();
 
 }
 

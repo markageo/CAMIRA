@@ -147,15 +147,12 @@ public:
         using enum Fields::ENUMDATA;
         using enum TransportCoefficients::ENUMDATA;
 
-        TIC("Computation")
-
         // For indexing the staggered cells
         intType iU( i + sCU::iCoupled ), jU( j                 ), kU( k                 ); // U momentum
         intType iV( i                 ), jV( j + sCV::iCoupled ), kV( k                 ); // V momentum
         intType iW( i                 ), jW( j                 ), kW( k + sCW::iCoupled ); // W momentum
 
 
-        TIC("U momentum off diagonal")
         // Precompute momentum RHS divided by AP coefficients
         // U momentum
         floatType bU = ( m_fvCoeffs.Umom.B(iU, jU, kU)
@@ -170,12 +167,9 @@ public:
                        - m_fvCoeffs.Umom.AP[sUP::cLeft ](iU) * m_fields[P]( G(iU + sUP::iLeft , jU, kU) ) 
                        - m_fvCoeffs.Umom.AP[sUP::cRight](iU) * m_fields[P]( G(iU + sUP::iRight, jU, kU) ) 
 
-                       ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU);
-
-        TOC()
+                       ) * m_fvCoeffs.Umom.diagCoeffInv(iU, jU, kU);
 
 
-        TIC("V momentum off diagonal")
         // V momentum
         floatType bV = ( m_fvCoeffs.Vmom.B(iV, jV, kV)
 
@@ -189,11 +183,9 @@ public:
                        - m_fvCoeffs.Vmom.AP[sVP::cLeft ](jV) * m_fields[P]( G(iV, jV + sVP::iLeft , kV) ) 
                        - m_fvCoeffs.Vmom.AP[sVP::cRight](jV) * m_fields[P]( G(iV, jV + sVP::iRight, kV) )
 
-                       ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV);
+                       ) * m_fvCoeffs.Vmom.diagCoeffInv(iV, jV, kV);
 
-        TOC()
 
-        TIC("W momentum off diagonal")
         // W momentum
         floatType bW = ( m_fvCoeffs.Wmom.B(iW, jW, kW)
 
@@ -207,10 +199,9 @@ public:
                        - m_fvCoeffs.Wmom.AP[sWP::cLeft ](kW) * m_fields[P]( G(iW, jW, kW + sWP::iLeft) ) 
                        - m_fvCoeffs.Wmom.AP[sWP::cRight](kW) * m_fields[P]( G(iW, jW, kW + sWP::iRight) )
 
-                       ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
-        TOC()
+                       ) * m_fvCoeffs.Wmom.diagCoeffInv(iW, jW, kW);
 
-        TIC("Continuity off diagonal")
+
         // Continuity for pressure
         floatType bP = m_fvCoeffs.Cont.B(i, j, k)
 
@@ -236,9 +227,8 @@ public:
                      - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields[P]( G(i-2, j  , k  ) ) 
                      - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields[P]( G(i  , j  , k+2) ) 
                      - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields[P]( G(i  , j  , k-2) );
-        TOC()
 
-        TIC("Pressure update")
+
         // Update P from continuity
         m_fields[P]( G(i, j, k) ) = ( 1 - m_fvCoeffs.Cont.relaxation ) * m_fieldsOld[P]( G(i, j, k) )
                                   + m_fvCoeffs.Cont.relaxation * 
@@ -247,27 +237,20 @@ public:
                                     - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * bV 
                                     - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * bW 
                                     ) * m_K(i, j, k);
-        TOC()
 
-        TIC("U update")
+
         // Update U from momentum
         m_fields[U]( G(iU, jU, kU) ) = ( 1 - m_fvCoeffs.Umom.relaxation ) * m_fieldsOld[U]( G(iU, jU, kU) )
-                                     + m_fvCoeffs.Umom.relaxation * ( bU - m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Umom.AU[p](iU, jU, kU) );
-        TOC()
+                                     + m_fvCoeffs.Umom.relaxation * ( bU - m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) * m_fields[P]( G(i, j, k) ) * m_fvCoeffs.Umom.diagCoeffInv(iU, jU, kU) );
 
-        TIC("V update")
         // Update V from momentum
         m_fields[V]( G(iV, jV, kV) ) = ( 1 - m_fvCoeffs.Vmom.relaxation ) * m_fieldsOld[V]( G(iV, jV, kV) )
-                                     + m_fvCoeffs.Vmom.relaxation * ( bV - m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV) );
-        TOC()
+                                     + m_fvCoeffs.Vmom.relaxation * ( bV - m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) * m_fields[P]( G(i, j, k) ) * m_fvCoeffs.Vmom.diagCoeffInv(iV, jV, kV) );
 
-        TIC("W update")
         // Update W from momentum
         m_fields[W]( G(iW, jW, kW) ) = ( 1 - m_fvCoeffs.Wmom.relaxation ) * m_fieldsOld[W]( G(iW, jW, kW) ) 
-                                     + m_fvCoeffs.Wmom.relaxation * ( bW - m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) * m_fields[P]( G(i, j, k) ) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW) );
-        TOC()
+                                     + m_fvCoeffs.Wmom.relaxation * ( bW - m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) * m_fields[P]( G(i, j, k) ) * m_fvCoeffs.Wmom.diagCoeffInv(iW, jW, kW) );
 
-        TOC()
     }
 
     // Constants which are global to the linear solver
@@ -439,6 +422,7 @@ private:
         for (intType i = m_ni - 1; i != 0; i--) { // Backward sweep
             UpdateAndRelax(m_blockSolverWest, i, j, k);
         }
+
     }
 
     void UpdateState3D()
