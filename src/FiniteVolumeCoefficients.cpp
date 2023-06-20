@@ -249,20 +249,18 @@ void Upwind( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs,
     startIndex[axis] += 1;
     nFaces[axis] -= 1;
 
-    std::array<Eigen::Index, 3> HiIndex, LoIndex;
     TransportCoefficients::ENUMDATA east = HiCoeff[axis], 
                                     west = LoCoeff[axis];
-    floatType uf;
 
     for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
                 
-                HiIndex = { i, j, k };
-                LoIndex = { i, j, k };
+                Eigen::array<Eigen::Index, 3> HiIndex = { i, j, k },
+                                              LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
 
-                uf = faceVelocities[ field ](i, j, k);
+                floatType uf = faceVelocities[ field ](i, j, k);
                 if ( uf >= 0 ) {
                     
                     coeffs[p   ](LoIndex) +=   uf * mesh.cellLengthsInv[axis]( LoIndex[axis] );
@@ -388,16 +386,16 @@ void SetAdvectionCoefficients( ArrayAllocator<TransportCoefficients, array3D> &c
 
     // Upwind internal faces
     EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
+
+        // Upwind internal faces
         Upwind(coeffs, faceVelocities, mesh, axis);
-    } );
 
-    // Boundary conditions by axis
-    EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
-
+        // Boundary faces
         AdvectionPositiveBoundary(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], axis);
         AdvectionNegativeBoundary(coeffs, boundaryConstants, faceVelocities, mesh, boundaryConditions[field], axis);
 
     } );
+
 }
 
 
@@ -604,28 +602,28 @@ floatType MWIWeightingCoeff( const indexVector3 &idx,
     using enum TransportCoefficients::ENUMDATA;
     using enum Axis::ENUMDATA;
 
-    // Temporary index vector that has the correct indices for the neighbouring cell of the current axis
-    indexVector3 idxn( idx );
-    idxn(axis) -= 1;
+    Eigen::array<Eigen::Index, 3> HiIndex = {idx[X], idx[Y], idx[Z]},
+                                  LoIndex = HiIndex;
+    LoIndex[axis] -= 1;
 
-    floatType d = 1.0f / ( AUU[p]( idx(X), idx(Y), idx(Z) )  +  AUU[p]( idxn(X), idxn(Y), idxn(Z) ) ); 
+    floatType d = 2.0f / ( AUU[p]( HiIndex )  +  AUU[p]( LoIndex ) ); 
     return d;
 }
 
 
 // Face velocity correction coefficients for a single face from Momentum Weighted Coefficients. In order of westmost to eastmost.
-std::vector<floatType> MWICoeffs( const indexVector3 &idx, 
-                                  const ArrayAllocator<TransportCoefficients, array3D> &AUU, 
-                                  const ArrayAllocator<TransportCoefficients, array1D> &AUP,
-                                  const Mesh &mesh, 
-                                  const floatType rho, 
-                                  const Axis::ENUMDATA axis)
+std::array<floatType, 4> MWICoeffs( const indexVector3 &idx, 
+                                    const ArrayAllocator<TransportCoefficients, array3D> &AUU, 
+                                    const ArrayAllocator<TransportCoefficients, array1D> &AUP,
+                                    const Mesh &mesh, 
+                                    const floatType rho, 
+                                    const Axis::ENUMDATA axis)
 {
     using enum TransportCoefficients::ENUMDATA;
     using enum Axis::ENUMDATA;
-    std::vector<floatType> coeffs(4);
-    const TransportCoefficients::ENUMDATA east = HiCoeff[axis];
-    const TransportCoefficients::ENUMDATA west = LoCoeff[axis];
+    std::array<floatType, 4> coeffs{ 0.0f };
+    const TransportCoefficients::ENUMDATA east = HiCoeff[axis],
+                                          west = LoCoeff[axis];
 
     const intType i = idx( axis );
     const floatType d = MWIWeightingCoeff(idx, AUU, axis);
@@ -647,38 +645,56 @@ std::vector<floatType> MWICoeffs( const indexVector3 &idx,
 }
 
 
-void MWInterpolationXnormal( FVCoefficients &fvCoeffs, 
-                             const Mesh &mesh, 
-                             const floatType rho)
+void MWInterpolationFace( ArrayAllocator<TransportCoefficients, array3D> &continuityPressureCoeffs,
+                          const ArrayAllocator<TransportCoefficients, array3D> &momentumVelocityCoeffs,
+                          const ArrayAllocator<TransportCoefficients, array1D> &momentumPressureCoeffs,
+                          const Mesh &mesh, 
+                          const floatType rho,
+                          const Axis::ENUMDATA axis )
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    std::vector<floatType> coeffs;
+    
+    // Starting index and number of faces to iterate over
+    indexVector3 startIndex, nFaces;
+    EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
+        startIndex[a] = 0;
+        nFaces[a] = mesh.nCells[axis];
+    } );
+    startIndex[axis] += 1;
 
-    // These will get written to multiple times and need to be reset to zero
-    fvCoeffs.Cont.AP[w ].chip(0, X).setZero();
-    fvCoeffs.Cont.AP[p ].chip(0, X).setZero();
-    fvCoeffs.Cont.AP[e ].chip(0, X).setZero();
+    // Cell indexing
+    TransportCoefficients::ENUMDATA east  = HiCoeff[axis], 
+                                    eeast = HiHiCoeff[axis],
+                                    west  = LoCoeff[axis],
+                                    wwest = LoLoCoeff[axis];
 
-    for (intType k = 0; k != mesh.nCells(Z); k++) {
-        for (intType j = 0; j != mesh.nCells(Y); j++) {
-            for (intType i = 1; i != mesh.nCells(X)-1; i++) {   // Boundary condition in the x direction
+
+    for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+        for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+
+                Eigen::array<Eigen::Index, 3> HiIndex = { i, j, k },
+                                              LoIndex = { i, j, k };
+                LoIndex[axis] -= 1;
 
                 // Coefficients vector, in order of westmost to east most
-                coeffs = MWICoeffs({i, j, k}, fvCoeffs.Umom.AU, fvCoeffs.Umom.AP, mesh, rho, X); 
+                std::array<floatType, 4> coeffs = MWICoeffs({i, j, k}, momentumVelocityCoeffs, momentumPressureCoeffs, mesh, rho, axis); 
 
                 // Cell on west side 
-                fvCoeffs.Cont.AP[w ](i-1, j, k) += coeffs[0] * mesh.cellLengthsInv[X](i-1);
-                fvCoeffs.Cont.AP[p ](i-1, j, k) += coeffs[1] * mesh.cellLengthsInv[X](i-1);
-                fvCoeffs.Cont.AP[e ](i-1, j, k) += coeffs[2] * mesh.cellLengthsInv[X](i-1);
-                fvCoeffs.Cont.AP[ee](i-1, j, k)  = coeffs[3] * mesh.cellLengthsInv[X](i-1);
+                floatType LoCellLengthInv = mesh.cellLengthsInv[axis]( LoIndex[axis] );
+                continuityPressureCoeffs[west ](LoIndex) += coeffs[0] * LoCellLengthInv;
+                continuityPressureCoeffs[p    ](LoIndex) += coeffs[1] * LoCellLengthInv;
+                continuityPressureCoeffs[east ](LoIndex) += coeffs[2] * LoCellLengthInv;
+                continuityPressureCoeffs[eeast](LoIndex)  = coeffs[3] * LoCellLengthInv;
 
                 // Cell on east side
-                fvCoeffs.Cont.AP[ww](i, j, k) = coeffs[0] * mesh.cellLengthsInv[X](i);
-                fvCoeffs.Cont.AP[w ](i, j, k) = coeffs[1] * mesh.cellLengthsInv[X](i);
-                fvCoeffs.Cont.AP[p ](i, j, k) = coeffs[2] * mesh.cellLengthsInv[X](i);  // Shouldn't be += since this is the first time it is set
-                fvCoeffs.Cont.AP[e ](i, j, k) = coeffs[3] * mesh.cellLengthsInv[X](i);
+                floatType HiCellLengthInv = mesh.cellLengthsInv[axis]( HiIndex[axis] );
+                continuityPressureCoeffs[wwest](HiIndex)  = coeffs[0] * HiCellLengthInv;
+                continuityPressureCoeffs[west ](HiIndex)  = coeffs[1] * HiCellLengthInv;
+                continuityPressureCoeffs[p    ](HiIndex) += coeffs[2] * HiCellLengthInv;
+                continuityPressureCoeffs[east ](HiIndex)  = coeffs[3] * HiCellLengthInv;
 
             }
         }
@@ -687,178 +703,66 @@ void MWInterpolationXnormal( FVCoefficients &fvCoeffs,
 }
 
 
-void MWInterpolationYnormal( FVCoefficients &fvCoeffs, 
-                             const Mesh &mesh, 
-                             const floatType rho)
+
+void MWInterpolationBoundary( EnumVector<BoundaryPatches, array2D> &continuityBoundaryPressure,
+                              const EnumVector<BoundaryPatches, floatType> &momentumBoundaryPressure,
+                              const ArrayAllocator<TransportCoefficients, array3D> &momentumVelocityCoeffs, 
+                              const Mesh &mesh,
+                              const Axis::ENUMDATA axis )
 {
+    // Boundary condition contribution comes from cell face one off the boundary, since MWI correction is taken as zero
+    // at the boundary.
+
     using enum Axis::ENUMDATA;
-    using enum TransportCoefficients::ENUMDATA;
 
-    std::vector<floatType> coeffs(4);
+    BoundaryPatches::ENUMDATA positivePatch = PositivePatch[ axis ],
+                              negativePatch = NegativePatch[ axis ];
 
-    // These will get written to multiple times and need to be reset to zero
-    fvCoeffs.Cont.AP[n ].chip(0, Y).setZero();
-    fvCoeffs.Cont.AP[s ].chip(0, Y).setZero();
+    // Other orthogonal axis directions
+    Axis::ENUMDATA axis1 = ( axis == X ) ? Y : X,
+                   axis2 = ( axis == Z ) ? Y : Z;
 
-    for (intType k = 0; k != mesh.nCells(Z); k++) {
-        for (intType j = 1; j != mesh.nCells(Y)-1; j++) {   // Boundary condition in the y direction
-            for (intType i = 0; i != mesh.nCells(X); i++) {
-                
-                // Coefficients vector, in order of westmost to east most
-                coeffs = MWICoeffs({i, j, k}, fvCoeffs.Vmom.AV, fvCoeffs.Vmom.AP, mesh, rho, Y); 
+    indexVector3 startIndex, nCells;
+    EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
+        startIndex[a] = 0;
+        nCells[a] = mesh.nCells[a];
+    } );
 
-                // Cell on south
-                fvCoeffs.Cont.AP[s ](i, j-1, k) += coeffs[0] * mesh.cellLengthsInv[Y](j-1);
-                fvCoeffs.Cont.AP[p ](i, j-1, k) += coeffs[1] * mesh.cellLengthsInv[Y](j-1);
-                fvCoeffs.Cont.AP[n ](i, j-1, k) += coeffs[2] * mesh.cellLengthsInv[Y](j-1);
-                fvCoeffs.Cont.AP[nn](i, j-1, k)  = coeffs[3] * mesh.cellLengthsInv[Y](j-1);
 
-                // Cell on north
-                fvCoeffs.Cont.AP[ss](i, j, k)  = coeffs[0] * mesh.cellLengthsInv[Y](j);
-                fvCoeffs.Cont.AP[s ](i, j, k)  = coeffs[1] * mesh.cellLengthsInv[Y](j);
-                fvCoeffs.Cont.AP[p ](i, j, k) += coeffs[2] * mesh.cellLengthsInv[Y](j);
-                fvCoeffs.Cont.AP[n ](i, j, k)  = coeffs[3] * mesh.cellLengthsInv[Y](j);
+    // Negative patch
+    startIndex[axis] = 1;
+    nCells[axis] = startIndex[axis] + 1;
 
+    for (intType k = startIndex[Z]; k != nCells[Z]; k++) {
+            for (intType j = startIndex[Y]; j != nCells[Y]; j++) {
+                for (intType i = startIndex[X]; i != nCells[X]; i++) {
+
+                    indexVector3 idx = { i, j, k };
+                    floatType d = MWIWeightingCoeff( idx, momentumVelocityCoeffs, axis );
+                    continuityBoundaryPressure[ negativePatch ]( idx[axis1], idx[axis2] ) = d * (1 - mesh.interpFactors[axis]( idx[axis] )) * momentumBoundaryPressure[ negativePatch ];
             }
         }
     }
 
-}
 
+    // Positive patch
+    startIndex[axis] = mesh.nCells[axis] - 1;
+    nCells[axis] = startIndex[axis] + 1;
 
-void MWInterpolationZnormal( FVCoefficients &fvCoeffs, 
-                             const Mesh &mesh, 
-                             const floatType rho)
-{
-    using enum Axis::ENUMDATA;
-    using enum TransportCoefficients::ENUMDATA;
+    for (intType k = startIndex[Z]; k != nCells[Z]; k++) {
+            for (intType j = startIndex[Y]; j != nCells[Y]; j++) {
+                for (intType i = startIndex[X]; i != nCells[X]; i++) {
 
-    std::vector<floatType> coeffs;
-
-    // These will get written to multiple times and need to be reset to zero
-    fvCoeffs.Cont.AP[t ].chip(0, Z).setZero();
-    fvCoeffs.Cont.AP[b ].chip(0, Z).setZero();
-
-    for (intType k = 1; k != mesh.nCells(Z)-1; k++) {   // Boundary condition in the z direction
-        for (intType j = 0; j != mesh.nCells(Y); j++) {
-            for (intType i = 0; i != mesh.nCells(X); i++) {
-
-                // Coefficients vector, in order of westmost to east most
-                coeffs = MWICoeffs({i, j, k}, fvCoeffs.Wmom.AW, fvCoeffs.Wmom.AP, mesh, rho, Z); 
-
-                // Cell on bottom side
-                fvCoeffs.Cont.AP[b ](i, j, k-1) += coeffs[0] * mesh.cellLengthsInv[Z](k-1);
-                fvCoeffs.Cont.AP[p ](i, j, k-1) += coeffs[1] * mesh.cellLengthsInv[Z](k-1);
-                fvCoeffs.Cont.AP[t ](i, j, k-1) += coeffs[2] * mesh.cellLengthsInv[Z](k-1);
-                fvCoeffs.Cont.AP[tt](i, j, k-1)  = coeffs[3] * mesh.cellLengthsInv[Z](k-1);
-
-                // Cell on top side
-                fvCoeffs.Cont.AP[bb](i, j, k)  = coeffs[0] * mesh.cellLengthsInv[Z](k);
-                fvCoeffs.Cont.AP[b ](i, j, k)  = coeffs[1] * mesh.cellLengthsInv[Z](k);
-                fvCoeffs.Cont.AP[p ](i, j, k) += coeffs[2] * mesh.cellLengthsInv[Z](k);
-                fvCoeffs.Cont.AP[t ](i, j, k)  = coeffs[3] * mesh.cellLengthsInv[Z](k);
-
+                    indexVector3 idx = { i, j, k };
+                    floatType d = MWIWeightingCoeff( idx, momentumVelocityCoeffs, axis );
+                    continuityBoundaryPressure[ positivePatch ]( idx[axis1], idx[axis2] ) = d * mesh.interpFactors[axis]( idx[axis] ) * momentumBoundaryPressure[ positivePatch ];
             }
         }
     }
 
-}
-
-
-void MWInterpolationBoundaryXnormal( FVCoefficients &fvCoeffs,
-                                     const Mesh &mesh )
-{
-    using enum Axis::ENUMDATA;
-    using BP = BoundaryPatches::ENUMDATA;
-
-    // Boundary condition contribution comes from cell face one off the boundary, since MWI correction is taken as zero
-    // at the boundary.
-
-    floatType d;
-
-    // X axis, from U momentum
-    intType i;
-    for (intType k = 0; k != mesh.nCells(Z); k++) { 
-        for (intType j = 0; j != mesh.nCells(Y); j++) {
-
-            // Negative boundary
-            i = 1;  
-            d = MWIWeightingCoeff( {i, j, k}, fvCoeffs.Umom.AU, X );
-            fvCoeffs.Cont.boundaryP[BP::xNegative](j, k) = d * (1 - mesh.interpFactors[X](i)) * fvCoeffs.Umom.boundaryP[BP::xNegative];
-
-            // Positive boundary
-            i = mesh.nCells(X) - 1;
-            d = MWIWeightingCoeff( {i, j, k}, fvCoeffs.Umom.AU, X );
-            fvCoeffs.Cont.boundaryP[BP::xPositive](j, k) = d * mesh.interpFactors[X](i) * fvCoeffs.Umom.boundaryP[BP::xPositive];
-
-        }
-    }
 
 }
 
-
-void MWInterpolationBoundaryYnormal( FVCoefficients &fvCoeffs,
-                                     const Mesh &mesh )
-{
-    using enum Axis::ENUMDATA;
-    using BP = BoundaryPatches::ENUMDATA;
-
-    // Boundary condition contribution comes from cell face one off the boundary, since MWI correction is taken as zero
-    // at the boundary.
-
-    floatType d;
-
-    // Y axis, from V momentum
-    intType j;
-    for (intType k = 0; k != mesh.nCells(Z); k++) { 
-        for (intType i = 0; i != mesh.nCells(X); i++) {
-
-            // Negative boundary
-            j = 1;  
-            d = MWIWeightingCoeff( {i, j, k}, fvCoeffs.Vmom.AV, Y );
-            fvCoeffs.Cont.boundaryP[BP::yNegative](i, k) = d * (1 - mesh.interpFactors[Y](j)) * fvCoeffs.Vmom.boundaryP[BP::yNegative];
-
-            // Positive boundary
-            j = mesh.nCells(Y) - 1;
-            d = MWIWeightingCoeff( {i, j, k}, fvCoeffs.Vmom.AV, Y );
-            fvCoeffs.Cont.boundaryP[BP::yPositive](i, k) = d * mesh.interpFactors[Y](j) * fvCoeffs.Vmom.boundaryP[BP::yPositive];
-
-        }
-    }
-
-}
-
-
-void MWInterpolationBoundaryZnormal( FVCoefficients &fvCoeffs,
-                                     const Mesh &mesh )
-{
-    using enum Axis::ENUMDATA;
-    using BP = BoundaryPatches::ENUMDATA;
-
-    // Boundary condition contribution comes from cell face one off the boundary, since MWI correction is taken as zero
-    // at the boundary.
-
-    floatType d;
-
-    // Z axis, from W momentum
-    intType k;
-    for (intType j = 0; j != mesh.nCells(Y); j++) {
-        for (intType i = 0; i != mesh.nCells(X); i++) {
-
-            // Negative boundary
-            k = 1;  
-            d = MWIWeightingCoeff( {i, j, k}, fvCoeffs.Wmom.AW, Z );
-            fvCoeffs.Cont.boundaryP[BP::zNegative](i, j) = d * (1 - mesh.interpFactors[Z](k)) * fvCoeffs.Wmom.boundaryP[BP::zNegative];
-
-            // Positive boundary
-            k = mesh.nCells(Z) - 1;
-            d = MWIWeightingCoeff( {i, j, k}, fvCoeffs.Wmom.AW, Z );
-            fvCoeffs.Cont.boundaryP[BP::zPositive](i, j) = d * mesh.interpFactors[Z](k) * fvCoeffs.Wmom.boundaryP[BP::zPositive];
-
-        }
-    }
-
-}
 
 
 void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs, 
@@ -867,17 +771,46 @@ void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
 {
     const floatType rho = inputData.rho;
 
+    // Assumes that coefficients are set to zero
+
     // Only internal cells need to be done, since correction is zero at boundary, and
     // sparse pressure gradient is taken from momentum equations, which already contain
     // the boundary condition.
-    MWInterpolationXnormal(fvCoeffs, mesh, rho);
-    MWInterpolationYnormal(fvCoeffs, mesh, rho);
-    MWInterpolationZnormal(fvCoeffs, mesh, rho);
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-    // Constants that arise from boundary conditions need to be added
-    MWInterpolationBoundaryXnormal(fvCoeffs, mesh);
-    MWInterpolationBoundaryYnormal(fvCoeffs, mesh);
-    MWInterpolationBoundaryZnormal(fvCoeffs, mesh);
+        ArrayAllocator<TransportCoefficients, array3D> *momentumVelocityCoeffs   = nullptr;
+        ArrayAllocator<TransportCoefficients, array1D> *momentumPressureCoeffs   = nullptr;
+        EnumVector<BoundaryPatches, floatType>         *momentumBoundaryPressure = nullptr;
+        switch ( axis ) 
+        {
+            case Axis::X:
+                momentumVelocityCoeffs   = &fvCoeffs.Umom.AU;
+                momentumPressureCoeffs   = &fvCoeffs.Umom.AP;
+                momentumBoundaryPressure = &fvCoeffs.Umom.boundaryP;
+                break;
+
+            case Axis::Y:
+                momentumVelocityCoeffs   = &fvCoeffs.Vmom.AV;
+                momentumPressureCoeffs   = &fvCoeffs.Vmom.AP;
+                momentumBoundaryPressure = &fvCoeffs.Vmom.boundaryP;
+                break;
+
+            case Axis::Z:
+                momentumVelocityCoeffs   = &fvCoeffs.Wmom.AW;
+                momentumPressureCoeffs   = &fvCoeffs.Wmom.AP;
+                momentumBoundaryPressure = &fvCoeffs.Wmom.boundaryP;
+                break;
+        }
+
+
+        // Internal faces
+        MWInterpolationFace(fvCoeffs.Cont.AP, *momentumVelocityCoeffs, *momentumPressureCoeffs, mesh, rho, axis);
+
+        // Boundary constants
+        MWInterpolationBoundary(fvCoeffs.Cont.boundaryP, *momentumBoundaryPressure, *momentumVelocityCoeffs, mesh, axis);
+
+    } );
+
 }
  
 
@@ -1014,7 +947,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AW, fvCoeffs.Cont.boundaryVel, mesh, inputData, F::W, A::Z);
 
     // Continuity pressure terms (from momentum weighted interpolation)
-    // SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
+    SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
     
     // Add boundary constants to source terms
     AddMomentumBoundaryConstants(fvCoeffs.Umom);
@@ -1057,6 +990,10 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
 
         if ( fvCoeffs.Wmom.AW.get(tc) )
             fvCoeffs.Wmom.AW[tc].setZero();
+
+
+        if ( fvCoeffs.Cont.AP.get(tc) )
+            fvCoeffs.Cont.AP[tc].setZero();
     } );
 
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
@@ -1064,6 +1001,7 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
         fvCoeffs.Umom.boundaryVel[bp].setZero();
         fvCoeffs.Vmom.boundaryVel[bp].setZero();
         fvCoeffs.Wmom.boundaryVel[bp].setZero();
+        fvCoeffs.Cont.boundaryP[bp].setZero();
 
     } );
 
@@ -1079,7 +1017,7 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     AddDiffusion(fvCoeffs.Wmom.AW, fvCoeffs.Wmom.boundaryVel, fvCoeffs.Wmom.diff, fvCoeffs.Wmom.boundaryDiff, mesh);
 
     // Set the momentum interpolation coefficients
-    // SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
+    SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
 
     // Set the source terms to zero... there may be a more efficient way to do this
     fvCoeffs.Umom.B.setZero();

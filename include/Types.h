@@ -185,32 +185,40 @@ constexpr std::array<intType, TransportCoefficients::count> CoeffIndex = {2,    
 
 
 // Get BoundaryPatches from Axis
-constexpr std::array<BoundaryPatches::ENUMDATA, 3> PositivePatch = {BoundaryPatches::ENUMDATA::xPositive,
-                                                                    BoundaryPatches::ENUMDATA::yPositive,
-                                                                    BoundaryPatches::ENUMDATA::zPositive};
+constexpr std::array<BoundaryPatches::ENUMDATA, 3> PositivePatch = {BoundaryPatches::xPositive,
+                                                                    BoundaryPatches::yPositive,
+                                                                    BoundaryPatches::zPositive};
 
-constexpr std::array<BoundaryPatches::ENUMDATA, 3> NegativePatch{BoundaryPatches::ENUMDATA::xNegative,
-                                                                 BoundaryPatches::ENUMDATA::yNegative,
-                                                                 BoundaryPatches::ENUMDATA::zNegative};
+constexpr std::array<BoundaryPatches::ENUMDATA, 3> NegativePatch{BoundaryPatches::xNegative,
+                                                                 BoundaryPatches::yNegative,
+                                                                 BoundaryPatches::zNegative};
 
 // Get TransportCoefficient from Axis
-constexpr std::array<TransportCoefficients::ENUMDATA, 3> HiCoeff{TransportCoefficients::ENUMDATA::e,
-                                                                 TransportCoefficients::ENUMDATA::n,
-                                                                 TransportCoefficients::ENUMDATA::t};
+constexpr std::array<TransportCoefficients::ENUMDATA, 3> HiCoeff{TransportCoefficients::e,
+                                                                 TransportCoefficients::n,
+                                                                 TransportCoefficients::t};
+                                                                 
+constexpr std::array<TransportCoefficients::ENUMDATA, 3> HiHiCoeff{TransportCoefficients::ee,
+                                                                   TransportCoefficients::nn,
+                                                                   TransportCoefficients::tt};
 
 
-constexpr std::array<TransportCoefficients::ENUMDATA, 3> LoCoeff{TransportCoefficients::ENUMDATA::w,
-                                                                 TransportCoefficients::ENUMDATA::s,
-                                                                 TransportCoefficients::ENUMDATA::b};
+constexpr std::array<TransportCoefficients::ENUMDATA, 3> LoCoeff{TransportCoefficients::w,
+                                                                 TransportCoefficients::s,
+                                                                 TransportCoefficients::b};
+
+constexpr std::array<TransportCoefficients::ENUMDATA, 3> LoLoCoeff{TransportCoefficients::ww,
+                                                                   TransportCoefficients::ss,
+                                                                   TransportCoefficients::bb};                                                                 
 
 
 // Get Axis from BoundaryPatches
-constexpr std::array<Axis::ENUMDATA, 6> BoundaryPatchAxis{Axis::ENUMDATA::X,    // xPositive
-                                                          Axis::ENUMDATA::X,    // xNegative
-                                                          Axis::ENUMDATA::Y,    // yPositive
-                                                          Axis::ENUMDATA::Y,    // yNegative
-                                                          Axis::ENUMDATA::Z,    // zPositive
-                                                          Axis::ENUMDATA::Z};   // zNegative
+constexpr std::array<Axis::ENUMDATA, 6> BoundaryPatchAxis{Axis::X,    // xPositive
+                                                          Axis::X,    // xNegative
+                                                          Axis::Y,    // yPositive
+                                                          Axis::Y,    // yNegative
+                                                          Axis::Z,    // zPositive
+                                                          Axis::Z};   // zNegative
 
 
 

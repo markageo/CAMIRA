@@ -83,6 +83,7 @@
         "shared_mutex": "cpp",
         "*.ipp": "cpp",
         "core": "cpp",
-        "specialfunctions": "cpp"
+        "specialfunctions": "cpp",
+        "hash_map": "cpp"
     }
 }
