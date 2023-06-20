@@ -59,14 +59,15 @@ namespace
     bool MetResidualTolerence( const EnumVector<Fields, floatType> &residuals,
                                const EnumVector<Fields, floatType> &residualsTarget )
     {
-        Fields::ENUMDATA field;
-        for (int f = 0; f != Fields::count; f++) {      // Don't think I can use an EnumFor here because of the return statement
-            field = static_cast<Fields::ENUMDATA>(f);
+        bool met = true;
+        EnumFor<Fields>( [&] (Fields::ENUMDATA field) {
 
-            if (residuals[field] > residualsTarget[field])
-                return false;
-        }
-        return true;
+            if (residuals[field] > residualsTarget[field]) 
+                met = false;
+                
+        } );
+        return met;
+
     }
 
 
@@ -292,9 +293,9 @@ public:
                     iW = i;
 
                     m_K(i, j, k) = m_fvCoeffs.Cont.AP[p](i, j, k) 
-                                 - m_fvCoeffs.Cont.AU[sCU::cCoupled](i) * m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) / m_fvCoeffs.Umom.AU[p](iU, jU, kU) 
-                                 - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) / m_fvCoeffs.Vmom.AV[p](iV, jV, kV) 
-                                 - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) / m_fvCoeffs.Wmom.AW[p](iW, jW, kW);
+                                 - m_fvCoeffs.Cont.AU[sCU::cCoupled](i) * m_fvCoeffs.Umom.AP[sUP::cCoupled](iU) * m_fvCoeffs.Umom.diagCoeffInv(iU, jU, kU) 
+                                 - m_fvCoeffs.Cont.AV[sCV::cCoupled](j) * m_fvCoeffs.Vmom.AP[sVP::cCoupled](jV) * m_fvCoeffs.Vmom.diagCoeffInv(iV, jV, kV) 
+                                 - m_fvCoeffs.Cont.AW[sCW::cCoupled](k) * m_fvCoeffs.Wmom.AP[sWP::cCoupled](kW) * m_fvCoeffs.Wmom.diagCoeffInv(iW, jW, kW);
                     m_K(i, j, k) = 1.0f / m_K(i, j, k);
                 }
             }
@@ -826,7 +827,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
 
         // Update residuals
         L1ArrayDiff(residualsOuter, fields, fieldsOld);
-        RelativeResidual(residualsOuter, residualsOuterInitialInv, nOuterIterations);
+        // RelativeResidual(residualsOuter, residualsOuterInitialInv, nOuterIterations);
         massFluxResidual = BoundaryMassFluxResidual(faceVelocities, mesh);
         nOuterIterations++;
 

@@ -340,7 +340,7 @@ namespace
 
         // Convert and store value
         if (bcStruct.type == BC::uniform) {
-            bcStruct.value = std::stod(bcValueString);
+            bcStruct.value = String2Type<floatType>(bcValueString);
         }
 
         return bcStruct;

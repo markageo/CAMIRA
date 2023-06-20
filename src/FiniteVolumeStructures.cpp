@@ -260,11 +260,8 @@ Mesh::Mesh(const InputData &inputData) :
         EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
 
             // Axis are ordered by numbering
-            Axis::ENUMDATA axis1 = static_cast<Axis::ENUMDATA>( (axis+1) % Axis::count );
-            Axis::ENUMDATA axis2 = static_cast<Axis::ENUMDATA>( (axis+2) % Axis::count );
-            if ( axis1 >= axis2 ) {
-                std::swap( axis1, axis2 );
-            }
+            Axis::ENUMDATA axis1 = ( axis == Axis::X ) ? Axis::Y : Axis::X;
+            Axis::ENUMDATA axis2 = ( axis == Axis::Z ) ? Axis::Y : Axis::Z;
             CalculateCellFaceAreas(cellFaceAreas[axis], cellLengths[axis1], cellLengths[axis2]);
 
         } );
