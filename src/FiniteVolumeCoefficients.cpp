@@ -605,8 +605,8 @@ floatType MWIWeightingCoeff( const indexVector3 &idx,
     Eigen::array<Eigen::Index, 3> HiIndex = {idx[X], idx[Y], idx[Z]},
                                   LoIndex = HiIndex;
     LoIndex[axis] -= 1;
-
-    floatType d = 2.0f / ( AUU[p]( HiIndex )  +  AUU[p]( LoIndex ) ); 
+ 
+    floatType d = 0.5f * ( (1.0f / AUU[p]( HiIndex ))  +  (1.0f / AUU[p]( LoIndex )) ); 
     return d;
 }
 
@@ -633,11 +633,11 @@ std::array<floatType, 4> MWICoeffs( const indexVector3 &idx,
 
     coeffs[1] = d * ( (1 - mesh.interpFactors[axis](i)) * AUP[p   ](i-1)
                     +  mesh.interpFactors[axis](i)      * AUP[west](i  )
-                    +  mesh.cellCenterDiffInv[axis](i)  * rho );
+                    +  mesh.cellCenterDiffInv[axis](i)  / rho );
 
     coeffs[2] = d * ( (1 - mesh.interpFactors[axis](i)) * AUP[east](i-1)
                     + mesh.interpFactors[axis](i)       * AUP[p   ](i  )
-                    - mesh.cellCenterDiffInv[axis](i)   * rho );
+                    - mesh.cellCenterDiffInv[axis](i)   / rho );
 
     coeffs[3] = d * mesh.interpFactors[axis](i) * AUP[east](i);
 
@@ -660,9 +660,10 @@ void MWInterpolationFace( ArrayAllocator<TransportCoefficients, array3D> &contin
     indexVector3 startIndex, nFaces;
     EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
         startIndex[a] = 0;
-        nFaces[a] = mesh.nCells[axis];
+        nFaces[a] = mesh.nCells[a];
     } );
     startIndex[axis] += 1;
+
 
     // Cell indexing
     TransportCoefficients::ENUMDATA east  = HiCoeff[axis], 
@@ -713,6 +714,8 @@ void MWInterpolationBoundary( EnumVector<BoundaryPatches, array2D> &continuityBo
     // Boundary condition contribution comes from cell face one off the boundary, since MWI correction is taken as zero
     // at the boundary.
 
+    // I think I need to divide by inverse of cell length?
+
     using enum Axis::ENUMDATA;
 
     BoundaryPatches::ENUMDATA positivePatch = PositivePatch[ axis ],
@@ -739,7 +742,8 @@ void MWInterpolationBoundary( EnumVector<BoundaryPatches, array2D> &continuityBo
 
                     indexVector3 idx = { i, j, k };
                     floatType d = MWIWeightingCoeff( idx, momentumVelocityCoeffs, axis );
-                    continuityBoundaryPressure[ negativePatch ]( idx[axis1], idx[axis2] ) = d * (1 - mesh.interpFactors[axis]( idx[axis] )) * momentumBoundaryPressure[ negativePatch ];
+                    continuityBoundaryPressure[ negativePatch ]( idx[axis1], idx[axis2] ) = d * (1 - mesh.interpFactors[axis]( idx[axis] )) * momentumBoundaryPressure[ negativePatch ] 
+                                                                                              * mesh.cellLengthsInv[axis]( idx[axis] );
             }
         }
     }
@@ -755,7 +759,8 @@ void MWInterpolationBoundary( EnumVector<BoundaryPatches, array2D> &continuityBo
 
                     indexVector3 idx = { i, j, k };
                     floatType d = MWIWeightingCoeff( idx, momentumVelocityCoeffs, axis );
-                    continuityBoundaryPressure[ positivePatch ]( idx[axis1], idx[axis2] ) = d * mesh.interpFactors[axis]( idx[axis] ) * momentumBoundaryPressure[ positivePatch ];
+                    continuityBoundaryPressure[ positivePatch ]( idx[axis1], idx[axis2] ) = d * mesh.interpFactors[axis]( idx[axis] ) * momentumBoundaryPressure[ positivePatch ]
+                                                                                              * mesh.cellLengthsInv[axis]( idx[axis] );
             }
         }
     }
