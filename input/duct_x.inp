@@ -13,7 +13,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 4)
-            nCells     = 128
+            nCells     = 32
             biasFactor = 1
         }
     }
@@ -22,14 +22,14 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 0.25)
-            nCells     = 16
-            biasFactor = 2
+            nCells     = 4
+            biasFactor = 1
         }
 
          Segment {
             bounds     = (0.25, 0.5)
-            nCells     = 16
-            biasFactor = -2
+            nCells     = 4
+            biasFactor = 1
         }
     }
 
@@ -37,14 +37,14 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.25)
-            nCells     = 16
-            biasFactor = 2
+            nCells     = 4
+            biasFactor = 1
         }
 
          Segment {
             bounds     = (0.25, 0.5)
-            nCells     = 16
-            biasFactor = -2
+            nCells     = 4
+            biasFactor = 1
         }
     }
     
@@ -118,8 +118,8 @@ Solver {
     Schemes {
         linearisation = Picard
 
-        implicitMomentumRelaxation = (0.9, 0.9, 0.9)
-        implicitPressureRelaxation = 0.8
+        implicitMomentumRelaxation = (1, 1, 1)
+        implicitPressureRelaxation = 1
 
         advectionScheme = upwind
         faceInterpolationScheme = average
@@ -145,7 +145,7 @@ Solver {
             momentumRelaxation = (1, 1, 1)
             pressureRelaxation = 1
 
-            planeSweepDirection = +x
+            planeSweepDirection = +z
 
 
             LineSolver {
