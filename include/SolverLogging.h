@@ -28,9 +28,8 @@ class ConvergenceLogger
             m_columnWidth( precision + 8 )
         {
             // Store the mapped fields
-            EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
             EnumFor<Axis>( [&] ( Axis::ENUMDATA userAxis) {
-                m_userFields[ axisField[ userAxis ] ] = axisField[ axisTransformation.CodeAxis( userAxis ) ];
+                m_userFields[ AxisVelocity[ userAxis ] ] = AxisVelocity[ axisTransformation.CodeAxis( userAxis ) ];
             } );
             m_userFields[F::P] = F::P;
             
