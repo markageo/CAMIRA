@@ -827,7 +827,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
 
         // Update residuals
         L1ArrayDiff(residualsOuter, fields, fieldsOld);
-        // RelativeResidual(residualsOuter, residualsOuterInitialInv, nOuterIterations);
+        RelativeResidual(residualsOuter, residualsOuterInitialInv, nOuterIterations);
         massFluxResidual = BoundaryMassFluxResidual(faceVelocities, mesh);
         nOuterIterations++;
 
