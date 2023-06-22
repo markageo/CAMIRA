@@ -20,7 +20,7 @@ namespace CFD
 #endif
 
 using intType = Eigen::Index;
-using array0D = Eigen::Tensor<floatType, 0>;    // Colum major
+using array0D = Eigen::Tensor<floatType, 0>;    // Column major
 using array1D = Eigen::Tensor<floatType, 1>;    // Column major
 using array2D = Eigen::Tensor<floatType, 2>;    // Column major
 using array3D = Eigen::Tensor<floatType, 3>;    // Column major
