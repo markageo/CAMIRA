@@ -24,7 +24,7 @@ struct InputData
 
 
     // Domain size
-    floatVector3 domainSize;
+    fVector3 domainSize;
 
 
     // Mesh

@@ -253,7 +253,7 @@ namespace
 
         // Temporary for boundary conditions as user specifies them
         InputData::BoundaryConditionData boundaryConditionsUser = boundaryConditions;
-        floatVector3 domainSizeUser = inputData.domainSize;
+        fVector3 domainSizeUser = inputData.domainSize;
         
         EnumFor<Axis>( [&] (A codeAxis) {
 
@@ -306,7 +306,7 @@ namespace
 
         // Create temporary copy of mesh data to take data from
         EnumVector<Axis, std::vector<InputData::MeshSegment> > userMeshSegments = inputData.meshSegments;
-        floatVector3 userDomainSize;
+        fVector3 userDomainSize;
 
         EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
 

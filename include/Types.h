@@ -24,10 +24,12 @@ using array0D = Eigen::Tensor<floatType, 0>;    // Column major
 using array1D = Eigen::Tensor<floatType, 1>;    // Column major
 using array2D = Eigen::Tensor<floatType, 2>;    // Column major
 using array3D = Eigen::Tensor<floatType, 3>;    // Column major
-using indexVector3 = Eigen::Array<intType, 3, 1>;
-using indexVector2 = Eigen::Array<intType, 2, 1>;
-using floatVector3 = Eigen::Array<floatType, 3, 1>;
-using floatVector2 = Eigen::Array<floatType, 2, 1>;
+using arrayIndex3D = Eigen::array<Eigen::Index, 3>;
+using arrayIndex2D = Eigen::array<Eigen::Index, 3>;
+using iVector3 = Eigen::Array<intType, 3, 1>;
+using iVector2 = Eigen::Array<intType, 2, 1>;
+using fVector3 = Eigen::Array<floatType, 3, 1>;
+using fVector2 = Eigen::Array<floatType, 2, 1>;
 
 
 

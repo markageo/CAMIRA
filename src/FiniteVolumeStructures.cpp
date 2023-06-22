@@ -359,7 +359,7 @@ using enum Axis::ENUMDATA;
 
 // Momentum equations constructor
 FVCoefficients::MomentumEquation::MomentumEquation( const Fields::ENUMDATA field, 
-                                                    const indexVector3 &dims) :
+                                                    const iVector3 &dims) :
     AU( EquationEnums(field, F::U), dims ),
     AV( EquationEnums(field, F::V), dims ),
     AW( EquationEnums(field, F::W), dims ),
@@ -379,7 +379,7 @@ FVCoefficients::MomentumEquation::MomentumEquation( const Fields::ENUMDATA field
 
 
 // Continuity equations constructor
-FVCoefficients::ContinuityEquation::ContinuityEquation( const indexVector3 &dims ) :
+FVCoefficients::ContinuityEquation::ContinuityEquation( const iVector3 &dims ) :
     AU( EquationEnums(F::P, F::U), dims( EquationDim(F::U) ) ),
     AV( EquationEnums(F::P, F::V), dims( EquationDim(F::V) ) ),
     AW( EquationEnums(F::P, F::W), dims( EquationDim(F::W) ) ),
@@ -394,7 +394,7 @@ FVCoefficients::ContinuityEquation::ContinuityEquation( const indexVector3 &dims
 
 
 // Coefficients class constructor
-FVCoefficients::FVCoefficients(const indexVector3 &dims) :
+FVCoefficients::FVCoefficients(const iVector3 &dims) :
     Umom( F::U, dims ),
     Vmom( F::V, dims ),
     Wmom( F::W, dims ),
@@ -412,10 +412,10 @@ FVCoefficients::FVCoefficients(const indexVector3 &dims) :
 void RemoveGhostCells( array3D &array, 
                        const intType nGhostCells)
 {
-    Eigen::array<Eigen::Index, 3> offsets = { nGhostCells, nGhostCells, nGhostCells },
-                                  extents = { array.dimension(0) - 2*nGhostCells, 
-                                              array.dimension(1) - 2*nGhostCells,
-                                              array.dimension(2) - 2*nGhostCells };
+    arrayIndex3D offsets = { nGhostCells, nGhostCells, nGhostCells },
+                 extents = { array.dimension(0) - 2*nGhostCells, 
+                             array.dimension(1) - 2*nGhostCells,
+                             array.dimension(2) - 2*nGhostCells };
                                               
     array = array3D( array ).slice(offsets, extents);
 }
@@ -427,8 +427,8 @@ ArrayAllocator<Fields, array3D> InitialiseFields( const Mesh &mesh,
     // Create fields
     ArrayAllocator<Fields, array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells + 2*CFD::nGhost);
 
-    Eigen::array<Eigen::Index, 3> offsets = {nGhost, nGhost, nGhost},
-                                  extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
+    arrayIndex3D offsets = {nGhost, nGhost, nGhost},
+                 extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
 
     // Set initial values
     EnumFor<Fields>( [&] (Fields::ENUMDATA f) {
