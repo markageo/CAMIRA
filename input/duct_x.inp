@@ -13,7 +13,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 4)
-            nCells     = 256
+            nCells     = 128
             biasFactor = 1
         }
     }
@@ -22,13 +22,13 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 0.25)
-            nCells     = 32
+            nCells     = 16
             biasFactor = 3
         }
 
          Segment {
             bounds     = (0.25, 0.5)
-            nCells     = 32
+            nCells     = 16
             biasFactor = -3
         }
     }
@@ -37,13 +37,13 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.25)
-            nCells     = 32
+            nCells     = 16
             biasFactor = 3
         }
 
          Segment {
             bounds     = (0.25, 0.5)
-            nCells     = 32
+            nCells     = 16
             biasFactor = -3
         }
     }
@@ -124,7 +124,7 @@ Solver {
         advectionScheme = upwind
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 1000
+        maxOuterIterations = 500
         maxOuterResiduals = 1e-12
     }
     

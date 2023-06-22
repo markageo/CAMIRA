@@ -117,8 +117,8 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
     BoundaryPatches::ENUMDATA positivePatch, negativePatch;
 
     // Ghost cells mean that a slice of the fields tensor must be used when setting BCs
-    Eigen::array<intType, 3> offsets = {nGhost, nGhost, nGhost};
-    Eigen::array<intType, 3> extents = {mesh.nCells(X), mesh.nCells(Y), mesh.nCells(Z)};
+    arrayIndex3D offsets = {nGhost, nGhost, nGhost};
+    arrayIndex3D extents = {mesh.nCells(X), mesh.nCells(Y), mesh.nCells(Z)};
 
     for (intType axis = 0; axis != Axis::count; axis++) {
 

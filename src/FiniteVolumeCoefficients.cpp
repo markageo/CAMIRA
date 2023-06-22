@@ -241,7 +241,7 @@ void Upwind( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs,
     Fields::ENUMDATA field = axisFields[axis];
 
     // Starting index and number of faces to iterate over
-    indexVector3 startIndex, nFaces;
+    iVector3 startIndex, nFaces;
     EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
         startIndex[a] = 0;
         nFaces[a] = faceVelocities[ field ].dimension(a);
@@ -256,7 +256,7 @@ void Upwind( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs,
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
                 
-                Eigen::array<Eigen::Index, 3> HiIndex = { i, j, k },
+                arrayIndex3D HiIndex = { i, j, k },
                                               LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
 
@@ -595,23 +595,19 @@ void SetFaceInterpolatedCoefficients( ArrayAllocator<CFD::TransportCoefficients,
 \*---------------------------------------------------------------------------------------------------------------*/
 
 // Cell weighting coefficient for MWI. The given idx is the face index
-floatType MWIWeightingCoeff( const indexVector3 &idx, 
+floatType MWIWeightingCoeff( const arrayIndex3D &idx, 
                              const array3D &AUUpInv, 
                              const Axis::ENUMDATA axis)
 {
-    using enum Axis::ENUMDATA;
-
-    Eigen::array<Eigen::Index, 3> HiIndex = {idx[X], idx[Y], idx[Z]},
-                                  LoIndex = HiIndex;
+    arrayIndex3D HiIndex = idx,
+                 LoIndex = idx;
     LoIndex[axis] -= 1;
- 
-    floatType d = 0.5f * ( AUUpInv( HiIndex )  +  AUUpInv( LoIndex ) ); 
-    return d;
+    return 0.5f * ( AUUpInv( HiIndex )  +  AUUpInv( LoIndex ) ); 
 }
 
 
 // Face velocity correction coefficients for a single face from Momentum Weighted Coefficients. In order of westmost to eastmost.
-std::array<floatType, 4> MWICoeffs( const indexVector3 &idx, 
+std::array<floatType, 4> MWICoeffs( const arrayIndex3D &idx, 
                                     const array3D &AUUpInv, 
                                     const ArrayAllocator<TransportCoefficients, array1D> &AUP,
                                     const Mesh &mesh, 
@@ -624,7 +620,7 @@ std::array<floatType, 4> MWICoeffs( const indexVector3 &idx,
     const TransportCoefficients::ENUMDATA east = HiCoeff[axis],
                                           west = LoCoeff[axis];
 
-    const intType i = idx( axis );
+    const intType i = idx[ axis ];
     const floatType d = MWIWeightingCoeff(idx, AUUpInv, axis);
 
     // These coefficients assume that the momentum equations have been divided through by the cell volume
@@ -656,7 +652,7 @@ void MWInterpolationFace( ArrayAllocator<TransportCoefficients, array3D> &contin
 
     
     // Starting index and number of faces to iterate over
-    indexVector3 startIndex, nFaces;
+    iVector3 startIndex, nFaces;
     EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
         startIndex[a] = 0;
         nFaces[a] = mesh.nCells[a];
@@ -675,8 +671,8 @@ void MWInterpolationFace( ArrayAllocator<TransportCoefficients, array3D> &contin
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
-                Eigen::array<Eigen::Index, 3> HiIndex = { i, j, k },
-                                              LoIndex = { i, j, k };
+                arrayIndex3D HiIndex = { i, j, k },
+                             LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
 
                 // Coefficients vector, in order of westmost to east most
@@ -722,7 +718,7 @@ void MWInterpolationBoundary( EnumVector<BoundaryPatches, array2D> &continuityBo
     Axis::ENUMDATA axis1 = ( axis == X ) ? Y : X,
                    axis2 = ( axis == Z ) ? Y : Z;
 
-    indexVector3 startIndex, nCells;
+    iVector3 startIndex, nCells;
     EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
         startIndex[a] = 0;
         nCells[a] = mesh.nCells[a];
@@ -737,7 +733,7 @@ void MWInterpolationBoundary( EnumVector<BoundaryPatches, array2D> &continuityBo
             for (intType j = startIndex[Y]; j != nCells[Y]; j++) {
                 for (intType i = startIndex[X]; i != nCells[X]; i++) {
 
-                    indexVector3 idx = { i, j, k };
+                    arrayIndex3D idx = { i, j, k };
                     floatType d = MWIWeightingCoeff( idx, momentumDiagCoeffInv, axis );
                     continuityBoundaryPressure[ negativePatch ]( idx[axis1], idx[axis2] ) = d * (1 - mesh.interpFactors[axis]( idx[axis] )) * momentumBoundaryPressure[ negativePatch ] 
                                                                                               * mesh.cellLengthsInv[axis]( idx[axis] );
@@ -754,7 +750,7 @@ void MWInterpolationBoundary( EnumVector<BoundaryPatches, array2D> &continuityBo
             for (intType j = startIndex[Y]; j != nCells[Y]; j++) {
                 for (intType i = startIndex[X]; i != nCells[X]; i++) {
 
-                    indexVector3 idx = { i, j, k };
+                    arrayIndex3D idx = { i, j, k };
                     floatType d = MWIWeightingCoeff( idx, momentumDiagCoeffInv, axis );
                     continuityBoundaryPressure[ positivePatch ]( idx[axis1], idx[axis2] ) = d * mesh.interpFactors[axis]( idx[axis] ) * momentumBoundaryPressure[ positivePatch ]
                                                                                               * mesh.cellLengthsInv[axis]( idx[axis] );
@@ -804,13 +800,11 @@ void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
                 break;
         }
 
-
         // Internal faces
         MWInterpolationFace(fvCoeffs.Cont.AP, *momentumDiagCoeffInv, *momentumPressureCoeffs, mesh, rho, axis);
 
         // Boundary constants
         MWInterpolationBoundary(fvCoeffs.Cont.boundaryP, *momentumBoundaryPressure, *momentumDiagCoeffInv, mesh, axis);
-        
 
     } );
 
@@ -836,10 +830,10 @@ void AddRelaxation( array3D &diagonalCoeffs,
     diagonalCoeffs *= diagonalCoeffs.constant( 1.0f / relaxationFactor );
 
     // Coefficients do not have ghost cells, so need to slice the field to work with it
-    Eigen::array< Eigen::Index, 3 > offsets = {nGhost, nGhost, nGhost},
-                                    extents = {oldField.dimension(0) - 2*nGhost,
-                                               oldField.dimension(1) - 2*nGhost,
-                                               oldField.dimension(2) - 2*nGhost }; 
+    arrayIndex3D offsets = {nGhost, nGhost, nGhost},
+                 extents = {oldField.dimension(0) - 2*nGhost,
+                            oldField.dimension(1) - 2*nGhost,
+                            oldField.dimension(2) - 2*nGhost }; 
 
     // Add to the source term, note the diagonal coefficient is already relaxed
     sourceTerms += diagonalCoeffs * sourceTerms.constant( 1 - relaxationFactor  )

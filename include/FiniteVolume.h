@@ -14,7 +14,7 @@ namespace CFD
 struct Mesh
 {
     Mesh(const CFD::InputData &);
-    indexVector3 nCells;
+    iVector3 nCells;
     ArrayAllocator<Axis, array1D> cellCenters, 
                                   cellFaces,            // cellFaces[axis](i) -> cellFaces[axis](i - 1/2)
                                   cellLengths, 
@@ -39,10 +39,10 @@ struct FVCoefficients
     // coefficients in the continuity equations can be stored in 1D arrays when using a 
     // rectilinear grid.
 
-    FVCoefficients(const indexVector3 &);
+    FVCoefficients(const iVector3 &);
 
     struct MomentumEquation {
-        MomentumEquation(const Fields::ENUMDATA, const indexVector3 &);
+        MomentumEquation(const Fields::ENUMDATA, const iVector3 &);
         ArrayAllocator<TransportCoefficients, array3D> AU, AV, AW;          // Velocity coefficients (LHS)
         ArrayAllocator<TransportCoefficients, array1D> AP;                  // Pressure coefficients (LHS)
         array3D B;                                                          // Source Term (RHS)
@@ -54,7 +54,7 @@ struct FVCoefficients
     };
 
     struct ContinuityEquation {
-        ContinuityEquation(const indexVector3 &);
+        ContinuityEquation(const iVector3 &);
         ArrayAllocator<TransportCoefficients, array1D> AU, AV, AW;          // Velocity coefficients (LHS)
         ArrayAllocator<TransportCoefficients, array3D> AP;                  // Pressure coefficients (LHS)
         array3D B;                                                          // Source term (RHS)
@@ -65,7 +65,7 @@ struct FVCoefficients
 
     MomentumEquation Umom, Vmom, Wmom;
     ContinuityEquation Cont;
-    indexVector3 nCells;
+    iVector3 nCells;
 };
 
 
