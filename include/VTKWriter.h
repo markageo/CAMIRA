@@ -14,23 +14,18 @@
 
 namespace VTK
 {
-
-// Settings
-#define MODE_ASCII          "ascii"
-#define MODE_BINARY         "binary"
-#define TYPE_FLOAT          "float"
-#define TYPE_DOUBLE         "double"
-
-// Defaults
-#define DEFAULT_WRITE_MODE          MODE_ASCII       
-#define DEFAULT_ASCII_PRECISION     6
-
+    
+#define DEFAULT_ASCII_PRECISION     6   // Maybe name this something else since it is now in a header
 
 // Data writing mdoes
-enum WriteModes {
+enum class WriteModes {
     ASCII, BINARY
 };
-std::array<std::string, 2> writeModeStrings{MODE_ASCII, MODE_BINARY};
+
+// Point or cell data
+enum class GridTypes {
+    CELL_DATA, POINT_DATA
+};
 
 
 // Type aliases
@@ -41,7 +36,7 @@ template<typename T> using vectorMapType = std::map<std::string, std::vector<con
 
 
 // Utility functions
-namespace
+namespace INTERNAL
 {
     // Swap between big endian and little endian representation
     // Credit to Michael Klimenko
@@ -58,7 +53,10 @@ namespace
         return dst.val;
     }
 
-}   // end anonymous namespace
+}   // end namespace INTERNAL
+
+
+
 
 
 /*-------------------------------------------------------------------------------------*\
@@ -73,16 +71,20 @@ class VTKWriterConfig
         VTKWriterConfig(sizeType, sizeType, sizeType);
 
         void SetWriteMode(WriteModes);
+        void SetGridType(GridTypes);
         void SetASCIIPrecision(int);
 
-        const sizeType &dim(sizeType) const;
-        const std::string &WriteMode() const;
+        const std::array<sizeType, 3> &dims() const;
+        sizeType dim(sizeType) const;
+        WriteModes WriteMode() const;
+        GridTypes GridType() const;
         const int &ASCIIPrecision() const;
 
     private:
 
-        sizeType m_dims[3]; 
-        std::string m_writeMode;
+        std::array<sizeType, 3> m_dims; 
+        VTK::WriteModes m_writeMode;
+        VTK::GridTypes m_gridType;
         int m_ASCIIPrecision;
 
 };
@@ -91,24 +93,39 @@ class VTKWriterConfig
 // ------------------------------------- Class Member Definitions ------------------------------------- //
 
 // Constructor sets default values
-VTKWriterConfig::VTKWriterConfig(sizeType dimX,sizeType dimY, sizeType dimZ) :
+VTKWriterConfig::VTKWriterConfig(sizeType dimX, sizeType dimY, sizeType dimZ) :
     m_dims{dimX, dimY, dimZ},
-    m_writeMode(DEFAULT_WRITE_MODE), 
-    m_ASCIIPrecision(DEFAULT_ASCII_PRECISION)
+    m_writeMode( WriteModes::ASCII ), 
+    m_gridType( GridTypes::POINT_DATA ),
+    m_ASCIIPrecision( DEFAULT_ASCII_PRECISION )
     {};
 
 
 // Dimensions
-const sizeType &VTKWriterConfig::dim(sizeType i) const
+sizeType VTKWriterConfig::dim(sizeType i) const
 { return m_dims[i]; }
+
+const std::array<sizeType, 3> &VTKWriterConfig::dims() const
+{ return m_dims; } 
+
 
 // Write mode set
 void VTKWriterConfig::SetWriteMode(WriteModes writeMode) 
-{ m_writeMode = writeModeStrings[ writeMode ]; }
+{ m_writeMode = writeMode; }
 
 // Write mode get
-const std::string &VTKWriterConfig::WriteMode() const
+WriteModes VTKWriterConfig::WriteMode() const
 { return m_writeMode; }
+
+
+// Grid type set
+void VTKWriterConfig::SetGridType(VTK::GridTypes gridType)
+{ m_gridType = gridType; }
+
+// Grid type get
+GridTypes VTKWriterConfig::GridType() const
+{ return m_gridType; }
+
 
 // ASCII precision set
 void VTKWriterConfig::SetASCIIPrecision(int ASCIIPrecision) 
@@ -117,6 +134,9 @@ void VTKWriterConfig::SetASCIIPrecision(int ASCIIPrecision)
 // ASCII precision get
 const int &VTKWriterConfig::ASCIIPrecision() const
 { return m_ASCIIPrecision; }
+
+
+
 
 
 /*-------------------------------------------------------------------------------------*\
@@ -143,8 +163,13 @@ class VTKWriter
 
         VTKWriterConfig m_config;
         std::ofstream m_outputFileStream;
+        std::string m_writeMode;
         std::string m_outputDataType;
+        std::string m_gridType;
         std::string m_fileExtension = ".vtk"; 
+
+        std::array<sizeType, 3> m_gridDims;
+        std::array<sizeType, 3> m_dataDims;
 
         gridVectorType<T> m_gridVector;
         scalarMapType<T> m_scalarMap;
@@ -168,32 +193,51 @@ VTKWriter<T>::VTKWriter(const gridVectorType<T> &gridVector,
                         const vectorMapType<T> &vectorMap, 
                         const VTKWriterConfig &config) : 
     m_config(config),
-    m_gridVector(gridVector), 
-    m_scalarMap(scalarMap),
-    m_vectorMap(vectorMap) 
+    m_gridDims( config.dims() ),    // This will change if it is cell data
+    m_dataDims( config.dims() ),
+    m_gridVector( gridVector ), 
+    m_scalarMap( scalarMap ),
+    m_vectorMap( vectorMap ) 
     {
-        // Set the writing function
-        if (config.WriteMode() == MODE_ASCII) {
-            DataProperWriteFunc =  [&](T data) { 
-                m_outputFileStream << data << " "; 
-            };
-            m_outputFileStream << std::fixed << std::setprecision(config.ASCIIPrecision());
+        using enum WriteModes;
+        using enum GridTypes;
 
-        } else if (config.WriteMode() == MODE_BINARY) {
-            DataProperWriteFunc = [&](T data) {
-                T tmp = SwapEndian(data);  // Legacy VTK uses big endian
-                m_outputFileStream.write(reinterpret_cast<const char *>(&tmp), sizeof(tmp)); 
-            };
-        } 
+        switch ( config.WriteMode() ) {
+            case ASCII:
+                DataProperWriteFunc =  [&](T data) { 
+                    m_outputFileStream << data << " "; 
+                };
+                m_outputFileStream << std::fixed << std::setprecision(config.ASCIIPrecision());
+                m_writeMode = "ASCII";
+                break;
 
-        // Set the datatype
-        if constexpr        ( std::is_same<T, double>::value ) {
-            m_outputDataType = TYPE_DOUBLE;
-
-        } else if constexpr ( std::is_same<T, float>::value ) {
-            m_outputDataType = TYPE_FLOAT;
-            
+            case BINARY:
+                DataProperWriteFunc = [&](T data) {
+                    T tmp = INTERNAL::SwapEndian(data);  // Legacy VTK uses big endian
+                    m_outputFileStream.write(reinterpret_cast<const char *>(&tmp), sizeof(tmp)); 
+                };
+                m_writeMode = "BINARY";
+                break;
         }
+
+
+        switch ( config.GridType() ) {
+            case POINT_DATA:
+                m_gridType = "POINT_DATA";
+                break;
+            case CELL_DATA:
+                m_gridType = "CELL_DATA";
+                for ( auto &dim : m_gridDims ) { dim += 1; }
+                break;
+        }
+
+
+        if constexpr        ( std::is_same<T, double>::value ) {
+            m_outputDataType = "DOUBLE";
+        } else if constexpr ( std::is_same<T, float>::value ) {
+            m_outputDataType = "FLOAT";
+        }
+
     }
 
 
@@ -249,15 +293,15 @@ int VTKWriter<T>::WriteData(const std::string &filename,
     m_outputFileStream << title << "\n";
 
     // Data type
-    m_outputFileStream << m_config.WriteMode() << "\n";
+    m_outputFileStream << m_writeMode << "\n";
 
     // Dataset
     WriteDatasetRectilinearGrid();
     m_outputFileStream << "\n";     
 
     // Dataset attributes
-    m_outputFileStream << "POINT_DATA"
-                       << " " << m_config.dim(0)*m_config.dim(1)*m_config.dim(2)
+    m_outputFileStream << m_gridType
+                       << " " << m_dataDims[0] * m_dataDims[1] * m_dataDims[2]
                        << "\n";
                     
     // Scalars
@@ -307,34 +351,24 @@ void VTKWriter<T>::WriteDataArray(const std::vector<const T *> dataPtrVec,
 template<typename T>
 void VTKWriter<T>::WriteDatasetRectilinearGrid()
 {
+    auto WriteAxis = [&] ( const std::string &axisName, const int dim ) {
+        m_outputFileStream << axisName
+                           << " " << m_gridDims[ dim ]
+                           << " " << m_outputDataType
+                           << "\n";
+        WriteDataArray(m_gridVector[ dim ], m_gridDims[ dim ]);
+        m_outputFileStream << "\n";
+    };
 
     m_outputFileStream << "DATASET RECTILINEAR_GRID" << "\n";
     m_outputFileStream << "DIMENSIONS"
-                       << " " << m_config.dim(0)
-                       << " " << m_config.dim(1)
-                       << " " << m_config.dim(2)
+                       << " " << m_gridDims[0]
+                       << " " << m_gridDims[1]
+                       << " " << m_gridDims[2]
                        << "\n";
-
-    m_outputFileStream << "X_COORDINATES"
-                       << " " << m_config.dim(0)
-                       << " " << m_outputDataType
-                       << "\n";
-    WriteDataArray(m_gridVector[0], m_config.dim(0));
-    m_outputFileStream << "\n";
-                       
-    m_outputFileStream << "Y_COORDINATES"
-                       << " " << m_config.dim(1)
-                       << " " << m_outputDataType
-                       << "\n";
-    WriteDataArray(m_gridVector[1], m_config.dim(1));
-    m_outputFileStream << "\n";
-
-    m_outputFileStream << "Z_COORDINATES"
-                       << " " << m_config.dim(2)
-                       << " " << m_outputDataType
-                       << "\n";
-    WriteDataArray(m_gridVector[2], m_config.dim(2));
-    m_outputFileStream << "\n";
+    WriteAxis( "X_COORDINATES", 0 );
+    WriteAxis( "Y_COORDINATES", 1 );
+    WriteAxis( "Z_COORDINATES", 2 );
 }
 
 
@@ -350,7 +384,7 @@ void VTKWriter<T>::WriteDataAttributeScalar(const std::string &scalarFieldName,
                            << "\n";
 
     m_outputFileStream << "LOOKUP_TABLE default" << "\n";
-    WriteDataArray(pScalarField, m_config.dim(0)*m_config.dim(1)*m_config.dim(2));
+    WriteDataArray( pScalarField, m_dataDims[0]*m_dataDims[1]*m_dataDims[2] );
 }
 
 
@@ -363,7 +397,7 @@ void VTKWriter<T>::WriteDataAttributeVector(const std::string &vectorFieldName,
                            << " " << vectorFieldName
                            << " " << m_outputDataType
                            << "\n";
-    WriteDataArray(vectorField, m_config.dim(0)*m_config.dim(1)*m_config.dim(2));
+    WriteDataArray(vectorField, m_dataDims[0]*m_dataDims[1]*m_dataDims[2] );
 }
 
 
