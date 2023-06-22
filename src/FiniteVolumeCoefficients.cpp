@@ -233,12 +233,10 @@ void Upwind( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs,
              const Mesh &mesh,
              const Axis::ENUMDATA axis )
 {
-    using F  = Fields::ENUMDATA;
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    static constexpr std::array<Fields::ENUMDATA, 3> axisFields = {F::U, F::V, F::W}; 
-    Fields::ENUMDATA field = axisFields[axis];
+    Fields::ENUMDATA field = AxisVelocity[axis];
 
     // Starting index and number of faces to iterate over
     iVector3 startIndex, nFaces;

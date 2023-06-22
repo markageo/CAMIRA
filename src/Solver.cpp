@@ -75,18 +75,16 @@ namespace
     floatType BoundaryMassFluxResidual( const ArrayAllocator<Fields, array3D> &faceVelocities,
                                         const Mesh &mesh )
     {
-        using F = Fields::ENUMDATA;
         floatType massFluxResidual = 0.0f;
-        EnumVector<Axis, F> axisField({F::U, F::V, F::W});
 
         EnumFor<Axis>([&](Axis::ENUMDATA axis) {
 
             // Positive face, area normal is in positive direction
-            auto faceFluxesPositive = faceVelocities[axisField[axis]].chip( mesh.nCells(axis), axis ) * mesh.cellFaceAreas[axis];
+            auto faceFluxesPositive = faceVelocities[AxisVelocity[axis]].chip( mesh.nCells(axis), axis ) * mesh.cellFaceAreas[axis];
             massFluxResidual += static_cast<array0D>( faceFluxesPositive.sum() )(0);
 
             // Negative face, area normal is in negative direction
-            auto faceFluxesNegative = -faceVelocities[axisField[axis]].chip( 0, axis ) * mesh.cellFaceAreas[axis];
+            auto faceFluxesNegative = -faceVelocities[AxisVelocity[axis]].chip( 0, axis ) * mesh.cellFaceAreas[axis];
             massFluxResidual += static_cast<array0D>( faceFluxesNegative.sum() )(0);
 
         });

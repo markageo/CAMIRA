@@ -226,15 +226,13 @@ namespace
     void TransformFieldVectorToCode( EnumVector<Fields, T> &fieldsVector,
                                      const AxisTransformationMap& axisTransformation )
     {
-        using F = Fields::ENUMDATA;
-        EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
 
         // Create temporary copy to move data from 
         EnumVector<Fields, T> userFieldsVector = fieldsVector;
 
         EnumFor<Axis>([&] (Axis::ENUMDATA codeAxis) { // Code axis
 
-            fieldsVector[ axisField[codeAxis] ] = userFieldsVector[ axisField[ axisTransformation.UserAxis(codeAxis) ] ];
+            fieldsVector[ AxisVelocity[codeAxis] ] = userFieldsVector[ AxisVelocity[ axisTransformation.UserAxis(codeAxis) ] ];
 
         } );
     }
@@ -415,19 +413,15 @@ namespace
     void TransformFieldVectorToUser( Container<Fields, T> &fieldsVector,
                                      const AxisTransformationMap& axisTransformation )
     {
-
         static_assert( std::is_same< Container<Fields, T>, EnumVector<Fields, T> >::value    ||
                        std::is_same< Container<Fields, T>, ArrayAllocator<Fields, T> >::value );
-
-        using F = Fields::ENUMDATA;
-        EnumVector<Axis, F> axisField({ F::U, F::V, F::W });
 
         // Create temporary copy to move data from 
         Container<Fields, T> codeFieldsVector = fieldsVector;
 
         EnumFor<Axis>([&] (Axis::ENUMDATA userAxis) { // User axis
 
-            fieldsVector[ axisField[userAxis] ] = codeFieldsVector[ axisField[ axisTransformation.CodeAxis( userAxis ) ] ];
+            fieldsVector[ AxisVelocity[userAxis] ] = codeFieldsVector[ AxisVelocity[ axisTransformation.CodeAxis( userAxis ) ] ];
 
         } );
     }

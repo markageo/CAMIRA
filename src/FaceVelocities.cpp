@@ -14,7 +14,6 @@ void FaceVelocity( ArrayAllocator<Fields, array3D> &faceVelocities,
 {
     using enum Axis::ENUMDATA;
 
-    static constexpr std::array<Fields::ENUMDATA, 3> axisFields = {Fields::U, Fields::V, Fields::W}; 
     Fields::ENUMDATA field = AxisVelocity[axis];
 
     array3D &faceVel = faceVelocities[ field ];
@@ -54,12 +53,12 @@ void BoundaryFaceVelocitiy( ArrayAllocator<Fields, array3D> &faceVelocities,
 {
     using BC = BoundaryConditions::ENUMDATA;
     
-    static constexpr arrayIndex3D offsets = {nGhost, nGhost, nGhost};
-    arrayIndex3D extents = {mesh.nCells(Axis::X), mesh.nCells(Axis::Y), mesh.nCells(Axis::Z)};
     Axis::ENUMDATA axis = BoundaryPatchAxis[ boundaryPatch ];
     Fields::ENUMDATA axisVel = AxisVelocity[ axis ];
-
-
+    
+    static constexpr arrayIndex3D offsets = {nGhost, nGhost, nGhost};
+    arrayIndex3D extents = {mesh.nCells(Axis::X), mesh.nCells(Axis::Y), mesh.nCells(Axis::Z)};
+    
     intType faceEndIndex, fieldEndIndex;
     if ( boundaryPatch == PositivePatch[ axis ] ) {
         faceEndIndex = mesh.nCells(axis);
@@ -121,6 +120,9 @@ ArrayAllocator<Fields, array3D> InitialiseFaceVelocities(const Mesh &mesh,
 
     return faceVelocities;
 }
+
+
+
 
 
 void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
