@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 1
+    nu   = 0.001
 }
 
 Mesh {
@@ -11,17 +11,29 @@ Mesh {
 
     Grid x {
         Segment {
-            bounds     = (0, 0.5)
+            bounds     = (0, 0.25)
             nCells     = 25
-            biasFactor = 1
+            biasFactor = 2
+        }
+
+        Segment {
+            bounds     = (0.25, 0.5)
+            nCells     = 25
+            biasFactor = -2
         }
     }
 
     Grid y {
         Segment {
-            bounds     = (0, 0.5)
+            bounds     = (0, 0.25)
             nCells     = 25
-            biasFactor = 1
+            biasFactor = 2
+        }
+
+        Segment {
+            bounds     = (0.25, 0.5)
+            nCells     = 25
+            biasFactor = -2
         }
     }
 
@@ -67,7 +79,7 @@ BoundaryConditions
         u = uniform, 1
         v = uniform, 0
         w = uniform, 0
-        p = uniform, 0
+        p = extrapolated
     }
 
     // Wall
@@ -78,49 +90,52 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Symmetry
+    // Wall
     +z {
-        u = zeroGradient
-        v = zeroGradient
+        u = uniform, 0
+        v = uniform, 0
         w = uniform, 0
         p = zeroGradient
     }
 
-    // Symmetry
+    // Wall
     -z {
-        u = zeroGradient
-        v = zeroGradient
+        u = uniform, 0
+        v = uniform, 0
         w = uniform, 0
         p = zeroGradient
     }
 }
 
 
-
 Solver {
 
     Schemes {
         linearisation = Picard
+
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 1000
-        maxOuterResiduals = 1e-3
+        advectionScheme = upwind
+        faceInterpolationScheme = weightedLinear
+
+        maxOuterIterations = 50000
+        maxOuterResiduals = 1e-4
     }
     
     LinearSolver {
 
         type = SUGS
         maxIterations = 1
-        maxResiduals = 1e-3
+        maxResiduals = 1e-4
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
         PlaneSolver {
             type = SUGS
-            maxIterations = 5
-            maxResiduals = 1e-2
+            maxIterations = 1
+            maxResiduals = 1e-5
 
             momentumRelaxation = (1, 1, 1)
             pressureRelaxation = 1
@@ -131,9 +146,9 @@ Solver {
             LineSolver {
                 type = SUGS
                 maxIterations = 1
-                maxResiduals = 1e-2
+                maxResiduals = 1e-3
 
-                momentumRelaxation = (0.5, 0.5, 0.5)
+                momentumRelaxation = (1, 1, 1)
                 pressureRelaxation = 1
 
                 lineSweepDirection = +y

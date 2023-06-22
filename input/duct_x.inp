@@ -122,7 +122,7 @@ Solver {
         implicitPressureRelaxation = 1.1
 
         advectionScheme = upwind
-        faceInterpolationScheme = weightedLinear
+        faceInterpolationScheme = average
 
         maxOuterIterations = 500
         maxOuterResiduals = 1e-12

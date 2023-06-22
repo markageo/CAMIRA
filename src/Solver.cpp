@@ -18,7 +18,7 @@ namespace
 {
 
     // Calculated as the L1 norm of the difference between two arrays.
-    template <typename arrayType, typename enumStruct>
+    template <typename arrayType, typename enumStruct> [[ maybe_unused ]]
     EnumVector<enumStruct, floatType> L1ArrayDiff( const ArrayAllocator<enumStruct, arrayType> &array1,
                                                    const ArrayAllocator<enumStruct, arrayType> &array2)
     {
@@ -37,7 +37,9 @@ namespace
     }
 
 
+
     // Calculate the absolute residual of each equation from the finite volume stencil
+    [[ maybe_unused ]]
     EnumVector<Fields, floatType> StencilResiduals( const ArrayAllocator<Fields, array3D> &fields,
                                                     const FVCoefficients &fvCoeffs )
     {
@@ -142,7 +144,57 @@ namespace
     }
 
 
+
+    // Calculate global mass flux residual at the domain boundary
+    [[ maybe_unused ]]
+    floatType BoundaryMassFluxResidual( const ArrayAllocator<Fields, array3D> &faceVelocities,
+                                        const Mesh &mesh )
+    {
+        floatType massFluxResidual = 0.0f;
+
+        EnumFor<Axis>([&](Axis::ENUMDATA axis) {
+
+            // Positive face, area normal is in positive direction
+            auto faceFluxesPositive = faceVelocities[AxisVelocity[axis]].chip( mesh.nCells(axis), axis ) * mesh.cellFaceAreas[axis];
+            massFluxResidual += static_cast<array0D>( faceFluxesPositive.sum() )(0);
+
+            // Negative face, area normal is in negative direction
+            auto faceFluxesNegative = -faceVelocities[AxisVelocity[axis]].chip( 0, axis ) * mesh.cellFaceAreas[axis];
+            massFluxResidual += static_cast<array0D>( faceFluxesNegative.sum() )(0);
+
+        });
+
+        return massFluxResidual;
+    }
+
+
+
+    // Calculate global momentum flux residual at the domain boundary
+    [[ maybe_unused ]]
+    floatType BoundaryMomentumFluxResidual( const ArrayAllocator<Fields, array3D> &faceVelocities,
+                                            const Mesh &mesh )
+    {
+        floatType momentumFluxResidual = 0.0f;
+
+        EnumFor<Axis>([&](Axis::ENUMDATA axis) {
+
+            // Positive face, area normal is in positive direction
+            auto faceFluxesPositive = faceVelocities[AxisVelocity[axis]].chip( mesh.nCells(axis), axis ) * mesh.cellFaceAreas[axis];
+            momentumFluxResidual += static_cast<array0D>( faceFluxesPositive.sum() )(0);
+
+            // Negative face, area normal is in negative direction
+            auto faceFluxesNegative = -faceVelocities[AxisVelocity[axis]].chip( 0, axis ) * mesh.cellFaceAreas[axis];
+            momentumFluxResidual += static_cast<array0D>( faceFluxesNegative.sum() )(0);
+
+        });
+
+        return momentumFluxResidual;
+    }
+
+
+
     // Turn the residual into a relative residual
+    [[ maybe_unused ]]
     void RelativeResidual( EnumVector<Fields, floatType> &residuals,
                            EnumVector<Fields, floatType> &residualsInitialInv,
                            const intType nIterations )
@@ -163,6 +215,7 @@ namespace
     }
 
 
+
     // Check if residual tolerence is met
     bool MetResidualTolerence( const EnumVector<Fields, floatType> &residuals,
                                const EnumVector<Fields, floatType> &residualsTarget )
@@ -176,28 +229,6 @@ namespace
         } );
         return met;
 
-    }
-
-
-    // Calculate global mass flux residual at the domain boundary
-    floatType BoundaryMassFluxResidual( const ArrayAllocator<Fields, array3D> &faceVelocities,
-                                        const Mesh &mesh )
-    {
-        floatType massFluxResidual = 0.0f;
-
-        EnumFor<Axis>([&](Axis::ENUMDATA axis) {
-
-            // Positive face, area normal is in positive direction
-            auto faceFluxesPositive = faceVelocities[AxisVelocity[axis]].chip( mesh.nCells(axis), axis ) * mesh.cellFaceAreas[axis];
-            massFluxResidual += static_cast<array0D>( faceFluxesPositive.sum() )(0);
-
-            // Negative face, area normal is in negative direction
-            auto faceFluxesNegative = -faceVelocities[AxisVelocity[axis]].chip( 0, axis ) * mesh.cellFaceAreas[axis];
-            massFluxResidual += static_cast<array0D>( faceFluxesNegative.sum() )(0);
-
-        });
-
-        return massFluxResidual;
     }
 
 } // end anonymous namespace
@@ -932,8 +963,8 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
         UpdateFaceVelocities(faceVelocities, mesh, fields, inputData);
 
         // Update residuals
-        // residualsOuter = L1ArrayDiff(fields, fieldsOld);
-        residualsOuter = StencilResiduals(fields, fvCoeffs);
+        residualsOuter = L1ArrayDiff(fields, fieldsOld);
+        // residualsOuter = StencilResiduals(fields, fvCoeffs);
         massFluxResidual = BoundaryMassFluxResidual(faceVelocities, mesh);
         RelativeResidual(residualsOuter, residualsOuterInitialInv, nOuterIterations);
         nOuterIterations++;
