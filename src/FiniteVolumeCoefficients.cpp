@@ -257,7 +257,7 @@ void Upwind( ArrayAllocator<CFD::TransportCoefficients, CFD::array3D> &coeffs,
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
                 
                 arrayIndex3D HiIndex = { i, j, k },
-                                              LoIndex = { i, j, k };
+                             LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
 
                 floatType uf = faceVelocities[ field ](i, j, k);
