@@ -10,11 +10,10 @@ namespace
 void FaceVelocity( ArrayAllocator<Fields, array3D> &faceVelocities, 
                    const ArrayAllocator<Fields, array3D> &fields, 
                    const Mesh &mesh, 
-                   const Axis::ENUMDATA axis )
+                   const Axis::ENUMDATA axis,
+                   const Fields::ENUMDATA field )
 {
     using enum Axis::ENUMDATA;
-
-    Fields::ENUMDATA field = AxisVelocity[axis];
 
     array3D &faceVel = faceVelocities[ field ];
     const array3D &cellVel = fields[ field ];
@@ -49,7 +48,8 @@ void BoundaryFaceVelocitiy( ArrayAllocator<Fields, array3D> &faceVelocities,
                             const ArrayAllocator<Fields, array3D> &fields, 
                             const Mesh &mesh, 
                             const InputData::BoundaryConditionData& boundaryConditions,
-                            const BoundaryPatches::ENUMDATA boundaryPatch )
+                            const BoundaryPatches::ENUMDATA boundaryPatch,
+                            const Fields::ENUMDATA field )
 {
     using BC = BoundaryConditions::ENUMDATA;
     
@@ -69,23 +69,23 @@ void BoundaryFaceVelocitiy( ArrayAllocator<Fields, array3D> &faceVelocities,
     }
 
     floatType extrapFactor_p, extrapFactor_a;
-    switch ( boundaryConditions[axisVel][boundaryPatch].type ) 
+    switch ( boundaryConditions[field][boundaryPatch].type ) 
     {    
         case BC::zeroGradient:
-            faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].slice(offsets, extents).chip(fieldEndIndex, axis);          
+            faceVelocities[field].chip(faceEndIndex, axis) = fields[field].slice(offsets, extents).chip(fieldEndIndex, axis);          
             break;
 
         case BC::uniform:
-            faceVelocities[axisVel].chip(faceEndIndex, axis) = faceVelocities[axisVel].chip(faceEndIndex, axis).constant( boundaryConditions[axisVel][boundaryPatch].value );
+            faceVelocities[field].chip(faceEndIndex, axis) = faceVelocities[field].chip(faceEndIndex, axis).constant( boundaryConditions[field][boundaryPatch].value );
             break;
 
         case BC::extrapolated:
             extrapFactor_p = mesh.extrapFactors[boundaryPatch].p;
             extrapFactor_a = mesh.extrapFactors[boundaryPatch].a;
-            faceVelocities[axisVel].chip(faceEndIndex, axis) = fields[axisVel].slice(offsets, extents).chip(fieldEndIndex  , axis) 
-                                                                * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
-                                                             + fields[axisVel].slice(offsets, extents).chip(fieldEndIndex+1, axis) 
-                                                                * fields[axisVel].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
+            faceVelocities[field].chip(faceEndIndex, axis) = fields[field].slice(offsets, extents).chip(fieldEndIndex  , axis) 
+                                                                * fields[field].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
+                                                             + fields[field].slice(offsets, extents).chip(fieldEndIndex+1, axis) 
+                                                                * fields[field].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
             break;
 
         default:
@@ -124,7 +124,7 @@ ArrayAllocator<Fields, array3D> InitialiseFaceVelocities(const Mesh &mesh,
 
 
 
-
+// Calculates face velocity fluxes. i.e. normal component of velocity on faces
 void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities, 
                            const Mesh &mesh, 
                            const ArrayAllocator<Fields, CFD::array3D> &fields, 
@@ -132,12 +132,13 @@ void UpdateFaceVelocities( ArrayAllocator<Fields, CFD::array3D> &faceVelocities,
 {
     // Internal faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        FaceVelocity( faceVelocities, fields, mesh, axis);
+        FaceVelocity( faceVelocities, fields, mesh, axis, AxisVelocity[axis]);
     } );
     
     // Boundary faces
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {
-        BoundaryFaceVelocitiy( faceVelocities, fields, mesh, inputData.boundaryConditions, boundaryPatch );
+        Fields::ENUMDATA field = AxisVelocity[ BoundaryPatchAxis[ boundaryPatch ] ];
+        BoundaryFaceVelocitiy( faceVelocities, fields, mesh, inputData.boundaryConditions, boundaryPatch, field );
     } );
 }
 
