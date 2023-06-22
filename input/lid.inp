@@ -39,9 +39,15 @@ Mesh {
 
     Grid z {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 1
-            biasFactor = 1
+            bounds     = (0, 0.25)
+            nCells     = 25
+            biasFactor = 2
+        }
+
+        Segment {
+            bounds     = (0.25, 0.5)
+            nCells     = 25
+            biasFactor = -2
         }
     }
 }

@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.0001
+    nu   = 0.01
 }
 
 Mesh {

@@ -48,8 +48,6 @@ int main(int argc, char const *argv[])
                                          Post-Processing
     \*-------------------------------------------------------------------------------------*/
 
-    using AX = CFD::Axis::ENUMDATA;
-
     // Undo the boundary condition transformation
     CFD::TransformToUserCoordinates(mesh, fields, axisTransformation);
 
@@ -62,12 +60,15 @@ int main(int argc, char const *argv[])
                                              Output
     \*-------------------------------------------------------------------------------------*/
 
+    using AX = CFD::Axis::ENUMDATA;
+
     // Data to pass to writer
-    VTK::VTKWriterConfig config(mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z]);
-    config.SetWriteMode(VTK::ASCII);
-    VTK::gridVectorType<CFD::floatType> gridVector = {mesh.cellCenters[AX::X].data(), mesh.cellCenters[AX::Y].data(), mesh.cellCenters[AX::Z].data()};
-    VTK::scalarMapType<CFD::floatType> scalarMap = {{"Pressure", fields[F::P].data()}};
-    VTK::vectorMapType<CFD::floatType> vectorMap = {{"Velocity", {fields[F::U].data(), fields[F::V].data(), fields[F::W].data()}}};
+    VTK::VTKWriterConfig config( mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z] );
+        config.SetWriteMode( VTK::WriteModes::ASCII );
+        config.SetGridType( VTK::GridTypes::CELL_DATA );
+    VTK::gridVectorType<CFD::floatType> gridVector = {mesh.cellFaces[AX::X].data(), mesh.cellFaces[AX::Y].data(), mesh.cellFaces[AX::Z].data()};
+    VTK::scalarMapType<CFD::floatType> scalarMap = { {"Pressure", fields[F::P].data()} };
+    VTK::vectorMapType<CFD::floatType> vectorMap = { {"Velocity", {fields[F::U].data(), fields[F::V].data(), fields[F::W].data()}} };
 
     // Write output
     VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
