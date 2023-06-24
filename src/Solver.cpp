@@ -3,7 +3,7 @@
 #include "InputProcessing.h"
 #include "SweepTransformations.h"
 #include "FiniteVolume.h"
-#include "SolverLogging.h"
+#include "ConvergenceLogger.h"
 #include "StaggerIndexing.h"
 #include "Utils.h"
 
@@ -241,7 +241,7 @@ namespace
 template < TransportCoefficients::ENUMDATA Ustag,
            TransportCoefficients::ENUMDATA Vstag,
            TransportCoefficients::ENUMDATA Wstag>
-class BlockSolver
+class TriadSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
     using F = Fields::ENUMDATA;
@@ -262,7 +262,7 @@ class BlockSolver
     using sWP = typename StaggerIndexing< F::W, Wstag >::MomentumPressure;
 
 public:
-    BlockSolver( ArrayAllocator<Fields, array3D> &fields,
+    TriadSolver( ArrayAllocator<Fields, array3D> &fields,
                  const ArrayAllocator<Fields, array3D> &fieldsOld,
                  const FVCoefficients &fvCoeffs ) : 
                     m_fields( fields ),
@@ -278,7 +278,7 @@ public:
 
 
     // Core function which updates the local coupled system. Templated by staggering direction.
-    void UpdateBlock( const intType i, 
+    void UpdateTriad( const intType i, 
                       const intType j, 
                       const intType k )
     {
@@ -477,13 +477,13 @@ public:
     {
         if (m_ni == 1) {
 
-            m_blockSolverCenter = std::make_unique<BlockSolver<TC::p, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
+            m_blockSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep2D;
             StateUpdater = &LineSolver::UpdateState2D;
 
         } else {
-            m_blockSolverEast = std::make_unique<BlockSolver<TC::e, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
-            m_blockSolverWest = std::make_unique<BlockSolver<TC::w, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
+            m_blockSolverEast = std::make_unique<TriadSolver<TC::e, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
+            m_blockSolverWest = std::make_unique<TriadSolver<TC::w, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep3D;
             StateUpdater = &LineSolver::UpdateState3D;
 
@@ -539,9 +539,9 @@ private:
     const EnumVector<Fields, floatType> m_maxResiduals;
     const EnumVector<Fields, floatType> m_relaxation;
 
-    std::unique_ptr<BlockSolver<TC::e, Vstag, Wstag>> m_blockSolverEast;
-    std::unique_ptr<BlockSolver<TC::w, Vstag, Wstag>> m_blockSolverWest;
-    std::unique_ptr<BlockSolver<TC::p, Vstag, Wstag>> m_blockSolverCenter;
+    std::unique_ptr<TriadSolver<TC::e, Vstag, Wstag>> m_blockSolverEast;
+    std::unique_ptr<TriadSolver<TC::w, Vstag, Wstag>> m_blockSolverWest;
+    std::unique_ptr<TriadSolver<TC::p, Vstag, Wstag>> m_blockSolverCenter;
 
     void (LineSolver::*SolutionUpdater)(intType, intType);
     void (LineSolver::*StateUpdater)(void);
@@ -582,7 +582,7 @@ private:
     }
 
     template <TC Ustag>
-    void UpdateAndRelax(std::unique_ptr<BlockSolver<Ustag, Vstag, Wstag>> &blockSolver, intType i, intType j, intType k)
+    void UpdateAndRelax(std::unique_ptr<TriadSolver<Ustag, Vstag, Wstag>> &blockSolver, intType i, intType j, intType k)
     {
         using enum TransportCoefficients::ENUMDATA;
         using enum Fields::ENUMDATA;
@@ -594,7 +594,7 @@ private:
         EnumFor<Fields>([&](Fields::ENUMDATA f)
                         { m_oldBlock[f] = m_fields[f](G(m_iS[f], m_jS[f], m_kS[f])); }); // Set old block values
 
-        blockSolver->UpdateBlock(i, j, k);
+        blockSolver->UpdateTriad(i, j, k);
 
         EnumFor<Fields>( [&] (Fields::ENUMDATA f) {
             auto &fieldBlock = m_fields[f](G(m_iS[f], m_jS[f], m_kS[f]));
