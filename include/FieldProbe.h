@@ -16,6 +16,11 @@ class FieldProbe
                     const fVector3 &probePoint )
         {
             EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                
+                // Initialise so that it is valid for meshes that are 1 cell thick
+                m_latticeIndex[axis](0) = 0;
+                m_latticeIndex[axis](1) = 0;
+                m_latticeCoord[axis]    = 0.0f;
 
                 for ( intType i = 1; i != mesh.cellCenters[axis].size(); i++ ) {
 
@@ -28,7 +33,7 @@ class FieldProbe
                     if ( pointHigher && pointLower ) {
                         m_latticeIndex[axis](0) = i-1;
                         m_latticeIndex[axis](1) = i;
-                        m_latticeCoord[axis] = ( probePoint[axis] - x0 ) / ( x1 - x0 );
+                        m_latticeCoord[axis]    = ( probePoint[axis] - x0 ) / ( x1 - x0 );
                         break;
                     }
                 }
