@@ -1,5 +1,5 @@
-#ifndef SOLVER_LOGGING
-#define SOLVER_LOGGING
+#ifndef CONVERGENCE_LOGGER
+#define CONVERGENCE_LOGGER
 
 #include "Types.h"
 #include "Solver.h"
@@ -86,4 +86,4 @@ class ConvergenceLogger
 }   // end namespace CFD
 
 
-#endif // SOLVER_LOGGING
+#endif // CONVERGENCE_LOGGER
