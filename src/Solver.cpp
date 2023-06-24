@@ -948,7 +948,6 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
     ArrayAllocator<Fields, array3D> fieldsOld(fields);
     FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, faceVelocities, inputData);
 
-    intType nOuterIterations;
     EnumVector<Fields, floatType> residualsOuter, residualsOuterInitialInv;
     floatType massFluxResidual;
     ConvergenceLogger logger("convergence_history.csv", axisTransformation);
@@ -957,15 +956,13 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
     LinearSolver linearSolver(fields, fieldsOld, fvCoeffs, linearSolverSettings);
 
     // Outer iterations
-    nOuterIterations = 0;
-    while (nOuterIterations < maxOuterIterations)
+    for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
         linearSolver.Solve();
         UpdateFaceVelocities(faceVelocities, mesh, fields, inputData);
 
         // Update residuals
         residualsOuter = L1ArrayDiff(fields, fieldsOld);
-        // residualsOuter = StencilResiduals(fields, fvCoeffs);
         massFluxResidual = BoundaryMassFluxResidual(faceVelocities, mesh);
         RelativeResidual(residualsOuter, residualsOuterInitialInv, nOuterIterations);
         nOuterIterations++;

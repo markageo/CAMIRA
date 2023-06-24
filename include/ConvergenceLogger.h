@@ -15,6 +15,49 @@
 namespace CFD
 {
 
+class ConvergenceFile
+{
+    using F = Fields::ENUMDATA;
+
+    public:
+        ConvergenceFile( const std::string &filename, 
+                         const int precision = 6 ) :
+            m_fileStream( filename ),
+            m_precision( precision ),
+            m_columnWidth( precision + 8 )
+        {            
+            m_fileStream << std::setprecision( m_precision ) << std::scientific;
+        }
+
+        template <class ...Args> 
+        void WriteLine( Args... args )
+        {
+            const int nArgs = sizeof...(args);
+            int i = 0;
+
+            // Fold expression to loop through args. This is needed since each arg can have a different type
+            ( [&] {
+
+                i++;
+                m_fileStream << std::left << std::setw( m_columnWidth ) << args;
+                if ( i != nArgs )
+                    m_fileStream << ", ";
+
+            } , ... )
+
+            m_fileStream << std::endl;  // flush to write immediately to file
+        }
+
+    private:
+        std::ofstream m_fileStream;
+        int m_precision;
+        int m_columnWidth;
+};
+
+
+
+
+
 class ConvergenceLogger
 {
     using F = Fields::ENUMDATA;
