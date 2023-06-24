@@ -13,11 +13,12 @@ class FieldProbe
     public:
 
         FieldProbe( const Mesh &mesh,
-                    const fVector3 &probePoint )
+                    const fVector3 &probePoint ) :
+            m_probePoint( probePoint )
         {
             EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
                 
-                // Initialise so that it is valid for meshes that are 1 cell thick
+                // These values are valid if the mesh is only 1 cell thick
                 m_latticeIndex[axis](0) = 0;
                 m_latticeIndex[axis](1) = 0;
                 m_latticeCoord[axis]    = 0.0f;
@@ -56,23 +57,30 @@ class FieldProbe
                             c111 = field( G( m_latticeIndex[X](1), m_latticeIndex[Y](1), m_latticeIndex[Z](1) ) );
 
             // Linear interpolation in x direction
-            const floatType c00 = c000 * ( 1 - m_latticeCoord[X] ) + c100 *  m_latticeCoord[X],
-                            c01 = c001 * ( 1 - m_latticeCoord[X] ) + c101 *  m_latticeCoord[X],
-                            c10 = c010 * ( 1 - m_latticeCoord[X] ) + c110 *  m_latticeCoord[X],
-                            c11 = c011 * ( 1 - m_latticeCoord[X] ) + c111 *  m_latticeCoord[X];
+            const floatType c00 = c000 * ( 1 - m_latticeCoord[X] )  +  c100 *  m_latticeCoord[X],
+                            c01 = c001 * ( 1 - m_latticeCoord[X] )  +  c101 *  m_latticeCoord[X],
+                            c10 = c010 * ( 1 - m_latticeCoord[X] )  +  c110 *  m_latticeCoord[X],
+                            c11 = c011 * ( 1 - m_latticeCoord[X] )  +  c111 *  m_latticeCoord[X];
 
             // Linear interpolation in y direction
-            const floatType c0 = c00 * ( 1 - m_latticeCoord[Y] ) + c10 * m_latticeCoord[Y],
-                            c1 = c01 * ( 1 - m_latticeCoord[Y] ) + c11 * m_latticeCoord[Y];
+            const floatType c0 = c00 * ( 1 - m_latticeCoord[Y] )  +  c10 * m_latticeCoord[Y],
+                            c1 = c01 * ( 1 - m_latticeCoord[Y] )  +  c11 * m_latticeCoord[Y];
 
             // Linear interpolation in z direction
-            const floatType c = c0 * ( 1 - m_latticeCoord[Z] ) + c1 * m_latticeCoord[Z];
+            const floatType c = c0 * ( 1 - m_latticeCoord[Z] )  +  c1 * m_latticeCoord[Z];
 
             return c;
         }
 
+        const fVector3& Coordinates() const
+        { return m_probePoint; }
+
+        floatType Coordinate( const intType axis ) const
+        { return m_probePoint( axis ); }
+
     private:
-        EnumVector<Axis, iVector2> m_latticeIndex;  // Index of lattice points to itnerpolate from
+        fVector3 m_probePoint;
+        EnumVector<Axis, iVector2> m_latticeIndex;    // Index of lattice points to itnerpolate from
         EnumVector<Axis, floatType> m_latticeCoord;   // Normalised coordinates in the lattice
     
 };
