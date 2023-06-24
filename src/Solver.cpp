@@ -4,6 +4,7 @@
 #include "SweepTransformations.h"
 #include "FiniteVolume.h"
 #include "ConvergenceLogger.h"
+#include "FieldProbe.h"
 #include "StaggerIndexing.h"
 #include "Utils.h"
 
