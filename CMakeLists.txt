@@ -70,7 +70,11 @@ include_directories(include)
 # Add libraries
 include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings
 add_subdirectory(libraries/fmt-10.0.0)
-add_subdirectory(libraries/eigen-3.4.0)
+
+# Eigen library, need to do it this way to not get warnings from it
+add_library(eigen INTERFACE)
+target_sources(eigen INTERFACE libraries/eigen-3.4.0)
+target_include_directories(eigen SYSTEM INTERFACE libraries/eigen-3.4.0)
 
 add_subdirectory(src)
 add_subdirectory(tests)
