@@ -54,7 +54,6 @@ void BoundaryFaceVelocitiy( ArrayAllocator<Fields, array3D> &faceVelocities,
     using BC = BoundaryConditions::ENUMDATA;
     
     Axis::ENUMDATA axis = BoundaryPatchAxis[ boundaryPatch ];
-    Fields::ENUMDATA axisVel = AxisVelocity[ axis ];
     
     static constexpr arrayIndex3D offsets = {nGhost, nGhost, nGhost};
     arrayIndex3D extents = {mesh.nCells(Axis::X), mesh.nCells(Axis::Y), mesh.nCells(Axis::Z)};

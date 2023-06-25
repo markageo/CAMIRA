@@ -200,7 +200,7 @@ namespace
                            EnumVector<Fields, floatType> &residualsInitialInv,
                            const intType nIterations )
     {
-        if (nIterations == 0) {
+        if (nIterations == 1) {
 
             EnumFor<Fields>([&](Fields::ENUMDATA field) {
                 if ( residuals[field] != 0 ) { // Division by zero
@@ -229,7 +229,6 @@ namespace
                 
         } );
         return met;
-
     }
 
 } // end anonymous namespace
@@ -507,8 +506,7 @@ public:
         m_kS[W] += CoeffIndex[Wstag];
 
         // Solver loop
-        intType nIterations = 0;
-        while (nIterations < m_maxIterations)
+        for ( intType nIterations = 1; nIterations <= m_maxIterations; nIterations++ )
         {
             EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] = 0.0f; });
 
@@ -518,7 +516,6 @@ public:
             // Normalise residuals
             EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] /= static_cast<floatType>(m_ni); } );
             RelativeResidual( m_residuals, m_residualsInitialInv, nIterations );
-            nIterations++;
 
             // Check residual
             if (MetResidualTolerence(m_residuals, m_maxResiduals)) {
@@ -665,8 +662,7 @@ public:
         m_kS[W] += CoeffIndex[Wstag];
 
         // Solver loop
-        intType nIterations = 0;
-        while (nIterations < m_maxIterations)
+        for ( intType nIterations = 1; nIterations <= m_maxIterations; nIterations++ )
         {
             EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] = 0.0f; } );
 
@@ -676,7 +672,6 @@ public:
             // Normalise residuals
             EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] /= static_cast<floatType>(m_ni * m_nj); } );
             RelativeResidual(m_residuals, m_residualsInitialInv, nIterations);
-            nIterations++;
 
             // Check residual tolerence
             if ( MetResidualTolerence(m_residuals, m_maxResiduals) ) {
@@ -819,8 +814,7 @@ public:
         using enum Axis::ENUMDATA;
         using enum TransportCoefficients::ENUMDATA;
 
-        intType nIterations = 0;
-        while (nIterations < m_maxIterations)
+        for ( intType nIterations = 1; nIterations <= m_maxIterations; nIterations++ )
         {
 
             // Reset residuals
@@ -832,7 +826,6 @@ public:
             // Normalise residuals
             EnumFor<Fields>( [&] (Fields::ENUMDATA field) { m_residuals[field] /= static_cast<floatType>(m_ni * m_nj * m_nk); });
             RelativeResidual(m_residuals, m_residualsInitialInv, nIterations);
-            nIterations++;
 
             // Check residual tolerence
             if ( MetResidualTolerence(m_residuals, m_maxResiduals) ) {
@@ -950,7 +943,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
 
     EnumVector<Fields, floatType> residualsOuter, residualsOuterInitialInv;
     floatType massFluxResidual;
-    ConvergenceLogger logger("convergence_history.csv", axisTransformation);
+    ResidualLogFile logger("convergence_history.csv", axisTransformation);
 
     // Instantiate linear solver, this holds references to the fields
     LinearSolver linearSolver(fields, fieldsOld, fvCoeffs, linearSolverSettings);
@@ -958,10 +951,12 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
     // Outer iterations
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
+        linearSolver.UpdateState();
         linearSolver.Solve();
-        UpdateFaceVelocities(faceVelocities, mesh, fields, inputData);
 
-        // Update residuals
+        UpdateFaceVelocities(faceVelocities, mesh, fields, inputData);
+        UpdateFVCoefficients(fvCoeffs, mesh, faceVelocities, inputData);
+        
         residualsOuter = L1ArrayDiff(fields, fieldsOld);
         massFluxResidual = BoundaryMassFluxResidual(faceVelocities, mesh);
         RelativeResidual(residualsOuter, residualsOuterInitialInv, nOuterIterations);
@@ -976,10 +971,7 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
                         << "\n\n";
             break;
         }
-
-        // Update nonlinear coefficients
-        UpdateFVCoefficients(fvCoeffs, mesh, faceVelocities, inputData);
-        linearSolver.UpdateState();
+        
     }
 }
 
