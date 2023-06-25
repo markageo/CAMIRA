@@ -3,7 +3,7 @@
 #include "InputProcessing.h"
 #include "SweepTransformations.h"
 #include "FiniteVolume.h"
-#include "ConvergenceLogger.h"
+#include "ConvergenceLogging.h"
 #include "FieldProbe.h"
 #include "StaggerIndexing.h"
 #include "Utils.h"
@@ -943,7 +943,9 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
 
     EnumVector<Fields, floatType> residualsOuter, residualsOuterInitialInv;
     floatType massFluxResidual;
-    ResidualLogFile logger("convergence_history.csv", axisTransformation);
+
+    ResidualLogFile residualsLogFile("convergence_history.csv", axisTransformation);
+    ConsoleLog consoleLog( axisTransformation );
 
     // Instantiate linear solver, this holds references to the fields
     LinearSolver linearSolver(fields, fieldsOld, fvCoeffs, linearSolverSettings);
@@ -963,8 +965,8 @@ void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
 
         fieldsOld = fields;
 
-        logger.WriteResidualsToScreen(residualsOuter, massFluxResidual, nOuterIterations);
-        logger.WriteResidualsToFile(residualsOuter, massFluxResidual, nOuterIterations);
+        consoleLog.WriteResiduals(residualsOuter, massFluxResidual, nOuterIterations);
+        residualsLogFile.WriteData(residualsOuter, massFluxResidual, nOuterIterations);
 
         if (MetResidualTolerence(residualsOuter, maxOuterResiduals)) {
             std::cout << "*** OUTER ITERATIONS CONVERGED ***"
