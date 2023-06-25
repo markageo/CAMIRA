@@ -39,7 +39,7 @@ class ConvergenceFile
         {
             const int nArgs = sizeof...(args);
             int i = 0;
-
+        
             // Fold expression to loop through args. This is needed since each arg can have a different type
             ( [&] {
 
@@ -48,7 +48,7 @@ class ConvergenceFile
                 if ( i != nArgs )
                     m_fileStream << ", ";
 
-            } , ... )
+            } (), ... );
 
             m_fileStream << std::endl;  // flush to write immediately to file
         }
@@ -173,6 +173,45 @@ class ProbeLogFile
         EnumVector< Fields, F > m_userFields;
 };
 
+
+
+
+
+class ConsoleLog
+{
+    using F = Fields::ENUMDATA;
+
+    public:
+        ConsoleLog( const AxisTransformationMap &axisTransformation,
+                    const int precision = 6 ) :
+            m_precision( precision )
+        {
+            // Store the mapped fields
+            EnumFor<Axis>( [&] ( Axis::ENUMDATA userAxis) {
+                m_userFields[ AxisVelocity[ userAxis ] ] = AxisVelocity[ axisTransformation.CodeAxis( userAxis ) ];
+            } );
+            m_userFields[F::P] = F::P;
+            
+            std::cout << std::setprecision( m_precision ) << std::scientific;
+        }
+
+        void WriteResiduals( const EnumVector<Fields, floatType> &residuals, 
+                             const floatType massFluxResidual,
+                             const intType nIterations )
+        {
+            std::cout << "iteration: " << std::left << std::setw(5) << nIterations << ", "
+                      << "U residual: " << residuals[ m_userFields[F::U] ] << ",   "
+                      << "V residual: " << residuals[ m_userFields[F::V] ] << ",   "
+                      << "W residual: " << residuals[ m_userFields[F::W] ] << ",   "
+                      << "P residual: " << residuals[ m_userFields[F::P] ] << ",   "
+                      << "Mass residual: " << massFluxResidual << "\n";
+        }
+
+
+    private:
+        EnumVector< Fields, F > m_userFields;
+        int m_precision;
+};
 
 }   // end namespace CFD
 
