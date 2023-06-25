@@ -59,11 +59,11 @@ void AxisTransformationMap::Set( const BoundaryPatches::ENUMDATA codePatch,
 
 
 // Code patch from user patch
-const BoundaryPatches::ENUMDATA &AxisTransformationMap::CodePatch(const BP userPatch) const 
+BoundaryPatches::ENUMDATA AxisTransformationMap::CodePatch(const BP userPatch) const 
 {   return m_userBoundaryPatches[ userPatch ]; }
 
 // Code axis from user axis
-const Axis::ENUMDATA &AxisTransformationMap::CodeAxis(const A userAxis) const
+Axis::ENUMDATA AxisTransformationMap::CodeAxis(const A userAxis) const
 { 
     BP userPatch = PositivePatch[ userAxis ];
     BP codePatch = CodePatch( userPatch );
@@ -84,11 +84,11 @@ bool AxisTransformationMap::IsCodeAxisReversed( const A codeAxis ) const
 
 
 // User patch from code patch
-const BoundaryPatches::ENUMDATA &AxisTransformationMap::UserPatch(const BP codePatch) const
+BoundaryPatches::ENUMDATA AxisTransformationMap::UserPatch(const BP codePatch) const
 {   return m_codeBoundaryPatches[ codePatch ]; }
 
 // User axis from code axis
-const Axis::ENUMDATA &AxisTransformationMap::UserAxis(const A codeAxis) const
+Axis::ENUMDATA AxisTransformationMap::UserAxis(const A codeAxis) const
 {
     BP codePatch = PositivePatch[ codeAxis ];
     BP userPatch = UserPatch( codePatch );
