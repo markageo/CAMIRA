@@ -29,7 +29,7 @@ enum class GridTypes {
 
 
 // Type aliases
-using sizeType = int long;
+using sizeType = long;
 template<typename T> using gridVectorType = std::vector<const T *>;
 template<typename T> using scalarMapType = std::map<std::string, const T *>;
 template<typename T> using vectorMapType = std::map<std::string, std::vector<const T *>>;
@@ -103,7 +103,7 @@ VTKWriterConfig::VTKWriterConfig(sizeType dimX, sizeType dimY, sizeType dimZ) :
 
 // Dimensions
 sizeType VTKWriterConfig::dim(sizeType i) const
-{ return m_dims[i]; }
+{ return m_dims[ static_cast<size_t>(i) ]; }
 
 const std::array<sizeType, 3> &VTKWriterConfig::dims() const
 { return m_dims; } 
@@ -351,7 +351,7 @@ void VTKWriter<T>::WriteDataArray(const std::vector<const T *> dataPtrVec,
 template<typename T>
 void VTKWriter<T>::WriteDatasetRectilinearGrid()
 {
-    auto WriteAxis = [&] ( const std::string &axisName, const int dim ) {
+    auto WriteAxis = [&] ( const std::string &axisName, const size_t dim ) {
         m_outputFileStream << axisName
                            << " " << m_gridDims[ dim ]
                            << " " << m_outputDataType

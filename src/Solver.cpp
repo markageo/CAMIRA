@@ -170,30 +170,6 @@ namespace
 
 
 
-    // Calculate global momentum flux residual at the domain boundary
-    [[ maybe_unused ]]
-    floatType BoundaryMomentumFluxResidual( const ArrayAllocator<Fields, array3D> &faceVelocities,
-                                            const Mesh &mesh )
-    {
-        floatType momentumFluxResidual = 0.0f;
-
-        EnumFor<Axis>([&](Axis::ENUMDATA axis) {
-
-            // Positive face, area normal is in positive direction
-            auto faceFluxesPositive = faceVelocities[AxisVelocity[axis]].chip( mesh.nCells(axis), axis ) * mesh.cellFaceAreas[axis];
-            momentumFluxResidual += static_cast<array0D>( faceFluxesPositive.sum() )(0);
-
-            // Negative face, area normal is in negative direction
-            auto faceFluxesNegative = -faceVelocities[AxisVelocity[axis]].chip( 0, axis ) * mesh.cellFaceAreas[axis];
-            momentumFluxResidual += static_cast<array0D>( faceFluxesNegative.sum() )(0);
-
-        });
-
-        return momentumFluxResidual;
-    }
-
-
-
     // Turn the residual into a relative residual
     [[ maybe_unused ]]
     void RelativeResidual( EnumVector<Fields, floatType> &residuals,
@@ -779,7 +755,6 @@ public:
                   const FVCoefficients &fvCoeffs, 
                   const InputData::LinearSolverSettings &linearSolverSettings) : 
                     m_fields( fields ),
-                    m_fieldsOld( fieldsOld ),
                     m_maxIterations( linearSolverSettings.maxIterations ),
                     m_maxResiduals( linearSolverSettings.maxResiduals ),
                     m_relaxation( linearSolverSettings.relaxation ),
@@ -847,7 +822,6 @@ public:
 private:
 
     ArrayAllocator<Fields, array3D> &m_fields;
-    const ArrayAllocator<Fields, array3D> &m_fieldsOld;
     const intType m_maxIterations;
     const EnumVector<Fields, floatType> m_maxResiduals;
     const EnumVector<Fields, floatType> m_relaxation;

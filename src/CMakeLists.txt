@@ -10,12 +10,13 @@ add_library(libs InputParser.cpp
 # Model library
 add_library(model INTERFACE)
 
-# Model library
-target_link_libraries(model INTERFACE compiler_flags)
-target_link_libraries(libs PUBLIC compiler_flags)
-
 target_link_libraries(libs PUBLIC fmt::fmt)
 target_link_libraries(libs PUBLIC eigen)
+
+# Model library
+target_link_libraries(model INTERFACE compiler_flags)
+target_link_libraries(libs PRIVATE compiler_flags)
+
 
 target_link_libraries(model INTERFACE libs)
 target_link_libraries(model INTERFACE fmt::fmt)
