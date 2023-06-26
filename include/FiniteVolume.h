@@ -92,10 +92,10 @@ void RemoveGhostCells( array3D &, const intType);
 // -------------------------------------- Definition in FaceVelocities.cpp -------------------------------------- //
 
 // Allocate and initialise face velocities
-ArrayAllocator<Fields, array3D> InitialiseFaceVelocities(const Mesh &, const ArrayAllocator<Fields, array3D> &, const InputData &);
+EnumVector<Axis, array3D> InitialiseFaceFluxes(const Mesh &, const EnumVector<Axis, array3D> &, const InputData &);
 
 // Update face velocities
-void UpdateFaceVelocities( ArrayAllocator<Fields, array3D> &, const Mesh &, const ArrayAllocator<Fields, array3D> &, const InputData &);
+void UpdateFaceFluxes( EnumVector<Axis, array3D> &, const Mesh &, const EnumVector<Axis, array3D> &, const InputData &);
 
 
 
