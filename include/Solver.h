@@ -9,7 +9,7 @@
 namespace CFD
 {
 
-    void SweepSolve(CFD::ArrayAllocator<CFD::Fields, CFD::array3D> &, const CFD::Mesh &, const CFD::InputData &, const AxisTransformationMap &);
+    void SweepSolve(CellFields &, const Mesh &, const CFD::InputData &, const AxisTransformationMap &);
 
 }   // end namespace CFD    
 

@@ -22,7 +22,7 @@ int main(int argc, char const *argv[])
     \*-------------------------------------------------------------------------------------*/
 
     CFD::InputData inputData = CFD::InputDataFromCommandLine(argc, argv);
-    
+
     CFD::AxisTransformationMap axisTransformation = CFD::TransformUserInputData( inputData );
 
 
@@ -43,6 +43,8 @@ int main(int argc, char const *argv[])
     TIC("Solver");
     // CFD::SweepSolve(fields, mesh, inputData, axisTransformation);
     TOC();
+
+    CFD::EnumVector<CFD::Axis, CFD::array3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, inputData);
 
 
     /*-------------------------------------------------------------------------------------*\

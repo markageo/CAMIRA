@@ -897,7 +897,7 @@ private:
 
 
 
-void SweepSolve( ArrayAllocator<Fields, array3D> &fields,
+void SweepSolve( CellFields &fields,
                  const Mesh &mesh,
                  const InputData &inputData,
                  const AxisTransformationMap &axisTransformation)
