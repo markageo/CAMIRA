@@ -55,10 +55,10 @@ Mesh {
 
 InitialConditions
 {
-    u = 0
-    v = 0
-    w = 0
-    p = 0
+    u = 1
+    v = 1.2
+    w = 3
+    p = 0.4
 }
 
 

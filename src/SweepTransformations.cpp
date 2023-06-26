@@ -220,19 +220,19 @@ namespace
     }
 
 
-
-    // Transform an EnumVector of fields data to code coordinates. Only transforms the momentum equations part.
+    
+    // Transform user FieldData struct to code coordinates. Only transforms the momentum equations part.
     template< typename T >
-    void TransformFieldVectorToCode( EnumVector<Fields, T> &fieldsVector,
-                                     const AxisTransformationMap& axisTransformation )
+    void TransformFieldDataToCode( InputData::FieldData<T> &fieldData,
+                                   const AxisTransformationMap& axisTransformation )
     {
 
         // Create temporary copy to move data from 
-        EnumVector<Fields, T> userFieldsVector = fieldsVector;
+        InputData::FieldData<T> userFieldData = fieldData;
 
         EnumFor<Axis>([&] (Axis::ENUMDATA codeAxis) { // Code axis
 
-            fieldsVector[ AxisVelocity[codeAxis] ] = userFieldsVector[ AxisVelocity[ axisTransformation.UserAxis(codeAxis) ] ];
+            fieldData.U[ codeAxis ] = userFieldData.U[ axisTransformation.UserAxis(codeAxis) ];
 
         } );
     }
@@ -243,36 +243,32 @@ namespace
     void TransformBoundaryConditions( InputData &inputData, 
                                       const AxisTransformationMap &axisTransformation )
     {
-        using BP = CFD::BoundaryPatches::ENUMDATA;
-        using F = CFD::Fields::ENUMDATA;
-        using A = CFD::Axis::ENUMDATA;
-
-        InputData::BoundaryConditionData &boundaryConditions = inputData.boundaryConditions;
+        auto &boundaryConditions = inputData.boundaryConditions;
 
         // Temporary for boundary conditions as user specifies them
-        InputData::BoundaryConditionData boundaryConditionsUser = boundaryConditions;
+        auto boundaryConditionsUser = boundaryConditions;
         fVector3 domainSizeUser = inputData.domainSize;
         
-        EnumFor<Axis>( [&] (A codeAxis) {
+        EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
 
             inputData.domainSize( codeAxis ) = domainSizeUser( axisTransformation.UserAxis( codeAxis ) ); 
 
         } );
 
-
-        // Transform just the boundary conditions
-        EnumFor<Fields>( [&] (F field) {
             
-            EnumFor<BoundaryPatches>( [&] (BP patch) { 
+        // Transform boundary condition directions
+        EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA patch) { 
 
-                boundaryConditions[field][patch] = boundaryConditionsUser[field][ axisTransformation.UserPatch( patch ) ];
-
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                boundaryConditions.U[axis][patch] = boundaryConditionsUser.U[axis][ axisTransformation.UserPatch( patch ) ];
             } );
+            boundaryConditions.P[patch] = boundaryConditionsUser.P[ axisTransformation.UserPatch( patch ) ];
 
         } );
 
+
         // Now the momentum directions
-        TransformFieldVectorToCode( boundaryConditions, axisTransformation );
+        TransformFieldDataToCode( boundaryConditions, axisTransformation );
     }
 
 
@@ -323,7 +319,7 @@ namespace
     void TransformInitialConditions( InputData &inputData,
                                      const AxisTransformationMap &axisTransformation )
     {
-        TransformFieldVectorToCode( inputData.initialConditions, axisTransformation );
+        TransformFieldDataToCode( inputData.initialConditions, axisTransformation );
     }
 
 
@@ -331,10 +327,10 @@ namespace
     void TransformSolver( InputData &inputData,
                           const AxisTransformationMap &axisTransformation )
     {
-        TransformFieldVectorToCode( inputData.schemes.implicitRelaxation      , axisTransformation );
-        TransformFieldVectorToCode( inputData.linearSolverSettings.relaxation , axisTransformation );
-        TransformFieldVectorToCode( inputData.linearSolverSettings.planeSolverSettings.relaxation, axisTransformation );
-        TransformFieldVectorToCode( inputData.linearSolverSettings.planeSolverSettings.lineSolverSettings.relaxation, axisTransformation );
+        TransformFieldDataToCode( inputData.schemes.implicitRelaxation      , axisTransformation );
+        TransformFieldDataToCode( inputData.linearSolverSettings.relaxation , axisTransformation );
+        TransformFieldDataToCode( inputData.linearSolverSettings.planeSolverSettings.relaxation, axisTransformation );
+        TransformFieldDataToCode( inputData.linearSolverSettings.planeSolverSettings.lineSolverSettings.relaxation, axisTransformation );
     }
 
 }   // end anonymous namespace
