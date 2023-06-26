@@ -22,6 +22,7 @@ int main(int argc, char const *argv[])
     \*-------------------------------------------------------------------------------------*/
 
     CFD::InputData inputData = CFD::InputDataFromCommandLine(argc, argv);
+    
     CFD::AxisTransformationMap axisTransformation = CFD::TransformUserInputData( inputData );
 
 
@@ -32,15 +33,15 @@ int main(int argc, char const *argv[])
     using F = CFD::Fields::ENUMDATA;
 
     TIC("Meshing");
-    CFD::Mesh mesh(inputData);
+    CFD::Mesh mesh( inputData );
     TOC();
 
     TIC("Field Allocation");
-    CFD::ArrayAllocator<CFD::Fields, CFD::array3D> fields = CFD::InitialiseFields(mesh, inputData);
+    CFD::CellFields fields = CFD::InitialiseFields( mesh, inputData );
     TOC();
 
     TIC("Solver");
-    CFD::SweepSolve(fields, mesh, inputData, axisTransformation);
+    // CFD::SweepSolve(fields, mesh, inputData, axisTransformation);
     TOC();
 
 
@@ -48,33 +49,33 @@ int main(int argc, char const *argv[])
                                          Post-Processing
     \*-------------------------------------------------------------------------------------*/
 
-    // Undo the boundary condition transformation
-    CFD::TransformToUserCoordinates(mesh, fields, axisTransformation);
+    // // Undo the boundary condition transformation
+    // CFD::TransformToUserCoordinates(mesh, fields, axisTransformation);
 
-    // Remove ghost cells from the fields
-    CFD::EnumFor<CFD::Fields>([&](CFD::Fields::ENUMDATA field)
-                              { CFD::RemoveGhostCells(fields[field], CFD::nGhost); });
+    // // Remove ghost cells from the fields
+    // CFD::EnumFor<CFD::Fields>([&](CFD::Fields::ENUMDATA field)
+    //                           { CFD::RemoveGhostCells(fields[field], CFD::nGhost); });
 
 
     /*-------------------------------------------------------------------------------------*\
                                              Output
     \*-------------------------------------------------------------------------------------*/
 
-    using AX = CFD::Axis::ENUMDATA;
+    // using AX = CFD::Axis::ENUMDATA;
 
-    // Data to pass to writer
-    VTK::VTKWriterConfig config( mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z] );
-        config.SetWriteMode( VTK::WriteModes::ASCII );
-        config.SetGridType( VTK::GridTypes::CELL_DATA );
-    VTK::gridVectorType<CFD::floatType> gridVector = {mesh.cellFaces[AX::X].data(), mesh.cellFaces[AX::Y].data(), mesh.cellFaces[AX::Z].data()};
-    VTK::scalarMapType<CFD::floatType> scalarMap = { {"Pressure", fields[F::P].data()} };
-    VTK::vectorMapType<CFD::floatType> vectorMap = { {"Velocity", {fields[F::U].data(), fields[F::V].data(), fields[F::W].data()}} };
+    // // Data to pass to writer
+    // VTK::VTKWriterConfig config( mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z] );
+    //     config.SetWriteMode( VTK::WriteModes::ASCII );
+    //     config.SetGridType( VTK::GridTypes::CELL_DATA );
+    // VTK::gridVectorType<CFD::floatType> gridVector = {mesh.cellFaces[AX::X].data(), mesh.cellFaces[AX::Y].data(), mesh.cellFaces[AX::Z].data()};
+    // VTK::scalarMapType<CFD::floatType> scalarMap = { {"Pressure", fields[F::P].data()} };
+    // VTK::vectorMapType<CFD::floatType> vectorMap = { {"Velocity", {fields[F::U].data(), fields[F::V].data(), fields[F::W].data()}} };
 
-    // Write output
-    VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
-    TIC("Writer");
-    writer.WriteData("fields.vtk", "CFD simulation");
-    TOC();
+    // // Write output
+    // VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
+    // TIC("Writer");
+    // writer.WriteData("fields.vtk", "CFD simulation");
+    // TOC();
 
 // Display profiling information
 #ifdef PROFILING
