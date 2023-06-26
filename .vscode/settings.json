@@ -84,6 +84,7 @@
         "*.ipp": "cpp",
         "core": "cpp",
         "specialfunctions": "cpp",
-        "hash_map": "cpp"
+        "hash_map": "cpp",
+        "alignedvector3": "cpp"
     }
 }

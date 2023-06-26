@@ -4,7 +4,7 @@ add_library(libs InputParser.cpp
                  SweepTransformations.cpp
                  FiniteVolumeStructures.cpp
                  FaceVelocities.cpp
-                #  FiniteVolumeCoefficients.cpp
+                 FiniteVolumeCoefficients.cpp
                 #  Solver.cpp)
                 )
 

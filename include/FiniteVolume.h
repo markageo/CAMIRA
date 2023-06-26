@@ -104,10 +104,10 @@ void UpdateFaceFluxes( EnumVector<Axis, array3D> &, const Mesh &, const EnumVect
 // ---------------------------------- Definition in FiniteVolumeCoefficients.cpp --------------------------------- //
 
 // Allocate and initialise finite volume coefficients
-FVCoefficients InitialiseFVCoefficients(const Mesh &, const ArrayAllocator<Fields, array3D> &, const InputData &);
+FVCoefficients InitialiseFVCoefficients(const Mesh &, const EnumVector<Axis, array3D> &, const InputData &);
 
 // Update finite volume coefficients (Picard linearisation)
-void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const ArrayAllocator<Fields, array3D> &, const InputData &);
+void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const EnumVector<Axis, array3D> &, const InputData &);
 
 
 

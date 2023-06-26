@@ -45,6 +45,7 @@ int main(int argc, char const *argv[])
     TOC();
 
     CFD::EnumVector<CFD::Axis, CFD::array3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, inputData);
+    CFD::FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, faceFluxes, inputData);
 
 
     /*-------------------------------------------------------------------------------------*\
