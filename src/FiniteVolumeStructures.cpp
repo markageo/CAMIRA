@@ -330,11 +330,11 @@ std::vector< TransportCoefficients::ENUMDATA > MomentumVelocityEnums( const Axis
                     break;
 
                 case Y:
-                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
+                    return {};
                     break;
 
                 case Z:
-                    return {};
+                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
                     break;
             }
             break;

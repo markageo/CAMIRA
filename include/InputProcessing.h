@@ -49,7 +49,8 @@ struct InputData
         BoundaryConditions::ENUMDATA type;
         floatType value;    
     };
-    FieldData< EnumVector< BoundaryPatches, BoundaryConditionData  > > boundaryConditions;
+    using FieldBoundaryConditions =  FieldData< EnumVector< BoundaryPatches, BoundaryConditionData  > >;
+    FieldBoundaryConditions boundaryConditions;
 
 
     // Initial conditions
