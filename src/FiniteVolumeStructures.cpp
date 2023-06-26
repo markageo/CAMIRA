@@ -269,14 +269,7 @@ Mesh::Mesh(const InputData &inputData) :
     };
 
 
-/*-------------------------------------------------------------------------------------*\
-                                        CellFields
-\*-------------------------------------------------------------------------------------*/
 
-CellFields::CellFields( const Mesh &mesh ) :
-    U( array3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero() ),
-    P( array3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero() )
-{}
 
 /*-------------------------------------------------------------------------------------*\
                                     FVCoefficients
@@ -440,21 +433,20 @@ void RemoveGhostCells( array3D &array,
 }
 
 
-CellFields InitialiseFields( const Mesh &mesh, 
-                             const InputData &inputData )
+FieldData<array3D> InitialiseFields( const Mesh &mesh, 
+                                     const InputData &inputData )
 {
-    // Create fields, 
-    CellFields fields( mesh );
+
+    FieldData<array3D> fields;
+    fields.U = EnumVector<Axis, array3D>( array3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero() );
+    fields.P = array3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero();
 
     arrayIndex3D offsets = {nGhost, nGhost, nGhost},
                  extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
 
     // Set initial values
-    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        fields.U[axis].slice( offsets, extents ).setConstant( inputData.initialConditions.U[axis] );  // Don't set the ghost cells
-    } );
-    fields.P.slice( offsets, extents ).setConstant( inputData.initialConditions.P );
-
+    ForAllFieldData( [&] (intType i) { fields[i].slice( offsets, extents ).setConstant( inputData.initialConditions[i] );  } );
+    
     return fields;
 }
 

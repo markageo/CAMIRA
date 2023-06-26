@@ -37,15 +37,12 @@ int main(int argc, char const *argv[])
     TOC();
 
     TIC("Field Allocation");
-    CFD::CellFields fields = CFD::InitialiseFields( mesh, inputData );
+    CFD::FieldData fields = CFD::InitialiseFields( mesh, inputData );
     TOC();
 
     TIC("Solver");
-    // CFD::SweepSolve(fields, mesh, inputData, axisTransformation);
+    CFD::SweepSolve(fields, mesh, inputData, axisTransformation);
     TOC();
-
-    CFD::EnumVector<CFD::Axis, CFD::array3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, inputData);
-    CFD::FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, faceFluxes, inputData);
 
 
     /*-------------------------------------------------------------------------------------*\

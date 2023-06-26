@@ -36,14 +36,6 @@ struct InputData
     };
     EnumVector< Axis, std::vector< MeshSegment > > meshSegments;
 
-
-    // A general struct for holding values corresponding to different fields
-    template < typename dataType >
-    struct FieldData {
-        EnumVector<Axis, dataType> U;
-        dataType P;
-    };
-
     // Boundary conditions
     struct BoundaryConditionData {
         BoundaryConditions::ENUMDATA type;

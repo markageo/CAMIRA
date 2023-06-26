@@ -148,7 +148,7 @@ struct TransportCoefficients
 
 // For looping through enum and applying lambda to each element
 template<typename enumStruct, typename L>
-void EnumFor(L&& f)
+void EnumFor( L&& f )
 {
     static_assert(std::is_same<enumStruct, Axis                 >::value ||
                   std::is_same<enumStruct, Fields               >::value ||
@@ -303,6 +303,9 @@ struct dimTypes<B>
 };
 
 }   //  end namespace Internal
+
+
+
 
 
 // Wrapper for std::vector that can only be indexed using enums
@@ -483,6 +486,39 @@ class ArrayAllocator
         std::vector< std::unique_ptr<arrayType> > m_coeffPointers;
 
 };
+
+
+
+
+
+// A general struct for holding values corresponding to different fields
+template < typename dataType >
+struct FieldData {
+    EnumVector<Axis, dataType> U;
+    dataType P;
+
+    template< typename L >
+    friend void ForAllFieldData( L&& );
+
+    static constexpr intType nData = Axis::count + 1;   // This doesnt depend on datatype 
+
+    dataType &operator[]( const intType idx )
+    { return *m_dataPointers[idx]; }
+
+    const dataType &operator[]( const intType idx ) const
+    { return *m_dataPointers[idx]; }
+
+    private:
+        std::array< dataType*, nData > m_dataPointers{ &U[Axis::X], &U[Axis::Y], &U[Axis::Z], &P };
+};
+
+template< typename L >
+void ForAllFieldData( L&& f )
+{
+    for ( intType i = 0; i != FieldData<int>::nData; i++ ) {
+        f( i );
+    }
+}
 
 
 }   // end namespace CFD

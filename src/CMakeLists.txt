@@ -5,8 +5,7 @@ add_library(libs InputParser.cpp
                  FiniteVolumeStructures.cpp
                  FaceVelocities.cpp
                  FiniteVolumeCoefficients.cpp
-                #  Solver.cpp)
-                )
+                 Solver.cpp)
 
 # Model library
 add_library(model INTERFACE)
