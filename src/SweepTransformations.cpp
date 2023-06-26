@@ -223,12 +223,12 @@ namespace
     
     // Transform user FieldData struct to code coordinates. Only transforms the momentum equations part.
     template< typename T >
-    void TransformFieldDataToCode( InputData::FieldData<T> &fieldData,
+    void TransformFieldDataToCode( FieldData<T> &fieldData,
                                    const AxisTransformationMap& axisTransformation )
     {
 
         // Create temporary copy to move data from 
-        InputData::FieldData<T> userFieldData = fieldData;
+        FieldData<T> userFieldData = fieldData;
 
         EnumFor<Axis>([&] (Axis::ENUMDATA codeAxis) { // Code axis
 

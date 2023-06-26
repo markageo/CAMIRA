@@ -76,14 +76,9 @@ class ResidualLogFile
         ResidualLogFile( const std::string &filename, 
                          const AxisTransformationMap &axisTransformation,
                          const int precision = 6 ) :
+            m_AT( axisTransformation ),
             m_convergenceFile( filename, precision )
-        {
-            // Store the mapped fields
-            EnumFor<Axis>( [&] ( Axis::ENUMDATA userAxis) {
-                m_userFields[ AxisVelocity[ userAxis ] ] = AxisVelocity[ axisTransformation.CodeAxis( userAxis ) ];
-            } );
-            m_userFields[F::P] = F::P;
-            
+        {            
             // Comment description of file
             m_convergenceFile.WriteCommentLine( "Residuals convergence history" );
 
@@ -97,24 +92,24 @@ class ResidualLogFile
             
         }
 
-        void WriteData( const EnumVector<Fields, floatType> &residuals, 
+        void WriteData( const FieldData<floatType> &residuals, 
                         const floatType massFluxResidual, 
                         const intType nIterations )
         {
-            using enum Fields::ENUMDATA;
+            using enum Axis::ENUMDATA;
 
             m_convergenceFile.WriteLine( nIterations,
-                                         residuals[ m_userFields[U] ], 
-                                         residuals[ m_userFields[V] ],
-                                         residuals[ m_userFields[W] ], 
-                                         residuals[ m_userFields[P] ], 
+                                         residuals.U[ m_AT.CodeAxis(X) ], 
+                                         residuals.U[ m_AT.CodeAxis(Y) ],
+                                         residuals.U[ m_AT.CodeAxis(Z) ], 
+                                         residuals.P                    , 
                                          massFluxResidual );
         }
 
 
     private:
+        AxisTransformationMap m_AT;
         ConvergenceFile m_convergenceFile;
-        EnumVector< Fields, F > m_userFields;
 };
 
 
@@ -130,20 +125,17 @@ class ProbeLogFile
                       const AxisTransformationMap &axisTransformation,
                       const FieldProbe &fieldProbe,
                       const int precision = 6 ) :
+            m_AT( axisTransformation ),
             m_convergenceFile( filename, precision )
-        {
-            // Store the mapped fields
-            EnumFor<Axis>( [&] ( Axis::ENUMDATA userAxis) {
-                m_userFields[ AxisVelocity[ userAxis ] ] = AxisVelocity[ axisTransformation.CodeAxis( userAxis ) ];
-            } );
-            m_userFields[F::P] = F::P;
-            
+        {            
+            using enum Axis::ENUMDATA;
+
             // Comment description of file
             std::string fileDescription = "Probe: '" + fieldProbe.Name() + "', "
                                         + ", Location: (" 
-                                        + std::to_string( fieldProbe.Coordinate(0) ) + ", "
-                                        + std::to_string( fieldProbe.Coordinate(1) ) + ", "
-                                        + std::to_string( fieldProbe.Coordinate(2) ) + ").";
+                                        + std::to_string( fieldProbe.Coordinate( m_AT.CodeAxis(X) ) ) + ", "
+                                        + std::to_string( fieldProbe.Coordinate( m_AT.CodeAxis(Y) ) ) + ", "
+                                        + std::to_string( fieldProbe.Coordinate( m_AT.CodeAxis(Z) ) ) + ").";
             m_convergenceFile.WriteCommentLine( fileDescription );
 
             // Write header
@@ -155,20 +147,21 @@ class ProbeLogFile
             
         }
 
-        void WriteData( const EnumVector<Fields, floatType> &probeValues,  
-                                   const intType nIterations )
+        void WriteData( const FieldData<floatType> &probeValues,  
+                        const intType nIterations )
         {
-            using enum Fields::ENUMDATA;
+            using enum Axis::ENUMDATA;
 
             m_convergenceFile.WriteLine( nIterations,
-                                         probeValues[ m_userFields[U] ], 
-                                         probeValues[ m_userFields[V] ],
-                                         probeValues[ m_userFields[W] ], 
-                                         probeValues[ m_userFields[P] ] );
+                                         probeValues.U[ m_AT.CodeAxis(X) ], 
+                                         probeValues.U[ m_AT.CodeAxis(Y) ],
+                                         probeValues.U[ m_AT.CodeAxis(Z) ], 
+                                         probeValues.P );
         }
 
 
     private:
+        AxisTransformationMap m_AT;
         ConvergenceFile m_convergenceFile;
         EnumVector< Fields, F > m_userFields;
 };
@@ -184,32 +177,28 @@ class ConsoleLog
     public:
         ConsoleLog( const AxisTransformationMap &axisTransformation,
                     const int precision = 6 ) :
+            m_AT( axisTransformation ),
             m_precision( precision )
-        {
-            // Store the mapped fields
-            EnumFor<Axis>( [&] ( Axis::ENUMDATA userAxis) {
-                m_userFields[ AxisVelocity[ userAxis ] ] = AxisVelocity[ axisTransformation.CodeAxis( userAxis ) ];
-            } );
-            m_userFields[F::P] = F::P;
-            
+        {            
             std::cout << std::setprecision( m_precision ) << std::scientific;
         }
 
-        void WriteResiduals( const EnumVector<Fields, floatType> &residuals, 
+        void WriteResiduals( const FieldData<floatType> &residuals, 
                              const floatType massFluxResidual,
                              const intType nIterations )
         {
+            using enum Axis::ENUMDATA;
             std::cout << "iteration: " << std::left << std::setw(5) << nIterations << ", "
-                      << "U residual: " << residuals[ m_userFields[F::U] ] << ",   "
-                      << "V residual: " << residuals[ m_userFields[F::V] ] << ",   "
-                      << "W residual: " << residuals[ m_userFields[F::W] ] << ",   "
-                      << "P residual: " << residuals[ m_userFields[F::P] ] << ",   "
+                      << "U residual: " << residuals.U[ m_AT.CodeAxis(X) ] << ",   "
+                      << "V residual: " << residuals.U[ m_AT.CodeAxis(Y) ] << ",   "
+                      << "W residual: " << residuals.U[ m_AT.CodeAxis(Z) ] << ",   "
+                      << "P residual: " << residuals.P                   << ",   "
                       << "Mass residual: " << massFluxResidual << "\n";
         }
 
 
     private:
-        EnumVector< Fields, F > m_userFields;
+        AxisTransformationMap m_AT;
         int m_precision;
 };
 
