@@ -31,6 +31,15 @@ struct Mesh
 };
 
 
+// Stores fields at cell centers, i.e. cell average
+struct CellFields
+{  
+    CellFields( const Mesh & );
+    EnumVector<Axis, array3D> U;
+    array3D P;
+};
+
+
 // Structure to store finite volume discrete equation coefficients (Picard linearisation)
 struct FVCoefficients
 {
@@ -42,35 +51,36 @@ struct FVCoefficients
     FVCoefficients(const iVector3 &);
 
     struct MomentumEquation {
-        MomentumEquation(const Fields::ENUMDATA, const iVector3 &);
-        ArrayAllocator<TransportCoefficients, array3D> AU, AV, AW;          // Velocity coefficients (LHS)
-        ArrayAllocator<TransportCoefficients, array1D> AP;                  // Pressure coefficients (LHS)
-        array3D B;                                                          // Source Term (RHS)
-        array3D diagCoeffInv;                                               // Inverse of diagonal coefficient
-        EnumVector< Axis, ArrayAllocator<TransportCoefficients, array1D> > diff;    // Diffusion coefficients (LHS)
-        EnumVector< BoundaryPatches, floatType > boundaryDiff, boundaryP;           // Constant terms that come from uniform BC (LHS)
+        MomentumEquation(const Axis::ENUMDATA, const iVector3 &);
+        EnumVector< Axis, ArrayAllocator< TransportCoefficients, array3D > > AU;     // Velocity coefficients (LHS)
+        ArrayAllocator<TransportCoefficients, array1D> AP;                           // Pressure coefficients (LHS)
+        array3D B;                                                                   // Source Term (RHS)
+        array3D diagCoeffInv;                                                        // Inverse of diagonal coefficient
+        EnumVector< Axis, ArrayAllocator<TransportCoefficients, array1D> > diff;     // Diffusion coefficients (LHS)
+        EnumVector< BoundaryPatches, floatType > boundaryDiff, boundaryP;            // Constant terms that come from uniform BC (LHS)
         EnumVector< BoundaryPatches, array2D > boundaryVel;       
         floatType relaxation;
     };
 
     struct ContinuityEquation {
         ContinuityEquation(const iVector3 &);
-        ArrayAllocator<TransportCoefficients, array1D> AU, AV, AW;          // Velocity coefficients (LHS)
-        ArrayAllocator<TransportCoefficients, array3D> AP;                  // Pressure coefficients (LHS)
-        array3D B;                                                          // Source term (RHS)
-        EnumVector< BoundaryPatches, array2D > boundaryP;                   // Constant terms that come from uniform BC (LHS)
+        EnumVector< Axis, ArrayAllocator< TransportCoefficients, array1D > > AU;    // Velocity coefficients (LHS)
+        ArrayAllocator<TransportCoefficients, array3D> AP;                          // Pressure coefficients (LHS)
+        array3D B;                                                                  // Source term (RHS)
+        EnumVector< BoundaryPatches, array2D > boundaryP;                           // Constant terms that come from uniform BC (LHS)
         EnumVector< BoundaryPatches, floatType > boundaryVel;
         floatType relaxation;
     };
 
-    MomentumEquation Umom, Vmom, Wmom;
+    EnumVector<Axis, MomentumEquation> Mom;
     ContinuityEquation Cont;
     iVector3 nCells;
 };
 
 
+
 // Allocate and initialise the fields
-ArrayAllocator<Fields, array3D> InitialiseFields(const Mesh &, const InputData &);
+CellFields InitialiseFields(const Mesh &, const InputData &);
 
 // Remove ghost cells from a 3D array
 void RemoveGhostCells( array3D &, const intType);

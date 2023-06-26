@@ -270,84 +270,105 @@ Mesh::Mesh(const InputData &inputData) :
 
 
 /*-------------------------------------------------------------------------------------*\
+                                        CellFields
+\*-------------------------------------------------------------------------------------*/
+
+CellFields::CellFields( const Mesh &mesh ) :
+    U( array3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero() ),
+    P( array3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero() )
+{}
+
+/*-------------------------------------------------------------------------------------*\
                                     FVCoefficients
 \*-------------------------------------------------------------------------------------*/
 
 namespace
 {
 
-// Return the vector of enums corresponding to the coefficients required to multiply be a variable for a particular equation
-std::vector< TransportCoefficients::ENUMDATA > EquationEnums(const Fields::ENUMDATA equation, 
-                                                             const Fields::ENUMDATA variable)
+std::vector< TransportCoefficients::ENUMDATA > MomentumVelocityEnums( const Axis::ENUMDATA momentumEquation, 
+                                                                      const Axis::ENUMDATA velocity)
 {
-    using F = Fields::ENUMDATA;
+    using enum Axis::ENUMDATA;
     using C = TransportCoefficients::ENUMDATA;
-    switch (equation) {
-        case F::U:  // U momentum equation
-            if        (variable == F::U) {
-                return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
-            } else if (variable == F::V) {
-                return {};
-            } else if (variable == F::W) {
-                return {};
-            } else if (variable == F::P) {
-                return {C::p, C::e, C::w};
+
+    switch ( momentumEquation ) {
+        case X: 
+
+            switch ( velocity ) {
+                case X: 
+                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
+                    break;
+                case Y:
+                    return {};
+                    break;
+                case Z:
+                    return {};
+                    break;
             }
             break;
 
+        case Y: 
 
-        case F::V:  // V momentum equation
-            if        (variable == F::U) {
-                return {};
-            } else if (variable == F::V) {
-                return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
-            } else if (variable == F::W) {
-                return {};
-            } else if (variable == F::P) {
-                return {C::p, C::n, C::s};
+            switch ( velocity ) {
+                case X: 
+                    return {};
+                    break;
+                case Y:
+                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
+                    break;
+                case Z:
+                    return {};
+                    break;
             }
             break;
 
-        case F::W:  // W momentum equation
-            if        (variable == F::U) {
-                return {};
-            } else if (variable == F::V) {
-                return {};
-            } else if (variable == F::W) {
-                return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
-            } else if (variable == F::P) {
-                return {C::p, C::t, C::b};
-            }
-            break;
+        case Z:
 
-        case F::P:  // Continuity equation (not Poisson pressure equation)
-            if        (variable == F::U) {
-                return {C::p, C::e, C::w};
-            } else if (variable == F::V) {
-                return {C::p, C::n, C::s};
-            } else if (variable == F::W) {
-                return {C::p, C::t, C::b};
-            } else if (variable == F::P) {
-                return {C::p, C::n, C::e, C::s, C::w, C::t, C::b, 
-                        C::nn, C::ee, C::ss, C::ww, C::tt, C::bb};
+            switch ( velocity ) {
+                case X: 
+                    return {};
+                    break;
+
+                case Y:
+                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
+                    break;
+
+                case Z:
+                    return {};
+                    break;
             }
             break;
     }
     return {};
 }
 
-// Returns the dimension axis corresponding to the U, V, or W direction
-Axis::ENUMDATA EquationDim(const Fields::ENUMDATA field) {
-    using F = Fields::ENUMDATA;
+
+std::vector< TransportCoefficients::ENUMDATA > MomentumPressureEnums( const Axis::ENUMDATA momentumEquation )
+{
     using enum Axis::ENUMDATA;
-    if (field == F::U) {
-        return X;
-    } else if (field == F::V) {
-        return Y;
-    } else if (field == F::W) {
-        return Z;
+    using C = TransportCoefficients::ENUMDATA;
+
+    switch ( momentumEquation ) {
+        case X: 
+            return { C::p, C::e, C::w };
+            break;
+
+        case Y: 
+            return { C::p, C::n, C::s };
+            break;
+
+        case Z:
+            return { C::p, C::t, C::b };
+            break;
     }
-    return X;
+    return {};
+}
+
+
+std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums()
+{
+    using C = TransportCoefficients::ENUMDATA;
+    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b, C::nn, C::ee, C::ss, C::ww, C::tt, C::bb};
 }
 
 }   // end anonymous namespace
@@ -358,12 +379,12 @@ using F = Fields::ENUMDATA;
 using enum Axis::ENUMDATA;
 
 // Momentum equations constructor
-FVCoefficients::MomentumEquation::MomentumEquation( const Fields::ENUMDATA field, 
+FVCoefficients::MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis, 
                                                     const iVector3 &dims) :
-    AU( EquationEnums(field, F::U), dims ),
-    AV( EquationEnums(field, F::V), dims ),
-    AW( EquationEnums(field, F::W), dims ),
-    AP( EquationEnums(field, F::P), dims( EquationDim(field) ) ),
+    AU( { ArrayAllocator<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, X), dims),
+          ArrayAllocator<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, Y), dims),
+          ArrayAllocator<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, Z), dims) }  ),
+    AP( MomentumPressureEnums( axis ), dims( axis ) ),
     B( CFD::array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
     diagCoeffInv( CFD::array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
     diff({ ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims(X) ),
@@ -380,10 +401,10 @@ FVCoefficients::MomentumEquation::MomentumEquation( const Fields::ENUMDATA field
 
 // Continuity equations constructor
 FVCoefficients::ContinuityEquation::ContinuityEquation( const iVector3 &dims ) :
-    AU( EquationEnums(F::P, F::U), dims( EquationDim(F::U) ) ),
-    AV( EquationEnums(F::P, F::V), dims( EquationDim(F::V) ) ),
-    AW( EquationEnums(F::P, F::W), dims( EquationDim(F::W) ) ),
-    AP( EquationEnums(F::P, F::P), dims ),
+    AU( { ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims( X )),
+          ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims( Y )),
+          ArrayAllocator<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims( Z )) } ),
+    AP( ContinuityPressureEnums(), dims ),
     B( CFD::array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
     boundaryP( {array2D( dims(Y), dims(Z) ).setZero(), array2D( dims(Y), dims(Z) ).setZero(),
                 array2D( dims(X), dims(Z) ).setZero(), array2D( dims(X), dims(Z) ).setZero(),
@@ -395,9 +416,7 @@ FVCoefficients::ContinuityEquation::ContinuityEquation( const iVector3 &dims ) :
 
 // Coefficients class constructor
 FVCoefficients::FVCoefficients(const iVector3 &dims) :
-    Umom( F::U, dims ),
-    Vmom( F::V, dims ),
-    Wmom( F::W, dims ),
+    Mom( { MomentumEquation(X, dims),  MomentumEquation(Y, dims),  MomentumEquation(Z, dims) } ),
     Cont( dims ),
     nCells( dims )
 {};
@@ -421,19 +440,20 @@ void RemoveGhostCells( array3D &array,
 }
 
 
-ArrayAllocator<Fields, array3D> InitialiseFields( const Mesh &mesh, 
-                                                  const InputData &inputData )
+CellFields InitialiseFields( const Mesh &mesh, 
+                             const InputData &inputData )
 {
-    // Create fields
-    ArrayAllocator<Fields, array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells + 2*CFD::nGhost);
+    // Create fields, 
+    CellFields fields( mesh );
 
     arrayIndex3D offsets = {nGhost, nGhost, nGhost},
                  extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
 
     // Set initial values
-    EnumFor<Fields>( [&] (Fields::ENUMDATA f) {
-        fields[f].slice( offsets, extents ).setConstant( inputData.initialConditions[f] );  // Don't set the ghost cells
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        fields.U[axis].slice( offsets, extents ).setConstant( inputData.initialConditions.U[axis] );  // Don't set the ghost cells
     } );
+    fields.P.slice( offsets, extents ).setConstant( inputData.initialConditions.P );
 
     return fields;
 }

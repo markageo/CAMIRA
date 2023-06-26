@@ -37,42 +37,50 @@ struct InputData
     EnumVector< Axis, std::vector< MeshSegment > > meshSegments;
 
 
-    // Boundary conditions
-    struct BoundaryConditionStruct {
-        BoundaryConditions::ENUMDATA type;
-        CFD::floatType value;
+    // A general struct for holding values corresponding to different fields
+    template < typename dataType >
+    struct FieldData {
+        EnumVector<Axis, dataType> U;
+        dataType P;
     };
-    using BoundaryConditionData = EnumVector< Fields, EnumVector< BoundaryPatches, BoundaryConditionStruct > >;
-    BoundaryConditionData boundaryConditions;
+
+    // Boundary conditions
+    struct BoundaryConditionData {
+        BoundaryConditions::ENUMDATA type;
+        floatType value;    
+    };
+    FieldData< EnumVector< BoundaryPatches, BoundaryConditionData  > > boundaryConditions;
+
 
     // Initial conditions
-    EnumVector<Fields, floatType> initialConditions;
+    FieldData<floatType> initialConditions;
 
     // Solver
     struct Schemes {
         Linearisation linearisation;
-        EnumVector<Fields, floatType> implicitRelaxation;
+        FieldData<floatType> implicitRelaxation;
 
         AdvectionSchemes advectionScheme;
         FaceInterpolationSchemes faceInterpolationScheme;
 
         intType maxOuterIterations;
-        EnumVector<Fields, floatType> maxOuterResiduals;
-    } schemes;
+        FieldData<floatType> maxOuterResiduals;
+    };
+    Schemes schemes;
 
     struct LineSolverSettings {
         LineSolvers type;
         intType maxIterations;
-        EnumVector<Fields, floatType> maxResiduals;
-        EnumVector<Fields, floatType> relaxation;
+        FieldData<floatType> maxResiduals;
+        FieldData<floatType> relaxation;
         BoundaryPatches::ENUMDATA sweepDirection;
     };
 
     struct PlaneSolverSettings {
         PlaneSolvers type;
         intType maxIterations;
-        EnumVector<Fields, floatType> maxResiduals;
-        EnumVector<Fields, floatType> relaxation;
+        FieldData<floatType> maxResiduals;
+        FieldData<floatType> relaxation;
         BoundaryPatches::ENUMDATA sweepDirection;
 
         LineSolverSettings lineSolverSettings;
@@ -82,14 +90,12 @@ struct InputData
     struct LinearSolverSettings {
         LinearSolvers type;
         intType maxIterations;
-        EnumVector<Fields, floatType> maxResiduals;
-        EnumVector<Fields, floatType> relaxation;
+        FieldData<floatType> maxResiduals;
+        FieldData<floatType> relaxation;
 
         PlaneSolverSettings planeSolverSettings;
     }; 
     LinearSolverSettings linearSolverSettings;
-
-    
 
 };
 
