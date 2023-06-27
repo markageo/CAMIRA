@@ -8,6 +8,8 @@
 #include <utility>
 #include <algorithm>
 
+#include <iostream>
+
 namespace CFD 
 {
 
@@ -490,17 +492,17 @@ class ArrayAllocator
 
 
 
-
 // A general struct for holding values corresponding to different fields
 template < typename dataType >
 struct FieldData {
     EnumVector<Axis, dataType> U;
     dataType P;
+    
+    FieldData() { SetPointers(); };
+    FieldData( const dataType &data ) : U( data ), P( data ) 
+    { SetPointers(); };
 
-    template< typename L >
-    friend void ForAllFieldData( L&& );
-
-    static constexpr intType nData = Axis::count + 1;   // This doesnt depend on datatype 
+    static constexpr intType nData = Axis::count + 1;   // This doesn't depend on datatype 
 
     dataType &operator[]( const intType idx )
     { return *m_dataPointers[idx]; }
@@ -508,10 +510,33 @@ struct FieldData {
     const dataType &operator[]( const intType idx ) const
     { return *m_dataPointers[idx]; }
 
+    // Copy constructor
+    FieldData( const FieldData &that ) : U( that.U ), P( that.P )
+    { SetPointers(); }
+
+    // Copy assignment
+    FieldData &operator=( FieldData that )
+    { 
+        std::swap( this->U, that.U );
+        std::swap( this->P, that.P );
+        SetPointers();
+        return *this;
+    }
+
+    // Move constructor
+    FieldData( FieldData&& that ) noexcept : U( std::move( that.U ) ), P( std::move( that.P ) ) 
+    { SetPointers(); };
+
+
     private:
-        std::array< dataType*, nData > m_dataPointers{ &U[Axis::X], &U[Axis::Y], &U[Axis::Z], &P };
+        std::array< dataType*, nData > m_dataPointers;
+        
+        void SetPointers()
+        { m_dataPointers = { &U[Axis::X], &U[Axis::Y], &U[Axis::Z], &P }; }
 };
 
+
+// To allow iterating through values of a FielData object
 template< typename L >
 void ForAllFieldData( L&& f )
 {
