@@ -4,24 +4,23 @@
 namespace CFD
 {
 
-template< Fields::ENUMDATA field, 
+template< Axis::ENUMDATA field, 
           TransportCoefficients::ENUMDATA staggeredCoeff >
 class StaggerIndexing
 {
     using TC = TransportCoefficients::ENUMDATA;
-    using F = Fields::ENUMDATA;
 
-    static_assert( ( field == F::U && staggeredCoeff == TC::e ) ||
-                   ( field == F::U && staggeredCoeff == TC::w ) ||
-                   ( field == F::U && staggeredCoeff == TC::p ) ||
+    static_assert( ( field == Axis::X && staggeredCoeff == TC::e ) ||
+                   ( field == Axis::X && staggeredCoeff == TC::w ) ||
+                   ( field == Axis::X && staggeredCoeff == TC::p ) ||
                    
-                   ( field == F::V && staggeredCoeff == TC::n ) ||
-                   ( field == F::V && staggeredCoeff == TC::s ) ||
-                   ( field == F::V && staggeredCoeff == TC::p ) ||
+                   ( field == Axis::Y && staggeredCoeff == TC::n ) ||
+                   ( field == Axis::Y && staggeredCoeff == TC::s ) ||
+                   ( field == Axis::Y && staggeredCoeff == TC::p ) ||
                    
-                   ( field == F::W && staggeredCoeff == TC::t ) ||
-                   ( field == F::W && staggeredCoeff == TC::b ) ||
-                   ( field == F::W && staggeredCoeff == TC::p )  );
+                   ( field == Axis::Z && staggeredCoeff == TC::t ) ||
+                   ( field == Axis::Z && staggeredCoeff == TC::b ) ||
+                   ( field == Axis::Z && staggeredCoeff == TC::p )  );
     
     static constexpr TC OppositeCoeff(TC coeff)
     {
@@ -49,14 +48,14 @@ class StaggerIndexing
     static constexpr TC LeftCoeff(TC coeff)
     {
         using enum TransportCoefficients::ENUMDATA;
-        using enum Fields::ENUMDATA;
+        using enum Axis::ENUMDATA;
 
         if     ( coeff == p ) { 
-            if      ( field == U )
+            if      ( field == X )
                 return w;
-            else if ( field == V)
+            else if ( field == Y )
                 return s;
-            else if ( field == W )
+            else if ( field == Z )
                 return b;
         } 
         else if ( coeff == n )
@@ -79,14 +78,14 @@ class StaggerIndexing
     static constexpr TC RightCoeff(TC coeff)
     {
         using enum TransportCoefficients::ENUMDATA;
-        using enum Fields::ENUMDATA;
+        using enum Axis::ENUMDATA;
 
         if     ( coeff == p ) { 
-            if      ( field == U )
+            if      ( field == X )
                 return e;
-            else if ( field == V)
+            else if ( field == Y )
                 return n;
-            else if ( field == W )
+            else if ( field == Z )
                 return t;
         } 
         else if ( coeff == n )

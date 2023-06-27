@@ -17,7 +17,6 @@ class AxisTransformationMap
 {
     using BP = BoundaryPatches::ENUMDATA;
     using A = Axis::ENUMDATA;
-    using F = Fields::ENUMDATA;
 
     public:
         AxisTransformationMap();

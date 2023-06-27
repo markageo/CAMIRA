@@ -355,7 +355,6 @@ namespace
                                 const pt::ptree &tree)
     {
         using BP = BoundaryPatches::ENUMDATA;
-        using F  = Fields::ENUMDATA;
         using enum Axis::ENUMDATA;
 
         const pt::ptree &boundaryConditionsTree = tree.get_child( "BoundaryConditions" );
@@ -364,12 +363,6 @@ namespace
         std::map<BP, std::string> boundaryPatchMap{ {BP::xPositive, "+x"}, {BP::xNegative, "-x"},
                                                     {BP::yPositive, "+y"}, {BP::yNegative, "-y"},
                                                     {BP::zPositive, "+z"}, {BP::zNegative, "-z"} };
-
-        // Field name strings
-        std::map<F, std::string> fieldMap { {F::U, "u"},
-                                            {F::V, "v"},
-                                            {F::W, "w"},
-                                            {F::P, "p"} };
 
         // Iterate boundary patches
         std::string valueString;
