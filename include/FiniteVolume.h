@@ -15,13 +15,13 @@ struct Mesh
 {
     Mesh(const InputData &);
     iVector3 nCells;
-    ArrayAllocator<Axis, array1D> cellCenters, 
-                                  cellFaces,            // cellFaces[axis](i) -> cellFaces[axis](i - 1/2)
-                                  cellLengths, 
-                                  cellLengthsInv,       // inverse of cell lengths
-                                  cellCenterDiffInv,    // inverse of distance between cell centers, same convention as cell faces
-                                  interpFactors;        // faceValue(i) = (1 - interpFactor(i))*cellValue(i-1) + interpFactor(i)*cellValue(i)
-    ArrayAllocator<Axis, array2D> cellFaceAreas;        // Index by X, Y, Z order, not right hand rule.
+    EnumVector<Axis, array1D> cellCenters, 
+                              cellFaces,            // cellFaces[axis](i) -> cellFaces[axis](i - 1/2)
+                              cellLengths, 
+                              cellLengthsInv,       // inverse of cell lengths
+                              cellCenterDiffInv,    // inverse of distance between cell centers, same convention as cell faces
+                              interpFactors;        // faceValue(i) = (1 - interpFactor(i))*cellValue(i-1) + interpFactor(i)*cellValue(i)
+    EnumVector<Axis, array2D> cellFaceAreas;        // Index by X, Y, Z order, not right hand rule.
 
     struct ExtrapFactorsStruct {
         floatType p,    // Boundary cell 
