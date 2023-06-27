@@ -517,7 +517,7 @@ struct FieldData {
         return *this;
     }
 
-    // Move constructor
+    // Move constructor, don't need move assignment due to copy and swap
     FieldData( FieldData&& that ) noexcept : U( std::move( that.U ) ), P( std::move( that.P ) ) 
     { SetPointers(); };
 
