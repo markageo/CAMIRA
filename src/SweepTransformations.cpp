@@ -226,7 +226,6 @@ namespace
     void TransformFieldDataToCode( InputData::FieldData<T> &fieldData,
                                    const AxisTransformationMap& axisTransformation )
     {
-
         // Create temporary copy to move data from 
         InputData::FieldData<T> userFieldData = fieldData;
 
@@ -406,18 +405,18 @@ namespace
 
     // Template template parameter so both EnumVectors and ArrayAllocators can be used
     template< template<typename, typename> typename Container, typename T >
-    void TransformFieldVectorToUser( Container<Fields, T> &fieldsVector,
+    void TransformAxisVectorToUser( Container<Axis, T> &fieldsVector,
                                      const AxisTransformationMap& axisTransformation )
     {
         static_assert( std::is_same< Container<Fields, T>, EnumVector<Fields, T> >::value    ||
                        std::is_same< Container<Fields, T>, ArrayAllocator<Fields, T> >::value );
 
         // Create temporary copy to move data from 
-        Container<Fields, T> codeFieldsVector = fieldsVector;
+        Container<Axis, T> codeFieldsVector = fieldsVector;
 
         EnumFor<Axis>([&] (Axis::ENUMDATA userAxis) { // User axis
 
-            fieldsVector[ AxisVelocity[userAxis] ] = codeFieldsVector[ AxisVelocity[ axisTransformation.CodeAxis( userAxis ) ] ];
+            fieldsVector[ userAxis ] = codeFieldsVector[ axisTransformation.CodeAxis( userAxis ) ];
 
         } );
     }
@@ -427,7 +426,7 @@ namespace
 
 
 void TransformToUserCoordinates( Mesh &mesh, 
-                                 ArrayAllocator<Fields, array3D> &fields, 
+                                 FieldData<array3D> &fields, 
                                  const AxisTransformationMap &axisTransformation )                                  
 {
     Eigen::array<intType , Axis::count> shuffleArray;
@@ -436,13 +435,10 @@ void TransformToUserCoordinates( Mesh &mesh,
     // Temporary copy of the mesh to take data from 
     Mesh codeMesh = mesh;
 
-    Axis::ENUMDATA codeAxis;
-    bool reverseAxis;
-
     EnumFor<Axis>( [&] (Axis::ENUMDATA userAxis) {
 
-        codeAxis = axisTransformation.CodeAxis( userAxis );
-        reverseAxis = axisTransformation.IsUserAxisReversed( userAxis );
+        Axis::ENUMDATA codeAxis = axisTransformation.CodeAxis( userAxis );
+        bool reverseAxis = axisTransformation.IsUserAxisReversed( userAxis );
 
         CopyMeshAxis( mesh, codeMesh, userAxis, codeAxis );
 
@@ -457,10 +453,10 @@ void TransformToUserCoordinates( Mesh &mesh,
     } );
 
     // 3D arrays
-    EnumFor<Fields>( [&] (Fields::ENUMDATA field) {
-        fields[field] = array3D( fields[field] ).shuffle(shuffleArray).reverse(reverseArray);   // Have to make a copy
+    ForAllFieldData( [&] (intType f) {
+        fields[f] = array3D( fields[f] ).shuffle(shuffleArray).reverse(reverseArray);   // Have to make a copy
     } );
-    TransformFieldVectorToUser( fields, axisTransformation );
+    TransformAxisVectorToUser( fields.U, axisTransformation );
 
 }
 
