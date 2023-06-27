@@ -146,7 +146,7 @@ Solver {
             momentumRelaxation = (1, 1, 1)
             pressureRelaxation = 1
 
-            planeSweepDirection = +x
+            planeSweepDirection = +y
 
 
             LineSolver {
@@ -157,7 +157,7 @@ Solver {
                 momentumRelaxation = (1, 1, 1)
                 pressureRelaxation = 1
 
-                lineSweepDirection = +z
+                lineSweepDirection = +x
             }
         }
     }
