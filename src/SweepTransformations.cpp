@@ -408,8 +408,8 @@ namespace
     void TransformAxisVectorToUser( Container<Axis, T> &fieldsVector,
                                      const AxisTransformationMap& axisTransformation )
     {
-        static_assert( std::is_same< Container<Fields, T>, EnumVector<Fields, T> >::value    ||
-                       std::is_same< Container<Fields, T>, ArrayAllocator<Fields, T> >::value );
+        static_assert( std::is_same< Container<Axis, T>, EnumVector<Axis, T> >::value    ||
+                       std::is_same< Container<Axis, T>, ArrayAllocator<Axis, T> >::value );
 
         // Create temporary copy to move data from 
         Container<Axis, T> codeFieldsVector = fieldsVector;
