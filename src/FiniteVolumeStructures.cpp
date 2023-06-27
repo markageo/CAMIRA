@@ -368,7 +368,6 @@ std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums()
 
 
 using C = TransportCoefficients::ENUMDATA;
-using F = Fields::ENUMDATA;
 using enum Axis::ENUMDATA;
 
 // Momentum equations constructor

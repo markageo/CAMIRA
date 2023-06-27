@@ -18,7 +18,6 @@ namespace CFD
 
 class ConvergenceFile
 {
-    using F = Fields::ENUMDATA;
 
     public:
         ConvergenceFile( const std::string &filename, 
@@ -70,7 +69,6 @@ class ConvergenceFile
 
 class ResidualLogFile
 {
-    using F = Fields::ENUMDATA;
 
     public:
         ResidualLogFile( const std::string &filename, 
@@ -118,7 +116,6 @@ class ResidualLogFile
 
 class ProbeLogFile
 {
-    using F = Fields::ENUMDATA;
 
     public:
         ProbeLogFile( const std::string &filename, 
@@ -163,7 +160,6 @@ class ProbeLogFile
     private:
         AxisTransformationMap m_AT;
         ConvergenceFile m_convergenceFile;
-        EnumVector< Fields, F > m_userFields;
 };
 
 
@@ -172,7 +168,6 @@ class ProbeLogFile
 
 class ConsoleLog
 {
-    using F = Fields::ENUMDATA;
 
     public:
         ConsoleLog( const AxisTransformationMap &axisTransformation,

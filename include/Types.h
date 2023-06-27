@@ -86,19 +86,6 @@ struct Axis
 };
 
 
-struct Fields
-{
-    enum ENUMDATA
-    {
-        U, // x velocity
-        V, // y velocity
-        W, // z velocity
-        P, // Pressure
-    };
-    const static int count = 4;
-};
-
-
 struct BoundaryConditions 
 {
     enum ENUMDATA 
@@ -153,7 +140,6 @@ template<typename enumStruct, typename L>
 void EnumFor( L&& f )
 {
     static_assert(std::is_same<enumStruct, Axis                 >::value ||
-                  std::is_same<enumStruct, Fields               >::value ||
                   std::is_same<enumStruct, BoundaryConditions   >::value ||
                   std::is_same<enumStruct, BoundaryPatches      >::value ||
                   std::is_same<enumStruct, TransportCoefficients>::value);
@@ -223,12 +209,6 @@ constexpr std::array<Axis::ENUMDATA, 6> BoundaryPatchAxis{ Axis::X,    // xPosit
                                                            Axis::Y,    // yNegative
                                                            Axis::Z,    // zPositive
                                                            Axis::Z};   // zNegative
-
-
-// Velocity component corresponding to each axis
-constexpr std::array<Fields::ENUMDATA, 3> AxisVelocity{ Fields::U,
-                                                        Fields::V,
-                                                        Fields::W };
 
 
 
@@ -315,7 +295,6 @@ template <typename enumStruct, typename T>
 class EnumVector
 {
     static_assert(std::is_same<enumStruct, CFD::Axis                 >::value ||
-                  std::is_same<enumStruct, CFD::Fields               >::value ||
                   std::is_same<enumStruct, CFD::BoundaryConditions   >::value ||
                   std::is_same<enumStruct, CFD::BoundaryPatches      >::value ||
                   std::is_same<enumStruct, CFD::TransportCoefficients>::value,
@@ -388,7 +367,6 @@ template <typename enumStruct, typename arrayType>
 class ArrayAllocator
 {
     static_assert(std::is_same<enumStruct, CFD::Axis                 >::value ||
-                  std::is_same<enumStruct, CFD::Fields               >::value ||
                   std::is_same<enumStruct, CFD::BoundaryConditions   >::value ||
                   std::is_same<enumStruct, CFD::BoundaryPatches      >::value ||
                   std::is_same<enumStruct, CFD::TransportCoefficients>::value,

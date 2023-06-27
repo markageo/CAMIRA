@@ -185,7 +185,6 @@ template < TransportCoefficients::ENUMDATA Ustag,
 class TriadSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
-    using F = Fields::ENUMDATA;
 
     // Staggering must be valid
     static_assert( (Ustag == TC::e) || (Ustag == TC::w) || (Ustag == TC::p), "Invalid U momentum staggering" );
@@ -193,14 +192,14 @@ class TriadSolver
     static_assert( (Wstag == TC::t) || (Wstag == TC::b) || (Wstag == TC::p), "Invalid W momentum staggering" );
 
     // Aliases for the staggering offsets
-    using sCU = typename StaggerIndexing< F::U, Ustag >::ContinuityVelocity;
-    using sUP = typename StaggerIndexing< F::U, Ustag >::MomentumPressure;
+    using sCU = typename StaggerIndexing< Axis::X, Ustag >::ContinuityVelocity;
+    using sUP = typename StaggerIndexing< Axis::X, Ustag >::MomentumPressure;
 
-    using sCV = typename StaggerIndexing< F::V, Vstag >::ContinuityVelocity;
-    using sVP = typename StaggerIndexing< F::V, Vstag >::MomentumPressure;
+    using sCV = typename StaggerIndexing< Axis::Y, Vstag >::ContinuityVelocity;
+    using sVP = typename StaggerIndexing< Axis::Y, Vstag >::MomentumPressure;
 
-    using sCW = typename StaggerIndexing< F::W, Wstag >::ContinuityVelocity;
-    using sWP = typename StaggerIndexing< F::W, Wstag >::MomentumPressure;
+    using sCW = typename StaggerIndexing< Axis::Z, Wstag >::ContinuityVelocity;
+    using sWP = typename StaggerIndexing< Axis::Z, Wstag >::MomentumPressure;
 
 public:
     TriadSolver( FieldData<array3D> &fields,
@@ -552,7 +551,6 @@ template <TransportCoefficients::ENUMDATA Wstag>
 class PlaneSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
-    using F = Fields::ENUMDATA;
     using A = Axis::ENUMDATA;
 
     // Staggering must be valid
@@ -709,7 +707,6 @@ private:
 class LinearSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
-    using F = Fields::ENUMDATA;
     using A = Axis::ENUMDATA;
 
 public:
