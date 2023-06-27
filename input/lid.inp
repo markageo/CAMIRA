@@ -125,7 +125,7 @@ Solver {
         advectionScheme = upwind
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 50000
+        maxOuterIterations = 5000
         maxOuterResiduals = 1e-4
     }
     
@@ -135,8 +135,8 @@ Solver {
         maxIterations = 1
         maxResiduals = 1e-4
 
-        momentumRelaxation = (1.15, 1.15, 1.15)
-        pressureRelaxation = 1.25
+        momentumRelaxation = (1.25, 1.25, 1.25)
+        pressureRelaxation = 1.3
 
         PlaneSolver {
             type = SUGS
