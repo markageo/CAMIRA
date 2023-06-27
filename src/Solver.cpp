@@ -558,12 +558,12 @@ private:
         ForAllFieldData( [&] (intType f) { m_iS[f] = i; } ); // Set iterating coefficient
         m_iS.U[X] += CoeffIndex[Ustag];      // U momentum is staggered
 
-        ForAllFieldData( [&] (intType f) { m_oldBlock[f] = m_fields[f](G(m_iS[f], m_jS[f], m_kS[f])); }); // Set old block values
+        ForAllFieldData( [&] (intType f) { m_oldBlock[f] = m_fields[f]( G(m_iS[f], m_jS[f], m_kS[f]) ); }); // Set old block values
 
         blockSolver->UpdateTriad(i, j, k);
 
         ForAllFieldData( [&] (intType f) {
-            auto &fieldBlock = m_fields[f](G(m_iS[f], m_jS[f], m_kS[f]));
+            auto &fieldBlock = m_fields[f]( G(m_iS[f], m_jS[f], m_kS[f]) );
             m_delta[f] = m_relaxation[f] * (fieldBlock - m_oldBlock[f]); // Relaxed change in solution
             fieldBlock = m_oldBlock[f] + m_delta[f];                     // Apply relaxation
             m_residuals[f] += abs(m_delta[f]);                           // Add to residual count
