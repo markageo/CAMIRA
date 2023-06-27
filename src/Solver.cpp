@@ -36,110 +36,81 @@ namespace
 
 
 
-    // // Calculate the absolute residual of each equation from the finite volume stencil
-    // [[ maybe_unused ]]
-    // EnumVector<Fields, floatType> StencilResiduals( const ArrayAllocator<Fields, array3D> &fields,
-    //                                                 const FVCoefficients &fvCoeffs )
-    // {
-    //     using enum Fields::ENUMDATA;
-    //     using enum Axis::ENUMDATA;
-    //     using enum TransportCoefficients::ENUMDATA;
+    // Calculate the absolute residual of each equation from the finite volume stencil
+    [[ maybe_unused ]]
+    FieldData<floatType> StencilResiduals( const FieldData<array3D> &fields,
+                                           const FVCoefficients &fvCoeffs )
+    {
+        using enum Axis::ENUMDATA;
+        using enum TransportCoefficients::ENUMDATA;
 
-    //     EnumVector<CFD::Fields, floatType> residuals;
+        FieldData<floatType> residuals;
 
-    //     for ( intType k = 0; k != fvCoeffs.nCells[Z]; k++ ) {
-    //         for ( intType j = 0; j != fvCoeffs.nCells[Y]; j++ ) {
-    //             for ( intType i = 0; i != fvCoeffs.nCells[Z]; i++ ) {
+        for ( intType k = 0; k != fvCoeffs.nCells[Z]; k++ ) {
+            for ( intType j = 0; j != fvCoeffs.nCells[Y]; j++ ) {
+                for ( intType i = 0; i != fvCoeffs.nCells[Z]; i++ ) {
 
-    //                 // U momentum
-    //                 residuals[U] += abs(
-    //                                   fvCoeffs.Umom.AU[p](i, j, k) * fields[U]( G(i  , j  , k  ) )
-    //                                 + fvCoeffs.Umom.AU[n](i, j, k) * fields[U]( G(i  , j+1, k  ) )
-    //                                 + fvCoeffs.Umom.AU[e](i, j, k) * fields[U]( G(i+1, j  , k  ) )
-    //                                 + fvCoeffs.Umom.AU[s](i, j, k) * fields[U]( G(i  , j-1, k  ) )
-    //                                 + fvCoeffs.Umom.AU[w](i, j, k) * fields[U]( G(i-1, j  , k  ) )
-    //                                 + fvCoeffs.Umom.AU[t](i, j, k) * fields[U]( G(i  , j  , k+1) )
-    //                                 + fvCoeffs.Umom.AU[b](i, j, k) * fields[U]( G(i  , j  , k-1) )
+                    // Momentum equations
+                    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-    //                                 + fvCoeffs.Umom.AP[e](i) * fields[P]( G(i+1, j  , k  ) )
-    //                                 + fvCoeffs.Umom.AP[p](i) * fields[P]( G(i  , j  , k  ) )
-    //                                 + fvCoeffs.Umom.AP[w](i) * fields[P]( G(i-1, j  , k  ) )
+                        residuals.U[axis] += abs( 
+                                                fvCoeffs.Mom[axis].AU[axis][p](i, j, k) * fields.U[axis]( G(i  , j  , k  ) )
+                                              + fvCoeffs.Mom[axis].AU[axis][n](i, j, k) * fields.U[axis]( G(i  , j+1, k  ) )
+                                              + fvCoeffs.Mom[axis].AU[axis][e](i, j, k) * fields.U[axis]( G(i+1, j  , k  ) )
+                                              + fvCoeffs.Mom[axis].AU[axis][s](i, j, k) * fields.U[axis]( G(i  , j-1, k  ) )
+                                              + fvCoeffs.Mom[axis].AU[axis][w](i, j, k) * fields.U[axis]( G(i-1, j  , k  ) )
+                                              + fvCoeffs.Mom[axis].AU[axis][t](i, j, k) * fields.U[axis]( G(i  , j  , k+1) )
+                                              + fvCoeffs.Mom[axis].AU[axis][b](i, j, k) * fields.U[axis]( G(i  , j  , k-1) )
 
-    //                                 - fvCoeffs.Umom.B(i, j, k) );
+                                              + fvCoeffs.Mom[axis].AP[e](i) * fields.P( G(i+1, j  , k  ) )
+                                              + fvCoeffs.Mom[axis].AP[p](i) * fields.P( G(i  , j  , k  ) )
+                                              + fvCoeffs.Mom[axis].AP[w](i) * fields.P( G(i-1, j  , k  ) )
 
-    //                 // V momentum
-    //                 residuals[V] += abs( 
-    //                                   fvCoeffs.Vmom.AV[p](i, j, k) * fields[V]( G(i  , j  , k  ) )
-    //                                 + fvCoeffs.Vmom.AV[n](i, j, k) * fields[V]( G(i  , j+1, k  ) )
-    //                                 + fvCoeffs.Vmom.AV[e](i, j, k) * fields[V]( G(i+1, j  , k  ) )
-    //                                 + fvCoeffs.Vmom.AV[s](i, j, k) * fields[V]( G(i  , j-1, k  ) )
-    //                                 + fvCoeffs.Vmom.AV[w](i, j, k) * fields[V]( G(i-1, j  , k  ) )
-    //                                 + fvCoeffs.Vmom.AV[t](i, j, k) * fields[V]( G(i  , j  , k+1) )
-    //                                 + fvCoeffs.Vmom.AV[b](i, j, k) * fields[V]( G(i  , j  , k-1) )
+                                              - fvCoeffs.Mom[axis].B(i, j, k)  );
 
-    //                                 + fvCoeffs.Vmom.AP[n](j) * fields[P]( G(i  , j+1, k  ) )
-    //                                 + fvCoeffs.Vmom.AP[p](j) * fields[P]( G(i  , j  , k  ) )
-    //                                 + fvCoeffs.Vmom.AP[s](j) * fields[P]( G(i  , j-1, k  ) )
+                    } );
 
-    //                                 - fvCoeffs.Vmom.B(i, j, k) );
+                    // Continuity
+                    residuals.P += abs( 
+                                      fvCoeffs.Cont.AU[X][e](i) * fields.U[X]( G(i+1, j  , k  ) )
+                                    + fvCoeffs.Cont.AU[X][p](i) * fields.U[X]( G(i  , j  , k  ) )
+                                    + fvCoeffs.Cont.AU[X][w](i) * fields.U[X]( G(i-1, j  , k  ) )
 
-    //                 // W momentum
-    //                 residuals[W] += abs( 
-    //                                   fvCoeffs.Wmom.AW[p](i, j, k) * fields[W]( G(i  , j  , k  ) )
-    //                                 + fvCoeffs.Wmom.AW[n](i, j, k) * fields[W]( G(i  , j+1, k  ) )
-    //                                 + fvCoeffs.Wmom.AW[e](i, j, k) * fields[W]( G(i+1, j  , k  ) )
-    //                                 + fvCoeffs.Wmom.AW[s](i, j, k) * fields[W]( G(i  , j-1, k  ) )
-    //                                 + fvCoeffs.Wmom.AW[w](i, j, k) * fields[W]( G(i-1, j  , k  ) )
-    //                                 + fvCoeffs.Wmom.AW[t](i, j, k) * fields[W]( G(i  , j  , k+1) )
-    //                                 + fvCoeffs.Wmom.AW[b](i, j, k) * fields[W]( G(i  , j  , k-1) )
+                                    + fvCoeffs.Cont.AU[Y][n](j) * fields.U[Y]( G(i  , j+1, k  ) )
+                                    + fvCoeffs.Cont.AU[Y][p](j) * fields.U[Y]( G(i  , j  , k  ) )
+                                    + fvCoeffs.Cont.AU[Y][s](j) * fields.U[Y]( G(i  , j-1, k  ) )
 
-    //                                 + fvCoeffs.Wmom.AP[t](k) * fields[P]( G(i  , j  , k+1) )
-    //                                 + fvCoeffs.Wmom.AP[p](k) * fields[P]( G(i  , j  , k  ) )
-    //                                 + fvCoeffs.Wmom.AP[b](k) * fields[P]( G(i  , j  , k-1) )
+                                    + fvCoeffs.Cont.AU[Z][t](k) * fields.U[Z]( G(i  , j  , k+1) )
+                                    + fvCoeffs.Cont.AU[Z][p](k) * fields.U[Z]( G(i  , j  , k  ) )
+                                    + fvCoeffs.Cont.AU[Z][b](k) * fields.U[Z]( G(i  , j  , k-1) )
 
-    //                                 - fvCoeffs.Wmom.B(i, j, k) );
+                                    + fvCoeffs.Cont.AP[p](i, j, k) * fields.P( G(i  , j  , k  ) )
+                                    + fvCoeffs.Cont.AP[n](i, j, k) * fields.P( G(i  , j+1, k  ) ) 
+                                    + fvCoeffs.Cont.AP[e](i, j, k) * fields.P( G(i+1, j  , k  ) ) 
+                                    + fvCoeffs.Cont.AP[s](i, j, k) * fields.P( G(i  , j-1, k  ) ) 
+                                    + fvCoeffs.Cont.AP[w](i, j, k) * fields.P( G(i-1, j  , k  ) ) 
+                                    + fvCoeffs.Cont.AP[t](i, j, k) * fields.P( G(i  , j  , k+1) ) 
+                                    + fvCoeffs.Cont.AP[b](i, j, k) * fields.P( G(i  , j  , k-1) )
 
-    //                 // Continuity
-    //                 residuals[P] += abs( 
-    //                                   fvCoeffs.Cont.AU[e](i) * fields[U]( G(i+1, j  , k  ) )
-    //                                 + fvCoeffs.Cont.AU[p](i) * fields[U]( G(i  , j  , k  ) )
-    //                                 + fvCoeffs.Cont.AU[w](i) * fields[U]( G(i-1, j  , k  ) )
-
-    //                                 + fvCoeffs.Cont.AV[n](j) * fields[V]( G(i  , j+1, k  ) )
-    //                                 + fvCoeffs.Cont.AV[p](j) * fields[V]( G(i  , j  , k  ) )
-    //                                 + fvCoeffs.Cont.AV[s](j) * fields[V]( G(i  , j-1, k  ) )
-
-    //                                 + fvCoeffs.Cont.AW[t](k) * fields[W]( G(i  , j  , k+1) )
-    //                                 + fvCoeffs.Cont.AW[p](k) * fields[W]( G(i  , j  , k  ) )
-    //                                 + fvCoeffs.Cont.AW[b](k) * fields[W]( G(i  , j  , k-1) )
-
-    //                                 + fvCoeffs.Cont.AP[p](i, j, k) * fields[P]( G(i  , j  , k  ) )
-    //                                 + fvCoeffs.Cont.AP[n](i, j, k) * fields[P]( G(i  , j+1, k  ) ) 
-    //                                 + fvCoeffs.Cont.AP[e](i, j, k) * fields[P]( G(i+1, j  , k  ) ) 
-    //                                 + fvCoeffs.Cont.AP[s](i, j, k) * fields[P]( G(i  , j-1, k  ) ) 
-    //                                 + fvCoeffs.Cont.AP[w](i, j, k) * fields[P]( G(i-1, j  , k  ) ) 
-    //                                 + fvCoeffs.Cont.AP[t](i, j, k) * fields[P]( G(i  , j  , k+1) ) 
-    //                                 + fvCoeffs.Cont.AP[b](i, j, k) * fields[P]( G(i  , j  , k-1) )
-
-    //                                 + fvCoeffs.Cont.AP[nn](i, j, k) * fields[P]( G(i  , j+2, k  ) ) 
-    //                                 + fvCoeffs.Cont.AP[ee](i, j, k) * fields[P]( G(i+2, j  , k  ) ) 
-    //                                 + fvCoeffs.Cont.AP[ss](i, j, k) * fields[P]( G(i  , j-2, k  ) ) 
-    //                                 + fvCoeffs.Cont.AP[ww](i, j, k) * fields[P]( G(i-2, j  , k  ) ) 
-    //                                 + fvCoeffs.Cont.AP[tt](i, j, k) * fields[P]( G(i  , j  , k+2) ) 
-    //                                 + fvCoeffs.Cont.AP[bb](i, j, k) * fields[P]( G(i  , j  , k-2) )
+                                    + fvCoeffs.Cont.AP[nn](i, j, k) * fields.P( G(i  , j+2, k  ) ) 
+                                    + fvCoeffs.Cont.AP[ee](i, j, k) * fields.P( G(i+2, j  , k  ) ) 
+                                    + fvCoeffs.Cont.AP[ss](i, j, k) * fields.P( G(i  , j-2, k  ) ) 
+                                    + fvCoeffs.Cont.AP[ww](i, j, k) * fields.P( G(i-2, j  , k  ) ) 
+                                    + fvCoeffs.Cont.AP[tt](i, j, k) * fields.P( G(i  , j  , k+2) ) 
+                                    + fvCoeffs.Cont.AP[bb](i, j, k) * fields.P( G(i  , j  , k-2) )
                                     
-    //                                 - fvCoeffs.Cont.B(i, j, k) );
+                                    - fvCoeffs.Cont.B(i, j, k) );
 
-    //             }
-    //         }
-    //     }
+                }
+            }
+        }
 
-    //     EnumFor<Fields>( [&] (Fields::ENUMDATA field) {
-    //         residuals[field] /= static_cast<floatType>( fvCoeffs.nCells[X] * fvCoeffs.nCells[Y] * fvCoeffs.nCells[Z] ); 
-    //     } );
+        ForAllFieldData( [&] (intType f) {
+            residuals[f] /= static_cast<floatType>( fvCoeffs.nCells[X] * fvCoeffs.nCells[Y] * fvCoeffs.nCells[Z] ); 
+        } );
 
-    //     return residuals;
-    // }
+        return residuals;
+    }
 
 
 

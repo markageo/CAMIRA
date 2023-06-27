@@ -13,13 +13,13 @@ Mesh {
         Segment {
             bounds     = (0, 0.5)
             nCells     = 25
-            biasFactor = 1
+            biasFactor = 3
         }
 
         Segment {
             bounds     = (0.5, 1)
             nCells     = 25
-            biasFactor = 1
+            biasFactor = -3
         }
     }
 
@@ -27,13 +27,13 @@ Mesh {
         Segment {
             bounds     = (0, 0.5)
             nCells     = 25
-            biasFactor = 1
+            biasFactor = 3
         }
 
         Segment {
             bounds     = (0.5, 1)
             nCells     = 25
-            biasFactor = 1
+            biasFactor = -3
         }
     }
 
@@ -41,13 +41,13 @@ Mesh {
         Segment {
             bounds     = (0, 0.5)
             nCells     = 25
-            biasFactor = 1
+            biasFactor = 3
         }
 
         Segment {
             bounds     = (0.5, 1)
             nCells     = 25
-            biasFactor = 1
+            biasFactor = -3
         }
     }
 }

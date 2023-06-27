@@ -13,7 +13,7 @@ namespace CFD
 // Recitlinear mesh structure and mesher (on construction)
 struct Mesh
 {
-    Mesh(const CFD::InputData &);
+    Mesh(const InputData &);
     iVector3 nCells;
     ArrayAllocator<Axis, array1D> cellCenters, 
                                   cellFaces,            // cellFaces[axis](i) -> cellFaces[axis](i - 1/2)
