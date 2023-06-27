@@ -144,7 +144,7 @@ Mesh::ExtrapFactorsStruct GetExtrapolationFactors(const array1D &cellLengths,
 
 
 void CalculateExtrapolationFactors(EnumVector<BoundaryPatches, Mesh::ExtrapFactorsStruct > &extrapFactors, 
-                                   const ArrayAllocator<Axis, array1D> &cellLengths, 
+                                   const EnumVector<Axis, array1D> &cellLengths, 
                                    const Axis::ENUMDATA axis)
 {  
 
