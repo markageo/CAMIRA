@@ -310,7 +310,7 @@ struct dimTypes<B>
 
 
 
-// Wrapper for std::vector that can only be indexed using enums
+// Wrapper for std::array that can only be indexed using enums
 template <typename enumStruct, typename T>
 class EnumVector
 {
@@ -338,14 +338,13 @@ class EnumVector
     public:
 
         // Constructors for general types
-        EnumVector() : m_dataVector( enumStruct::count ) {};
-        EnumVector( const T &data ) : m_dataVector( enumStruct::count, data )  { };
-        EnumVector( const std::array<T, enumStruct::count> &arr ) : m_dataVector( arr.begin(), arr.end() ) { };
+        EnumVector() {};
+        EnumVector( const T &data ) { std::fill( m_dataVector.begin(), m_dataVector.end(), data ); };
+        EnumVector( const std::array<T, enumStruct::count> &arr ) : m_dataVector( arr ) {};
 
         // Special constructors for array objects, all having same dimenions
         EnumVector(const std::vector< ENUMDATA > &coeffs, const dimsArray &dims) 
-        requires( isArray ) :
-            m_dataVector(enumStruct::count)
+        requires( isArray ) 
         {
             dimsArrayInternal dimsInternal = Internal::dimTypes<T>::ConvertDimsArrayInternal( dims );
             for (const auto &index : coeffs) {
@@ -355,8 +354,7 @@ class EnumVector
 
         // Special constructors for array objects, can have different dimensions
         EnumVector( const std::vector< std::pair< ENUMDATA, dimsArray > > &arraySpec)  
-        requires ( isArray ) :
-            m_dataVector(enumStruct::count)
+        requires ( isArray ) 
         {
             dimsArrayInternal dimsInternal;
             for (size_t i = 0; i != arraySpec.size(); i++) {
@@ -373,11 +371,11 @@ class EnumVector
         { return m_dataVector[idx]; }
 
         // Get underlying data vector
-        std::vector<T> &get()
+        std::array<T, enumStruct::count> &get()
         { return m_dataVector; }
 
     private:
-        std::vector<T> m_dataVector;
+        std::array<T, enumStruct::count> m_dataVector;
 
 };
 
@@ -385,7 +383,7 @@ class EnumVector
 
 
 
-// Allocate arrays using enums. Arrays are initialised to zero.
+// Allocate arrays using enums, stored in array of pointers to the arrays. Arrays are initialised to zero.
 template <typename enumStruct, typename arrayType>
 class ArrayAllocator
 {
@@ -412,9 +410,11 @@ class ArrayAllocator
 
     public:
 
+        // Default constructor, array of null pointers
+        ArrayAllocator() {};
+
         // Constructor, All arrays have same dimensions 
-        ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const dimsArray &dims ) :
-            m_coeffPointers(enumStruct::count)
+        ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const dimsArray &dims )
         {
             dimsArrayInternal dimsInternal = Internal::dimTypes<arrayType>::ConvertDimsArrayInternal( dims );
 
@@ -425,8 +425,7 @@ class ArrayAllocator
 
 
         // Constructor, arrays can have different dimensions
-        ArrayAllocator( const std::vector< std::pair< ENUMDATA, dimsArray > > &arraySpec) : 
-            m_coeffPointers(enumStruct::count)
+        ArrayAllocator( const std::vector< std::pair< ENUMDATA, dimsArray > > &arraySpec)
         {
             dimsArrayInternal dimsInternal;
             for (size_t i = 0; i != arraySpec.size(); i++) {
@@ -437,8 +436,7 @@ class ArrayAllocator
 
 
         // Copy Constructor
-        ArrayAllocator(const ArrayAllocator &that) :
-            m_coeffPointers(enumStruct::count)
+        ArrayAllocator(const ArrayAllocator &that) 
         {
             // Allocate a new array object only if it was allocated in the original
             for (size_t i = 0; i != m_coeffPointers.size(); i++) {
@@ -457,14 +455,10 @@ class ArrayAllocator
         }
 
 
-        // Move constructor
+        // Move constructor. No need for move assignmnet due to copy and swap
         ArrayAllocator(ArrayAllocator&& that) noexcept :
             m_coeffPointers( std::move( that.m_coeffPointers ) )
         {}
-
-
-        // Move assignment
-        // No need due to copy-swap 
 
 
         // Indexing operators
@@ -485,7 +479,7 @@ class ArrayAllocator
 
 
     private:
-        std::vector< std::unique_ptr<arrayType> > m_coeffPointers;
+        std::array< std::unique_ptr<arrayType>, enumStruct::count > m_coeffPointers;
 
 };
 
