@@ -52,7 +52,7 @@ int main(int argc, char const *argv[])
     \*-------------------------------------------------------------------------------------*/
 
     // // Undo the boundary condition transformation
-    // CFD::TransformToUserCoordinates(mesh, fields, axisTransformation);
+    CFD::TransformToUserCoordinates(mesh, fields, axisTransformation);
 
     // // Remove ghost cells from the fields
     // CFD::EnumFor<CFD::Fields>([&](CFD::Fields::ENUMDATA field)
