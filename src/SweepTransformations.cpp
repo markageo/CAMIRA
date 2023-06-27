@@ -300,7 +300,7 @@ namespace
 
         // Create temporary copy of mesh data to take data from
         EnumVector<Axis, std::vector<InputData::MeshSegment> > userMeshSegments = inputData.meshSegments;
-        fVector3 userDomainSize;
+        fVector3 userDomainSize = inputData.domainSize;
 
         EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
 

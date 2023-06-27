@@ -85,6 +85,7 @@
         "core": "cpp",
         "specialfunctions": "cpp",
         "hash_map": "cpp",
-        "alignedvector3": "cpp"
+        "alignedvector3": "cpp",
+        "*.lxx": "cpp"
     }
 }
