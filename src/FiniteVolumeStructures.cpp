@@ -437,15 +437,15 @@ FieldData<array3D> InitialiseFields( const Mesh &mesh,
                                      const InputData &inputData )
 {
 
-    FieldData<array3D> fields;
-    fields.U = EnumVector<Axis, array3D>( array3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero() );
-    fields.P = array3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero();
+    FieldData<array3D> fields( array3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero() );
 
     arrayIndex3D offsets = {nGhost, nGhost, nGhost},
                  extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
 
     // Set initial values
-    ForAllFieldData( [&] (intType i) { fields[i].slice( offsets, extents ).setConstant( inputData.initialConditions[i] );  } );
+    ForAllFieldData( [&] (intType i) { 
+        fields[i].slice( offsets, extents ).setConstant( inputData.initialConditions[i] );  
+    } );
     
     return fields;
 }

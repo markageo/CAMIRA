@@ -30,14 +30,12 @@ int main(int argc, char const *argv[])
                                               Solve
     \*-------------------------------------------------------------------------------------*/
 
-    using F = CFD::Fields::ENUMDATA;
-
     TIC("Meshing");
     CFD::Mesh mesh( inputData );
     TOC();
 
     TIC("Field Allocation");
-    CFD::FieldData fields = CFD::InitialiseFields( mesh, inputData );
+    CFD::FieldData<CFD::array3D> fields = CFD::InitialiseFields( mesh, inputData );
     TOC();
 
     TIC("Solver");
@@ -52,30 +50,32 @@ int main(int argc, char const *argv[])
     // // Undo the boundary condition transformation
     // CFD::TransformToUserCoordinates(mesh, fields, axisTransformation);
 
-    // // Remove ghost cells from the fields
-    // CFD::EnumFor<CFD::Fields>([&](CFD::Fields::ENUMDATA field)
-    //                           { CFD::RemoveGhostCells(fields[field], CFD::nGhost); });
+    // Remove ghost cells from the fields
+    CFD::ForAllFieldData( [&] (CFD::intType f) {
+        CFD::RemoveGhostCells(fields[f], CFD::nGhost);
+    } );
+
 
 
     /*-------------------------------------------------------------------------------------*\
                                              Output
     \*-------------------------------------------------------------------------------------*/
 
-    // using AX = CFD::Axis::ENUMDATA;
+    using enum CFD::Axis::ENUMDATA;
 
-    // // Data to pass to writer
-    // VTK::VTKWriterConfig config( mesh.nCells[AX::X], mesh.nCells[AX::Y], mesh.nCells[AX::Z] );
-    //     config.SetWriteMode( VTK::WriteModes::ASCII );
-    //     config.SetGridType( VTK::GridTypes::CELL_DATA );
-    // VTK::gridVectorType<CFD::floatType> gridVector = {mesh.cellFaces[AX::X].data(), mesh.cellFaces[AX::Y].data(), mesh.cellFaces[AX::Z].data()};
-    // VTK::scalarMapType<CFD::floatType> scalarMap = { {"Pressure", fields[F::P].data()} };
-    // VTK::vectorMapType<CFD::floatType> vectorMap = { {"Velocity", {fields[F::U].data(), fields[F::V].data(), fields[F::W].data()}} };
+    // Data to pass to writer
+    VTK::VTKWriterConfig config( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] );
+        config.SetWriteMode( VTK::WriteModes::ASCII );
+        config.SetGridType( VTK::GridTypes::CELL_DATA );
+    VTK::gridVectorType<CFD::floatType> gridVector = {mesh.cellFaces[X].data(), mesh.cellFaces[Y].data(), mesh.cellFaces[Z].data()};
+    VTK::scalarMapType<CFD::floatType> scalarMap = { {"Pressure", fields.P.data()} };
+    VTK::vectorMapType<CFD::floatType> vectorMap = { {"Velocity", {fields.U[X].data(), fields.U[Y].data(), fields.U[Z].data()}} };
 
-    // // Write output
-    // VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
-    // TIC("Writer");
-    // writer.WriteData("fields.vtk", "CFD simulation");
-    // TOC();
+    // Write output
+    VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
+    TIC("Writer");
+    writer.WriteData("fields.vtk", "CFD simulation");
+    TOC();
 
 // Display profiling information
 #ifdef PROFILING
