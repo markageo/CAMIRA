@@ -886,18 +886,6 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     AddDiffusion(fvCoeffs.Mom[Y].AU[Y], fvCoeffs.Mom[Y].boundaryVel, fvCoeffs.Mom[Y].diff, fvCoeffs.Mom[Y].boundaryDiff, mesh);
     AddDiffusion(fvCoeffs.Mom[Z].AU[Z], fvCoeffs.Mom[Z].boundaryVel, fvCoeffs.Mom[Z].diff, fvCoeffs.Mom[Z].boundaryDiff, mesh);
 
-    // // Write out the fields for debugging
-    // using enum TransportCoefficients::ENUMDATA;
-    // Axis::ENUMDATA ax = Axis::Z;
-    // UTIL::WriteArray( "ap", fvCoeffs.Mom[ax].AU[ax][p] );
-    // UTIL::WriteArray( "an", fvCoeffs.Mom[ax].AU[ax][n] );
-    // UTIL::WriteArray( "ae", fvCoeffs.Mom[ax].AU[ax][e] );
-    // UTIL::WriteArray( "as", fvCoeffs.Mom[ax].AU[ax][s] );
-    // UTIL::WriteArray( "aw", fvCoeffs.Mom[ax].AU[ax][w] );
-    // UTIL::WriteArray( "at", fvCoeffs.Mom[ax].AU[ax][t] );
-    // UTIL::WriteArray( "ab", fvCoeffs.Mom[ax].AU[ax][b] );
-
-
     // Inverse of AP coefficient
     using TC = TransportCoefficients::ENUMDATA;
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
@@ -926,8 +914,6 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     AddMomentumBoundaryConstants(fvCoeffs.Mom[Y]);
     AddMomentumBoundaryConstants(fvCoeffs.Mom[Z]);
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
-
-    // UTIL::WriteArray( "B", fvCoeffs.Mom[Z].B );
 
     // Set implicit under relaxation
     EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
@@ -983,8 +969,8 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
 
     // Add diffusion to the velocity coefficients in momentum equations
     AddDiffusion(fvCoeffs.Mom[X].AU[X], fvCoeffs.Mom[X].boundaryVel, fvCoeffs.Mom[X].diff, fvCoeffs.Mom[X].boundaryDiff, mesh);
-    AddDiffusion(fvCoeffs.Mom[Y].AU[Y], fvCoeffs.Mom[Y].boundaryVel, fvCoeffs.Mom[X].diff, fvCoeffs.Mom[X].boundaryDiff, mesh);
-    AddDiffusion(fvCoeffs.Mom[Z].AU[Z], fvCoeffs.Mom[Z].boundaryVel, fvCoeffs.Mom[X].diff, fvCoeffs.Mom[X].boundaryDiff, mesh);
+    AddDiffusion(fvCoeffs.Mom[Y].AU[Y], fvCoeffs.Mom[Y].boundaryVel, fvCoeffs.Mom[Y].diff, fvCoeffs.Mom[Y].boundaryDiff, mesh);
+    AddDiffusion(fvCoeffs.Mom[Z].AU[Z], fvCoeffs.Mom[Z].boundaryVel, fvCoeffs.Mom[Z].diff, fvCoeffs.Mom[Z].boundaryDiff, mesh);
 
     // Inverse of AP coefficient
     using TC = TransportCoefficients::ENUMDATA;

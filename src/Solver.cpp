@@ -175,7 +175,7 @@ namespace
         if (nIterations == 1) {
 
             ForAllFieldData( [&] (intType i) {
-                residuals[i] = 1.0f;
+                residualsInitialInv[i] = 1.0f;
                 if ( residuals[i] != 0 ) { // Division by zero
                     residualsInitialInv[i] = 1.0f / residuals[i];
                 } 
@@ -345,6 +345,8 @@ public:
                                    - m_fvCoeffs.Cont.AU[Y][sCV::cCoupled](j) * bV 
                                    - m_fvCoeffs.Cont.AU[Z][sCW::cCoupled](k) * bW 
                                    ) * m_K(i, j, k);
+
+        // m_fields.P( G(i, j, k) ) = 0;
 
 
         // Update U from momentum
@@ -780,7 +782,6 @@ public:
 
         for ( intType nIterations = 1; nIterations <= m_maxIterations; nIterations++ )
         {
-
             // Reset residuals
             ForAllFieldData( [&] (intType f) { m_residuals[f] = 0.0f; });
 
