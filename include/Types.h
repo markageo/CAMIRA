@@ -477,10 +477,10 @@ struct FieldData {
     static constexpr intType nData = Axis::count + 1;   // This doesn't depend on datatype 
 
     dataType &operator[]( const intType idx )
-    { return *m_dataPointers[idx]; }
+    { return *m_dataPointers[ static_cast<size_t>( idx ) ]; }
 
     const dataType &operator[]( const intType idx ) const
-    { return *m_dataPointers[idx]; }
+    { return *m_dataPointers[ static_cast<size_t>( idx ) ]; }
 
     // Copy constructor
     FieldData( const FieldData &that ) : U( that.U ), P( that.P )
