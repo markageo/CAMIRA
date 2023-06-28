@@ -218,9 +218,10 @@ public:
 
 
     // Core function which updates the local coupled system. Templated by staggering direction.
-    void UpdateTriad( const intType i, 
-                      const intType j, 
-                      const intType k )
+    __attribute__((always_inline))  // This will only work with gcc and clang
+    inline void UpdateTriad( const intType i, 
+                             const intType j, 
+                             const intType k )
     {
         using enum Axis::ENUMDATA;
         using enum TransportCoefficients::ENUMDATA;
@@ -757,7 +758,6 @@ public:
                 m_triadSolver_ws.UpdateTriad( i, j, k );
             }
         }
-
     }
 
 
@@ -1012,7 +1012,7 @@ void SweepSolve( FieldData<array3D> &fields,
 
         UpdateFaceFluxes(faceFluxes, mesh, fields.U, inputData);
         UpdateFVCoefficients(fvCoeffs, mesh, faceFluxes, inputData);
-        
+
         residualsOuter = L1DiffResiduals(fields, fieldsOld);
         massFluxResidual = BoundaryMassFluxResidual(faceFluxes, mesh);
         RelativeResidual(residualsOuter, residualsOuterInitialInv, nOuterIterations);
@@ -1027,7 +1027,6 @@ void SweepSolve( FieldData<array3D> &fields,
                         << "\n\n";
             break;
         }
-        
     }
 }
 
