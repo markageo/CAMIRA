@@ -909,9 +909,6 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
 {
     using enum Axis::ENUMDATA;
 
-    TIC("Updating FV Coeffs")
-
-    TIC("Zeroing coeffs")
     // Zero momentum equations
     EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
 
@@ -939,45 +936,31 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
         fvCoeffs.Cont.boundaryP[bp].setZero();
     } );
     fvCoeffs.Cont.B.setZero();
-    TOC()
 
-
-    TIC("Advection")
     // Momentum advection terms
     SetAdvectionCoefficients(fvCoeffs.Mom[X].AU[X], fvCoeffs.Mom[X].boundaryVel, faceFluxes, mesh, inputData, X);
     SetAdvectionCoefficients(fvCoeffs.Mom[Y].AU[Y], fvCoeffs.Mom[Y].boundaryVel, faceFluxes, mesh, inputData, Y);
     SetAdvectionCoefficients(fvCoeffs.Mom[Z].AU[Z], fvCoeffs.Mom[Z].boundaryVel, faceFluxes, mesh, inputData, Z);
-    TOC()
 
-    TIC("Add diffusion")
     // Add diffusion to the velocity coefficients in momentum equations
     AddDiffusion(fvCoeffs.Mom[X].AU[X], fvCoeffs.Mom[X].boundaryVel, fvCoeffs.Mom[X].diff, fvCoeffs.Mom[X].boundaryDiff, mesh);
     AddDiffusion(fvCoeffs.Mom[Y].AU[Y], fvCoeffs.Mom[Y].boundaryVel, fvCoeffs.Mom[Y].diff, fvCoeffs.Mom[Y].boundaryDiff, mesh);
     AddDiffusion(fvCoeffs.Mom[Z].AU[Z], fvCoeffs.Mom[Z].boundaryVel, fvCoeffs.Mom[Z].diff, fvCoeffs.Mom[Z].boundaryDiff, mesh);
-    TOC()
 
-    TIC("Inverse AP")
     // Inverse of AP coefficient
     using TC = TransportCoefficients::ENUMDATA;
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
     } );
-    TOC()
 
-    TIC("MWI")
     // Set the momentum interpolation coefficients
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, inputData);
-    TOC()
 
-    TIC("Boundary constants")
     // Add boundary constants to source terms
     AddMomentumBoundaryConstants(fvCoeffs.Mom[X]);
     AddMomentumBoundaryConstants(fvCoeffs.Mom[Y]);
     AddMomentumBoundaryConstants(fvCoeffs.Mom[Z]);
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
-    TOC()
-
-    TOC()
 
 }
 
