@@ -178,7 +178,7 @@ namespace
 
 
 
-// Performs a single local update of block coupled equations
+// --------------------------------------------------------- TriadSolver --------------------------------------------------------- //
 template < TransportCoefficients::ENUMDATA Ustag,
            TransportCoefficients::ENUMDATA Vstag,
            TransportCoefficients::ENUMDATA Wstag>
@@ -316,8 +316,6 @@ public:
                                    - m_fvCoeffs.Cont.AU[Z][sCW::cCoupled](k) * bW 
                                    ) * m_K(i, j, k);
 
-        // m_fields.P( G(i, j, k) ) = 0;
-
 
         // Update U from momentum
         m_fields.U[X]( G(iU, jU, kU) ) = ( 1 - m_fvCoeffs.Mom[X].relaxation ) * m_fieldsOld.U[X]( G(iU, jU, kU) )
@@ -395,7 +393,7 @@ private:
 
 
 
-
+// --------------------------------------------------------- LineSolver --------------------------------------------------------- //
 template < TransportCoefficients::ENUMDATA Vstag,
            TransportCoefficients::ENUMDATA Wstag >
 class LineSolver
@@ -546,7 +544,7 @@ private:
 
 
 
-
+// --------------------------------------------------------- PlaneSolver --------------------------------------------------------- //
 template <TransportCoefficients::ENUMDATA Wstag>
 class PlaneSolver
 {
@@ -562,7 +560,6 @@ public:
                  const FVCoefficients &fvCoeffs,
                  const InputData::PlaneSolverSettings &planeSolverSettings) : 
                     m_fields( fields ),
-                    m_fieldsOld( fieldsOld ),
                     m_maxIterations( planeSolverSettings.maxIterations ),
                     m_maxResiduals( planeSolverSettings.maxResiduals ),
                     m_relaxation( planeSolverSettings.relaxation ),
@@ -628,7 +625,6 @@ public:
 private:
 
     FieldData<array3D> &m_fields;
-    const FieldData<array3D> &m_fieldsOld;
     const intType m_maxIterations;
     const FieldData<floatType> m_maxResiduals;
     const FieldData<floatType> m_relaxation;
@@ -702,8 +698,97 @@ private:
 
 
 
+// --------------------------------------------------------- PlaneSolver2 --------------------------------------------------------- //
+template <TransportCoefficients::ENUMDATA Wstag>
+class PlaneSolver2
+{
+    using TC = TransportCoefficients::ENUMDATA;
+
+    // Staggering must be valid
+    static_assert( (Wstag == TC::t) || (Wstag == TC::b) || (Wstag == TC::p), "Invalid W momentum staggering" );
+
+public:
+    PlaneSolver2( FieldData<array3D> &fields,
+                  const FieldData<array3D> &fieldsOld,
+                  const FVCoefficients &fvCoeffs,
+                  const InputData::PlaneSolverSettings &planeSolverSettings) : 
+        m_fields( fields ),
+        m_ni( fvCoeffs.nCells(Axis::X) ),
+        m_nj( fvCoeffs.nCells(Axis::Y) )
+    { 
+        m_triadSolver_en = std::make_unique<TriadSolver<TC::e, TC::n, Wstag> >( fields, fieldsOld, fvCoeffs );
+        m_triadSolver_wn = std::make_unique<TriadSolver<TC::w, TC::n, Wstag> >( fields, fieldsOld, fvCoeffs );
+        m_triadSolver_es = std::make_unique<TriadSolver<TC::e, TC::s, Wstag> >( fields, fieldsOld, fvCoeffs );
+        m_triadSolver_ws = std::make_unique<TriadSolver<TC::w, TC::s, Wstag> >( fields, fieldsOld, fvCoeffs );
+        SolutionUpdater = &PlaneSolver2::Sweep3D;
+        StateUpdater = &PlaneSolver2::UpdateState3D;
+    }
 
 
+    void SolvePlane(const intType k)
+    { (this->*SolutionUpdater)(k); }
+
+
+    void UpdateState()
+    { (this->*StateUpdater)(); }
+
+
+private:
+
+    FieldData<array3D> &m_fields;
+
+    std::unique_ptr< TriadSolver< TC::e, TC::n, Wstag > > m_triadSolver_en;
+    std::unique_ptr< TriadSolver< TC::w, TC::n, Wstag > > m_triadSolver_wn;
+    std::unique_ptr< TriadSolver< TC::e, TC::s, Wstag > > m_triadSolver_es;
+    std::unique_ptr< TriadSolver< TC::w, TC::s, Wstag > > m_triadSolver_ws;
+
+    void (PlaneSolver2::*SolutionUpdater)(intType);
+    void (PlaneSolver2::*StateUpdater)();
+
+    intType m_ni, m_nj;
+
+
+    // For 3D simulations
+    void Sweep3D(intType k)
+    {   
+            
+        for ( intType j = 0; j != m_nj - 1; j++ ) {
+            for ( intType i = 0; i != m_ni - 1; i++ ) {
+                m_triadSolver_en->UpdateTriad( i, j, k );
+            }
+
+            for ( intType i = m_ni - 1; i != 0; i-- ) {
+                m_triadSolver_wn->UpdateTriad( i, j, k );
+            }
+        }
+
+        // Reverse sweep
+        for ( intType j = m_nj - 1; j != 0; j-- ) { 
+            for ( intType i = 0; i != m_ni - 1; i++ ) {
+                m_triadSolver_es->UpdateTriad( i, j, k );
+            }
+
+            for ( intType i = m_ni - 1; i != 0; i-- ) {
+                m_triadSolver_ws->UpdateTriad( i, j, k );
+            }
+        }
+
+    }
+
+    void UpdateState3D()
+    {
+        m_triadSolver_en->UpdateGlobalConstants();
+        m_triadSolver_wn->UpdateGlobalConstants();
+        m_triadSolver_es->UpdateGlobalConstants();
+        m_triadSolver_ws->UpdateGlobalConstants();
+    }
+};
+
+
+
+
+
+// --------------------------------------------------------- LinearSolver --------------------------------------------------------- //
 class LinearSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -728,14 +813,14 @@ public:
     {
         if (m_nk == 1) {
 
-            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p>>(fields, fieldsOld, fvCoeffs, linearSolverSettings.planeSolverSettings);
+            m_planeSolverCenter = std::make_unique<PlaneSolver2<TC::p>>(fields, fieldsOld, fvCoeffs, linearSolverSettings.planeSolverSettings);
             SolutionUpdater = &LinearSolver::Sweep2D;
             StateUpdater = &LinearSolver::UpdateState2D;
 
         } else {
 
-            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t>>(fields, fieldsOld, fvCoeffs, linearSolverSettings.planeSolverSettings);
-            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b>>(fields, fieldsOld, fvCoeffs, linearSolverSettings.planeSolverSettings);
+            m_planeSolverTop = std::make_unique<PlaneSolver2<TC::t>>(fields, fieldsOld, fvCoeffs, linearSolverSettings.planeSolverSettings);
+            m_planeSolverBottom = std::make_unique<PlaneSolver2<TC::b>>(fields, fieldsOld, fvCoeffs, linearSolverSettings.planeSolverSettings);
             SolutionUpdater = &LinearSolver::Sweep3D;
             StateUpdater = &LinearSolver::UpdateState3D;
 
@@ -784,9 +869,9 @@ private:
     const FieldData<floatType> m_maxResiduals;
     const FieldData<floatType> m_relaxation;
 
-    std::unique_ptr<PlaneSolver<TC::t>> m_planeSolverTop;
-    std::unique_ptr<PlaneSolver<TC::b>> m_planeSolverBottom;
-    std::unique_ptr<PlaneSolver<TC::p>> m_planeSolverCenter;
+    std::unique_ptr<PlaneSolver2<TC::t>> m_planeSolverTop;
+    std::unique_ptr<PlaneSolver2<TC::b>> m_planeSolverBottom;
+    std::unique_ptr<PlaneSolver2<TC::p>> m_planeSolverCenter;
 
     void (LinearSolver::*SolutionUpdater)(void);
     void (LinearSolver::*StateUpdater)(void);
@@ -829,7 +914,7 @@ private:
 
 
     template <TC Wstag>
-    void UpdateAndRelax(std::unique_ptr<PlaneSolver<Wstag>> &planeSolver, intType k)
+    void UpdateAndRelax( std::unique_ptr<PlaneSolver2<Wstag>> &planeSolver, intType k )
     {
         using enum TransportCoefficients::ENUMDATA;
         using enum Axis::ENUMDATA;
@@ -849,8 +934,6 @@ private:
         } );
     }
 };
-
-
 
 
 
