@@ -226,24 +226,30 @@ public:
         using enum TransportCoefficients::ENUMDATA;
 
         // For indexing the staggered cells
-        intType iU( i + sCU::iCoupled ), jU( j                 ), kU( k                 ); // U momentum
-        intType iV( i                 ), jV( j + sCV::iCoupled ), kV( k                 ); // V momentum
-        intType iW( i                 ), jW( j                 ), kW( k + sCW::iCoupled ); // W momentum
+        intType iU{ i + sCU::iCoupled }, jU{ j                 }, kU{ k                 }; // U momentum
+        intType iV{ i                 }, jV{ j + sCV::iCoupled }, kV{ k                 }; // V momentum
+        intType iW{ i                 }, jW{ j                 }, kW{ k + sCW::iCoupled }; // W momentum
+
+        // With ghost cells, this is faster than using the G() function inline every time
+        intType igU{ G(iU) }, jgU{ G(jU) }, kgU{ G(kU) };
+        intType igV{ G(iV) }, jgV{ G(jV) }, kgV{ G(kV) };
+        intType igW{ G(iW) }, jgW{ G(jW) }, kgW{ G(kW) };
+        intType   ig{ G(i) },   jg{ G(j) },   kg{ G(k) };
 
 
         // Precompute momentum RHS divided by AP coefficients
         // U momentum
         floatType bU = ( m_fvCoeffs.Mom[X].B(iU, jU, kU)
 
-                       - m_fvCoeffs.Mom[X].AU[X][n](iU, jU, kU) * m_fields.U[X]( G(iU  , jU+1, kU  ) ) 
-                       - m_fvCoeffs.Mom[X].AU[X][e](iU, jU, kU) * m_fields.U[X]( G(iU+1, jU  , kU  ) ) 
-                       - m_fvCoeffs.Mom[X].AU[X][s](iU, jU, kU) * m_fields.U[X]( G(iU  , jU-1, kU  ) ) 
-                       - m_fvCoeffs.Mom[X].AU[X][w](iU, jU, kU) * m_fields.U[X]( G(iU-1, jU  , kU  ) ) 
-                       - m_fvCoeffs.Mom[X].AU[X][t](iU, jU, kU) * m_fields.U[X]( G(iU  , jU  , kU+1) ) 
-                       - m_fvCoeffs.Mom[X].AU[X][b](iU, jU, kU) * m_fields.U[X]( G(iU  , jU  , kU-1) )
+                       - m_fvCoeffs.Mom[X].AU[X][n](iU, jU, kU) * m_fields.U[X]( igU  , jgU+1, kgU  )
+                       - m_fvCoeffs.Mom[X].AU[X][e](iU, jU, kU) * m_fields.U[X]( igU+1, jgU  , kgU  )
+                       - m_fvCoeffs.Mom[X].AU[X][s](iU, jU, kU) * m_fields.U[X]( igU  , jgU-1, kgU  )
+                       - m_fvCoeffs.Mom[X].AU[X][w](iU, jU, kU) * m_fields.U[X]( igU-1, jgU  , kgU  )
+                       - m_fvCoeffs.Mom[X].AU[X][t](iU, jU, kU) * m_fields.U[X]( igU  , jgU  , kgU+1) 
+                       - m_fvCoeffs.Mom[X].AU[X][b](iU, jU, kU) * m_fields.U[X]( igU  , jgU  , kgU-1)
 
-                       - m_fvCoeffs.Mom[X].AP[sUP::cLeft ](iU) * m_fields.P( G(iU + sUP::iLeft , jU, kU) ) 
-                       - m_fvCoeffs.Mom[X].AP[sUP::cRight](iU) * m_fields.P( G(iU + sUP::iRight, jU, kU) ) 
+                       - m_fvCoeffs.Mom[X].AP[sUP::cLeft ](iU) * m_fields.P( igU + sUP::iLeft , jgU, kgU)
+                       - m_fvCoeffs.Mom[X].AP[sUP::cRight](iU) * m_fields.P( igU + sUP::iRight, jgU, kgU) 
 
                        ) * m_fvCoeffs.Mom[X].diagCoeffInv(iU, jU, kU);
 
@@ -251,15 +257,15 @@ public:
         // V momentum
         floatType bV = ( m_fvCoeffs.Mom[Y].B(iV, jV, kV)
 
-                       - m_fvCoeffs.Mom[Y].AU[Y][n](iV, jV, kV) * m_fields.U[Y]( G(iV  , jV+1, kV  ) ) 
-                       - m_fvCoeffs.Mom[Y].AU[Y][e](iV, jV, kV) * m_fields.U[Y]( G(iV+1, jV  , kV  ) ) 
-                       - m_fvCoeffs.Mom[Y].AU[Y][s](iV, jV, kV) * m_fields.U[Y]( G(iV  , jV-1, kV  ) ) 
-                       - m_fvCoeffs.Mom[Y].AU[Y][w](iV, jV, kV) * m_fields.U[Y]( G(iV-1, jV  , kV  ) ) 
-                       - m_fvCoeffs.Mom[Y].AU[Y][t](iV, jV, kV) * m_fields.U[Y]( G(iV  , jV  , kV+1) ) 
-                       - m_fvCoeffs.Mom[Y].AU[Y][b](iV, jV, kV) * m_fields.U[Y]( G(iV  , jV  , kV-1) )
+                       - m_fvCoeffs.Mom[Y].AU[Y][n](iV, jV, kV) * m_fields.U[Y]( igV  , jgV+1, kgV  ) 
+                       - m_fvCoeffs.Mom[Y].AU[Y][e](iV, jV, kV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
+                       - m_fvCoeffs.Mom[Y].AU[Y][s](iV, jV, kV) * m_fields.U[Y]( igV  , jgV-1, kgV  ) 
+                       - m_fvCoeffs.Mom[Y].AU[Y][w](iV, jV, kV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
+                       - m_fvCoeffs.Mom[Y].AU[Y][t](iV, jV, kV) * m_fields.U[Y]( igV  , jgV  , kgV+1) 
+                       - m_fvCoeffs.Mom[Y].AU[Y][b](iV, jV, kV) * m_fields.U[Y]( igV  , jgV  , kgV-1)
 
-                       - m_fvCoeffs.Mom[Y].AP[sVP::cLeft ](jV) * m_fields.P( G(iV, jV + sVP::iLeft , kV) ) 
-                       - m_fvCoeffs.Mom[Y].AP[sVP::cRight](jV) * m_fields.P( G(iV, jV + sVP::iRight, kV) )
+                       - m_fvCoeffs.Mom[Y].AP[sVP::cLeft ](jV) * m_fields.P( igV, jgV + sVP::iLeft , kgV)
+                       - m_fvCoeffs.Mom[Y].AP[sVP::cRight](jV) * m_fields.P( igV, jgV + sVP::iRight, kgV)
 
                        ) * m_fvCoeffs.Mom[Y].diagCoeffInv(iV, jV, kV);
 
@@ -267,15 +273,15 @@ public:
         // W momentum
         floatType bW = ( m_fvCoeffs.Mom[Z].B(iW, jW, kW)
                             
-                       - m_fvCoeffs.Mom[Z].AU[Z][n](iW, jW, kW) * m_fields.U[Z]( G(iW  , jW+1, kW  ) ) 
-                       - m_fvCoeffs.Mom[Z].AU[Z][e](iW, jW, kW) * m_fields.U[Z]( G(iW+1, jW  , kW  ) ) 
-                       - m_fvCoeffs.Mom[Z].AU[Z][s](iW, jW, kW) * m_fields.U[Z]( G(iW  , jW-1, kW  ) ) 
-                       - m_fvCoeffs.Mom[Z].AU[Z][w](iW, jW, kW) * m_fields.U[Z]( G(iW-1, jW  , kW  ) ) 
-                       - m_fvCoeffs.Mom[Z].AU[Z][t](iW, jW, kW) * m_fields.U[Z]( G(iW  , jW  , kW+1) ) 
-                       - m_fvCoeffs.Mom[Z].AU[Z][b](iW, jW, kW) * m_fields.U[Z]( G(iW  , jW  , kW-1) )
+                       - m_fvCoeffs.Mom[Z].AU[Z][n](iW, jW, kW) * m_fields.U[Z]( igW  , jgW+1, kgW  ) 
+                       - m_fvCoeffs.Mom[Z].AU[Z][e](iW, jW, kW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
+                       - m_fvCoeffs.Mom[Z].AU[Z][s](iW, jW, kW) * m_fields.U[Z]( igW  , jgW-1, kgW  ) 
+                       - m_fvCoeffs.Mom[Z].AU[Z][w](iW, jW, kW) * m_fields.U[Z]( igW-1, jgW  , kgW  ) 
+                       - m_fvCoeffs.Mom[Z].AU[Z][t](iW, jW, kW) * m_fields.U[Z]( igW  , jgW  , kgW+1) 
+                       - m_fvCoeffs.Mom[Z].AU[Z][b](iW, jW, kW) * m_fields.U[Z]( igW  , jgW  , kgW-1)
 
-                       - m_fvCoeffs.Mom[Z].AP[sWP::cLeft ](kW) * m_fields.P( G(iW, jW, kW + sWP::iLeft) ) 
-                       - m_fvCoeffs.Mom[Z].AP[sWP::cRight](kW) * m_fields.P( G(iW, jW, kW + sWP::iRight) )
+                       - m_fvCoeffs.Mom[Z].AP[sWP::cLeft ](kW) * m_fields.P( igW, jgW, kgW + sWP::iLeft ) 
+                       - m_fvCoeffs.Mom[Z].AP[sWP::cRight](kW) * m_fields.P( igW, jgW, kgW + sWP::iRight)
 
                        ) * m_fvCoeffs.Mom[Z].diagCoeffInv(iW, jW, kW);
 
@@ -283,32 +289,32 @@ public:
         // Continuity for pressure
         floatType bP = m_fvCoeffs.Cont.B(i, j, k)
 
-                     - m_fvCoeffs.Cont.AU[X][sCU::cLeft ](i) * m_fields.U[X]( G(i + sCU::iLeft , j, k) ) 
-                     - m_fvCoeffs.Cont.AU[X][sCU::cRight](i) * m_fields.U[X]( G(i + sCU::iRight, j, k) )
+                     - m_fvCoeffs.Cont.AU[X][sCU::cLeft ](i) * m_fields.U[X]( ig + sCU::iLeft , jg, kg)
+                     - m_fvCoeffs.Cont.AU[X][sCU::cRight](i) * m_fields.U[X]( ig + sCU::iRight, jg, kg)
 
-                     - m_fvCoeffs.Cont.AU[Y][sCV::cLeft ](j) * m_fields.U[Y]( G(i, j + sCV::iLeft , k) ) 
-                     - m_fvCoeffs.Cont.AU[Y][sCV::cRight](j) * m_fields.U[Y]( G(i, j + sCV::iRight, k) )
+                     - m_fvCoeffs.Cont.AU[Y][sCV::cLeft ](j) * m_fields.U[Y]( ig, jg + sCV::iLeft , kg)
+                     - m_fvCoeffs.Cont.AU[Y][sCV::cRight](j) * m_fields.U[Y]( ig, jg + sCV::iRight, kg)
 
-                     - m_fvCoeffs.Cont.AU[Z][sCW::cLeft ](k) * m_fields.U[Z]( G(i, j, k + sCW::iLeft ) )
-                     - m_fvCoeffs.Cont.AU[Z][sCW::cRight](k) * m_fields.U[Z]( G(i, j, k + sCW::iRight) )
+                     - m_fvCoeffs.Cont.AU[Z][sCW::cLeft ](k) * m_fields.U[Z]( ig, jg, kg + sCW::iLeft )
+                     - m_fvCoeffs.Cont.AU[Z][sCW::cRight](k) * m_fields.U[Z]( ig, jg, kg + sCW::iRight)
 
-                     - m_fvCoeffs.Cont.AP[n](i, j, k) * m_fields.P( G(i  , j+1, k  )) 
-                     - m_fvCoeffs.Cont.AP[e](i, j, k) * m_fields.P( G(i+1, j  , k  )) 
-                     - m_fvCoeffs.Cont.AP[s](i, j, k) * m_fields.P( G(i  , j-1, k  )) 
-                     - m_fvCoeffs.Cont.AP[w](i, j, k) * m_fields.P( G(i-1, j  , k  )) 
-                     - m_fvCoeffs.Cont.AP[t](i, j, k) * m_fields.P( G(i  , j  , k+1)) 
-                     - m_fvCoeffs.Cont.AP[b](i, j, k) * m_fields.P( G(i  , j  , k-1))
+                     - m_fvCoeffs.Cont.AP[n](i, j, k) * m_fields.P( ig  , jg+1, kg  ) 
+                     - m_fvCoeffs.Cont.AP[e](i, j, k) * m_fields.P( ig+1, jg  , kg  ) 
+                     - m_fvCoeffs.Cont.AP[s](i, j, k) * m_fields.P( ig  , jg-1, kg  ) 
+                     - m_fvCoeffs.Cont.AP[w](i, j, k) * m_fields.P( ig-1, jg  , kg  ) 
+                     - m_fvCoeffs.Cont.AP[t](i, j, k) * m_fields.P( ig  , jg  , kg+1) 
+                     - m_fvCoeffs.Cont.AP[b](i, j, k) * m_fields.P( ig  , jg  , kg-1)
 
-                     - m_fvCoeffs.Cont.AP[nn](i, j, k) * m_fields.P( G(i  , j+2, k  ) ) 
-                     - m_fvCoeffs.Cont.AP[ee](i, j, k) * m_fields.P( G(i+2, j  , k  ) ) 
-                     - m_fvCoeffs.Cont.AP[ss](i, j, k) * m_fields.P( G(i  , j-2, k  ) ) 
-                     - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields.P( G(i-2, j  , k  ) ) 
-                     - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields.P( G(i  , j  , k+2) ) 
-                     - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields.P( G(i  , j  , k-2) );
+                     - m_fvCoeffs.Cont.AP[nn](i, j, k) * m_fields.P( ig  , jg+2, kg  )
+                     - m_fvCoeffs.Cont.AP[ee](i, j, k) * m_fields.P( ig+2, jg  , kg  ) 
+                     - m_fvCoeffs.Cont.AP[ss](i, j, k) * m_fields.P( ig  , jg-2, kg  ) 
+                     - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields.P( ig-2, jg  , kg  ) 
+                     - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields.P( ig  , jg  , kg+2) 
+                     - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields.P( ig  , jg  , kg-2);
 
 
         // Update P from continuity
-        m_fields.P( G(i, j, k) ) = ( 1 - m_fvCoeffs.Cont.relaxation ) * m_fieldsOld.P( G(i, j, k) )
+        m_fields.P( ig, jg, kg ) = ( 1 - m_fvCoeffs.Cont.relaxation ) * m_fieldsOld.P( ig, jg, kg )
                                  + m_fvCoeffs.Cont.relaxation * 
                                    ( bP 
                                    - m_fvCoeffs.Cont.AU[X][sCU::cCoupled](i) * bU 
@@ -318,16 +324,16 @@ public:
 
 
         // Update U from momentum
-        m_fields.U[X]( G(iU, jU, kU) ) = ( 1 - m_fvCoeffs.Mom[X].relaxation ) * m_fieldsOld.U[X]( G(iU, jU, kU) )
-                                       + m_fvCoeffs.Mom[X].relaxation * ( bU - m_fvCoeffs.Mom[X].AP[sUP::cCoupled](iU) * m_fields.P( G(i, j, k) ) * m_fvCoeffs.Mom[X].diagCoeffInv(iU, jU, kU) );
+        m_fields.U[X]( igU, jgU, kgU ) = ( 1 - m_fvCoeffs.Mom[X].relaxation ) * m_fieldsOld.U[X]( igU, jgU, kgU )
+                                       + m_fvCoeffs.Mom[X].relaxation * ( bU - m_fvCoeffs.Mom[X].AP[sUP::cCoupled](iU) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[X].diagCoeffInv(iU, jU, kU) );
 
         // Update V from momentum
-        m_fields.U[Y]( G(iV, jV, kV) ) = ( 1 - m_fvCoeffs.Mom[Y].relaxation ) * m_fieldsOld.U[Y]( G(iV, jV, kV) )
-                                       + m_fvCoeffs.Mom[Y].relaxation * ( bV - m_fvCoeffs.Mom[Y].AP[sVP::cCoupled](jV) * m_fields.P( G(i, j, k) ) * m_fvCoeffs.Mom[Y].diagCoeffInv(iV, jV, kV) );
+        m_fields.U[Y]( igV, jgV, kgV ) = ( 1 - m_fvCoeffs.Mom[Y].relaxation ) * m_fieldsOld.U[Y]( igV, jgV, kgV )
+                                       + m_fvCoeffs.Mom[Y].relaxation * ( bV - m_fvCoeffs.Mom[Y].AP[sVP::cCoupled](jV) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Y].diagCoeffInv(iV, jV, kV) );
 
         // Update W from momentum
-        m_fields.U[Z]( G(iW, jW, kW) ) = ( 1 - m_fvCoeffs.Mom[Z].relaxation ) * m_fieldsOld.U[Z]( G(iW, jW, kW) ) 
-                                       + m_fvCoeffs.Mom[Z].relaxation * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kW) * m_fields.P( G(i, j, k) ) * m_fvCoeffs.Mom[Z].diagCoeffInv(iW, jW, kW) );
+        m_fields.U[Z]( igW, jgW, kgW ) = ( 1 - m_fvCoeffs.Mom[Z].relaxation ) * m_fieldsOld.U[Z]( igW, jgW, kgW ) 
+                                       + m_fvCoeffs.Mom[Z].relaxation * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(iW, jW, kW) );
 
     }
 
@@ -339,8 +345,8 @@ public:
 
         // Staggered indexing for fields
         intType iU, jU, kU,
-            iV, jV, kV,
-            iW, jW, kW;
+                iV, jV, kV,
+                iW, jW, kW;
 
         // Starting and ending indices, since K cannot be calculated on some boundaries due to the staggering
         intType iStart = 1 + sCU::iLeft,
@@ -385,7 +391,7 @@ private:
     FieldData<array3D> &m_fields;
     const FieldData<array3D> &m_fieldsOld;
     const FVCoefficients &m_fvCoeffs;
-    intType m_ni, m_nj, m_nk;
+    const intType m_ni, m_nj, m_nk;
     array3D m_K;
 
 };
@@ -713,75 +719,110 @@ public:
                   const FVCoefficients &fvCoeffs,
                   const InputData::PlaneSolverSettings &planeSolverSettings) : 
         m_fields( fields ),
+        m_triadSolver_en( fields, fieldsOld, fvCoeffs ),
+        m_triadSolver_wn( fields, fieldsOld, fvCoeffs ),
+        m_triadSolver_es( fields, fieldsOld, fvCoeffs ),
+        m_triadSolver_ws( fields, fieldsOld, fvCoeffs ),
         m_ni( fvCoeffs.nCells(Axis::X) ),
         m_nj( fvCoeffs.nCells(Axis::Y) )
     { 
-        m_triadSolver_en = std::make_unique<TriadSolver<TC::e, TC::n, Wstag> >( fields, fieldsOld, fvCoeffs );
-        m_triadSolver_wn = std::make_unique<TriadSolver<TC::w, TC::n, Wstag> >( fields, fieldsOld, fvCoeffs );
-        m_triadSolver_es = std::make_unique<TriadSolver<TC::e, TC::s, Wstag> >( fields, fieldsOld, fvCoeffs );
-        m_triadSolver_ws = std::make_unique<TriadSolver<TC::w, TC::s, Wstag> >( fields, fieldsOld, fvCoeffs );
-        SolutionUpdater = &PlaneSolver2::Sweep3D;
-        StateUpdater = &PlaneSolver2::UpdateState3D;
+        // m_triadSolver_en = std::make_unique<TriadSolver<TC::e, TC::n, Wstag> >( fields, fieldsOld, fvCoeffs );
+        // m_triadSolver_wn = std::make_unique<TriadSolver<TC::w, TC::n, Wstag> >( fields, fieldsOld, fvCoeffs );
+        // m_triadSolver_es = std::make_unique<TriadSolver<TC::e, TC::s, Wstag> >( fields, fieldsOld, fvCoeffs );
+        // m_triadSolver_ws = std::make_unique<TriadSolver<TC::w, TC::s, Wstag> >( fields, fieldsOld, fvCoeffs );
+        // SolutionUpdater = &PlaneSolver2::Sweep3D;
+        // StateUpdater = &PlaneSolver2::UpdateState3D;
     }
 
 
     void SolvePlane(const intType k)
-    { (this->*SolutionUpdater)(k); }
+    { 
+        // (this->*SolutionUpdater)(k); 
+        for ( intType j = 0; j != m_nj - 1; j++ ) {
+            for ( intType i = 0; i != m_ni - 1; i++ ) {
+                m_triadSolver_en.UpdateTriad( i, j, k );
+            }
+
+            for ( intType i = m_ni - 1; i != 0; i-- ) {
+                m_triadSolver_wn.UpdateTriad( i, j, k );
+            }
+        }
+
+        for ( intType j = m_nj - 1; j != 0; j-- ) { 
+            for ( intType i = 0; i != m_ni - 1; i++ ) {
+                m_triadSolver_es.UpdateTriad( i, j, k );
+            }
+
+            for ( intType i = m_ni - 1; i != 0; i-- ) {
+                m_triadSolver_ws.UpdateTriad( i, j, k );
+            }
+        }
+
+    }
 
 
     void UpdateState()
-    { (this->*StateUpdater)(); }
+    { 
+        // (this->*StateUpdater)(); 
+        m_triadSolver_en.UpdateGlobalConstants();
+        m_triadSolver_wn.UpdateGlobalConstants();
+        m_triadSolver_es.UpdateGlobalConstants();
+        m_triadSolver_ws.UpdateGlobalConstants();
+    }
 
 
 private:
 
     FieldData<array3D> &m_fields;
 
-    std::unique_ptr< TriadSolver< TC::e, TC::n, Wstag > > m_triadSolver_en;
-    std::unique_ptr< TriadSolver< TC::w, TC::n, Wstag > > m_triadSolver_wn;
-    std::unique_ptr< TriadSolver< TC::e, TC::s, Wstag > > m_triadSolver_es;
-    std::unique_ptr< TriadSolver< TC::w, TC::s, Wstag > > m_triadSolver_ws;
+    // std::unique_ptr< TriadSolver< TC::e, TC::n, Wstag > > m_triadSolver_en;
+    // std::unique_ptr< TriadSolver< TC::w, TC::n, Wstag > > m_triadSolver_wn;
+    // std::unique_ptr< TriadSolver< TC::e, TC::s, Wstag > > m_triadSolver_es;
+    // std::unique_ptr< TriadSolver< TC::w, TC::s, Wstag > > m_triadSolver_ws;
 
-    void (PlaneSolver2::*SolutionUpdater)(intType);
-    void (PlaneSolver2::*StateUpdater)();
+    TriadSolver< TC::e, TC::n, Wstag > m_triadSolver_en;
+    TriadSolver< TC::w, TC::n, Wstag > m_triadSolver_wn;
+    TriadSolver< TC::e, TC::s, Wstag > m_triadSolver_es;
+    TriadSolver< TC::w, TC::s, Wstag > m_triadSolver_ws;
+
+    // void (PlaneSolver2::*SolutionUpdater)(intType);
+    // void (PlaneSolver2::*StateUpdater)();
 
     intType m_ni, m_nj;
 
 
-    // For 3D simulations
-    void Sweep3D(intType k)
-    {   
-            
-        for ( intType j = 0; j != m_nj - 1; j++ ) {
-            for ( intType i = 0; i != m_ni - 1; i++ ) {
-                m_triadSolver_en->UpdateTriad( i, j, k );
-            }
+    // // For 3D simulations
+    // void Sweep3D(intType k)
+    // {       
+    //     for ( intType j = 0; j != m_nj - 1; j++ ) {
+    //         for ( intType i = 0; i != m_ni - 1; i++ ) {
+    //             m_triadSolver_en.UpdateTriad( i, j, k );
+    //         }
 
-            for ( intType i = m_ni - 1; i != 0; i-- ) {
-                m_triadSolver_wn->UpdateTriad( i, j, k );
-            }
-        }
+    //         for ( intType i = m_ni - 1; i != 0; i-- ) {
+    //             m_triadSolver_wn.UpdateTriad( i, j, k );
+    //         }
+    //     }
 
-        // Reverse sweep
-        for ( intType j = m_nj - 1; j != 0; j-- ) { 
-            for ( intType i = 0; i != m_ni - 1; i++ ) {
-                m_triadSolver_es->UpdateTriad( i, j, k );
-            }
+    //     for ( intType j = m_nj - 1; j != 0; j-- ) { 
+    //         for ( intType i = 0; i != m_ni - 1; i++ ) {
+    //             m_triadSolver_es.UpdateTriad( i, j, k );
+    //         }
 
-            for ( intType i = m_ni - 1; i != 0; i-- ) {
-                m_triadSolver_ws->UpdateTriad( i, j, k );
-            }
-        }
+    //         for ( intType i = m_ni - 1; i != 0; i-- ) {
+    //             m_triadSolver_ws.UpdateTriad( i, j, k );
+    //         }
+    //     }
 
-    }
+    // }
 
-    void UpdateState3D()
-    {
-        m_triadSolver_en->UpdateGlobalConstants();
-        m_triadSolver_wn->UpdateGlobalConstants();
-        m_triadSolver_es->UpdateGlobalConstants();
-        m_triadSolver_ws->UpdateGlobalConstants();
-    }
+    // void UpdateState3D()
+    // {
+    //     m_triadSolver_en.UpdateGlobalConstants();
+    //     m_triadSolver_wn.UpdateGlobalConstants();
+    //     m_triadSolver_es.UpdateGlobalConstants();
+    //     m_triadSolver_ws.UpdateGlobalConstants();
+    // }
 };
 
 
