@@ -114,9 +114,9 @@ class StaggerIndexing
                                 cLeft    = StaggerIndexing::LeftCoeff( StaggerIndexing::OppositeCoeff( staggeredCoeff ) ), 
                                 cRight   = StaggerIndexing::RightCoeff( StaggerIndexing::OppositeCoeff( staggeredCoeff ) );
 
-            static constexpr intType iCoupled = CoeffIndex[ cCoupled ],
-                                     iLeft    = CoeffIndex[ cLeft ], 
-                                     iRight   = CoeffIndex[ cRight ];
+            static constexpr intType iCoupled = LUT::CoeffIndex[ cCoupled ],
+                                     iLeft    = LUT::CoeffIndex[ cLeft ], 
+                                     iRight   = LUT::CoeffIndex[ cRight ];
         };
 
 
@@ -127,9 +127,9 @@ class StaggerIndexing
                                 cLeft    = StaggerIndexing::LeftCoeff( staggeredCoeff ),
                                 cRight   = StaggerIndexing::RightCoeff( staggeredCoeff );
 
-            static constexpr intType iCoupled = CoeffIndex[ cCoupled ],
-                                     iLeft    = CoeffIndex[ cLeft ], 
-                                     iRight   = CoeffIndex[ cRight ];
+            static constexpr intType iCoupled = LUT::CoeffIndex[ cCoupled ],
+                                     iLeft    = LUT::CoeffIndex[ cLeft ], 
+                                     iRight   = LUT::CoeffIndex[ cRight ];
         };
 
 };

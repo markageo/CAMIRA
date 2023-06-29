@@ -54,13 +54,13 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceFluxes,
 {
     using BC = BoundaryConditions::ENUMDATA;
     
-    Axis::ENUMDATA axis = BoundaryPatchAxis[ boundaryPatch ];
+    Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
     
     static constexpr arrayIndex3D offsets = {nGhost, nGhost, nGhost};
     arrayIndex3D extents = {mesh.nCells(Axis::X), mesh.nCells(Axis::Y), mesh.nCells(Axis::Z)};
     
     intType faceEndIndex, fieldEndIndex;
-    if ( boundaryPatch == PositivePatch[ axis ] ) {
+    if ( boundaryPatch == LUT::PositivePatch[ axis ] ) {
         faceEndIndex = mesh.nCells(axis);
         fieldEndIndex = mesh.nCells(axis)-1;
     } else {
@@ -136,7 +136,7 @@ void UpdateFaceFluxes( EnumVector<Axis, array3D> &faceFluxes,
     // Boundary faces
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {
 
-        Axis::ENUMDATA axis = BoundaryPatchAxis[ boundaryPatch ];
+        Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
         BoundaryFaceVelocitiy( faceFluxes, cellVelocities, mesh, inputData.boundaryConditions.U, boundaryPatch, axis );
 
     } );

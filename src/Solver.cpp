@@ -700,7 +700,7 @@ private:
         using enum Axis::ENUMDATA;
 
         ForAllFieldData( [&] (intType f) { m_kS[f] = k; });  // Set iterating coefficient
-        m_kS.U[Z] += CoeffIndex[Wstag];                      // W momentum is staggered
+        m_kS.U[Z] += LUT::CoeffIndex[Wstag];                      // W momentum is staggered
 
         ForAllFieldData( [&] (intType f) { m_oldPlane[f] = m_fields[f].chip( G(m_kS[f]), Z ); } ); // Set old plane
 

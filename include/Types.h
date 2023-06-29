@@ -157,6 +157,8 @@ void EnumFor( L&& f )
 
 // ----------------------------------------------------- Enum Lookups ----------------------------------------------------- //
 
+namespace LUT
+{
 
 // Get index offset from TransportCoeffienct
 constexpr std::array<intType, TransportCoefficients::count> CoeffIndex = { 2,     // tt
@@ -211,7 +213,7 @@ constexpr std::array<Axis::ENUMDATA, 6> BoundaryPatchAxis{ Axis::X,    // xPosit
                                                            Axis::Z};   // zNegative
 
 
-
+}   // end namespace LUT
 
 
 // ---------------------------------------------------- Solver Parameters -------------------------------------------------- //
@@ -240,7 +242,7 @@ enum class FaceInterpolationSchemes {
 // ------------------------------------------------------- Containers ----------------------------------------------------- //
 
 // Namespace for internal implementation.
-namespace Internal
+namespace CFD_INTERNAL
 {
 
 // Contain the types needed when constructing multidimensional arrays. 1D arrays are not constructed using arrays for
@@ -276,7 +278,7 @@ struct dimTypes<B>
     
 };
 
-}   //  end namespace Internal
+}   //  end namespace CFD_INTERNAL
 
 
 
@@ -303,8 +305,8 @@ class EnumVector
     static constexpr bool isArrayND = std::is_same< T, CFD::array2D >::value ||
                                       std::is_same< T, CFD::array3D >::value;
 
-    using dimsArray =  typename Internal::dimTypes<T>::dimsArray;
-    using dimsArrayInternal =  typename Internal::dimTypes<T>::dimsArrayInternal;
+    using dimsArray =  typename CFD_INTERNAL::dimTypes<T>::dimsArray;
+    using dimsArrayInternal =  typename CFD_INTERNAL::dimTypes<T>::dimsArrayInternal;
 
     public:
 
@@ -317,7 +319,7 @@ class EnumVector
         EnumVector(const std::vector< ENUMDATA > &coeffs, const dimsArray &dims) 
         requires( isArray ) 
         {
-            dimsArrayInternal dimsInternal = Internal::dimTypes<T>::ConvertDimsArrayInternal( dims );
+            dimsArrayInternal dimsInternal = CFD_INTERNAL::dimTypes<T>::ConvertDimsArrayInternal( dims );
             for (const auto &index : coeffs) {
                 m_dataVector[index] = T( dimsInternal ).setZero();
             }
@@ -329,7 +331,7 @@ class EnumVector
         {
             dimsArrayInternal dimsInternal;
             for (size_t i = 0; i != arraySpec.size(); i++) {
-                dimsInternal = Internal::dimTypes<T>::ConvertDimsArrayInternal( arraySpec[i].second );
+                dimsInternal = CFD_INTERNAL::dimTypes<T>::ConvertDimsArrayInternal( arraySpec[i].second );
                 m_dataVector[ arraySpec[i].first ] = T( dimsInternal ).setZero();
             }
         }
@@ -375,8 +377,8 @@ class ArrayAllocator
     static constexpr bool isArrayND = std::is_same< arrayType, CFD::array2D >::value ||
                                       std::is_same< arrayType, CFD::array3D >::value;
 
-    using dimsArray =  typename Internal::dimTypes<arrayType>::dimsArray;
-    using dimsArrayInternal = typename Internal::dimTypes<arrayType>::dimsArrayInternal;
+    using dimsArray =  typename CFD_INTERNAL::dimTypes<arrayType>::dimsArray;
+    using dimsArrayInternal = typename CFD_INTERNAL::dimTypes<arrayType>::dimsArrayInternal;
 
     public:
 
@@ -386,7 +388,7 @@ class ArrayAllocator
         // Constructor, All arrays have same dimensions 
         ArrayAllocator(const std::vector< ENUMDATA > &coeffs, const dimsArray &dims )
         {
-            dimsArrayInternal dimsInternal = Internal::dimTypes<arrayType>::ConvertDimsArrayInternal( dims );
+            dimsArrayInternal dimsInternal = CFD_INTERNAL::dimTypes<arrayType>::ConvertDimsArrayInternal( dims );
 
             for (const auto &index : coeffs) {
                 m_coeffPointers[index] = std::make_unique<arrayType>( arrayType( dimsInternal ).setZero() );
@@ -399,7 +401,7 @@ class ArrayAllocator
         {
             dimsArrayInternal dimsInternal;
             for (size_t i = 0; i != arraySpec.size(); i++) {
-                dimsInternal =  Internal::dimTypes<arrayType>::ConvertDimsArrayInternal( arraySpec[i].second );
+                dimsInternal =  CFD_INTERNAL::dimTypes<arrayType>::ConvertDimsArrayInternal( arraySpec[i].second );
                 m_coeffPointers[ arraySpec[i].first ] = std::make_unique<arrayType>( arrayType( dimsInternal ).setZero() );
             }
         }
