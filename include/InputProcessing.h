@@ -72,6 +72,17 @@ struct InputData
     }; 
     LinearSolverSettings linearSolverSettings;
 
+
+    // Ouput
+    std::string residualHistoryFilename;
+    std::string fieldOutputFilename;
+
+    struct ProbeData {
+        std::string name;
+        fVector3 location;
+    };
+    std::vector< ProbeData > probes;
+
 };
 
 

@@ -547,6 +547,53 @@ namespace
     }
 
 
+    /*-------------------------------------------------------------------------------------*\
+                                            Output
+    \*-------------------------------------------------------------------------------------*/
+
+    void ReadMonitors( InputData &inputData,
+                       const pt::ptree &outputTree )
+    {
+        // It's ok if there is no monitors tree
+        boost::optional<const pt::ptree &> monitorsTreeOptional = outputTree.get_child_optional( "Monitors" );
+        if ( !monitorsTreeOptional )
+            return;
+
+        const pt::ptree &monitorsTree = monitorsTreeOptional.get();
+
+        InputData::ProbeData tempProbeData;
+        std::vector<floatType> tempLocation;
+        for (auto probe : monitorsTree) {
+            if (probe.first != "Probe") {
+                throw std::runtime_error(  "'" + probe.first + "' is not a valid Monitors child name" );
+            }
+
+            tempProbeData.name     = probe.second.get<std::string>( "name" );
+            tempLocation           = probe.second.get< std::vector<floatType> >( "location" ); 
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                tempProbeData.location(axis) = tempLocation[axis];
+            } );
+
+            inputData.probes.push_back( tempProbeData );
+        }
+    }
+
+
+    void ReadOutput( InputData &inputData,
+                    const pt::ptree &tree )
+    {
+        const pt::ptree &outputTree = tree.get_child( "Output" );
+
+        // Residual history filename
+        inputData.residualHistoryFilename = outputTree.get<std::string>( "residualHistoryFilename" );
+
+        // Field output filename
+        inputData.fieldOutputFilename = outputTree.get<std::string>( "fieldOutputFilename" );
+
+        // Probes
+        ReadMonitors( inputData, outputTree );
+    }
+
 }   // end anonymous namepsace
 
 
@@ -561,6 +608,7 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFileName)
     ReadBoundaryConditions(inputData, tree);
     ReadInitialConditions(inputData, tree);
     ReadSolver(inputData, tree);
+    ReadOutput(inputData, tree);
 
     return inputData;
 }
