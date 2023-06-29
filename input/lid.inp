@@ -144,3 +144,18 @@ Solver {
     }
 
 }
+
+
+Output {
+
+    residualHistoryFilename = "residual_history.csv"
+    fieldOutputFilename = "fields.vtk"
+
+    Monitors {
+        Probe {
+            name = "probe1"
+            location = (0.5, 0.5, 0.5)
+        }
+    }
+
+}
