@@ -25,8 +25,8 @@ AxisTransformationMap::AxisTransformationMap() :
 void AxisTransformationMap::Set( const BoundaryPatches::ENUMDATA codePatch,
                                  const BoundaryPatches::ENUMDATA userPatch )
 {
-    A codeAxis = BoundaryPatchAxis[ codePatch ];
-    A userAxis = BoundaryPatchAxis[ userPatch ];
+    A codeAxis = LUT::BoundaryPatchAxis[ codePatch ];
+    A userAxis = LUT::BoundaryPatchAxis[ userPatch ];
 
     // Set the given patch
     m_codeBoundaryPatches[ codePatch ] = userPatch;
@@ -35,17 +35,17 @@ void AxisTransformationMap::Set( const BoundaryPatches::ENUMDATA codePatch,
     // Set the opposite patch
     BP codePatchOpposite;
     
-    if ( codePatch == PositivePatch[ codeAxis ] ) {
-        codePatchOpposite = NegativePatch[ codeAxis ];
+    if ( codePatch == LUT::PositivePatch[ codeAxis ] ) {
+        codePatchOpposite =LUT:: NegativePatch[ codeAxis ];
     } else {
-        codePatchOpposite = PositivePatch[ codeAxis ];
+        codePatchOpposite = LUT::PositivePatch[ codeAxis ];
     }
 
     BP userPatchOpposite;
-    if ( userPatch == PositivePatch[ userAxis ] ) {
-        userPatchOpposite = NegativePatch[ userAxis ];
+    if ( userPatch == LUT::PositivePatch[ userAxis ] ) {
+        userPatchOpposite = LUT::NegativePatch[ userAxis ];
     } else {
-        userPatchOpposite = PositivePatch[ userAxis ];
+        userPatchOpposite = LUT::PositivePatch[ userAxis ];
     }
 
     m_codeBoundaryPatches[ codePatchOpposite ] = userPatchOpposite;
@@ -65,18 +65,18 @@ BoundaryPatches::ENUMDATA AxisTransformationMap::CodePatch(const BP userPatch) c
 // Code axis from user axis
 Axis::ENUMDATA AxisTransformationMap::CodeAxis(const A userAxis) const
 { 
-    BP userPatch = PositivePatch[ userAxis ];
+    BP userPatch = LUT::PositivePatch[ userAxis ];
     BP codePatch = CodePatch( userPatch );
-    return BoundaryPatchAxis[ codePatch ];
+    return LUT::BoundaryPatchAxis[ codePatch ];
 }
 
 // If code axis is mapped to the negative direction of a user axis
 bool AxisTransformationMap::IsCodeAxisReversed( const A codeAxis ) const
 {
-    BP positiveCodePatch = PositivePatch[ codeAxis ];
+    BP positiveCodePatch = LUT::PositivePatch[ codeAxis ];
     BP mappedUserPatch   = UserPatch( positiveCodePatch );
-    A  mappedUserAxis    = BoundaryPatchAxis[ mappedUserPatch ];
-    if ( mappedUserPatch == NegativePatch[ mappedUserAxis ] ) {
+    A  mappedUserAxis    = LUT::BoundaryPatchAxis[ mappedUserPatch ];
+    if ( mappedUserPatch == LUT::NegativePatch[ mappedUserAxis ] ) {
         return true;
     }
     return false;
@@ -90,18 +90,18 @@ BoundaryPatches::ENUMDATA AxisTransformationMap::UserPatch(const BP codePatch) c
 // User axis from code axis
 Axis::ENUMDATA AxisTransformationMap::UserAxis(const A codeAxis) const
 {
-    BP codePatch = PositivePatch[ codeAxis ];
+    BP codePatch = LUT::PositivePatch[ codeAxis ];
     BP userPatch = UserPatch( codePatch );
-    return BoundaryPatchAxis[ userPatch ];
+    return LUT::BoundaryPatchAxis[ userPatch ];
 }
 
 // If user axis is mapped to the negative direction of a code axis
 bool AxisTransformationMap::IsUserAxisReversed( const A userAxis ) const
 {
-    BP positiveUserPatch = PositivePatch[ userAxis ];
+    BP positiveUserPatch = LUT::PositivePatch[ userAxis ];
     BP mappedCodePatch   = CodePatch( positiveUserPatch );
-    A  mappedCodeAxis    = BoundaryPatchAxis[ mappedCodePatch ];
-    if ( mappedCodePatch == NegativePatch[ mappedCodeAxis ] ) {
+    A  mappedCodeAxis    = LUT::BoundaryPatchAxis[ mappedCodePatch ];
+    if ( mappedCodePatch == LUT::NegativePatch[ mappedCodeAxis ] ) {
         return true;
     }
     return false;
@@ -373,8 +373,8 @@ namespace
         targetMesh.cellCenterDiffInv[ targetAxis ] = sourceMesh.cellCenterDiffInv[ sourceAxis ];
         targetMesh.interpFactors[ targetAxis ]     = sourceMesh.interpFactors[ sourceAxis ];
 
-        targetMesh.extrapFactors[ PositivePatch[ targetAxis ] ] = sourceMesh.extrapFactors[ PositivePatch[ sourceAxis ] ];
-        targetMesh.extrapFactors[ NegativePatch[ targetAxis ] ] = sourceMesh.extrapFactors[ NegativePatch[ sourceAxis ] ];
+        targetMesh.extrapFactors[ LUT::PositivePatch[ targetAxis ] ] = sourceMesh.extrapFactors[ LUT::PositivePatch[ sourceAxis ] ];
+        targetMesh.extrapFactors[ LUT::NegativePatch[ targetAxis ] ] = sourceMesh.extrapFactors[ LUT::NegativePatch[ sourceAxis ] ];
     }
 
 
@@ -397,7 +397,7 @@ namespace
         mesh.cellCenterDiffInv[axis] = ReversedArray1D( mesh.cellCenterDiffInv[axis] );
         mesh.interpFactors[axis]     = 1 - ReversedArray1D( mesh.interpFactors[axis] );
 
-        std::swap( mesh.extrapFactors[ PositivePatch[axis] ], mesh.extrapFactors[ NegativePatch[axis] ] );
+        std::swap( mesh.extrapFactors[ LUT::PositivePatch[axis] ], mesh.extrapFactors[ LUT::NegativePatch[axis] ] );
     }
 
 

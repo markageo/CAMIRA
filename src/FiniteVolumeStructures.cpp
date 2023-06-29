@@ -151,8 +151,8 @@ void CalculateExtrapolationFactors(EnumVector<BoundaryPatches, Mesh::ExtrapFacto
     using enum BoundaryPatches::ENUMDATA;
     using enum Axis::ENUMDATA;
 
-    BoundaryPatches::ENUMDATA patchPositive = PositivePatch[ axis ], 
-                              patchNegative = NegativePatch[ axis ];
+    BoundaryPatches::ENUMDATA patchPositive = LUT::PositivePatch[ axis ], 
+                              patchNegative = LUT::NegativePatch[ axis ];
 
     // If mesh is only 1 cell think (such as in a 2D simulation), make the extrapolatino equal to the single cell
     if ( cellLengths[axis].size() == 1 ) {
