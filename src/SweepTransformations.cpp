@@ -330,6 +330,20 @@ namespace
         TransformFieldDataToCode( inputData.linearSolverSettings.relaxation , axisTransformation );
     }
 
+
+    // Remaps any output settings that have direction dependence
+    void TransformOutput( InputData &inputData,
+                          const AxisTransformationMap &axisTransformation )
+    {
+        // Probe locations
+        for ( auto &probe : inputData.probes ) {
+            fVector3 probeLocationUser = probe.location;
+            EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
+                probe.location( codeAxis ) = probeLocationUser( axisTransformation.UserAxis( codeAxis ) ); 
+            } );
+        }
+    }
+
 }   // end anonymous namespace
 
 
@@ -343,6 +357,7 @@ AxisTransformationMap TransformUserInputData(InputData &inputData )
     TransformInitialConditions( inputData, axisTransformation );
     TransformMesh( inputData, axisTransformation );
     TransformSolver( inputData, axisTransformation );
+    TransformOutput( inputData, axisTransformation );
 
     return axisTransformation;
 }
