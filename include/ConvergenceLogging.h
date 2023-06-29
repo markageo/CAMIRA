@@ -82,11 +82,11 @@ class ResidualLogFile
 
             // Write header
             m_convergenceFile.WriteLine( "Iteration", 
-                                          "U residual", 
-                                          "V residual",
-                                          "W residual",
-                                          "P residual", 
-                                          "Global Mass Residual");
+                                          "U_residual", 
+                                          "V_residual",
+                                          "W_residual",
+                                          "P_residual", 
+                                          "Global_mass_residual");
             
         }
 
@@ -137,9 +137,9 @@ class ProbeLogFile
 
             // Write header
             m_convergenceFile.WriteLine( "Iteration", 
-                                         "X velocity", 
-                                         "Y velocity",
-                                         "Z velocity",
+                                         "X_velocity", 
+                                         "Y_velocity",
+                                         "Z_velocity",
                                          "Pressure");
             
         }
@@ -188,7 +188,7 @@ class ConsoleLog
                       << "V residual: " << residuals.U[ m_AT.CodeAxis(Y) ] << ",   "
                       << "W residual: " << residuals.U[ m_AT.CodeAxis(Z) ] << ",   "
                       << "P residual: " << residuals.P                   << ",   "
-                      << "Mass residual: " << massFluxResidual << "\n";
+                      << "Global Mass residual: " << massFluxResidual << "\n";
         }
 
 

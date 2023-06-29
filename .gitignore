@@ -10,6 +10,7 @@ tests/fv_coefficients/output/*
 *.vtk
 *.dbg
 *.csv
+*.dat
 
 perf.data
 perf.data.old
