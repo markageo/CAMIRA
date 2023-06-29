@@ -23,13 +23,13 @@ Mesh {
         Segment {
             bounds     = (0, 0.25)
             nCells     = 8
-            biasFactor = 3
+            biasFactor = 2
         }
 
          Segment {
             bounds     = (0.25, 0.5)
             nCells     = 8
-            biasFactor = -3
+            biasFactor = -2
         }
     }
 
@@ -38,13 +38,13 @@ Mesh {
         Segment {
             bounds     = (0, 0.25)
             nCells     = 8
-            biasFactor = 3
+            biasFactor = 2
         }
 
          Segment {
             bounds     = (0.25, 0.5)
             nCells     = 8
-            biasFactor = -3
+            biasFactor = -2
         }
     }
     
@@ -119,13 +119,13 @@ Solver {
         linearisation = Picard
 
         implicitMomentumRelaxation = (1, 1, 1)
-        implicitPressureRelaxation = 1.1
+        implicitPressureRelaxation = 1
 
         advectionScheme = upwind
-        faceInterpolationScheme = average
+        faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 500
-        maxOuterResiduals = 1e-12
+        maxOuterIterations = 1000
+        maxOuterResiduals = 1e-4
     }
     
     LinearSolver {
@@ -134,31 +134,12 @@ Solver {
         maxIterations = 1
         maxResiduals = 1e-4
 
+        planeSweepDirection = +y
+        lineSweepDirection = +x
+
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
-        PlaneSolver {
-            type = SUGS
-            maxIterations = 1
-            maxResiduals = 1e-5
-
-            momentumRelaxation = (1, 1, 1)
-            pressureRelaxation = 1
-
-            planeSweepDirection = +z
-
-
-            LineSolver {
-                type = SUGS
-                maxIterations = 1
-                maxResiduals = 1e-3
-
-                momentumRelaxation = (1, 1, 1)
-                pressureRelaxation = 1
-
-                lineSweepDirection = +y
-            }
-        }
     }
 
 }

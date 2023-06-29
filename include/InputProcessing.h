@@ -61,32 +61,14 @@ struct InputData
     };
     Schemes schemes;
 
-    struct LineSolverSettings {
-        LineSolvers type;
-        intType maxIterations;
-        FieldData<floatType> maxResiduals;
-        FieldData<floatType> relaxation;
-        BoundaryPatches::ENUMDATA sweepDirection;
-    };
-
-    struct PlaneSolverSettings {
-        PlaneSolvers type;
-        intType maxIterations;
-        FieldData<floatType> maxResiduals;
-        FieldData<floatType> relaxation;
-        BoundaryPatches::ENUMDATA sweepDirection;
-
-        LineSolverSettings lineSolverSettings;
-    };
-
-    
     struct LinearSolverSettings {
         LinearSolvers type;
         intType maxIterations;
         FieldData<floatType> maxResiduals;
         FieldData<floatType> relaxation;
 
-        PlaneSolverSettings planeSolverSettings;
+        BoundaryPatches::ENUMDATA lineSweepDirection;
+        BoundaryPatches::ENUMDATA planeSweepDirection;
     }; 
     LinearSolverSettings linearSolverSettings;
 

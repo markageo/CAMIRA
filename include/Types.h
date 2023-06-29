@@ -221,14 +221,6 @@ enum class LinearSolvers {
     SUGS
 };
 
-enum class PlaneSolvers {
-    SUGS
-};
-
-enum class LineSolvers {
-    SUGS
-};
-
 enum class Linearisation {
     Picard, Newton
 };

@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.01
+    nu   = 0.001
 }
 
 Mesh {
@@ -119,34 +119,15 @@ Solver {
     LinearSolver {
 
         type = SUGS
-        maxIterations = 10
+        maxIterations = 1
         maxResiduals = 1e-5
+
+        planeSweepDirection = +z
+        lineSweepDirection = +y
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
-        PlaneSolver {
-            type = SUGS
-            maxIterations = 1
-            maxResiduals = 1e-5
-
-            momentumRelaxation = (1, 1, 1)
-            pressureRelaxation = 1
-
-            planeSweepDirection = +z
-
-
-            LineSolver {
-                type = SUGS
-                maxIterations = 1
-                maxResiduals = 1e-5
-
-                momentumRelaxation = (1, 1, 1)
-                pressureRelaxation = 1
-
-                lineSweepDirection = +y
-            }
-        }
     }
 
 }
