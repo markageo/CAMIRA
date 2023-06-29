@@ -737,7 +737,17 @@ void SweepSolve( FieldData<array3D> &fields,
     FieldData<floatType> residualsOuter, residualsOuterInitialInv;
     floatType massFluxResidual;
 
-    ResidualLogFile residualsLogFile("convergence_history.csv", axisTransformation);
+    // Logging objects
+    std::vector< FieldProbe > fieldProbes;
+    std::vector< ProbeLogFile > probeLogFiles;
+    for ( const auto &probeData : inputData.probes ) {
+        fieldProbes.emplace_back( mesh, probeData.location, probeData.name );
+        std::string probeFilename = "probe_" + probeData.name + ".csv";
+        probeLogFiles.emplace_back( probeFilename, axisTransformation, fieldProbes.back() );
+    }
+    std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
+    
+    ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 
     // Instantiate linear solver, this holds references to the fields
@@ -758,9 +768,16 @@ void SweepSolve( FieldData<array3D> &fields,
 
         fieldsOld = fields;
 
-        consoleLog.WriteResiduals(residualsOuter, massFluxResidual, nOuterIterations);
-        residualsLogFile.WriteData(residualsOuter, massFluxResidual, nOuterIterations);
-
+        consoleLog.WriteResiduals( residualsOuter, massFluxResidual, nOuterIterations );
+        residualsLogFile.WriteData( residualsOuter, massFluxResidual, nOuterIterations );
+        for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
+            ForAllFieldData( [&] (intType f) { 
+                probeValues[p][f] =  fieldProbes[p].GetFieldValue( fields[f] );
+            } );
+            probeLogFiles[p].WriteData( probeValues[p], nOuterIterations );
+        }
+        
+        
         if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
             std::cout << "*** OUTER ITERATIONS CONVERGED ***"
                         << "\n\n";

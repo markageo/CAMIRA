@@ -74,7 +74,7 @@ int main(int argc, char const *argv[])
     // Write output
     VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
     TIC("Writer");
-    writer.WriteData("fields.vtk", "CFD simulation");
+    writer.WriteData(inputData.fieldOutputFilename, "CFD simulation output");
     TOC();
 
 // Display profiling information
