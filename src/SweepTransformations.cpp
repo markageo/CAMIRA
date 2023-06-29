@@ -186,11 +186,11 @@ namespace
         AxisTransformationMap axisTransformation;
 
         // User input for plane sweep direction
-        BP planeSweepDirection = inputData.linearSolverSettings.planeSolverSettings.sweepDirection;
+        BP planeSweepDirection = inputData.linearSolverSettings.planeSweepDirection;
         directionVector planeSweepVector = Axis2Vector( planeSweepDirection );
 
         // User input for line sweep direction
-        BP lineSweepDirection = inputData.linearSolverSettings.planeSolverSettings.lineSolverSettings.sweepDirection;
+        BP lineSweepDirection = inputData.linearSolverSettings.lineSweepDirection;
         directionVector lineSweepVector = Axis2Vector( lineSweepDirection );
 
         // Plane and line sweep direction must be orthogonal
@@ -213,8 +213,8 @@ namespace
         axisTransformation.Set( BP::zNegative, Vector2Axis( -planeSweepVector ));
 
         // Change the sweep direction
-        inputData.linearSolverSettings.planeSolverSettings.sweepDirection = BP::zPositive;
-        inputData.linearSolverSettings.planeSolverSettings.lineSolverSettings.sweepDirection  = BP::yPositive;
+        inputData.linearSolverSettings.planeSweepDirection = BP::zPositive;
+        inputData.linearSolverSettings.lineSweepDirection  = BP::yPositive;
 
         return axisTransformation;
     }
@@ -328,8 +328,6 @@ namespace
     {
         TransformFieldDataToCode( inputData.schemes.implicitRelaxation      , axisTransformation );
         TransformFieldDataToCode( inputData.linearSolverSettings.relaxation , axisTransformation );
-        TransformFieldDataToCode( inputData.linearSolverSettings.planeSolverSettings.relaxation, axisTransformation );
-        TransformFieldDataToCode( inputData.linearSolverSettings.planeSolverSettings.lineSolverSettings.relaxation, axisTransformation );
     }
 
 }   // end anonymous namespace
