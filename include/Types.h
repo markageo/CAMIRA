@@ -282,8 +282,6 @@ struct dimTypes<B>
 
 
 
-
-
 // Wrapper for std::array that can only be indexed using enums
 template <typename enumStruct, typename T>
 class EnumVector
