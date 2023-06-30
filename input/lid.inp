@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.005
+    nu   = 0.01
 }
 
 Mesh {
@@ -132,7 +132,7 @@ Solver {
     LinearSolver {
 
         type = SUGS
-        maxIterations = 1
+        maxIterations = 5
         maxResiduals = 1e-4
 
         planeSweepDirection = +x
