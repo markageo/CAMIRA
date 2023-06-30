@@ -212,9 +212,7 @@ public:
                     m_nj( fvCoeffs.nCells(1) ),
                     m_nk (fvCoeffs.nCells(2) ),
                     m_K( array3D(m_ni, m_nj, m_nk).setZero() )
-    {
-        UpdateGlobalConstants();
-    };
+    { UpdateGlobalConstants(); };
 
 
     // Core function which updates the local coupled system. Templated by staggering direction.
@@ -338,6 +336,100 @@ public:
 
     }
 
+
+
+    // Core function which updates the local coupled system. Templated by staggering direction.
+    // This makes use of precomputed line constants
+    __attribute__((always_inline)) 
+    inline void UpdateTriad2( const intType i, 
+                              const intType j, 
+                              const intType k,
+                              const FieldData<array1D> &lineConstants )
+    {
+        using enum Axis::ENUMDATA;
+        using enum TransportCoefficients::ENUMDATA;
+
+        // For indexing the staggered cells
+        intType iU{ i + sCU::iCoupled }, jU{ j                 }, kU{ k                 }; // U momentum
+        intType iV{ i                 }, jV{ j + sCV::iCoupled }, kV{ k                 }; // V momentum
+        intType iW{ i                 }, jW{ j                 }, kW{ k + sCW::iCoupled }; // W momentum
+
+        // With ghost cells, this is faster than using the G() function inline every time
+        intType igU{ G(iU) }, jgU{ G(jU) }, kgU{ G(kU) };
+        intType igV{ G(iV) }, jgV{ G(jV) }, kgV{ G(kV) };
+        intType igW{ G(iW) }, jgW{ G(jW) }, kgW{ G(kW) };
+        intType   ig{ G(i) },   jg{ G(j) },   kg{ G(k) };
+
+
+        // Precompute momentum RHS divided by AP coefficients
+        // U momentum
+        floatType bU = lineConstants.U[X](iU) 
+                     + ( 
+                       - m_fvCoeffs.Mom[X].AU[X][e](iU, jU, kU) * m_fields.U[X]( igU+1, jgU  , kgU  )
+                       - m_fvCoeffs.Mom[X].AU[X][w](iU, jU, kU) * m_fields.U[X]( igU-1, jgU  , kgU  )
+
+                       - m_fvCoeffs.Mom[X].AP[sUP::cLeft ](iU) * m_fields.P( igU + sUP::iLeft , jgU, kgU)
+                       - m_fvCoeffs.Mom[X].AP[sUP::cRight](iU) * m_fields.P( igU + sUP::iRight, jgU, kgU) 
+
+                       ) * m_fvCoeffs.Mom[X].diagCoeffInv(iU, jU, kU);
+
+
+        // V momentum
+        floatType bV = lineConstants.U[Y](iV)
+                     + ( 
+                       - m_fvCoeffs.Mom[Y].AU[Y][e](iV, jV, kV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
+                       - m_fvCoeffs.Mom[Y].AU[Y][w](iV, jV, kV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
+
+                       ) * m_fvCoeffs.Mom[Y].diagCoeffInv(iV, jV, kV);
+
+
+        // W momentum
+        floatType bW = lineConstants.U[Z](iW)
+                     + ( 
+                       - m_fvCoeffs.Mom[Z].AU[Z][e](iW, jW, kW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
+                       - m_fvCoeffs.Mom[Z].AU[Z][w](iW, jW, kW) * m_fields.U[Z]( igW-1, jgW  , kgW  ) 
+
+                       ) * m_fvCoeffs.Mom[Z].diagCoeffInv(iW, jW, kW);
+
+
+        // Continuity for pressure
+        floatType bP = lineConstants.P(i)
+
+                     - m_fvCoeffs.Cont.AU[X][sCU::cLeft ](i) * m_fields.U[X]( ig + sCU::iLeft , jg, kg)
+                     - m_fvCoeffs.Cont.AU[X][sCU::cRight](i) * m_fields.U[X]( ig + sCU::iRight, jg, kg)
+
+                     - m_fvCoeffs.Cont.AP[e](i, j, k) * m_fields.P( ig+1, jg  , kg  ) 
+                     - m_fvCoeffs.Cont.AP[w](i, j, k) * m_fields.P( ig-1, jg  , kg  ) 
+
+                     - m_fvCoeffs.Cont.AP[ee](i, j, k) * m_fields.P( ig+2, jg  , kg  ) 
+                     - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields.P( ig-2, jg  , kg  );
+
+
+        // Update P from continuity
+        m_fields.P( ig, jg, kg ) = ( 1 - m_fvCoeffs.Cont.relaxation ) * m_fieldsOld.P( ig, jg, kg )
+                                 + m_fvCoeffs.Cont.relaxation * 
+                                   ( bP 
+                                   - m_fvCoeffs.Cont.AU[X][sCU::cCoupled](i) * bU 
+                                   - m_fvCoeffs.Cont.AU[Y][sCV::cCoupled](j) * bV 
+                                   - m_fvCoeffs.Cont.AU[Z][sCW::cCoupled](k) * bW 
+                                   ) * m_K(i, j, k);
+
+
+        // Update U from momentum
+        m_fields.U[X]( igU, jgU, kgU ) = ( 1 - m_fvCoeffs.Mom[X].relaxation ) * m_fieldsOld.U[X]( igU, jgU, kgU )
+                                       + m_fvCoeffs.Mom[X].relaxation * ( bU - m_fvCoeffs.Mom[X].AP[sUP::cCoupled](iU) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[X].diagCoeffInv(iU, jU, kU) );
+
+        // Update V from momentum
+        m_fields.U[Y]( igV, jgV, kgV ) = ( 1 - m_fvCoeffs.Mom[Y].relaxation ) * m_fieldsOld.U[Y]( igV, jgV, kgV )
+                                       + m_fvCoeffs.Mom[Y].relaxation * ( bV - m_fvCoeffs.Mom[Y].AP[sVP::cCoupled](jV) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Y].diagCoeffInv(iV, jV, kV) );
+
+        // Update W from momentum
+        m_fields.U[Z]( igW, jgW, kgW ) = ( 1 - m_fvCoeffs.Mom[Z].relaxation ) * m_fieldsOld.U[Z]( igW, jgW, kgW ) 
+                                       + m_fvCoeffs.Mom[Z].relaxation * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(iW, jW, kW) );
+
+    }
+
+
     // Constants which are global to the linear solver
     void UpdateGlobalConstants()
     {
@@ -371,6 +463,7 @@ public:
                 jV = j + sCV::iCoupled;
                 jW = j;
 
+                #pragma GCC ivdep
                 for (intType i = iStart; i != iLength; i++) {
 
                     iU = i + sCU::iCoupled;
@@ -416,7 +509,9 @@ public:
                 const FieldData<array3D> &fieldsOld,
                 const FVCoefficients &fvCoeffs) : 
                     m_fields( fields ),
-                    m_ni( fvCoeffs.nCells(0) )
+                    m_fvCoeffs( fvCoeffs ),
+                    m_lineConstants( array1D( fvCoeffs.nCells(Axis::X) ) ),
+                    m_ni( fvCoeffs.nCells(Axis::X) )
     {
         if (m_ni == 1) {
             m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
@@ -439,10 +534,13 @@ public:
 
 private:
     FieldData<array3D> &m_fields;
+    const FVCoefficients &m_fvCoeffs;
 
     std::unique_ptr<TriadSolver<TC::e, Vstag, Wstag>> m_triadSolverEast;
     std::unique_ptr<TriadSolver<TC::w, Vstag, Wstag>> m_triadSolverWest;
     std::unique_ptr<TriadSolver<TC::p, Vstag, Wstag>> m_triadSolverCenter;
+
+    FieldData<array1D> m_lineConstants;
 
     void (LineSolver::*SolutionUpdater)(intType, intType);
     void (LineSolver::*StateUpdater)(void);
@@ -452,12 +550,13 @@ private:
     // For 3D simulations
     void Sweep3D(intType j, intType k)
     {
+        UpdateLineConstants(j, k);
         for (intType i = 0; i != m_ni - 1; i++) { // Forward sweep
-            m_triadSolverEast->UpdateTriad(i, j, k);
+            m_triadSolverEast->UpdateTriad2(i, j, k, m_lineConstants);
         }
 
         for (intType i = m_ni - 1; i != 0; i--) { // Backward sweep
-            m_triadSolverWest->UpdateTriad(i, j, k);
+            m_triadSolverWest->UpdateTriad2(i, j, k, m_lineConstants);
         }
     }
 
@@ -474,6 +573,108 @@ private:
     void UpdateState2D()
     { m_triadSolverCenter->UpdateGlobalConstants(); }
 
+
+    // Precalculate parts of stencil that are constant along a line
+    void UpdateLineConstants(intType j, intType k)
+    {
+        using enum Axis::ENUMDATA;
+        using enum TransportCoefficients::ENUMDATA;
+
+        using sCV = typename StaggerIndexing< Axis::Y, Vstag >::ContinuityVelocity;
+        using sVP = typename StaggerIndexing< Axis::Y, Vstag >::MomentumPressure;
+
+        using sCW = typename StaggerIndexing< Axis::Z, Wstag >::ContinuityVelocity;
+        using sWP = typename StaggerIndexing< Axis::Z, Wstag >::MomentumPressure;
+
+        // Staggered indices, U momenutm is not staggered wrt to the line
+        intType jV{ j + sCV::iCoupled }, kV{ k                 }; // V momentum
+        intType jW{ j                 }, kW{ k + sCW::iCoupled }; // W momentum
+
+        // Ghost cells
+        intType jgV{ G(jV) }, kgV{ G(kV) };
+        intType jgW{ G(jW) }, kgW{ G(kW) };
+        intType   jg{ G(j) },   kg{ G(k) };
+
+        // U momentum
+        #pragma GCC ivdep
+        for ( intType i = 0; i!= m_ni; i++ ) {
+            intType ig{ G(i) };
+
+            m_lineConstants.U[X](i) = ( m_fvCoeffs.Mom[X].B(i, j, k)
+
+                                      - m_fvCoeffs.Mom[X].AU[X][n](i, j, k) * m_fields.U[X]( ig  , jg+1, kg  )
+                                      - m_fvCoeffs.Mom[X].AU[X][s](i, j, k) * m_fields.U[X]( ig  , jg-1, kg  )
+                                      - m_fvCoeffs.Mom[X].AU[X][t](i, j, k) * m_fields.U[X]( ig  , jg  , kg+1) 
+                                      - m_fvCoeffs.Mom[X].AU[X][b](i, j, k) * m_fields.U[X]( ig  , jg  , kg-1)
+
+                                      ) * m_fvCoeffs.Mom[X].diagCoeffInv(i, j, k);
+        }
+
+
+        // V momentum
+        #pragma GCC ivdep
+        for ( intType i = 0; i!= m_ni; i++ ) {
+            intType ig{ G(i) };
+
+            m_lineConstants.U[Y](i) = ( m_fvCoeffs.Mom[Y].B(i, jV, kV)
+
+                                      - m_fvCoeffs.Mom[Y].AU[Y][n](i, jV, kV) * m_fields.U[Y]( ig  , jgV+1, kgV  )  
+                                      - m_fvCoeffs.Mom[Y].AU[Y][s](i, jV, kV) * m_fields.U[Y]( ig  , jgV-1, kgV  ) 
+                                      - m_fvCoeffs.Mom[Y].AU[Y][t](i, jV, kV) * m_fields.U[Y]( ig  , jgV  , kgV+1) 
+                                      - m_fvCoeffs.Mom[Y].AU[Y][b](i, jV, kV) * m_fields.U[Y]( ig  , jgV  , kgV-1)
+
+                                      - m_fvCoeffs.Mom[Y].AP[sVP::cLeft ](jV) * m_fields.P( ig, jgV + sVP::iLeft , kgV)
+                                      - m_fvCoeffs.Mom[Y].AP[sVP::cRight](jV) * m_fields.P( ig, jgV + sVP::iRight, kgV)
+
+                                      ) * m_fvCoeffs.Mom[Y].diagCoeffInv(i, jV, kV);
+        }
+
+
+        // W momentum
+        #pragma GCC ivdep
+        for ( intType i = 0; i!= m_ni; i++ ) {
+            intType ig{ G(i) };
+
+            m_lineConstants.U[Z](i) = ( m_fvCoeffs.Mom[Z].B(i, jW, kW)
+                            
+                                      - m_fvCoeffs.Mom[Z].AU[Z][n](i, jW, kW) * m_fields.U[Z]( ig  , jgW+1, kgW  ) 
+                                      - m_fvCoeffs.Mom[Z].AU[Z][s](i, jW, kW) * m_fields.U[Z]( ig  , jgW-1, kgW  ) 
+                                      - m_fvCoeffs.Mom[Z].AU[Z][t](i, jW, kW) * m_fields.U[Z]( ig  , jgW  , kgW+1) 
+                                      - m_fvCoeffs.Mom[Z].AU[Z][b](i, jW, kW) * m_fields.U[Z]( ig  , jgW  , kgW-1)
+
+                                      - m_fvCoeffs.Mom[Z].AP[sWP::cLeft ](kW) * m_fields.P( ig, jgW, kgW + sWP::iLeft ) 
+                                      - m_fvCoeffs.Mom[Z].AP[sWP::cRight](kW) * m_fields.P( ig, jgW, kgW + sWP::iRight)
+
+                                      ) * m_fvCoeffs.Mom[Z].diagCoeffInv(i, jW, kW);
+        }
+
+
+        // Continuity equation
+        #pragma GCC ivdep
+        for ( intType i = 0; i!= m_ni; i++ ) {
+            intType ig{ G(i) };
+
+            m_lineConstants.P(i) = m_fvCoeffs.Cont.B(i, j, k)
+
+                                 - m_fvCoeffs.Cont.AU[Y][sCV::cLeft ](j) * m_fields.U[Y]( ig, jg + sCV::iLeft , kg)
+                                 - m_fvCoeffs.Cont.AU[Y][sCV::cRight](j) * m_fields.U[Y]( ig, jg + sCV::iRight, kg)
+
+                                 - m_fvCoeffs.Cont.AU[Z][sCW::cLeft ](k) * m_fields.U[Z]( ig, jg, kg + sCW::iLeft )
+                                 - m_fvCoeffs.Cont.AU[Z][sCW::cRight](k) * m_fields.U[Z]( ig, jg, kg + sCW::iRight)
+
+                                 - m_fvCoeffs.Cont.AP[n](i, j, k) * m_fields.P( ig  , jg+1, kg  ) 
+                                 - m_fvCoeffs.Cont.AP[s](i, j, k) * m_fields.P( ig  , jg-1, kg  ) 
+                                 - m_fvCoeffs.Cont.AP[t](i, j, k) * m_fields.P( ig  , jg  , kg+1) 
+                                 - m_fvCoeffs.Cont.AP[b](i, j, k) * m_fields.P( ig  , jg  , kg-1)
+ 
+                                 - m_fvCoeffs.Cont.AP[nn](i, j, k) * m_fields.P( ig  , jg+2, kg  )
+                                 - m_fvCoeffs.Cont.AP[ss](i, j, k) * m_fields.P( ig  , jg-2, kg  ) 
+                                 - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields.P( ig  , jg  , kg+2) 
+                                 - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields.P( ig  , jg  , kg-2);
+        }
+
+    }
+
 };
 
 
@@ -484,7 +685,6 @@ template <TransportCoefficients::ENUMDATA Wstag>
 class PlaneSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
-    using A = Axis::ENUMDATA;
 
     // Staggering must be valid
     static_assert( (Wstag == TC::t) || (Wstag == TC::b) || (Wstag == TC::p), "Invalid W momentum staggering" );
@@ -494,8 +694,10 @@ public:
                  const FieldData<array3D> &fieldsOld,
                  const FVCoefficients &fvCoeffs) : 
                     m_fields( fields ),
-                    m_ni( fvCoeffs.nCells(A::X) ),
-                    m_nj( fvCoeffs.nCells(A::Y) )
+                    m_fvCoeffs( fvCoeffs ),
+                    m_planeConstants( array2D( fvCoeffs.nCells(Axis::X), fvCoeffs.nCells(Axis::Y) ) ),
+                    m_ni( fvCoeffs.nCells(Axis::X) ),
+                    m_nj( fvCoeffs.nCells(Axis::Y) )
     {
         if (m_nj == 1) {
             m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag>>(fields, fieldsOld, fvCoeffs);
@@ -521,10 +723,13 @@ public:
 private:
 
     FieldData<array3D> &m_fields;
+    const FVCoefficients &m_fvCoeffs;
 
     std::unique_ptr< LineSolver<TC::n, Wstag> > m_lineSolverNorth;
     std::unique_ptr< LineSolver<TC::s, Wstag> > m_lineSolverSouth;
     std::unique_ptr< LineSolver<TC::p, Wstag> > m_lineSolverCenter;
+
+    FieldData<array2D> m_planeConstants;
 
     void (PlaneSolver::*SolutionUpdater)(intType);
     void (PlaneSolver::*StateUpdater)();
@@ -556,6 +761,105 @@ private:
 
     void UpdateState2D()
     { m_lineSolverCenter->UpdateState(); }
+
+
+    // Precalculate parts of stencil that are constant along a plane
+    void UpdatePlaneConstants(intType k)
+    {
+
+        using enum Axis::ENUMDATA;
+        using enum TransportCoefficients::ENUMDATA;
+
+        using sCW = typename StaggerIndexing< Axis::Z, Wstag >::ContinuityVelocity;
+        using sWP = typename StaggerIndexing< Axis::Z, Wstag >::MomentumPressure;
+
+        // Staggered indices, U and V momentum is not staggered with respect to a plane
+        intType kW{ k + sCW::iCoupled }; // W momentum
+
+        // Ghost cells
+        intType kgW{ G(kW) };
+        intType  kg{ G(k) };
+
+        // U momentum
+        #pragma GCC ivdep
+        for ( intType j = 0; j != m_nj; j++ ) {
+
+            #pragma GCC ivdep
+            for ( intType i = 0; i != m_ni; i++ ) {
+                intType ig{ G(i) }, jg{ G(j) };
+
+                m_planeConstants.U[X](i, j) = ( m_fvCoeffs.Mom[X].B(i, j, k)
+
+                                              - m_fvCoeffs.Mom[X].AU[X][t](i, j, k) * m_fields.U[X]( ig  , jg  , kg+1) 
+                                              - m_fvCoeffs.Mom[X].AU[X][b](i, j, k) * m_fields.U[X]( ig  , jg  , kg-1)
+
+                                              ) * m_fvCoeffs.Mom[X].diagCoeffInv(i, j, k);
+            }
+        }
+        
+
+
+        // V momentum
+        #pragma GCC ivdep
+        for ( intType j = 0; j != m_nj; j++ ) {
+
+            #pragma GCC ivdep
+            for ( intType i = 0; i != m_ni; i++ ) {
+                intType ig{ G(i) }, jg{ G(j) };
+
+                m_planeConstants.U[Y](i, j) = ( m_fvCoeffs.Mom[Y].B(i, j, k)
+
+                                              - m_fvCoeffs.Mom[Y].AU[Y][t](i, j, k) * m_fields.U[Y]( ig  , jg  , kg+1) 
+                                              - m_fvCoeffs.Mom[Y].AU[Y][b](i, j, k) * m_fields.U[Y]( ig  , jg  , kg-1)
+
+                                              ) * m_fvCoeffs.Mom[Y].diagCoeffInv(i, j, k);
+            }
+        }
+
+
+        // W momentum
+        #pragma GCC ivdep
+        for ( intType j = 0; j != m_nj; j++ ) {
+
+            #pragma GCC ivdep
+            for ( intType i = 0; i != m_ni; i++ ) {
+                intType ig{ G(i) }, jg{ G(j) };
+
+                m_planeConstants.U[Z](i, j) = ( m_fvCoeffs.Mom[Z].B(i, j, kW)
+                                
+                                            - m_fvCoeffs.Mom[Z].AU[Z][t](i, j, kW) * m_fields.U[Z]( ig  , jg  , kgW+1) 
+                                            - m_fvCoeffs.Mom[Z].AU[Z][b](i, j, kW) * m_fields.U[Z]( ig  , jg  , kgW-1)
+
+                                            - m_fvCoeffs.Mom[Z].AP[sWP::cLeft ](kW) * m_fields.P( ig, jg, kgW + sWP::iLeft ) 
+                                            - m_fvCoeffs.Mom[Z].AP[sWP::cRight](kW) * m_fields.P( ig, jg, kgW + sWP::iRight)
+
+                                            ) * m_fvCoeffs.Mom[Z].diagCoeffInv(i, j, kW);
+            }
+        }
+
+
+        // Continuity equation
+        #pragma GCC ivdep
+        for ( intType j = 0; j != m_nj; j++ ) {
+
+            #pragma GCC ivdep
+            for ( intType i = 0; i != m_ni; i++ ) {
+                intType ig{ G(i) }, jg{ G(j) };
+
+                m_planeConstants.P(i, j) = m_fvCoeffs.Cont.B(i, j, k)
+
+                                         - m_fvCoeffs.Cont.AU[Z][sCW::cLeft ](k) * m_fields.U[Z]( ig, jg, kg + sCW::iLeft )
+                                         - m_fvCoeffs.Cont.AU[Z][sCW::cRight](k) * m_fields.U[Z]( ig, jg, kg + sCW::iRight)
+
+                                         - m_fvCoeffs.Cont.AP[t](i, j, k) * m_fields.P( ig  , jg  , kg+1) 
+                                         - m_fvCoeffs.Cont.AP[b](i, j, k) * m_fields.P( ig  , jg  , kg-1)
+        
+                                         - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields.P( ig  , jg  , kg+2) 
+                                         - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields.P( ig  , jg  , kg-2);
+            }
+        }
+
+    }
 };
 
 
