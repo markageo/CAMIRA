@@ -416,16 +416,12 @@ namespace
     }
 
 
-    // Template template parameter so both EnumVectors and ArrayAllocators can be used
-    template< template<typename, typename> typename Container, typename T >
-    void TransformAxisVectorToUser( Container<Axis, T> &fieldsVector,
+    template< typename T >
+    void TransformAxisVectorToUser( EnumVector<Axis, T> &fieldsVector,
                                      const AxisTransformationMap& axisTransformation )
     {
-        static_assert( std::is_same< Container<Axis, T>, EnumVector<Axis, T> >::value    ||
-                       std::is_same< Container<Axis, T>, ArrayAllocator<Axis, T> >::value );
-
         // Create temporary copy to move data from 
-        Container<Axis, T> codeFieldsVector = fieldsVector;
+        EnumVector<Axis, T> codeFieldsVector = fieldsVector;
 
         EnumFor<Axis>([&] (Axis::ENUMDATA userAxis) { // User axis
 

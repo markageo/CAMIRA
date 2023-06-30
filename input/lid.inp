@@ -13,13 +13,13 @@ Mesh {
         Segment {
             bounds     = (0, 0.5)
             nCells     = 25
-            biasFactor = 2
+            biasFactor = 3
         }
 
         Segment {
             bounds     = (0.5, 1)
             nCells     = 25
-            biasFactor = -2
+            biasFactor = -3
         }
     }
 
@@ -27,13 +27,13 @@ Mesh {
         Segment {
             bounds     = (0, 0.5)
             nCells     = 25
-            biasFactor = 2
+            biasFactor = 3
         }
 
         Segment {
             bounds     = (0.5, 1)
             nCells     = 25
-            biasFactor = -2
+            biasFactor = -3
         }
     }
 
@@ -41,13 +41,13 @@ Mesh {
         Segment {
             bounds     = (0, 0.5)
             nCells     = 25
-            biasFactor = 2
+            biasFactor = 3
         }
 
         Segment {
             bounds     = (0.5, 1)
             nCells     = 25
-            biasFactor = -2
+            biasFactor = -3
         }
     }
 }
@@ -154,7 +154,7 @@ Output {
     Monitors {
         Probe {
             filename = "probe1.csv"
-            location = (0.5, 0.98, 0.5)
+            location = (0.5, 0.6, 0.5)
         }
     }
 
