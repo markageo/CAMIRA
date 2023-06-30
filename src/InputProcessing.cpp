@@ -568,7 +568,7 @@ namespace
                 throw std::runtime_error(  "'" + probe.first + "' is not a valid Monitors child name" );
             }
 
-            tempProbeData.name     = probe.second.get<std::string>( "name" );
+            tempProbeData.filename = probe.second.get<std::string>( "filename" );
             tempLocation           = probe.second.get< std::vector<floatType> >( "location" ); 
             EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
                 tempProbeData.location(axis) = tempLocation[axis];

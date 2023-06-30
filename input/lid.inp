@@ -12,13 +12,13 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 30
+            nCells     = 25
             biasFactor = 2
         }
 
         Segment {
             bounds     = (0.5, 1)
-            nCells     = 30
+            nCells     = 25
             biasFactor = -2
         }
     }
@@ -26,13 +26,13 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 30
+            nCells     = 25
             biasFactor = 2
         }
 
         Segment {
             bounds     = (0.5, 1)
-            nCells     = 30
+            nCells     = 25
             biasFactor = -2
         }
     }
@@ -40,13 +40,13 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 30
+            nCells     = 25
             biasFactor = 2
         }
 
         Segment {
             bounds     = (0.5, 1)
-            nCells     = 30
+            nCells     = 25
             biasFactor = -2
         }
     }
@@ -153,7 +153,7 @@ Output {
 
     Monitors {
         Probe {
-            name = "probe1"
+            filename = "probe1.csv"
             location = (0.5, 0.98, 0.5)
         }
     }

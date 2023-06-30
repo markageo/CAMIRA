@@ -13,10 +13,8 @@ class FieldProbe
     public:
 
         FieldProbe( const Mesh &mesh,
-                    const fVector3 &probePoint, 
-                    const std::string &probeName ) :
-            m_probePoint( probePoint ),
-            m_probeName( probeName )
+                    const fVector3 &probePoint ) :
+            m_probePoint( probePoint )
         {
             EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
                 
@@ -80,12 +78,8 @@ class FieldProbe
         floatType Coordinate( const intType axis ) const
         { return m_probePoint( axis ); }
 
-        const std::string& Name() const 
-        { return m_probeName; }
-
     private:
         fVector3 m_probePoint;
-        std::string m_probeName;
         EnumVector<Axis, iVector2> m_latticeIndex;    // Index of lattice points to itnerpolate from
         EnumVector<Axis, floatType> m_latticeCoord;   // Normalised coordinates in the lattice
     
