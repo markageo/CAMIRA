@@ -44,11 +44,11 @@ struct FVCoefficients
 
     struct MomentumEquation {
         MomentumEquation(const Axis::ENUMDATA, const iVector3 &);
-        EnumVector< Axis, ArrayAllocator< TransportCoefficients, array3D > > AU;     // Velocity coefficients (LHS)
-        ArrayAllocator<TransportCoefficients, array1D> AP;                           // Pressure coefficients (LHS)
+        EnumVector< Axis, EnumVector< TransportCoefficients, array3D > > AU;     // Velocity coefficients (LHS)
+        EnumVector<TransportCoefficients, array1D> AP;                           // Pressure coefficients (LHS)
         array3D B;                                                                   // Source Term (RHS)
         array3D diagCoeffInv;                                                        // Inverse of diagonal coefficient
-        EnumVector< Axis, ArrayAllocator<TransportCoefficients, array1D> > diff;     // Diffusion coefficients (LHS)
+        EnumVector< Axis, EnumVector<TransportCoefficients, array1D> > diff;     // Diffusion coefficients (LHS)
         EnumVector< BoundaryPatches, floatType > boundaryDiff, boundaryP;            // Constant terms that come from uniform BC (LHS)
         EnumVector< BoundaryPatches, array2D > boundaryVel;       
         floatType relaxation;
@@ -56,8 +56,8 @@ struct FVCoefficients
 
     struct ContinuityEquation {
         ContinuityEquation(const iVector3 &);
-        EnumVector< Axis, ArrayAllocator< TransportCoefficients, array1D > > AU;    // Velocity coefficients (LHS)
-        ArrayAllocator<TransportCoefficients, array3D> AP;                          // Pressure coefficients (LHS)
+        EnumVector< Axis, EnumVector< TransportCoefficients, array1D > > AU;    // Velocity coefficients (LHS)
+        EnumVector<TransportCoefficients, array3D> AP;                          // Pressure coefficients (LHS)
         array3D B;                                                                  // Source term (RHS)
         EnumVector< BoundaryPatches, array2D > boundaryP;                           // Constant terms that come from uniform BC (LHS)
         EnumVector< BoundaryPatches, floatType > boundaryVel;
