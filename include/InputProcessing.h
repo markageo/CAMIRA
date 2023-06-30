@@ -78,7 +78,7 @@ struct InputData
     std::string fieldOutputFilename;
 
     struct ProbeData {
-        std::string name;
+        std::string filename;
         fVector3 location;
     };
     std::vector< ProbeData > probes;

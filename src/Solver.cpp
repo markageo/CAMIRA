@@ -218,7 +218,7 @@ public:
 
 
     // Core function which updates the local coupled system. Templated by staggering direction.
-    __attribute__((always_inline))  // This will only work with gcc and clang
+    __attribute__((always_inline)) 
     inline void UpdateTriad( const intType i, 
                              const intType j, 
                              const intType k )
@@ -419,20 +419,16 @@ public:
                     m_ni( fvCoeffs.nCells(0) )
     {
         if (m_ni == 1) {
-
             m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep2D;
             StateUpdater = &LineSolver::UpdateState2D;
-
         } else {
             m_triadSolverEast = std::make_unique<TriadSolver<TC::e, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
             m_triadSolverWest = std::make_unique<TriadSolver<TC::w, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep3D;
             StateUpdater = &LineSolver::UpdateState3D;
-
         }
     }
-
 
     void SolveLine(const intType j, const intType k)
     { (this->*SolutionUpdater)(j, k); }
@@ -502,18 +498,14 @@ public:
                     m_nj( fvCoeffs.nCells(A::Y) )
     {
         if (m_nj == 1) {
-
             m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &PlaneSolver::Sweep2D;
             StateUpdater = &PlaneSolver::UpdateState2D;
-
         } else {
-
             m_lineSolverNorth = std::make_unique<LineSolver<TC::n, Wstag>>(fields, fieldsOld, fvCoeffs);
             m_lineSolverSouth = std::make_unique<LineSolver<TC::s, Wstag>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &PlaneSolver::Sweep3D;
             StateUpdater = &PlaneSolver::UpdateState3D;
-
         }
     }
 
@@ -592,18 +584,14 @@ public:
                     m_nk( fvCoeffs.nCells(A::Z) )
     {
         if (m_nk == 1) {
-
             m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LinearSolver::Sweep2D;
             StateUpdater = &LinearSolver::UpdateState2D;
-
         } else {
-
             m_planeSolverTop = std::make_unique<PlaneSolver<TC::t>>(fields, fieldsOld, fvCoeffs);
             m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LinearSolver::Sweep3D;
             StateUpdater = &LinearSolver::UpdateState3D;
-
         }
     }
 
@@ -700,7 +688,7 @@ private:
         using enum Axis::ENUMDATA;
 
         ForAllFieldData( [&] (intType f) { m_kS[f] = k; });  // Set iterating coefficient
-        m_kS.U[Z] += LUT::CoeffIndex[Wstag];                      // W momentum is staggered
+        m_kS.U[Z] += LUT::CoeffIndex[Wstag];                 // W momentum is staggered
 
         ForAllFieldData( [&] (intType f) { m_oldPlane[f] = m_fields[f].chip( G(m_kS[f]), Z ); } ); // Set old plane
 
@@ -741,9 +729,8 @@ void SweepSolve( FieldData<array3D> &fields,
     std::vector< FieldProbe > fieldProbes;
     std::vector< ProbeLogFile > probeLogFiles;
     for ( const auto &probeData : inputData.probes ) {
-        fieldProbes.emplace_back( mesh, probeData.location, probeData.name );
-        std::string probeFilename = "probe_" + probeData.name + ".csv";
-        probeLogFiles.emplace_back( probeFilename, axisTransformation, fieldProbes.back() );
+        fieldProbes.emplace_back( mesh, probeData.location );
+        probeLogFiles.emplace_back( probeData.filename, axisTransformation, fieldProbes.back() );
     }
     std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
     

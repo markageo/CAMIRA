@@ -128,8 +128,7 @@ class ProbeLogFile
             using enum Axis::ENUMDATA;
 
             // Comment description of file
-            std::string fileDescription = "Probe: '" + fieldProbe.Name() + "', "
-                                        + ", Location: (" 
+            std::string fileDescription = "Field probe at coordinates: (" 
                                         + std::to_string( fieldProbe.Coordinate( m_AT.CodeAxis(X) ) ) + ", "
                                         + std::to_string( fieldProbe.Coordinate( m_AT.CodeAxis(Y) ) ) + ", "
                                         + std::to_string( fieldProbe.Coordinate( m_AT.CodeAxis(Z) ) ) + ").";
