@@ -363,8 +363,8 @@ public:
 
         // Precompute momentum RHS divided by AP coefficients
         // U momentum
-        floatType bU = lineConstants.U[X](iU) 
-                     + ( 
+        floatType bU = ( lineConstants.U[X](iU)  
+
                        - m_fvCoeffs.Mom[X].AU[X][e](iU, jU, kU) * m_fields.U[X]( igU+1, jgU  , kgU  )
                        - m_fvCoeffs.Mom[X].AU[X][w](iU, jU, kU) * m_fields.U[X]( igU-1, jgU  , kgU  )
 
@@ -375,8 +375,7 @@ public:
 
 
         // V momentum
-        floatType bV = lineConstants.U[Y](iV)
-                     + ( 
+        floatType bV = ( lineConstants.U[Y](iV)
                        - m_fvCoeffs.Mom[Y].AU[Y][e](iV, jV, kV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
                        - m_fvCoeffs.Mom[Y].AU[Y][w](iV, jV, kV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
 
@@ -384,8 +383,8 @@ public:
 
 
         // W momentum
-        floatType bW = lineConstants.U[Z](iW)
-                     + ( 
+        floatType bW = ( lineConstants.U[Z](iW)
+
                        - m_fvCoeffs.Mom[Z].AU[Z][e](iW, jW, kW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
                        - m_fvCoeffs.Mom[Z].AU[Z][w](iW, jW, kW) * m_fields.U[Z]( igW-1, jgW  , kgW  ) 
 
@@ -616,7 +615,7 @@ private:
                                     + ( 
                                       - m_fvCoeffs.Mom[X].AU[X][n](i, j, k) * m_fields.U[X]( ig  , jg+1, kg  )
                                       - m_fvCoeffs.Mom[X].AU[X][s](i, j, k) * m_fields.U[X]( ig  , jg-1, kg  )
-                                      ) * m_fvCoeffs.Mom[X].diagCoeffInv(i, j, k);
+                                      );
 
             // V momentum
             m_lineConstants.U[Y](i) = planeConstants.U[Y](i, jV)
@@ -626,15 +625,14 @@ private:
 
                                       - m_fvCoeffs.Mom[Y].AP[sVP::cLeft ](jV) * m_fields.P( ig, jgV + sVP::iLeft , kgV)
                                       - m_fvCoeffs.Mom[Y].AP[sVP::cRight](jV) * m_fields.P( ig, jgV + sVP::iRight, kgV)
-
-                                      ) * m_fvCoeffs.Mom[Y].diagCoeffInv(i, jV, kV);
+                                      );
 
             // W momentum
             m_lineConstants.U[Z](i) = planeConstants.U[Z](i, jW)
                                     + ( 
                                       - m_fvCoeffs.Mom[Z].AU[Z][n](i, jW, kW) * m_fields.U[Z]( ig  , jgW+1, kgW  ) 
                                       - m_fvCoeffs.Mom[Z].AU[Z][s](i, jW, kW) * m_fields.U[Z]( ig  , jgW-1, kgW  ) 
-                                      ) * m_fvCoeffs.Mom[Z].diagCoeffInv(i, jW, kW);
+                                      );
 
             // Continuity equation
             m_lineConstants.P(i) = planeConstants.P(i, j)
@@ -775,7 +773,7 @@ private:
                                               - m_fvCoeffs.Mom[X].AU[X][t](i, j, k) * m_fields.U[X]( ig  , jg  , kg+1) 
                                               - m_fvCoeffs.Mom[X].AU[X][b](i, j, k) * m_fields.U[X]( ig  , jg  , kg-1)
 
-                                              ) * m_fvCoeffs.Mom[X].diagCoeffInv(i, j, k);
+                                              );
 
                 // V momentum
                 m_planeConstants.U[Y](i, j) = ( m_fvCoeffs.Mom[Y].B(i, j, k)
@@ -783,7 +781,7 @@ private:
                                               - m_fvCoeffs.Mom[Y].AU[Y][t](i, j, k) * m_fields.U[Y]( ig  , jg  , kg+1) 
                                               - m_fvCoeffs.Mom[Y].AU[Y][b](i, j, k) * m_fields.U[Y]( ig  , jg  , kg-1)
 
-                                              ) * m_fvCoeffs.Mom[Y].diagCoeffInv(i, j, k);
+                                              );
 
                 // W momentum 
                 m_planeConstants.U[Z](i, j) = ( m_fvCoeffs.Mom[Z].B(i, j, kW)
@@ -794,7 +792,7 @@ private:
                                             - m_fvCoeffs.Mom[Z].AP[sWP::cLeft ](kW) * m_fields.P( ig, jg, kgW + sWP::iLeft ) 
                                             - m_fvCoeffs.Mom[Z].AP[sWP::cRight](kW) * m_fields.P( ig, jg, kgW + sWP::iRight)
 
-                                            ) * m_fvCoeffs.Mom[Z].diagCoeffInv(i, j, kW);
+                                            );
 
                 // Continuity equation
                 m_planeConstants.P(i, j) = m_fvCoeffs.Cont.B(i, j, k)
