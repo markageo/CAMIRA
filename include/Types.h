@@ -227,6 +227,10 @@ enum class Linearisation {
     Picard, Newton
 };
 
+enum class MomentumInterpolation {
+    Implicit, SemiExplicit
+};
+
 enum class AdvectionSchemes {
     Upwind
 };

@@ -913,7 +913,6 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
     EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
 
         EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
-            // if ( fvCoeffs.Mom[axis].AU[axis].get(tc) )
                 fvCoeffs.Mom[axis].AU[axis][tc].setZero();
         } );
 
@@ -925,10 +924,8 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
 
     } );
 
-
     // Zero continuity equation
     EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
-        // if ( fvCoeffs.Cont.AP.get(tc) )
             fvCoeffs.Cont.AP[tc].setZero();
     } );
 
@@ -936,6 +933,7 @@ void UpdateFVCoefficients(FVCoefficients &fvCoeffs,
         fvCoeffs.Cont.boundaryP[bp].setZero();
     } );
     fvCoeffs.Cont.B.setZero();
+
 
     // Momentum advection terms
     SetAdvectionCoefficients(fvCoeffs.Mom[X].AU[X], fvCoeffs.Mom[X].boundaryVel, faceFluxes, mesh, inputData, X);
