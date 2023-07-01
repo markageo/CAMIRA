@@ -30,6 +30,10 @@ class ConvergenceFile
             if ( columnWidth < precision + 8 )
                 m_columnWidth = precision + 8; 
 
+            if ( !m_fileStream ) {
+                std::cout << "Convergence Log File ERROR: Could not open/create file! Convergence history will not be written. \n" << std::endl;
+    }
+
             m_fileStream << std::setprecision( m_precision ) << std::scientific;
         }
 

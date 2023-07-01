@@ -281,8 +281,8 @@ int VTKWriter<T>::WriteData(const std::string &filename,
     }
     m_outputFileStream.open(filename+ext, std::ofstream::binary);
 
-    if (!m_outputFileStream) {
-        std::cout << "ERROR: Could not open file." << std::endl;
+    if ( !m_outputFileStream ) {
+        std::cout << "VTK Writer ERROR: Could not open/create file. Output will not be written.\n" << std::endl;
         return -1;
     }
 

@@ -587,6 +587,11 @@ namespace
         }
     }
 
+    // void VerifyOutputFiles( InputData &inputData ) 
+    // {
+
+    // }
+
 
     void ReadOutput( InputData &inputData,
                     const pt::ptree &tree )
@@ -601,6 +606,9 @@ namespace
 
         // Probes
         ReadMonitors( inputData, outputTree );
+
+        // Verify the output filenames
+        // VerifyOutputFiles( inputData ); 
     }
 
 }   // end anonymous namepsace

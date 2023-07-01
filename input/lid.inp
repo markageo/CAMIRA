@@ -150,12 +150,12 @@ Solver {
 
 Output {
 
-    residualHistoryFilename = "residual_history.csv"
-    fieldOutputFilename = "fields.vtk"
+    residualHistoryFilename = "output/residual_history.csv"
+    fieldOutputFilename = "output/fields.vtk"
 
     Monitors {
         Probe {
-            filename = "probe1.csv"
+            filename = "output/probe1.csv"
             location = (0.5, 0.6, 0.5)
         }
     }
