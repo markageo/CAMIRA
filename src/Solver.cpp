@@ -137,6 +137,7 @@ namespace
     }
 
 
+
     // Turn the residual into a relative residual
     [[ maybe_unused ]]
     void RelativeResidual( FieldData<floatType> &residuals,
@@ -160,6 +161,7 @@ namespace
 
 
     // Check if residual tolerence is met
+    [[ maybe_unused ]]
     bool MetResidualTolerence( const FieldData<floatType> &residuals,
                                const FieldData<floatType> &residualsTarget )
     {
@@ -171,6 +173,24 @@ namespace
         }
         return true;
     }
+
+
+
+    // Update a vector of field probes
+    std::vector< FieldData<floatType> > FieldProbeValues( const FieldData<array3D> &fields,
+                                                          const std::vector<FieldProbe> &fieldProbes )
+    {
+        std::vector< FieldData<floatType> > probeValues;
+
+        for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
+            ForAllFieldData( [&] (intType f) { 
+                probeValues[p][f] =  fieldProbes[p].GetFieldValue( fields[f] );
+            } );
+        }
+
+        return probeValues;
+    }
+
 
 } // end anonymous namespace
 
@@ -376,6 +396,7 @@ public:
 
         // V momentum
         floatType bV = ( lineConstants.U[Y](iV)
+
                        - m_fvCoeffs.Mom[Y].AU[Y][e](iV, jV, kV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
                        - m_fvCoeffs.Mom[Y].AU[Y][w](iV, jV, kV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
 
@@ -1007,18 +1028,16 @@ void SweepSolve( FieldData<array3D> &fields,
         UpdateFaceFluxes(faceFluxes, mesh, fields.U, inputData);
         UpdateFVCoefficients(fvCoeffs, mesh, faceFluxes, inputData);
 
-        residualsOuter = L1DiffResiduals(fields, fieldsOld);
+        residualsOuter   = L1DiffResiduals(fields, fieldsOld);
         massFluxResidual = BoundaryMassFluxResidual(faceFluxes, mesh);
-        RelativeResidual(residualsOuter, residualsOuterInitialInv, nOuterIterations);
+        probeValues      = FieldProbeValues(fields, fieldProbes); 
+        RelativeResidual( residualsOuter, residualsOuterInitialInv, nOuterIterations );
 
         fieldsOld = fields;
 
         consoleLog.WriteResiduals( residualsOuter, massFluxResidual, nOuterIterations );
         residualsLogFile.WriteData( residualsOuter, massFluxResidual, nOuterIterations );
         for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
-            ForAllFieldData( [&] (intType f) { 
-                probeValues[p][f] =  fieldProbes[p].GetFieldValue( fields[f] );
-            } );
             probeLogFiles[p].WriteData( probeValues[p], nOuterIterations );
         }
         

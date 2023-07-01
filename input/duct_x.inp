@@ -117,12 +117,12 @@ Solver {
 
     Schemes {
         linearisation = Picard
+        momentumInterpolation = implicit
+        advectionScheme = upwind
+        faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
-
-        advectionScheme = upwind
-        faceInterpolationScheme = weightedLinear
 
         maxOuterIterations = 1000
         maxOuterResiduals = 1e-4

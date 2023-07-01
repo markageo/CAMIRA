@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.01
+    nu   = 0.005
 }
 
 Mesh {
@@ -12,13 +12,13 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 50
+            nCells     = 25
             biasFactor = 3
         }
 
         Segment {
             bounds     = (0.5, 1)
-            nCells     = 50
+            nCells     = 25
             biasFactor = -3
         }
     }
@@ -26,13 +26,13 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 50
+            nCells     = 25
             biasFactor = 3
         }
 
         Segment {
             bounds     = (0.5, 1)
-            nCells     = 50
+            nCells     = 25
             biasFactor = -3
         }
     }
@@ -40,13 +40,13 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 50
+            nCells     = 25
             biasFactor = 3
         }
 
         Segment {
             bounds     = (0.5, 1)
-            nCells     = 50
+            nCells     = 25
             biasFactor = -3
         }
     }
@@ -117,29 +117,31 @@ BoundaryConditions
 Solver {
 
     Schemes {
-        linearisation = Picard
+
+        linearisation           = Picard
+        momentumInterpolation   = implicit
+        advectionScheme         = upwind
+        faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        advectionScheme = upwind
-        faceInterpolationScheme = weightedLinear
-
         maxOuterIterations = 1000
         maxOuterResiduals = 1e-4
+
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 5
+        maxIterations = 1
         maxResiduals = 1e-4
 
         planeSweepDirection = +x
         lineSweepDirection = +z
 
-        momentumRelaxation = (1.25, 1.25, 1.25)
-        pressureRelaxation = 1.3
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
 
     }
 

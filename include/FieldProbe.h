@@ -44,7 +44,7 @@ class FieldProbe
         }
 
         // For arrays with ghost cells
-        floatType GetFieldValue( const array3D &field )
+        floatType GetFieldValue( const array3D &field ) const
         {
             using enum Axis::ENUMDATA;
             const floatType c000 = field( G( m_latticeIndex[X](0), m_latticeIndex[Y](0), m_latticeIndex[Z](0) ) ),
@@ -84,6 +84,7 @@ class FieldProbe
         EnumVector<Axis, floatType> m_latticeCoord;   // Normalised coordinates in the lattice
     
 };
+
 
 }   // end namespace CFD
 

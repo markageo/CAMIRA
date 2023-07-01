@@ -51,10 +51,11 @@ struct InputData
     // Solver
     struct Schemes {
         Linearisation linearisation;
-        FieldData<floatType> implicitRelaxation;
-
+        MomentumInterpolation momentumInterpolation;
         AdvectionSchemes advectionScheme;
         FaceInterpolationSchemes faceInterpolationScheme;
+
+        FieldData<floatType> implicitRelaxation;
 
         intType maxOuterIterations;
         FieldData<floatType> maxOuterResiduals;

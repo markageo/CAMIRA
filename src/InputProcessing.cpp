@@ -432,6 +432,15 @@ namespace
             throw std::runtime_error( "'" + valueString + "' is not a valid linearisation." );
         }
 
+        // Momentum interpolation
+        valueString = schemesTree.get<std::string>( "momentumInterpolation" );
+        if        ( valueString == "implicit" ) {
+            inputData.schemes.momentumInterpolation = MomentumInterpolation::Implicit;
+        } else if ( valueString == "semiExplicit" ) {
+            inputData.schemes.momentumInterpolation = MomentumInterpolation::SemiExplicit;
+        } else {
+            throw std::runtime_error( "'" + valueString + "' is not a valid momentum interpolation method." );
+        }
 
         // Advection scheme
         valueString = schemesTree.get<std::string>( "advectionScheme" );
