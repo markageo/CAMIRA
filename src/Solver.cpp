@@ -180,7 +180,7 @@ namespace
     std::vector< FieldData<floatType> > FieldProbeValues( const FieldData<array3D> &fields,
                                                           const std::vector<FieldProbe> &fieldProbes )
     {
-        std::vector< FieldData<floatType> > probeValues;
+        std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
 
         for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
             ForAllFieldData( [&] (intType f) { 
