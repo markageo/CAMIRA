@@ -9,6 +9,7 @@
 #include <utility>
 #include <optional>
 #include <iostream>
+#include <fstream>
 #include <algorithm>
 #include <map>
 
@@ -587,10 +588,28 @@ namespace
         }
     }
 
-    // void VerifyOutputFiles( InputData &inputData ) 
-    // {
+    void VerifyOutputFiles( InputData &inputData ) 
+    {
+        // Fields
+        std::ofstream fileStream( inputData.fieldOutputFilename );
+        if ( !fileStream )
+            throw std::runtime_error("File '" + inputData.fieldOutputFilename + "' cannot be written to or accessed.");
 
-    // }
+        // Residual history
+        fileStream.close();
+        fileStream.open( inputData.residualHistoryFilename );
+        if ( !fileStream )
+            throw std::runtime_error("File '" + inputData.residualHistoryFilename + "' cannot be written to or accessed.");
+
+        // Probes
+        for ( const auto &probe : inputData.probes ) {
+            fileStream.close();
+            fileStream.open( probe.filename );
+            if ( !fileStream )
+                throw std::runtime_error("File '" + probe.filename + "' cannot be written to or accessed.");
+        }
+
+    }
 
 
     void ReadOutput( InputData &inputData,
@@ -608,7 +627,7 @@ namespace
         ReadMonitors( inputData, outputTree );
 
         // Verify the output filenames
-        // VerifyOutputFiles( inputData ); 
+        VerifyOutputFiles( inputData ); 
     }
 
 }   // end anonymous namepsace
