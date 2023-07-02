@@ -397,7 +397,10 @@ FVCoefficients::ContinuityEquation::ContinuityEquation( const iVector3 &dims ) :
           EnumVector<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims( Y )),
           EnumVector<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims( Z )) } ),
     AP( ContinuityPressureEnums(), dims ),
-    B( CFD::array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
+    B( array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
+    mwiCoeffs( { std::array<array1D, 4>{ array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero() } ,
+                 std::array<array1D, 4>{ array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero() } ,
+                 std::array<array1D, 4>{ array1D(dims(Z)+1).setZero(), array1D(dims(Z)+1).setZero(), array1D(dims(Z)+1).setZero(), array1D(dims(Z)+1).setZero() } } ),
     boundaryP( {array2D( dims(Y), dims(Z) ).setZero(), array2D( dims(Y), dims(Z) ).setZero(),
                 array2D( dims(X), dims(Z) ).setZero(), array2D( dims(X), dims(Z) ).setZero(),
                 array2D( dims(X), dims(Y) ).setZero(), array2D( dims(X), dims(Y) ).setZero()} ),     // This doesn't follow right hand rule
