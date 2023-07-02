@@ -286,6 +286,7 @@ struct dimTypes<B>
 
 
 
+
 // Wrapper for std::array that can only be indexed using enums
 template <typename enumStruct, typename T>
 class EnumVector
@@ -345,7 +346,7 @@ class EnumVector
         const T &operator[](const typename enumStruct::ENUMDATA idx) const 
         { return m_dataVector[idx]; }
 
-        // Get underlying data vector
+        // Get underlying data
         std::array<T, enumStruct::count> &get()
         { return m_dataVector; }
 
