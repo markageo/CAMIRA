@@ -572,6 +572,8 @@ void DivideMomentumPressureByDensity( EnumVector<CFD::TransportCoefficients, CFD
 
 
 
+
+
 /*---------------------------------------------------------------------------------------------------------------*\
                         Momentum Weighted Interpolation (Rhie-Chow Interpolation) Coefficients
 \*---------------------------------------------------------------------------------------------------------------*/
@@ -747,8 +749,8 @@ void MWInterpolationBoundary( EnumVector<BoundaryPatches, array2D> &continuityBo
 }
 
 
-
-void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs, 
+template< MomentumInterpolation MI >
+void SetMomentumInterpolationCoefficients( FVCoefficients<MI> &fvCoeffs, 
                                            const Mesh &mesh)
 {
     // Assumes that coefficients are set to zero
@@ -776,7 +778,7 @@ void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
                                         Boundary Constants to Source Term
 \*---------------------------------------------------------------------------------------------------------------*/
 
-void AddMomentumBoundaryConstants( FVCoefficients::MomentumEquation &momCoeffs )
+void AddMomentumBoundaryConstants( MomentumEquation &momCoeffs )
 {
     BoundaryPatches::ENUMDATA positivePatch, negativePatch;
     intType iEnd;
@@ -799,8 +801,8 @@ void AddMomentumBoundaryConstants( FVCoefficients::MomentumEquation &momCoeffs )
 }
 
 
-
-void AddContinuityBoundaryConstants( FVCoefficients::ContinuityEquation &contCoeffs )
+template< MomentumInterpolation MI >
+void AddContinuityBoundaryConstants( ContinuityEquation<MI> &contCoeffs )
 {
     BoundaryPatches::ENUMDATA positivePatch, negativePatch;
     intType iEnd;
@@ -833,16 +835,21 @@ void AddContinuityBoundaryConstants( FVCoefficients::ContinuityEquation &contCoe
                                             Set and Update Functions
 \*---------------------------------------------------------------------------------------------------------------*/
 
+// Explicit instantiations, this allows definition in a .cpp file
+template  FVCoefficients<MomentumInterpolation::Implicit> InitialiseFVCoefficients( const Mesh &,const EnumVector<Axis, array3D> &, const InputData &);
+template  FVCoefficients<MomentumInterpolation::SemiExplicit> InitialiseFVCoefficients( const Mesh &,const EnumVector<Axis, array3D> &, const InputData &);
+
 
 // Allocate and initialise finite volume coefficients for momentum and continuity equations
-FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
-                                         const EnumVector<Axis, array3D> &faceFluxes, 
-                                         const InputData &inputData)
+template< MomentumInterpolation MI >
+FVCoefficients<MI> InitialiseFVCoefficients( const Mesh &mesh,
+                                             const EnumVector<Axis, array3D> &faceFluxes, 
+                                             const InputData &inputData)
 {
     using enum Axis::ENUMDATA;
 
     // Default construct the coefficients class
-    FVCoefficients fvCoeffs(mesh.nCells);
+    FVCoefficients<MI> fvCoeffs(mesh.nCells);
 
     // Diffusion coefficients
     SetDiffusionCoeffients(fvCoeffs.Mom[X].diff, fvCoeffs.Mom[X].boundaryDiff, mesh, inputData, X);
@@ -903,8 +910,16 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
 }
 
 
+
+
+
+template void UpdateFVCoefficients(FVCoefficients<MomentumInterpolation::Implicit> &, const Mesh &,const EnumVector<Axis, array3D> &, const InputData &);
+template void UpdateFVCoefficients(FVCoefficients<MomentumInterpolation::SemiExplicit> &, const Mesh &,const EnumVector<Axis, array3D> &, const InputData &);
+
+
 // Update linearisation in momenum and continuity equations
-void UpdateFVCoefficients(FVCoefficients &fvCoeffs, 
+template< MomentumInterpolation MI >
+void UpdateFVCoefficients(FVCoefficients<MI> &fvCoeffs, 
                           const Mesh &mesh,
                           const EnumVector<Axis, array3D> &faceFluxes,
                           const InputData &inputData)
