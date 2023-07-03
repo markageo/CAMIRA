@@ -37,9 +37,9 @@ namespace
 
 
     // Calculate the absolute residual of each equation from the finite volume stencil
-    [[ maybe_unused ]]
+    template< MomentumInterpolation MI > [[ maybe_unused ]]
     FieldData<floatType> StencilResiduals( const FieldData<array3D> &fields,
-                                           const FVCoefficients &fvCoeffs )
+                                           const FVCoefficients<MI> &fvCoeffs )
     {
         using enum Axis::ENUMDATA;
         using enum TransportCoefficients::ENUMDATA;
@@ -253,7 +253,8 @@ namespace
 // --------------------------------------------------------- TriadSolver --------------------------------------------------------- //
 template < TransportCoefficients::ENUMDATA Ustag,
            TransportCoefficients::ENUMDATA Vstag,
-           TransportCoefficients::ENUMDATA Wstag>
+           TransportCoefficients::ENUMDATA Wstag, 
+           MomentumInterpolation MI>
 class TriadSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -276,7 +277,7 @@ class TriadSolver
 public:
     TriadSolver( FieldData<array3D> &fields,
                  const FieldData<array3D> &fieldsOld,
-                 const FVCoefficients &fvCoeffs ) : 
+                 const FVCoefficients<MI> &fvCoeffs ) : 
                     m_fields( fields ),
                     m_fieldsOld( fieldsOld ),
                     m_fvCoeffs( fvCoeffs ),
@@ -434,7 +435,7 @@ public:
 private:
     FieldData<array3D> &m_fields;
     const FieldData<array3D> &m_fieldsOld;
-    const FVCoefficients &m_fvCoeffs;
+    const FVCoefficients<MI> &m_fvCoeffs;
     const intType m_ni, m_nj, m_nk;
     array3D m_K;
 
@@ -446,7 +447,8 @@ private:
 
 // --------------------------------------------------------- LineSolver --------------------------------------------------------- //
 template < TransportCoefficients::ENUMDATA Vstag,
-           TransportCoefficients::ENUMDATA Wstag >
+           TransportCoefficients::ENUMDATA Wstag,
+           MomentumInterpolation MI >
 class LineSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -458,19 +460,19 @@ class LineSolver
 public:
     LineSolver( FieldData<array3D> &fields,
                 const FieldData<array3D> &fieldsOld,
-                const FVCoefficients &fvCoeffs) : 
+                const FVCoefficients<MI> &fvCoeffs) : 
                     m_fields( fields ),
                     m_fvCoeffs( fvCoeffs ),
                     m_lineConstants( array1D( fvCoeffs.nCells(Axis::X) ) ),
                     m_ni( fvCoeffs.nCells(Axis::X) )
     {
         if (m_ni == 1) {
-            m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
+            m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag, MI>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep2D;
             StateUpdater = &LineSolver::UpdateState2D;
         } else {
-            m_triadSolverEast = std::make_unique<TriadSolver<TC::e, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
-            m_triadSolverWest = std::make_unique<TriadSolver<TC::w, Vstag, Wstag>>(fields, fieldsOld, fvCoeffs);
+            m_triadSolverEast = std::make_unique<TriadSolver<TC::e, Vstag, Wstag, MI>>(fields, fieldsOld, fvCoeffs);
+            m_triadSolverWest = std::make_unique<TriadSolver<TC::w, Vstag, Wstag, MI>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep3D;
             StateUpdater = &LineSolver::UpdateState3D;
         }
@@ -487,11 +489,11 @@ public:
 
 private:
     FieldData<array3D> &m_fields;
-    const FVCoefficients &m_fvCoeffs;
+    const FVCoefficients<MI> &m_fvCoeffs;
 
-    std::unique_ptr<TriadSolver<TC::e, Vstag, Wstag>> m_triadSolverEast;
-    std::unique_ptr<TriadSolver<TC::w, Vstag, Wstag>> m_triadSolverWest;
-    std::unique_ptr<TriadSolver<TC::p, Vstag, Wstag>> m_triadSolverCenter;
+    std::unique_ptr<TriadSolver<TC::e, Vstag, Wstag, MI>> m_triadSolverEast;
+    std::unique_ptr<TriadSolver<TC::w, Vstag, Wstag, MI>> m_triadSolverWest;
+    std::unique_ptr<TriadSolver<TC::p, Vstag, Wstag, MI>> m_triadSolverCenter;
 
     FieldData<array1D> m_lineConstants;
 
@@ -607,7 +609,8 @@ private:
 
 
 // --------------------------------------------------------- PlaneSolver --------------------------------------------------------- //
-template <TransportCoefficients::ENUMDATA Wstag>
+template <TransportCoefficients::ENUMDATA Wstag, 
+          MomentumInterpolation MI>
 class PlaneSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -618,7 +621,7 @@ class PlaneSolver
 public:
     PlaneSolver( FieldData<array3D> &fields,
                  const FieldData<array3D> &fieldsOld,
-                 const FVCoefficients &fvCoeffs) : 
+                 const FVCoefficients<MI> &fvCoeffs) : 
                     m_fields( fields ),
                     m_fvCoeffs( fvCoeffs ),
                     m_planeConstants( array2D( fvCoeffs.nCells(Axis::X), fvCoeffs.nCells(Axis::Y) ) ),
@@ -626,12 +629,12 @@ public:
                     m_nj( fvCoeffs.nCells(Axis::Y) )
     {
         if (m_nj == 1) {
-            m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag>>(fields, fieldsOld, fvCoeffs);
+            m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag, MI>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &PlaneSolver::Sweep2D;
             StateUpdater = &PlaneSolver::UpdateState2D;
         } else {
-            m_lineSolverNorth = std::make_unique<LineSolver<TC::n, Wstag>>(fields, fieldsOld, fvCoeffs);
-            m_lineSolverSouth = std::make_unique<LineSolver<TC::s, Wstag>>(fields, fieldsOld, fvCoeffs);
+            m_lineSolverNorth = std::make_unique<LineSolver<TC::n, Wstag, MI>>(fields, fieldsOld, fvCoeffs);
+            m_lineSolverSouth = std::make_unique<LineSolver<TC::s, Wstag, MI>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &PlaneSolver::Sweep3D;
             StateUpdater = &PlaneSolver::UpdateState3D;
         }
@@ -649,11 +652,11 @@ public:
 private:
 
     FieldData<array3D> &m_fields;
-    const FVCoefficients &m_fvCoeffs;
+    const FVCoefficients<MI> &m_fvCoeffs;
 
-    std::unique_ptr< LineSolver<TC::n, Wstag> > m_lineSolverNorth;
-    std::unique_ptr< LineSolver<TC::s, Wstag> > m_lineSolverSouth;
-    std::unique_ptr< LineSolver<TC::p, Wstag> > m_lineSolverCenter;
+    std::unique_ptr< LineSolver<TC::n, Wstag, MI> > m_lineSolverNorth;
+    std::unique_ptr< LineSolver<TC::s, Wstag, MI> > m_lineSolverSouth;
+    std::unique_ptr< LineSolver<TC::p, Wstag, MI> > m_lineSolverCenter;
 
     FieldData<array2D> m_planeConstants;
 
@@ -767,6 +770,7 @@ private:
 
 
 // --------------------------------------------------------- LinearSolver --------------------------------------------------------- //
+template< MomentumInterpolation MI >
 class LinearSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -775,7 +779,7 @@ class LinearSolver
 public:
     LinearSolver( FieldData<array3D> &fields,
                   const FieldData<array3D> &fieldsOld,
-                  const FVCoefficients &fvCoeffs, 
+                  const FVCoefficients<MI> &fvCoeffs, 
                   const InputData::LinearSolverSettings &linearSolverSettings) : 
                     m_fields( fields ),
                     m_maxIterations( linearSolverSettings.maxIterations ),
@@ -790,12 +794,12 @@ public:
                     m_nk( fvCoeffs.nCells(A::Z) )
     {
         if (m_nk == 1) {
-            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p>>(fields, fieldsOld, fvCoeffs);
+            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LinearSolver::Sweep2D;
             StateUpdater = &LinearSolver::UpdateState2D;
         } else {
-            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t>>(fields, fieldsOld, fvCoeffs);
-            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b>>(fields, fieldsOld, fvCoeffs);
+            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t, MI>>(fields, fieldsOld, fvCoeffs);
+            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LinearSolver::Sweep3D;
             StateUpdater = &LinearSolver::UpdateState3D;
         }
@@ -843,9 +847,9 @@ private:
     const FieldData<floatType> m_maxResiduals;
     const FieldData<floatType> m_relaxation;
 
-    std::unique_ptr<PlaneSolver<TC::t>> m_planeSolverTop;
-    std::unique_ptr<PlaneSolver<TC::b>> m_planeSolverBottom;
-    std::unique_ptr<PlaneSolver<TC::p>> m_planeSolverCenter;
+    std::unique_ptr<PlaneSolver<TC::t, MI>> m_planeSolverTop;
+    std::unique_ptr<PlaneSolver<TC::b, MI>> m_planeSolverBottom;
+    std::unique_ptr<PlaneSolver<TC::p, MI>> m_planeSolverCenter;
 
     void (LinearSolver::*SolutionUpdater)(void);
     void (LinearSolver::*StateUpdater)(void);
@@ -888,7 +892,7 @@ private:
 
 
     template <TC Wstag>
-    void UpdateAndRelax( std::unique_ptr<PlaneSolver<Wstag>> &planeSolver, intType k )
+    void UpdateAndRelax( std::unique_ptr<PlaneSolver<Wstag, MI>> &planeSolver, intType k )
     {
         using enum TransportCoefficients::ENUMDATA;
         using enum Axis::ENUMDATA;
@@ -914,6 +918,13 @@ private:
 
 
 // --------------------------------------------------------- SweepSolve --------------------------------------------------------- //
+
+// Explicit instantiations, this allows definition in a .cpp file
+template void SweepSolve<MomentumInterpolation::Implicit>( FieldData<array3D> &, const Mesh &, const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::SemiExplicit>( FieldData<array3D> &, const Mesh &, const InputData &, const AxisTransformationMap &);
+
+
+template< MomentumInterpolation MI >
 void SweepSolve( FieldData<array3D> &fields,
                  const Mesh &mesh,
                  const InputData &inputData,
@@ -928,8 +939,8 @@ void SweepSolve( FieldData<array3D> &fields,
 
     // Initialise
     EnumVector<Axis, array3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, inputData);
-    FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, faceFluxes, inputData);
     FieldData<array3D> fieldsOld( fields );
+    FVCoefficients<MI> fvCoeffs = InitialiseFVCoefficients<MI>(mesh, faceFluxes, inputData);
 
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
@@ -948,7 +959,7 @@ void SweepSolve( FieldData<array3D> &fields,
     ConsoleLog consoleLog( axisTransformation );
 
     // Instantiate linear solver, this holds references to the fields
-    LinearSolver linearSolver(fields, fieldsOld, fvCoeffs, linearSolverSettings);
+    LinearSolver<MI> linearSolver(fields, fieldsOld, fvCoeffs, linearSolverSettings);
 
 
     // Outer iterations
@@ -976,8 +987,7 @@ void SweepSolve( FieldData<array3D> &fields,
         for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
             probeLogFiles[p].WriteData( probeValues[p], nOuterIterations );
         }
-        
-        
+
         if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
             std::cout << "*** OUTER ITERATIONS CONVERGED ***"
                         << "\n\n";

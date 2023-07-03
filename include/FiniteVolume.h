@@ -32,7 +32,36 @@ struct Mesh
 
 
 
+struct MomentumEquation {
+    MomentumEquation(const Axis::ENUMDATA, const iVector3 &);
+    EnumVector< Axis, EnumVector< TransportCoefficients, array3D > > AU;     // Velocity coefficients (LHS)
+    EnumVector<TransportCoefficients, array1D> AP;                           // Pressure coefficients (LHS)
+    array3D B;                                                               // Source Term (RHS)
+    array3D diagCoeffInv;                                                    // Inverse of diagonal coefficient
+    EnumVector< Axis, EnumVector<TransportCoefficients, array1D> > diff;     // Diffusion coefficients (LHS)
+    EnumVector< BoundaryPatches, floatType > boundaryDiff, boundaryP;        // Constant terms that come from uniform BC (LHS)
+    EnumVector< BoundaryPatches, array2D > boundaryVel;       
+    floatType relaxation;
+};
+
+
+
+template< MomentumInterpolation MI >
+struct ContinuityEquation {
+    ContinuityEquation(const iVector3 &);
+    EnumVector< Axis, EnumVector< TransportCoefficients, array1D > > AU;    // Velocity coefficients (LHS)
+    EnumVector<TransportCoefficients, array3D> AP;                          // Pressure coefficients (LHS)
+    array3D B;                                                              // Source term (RHS)
+    EnumVector< Axis, std::array< array1D, 4 > > mwiCoeffs;                 // Unweighted MWI coefficients (LHS)
+    EnumVector< BoundaryPatches, array2D > boundaryP;                       // Constant terms that come from uniform BC (LHS)
+    EnumVector< BoundaryPatches, floatType > boundaryVel;
+    floatType relaxation;
+};
+
+
+
 // Structure to store finite volume discrete equation coefficients (Picard linearisation)
+template< MomentumInterpolation MI >
 struct FVCoefficients
 {
     // In the finite volume formulation, all equations are divided by the cell volume. This 
@@ -42,31 +71,8 @@ struct FVCoefficients
 
     FVCoefficients(const iVector3 &);
 
-    struct MomentumEquation {
-        MomentumEquation(const Axis::ENUMDATA, const iVector3 &);
-        EnumVector< Axis, EnumVector< TransportCoefficients, array3D > > AU;     // Velocity coefficients (LHS)
-        EnumVector<TransportCoefficients, array1D> AP;                           // Pressure coefficients (LHS)
-        array3D B;                                                               // Source Term (RHS)
-        array3D diagCoeffInv;                                                    // Inverse of diagonal coefficient
-        EnumVector< Axis, EnumVector<TransportCoefficients, array1D> > diff;     // Diffusion coefficients (LHS)
-        EnumVector< BoundaryPatches, floatType > boundaryDiff, boundaryP;        // Constant terms that come from uniform BC (LHS)
-        EnumVector< BoundaryPatches, array2D > boundaryVel;       
-        floatType relaxation;
-    };
-
-    struct ContinuityEquation {
-        ContinuityEquation(const iVector3 &);
-        EnumVector< Axis, EnumVector< TransportCoefficients, array1D > > AU;    // Velocity coefficients (LHS)
-        EnumVector<TransportCoefficients, array3D> AP;                          // Pressure coefficients (LHS)
-        array3D B;                                                              // Source term (RHS)
-        EnumVector< Axis, std::array< array1D, 4 > > mwiCoeffs;                 // Unweighted MWI coefficients (LHS)
-        EnumVector< BoundaryPatches, array2D > boundaryP;                       // Constant terms that come from uniform BC (LHS)
-        EnumVector< BoundaryPatches, floatType > boundaryVel;
-        floatType relaxation;
-    };
-
     EnumVector<Axis, MomentumEquation> Mom;
-    ContinuityEquation Cont;
+    ContinuityEquation< MI > Cont;
     iVector3 nCells;
 };
 
@@ -97,10 +103,12 @@ void UpdateFaceFluxes( EnumVector<Axis, array3D> &, const Mesh &, const EnumVect
 // ---------------------------------- Definition in FiniteVolumeCoefficients.cpp --------------------------------- //
 
 // Allocate and initialise finite volume coefficients
-FVCoefficients InitialiseFVCoefficients(const Mesh &, const EnumVector<Axis, array3D> &, const InputData &);
+template< MomentumInterpolation MI >
+FVCoefficients<MI> InitialiseFVCoefficients(const Mesh &, const EnumVector<Axis, array3D> &, const InputData &);
 
 // Update finite volume coefficients (Picard linearisation)
-void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const EnumVector<Axis, array3D> &, const InputData &);
+template< MomentumInterpolation MI >
+void UpdateFVCoefficients(FVCoefficients<MI> &, const Mesh &, const EnumVector<Axis, array3D> &, const InputData &);
 
 
 // ---------------------------------------- Definition in VertexValues.cpp -------------------------------------- //

@@ -39,7 +39,17 @@ int main(int argc, char const *argv[])
     TOC();
 
     TIC("Solver");
-    CFD::SweepSolve(fields, mesh, inputData, axisTransformation);
+    switch ( inputData.schemes.momentumInterpolation )
+    {
+        using MI = CFD::MomentumInterpolation;
+        case ( MI::Implicit ):
+            CFD::SweepSolve< MI::Implicit >(fields, mesh, inputData, axisTransformation);
+            break;
+
+        case ( MI::SemiExplicit ):
+            CFD::SweepSolve< MI::SemiExplicit >(fields, mesh, inputData, axisTransformation);
+            break;
+    }
     TOC();
 
 

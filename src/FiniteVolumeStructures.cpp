@@ -358,11 +358,23 @@ std::vector< TransportCoefficients::ENUMDATA > MomentumPressureEnums( const Axis
 }
 
 
-std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums()
-{
-    using C = TransportCoefficients::ENUMDATA;
-    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b, C::nn, C::ee, C::ss, C::ww, C::tt, C::bb};
-}
+    // Pressure coefficients are different depending on momentum interpolation treatement
+    template< MomentumInterpolation MI >
+    std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums() = delete;
+
+    template<>
+    std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums< MomentumInterpolation::Implicit >() {
+        using C = TransportCoefficients::ENUMDATA;
+        return {C::p, C::n, C::e, C::s, C::w, C::t, C::b, C::nn, C::ee, C::ss, C::ww, C::tt, C::bb};
+    }
+
+    template<>
+    std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums< MomentumInterpolation::SemiExplicit >() {
+        using C = TransportCoefficients::ENUMDATA;
+        return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
+    }
+
+
 
 }   // end anonymous namespace
 
@@ -371,7 +383,7 @@ using C = TransportCoefficients::ENUMDATA;
 using enum Axis::ENUMDATA;
 
 // Momentum equations constructor
-FVCoefficients::MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis, 
+MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis, 
                                                     const iVector3 &dims) :
     AU( { EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, X), dims),
           EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, Y), dims),
@@ -392,11 +404,12 @@ FVCoefficients::MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis,
 
 
 // Continuity equations constructor
-FVCoefficients::ContinuityEquation::ContinuityEquation( const iVector3 &dims ) :
+template< MomentumInterpolation MI >
+ContinuityEquation<MI>::ContinuityEquation( const iVector3 &dims ) :
     AU( { EnumVector<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims( X )),
           EnumVector<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims( Y )),
           EnumVector<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims( Z )) } ),
-    AP( ContinuityPressureEnums(), dims ),
+    AP( ContinuityPressureEnums<MI>(), dims ),
     B( array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
     mwiCoeffs( { std::array<array1D, 4>{ array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero() } ,
                  std::array<array1D, 4>{ array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero() } ,
@@ -410,7 +423,8 @@ FVCoefficients::ContinuityEquation::ContinuityEquation( const iVector3 &dims ) :
 
 
 // Coefficients class constructor
-FVCoefficients::FVCoefficients(const iVector3 &dims) :
+template< MomentumInterpolation MI >
+FVCoefficients<MI>::FVCoefficients(const iVector3 &dims) :
     Mom( { MomentumEquation(X, dims),  MomentumEquation(Y, dims),  MomentumEquation(Z, dims) } ),
     Cont( dims ),
     nCells( dims )
