@@ -77,7 +77,6 @@ struct FVCoefficients
 };
 
 
-
 // Allocate and initialise the fields
 FieldData<array3D> InitialiseFields(const Mesh &, const InputData &);
 
