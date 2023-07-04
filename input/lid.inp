@@ -11,43 +11,25 @@ Mesh {
 
     Grid x {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 50
-            biasFactor = 3
-        }
-
-        Segment {
-            bounds     = (0.5, 1)
-            nCells     = 50
-            biasFactor = -3
+            bounds     = (0, 1)
+            nCells     = 215
+            biasFactor = 1
         }
     }
 
     Grid y {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 50
-            biasFactor = 3
-        }
-
-        Segment {
-            bounds     = (0.5, 1)
-            nCells     = 50
-            biasFactor = -3
+            bounds     = (0, 1)
+            nCells     = 215
+            biasFactor = 1
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 50
-            biasFactor = 3
-        }
-
-        Segment {
-            bounds     = (0.5, 1)
-            nCells     = 50
-            biasFactor = -3
+            bounds     = (0, 1)
+            nCells     = 215
+            biasFactor = 1
         }
     }
 }
@@ -126,22 +108,22 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 1000
-        maxOuterResiduals = 1e-4
+        maxOuterIterations = 10000
+        maxOuterResiduals = 1e-5
 
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 3
+        maxIterations = 2
         maxResiduals = 1e-4
 
         planeSweepDirection = +x
         lineSweepDirection = +z
 
-        momentumRelaxation = (1.25, 1.25, 1.25)
-        pressureRelaxation = 1.3
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
 
     }
 
@@ -150,12 +132,12 @@ Solver {
 
 Output {
 
-    residualHistoryFilename = "output/residual_history.csv"
-    fieldOutputFilename = "output/fields.vtk"
+    residualHistoryFilename = "output/residual_history_g215.csv"
+    fieldOutputFilename = "output/fields_g215.vtk"
 
     Monitors {
         Probe {
-            filename = "output/probe1.csv"
+            filename = "output/probe1_g215.csv"
             location = (0.5, 0.6, 0.5)
         }
     }

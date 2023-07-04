@@ -44,60 +44,101 @@ namespace
         using enum Axis::ENUMDATA;
         using enum TransportCoefficients::ENUMDATA;
 
-        FieldData<floatType> residuals;
+        FieldData<floatType> residuals{0};
+        FieldData<floatType> scalingFactor{0};
+
 
         for ( intType k = 0; k != fvCoeffs.nCells[Z]; k++ ) {
             for ( intType j = 0; j != fvCoeffs.nCells[Y]; j++ ) {
-                for ( intType i = 0; i != fvCoeffs.nCells[Z]; i++ ) {
+                for ( intType i = 0; i != fvCoeffs.nCells[X]; i++ ) {
 
-                    // Momentum equations
-                    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                    intType ig{ G(i) }, jg{ G(j) }, kg{ G(k) };
 
-                        residuals.U[axis] += abs( 
-                                                fvCoeffs.Mom[axis].AU[axis][p](i, j, k) * fields.U[axis]( G(i  , j  , k  ) )
-                                              + fvCoeffs.Mom[axis].AU[axis][n](i, j, k) * fields.U[axis]( G(i  , j+1, k  ) )
-                                              + fvCoeffs.Mom[axis].AU[axis][e](i, j, k) * fields.U[axis]( G(i+1, j  , k  ) )
-                                              + fvCoeffs.Mom[axis].AU[axis][s](i, j, k) * fields.U[axis]( G(i  , j-1, k  ) )
-                                              + fvCoeffs.Mom[axis].AU[axis][w](i, j, k) * fields.U[axis]( G(i-1, j  , k  ) )
-                                              + fvCoeffs.Mom[axis].AU[axis][t](i, j, k) * fields.U[axis]( G(i  , j  , k+1) )
-                                              + fvCoeffs.Mom[axis].AU[axis][b](i, j, k) * fields.U[axis]( G(i  , j  , k-1) )
+                    // U momentum
+                    residuals.U[X] += abs( 
+                                            fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) 
+                                          + fvCoeffs.Mom[X].AU[X][n](i, j, k) * fields.U[X]( ig  , jg+1, kg  ) 
+                                          + fvCoeffs.Mom[X].AU[X][e](i, j, k) * fields.U[X]( ig+1, jg  , kg  ) 
+                                          + fvCoeffs.Mom[X].AU[X][s](i, j, k) * fields.U[X]( ig  , jg-1, kg  ) 
+                                          + fvCoeffs.Mom[X].AU[X][w](i, j, k) * fields.U[X]( ig-1, jg  , kg  ) 
+                                          + fvCoeffs.Mom[X].AU[X][t](i, j, k) * fields.U[X]( ig  , jg  , kg+1) 
+                                          + fvCoeffs.Mom[X].AU[X][b](i, j, k) * fields.U[X]( ig  , jg  , kg-1) 
 
-                                              + fvCoeffs.Mom[axis].AP[e](i) * fields.P( G(i+1, j  , k  ) )
-                                              + fvCoeffs.Mom[axis].AP[p](i) * fields.P( G(i  , j  , k  ) )
-                                              + fvCoeffs.Mom[axis].AP[w](i) * fields.P( G(i-1, j  , k  ) )
+                                          + fvCoeffs.Mom[X].AP[e](i) * fields.P( ig+1, jg  , kg  )
+                                          + fvCoeffs.Mom[X].AP[p](i) * fields.P( ig  , jg  , kg  )
+                                          + fvCoeffs.Mom[X].AP[w](i) * fields.P( ig-1, jg  , kg  )
 
-                                              - fvCoeffs.Mom[axis].B(i, j, k)  );
+                                          - fvCoeffs.Mom[X].B(i, j, k)  );
 
-                    } );
+                    scalingFactor.U[X] += abs( fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) );
+
+
+                    // V momentum
+                    residuals.U[Y] += abs( 
+                                            fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) 
+                                          + fvCoeffs.Mom[Y].AU[Y][n](i, j, k) * fields.U[Y]( ig  , jg+1, kg  ) 
+                                          + fvCoeffs.Mom[Y].AU[Y][e](i, j, k) * fields.U[Y]( ig+1, jg  , kg  ) 
+                                          + fvCoeffs.Mom[Y].AU[Y][s](i, j, k) * fields.U[Y]( ig  , jg-1, kg  ) 
+                                          + fvCoeffs.Mom[Y].AU[Y][w](i, j, k) * fields.U[Y]( ig-1, jg  , kg  ) 
+                                          + fvCoeffs.Mom[Y].AU[Y][t](i, j, k) * fields.U[Y]( ig  , jg  , kg+1) 
+                                          + fvCoeffs.Mom[Y].AU[Y][b](i, j, k) * fields.U[Y]( ig  , jg  , kg-1) 
+
+                                          + fvCoeffs.Mom[Y].AP[n](j) * fields.P( ig  , jg+1, kg  )
+                                          + fvCoeffs.Mom[Y].AP[p](j) * fields.P( ig  , jg  , kg  )
+                                          + fvCoeffs.Mom[Y].AP[s](j) * fields.P( ig  , jg-1, kg  )
+
+                                          - fvCoeffs.Mom[Y].B(i, j, k)  );
+
+                    scalingFactor.U[Y] += abs( fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) );
+
+
+                    // W momentm
+                    residuals.U[Z] += abs( 
+                                            fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) 
+                                          + fvCoeffs.Mom[Z].AU[Z][n](i, j, k) * fields.U[Z]( ig  , jg+1, kg  ) 
+                                          + fvCoeffs.Mom[Z].AU[Z][e](i, j, k) * fields.U[Z]( ig+1, jg  , kg  ) 
+                                          + fvCoeffs.Mom[Z].AU[Z][s](i, j, k) * fields.U[Z]( ig  , jg-1, kg  ) 
+                                          + fvCoeffs.Mom[Z].AU[Z][w](i, j, k) * fields.U[Z]( ig-1, jg  , kg  ) 
+                                          + fvCoeffs.Mom[Z].AU[Z][t](i, j, k) * fields.U[Z]( ig  , jg  , kg+1) 
+                                          + fvCoeffs.Mom[Z].AU[Z][b](i, j, k) * fields.U[Z]( ig  , jg  , kg-1) 
+
+                                          + fvCoeffs.Mom[Z].AP[t](k) * fields.P( ig  , jg  , kg+1)
+                                          + fvCoeffs.Mom[Z].AP[p](k) * fields.P( ig  , jg  , kg  )
+                                          + fvCoeffs.Mom[Z].AP[b](k) * fields.P( ig  , jg  , kg-1)
+
+                                          - fvCoeffs.Mom[Z].B(i, j, k)  );
+
+                    scalingFactor.U[Z] += abs( fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) );
+
 
                     // Continuity
                     residuals.P += abs( 
-                                      fvCoeffs.Cont.AU[X][e](i) * fields.U[X]( G(i+1, j  , k  ) )
-                                    + fvCoeffs.Cont.AU[X][p](i) * fields.U[X]( G(i  , j  , k  ) )
-                                    + fvCoeffs.Cont.AU[X][w](i) * fields.U[X]( G(i-1, j  , k  ) )
+                                      fvCoeffs.Cont.AU[X][e](i) * fields.U[X]( ig+1, jg  , kg  )
+                                    + fvCoeffs.Cont.AU[X][p](i) * fields.U[X]( ig  , jg  , kg  )
+                                    + fvCoeffs.Cont.AU[X][w](i) * fields.U[X]( ig-1, jg  , kg  )
 
-                                    + fvCoeffs.Cont.AU[Y][n](j) * fields.U[Y]( G(i  , j+1, k  ) )
-                                    + fvCoeffs.Cont.AU[Y][p](j) * fields.U[Y]( G(i  , j  , k  ) )
-                                    + fvCoeffs.Cont.AU[Y][s](j) * fields.U[Y]( G(i  , j-1, k  ) )
+                                    + fvCoeffs.Cont.AU[Y][n](j) * fields.U[Y]( ig  , jg+1, kg  )
+                                    + fvCoeffs.Cont.AU[Y][p](j) * fields.U[Y]( ig  , jg  , kg  )
+                                    + fvCoeffs.Cont.AU[Y][s](j) * fields.U[Y]( ig  , jg-1, kg  )
 
-                                    + fvCoeffs.Cont.AU[Z][t](k) * fields.U[Z]( G(i  , j  , k+1) )
-                                    + fvCoeffs.Cont.AU[Z][p](k) * fields.U[Z]( G(i  , j  , k  ) )
-                                    + fvCoeffs.Cont.AU[Z][b](k) * fields.U[Z]( G(i  , j  , k-1) )
+                                    + fvCoeffs.Cont.AU[Z][t](k) * fields.U[Z]( ig  , jg  , kg+1)
+                                    + fvCoeffs.Cont.AU[Z][p](k) * fields.U[Z]( ig  , jg  , kg  )
+                                    + fvCoeffs.Cont.AU[Z][b](k) * fields.U[Z]( ig  , jg  , kg-1)
 
-                                    + fvCoeffs.Cont.AP[p](i, j, k) * fields.P( G(i  , j  , k  ) )
-                                    + fvCoeffs.Cont.AP[n](i, j, k) * fields.P( G(i  , j+1, k  ) ) 
-                                    + fvCoeffs.Cont.AP[e](i, j, k) * fields.P( G(i+1, j  , k  ) ) 
-                                    + fvCoeffs.Cont.AP[s](i, j, k) * fields.P( G(i  , j-1, k  ) ) 
-                                    + fvCoeffs.Cont.AP[w](i, j, k) * fields.P( G(i-1, j  , k  ) ) 
-                                    + fvCoeffs.Cont.AP[t](i, j, k) * fields.P( G(i  , j  , k+1) ) 
-                                    + fvCoeffs.Cont.AP[b](i, j, k) * fields.P( G(i  , j  , k-1) )
+                                    + fvCoeffs.Cont.AP[p](i, j, k) * fields.P( ig  , jg  , kg  )
+                                    + fvCoeffs.Cont.AP[n](i, j, k) * fields.P( ig  , jg+1, kg  ) 
+                                    + fvCoeffs.Cont.AP[e](i, j, k) * fields.P( ig+1, jg  , kg  ) 
+                                    + fvCoeffs.Cont.AP[s](i, j, k) * fields.P( ig  , jg-1, kg  ) 
+                                    + fvCoeffs.Cont.AP[w](i, j, k) * fields.P( ig-1, jg  , kg  ) 
+                                    + fvCoeffs.Cont.AP[t](i, j, k) * fields.P( ig  , jg  , kg+1) 
+                                    + fvCoeffs.Cont.AP[b](i, j, k) * fields.P( ig  , jg  , kg-1)
 
-                                    + fvCoeffs.Cont.AP[nn](i, j, k) * fields.P( G(i  , j+2, k  ) ) 
-                                    + fvCoeffs.Cont.AP[ee](i, j, k) * fields.P( G(i+2, j  , k  ) ) 
-                                    + fvCoeffs.Cont.AP[ss](i, j, k) * fields.P( G(i  , j-2, k  ) ) 
-                                    + fvCoeffs.Cont.AP[ww](i, j, k) * fields.P( G(i-2, j  , k  ) ) 
-                                    + fvCoeffs.Cont.AP[tt](i, j, k) * fields.P( G(i  , j  , k+2) ) 
-                                    + fvCoeffs.Cont.AP[bb](i, j, k) * fields.P( G(i  , j  , k-2) )
+                                    + fvCoeffs.Cont.AP[nn](i, j, k) * fields.P( ig  , jg+2, kg  ) 
+                                    + fvCoeffs.Cont.AP[ee](i, j, k) * fields.P( ig+2, jg  , kg  ) 
+                                    + fvCoeffs.Cont.AP[ss](i, j, k) * fields.P( ig  , jg-2, kg  ) 
+                                    + fvCoeffs.Cont.AP[ww](i, j, k) * fields.P( ig-2, jg  , kg  ) 
+                                    + fvCoeffs.Cont.AP[tt](i, j, k) * fields.P( ig  , jg  , kg+2) 
+                                    + fvCoeffs.Cont.AP[bb](i, j, k) * fields.P( ig  , jg  , kg-2)
                                     
                                     - fvCoeffs.Cont.B(i, j, k) );
 
@@ -105,13 +146,16 @@ namespace
             }
         }
 
-        ForAllFieldData( [&] (intType f) {
-            residuals[f] /= static_cast<floatType>( fvCoeffs.nCells[X] * fvCoeffs.nCells[Y] * fvCoeffs.nCells[Z] ); 
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            residuals.U[axis] /= scalingFactor.U[axis];
         } );
+
+        // ForAllFieldData( [&] (intType f) {
+        //     residuals[f] /= static_cast<floatType>( fvCoeffs.nCells[X] * fvCoeffs.nCells[Y] * fvCoeffs.nCells[Z] ); 
+        // } );
 
         return residuals;
     }
-
 
 
     // Calculate global mass flux residual at the domain boundary
@@ -138,24 +182,32 @@ namespace
 
 
 
-    // Turn the residual into a relative residual
+    // Normalise the residual by the first iteration
     [[ maybe_unused ]]
-    void RelativeResidual( FieldData<floatType> &residuals,
-                           FieldData<floatType> &residualsInitialInv,
-                           const intType nIterations )
+    void NormaliseResiduals( FieldData<floatType> &residuals,
+                         FieldData<floatType> &residualsScaleFactor,
+                         const intType nIterations )
     {
         if (nIterations == 1) {
 
-            ForAllFieldData( [&] (intType i) {
-                residualsInitialInv[i] = 1.0f;
-                if ( residuals[i] != 0 ) { // Division by zero
-                    residualsInitialInv[i] = 1.0f / residuals[i];
-                } 
+            // Momentum equations
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+                residualsScaleFactor.U[axis] = 1.0f;
+                // if ( residuals.U[axis] != 0 ) { // Division by zero
+                //     residualsScaleFactor.U[axis] = 1.0f / residuals.U[axis];
+                // } 
+
             } );
 
+            // Continuity equation
+            residualsScaleFactor.P = 1.0f;
+            if ( residuals.P != 0 ) { // Division by zero
+                residualsScaleFactor.P = 1.0f / residuals.P;
+            } 
         }
-        ForAllFieldData( [&] (intType i) { residuals[i] *= residualsInitialInv[i]; } );
 
+        ForAllFieldData( [&] (intType i) { residuals[i] *= residualsScaleFactor[i]; } );
     }
 
 
@@ -235,133 +287,11 @@ public:
     { UpdateGlobalConstants(); };
 
 
-    // Core function which updates the local coupled system. Templated by staggering direction.
-    __attribute__((always_inline)) 
-    inline void UpdateTriad( const intType i, 
-                             const intType j, 
-                             const intType k )
-    {
-        using enum Axis::ENUMDATA;
-        using enum TransportCoefficients::ENUMDATA;
-
-        // For indexing the staggered cells
-        intType iU{ i + sCU::iCoupled }, jU{ j                 }, kU{ k                 }; // U momentum
-        intType iV{ i                 }, jV{ j + sCV::iCoupled }, kV{ k                 }; // V momentum
-        intType iW{ i                 }, jW{ j                 }, kW{ k + sCW::iCoupled }; // W momentum
-
-        // With ghost cells, this is faster than using the G() function inline every time
-        intType igU{ G(iU) }, jgU{ G(jU) }, kgU{ G(kU) };
-        intType igV{ G(iV) }, jgV{ G(jV) }, kgV{ G(kV) };
-        intType igW{ G(iW) }, jgW{ G(jW) }, kgW{ G(kW) };
-        intType   ig{ G(i) },   jg{ G(j) },   kg{ G(k) };
-
-
-        // Precompute momentum RHS divided by AP coefficients
-        // U momentum
-        floatType bU = ( m_fvCoeffs.Mom[X].B(iU, jU, kU)
-
-                       - m_fvCoeffs.Mom[X].AU[X][n](iU, jU, kU) * m_fields.U[X]( igU  , jgU+1, kgU  )
-                       - m_fvCoeffs.Mom[X].AU[X][e](iU, jU, kU) * m_fields.U[X]( igU+1, jgU  , kgU  )
-                       - m_fvCoeffs.Mom[X].AU[X][s](iU, jU, kU) * m_fields.U[X]( igU  , jgU-1, kgU  )
-                       - m_fvCoeffs.Mom[X].AU[X][w](iU, jU, kU) * m_fields.U[X]( igU-1, jgU  , kgU  )
-                       - m_fvCoeffs.Mom[X].AU[X][t](iU, jU, kU) * m_fields.U[X]( igU  , jgU  , kgU+1) 
-                       - m_fvCoeffs.Mom[X].AU[X][b](iU, jU, kU) * m_fields.U[X]( igU  , jgU  , kgU-1)
-
-                       - m_fvCoeffs.Mom[X].AP[sUP::cLeft ](iU) * m_fields.P( igU + sUP::iLeft , jgU, kgU)
-                       - m_fvCoeffs.Mom[X].AP[sUP::cRight](iU) * m_fields.P( igU + sUP::iRight, jgU, kgU) 
-
-                       ) * m_fvCoeffs.Mom[X].diagCoeffInv(iU, jU, kU);
-
-
-        // V momentum
-        floatType bV = ( m_fvCoeffs.Mom[Y].B(iV, jV, kV)
-
-                       - m_fvCoeffs.Mom[Y].AU[Y][n](iV, jV, kV) * m_fields.U[Y]( igV  , jgV+1, kgV  ) 
-                       - m_fvCoeffs.Mom[Y].AU[Y][e](iV, jV, kV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
-                       - m_fvCoeffs.Mom[Y].AU[Y][s](iV, jV, kV) * m_fields.U[Y]( igV  , jgV-1, kgV  ) 
-                       - m_fvCoeffs.Mom[Y].AU[Y][w](iV, jV, kV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
-                       - m_fvCoeffs.Mom[Y].AU[Y][t](iV, jV, kV) * m_fields.U[Y]( igV  , jgV  , kgV+1) 
-                       - m_fvCoeffs.Mom[Y].AU[Y][b](iV, jV, kV) * m_fields.U[Y]( igV  , jgV  , kgV-1)
-
-                       - m_fvCoeffs.Mom[Y].AP[sVP::cLeft ](jV) * m_fields.P( igV, jgV + sVP::iLeft , kgV)
-                       - m_fvCoeffs.Mom[Y].AP[sVP::cRight](jV) * m_fields.P( igV, jgV + sVP::iRight, kgV)
-
-                       ) * m_fvCoeffs.Mom[Y].diagCoeffInv(iV, jV, kV);
-
-
-        // W momentum
-        floatType bW = ( m_fvCoeffs.Mom[Z].B(iW, jW, kW)
-                            
-                       - m_fvCoeffs.Mom[Z].AU[Z][n](iW, jW, kW) * m_fields.U[Z]( igW  , jgW+1, kgW  ) 
-                       - m_fvCoeffs.Mom[Z].AU[Z][e](iW, jW, kW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
-                       - m_fvCoeffs.Mom[Z].AU[Z][s](iW, jW, kW) * m_fields.U[Z]( igW  , jgW-1, kgW  ) 
-                       - m_fvCoeffs.Mom[Z].AU[Z][w](iW, jW, kW) * m_fields.U[Z]( igW-1, jgW  , kgW  ) 
-                       - m_fvCoeffs.Mom[Z].AU[Z][t](iW, jW, kW) * m_fields.U[Z]( igW  , jgW  , kgW+1) 
-                       - m_fvCoeffs.Mom[Z].AU[Z][b](iW, jW, kW) * m_fields.U[Z]( igW  , jgW  , kgW-1)
-
-                       - m_fvCoeffs.Mom[Z].AP[sWP::cLeft ](kW) * m_fields.P( igW, jgW, kgW + sWP::iLeft ) 
-                       - m_fvCoeffs.Mom[Z].AP[sWP::cRight](kW) * m_fields.P( igW, jgW, kgW + sWP::iRight)
-
-                       ) * m_fvCoeffs.Mom[Z].diagCoeffInv(iW, jW, kW);
-
-
-        // Continuity for pressure
-        floatType bP = m_fvCoeffs.Cont.B(i, j, k)
-
-                     - m_fvCoeffs.Cont.AU[X][sCU::cLeft ](i) * m_fields.U[X]( ig + sCU::iLeft , jg, kg)
-                     - m_fvCoeffs.Cont.AU[X][sCU::cRight](i) * m_fields.U[X]( ig + sCU::iRight, jg, kg)
-
-                     - m_fvCoeffs.Cont.AU[Y][sCV::cLeft ](j) * m_fields.U[Y]( ig, jg + sCV::iLeft , kg)
-                     - m_fvCoeffs.Cont.AU[Y][sCV::cRight](j) * m_fields.U[Y]( ig, jg + sCV::iRight, kg)
-
-                     - m_fvCoeffs.Cont.AU[Z][sCW::cLeft ](k) * m_fields.U[Z]( ig, jg, kg + sCW::iLeft )
-                     - m_fvCoeffs.Cont.AU[Z][sCW::cRight](k) * m_fields.U[Z]( ig, jg, kg + sCW::iRight)
-
-                     - m_fvCoeffs.Cont.AP[n](i, j, k) * m_fields.P( ig  , jg+1, kg  ) 
-                     - m_fvCoeffs.Cont.AP[e](i, j, k) * m_fields.P( ig+1, jg  , kg  ) 
-                     - m_fvCoeffs.Cont.AP[s](i, j, k) * m_fields.P( ig  , jg-1, kg  ) 
-                     - m_fvCoeffs.Cont.AP[w](i, j, k) * m_fields.P( ig-1, jg  , kg  ) 
-                     - m_fvCoeffs.Cont.AP[t](i, j, k) * m_fields.P( ig  , jg  , kg+1) 
-                     - m_fvCoeffs.Cont.AP[b](i, j, k) * m_fields.P( ig  , jg  , kg-1)
-
-                     - m_fvCoeffs.Cont.AP[nn](i, j, k) * m_fields.P( ig  , jg+2, kg  )
-                     - m_fvCoeffs.Cont.AP[ee](i, j, k) * m_fields.P( ig+2, jg  , kg  ) 
-                     - m_fvCoeffs.Cont.AP[ss](i, j, k) * m_fields.P( ig  , jg-2, kg  ) 
-                     - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields.P( ig-2, jg  , kg  ) 
-                     - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields.P( ig  , jg  , kg+2) 
-                     - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields.P( ig  , jg  , kg-2);
-
-
-        // Update P from continuity
-        m_fields.P( ig, jg, kg ) = ( 1 - m_fvCoeffs.Cont.relaxation ) * m_fieldsOld.P( ig, jg, kg )
-                                 + m_fvCoeffs.Cont.relaxation * 
-                                   ( bP 
-                                   - m_fvCoeffs.Cont.AU[X][sCU::cCoupled](i) * bU 
-                                   - m_fvCoeffs.Cont.AU[Y][sCV::cCoupled](j) * bV 
-                                   - m_fvCoeffs.Cont.AU[Z][sCW::cCoupled](k) * bW 
-                                   ) * m_K(i, j, k);
-
-
-        // Update U from momentum
-        m_fields.U[X]( igU, jgU, kgU ) = ( 1 - m_fvCoeffs.Mom[X].relaxation ) * m_fieldsOld.U[X]( igU, jgU, kgU )
-                                       + m_fvCoeffs.Mom[X].relaxation * ( bU - m_fvCoeffs.Mom[X].AP[sUP::cCoupled](iU) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[X].diagCoeffInv(iU, jU, kU) );
-
-        // Update V from momentum
-        m_fields.U[Y]( igV, jgV, kgV ) = ( 1 - m_fvCoeffs.Mom[Y].relaxation ) * m_fieldsOld.U[Y]( igV, jgV, kgV )
-                                       + m_fvCoeffs.Mom[Y].relaxation * ( bV - m_fvCoeffs.Mom[Y].AP[sVP::cCoupled](jV) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Y].diagCoeffInv(iV, jV, kV) );
-
-        // Update W from momentum
-        m_fields.U[Z]( igW, jgW, kgW ) = ( 1 - m_fvCoeffs.Mom[Z].relaxation ) * m_fieldsOld.U[Z]( igW, jgW, kgW ) 
-                                       + m_fvCoeffs.Mom[Z].relaxation * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(iW, jW, kW) );
-
-    }
-
-
 
     // Core function which updates the local coupled system. Templated by staggering direction.
     // This makes use of precomputed line constants
     __attribute__((always_inline)) 
-    inline void UpdateTriad2( const intType i, 
+    inline void UpdateTriad( const intType i, 
                               const intType j, 
                               const intType k,
                               const FieldData<array1D> &lineConstants )
@@ -578,11 +508,11 @@ private:
         UpdateLineConstants(j, k, planeConstants);
 
         for (intType i = 0; i != m_ni - 1; i++) { // Forward sweep
-            m_triadSolverEast->UpdateTriad2(i, j, k, m_lineConstants);
+            m_triadSolverEast->UpdateTriad(i, j, k, m_lineConstants);
         }
 
         for (intType i = m_ni - 1; i != 0; i--) { // Backward sweep
-            m_triadSolverWest->UpdateTriad2(i, j, k, m_lineConstants);
+            m_triadSolverWest->UpdateTriad(i, j, k, m_lineConstants);
         }
     }
 
@@ -598,7 +528,7 @@ private:
                   const FieldData<array2D> &planeConstants )
     { 
         UpdateLineConstants(j, k, planeConstants);
-        m_triadSolverCenter->UpdateTriad2(0, j, k, m_lineConstants); 
+        m_triadSolverCenter->UpdateTriad(0, j, k, m_lineConstants); 
     }
 
     void UpdateState2D()
@@ -887,7 +817,7 @@ public:
 
             // Normalise residuals
             ForAllFieldData( [&] (intType f) { m_residuals[f] /= static_cast<floatType>(m_ni * m_nj * m_nk); });
-            RelativeResidual(m_residuals, m_residualsInitialInv, nIterations);
+            NormaliseResiduals(m_residuals, m_residualsInitialInv, nIterations);
 
             // Check residual tolerence
             if ( MetResidualTolerence(m_residuals, m_maxResiduals) ) {
@@ -998,10 +928,11 @@ void SweepSolve( FieldData<array3D> &fields,
 
     // Initialise
     EnumVector<Axis, array3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, inputData);
-    FieldData<array3D> fieldsOld( fields );
     FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, faceFluxes, inputData);
+    FieldData<array3D> fieldsOld( fields );
 
-    FieldData<floatType> residualsOuter, residualsOuterInitialInv;
+    // Initialise residuals
+    FieldData<floatType> residualsOuter, residualsScaleFactor;
     floatType massFluxResidual;
 
     // Logging objects
@@ -1019,6 +950,7 @@ void SweepSolve( FieldData<array3D> &fields,
     // Instantiate linear solver, this holds references to the fields
     LinearSolver linearSolver(fields, fieldsOld, fvCoeffs, linearSolverSettings);
 
+
     // Outer iterations
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
@@ -1028,10 +960,14 @@ void SweepSolve( FieldData<array3D> &fields,
         UpdateFaceFluxes(faceFluxes, mesh, fields.U, inputData);
         UpdateFVCoefficients(fvCoeffs, mesh, faceFluxes, inputData);
 
-        residualsOuter   = L1DiffResiduals(fields, fieldsOld);
+        // residualsOuter   = L1DiffResiduals(fields, fieldsOld);
+        residualsOuter   = StencilResiduals(fields, fvCoeffs); 
+        NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
+
         massFluxResidual = BoundaryMassFluxResidual(faceFluxes, mesh);
+
         probeValues      = FieldProbeValues(fields, fieldProbes); 
-        RelativeResidual( residualsOuter, residualsOuterInitialInv, nOuterIterations );
+        
 
         fieldsOld = fields;
 
