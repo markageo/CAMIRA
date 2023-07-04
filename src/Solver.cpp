@@ -919,11 +919,6 @@ private:
 
 // --------------------------------------------------------- SweepSolve --------------------------------------------------------- //
 
-// Explicit instantiations, this allows definition in a .cpp file
-template void SweepSolve<MomentumInterpolation::Implicit>( FieldData<array3D> &, const Mesh &, const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::SemiExplicit>( FieldData<array3D> &, const Mesh &, const InputData &, const AxisTransformationMap &);
-
-
 template< MomentumInterpolation MI >
 void SweepSolve( FieldData<array3D> &fields,
                  const Mesh &mesh,
@@ -995,5 +990,7 @@ void SweepSolve( FieldData<array3D> &fields,
         }
     }
 }
+template void SweepSolve<MomentumInterpolation::Implicit>( FieldData<array3D> &, const Mesh &, const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::SemiExplicit>( FieldData<array3D> &, const Mesh &, const InputData &, const AxisTransformationMap &);
 
 } // end namespace CFD

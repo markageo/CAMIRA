@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 22
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 22
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 22
             biasFactor = 1
         }
     }
@@ -101,7 +101,7 @@ Solver {
     Schemes {
 
         linearisation           = Picard
-        momentumInterpolation   = implicit
+        momentumInterpolation   = semiExplicit
         advectionScheme         = upwind
         faceInterpolationScheme = weightedLinear
 
@@ -109,7 +109,7 @@ Solver {
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 1000
-        maxOuterResiduals = 1e-8
+        maxOuterResiduals = 1e-5
 
     }
     

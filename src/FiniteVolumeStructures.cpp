@@ -371,7 +371,7 @@ std::vector< TransportCoefficients::ENUMDATA > MomentumPressureEnums( const Axis
     template<>
     std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums< MomentumInterpolation::SemiExplicit >() {
         using C = TransportCoefficients::ENUMDATA;
-        return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
+        return {C::p, C::n, C::e, C::s, C::w, C::t, C::b, C::nn, C::ee, C::ss, C::ww, C::tt, C::bb};
     }
 
 
@@ -420,6 +420,8 @@ ContinuityEquation<MI>::ContinuityEquation( const iVector3 &dims ) :
     boundaryVel( 0.0f ),
     relaxation( 1.0f )
 {};
+template struct ContinuityEquation< MomentumInterpolation::Implicit >;
+template struct ContinuityEquation< MomentumInterpolation::SemiExplicit >;
 
 
 // Coefficients class constructor
@@ -429,12 +431,13 @@ FVCoefficients<MI>::FVCoefficients(const iVector3 &dims) :
     Cont( dims ),
     nCells( dims )
 {};
+template struct FVCoefficients< MomentumInterpolation::Implicit >;
+template struct FVCoefficients< MomentumInterpolation::SemiExplicit >;
 
 
 /*-------------------------------------------------------------------------------------*\
                                       Free Functions
 \*-------------------------------------------------------------------------------------*/
-
 
 
 void RemoveGhostCells( array3D &array, 

@@ -835,10 +835,6 @@ void AddContinuityBoundaryConstants( ContinuityEquation<MI> &contCoeffs )
                                             Set and Update Functions
 \*---------------------------------------------------------------------------------------------------------------*/
 
-// Explicit instantiations, this allows definition in a .cpp file
-template  FVCoefficients<MomentumInterpolation::Implicit> InitialiseFVCoefficients( const Mesh &,const EnumVector<Axis, array3D> &, const InputData &);
-template  FVCoefficients<MomentumInterpolation::SemiExplicit> InitialiseFVCoefficients( const Mesh &,const EnumVector<Axis, array3D> &, const InputData &);
-
 
 // Allocate and initialise finite volume coefficients for momentum and continuity equations
 template< MomentumInterpolation MI >
@@ -908,13 +904,11 @@ FVCoefficients<MI> InitialiseFVCoefficients( const Mesh &mesh,
 
     return fvCoeffs;
 }
+template  FVCoefficients<MomentumInterpolation::Implicit> InitialiseFVCoefficients( const Mesh &,const EnumVector<Axis, array3D> &, const InputData &);
+template  FVCoefficients<MomentumInterpolation::SemiExplicit> InitialiseFVCoefficients( const Mesh &,const EnumVector<Axis, array3D> &, const InputData &);
 
 
 
-
-
-template void UpdateFVCoefficients(FVCoefficients<MomentumInterpolation::Implicit> &, const Mesh &,const EnumVector<Axis, array3D> &, const InputData &);
-template void UpdateFVCoefficients(FVCoefficients<MomentumInterpolation::SemiExplicit> &, const Mesh &,const EnumVector<Axis, array3D> &, const InputData &);
 
 
 // Update linearisation in momenum and continuity equations
@@ -977,6 +971,8 @@ void UpdateFVCoefficients(FVCoefficients<MI> &fvCoeffs,
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
 }
+template void UpdateFVCoefficients(FVCoefficients<MomentumInterpolation::Implicit> &, const Mesh &,const EnumVector<Axis, array3D> &, const InputData &);
+template void UpdateFVCoefficients(FVCoefficients<MomentumInterpolation::SemiExplicit> &, const Mesh &,const EnumVector<Axis, array3D> &, const InputData &);
 
 
 }   // end namespace CFD
