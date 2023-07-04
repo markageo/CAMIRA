@@ -579,7 +579,17 @@ void DivideMomentumPressureByDensity( EnumVector<CFD::TransportCoefficients, CFD
 \*---------------------------------------------------------------------------------------------------------------*/
 
 // Un-weighted cell face corrections for MWI, these are constant
-void SetMomentumInterpolationConstants( std::array< array1D, 4 > &mwiCoeffs,
+template < MomentumInterpolation MI > 
+void SetMomentumInterpolationConstants( std::array< array1D, 4 > &,
+                                        const EnumVector<TransportCoefficients, array1D> &,
+                                        const Mesh &,
+                                        const floatType,
+                                        const Axis::ENUMDATA ) = delete;
+
+
+template<>
+void SetMomentumInterpolationConstants< MomentumInterpolation::Implicit >
+                                      ( std::array< array1D, 4 > &mwiCoeffs,
                                         const EnumVector<TransportCoefficients, array1D> &momentumPressureCoeffs,
                                         const Mesh &mesh,
                                         const floatType rho,
@@ -607,6 +617,37 @@ void SetMomentumInterpolationConstants( std::array< array1D, 4 > &mwiCoeffs,
         mwiCoeffs[3](i) = mesh.interpFactors[axis](i) * momentumPressureCoeffs[east](i);
     }
 }
+
+
+// For semi explicit RC interpolation, these are the constants for the sparse gradient that gets treated explicitly
+template<>
+void SetMomentumInterpolationConstants< MomentumInterpolation::SemiExplicit >
+                                      ( std::array< array1D, 4 > &mwiCoeffs,
+                                        const EnumVector<TransportCoefficients, array1D> &momentumPressureCoeffs,
+                                        const Mesh &mesh,
+                                        [[ maybe_unused ]] const floatType rho,
+                                        const Axis::ENUMDATA axis )
+{
+    using enum TransportCoefficients::ENUMDATA;
+
+    TransportCoefficients::ENUMDATA west = LUT::LoCoeff[axis],
+                                    east = LUT::HiCoeff[axis];
+
+    // Internal faces
+    for ( intType i = 1; i != mesh.cellFaces[axis].size()-1; i++ ) {
+
+        mwiCoeffs[0](i) = (1 - mesh.interpFactors[axis](i))   * momentumPressureCoeffs[west](i-1);
+
+        mwiCoeffs[1](i) = ( (1 - mesh.interpFactors[axis](i)) * momentumPressureCoeffs[p   ](i-1)
+                       +  mesh.interpFactors[axis](i)      * momentumPressureCoeffs[west](i  ) );
+
+        mwiCoeffs[2](i) = ( (1 - mesh.interpFactors[axis](i)) * momentumPressureCoeffs[east](i-1)
+                       + mesh.interpFactors[axis](i)       * momentumPressureCoeffs[p   ](i  ) );
+
+        mwiCoeffs[3](i) = mesh.interpFactors[axis](i) * momentumPressureCoeffs[east](i);
+    }
+}
+
 
 
 // Cell weighting coefficient for MWI. The given idx is the face index
@@ -842,65 +883,59 @@ FVCoefficients<MI> InitialiseFVCoefficients( const Mesh &mesh,
                                              const EnumVector<Axis, array3D> &faceFluxes, 
                                              const InputData &inputData)
 {
-    using enum Axis::ENUMDATA;
+    using TC = TransportCoefficients::ENUMDATA;
 
     // Default construct the coefficients class
     FVCoefficients<MI> fvCoeffs(mesh.nCells);
 
-    // Diffusion coefficients
-    SetDiffusionCoeffients(fvCoeffs.Mom[X].diff, fvCoeffs.Mom[X].boundaryDiff, mesh, inputData, X);
-    SetDiffusionCoeffients(fvCoeffs.Mom[Y].diff, fvCoeffs.Mom[Y].boundaryDiff, mesh, inputData, Y);
-    SetDiffusionCoeffients(fvCoeffs.Mom[Z].diff, fvCoeffs.Mom[Z].boundaryDiff, mesh, inputData, Z);
-
-    // Momentum advection terms
-    SetAdvectionCoefficients(fvCoeffs.Mom[X].AU[X], fvCoeffs.Mom[X].boundaryVel, faceFluxes, mesh, inputData, X);
-    SetAdvectionCoefficients(fvCoeffs.Mom[Y].AU[Y], fvCoeffs.Mom[Y].boundaryVel, faceFluxes, mesh, inputData, Y);
-    SetAdvectionCoefficients(fvCoeffs.Mom[Z].AU[Z], fvCoeffs.Mom[Z].boundaryVel, faceFluxes, mesh, inputData, Z);
-
-    // Add diffusion to the velocity coefficients in momentum equations
-    AddDiffusion(fvCoeffs.Mom[X].AU[X], fvCoeffs.Mom[X].boundaryVel, fvCoeffs.Mom[X].diff, fvCoeffs.Mom[X].boundaryDiff, mesh);
-    AddDiffusion(fvCoeffs.Mom[Y].AU[Y], fvCoeffs.Mom[Y].boundaryVel, fvCoeffs.Mom[Y].diff, fvCoeffs.Mom[Y].boundaryDiff, mesh);
-    AddDiffusion(fvCoeffs.Mom[Z].AU[Z], fvCoeffs.Mom[Z].boundaryVel, fvCoeffs.Mom[Z].diff, fvCoeffs.Mom[Z].boundaryDiff, mesh);
-
-    // Inverse of AP coefficient
-    using TC = TransportCoefficients::ENUMDATA;
+    // Momentum equations
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+         // Diffusion coefficients
+        SetDiffusionCoeffients(fvCoeffs.Mom[axis].diff, fvCoeffs.Mom[axis].boundaryDiff, mesh, inputData, axis);
+
+        // Advection terms
+        SetAdvectionCoefficients(fvCoeffs.Mom[axis].AU[axis], fvCoeffs.Mom[axis].boundaryVel, faceFluxes, mesh, inputData, axis);
+
+        // Add diffusion to velocity terms
+        AddDiffusion(fvCoeffs.Mom[axis].AU[axis], fvCoeffs.Mom[axis].boundaryVel, fvCoeffs.Mom[axis].diff, fvCoeffs.Mom[axis].boundaryDiff, mesh);
+
+        // Inverse of AP coefficient
         fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
+
+        // Momentum pressure terms
+        SetFaceInterpolatedCoefficients(fvCoeffs.Mom[axis].AP, fvCoeffs.Mom[axis].boundaryP, mesh, inputData.boundaryConditions.P, axis);
+        DivideMomentumPressureByDensity(fvCoeffs.Mom[axis].AP, fvCoeffs.Mom[axis].boundaryP, inputData.rho, axis);
+
+        // Add boundary constants to source terms
+        AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
+
+        // Relaxation factor
+        fvCoeffs.Mom[axis].relaxation = inputData.schemes.implicitRelaxation.U[axis];
+
     } );
 
-    // Momentum pressure terms
-    SetFaceInterpolatedCoefficients(fvCoeffs.Mom[X].AP, fvCoeffs.Mom[X].boundaryP, mesh, inputData.boundaryConditions.P, X);
-    SetFaceInterpolatedCoefficients(fvCoeffs.Mom[Y].AP, fvCoeffs.Mom[Y].boundaryP, mesh, inputData.boundaryConditions.P, Y);
-    SetFaceInterpolatedCoefficients(fvCoeffs.Mom[Z].AP, fvCoeffs.Mom[Z].boundaryP, mesh, inputData.boundaryConditions.P, Z);
 
-    DivideMomentumPressureByDensity(fvCoeffs.Mom[X].AP, fvCoeffs.Mom[X].boundaryP, inputData.rho, X);
-    DivideMomentumPressureByDensity(fvCoeffs.Mom[Y].AP, fvCoeffs.Mom[Y].boundaryP, inputData.rho, Y);
-    DivideMomentumPressureByDensity(fvCoeffs.Mom[Z].AP, fvCoeffs.Mom[Z].boundaryP, inputData.rho, Z);
+    // Continuity equation
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-    // Continuity velocity terms
-    SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AU[X], fvCoeffs.Cont.boundaryVel, mesh, inputData.boundaryConditions.U[X], X);
-    SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AU[Y], fvCoeffs.Cont.boundaryVel, mesh, inputData.boundaryConditions.U[Y], Y);
-    SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AU[Z], fvCoeffs.Cont.boundaryVel, mesh, inputData.boundaryConditions.U[Z], Z);
+        // Velocity terms
+        SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AU[axis], fvCoeffs.Cont.boundaryVel, mesh, inputData.boundaryConditions.U[axis], axis);
 
-    // Momentum weighted interpolation constants in the coefficients
-    SetMomentumInterpolationConstants(fvCoeffs.Cont.mwiCoeffs[X], fvCoeffs.Mom[X].AP, mesh, inputData.rho, X);
-    SetMomentumInterpolationConstants(fvCoeffs.Cont.mwiCoeffs[Y], fvCoeffs.Mom[Y].AP, mesh, inputData.rho, Y);
-    SetMomentumInterpolationConstants(fvCoeffs.Cont.mwiCoeffs[Z], fvCoeffs.Mom[Z].AP, mesh, inputData.rho, Z);
+        // Momentum weighted interpolation constants in the coefficients
+        SetMomentumInterpolationConstants<MI>(fvCoeffs.Cont.mwiCoeffs[axis], fvCoeffs.Mom[axis].AP, mesh, inputData.rho, axis);
 
-    // Continuity pressure terms (from momentum weighted interpolation)
+    } );
+
+    // Momentum Weighted interpolation
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh);
     
     // Add boundary constants to source terms
-    AddMomentumBoundaryConstants(fvCoeffs.Mom[X]);
-    AddMomentumBoundaryConstants(fvCoeffs.Mom[Y]);
-    AddMomentumBoundaryConstants(fvCoeffs.Mom[Z]);
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
-    // Set implicit under relaxation
-    EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
-        fvCoeffs.Mom[axis].relaxation = inputData.schemes.implicitRelaxation.U[axis];
-    } );
+    // Relaxation factor
     fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation.P;
+
 
     return fvCoeffs;
 }
@@ -918,7 +953,7 @@ void UpdateFVCoefficients(FVCoefficients<MI> &fvCoeffs,
                           const EnumVector<Axis, array3D> &faceFluxes,
                           const InputData &inputData)
 {
-    using enum Axis::ENUMDATA;
+    using TC = TransportCoefficients::ENUMDATA;
 
     // Zero momentum equations
     EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
@@ -945,29 +980,29 @@ void UpdateFVCoefficients(FVCoefficients<MI> &fvCoeffs,
     } );
     fvCoeffs.Cont.B.setZero();
 
-    // Momentum advection terms
-    SetAdvectionCoefficients(fvCoeffs.Mom[X].AU[X], fvCoeffs.Mom[X].boundaryVel, faceFluxes, mesh, inputData, X);
-    SetAdvectionCoefficients(fvCoeffs.Mom[Y].AU[Y], fvCoeffs.Mom[Y].boundaryVel, faceFluxes, mesh, inputData, Y);
-    SetAdvectionCoefficients(fvCoeffs.Mom[Z].AU[Z], fvCoeffs.Mom[Z].boundaryVel, faceFluxes, mesh, inputData, Z);
 
-    // Add diffusion to the velocity coefficients in momentum equations
-    AddDiffusion(fvCoeffs.Mom[X].AU[X], fvCoeffs.Mom[X].boundaryVel, fvCoeffs.Mom[X].diff, fvCoeffs.Mom[X].boundaryDiff, mesh);
-    AddDiffusion(fvCoeffs.Mom[Y].AU[Y], fvCoeffs.Mom[Y].boundaryVel, fvCoeffs.Mom[Y].diff, fvCoeffs.Mom[Y].boundaryDiff, mesh);
-    AddDiffusion(fvCoeffs.Mom[Z].AU[Z], fvCoeffs.Mom[Z].boundaryVel, fvCoeffs.Mom[Z].diff, fvCoeffs.Mom[Z].boundaryDiff, mesh);
 
-    // Inverse of AP coefficient
-    using TC = TransportCoefficients::ENUMDATA;
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+        // Advection terms
+        SetAdvectionCoefficients(fvCoeffs.Mom[axis].AU[axis], fvCoeffs.Mom[axis].boundaryVel, faceFluxes, mesh, inputData, axis);
+
+        // Add diffusion to velocity terms
+        AddDiffusion(fvCoeffs.Mom[axis].AU[axis], fvCoeffs.Mom[axis].boundaryVel, fvCoeffs.Mom[axis].diff, fvCoeffs.Mom[axis].boundaryDiff, mesh);
+
+        // Inverse of AP coefficient
         fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
+
+        // Add boundary constants to source terms
+        AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
+
     } );
+
 
     // Set the momentum interpolation coefficients
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh);
 
     // Add boundary constants to source terms
-    AddMomentumBoundaryConstants(fvCoeffs.Mom[X]);
-    AddMomentumBoundaryConstants(fvCoeffs.Mom[Y]);
-    AddMomentumBoundaryConstants(fvCoeffs.Mom[Z]);
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
 }
