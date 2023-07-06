@@ -578,73 +578,50 @@ void DivideMomentumPressureByDensity( EnumVector<CFD::TransportCoefficients, CFD
                         Momentum Weighted Interpolation (Rhie-Chow Interpolation) Coefficients
 \*---------------------------------------------------------------------------------------------------------------*/
 
-// Un-weighted cell face corrections for MWI, these are constant
-template < MomentumInterpolation MI > 
-void SetMomentumInterpolationConstants( std::array< array1D, 4 > &,
-                                        const EnumVector<TransportCoefficients, array1D> &,
-                                        const Mesh &,
-                                        const floatType,
-                                        const Axis::ENUMDATA ) = delete;
-
-
-template<>
-void SetMomentumInterpolationConstants< MomentumInterpolation::Implicit >
-                                      ( std::array< array1D, 4 > &mwiCoeffs,
-                                        const EnumVector<TransportCoefficients, array1D> &momentumPressureCoeffs,
-                                        const Mesh &mesh,
-                                        const floatType rho,
-                                        const Axis::ENUMDATA axis )
+// Unweighted constants that appear in the sparse gradient part of MWI
+void SetMomentumInterpolationSparseConstants( std::array< array1D, 4 > &mwiSparseCoeffs,
+                                              const EnumVector<TransportCoefficients, array1D> &momentumPressureCoeffs,
+                                              const Mesh &mesh,
+                                              const Axis::ENUMDATA axis )
 {
     using enum TransportCoefficients::ENUMDATA;
 
-    floatType rhoInv = 1 / rho;
     TransportCoefficients::ENUMDATA west = LUT::LoCoeff[axis],
                                     east = LUT::HiCoeff[axis];
 
     // Internal faces
     for ( intType i = 1; i != mesh.cellFaces[axis].size()-1; i++ ) {
 
-        mwiCoeffs[0](i) = (1 - mesh.interpFactors[axis](i))   * momentumPressureCoeffs[west](i-1);
+        mwiSparseCoeffs[0](i) = (1 - mesh.interpFactors[axis](i))   * momentumPressureCoeffs[west](i-1);
 
-        mwiCoeffs[1](i) = ( (1 - mesh.interpFactors[axis](i)) * momentumPressureCoeffs[p   ](i-1)
-                       +  mesh.interpFactors[axis](i)      * momentumPressureCoeffs[west](i  )
-                       +  mesh.cellCenterDiffInv[axis](i)  * rhoInv );
+        mwiSparseCoeffs[1](i) = ( (1 - mesh.interpFactors[axis](i)) * momentumPressureCoeffs[p   ](i-1)
+                              +  mesh.interpFactors[axis](i)      * momentumPressureCoeffs[west](i  ) );
 
-        mwiCoeffs[2](i) = ( (1 - mesh.interpFactors[axis](i)) * momentumPressureCoeffs[east](i-1)
-                       + mesh.interpFactors[axis](i)       * momentumPressureCoeffs[p   ](i  )
-                       - mesh.cellCenterDiffInv[axis](i)   * rhoInv );
+        mwiSparseCoeffs[2](i) = ( (1 - mesh.interpFactors[axis](i)) * momentumPressureCoeffs[east](i-1)
+                              + mesh.interpFactors[axis](i)       * momentumPressureCoeffs[p   ](i  ) );
 
-        mwiCoeffs[3](i) = mesh.interpFactors[axis](i) * momentumPressureCoeffs[east](i);
+        mwiSparseCoeffs[3](i) = mesh.interpFactors[axis](i) * momentumPressureCoeffs[east](i);
     }
 }
 
 
-// For semi explicit RC interpolation, these are the constants for the sparse gradient that gets treated explicitly
-template<>
-void SetMomentumInterpolationConstants< MomentumInterpolation::SemiExplicit >
-                                      ( std::array< array1D, 4 > &mwiCoeffs,
-                                        const EnumVector<TransportCoefficients, array1D> &momentumPressureCoeffs,
-                                        const Mesh &mesh,
-                                        [[ maybe_unused ]] const floatType rho,
-                                        const Axis::ENUMDATA axis )
+
+// Unweighted constants that appear in the compact gradient part of MWI
+void SetMomentumInterpolationCompactConstants( std::array< array1D, 2 > &mwiCompactCoeffs,
+                                               const floatType rho,
+                                               const Mesh &mesh,
+                                               const Axis::ENUMDATA axis )
 {
     using enum TransportCoefficients::ENUMDATA;
 
-    TransportCoefficients::ENUMDATA west = LUT::LoCoeff[axis],
-                                    east = LUT::HiCoeff[axis];
+    floatType rhoInv = 1 / rho;
 
     // Internal faces
     for ( intType i = 1; i != mesh.cellFaces[axis].size()-1; i++ ) {
 
-        mwiCoeffs[0](i) = (1 - mesh.interpFactors[axis](i))   * momentumPressureCoeffs[west](i-1);
+        mwiCompactCoeffs[0](i) = mesh.cellCenterDiffInv[axis](i)  * rhoInv;
 
-        mwiCoeffs[1](i) = ( (1 - mesh.interpFactors[axis](i)) * momentumPressureCoeffs[p   ](i-1)
-                       +  mesh.interpFactors[axis](i)      * momentumPressureCoeffs[west](i  ) );
-
-        mwiCoeffs[2](i) = ( (1 - mesh.interpFactors[axis](i)) * momentumPressureCoeffs[east](i-1)
-                       + mesh.interpFactors[axis](i)       * momentumPressureCoeffs[p   ](i  ) );
-
-        mwiCoeffs[3](i) = mesh.interpFactors[axis](i) * momentumPressureCoeffs[east](i);
+        mwiCompactCoeffs[1](i) = - mesh.cellCenterDiffInv[axis](i)   * rhoInv;
     }
 }
 
@@ -662,12 +639,25 @@ floatType MWIWeightingCoeff( const arrayIndex3D &idx,
 }
 
 
+
 // Momentum interpolation coefficient for internal faces
-void MWInterpolationFace( EnumVector<TransportCoefficients, array3D> &continuityPressureCoeffs,
-                          const array3D &momentumDiagCoeffInv,
-                          const std::array< array1D, 4 > &mwiCoeffs,
-                          const Mesh &mesh,
-                          const Axis::ENUMDATA axis )
+template< MomentumInterpolation MI >
+void MWInterpolationFace( EnumVector<TransportCoefficients, array3D> &,
+                         const array3D &,
+                         const std::array< array1D, 4 > &,
+                         const std::array< array1D, 2 > &,
+                         const Mesh &,
+                         const Axis::ENUMDATA) = delete;
+
+
+template<>
+void MWInterpolationFace< MomentumInterpolation::Implicit >
+                       ( EnumVector<TransportCoefficients, array3D> &continuityPressureCoeffs,
+                         const array3D &momentumDiagCoeffInv,
+                         const std::array< array1D, 4 > &mwiSparseCoeffs,
+                         const std::array< array1D, 2 > &mwiCompactCoeffs,
+                         const Mesh &mesh,
+                         const Axis::ENUMDATA axis )
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
@@ -701,10 +691,10 @@ void MWInterpolationFace( EnumVector<TransportCoefficients, array3D> &continuity
                 // Coefficients for westmost to eastmost cell. These coefficients assume that the momentum equations 
                 // have been divided through by the cell volume
                 intType idx = HiIndex[axis];
-                floatType coeff0 = d * mwiCoeffs[0](idx),
-                          coeff1 = d * mwiCoeffs[1](idx),
-                          coeff2 = d * mwiCoeffs[2](idx),
-                          coeff3 = d * mwiCoeffs[3](idx);
+                floatType coeff0 = d * mwiSparseCoeffs[0](idx),
+                          coeff1 = d * mwiSparseCoeffs[1](idx) + mwiCompactCoeffs[0](idx),
+                          coeff2 = d * mwiSparseCoeffs[2](idx) + mwiCompactCoeffs[1](idx),
+                          coeff3 = d * mwiSparseCoeffs[3](idx);
 
                 // Cell on west side 
                 floatType LoCellLengthInv = mesh.cellLengthsInv[axis]( LoIndex[axis] );
@@ -727,7 +717,67 @@ void MWInterpolationFace( EnumVector<TransportCoefficients, array3D> &continuity
 }
 
 
+template<>
+void MWInterpolationFace< MomentumInterpolation::SemiExplicit >
+                       ( EnumVector<TransportCoefficients, array3D> &continuityPressureCoeffs,
+                         const array3D &momentumDiagCoeffInv,
+                         const std::array< array1D, 4 > &,
+                         const std::array< array1D, 2 > &mwiCompactCoeffs,
+                         const Mesh &mesh,
+                         const Axis::ENUMDATA axis )
+{
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
 
+    
+    // Starting index and number of faces to iterate over
+    iVector3 startIndex, nFaces;
+    EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
+        startIndex[a] = 0;
+        nFaces[a] = mesh.nCells[a];
+    } );
+    startIndex[axis] += 1;
+
+
+    // Cell indexing
+    TransportCoefficients::ENUMDATA east  = LUT::HiCoeff[axis], 
+                                    west  = LUT::LoCoeff[axis];
+
+    for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+        for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+
+                arrayIndex3D HiIndex = { i, j, k },
+                             LoIndex = { i, j, k };
+                LoIndex[axis] -= 1;
+
+                floatType d = MWIWeightingCoeff( {i, j, k}, momentumDiagCoeffInv, axis );
+
+                // Coefficients for westmost to eastmost cell. These coefficients assume that the momentum equations 
+                // have been divided through by the cell volume
+                intType idx = HiIndex[axis];
+                floatType coeff0 = d * mwiCompactCoeffs[0](idx),
+                          coeff1 = d * mwiCompactCoeffs[1](idx);
+
+                // Cell on west side 
+                floatType LoCellLengthInv = mesh.cellLengthsInv[axis]( LoIndex[axis] );
+                continuityPressureCoeffs[p    ](LoIndex) += coeff0 * LoCellLengthInv;
+                continuityPressureCoeffs[east ](LoIndex) += coeff1 * LoCellLengthInv;
+
+                // Cell on east side
+                floatType HiCellLengthInv = mesh.cellLengthsInv[axis]( HiIndex[axis] );
+                continuityPressureCoeffs[west ](HiIndex) -= coeff0 * HiCellLengthInv;
+                continuityPressureCoeffs[p    ](HiIndex) -= coeff1 * HiCellLengthInv;
+
+            }
+        }
+    }
+
+}
+
+
+
+// Boundary constants that come from MWI
 void MWInterpolationBoundary( EnumVector<BoundaryPatches, array2D> &continuityBoundaryPressure,
                               const EnumVector<BoundaryPatches, floatType> &momentumBoundaryPressure,
                               const array3D &momentumDiagCoeffInv, 
@@ -790,19 +840,17 @@ void MWInterpolationBoundary( EnumVector<BoundaryPatches, array2D> &continuityBo
 }
 
 
+// Set momentum interpolation coefficients that are treated implicitly
 template< MomentumInterpolation MI >
 void SetMomentumInterpolationCoefficients( FVCoefficients<MI> &fvCoeffs, 
                                            const Mesh &mesh)
 {
     // Assumes that coefficients are set to zero
-
-    // Only internal cells need to be done, since correction is zero at boundary, and
-    // sparse pressure gradient is taken from momentum equations, which already contain
-    // the boundary condition.
+    // Correction is zero at the boundary faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
         // Internal faces
-        MWInterpolationFace(fvCoeffs.Cont.AP, fvCoeffs.Mom[axis].diagCoeffInv, fvCoeffs.Cont.mwiCoeffs[axis], mesh, axis);
+        MWInterpolationFace<MI>(fvCoeffs.Cont.AP, fvCoeffs.Mom[axis].diagCoeffInv, fvCoeffs.Cont.mwiSparseCoeffs[axis], fvCoeffs.Cont.mwiCompactCoeffs[axis], mesh, axis);
 
         // Boundary constants
         MWInterpolationBoundary(fvCoeffs.Cont.boundaryP, fvCoeffs.Mom[axis].boundaryP, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
@@ -812,6 +860,82 @@ void SetMomentumInterpolationCoefficients( FVCoefficients<MI> &fvCoeffs,
 }
 
 
+// Add explicit part of momentum interpolation to the source term of the continuity equation
+template< MomentumInterpolation MI > requires ( MI == MomentumInterpolation::SemiExplicit )
+void AddMomentumInterpolationExplicitSource( ContinuityEquation<MI> &continuityEquation, 
+                                             const array3D &momentumDiagCoeffInv,
+                                             const array3D &P,
+                                             const Mesh &mesh )
+{
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+
+    array3D &B = continuityEquation.B;
+
+    auto NeighbourIndex = [] ( arrayIndex3D index, intType shift, Axis::ENUMDATA shiftAxis ) { return index[shiftAxis] += shift; };
+
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+        std::array< array1D, 4 > &mwiSparseCoeffs = continuityEquation.mwiSparseCoeffs[axis];
+
+        // Starting index and number of faces to iterate over
+        iVector3 startIndex, nFaces;
+        EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
+            startIndex[a] = 0;
+            nFaces[a] = mesh.nCells[a];
+        } );
+        startIndex[axis] += 1;
+
+        for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+            for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+                for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+
+                    arrayIndex3D HiIndex = { i, j, k },
+                                 LoIndex = NeighbourIndex( HiIndex, -1, axis );
+
+                    arrayIndex3D LoWest  = NeighbourIndex( LoIndex, -1, axis ),
+                                 LoEast  = NeighbourIndex( LoIndex,  1, axis ),
+                                 LoEEast = NeighbourIndex( LoIndex,  2, axis ),
+
+                                 HiWWest = NeighbourIndex( HiIndex, -2, axis ),
+                                 HiWest  = NeighbourIndex( HiIndex, -1, axis ),
+                                 HiEast  = NeighbourIndex( HiIndex,  1, axis );
+
+                    intType idx = HiIndex[axis];
+
+                    floatType d = MWIWeightingCoeff( {i, j, k}, momentumDiagCoeffInv, axis );
+                    floatType coeff0 = d * mwiSparseCoeffs[0](idx),
+                              coeff1 = d * mwiSparseCoeffs[1](idx),
+                              coeff2 = d * mwiSparseCoeffs[2](idx),
+                              coeff3 = d * mwiSparseCoeffs[3](idx);
+
+                    // Cell on west side 
+                    floatType LoCellLengthInv = mesh.cellLengthsInv[axis]( LoIndex[axis] );
+                    B(LoIndex) += (
+                                    coeff0 * P( G(LoWest)  )
+                                  + coeff1 * P( G(LoIndex) )
+                                  + coeff2 * P( G(LoEast)  )
+                                  + coeff3 * P( G(LoEEast) )
+                                  ) * LoCellLengthInv;
+
+                    // Cell on east side
+                    floatType HiCellLengthInv = mesh.cellLengthsInv[axis]( HiIndex[axis] );
+                    B(HiIndex) += (
+                                    coeff0 * P( G(HiWWest) )
+                                  + coeff1 * P( G(HiWest)  )
+                                  + coeff2 * P( G(HiIndex) )
+                                  + coeff3 * P( G(HiEast)  )
+                                  ) * HiCellLengthInv;
+
+                }
+            }
+        }
+        
+
+    } );
+
+}
 
 
 
@@ -923,12 +1047,17 @@ FVCoefficients<MI> InitialiseFVCoefficients( const Mesh &mesh,
         SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AU[axis], fvCoeffs.Cont.boundaryVel, mesh, inputData.boundaryConditions.U[axis], axis);
 
         // Momentum weighted interpolation constants in the coefficients
-        SetMomentumInterpolationConstants<MI>(fvCoeffs.Cont.mwiCoeffs[axis], fvCoeffs.Mom[axis].AP, mesh, inputData.rho, axis);
+        SetMomentumInterpolationSparseConstants(fvCoeffs.Cont.mwiSparseCoeffs[axis], fvCoeffs.Mom[axis].AP, mesh, axis);
+        SetMomentumInterpolationCompactConstants(fvCoeffs.Cont.mwiCompactCoeffs[axis], inputData.rho, mesh, axis);
 
     } );
 
     // Momentum Weighted interpolation
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh);
+
+    if constexpr ( MI == MomentumInterpolation::SemiExplicit ) {
+        // AddMomentumInterpolationExplicitSource( );
+    }
     
     // Add boundary constants to source terms
     AddContinuityBoundaryConstants(fvCoeffs.Cont);

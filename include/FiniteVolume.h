@@ -52,7 +52,8 @@ struct ContinuityEquation {
     EnumVector< Axis, EnumVector< TransportCoefficients, array1D > > AU;    // Velocity coefficients (LHS)
     EnumVector<TransportCoefficients, array3D> AP;                          // Pressure coefficients (LHS)
     array3D B;                                                              // Source term (RHS)
-    EnumVector< Axis, std::array< array1D, 4 > > mwiCoeffs;                 // Unweighted MWI coefficients (LHS). This stores the sparse part only when MI = SemiExplicit
+    EnumVector< Axis, std::array< array1D, 4 > > mwiSparseCoeffs;           // Unweighted MWI coefficients from the sparse pressure gradient (LHS)
+    EnumVector< Axis, std::array< array1D, 2 > > mwiCompactCoeffs;          // Unweighted MWI coefficients from the compact pressure gradient (LHS)
     EnumVector< BoundaryPatches, array2D > boundaryP;                       // Constant terms that come from uniform BC (LHS)
     EnumVector< BoundaryPatches, floatType > boundaryVel;
     floatType relaxation;
