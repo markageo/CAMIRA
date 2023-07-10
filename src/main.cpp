@@ -64,21 +64,16 @@ int main(int argc, char const *argv[])
 
     using enum CFD::Axis::ENUMDATA;
 
-    // Data to pass to writer
-    // VTK::VTKWriterConfig config( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] );
-    //     config.SetWriteMode( VTK::WriteModes::ASCII );
-    //     config.SetGridType( VTK::GridTypes::CELL_DATA );
-    // VTK::gridVectorType<CFD::floatType> gridVector = {mesh.cellFaces[X].data(), mesh.cellFaces[Y].data(), mesh.cellFaces[Z].data()};
-    // VTK::scalarMapType<CFD::floatType> scalarMap = { {"Pressure", fields.P.data()} };
-    // VTK::vectorMapType<CFD::floatType> vectorMap = { {"Velocity", {fields.U[X].data(), fields.U[Y].data(), fields.U[Z].data()}} };
-
-
-     VTK::VTKWriterConfig config( mesh.nCells[X]+1, mesh.nCells[Y]+1, mesh.nCells[Z]+1 );
+    VTK::VTKWriterConfig config( mesh.nCells[X]+1, mesh.nCells[Y]+1, mesh.nCells[Z]+1 );
         config.SetWriteMode( VTK::WriteModes::ASCII );
-        config.SetGridType( VTK::GridTypes::POINT_DATA );
     VTK::gridVectorType<CFD::floatType> gridVector = {mesh.cellFaces[X].data(), mesh.cellFaces[Y].data(), mesh.cellFaces[Z].data()};
-    VTK::scalarMapType<CFD::floatType> scalarMap = { {"Pressure", vertexFields.P.data()} };
-    VTK::vectorMapType<CFD::floatType> vectorMap = { {"Velocity", {vertexFields.U[X].data(), vertexFields.U[Y].data(), vertexFields.U[Z].data()}} };
+
+    VTK::scalarMapType<CFD::floatType> scalarMap = { {"Pressure", VTK::GridTypes::CELL_DATA , fields.P.data()      },
+                                                     {"Pressure", VTK::GridTypes::POINT_DATA, vertexFields.P.data()} };
+
+    VTK::vectorMapType<CFD::floatType> vectorMap = { {"Velocity", VTK::GridTypes::POINT_DATA, {vertexFields.U[X].data(), vertexFields.U[Y].data(), vertexFields.U[Z].data() }},
+                                                     {"Velocity", VTK::GridTypes::CELL_DATA , {fields.U[X].data()      , fields.U[Y].data()      , fields.U[Z].data()       }} };
+
 
     // Write output
     VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);

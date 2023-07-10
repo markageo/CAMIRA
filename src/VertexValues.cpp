@@ -19,26 +19,26 @@ namespace
 
                     // Points to interpolation from
                     floatType c000 = field( i-1, j-1, k-1 ),
-                            c100 = field( i  , j-1, k-1 ),
-                            c010 = field( i-1, j  , k-1 ),
-                            c001 = field( i-1, j-1, k   ),
-                            c101 = field( i  , j-1, k   ),
-                            c011 = field( i-1, j  , k   ),
-                            c110 = field( i  , j  , k-1 ),
-                            c111 = field( i  , j  , k   );
+                              c100 = field( i  , j-1, k-1 ),
+                              c010 = field( i-1, j  , k-1 ),
+                              c001 = field( i-1, j-1, k   ),
+                              c101 = field( i  , j-1, k   ),
+                              c011 = field( i-1, j  , k   ),
+                              c110 = field( i  , j  , k-1 ),
+                              c111 = field( i  , j  , k   );
 
                     // Linear interapolation in z direction
                     floatType lambdaZ = mesh.interpFactors[Z](k);
                     floatType c00 = ( 1-lambdaZ ) * c000  +  lambdaZ * c001,
-                            c10 = ( 1-lambdaZ ) * c100  +  lambdaZ * c101,
-                            c01 = ( 1-lambdaZ ) * c010  +  lambdaZ * c011,
-                            c11 = ( 1-lambdaZ ) * c110  +  lambdaZ * c111;
+                              c10 = ( 1-lambdaZ ) * c100  +  lambdaZ * c101,
+                              c01 = ( 1-lambdaZ ) * c010  +  lambdaZ * c011,
+                              c11 = ( 1-lambdaZ ) * c110  +  lambdaZ * c111;
 
                     
                     // Linear interpolation in y direction
                     floatType lambdaY = mesh.interpFactors[Y](j);
                     floatType c0 = ( 1-lambdaY ) * c00  +  lambdaY * c01,
-                            c1 = ( 1-lambdaY ) * c10  +  lambdaY * c11;
+                              c1 = ( 1-lambdaY ) * c10  +  lambdaY * c11;
 
 
                     // Linear interpolation in x direction
@@ -227,12 +227,12 @@ namespace
         using enum Axis::ENUMDATA;
 
         std::array<intType, 2> iVals{ 0, vertexField.dimension(X)-1 },
-                            jVals{ 0, vertexField.dimension(Y)-1 },
-                            kVals{ 0, vertexField.dimension(Z)-1 },
-                            iCellIndex{ 0, vertexField.dimension(X)-2 },
-                            jCellIndex{ 0, vertexField.dimension(Y)-2 },
-                            kCellIndex{ 0, vertexField.dimension(Z)-2 },
-                            nghbr{ +1, -1 };
+                               jVals{ 0, vertexField.dimension(Y)-1 },
+                               kVals{ 0, vertexField.dimension(Z)-1 },
+                               iCellIndex{ 0, vertexField.dimension(X)-2 },
+                               jCellIndex{ 0, vertexField.dimension(Y)-2 },
+                               kCellIndex{ 0, vertexField.dimension(Z)-2 },
+                               nghbr{ +1, -1 };
 
         // Iterate each corner
         for ( intType kIndex = 0; kIndex != 2; kIndex++ ) {
@@ -241,8 +241,8 @@ namespace
 
                     // Weighting factors
                     floatType length = mesh.cellLengths[X]( iCellIndex[ iIndex ] ) 
-                                    + mesh.cellLengths[Y]( jCellIndex[ jIndex ] ) 
-                                    + mesh.cellLengths[Z]( kCellIndex[ kIndex ] );
+                                     + mesh.cellLengths[Y]( jCellIndex[ jIndex ] ) 
+                                     + mesh.cellLengths[Z]( kCellIndex[ kIndex ] );
                     floatType wfNi = ( length - mesh.cellLengths[X]( iCellIndex[ iIndex ] ) ) / length;
                     floatType wfNj = ( length - mesh.cellLengths[Y]( jCellIndex[ jIndex ] ) ) / length;
                     floatType wfNk = ( length - mesh.cellLengths[Z]( kCellIndex[ kIndex ] ) ) / length;
@@ -257,8 +257,8 @@ namespace
                     idxNk[Z] += nghbr[ kIndex ];
 
                     vertexField( idx ) = wfNi * vertexField( idxNi )
-                                    + wfNj * vertexField( idxNj )
-                                    + wfNk * vertexField( idxNk );
+                                       + wfNj * vertexField( idxNj )
+                                       + wfNk * vertexField( idxNk );
                 }
             }
         }
