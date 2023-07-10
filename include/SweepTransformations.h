@@ -60,7 +60,7 @@ class AxisTransformationMap
 AxisTransformationMap TransformUserInputData( InputData & );
 
 // Transform back to the coordinates consistentent with the input file 
-void TransformToUserCoordinates(Mesh &, FieldData<array3D> &, const AxisTransformationMap &);
+void TransformToUserCoordinates(Mesh &, FieldData<array3D> &, FieldData<array3D> &, const AxisTransformationMap &);
 
 
 } // end namespace CFD

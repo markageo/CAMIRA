@@ -1,0 +1,307 @@
+#include "FiniteVolume.h"
+
+namespace CFD
+{
+
+
+namespace 
+{
+    // Weighted linear interpolation of the cell centers to the cell verticies of the interior points
+    void InterpolateInteriorPoints( array3D &vertexField, 
+                                    const array3D &field, 
+                                    const Mesh &mesh )
+    {
+        using enum Axis::ENUMDATA;
+
+        for ( intType k = 1; k != vertexField.dimension(2)-1; k++ ) {
+            for ( intType j = 1; j != vertexField.dimension(1)-1; j++ ) {
+                for ( intType i = 1; i != vertexField.dimension(0)-1; i++ ) {
+
+                    // Points to interpolation from
+                    floatType c000 = field( i-1, j-1, k-1 ),
+                            c100 = field( i  , j-1, k-1 ),
+                            c010 = field( i-1, j  , k-1 ),
+                            c001 = field( i-1, j-1, k   ),
+                            c101 = field( i  , j-1, k   ),
+                            c011 = field( i-1, j  , k   ),
+                            c110 = field( i  , j  , k-1 ),
+                            c111 = field( i  , j  , k   );
+
+                    // Linear interapolation in z direction
+                    floatType lambdaZ = mesh.interpFactors[Z](k);
+                    floatType c00 = ( 1-lambdaZ ) * c000  +  lambdaZ * c001,
+                            c10 = ( 1-lambdaZ ) * c100  +  lambdaZ * c101,
+                            c01 = ( 1-lambdaZ ) * c010  +  lambdaZ * c011,
+                            c11 = ( 1-lambdaZ ) * c110  +  lambdaZ * c111;
+
+                    
+                    // Linear interpolation in y direction
+                    floatType lambdaY = mesh.interpFactors[Y](j);
+                    floatType c0 = ( 1-lambdaY ) * c00  +  lambdaY * c01,
+                            c1 = ( 1-lambdaY ) * c10  +  lambdaY * c11;
+
+
+                    // Linear interpolation in x direction
+                    floatType lambdaX = mesh.interpFactors[X](i);
+                    floatType c = ( 1-lambdaX ) * c0  +  lambdaX * c1;
+
+                    vertexField(i, j, k) = c;
+
+                }
+            }
+        }
+
+    }
+
+
+
+    // Returns a plane which the field is interpolated onto the cell vertices
+    array2D InterpolateVertexPlane( const array3D &field,
+                                    const Mesh &mesh,
+                                    const Axis::ENUMDATA axis,
+                                    const intType k )
+    {
+        Axis::ENUMDATA axis1 = ( axis == Axis::X ) ? Axis::Y : Axis::X;
+        Axis::ENUMDATA axis2 = ( axis == Axis::Z ) ? Axis::Y : Axis::Z;
+
+        // Interpolate in directions parallel to the boundary face
+        array2D vertexPlane( field.dimension(axis1)+1, field.dimension(axis2)+1 );
+
+        for ( intType i = 1; i != vertexPlane.dimension(0)-1; i++ ) {
+            for ( intType j = 1; j != vertexPlane.dimension(1)-1; j++ ) {
+
+                // Points to interpolation from
+                floatType c00 = field( i-1, j-1, k ),
+                          c10 = field( i  , j-1, k ),
+                          c01 = field( i-1, j  , k ),
+                          c11 = field( i  , j  , k );
+
+                // Linear interpolation in j direction
+                floatType lambdaY = mesh.interpFactors[axis2](j);
+                floatType c0 = ( 1-lambdaY ) * c00  +  lambdaY * c01,
+                          c1 = ( 1-lambdaY ) * c10  +  lambdaY * c11;
+
+                // Linear interpolation in i direction
+                floatType lambdaX = mesh.interpFactors[axis1](i);
+                floatType c = ( 1-lambdaX ) * c0  +  lambdaX * c1;
+
+                vertexPlane(i, j) = c;
+
+            }
+        }
+
+        return vertexPlane;
+    }
+
+
+
+    // Set the face values of the cell verticies using the boundary conditions. Corners/edges will be incorrect, these will be set individually later
+    void SetBoundaryFaces( array3D &vertexField,
+                           const array3D &field,
+                           const Mesh &mesh,
+                           const EnumVector< BoundaryPatches, InputData::BoundaryConditionData > &boundaryConditions )
+    {
+        using BC = BoundaryConditions::ENUMDATA;
+
+        
+        EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {
+            Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
+
+            intType faceEndIndex;
+            if ( boundaryPatch == LUT::PositivePatch[ axis ] ) {
+                faceEndIndex = mesh.nCells(axis);
+            } else {
+                faceEndIndex = 0;
+            }
+
+            switch ( boundaryConditions[boundaryPatch].type ) {
+                case BC::zeroGradient: 
+                {
+                    intType k = ( boundaryPatch == LUT::PositivePatch[ axis ] ) ? mesh.nCells(axis)-1 : 0;
+                    array2D offBoundary = InterpolateVertexPlane( field, mesh, axis, k );
+                    vertexField.chip(faceEndIndex, axis) = offBoundary;  
+                    break;
+                }
+
+                case BC::uniform: 
+                {
+                    vertexField.chip(faceEndIndex, axis) = vertexField.chip(faceEndIndex, axis).constant( boundaryConditions[boundaryPatch].value );
+                    break;
+                }
+                    
+                case BC::extrapolated: 
+                {
+                    intType k_p = ( boundaryPatch == LUT::PositivePatch[ axis ] ) ? mesh.nCells(axis)-1 : 0;
+                    array2D offBoundary_p = InterpolateVertexPlane( field, mesh, axis, k_p );
+
+                    intType k_a = ( boundaryPatch == LUT::PositivePatch[ axis ] ) ? k_p-1 : k_p+1;
+                    array2D offBoundary_a = InterpolateVertexPlane( field, mesh, axis, k_a );
+
+                    floatType extrapFactor_p = mesh.extrapFactors[boundaryPatch].p;
+                    floatType extrapFactor_a = mesh.extrapFactors[boundaryPatch].a;
+
+                    vertexField.chip(faceEndIndex, axis) = offBoundary_p * offBoundary_p.constant( extrapFactor_p )
+                                                        + offBoundary_a * offBoundary_a.constant( extrapFactor_a );
+                    break;
+                }
+                    
+            }
+
+
+        } );
+    }
+
+
+
+    // Does a weighted linear average to set the edge values
+    void WeightedAverageEdges( array3D &vertexField,
+                               const Mesh &mesh )
+    {
+
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        Axis::ENUMDATA axis1 = ( axis == Axis::X ) ? Axis::Y : Axis::X;
+        Axis::ENUMDATA axis2 = ( axis == Axis::Z ) ? Axis::Y : Axis::Z;
+
+        // Indexing for each edge
+        std::array<intType, 2> iVals{ 0, vertexField.dimension(axis1)-1 },
+                               jVals{ 0, vertexField.dimension(axis2)-1 },
+                               iCellIndex{ 0, vertexField.dimension(axis1)-2 },
+                               jCellIndex{ 0, vertexField.dimension(axis2)-2 },
+                               nghbr{ +1, -1 };
+
+
+        // Iterate each edge
+        for ( intType iIndex = 0; iIndex != 2; iIndex++ ) {
+            for ( intType jIndex = 0; jIndex != 2; jIndex++ ) {
+                
+                intType i = iVals[ iIndex ];
+                intType j = jVals[ jIndex ];
+
+                // Weighting factors
+                floatType length = ( mesh.cellLengths[axis1]( iCellIndex[ iIndex ] ) + mesh.cellLengths[axis2]( jCellIndex[ jIndex ] ) );
+                floatType wfN1 = ( length - mesh.cellLengths[axis1]( iCellIndex[ iIndex ] ) ) / length;
+                floatType wfN2 = ( length - mesh.cellLengths[axis2]( jCellIndex[ jIndex ] ) ) / length;
+
+                // Index of node at vertex
+                arrayIndex3D idx;
+                idx[axis]  = 0;
+                idx[axis1] = i;
+                idx[axis2] = j;
+
+                // Index neighbour in the i direction
+                arrayIndex3D idxN1;
+                idxN1[axis]  = 0;
+                idxN1[axis1] = i + nghbr[ iIndex ];
+                idxN1[axis2] = j;
+
+                // Index neighbour in the j direction
+                arrayIndex3D idxN2;
+                idxN2[axis]  = 0;
+                idxN2[axis1] = i;
+                idxN2[axis2] = j + nghbr[ jIndex ];
+
+
+                for ( intType k = 0; k != vertexField.dimension(axis); k++ ) {
+
+                    idx[axis]   = k;
+                    idxN1[axis] = k;
+                    idxN2[axis] = k;
+
+                    vertexField( idx ) =  wfN1 * vertexField( idxN1 )  +  wfN2 * vertexField( idxN2 );
+                }
+
+            }
+        }
+
+
+    } );
+
+    }
+
+
+
+    // Does a weighted linear average to set the corner values
+    void WeightedAverageCorners( array3D &vertexField, 
+                                 const Mesh &mesh )
+    {
+        using enum Axis::ENUMDATA;
+
+        std::array<intType, 2> iVals{ 0, vertexField.dimension(X)-1 },
+                            jVals{ 0, vertexField.dimension(Y)-1 },
+                            kVals{ 0, vertexField.dimension(Z)-1 },
+                            iCellIndex{ 0, vertexField.dimension(X)-2 },
+                            jCellIndex{ 0, vertexField.dimension(Y)-2 },
+                            kCellIndex{ 0, vertexField.dimension(Z)-2 },
+                            nghbr{ +1, -1 };
+
+        // Iterate each corner
+        for ( intType kIndex = 0; kIndex != 2; kIndex++ ) {
+            for ( intType jIndex = 0; jIndex != 2; jIndex++ ) {
+                for ( intType iIndex = 0; iIndex != 2; iIndex++ ) {
+
+                    // Weighting factors
+                    floatType length = mesh.cellLengths[X]( iCellIndex[ iIndex ] ) 
+                                    + mesh.cellLengths[Y]( jCellIndex[ jIndex ] ) 
+                                    + mesh.cellLengths[Z]( kCellIndex[ kIndex ] );
+                    floatType wfNi = ( length - mesh.cellLengths[X]( iCellIndex[ iIndex ] ) ) / length;
+                    floatType wfNj = ( length - mesh.cellLengths[Y]( jCellIndex[ jIndex ] ) ) / length;
+                    floatType wfNk = ( length - mesh.cellLengths[Z]( kCellIndex[ kIndex ] ) ) / length;
+
+                    // Index of corner point
+                    arrayIndex3D idx{ iVals[ iIndex ], jVals[ jIndex ], kVals[ kIndex ] };
+
+                    // Index of neighbouring points
+                    arrayIndex3D idxNi{ idx }, idxNj{ idx }, idxNk{ idx };
+                    idxNi[X] += nghbr[ iIndex ];
+                    idxNj[Y] += nghbr[ jIndex ];
+                    idxNk[Z] += nghbr[ kIndex ];
+
+                    vertexField( idx ) = wfNi * vertexField( idxNi )
+                                    + wfNj * vertexField( idxNj )
+                                    + wfNk * vertexField( idxNk );
+                }
+            }
+        }
+    }
+
+
+}   // end anonymous namespace
+
+
+
+
+// Assumes ghost cells have been removed
+array3D InterpolateToVertex( const array3D &field,
+                             const Mesh &mesh, 
+                             const EnumVector< BoundaryPatches, InputData::BoundaryConditionData > &boundaryConditions )
+{
+    array3D vertexField( field.dimension(0)+1, field.dimension(1)+1, field.dimension(2)+1 );
+
+    InterpolateInteriorPoints( vertexField, field, mesh );
+
+    SetBoundaryFaces( vertexField, field, mesh, boundaryConditions );
+
+    WeightedAverageEdges( vertexField, mesh );
+
+    WeightedAverageCorners( vertexField, mesh );
+
+    return vertexField;
+}
+
+
+
+FieldData<array3D> GetVertexFields( const FieldData<array3D> &fields, 
+                                    const Mesh &mesh,
+                                    const InputData &inputData )
+{
+    FieldData<array3D> vertexFields;
+    ForAllFieldData( [&] (intType f) {
+        vertexFields[f] = InterpolateToVertex( fields[f], mesh, inputData.boundaryConditions[f] );
+    } );
+    return vertexFields;
+}
+
+
+
+
+} // end namespace CFD

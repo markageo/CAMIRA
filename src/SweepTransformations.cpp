@@ -436,6 +436,7 @@ namespace
 
 void TransformToUserCoordinates( Mesh &mesh, 
                                  FieldData<array3D> &fields, 
+                                 FieldData<array3D> &vertexFields,
                                  const AxisTransformationMap &axisTransformation )                                  
 {
     Eigen::array<intType , Axis::count> shuffleArray;
@@ -464,8 +465,10 @@ void TransformToUserCoordinates( Mesh &mesh,
     // 3D arrays
     ForAllFieldData( [&] (intType f) {
         fields[f] = array3D( fields[f] ).shuffle(shuffleArray).reverse(reverseArray);   // Have to make a copy
+        vertexFields[f] = array3D( vertexFields[f] ).shuffle(shuffleArray).reverse(reverseArray);
     } );
     TransformAxisVectorToUser( fields.U, axisTransformation );
+    TransformAxisVectorToUser( vertexFields.U, axisTransformation );
 
 }
 
