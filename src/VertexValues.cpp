@@ -67,14 +67,34 @@ namespace
         // Interpolate in directions parallel to the boundary face
         array2D vertexPlane( field.dimension(axis1)+1, field.dimension(axis2)+1 );
 
+        arrayIndex3D idx00, idx10, idx01, idx11;
+        idx00[axis] = k;
+        idx10[axis] = k;
+        idx01[axis] = k;
+        idx11[axis] = k;
+
         for ( intType i = 1; i != vertexPlane.dimension(0)-1; i++ ) {
             for ( intType j = 1; j != vertexPlane.dimension(1)-1; j++ ) {
 
+                // Indexing
+                idx00[axis1] = i-1;
+                idx00[axis2] = j-1;
+
+                idx10[axis1] = i;
+                idx10[axis2] = j-1;
+
+                idx01[axis1] = i-1;
+                idx01[axis2] = j;
+
+                idx11[axis1] = i;
+                idx11[axis2] = j;
+
+
                 // Points to interpolation from
-                floatType c00 = field( i-1, j-1, k ),
-                          c10 = field( i  , j-1, k ),
-                          c01 = field( i-1, j  , k ),
-                          c11 = field( i  , j  , k );
+                floatType c00 = field( idx00 ),
+                          c10 = field( idx10 ),
+                          c01 = field( idx01 ),
+                          c11 = field( idx11 );
 
                 // Linear interpolation in j direction
                 floatType lambdaY = mesh.interpFactors[axis2](j);
@@ -159,62 +179,61 @@ namespace
     {
 
         EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        Axis::ENUMDATA axis1 = ( axis == Axis::X ) ? Axis::Y : Axis::X;
-        Axis::ENUMDATA axis2 = ( axis == Axis::Z ) ? Axis::Y : Axis::Z;
+            Axis::ENUMDATA axis1 = ( axis == Axis::X ) ? Axis::Y : Axis::X;
+            Axis::ENUMDATA axis2 = ( axis == Axis::Z ) ? Axis::Y : Axis::Z;
 
-        // Indexing for each edge
-        std::array<intType, 2> iVals{ 0, vertexField.dimension(axis1)-1 },
-                               jVals{ 0, vertexField.dimension(axis2)-1 },
-                               iCellIndex{ 0, vertexField.dimension(axis1)-2 },
-                               jCellIndex{ 0, vertexField.dimension(axis2)-2 },
-                               nghbr{ +1, -1 };
-
-
-        // Iterate each edge
-        for ( intType iIndex = 0; iIndex != 2; iIndex++ ) {
-            for ( intType jIndex = 0; jIndex != 2; jIndex++ ) {
-                
-                intType i = iVals[ iIndex ];
-                intType j = jVals[ jIndex ];
-
-                // Weighting factors
-                floatType length = ( mesh.cellLengths[axis1]( iCellIndex[ iIndex ] ) + mesh.cellLengths[axis2]( jCellIndex[ jIndex ] ) );
-                floatType wfN1 = ( length - mesh.cellLengths[axis1]( iCellIndex[ iIndex ] ) ) / length;
-                floatType wfN2 = ( length - mesh.cellLengths[axis2]( jCellIndex[ jIndex ] ) ) / length;
-
-                // Index of node at vertex
-                arrayIndex3D idx;
-                idx[axis]  = 0;
-                idx[axis1] = i;
-                idx[axis2] = j;
-
-                // Index neighbour in the i direction
-                arrayIndex3D idxN1;
-                idxN1[axis]  = 0;
-                idxN1[axis1] = i + nghbr[ iIndex ];
-                idxN1[axis2] = j;
-
-                // Index neighbour in the j direction
-                arrayIndex3D idxN2;
-                idxN2[axis]  = 0;
-                idxN2[axis1] = i;
-                idxN2[axis2] = j + nghbr[ jIndex ];
+            // Indexing for each edge
+            std::array<intType, 2> iVals{ 0, vertexField.dimension(axis1)-1 },
+                                   jVals{ 0, vertexField.dimension(axis2)-1 },
+                                   iCellIndex{ 0, vertexField.dimension(axis1)-2 },
+                                   jCellIndex{ 0, vertexField.dimension(axis2)-2 },
+                                   nghbr{ +1, -1 };
 
 
-                for ( intType k = 0; k != vertexField.dimension(axis); k++ ) {
+            // Iterate each edge
+            for ( intType iIndex = 0; iIndex != 2; iIndex++ ) {
+                for ( intType jIndex = 0; jIndex != 2; jIndex++ ) {
+                    
+                    intType i = iVals[ iIndex ];
+                    intType j = jVals[ jIndex ];
 
-                    idx[axis]   = k;
-                    idxN1[axis] = k;
-                    idxN2[axis] = k;
+                    // Weighting factors
+                    floatType length = ( mesh.cellLengths[axis1]( iCellIndex[ iIndex ] ) + mesh.cellLengths[axis2]( jCellIndex[ jIndex ] ) );
+                    floatType wfN1 = ( length - mesh.cellLengths[axis1]( iCellIndex[ iIndex ] ) ) / length;
+                    floatType wfN2 = ( length - mesh.cellLengths[axis2]( jCellIndex[ jIndex ] ) ) / length;
 
-                    vertexField( idx ) =  wfN1 * vertexField( idxN1 )  +  wfN2 * vertexField( idxN2 );
+                    // Index of node at vertex
+                    arrayIndex3D idx;
+                    idx[axis]  = 0;
+                    idx[axis1] = i;
+                    idx[axis2] = j;
+
+                    // Index neighbour in the i direction
+                    arrayIndex3D idxN1;
+                    idxN1[axis]  = 0;
+                    idxN1[axis1] = i + nghbr[ iIndex ];
+                    idxN1[axis2] = j;
+
+                    // Index neighbour in the j direction
+                    arrayIndex3D idxN2;
+                    idxN2[axis]  = 0;
+                    idxN2[axis1] = i;
+                    idxN2[axis2] = j + nghbr[ jIndex ];
+
+
+                    for ( intType k = 0; k != vertexField.dimension(axis); k++ ) {
+
+                        idx[axis]   = k;
+                        idxN1[axis] = k;
+                        idxN2[axis] = k;
+
+                        vertexField( idx ) =  wfN1 * vertexField( idxN1 )  +  wfN2 * vertexField( idxN2 );
+                    }
+
                 }
-
             }
-        }
 
-
-    } );
+        } );
 
     }
 
@@ -276,6 +295,7 @@ array3D InterpolateToVertex( const array3D &field,
                              const EnumVector< BoundaryPatches, InputData::BoundaryConditionData > &boundaryConditions )
 {
     array3D vertexField( field.dimension(0)+1, field.dimension(1)+1, field.dimension(2)+1 );
+    vertexField.setZero();
 
     InterpolateInteriorPoints( vertexField, field, mesh );
 
