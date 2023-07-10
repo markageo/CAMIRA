@@ -103,6 +103,10 @@ FVCoefficients InitialiseFVCoefficients(const Mesh &, const EnumVector<Axis, arr
 void UpdateFVCoefficients(FVCoefficients &, const Mesh &, const EnumVector<Axis, array3D> &, const InputData &);
 
 
+// ---------------------------------------- Definition in VertexValues.cpp -------------------------------------- //
+
+
+FieldData<array3D> GetVertexFields( const FieldData<array3D> &, const Mesh &, const InputData & );
 
 
 

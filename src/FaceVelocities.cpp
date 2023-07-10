@@ -7,7 +7,7 @@ namespace
 {
 
 
-void FaceVelocity( EnumVector<Axis, array3D> &faceFluxes, 
+void FaceVelocity( EnumVector<Axis, array3D> &faceVelocities, 
                    const EnumVector<Axis, array3D> &cellVelocities, 
                    const Mesh &mesh, 
                    const Axis::ENUMDATA axis,
@@ -15,14 +15,14 @@ void FaceVelocity( EnumVector<Axis, array3D> &faceFluxes,
 {
     using enum Axis::ENUMDATA;
 
-    array3D &faceVel = faceFluxes[ velocityComponent ];
+    array3D &faceVel = faceVelocities[ velocityComponent ];
     const array3D &cellVel = cellVelocities[ velocityComponent ];
 
     // Starting index and number of faces to iterate over
     iVector3 startIndex, nFaces;
     EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
         startIndex[a] = 0;
-        nFaces[a] = faceFluxes[ velocityComponent ].dimension(a);
+        nFaces[a] = faceVelocities[ velocityComponent ].dimension(a);
     } );
     startIndex[axis] += 1;
     nFaces[axis] -= 1;
@@ -45,7 +45,7 @@ void FaceVelocity( EnumVector<Axis, array3D> &faceFluxes,
 
 
 
-void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceFluxes, 
+void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities, 
                             const EnumVector<Axis, array3D> &cellVelocities, 
                             const Mesh &mesh, 
                             const EnumVector< Axis, EnumVector< BoundaryPatches, InputData::BoundaryConditionData > >& boundaryConditions,
@@ -68,25 +68,33 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceFluxes,
         fieldEndIndex = 0;
     }
 
-    floatType extrapFactor_p, extrapFactor_a;
     switch ( boundaryConditions[component][boundaryPatch].type ) 
     {    
         case BC::zeroGradient:
-            faceFluxes[component].chip(faceEndIndex, axis) = cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex, axis);          
+        {
+            faceVelocities[component].chip(faceEndIndex, axis) = cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex, axis);          
             break;
+        }
+            
 
         case BC::uniform:
-            faceFluxes[component].chip(faceEndIndex, axis) = faceFluxes[component].chip(faceEndIndex, axis).constant( boundaryConditions[component][boundaryPatch].value );
+        {
+            faceVelocities[component].chip(faceEndIndex, axis) = faceVelocities[component].chip(faceEndIndex, axis).constant( boundaryConditions[component][boundaryPatch].value );
             break;
+        }
+            
 
         case BC::extrapolated:
-            extrapFactor_p = mesh.extrapFactors[boundaryPatch].p;
-            extrapFactor_a = mesh.extrapFactors[boundaryPatch].a;
-            faceFluxes[component].chip(faceEndIndex, axis) = cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex  , axis) 
-                                                            * cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
-                                                       + cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex+1, axis) 
-                                                            * cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
+        {
+            floatType extrapFactor_p = mesh.extrapFactors[boundaryPatch].p;
+            floatType extrapFactor_a = mesh.extrapFactors[boundaryPatch].a;
+            faceVelocities[component].chip(faceEndIndex, axis) = cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex  , axis) 
+                                                                    * cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
+                                                               + cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex+1, axis) 
+                                                                    * cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
             break;
+        }
+            
 
         default:
             break;
@@ -141,5 +149,6 @@ void UpdateFaceFluxes( EnumVector<Axis, array3D> &faceFluxes,
 
     } );
 }
+
 
 } // end namespace CFD

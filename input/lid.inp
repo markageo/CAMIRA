@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 215
+            nCells     = 25
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 215
+            nCells     = 25
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 215
+            nCells     = 25
             biasFactor = 1
         }
     }
@@ -108,8 +108,8 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 10000
-        maxOuterResiduals = 1e-5
+        maxOuterIterations = 1000
+        maxOuterResiduals = 1e-6
 
     }
     
@@ -132,12 +132,12 @@ Solver {
 
 Output {
 
-    residualHistoryFilename = "output/residual_history_g215.csv"
-    fieldOutputFilename = "output/fields_g215.vtk"
+    residualHistoryFilename = "output/residual_history.csv"
+    fieldOutputFilename = "output/fields.vtk"
 
     Monitors {
         Probe {
-            filename = "output/probe1_g215.csv"
+            filename = "output/probe1.csv"
             location = (0.5, 0.6, 0.5)
         }
     }
