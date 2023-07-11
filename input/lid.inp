@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 50
+            nCells     = 100
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 50
+            nCells     = 100
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 50
+            nCells     = 100
             biasFactor = 1
         }
     }
@@ -109,7 +109,7 @@ Solver {
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 1000
-        maxOuterResiduals = 1e-6
+        maxOuterResiduals = 1e-8
 
     }
     
@@ -122,8 +122,8 @@ Solver {
         planeSweepDirection = +x
         lineSweepDirection = +z
 
-        momentumRelaxation = (1, 1, 1)
-        pressureRelaxation = 1
+        momentumRelaxation = (1.25, 1.25, 1.25)
+        pressureRelaxation = 1.3
 
     }
 
