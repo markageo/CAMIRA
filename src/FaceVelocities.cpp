@@ -7,7 +7,7 @@ namespace
 {
 
 
-void FaceVelocity( EnumVector<Axis, array3D> &faceVelocities, 
+void InteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities, 
                    const EnumVector<Axis, array3D> &cellVelocities, 
                    const Mesh &mesh, 
                    const Axis::ENUMDATA axis,
@@ -138,7 +138,7 @@ void UpdateFaceFluxes( EnumVector<Axis, array3D> &faceFluxes,
 {
     // Internal faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        FaceVelocity( faceFluxes, cellVelocities, mesh, axis, axis);
+        InteriorFaceVelocity( faceFluxes, cellVelocities, mesh, axis, axis);
     } );
     
     // Boundary faces

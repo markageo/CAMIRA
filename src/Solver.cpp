@@ -935,7 +935,7 @@ void SweepSolve( FieldData<array3D> &fields,
     // Initialise
     EnumVector<Axis, array3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, inputData);
     FieldData<array3D> fieldsOld( fields );
-    FVCoefficients<MI> fvCoeffs = InitialiseFVCoefficients<MI>(mesh, faceFluxes, inputData);
+    FVCoefficients<MI> fvCoeffs = InitialiseFVCoefficients<MI>(mesh, fields, faceFluxes, inputData);
 
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
@@ -964,7 +964,7 @@ void SweepSolve( FieldData<array3D> &fields,
         linearSolver.Solve();
 
         UpdateFaceFluxes(faceFluxes, mesh, fields.U, inputData);
-        UpdateFVCoefficients(fvCoeffs, mesh, faceFluxes, inputData);
+        UpdateFVCoefficients(fvCoeffs, mesh, fields, faceFluxes, inputData);
 
         // residualsOuter   = L1DiffResiduals(fields, fieldsOld);
         residualsOuter   = StencilResiduals(fields, fvCoeffs); 
