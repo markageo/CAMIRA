@@ -104,11 +104,11 @@ void UpdateFaceFluxes( EnumVector<Axis, array3D> &, const Mesh &, const EnumVect
 
 // Allocate and initialise finite volume coefficients
 template< MomentumInterpolation MI >
-FVCoefficients<MI> InitialiseFVCoefficients(const Mesh &, const EnumVector<Axis, array3D> &, const InputData &);
+FVCoefficients<MI> InitialiseFVCoefficients(const Mesh &, const FieldData<array3D> &, const EnumVector<Axis, array3D> &, const InputData &);
 
 // Update finite volume coefficients (Picard linearisation)
 template< MomentumInterpolation MI >
-void UpdateFVCoefficients(FVCoefficients<MI> &, const Mesh &, const EnumVector<Axis, array3D> &, const InputData &);
+void UpdateFVCoefficients(FVCoefficients<MI> &, const Mesh &, const FieldData<array3D> &, const EnumVector<Axis, array3D> &, const InputData &);
 
 
 // ---------------------------------------- Definition in VertexValues.cpp -------------------------------------- //

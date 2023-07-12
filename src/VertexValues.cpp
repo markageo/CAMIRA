@@ -191,8 +191,8 @@ namespace
 
 
             // Iterate each edge
-            for ( intType iIndex = 0; iIndex != 2; iIndex++ ) {
-                for ( intType jIndex = 0; jIndex != 2; jIndex++ ) {
+            for ( size_t iIndex = 0; iIndex != 2; iIndex++ ) {
+                for ( size_t jIndex = 0; jIndex != 2; jIndex++ ) {
                     
                     intType i = iVals[ iIndex ];
                     intType j = jVals[ jIndex ];
@@ -254,9 +254,9 @@ namespace
                                nghbr{ +1, -1 };
 
         // Iterate each corner
-        for ( intType kIndex = 0; kIndex != 2; kIndex++ ) {
-            for ( intType jIndex = 0; jIndex != 2; jIndex++ ) {
-                for ( intType iIndex = 0; iIndex != 2; iIndex++ ) {
+        for ( size_t kIndex = 0; kIndex != 2; kIndex++ ) {
+            for ( size_t jIndex = 0; jIndex != 2; jIndex++ ) {
+                for ( size_t iIndex = 0; iIndex != 2; iIndex++ ) {
 
                     // Weighting factors
                     floatType length = mesh.cellLengths[X]( iCellIndex[ iIndex ] ) 
