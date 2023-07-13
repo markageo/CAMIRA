@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.01
+    nu   = 0.005
 }
 
 Mesh {
@@ -108,7 +108,7 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 1000
+        maxOuterIterations = 2000
         maxOuterResiduals = 1e-5
 
     }
@@ -122,8 +122,8 @@ Solver {
         planeSweepDirection = +x
         lineSweepDirection = +z
 
-        momentumRelaxation = (1, 1, 1)
-        pressureRelaxation = 1
+        momentumRelaxation = (1.25, 1.25, 1.25)
+        pressureRelaxation = 1.3
 
     }
 
