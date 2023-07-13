@@ -595,10 +595,10 @@ void SetMomentumInterpolationSparseConstants( std::array< array1D, 4 > &mwiSpars
         mwiSparseCoeffs[0](i) = (1 - mesh.interpFactors[axis](i))   * momentumPressureCoeffs[west](i-1);
 
         mwiSparseCoeffs[1](i) = ( (1 - mesh.interpFactors[axis](i)) * momentumPressureCoeffs[p   ](i-1)
-                              +  mesh.interpFactors[axis](i)      * momentumPressureCoeffs[west](i  ) );
+                              +    mesh.interpFactors[axis](i)      * momentumPressureCoeffs[west](i  ) );
 
         mwiSparseCoeffs[2](i) = ( (1 - mesh.interpFactors[axis](i)) * momentumPressureCoeffs[east](i-1)
-                              + mesh.interpFactors[axis](i)       * momentumPressureCoeffs[p   ](i  ) );
+                              +   mesh.interpFactors[axis](i)       * momentumPressureCoeffs[p   ](i  ) );
 
         mwiSparseCoeffs[3](i) = mesh.interpFactors[axis](i) * momentumPressureCoeffs[east](i);
     }
@@ -683,8 +683,8 @@ void MWInterpolationInteriorImplicit( ContinuityEquation<MI> &continuityEquation
                 // Coefficients for westmost to eastmost cell
                 intType idx = HiIndex[axis];
                 floatType coeff0 = d * mwiSparseCoeffs[0](idx),
-                          coeff1 = d * mwiSparseCoeffs[1](idx) + mwiCompactCoeffs[0](idx),
-                          coeff2 = d * mwiSparseCoeffs[2](idx) + mwiCompactCoeffs[1](idx),
+                          coeff1 = d * ( mwiSparseCoeffs[1](idx) + mwiCompactCoeffs[0](idx) ),
+                          coeff2 = d * ( mwiSparseCoeffs[2](idx) + mwiCompactCoeffs[1](idx) ),
                           coeff3 = d * mwiSparseCoeffs[3](idx);
 
                 // Cell on west side 
@@ -759,8 +759,10 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation<MI> &continuityEqua
                 floatType LoCellLengthInv = mesh.cellLengthsInv[axis]( LoIndex[axis] ),
                           HiCellLengthInv = mesh.cellLengthsInv[axis]( HiIndex[axis] );
 
+
                 // Implicit compact difference --------------------------------------------------------------------------
-                
+                                
+
                 // Coefficients for westmost to eastmost cell
                 floatType coeffCompact0 = d * mwiCompactCoeffs[0](idx),
                           coeffCompact1 = d * mwiCompactCoeffs[1](idx);
@@ -773,10 +775,10 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation<MI> &continuityEqua
                 continuityPressureCoeffs[west ](HiIndex) -= coeffCompact0 * HiCellLengthInv;
                 continuityPressureCoeffs[p    ](HiIndex) -= coeffCompact1 * HiCellLengthInv;
 
-                // ------------------------------------------------------------------------------------------------------
-
 
                 // Explicit sparse difference ---------------------------------------------------------------------------
+
+                // CHECK THE SIGN IS CORRECT!!!!
 
                 arrayIndex3D LoWest  = NeighbourIndex( LoIndex, -1, axis ),
                              LoEast  = NeighbourIndex( LoIndex,  1, axis ),
@@ -804,6 +806,7 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation<MI> &continuityEqua
                                                  + coeffSparse2 * P( G(HiIndex) )
                                                  + coeffSparse3 * P( G(HiEast)  )
                                                  ) * HiCellLengthInv;
+
 
                 // ------------------------------------------------------------------------------------------------------
 
@@ -890,11 +893,11 @@ void SetMomentumInterpolationCoefficients( FVCoefficients<MI> &fvCoeffs,
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
 
-        if        constexpr ( MI == MomentumInterpolation::SemiExplicit ) {
+        if        constexpr ( MI == MomentumInterpolation::Implicit ) {
 
             MWInterpolationInteriorImplicit(fvCoeffs.Cont, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
 
-        } else if constexpr ( MI == MomentumInterpolation::Implicit ) {
+        } else if constexpr ( MI == MomentumInterpolation::SemiExplicit ) {
 
             MWInterpolationInteriorSemiExplicit(fvCoeffs.Cont, P, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
 

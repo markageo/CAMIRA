@@ -358,21 +358,21 @@ std::vector< TransportCoefficients::ENUMDATA > MomentumPressureEnums( const Axis
 }
 
 
-    // Pressure coefficients are different depending on momentum interpolation treatement
-    template< MomentumInterpolation MI >
-    std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums() = delete;
+// Pressure coefficients are different depending on momentum interpolation treatement
+template< MomentumInterpolation MI >
+std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums() = delete;
 
-    template<>
-    std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums< MomentumInterpolation::Implicit >() {
-        using C = TransportCoefficients::ENUMDATA;
-        return {C::p, C::n, C::e, C::s, C::w, C::t, C::b, C::nn, C::ee, C::ss, C::ww, C::tt, C::bb};
-    }
+template<>
+std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums< MomentumInterpolation::Implicit >() {
+    using C = TransportCoefficients::ENUMDATA;
+    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b, C::nn, C::ee, C::ss, C::ww, C::tt, C::bb};
+}
 
-    template<>
-    std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums< MomentumInterpolation::SemiExplicit >() {
-        using C = TransportCoefficients::ENUMDATA;
-        return {C::p, C::n, C::e, C::s, C::w, C::t, C::b, C::nn, C::ee, C::ss, C::ww, C::tt, C::bb};
-    }
+template<>
+std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums< MomentumInterpolation::SemiExplicit >() {
+    using C = TransportCoefficients::ENUMDATA;
+    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
+}
 
 
 
