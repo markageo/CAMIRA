@@ -778,8 +778,6 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation<MI> &continuityEqua
 
                 // Explicit sparse difference ---------------------------------------------------------------------------
 
-                // CHECK THE SIGN IS CORRECT!!!!
-
                 arrayIndex3D LoWest  = NeighbourIndex( LoIndex, -1, axis ),
                              LoEast  = NeighbourIndex( LoIndex,  1, axis ),
                              LoEEast = NeighbourIndex( LoIndex,  2, axis ),
@@ -794,14 +792,14 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation<MI> &continuityEqua
                           coeffSparse3 = d * mwiSparseCoeffs[3](idx);
 
                 // Cell on west side 
-                continuitySourceTerm(LoIndex) += ( coeffSparse0 * P( G(LoWest)  )
+                continuitySourceTerm(LoIndex) -= ( coeffSparse0 * P( G(LoWest)  )
                                                  + coeffSparse1 * P( G(LoIndex) )
                                                  + coeffSparse2 * P( G(LoEast)  )
                                                  + coeffSparse3 * P( G(LoEEast) )
                                                  ) * LoCellLengthInv;
 
                 // Cell on east side
-                continuitySourceTerm(HiIndex) += ( coeffSparse0 * P( G(HiWWest) )
+                continuitySourceTerm(HiIndex) -= ( coeffSparse0 * P( G(HiWWest) )
                                                  + coeffSparse1 * P( G(HiWest)  )
                                                  + coeffSparse2 * P( G(HiIndex) )
                                                  + coeffSparse3 * P( G(HiEast)  )

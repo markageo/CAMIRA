@@ -111,7 +111,16 @@ namespace
                     scalingFactor.U[Z] += abs( fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) );
 
 
-                    // Continuity
+                    // Continuity 
+                    floatType pressureWideStencil = 0.0f;
+                    if constexpr ( MI == MomentumInterpolation::Implicit ) {
+                        pressureWideStencil = + fvCoeffs.Cont.AP[nn](i, j, k) * fields.P( ig  , jg+2, kg  ) 
+                                              + fvCoeffs.Cont.AP[ee](i, j, k) * fields.P( ig+2, jg  , kg  ) 
+                                              + fvCoeffs.Cont.AP[ss](i, j, k) * fields.P( ig  , jg-2, kg  ) 
+                                              + fvCoeffs.Cont.AP[ww](i, j, k) * fields.P( ig-2, jg  , kg  ) 
+                                              + fvCoeffs.Cont.AP[tt](i, j, k) * fields.P( ig  , jg  , kg+2) 
+                                              + fvCoeffs.Cont.AP[bb](i, j, k) * fields.P( ig  , jg  , kg-2);
+                    }
                     residuals.P += abs( 
                                       fvCoeffs.Cont.AU[X][e](i) * fields.U[X]( ig+1, jg  , kg  )
                                     + fvCoeffs.Cont.AU[X][p](i) * fields.U[X]( ig  , jg  , kg  )
@@ -133,12 +142,7 @@ namespace
                                     + fvCoeffs.Cont.AP[t](i, j, k) * fields.P( ig  , jg  , kg+1) 
                                     + fvCoeffs.Cont.AP[b](i, j, k) * fields.P( ig  , jg  , kg-1)
 
-                                    + fvCoeffs.Cont.AP[nn](i, j, k) * fields.P( ig  , jg+2, kg  ) 
-                                    + fvCoeffs.Cont.AP[ee](i, j, k) * fields.P( ig+2, jg  , kg  ) 
-                                    + fvCoeffs.Cont.AP[ss](i, j, k) * fields.P( ig  , jg-2, kg  ) 
-                                    + fvCoeffs.Cont.AP[ww](i, j, k) * fields.P( ig-2, jg  , kg  ) 
-                                    + fvCoeffs.Cont.AP[tt](i, j, k) * fields.P( ig  , jg  , kg+2) 
-                                    + fvCoeffs.Cont.AP[bb](i, j, k) * fields.P( ig  , jg  , kg-2)
+                                    + pressureWideStencil
                                     
                                     - fvCoeffs.Cont.B(i, j, k) );
 
@@ -293,9 +297,9 @@ public:
     // This makes use of precomputed line constants
     __attribute__((always_inline)) 
     inline void UpdateTriad( const intType i, 
-                              const intType j, 
-                              const intType k,
-                              const FieldData<array1D> &lineConstants )
+                             const intType j, 
+                             const intType k,
+                             const FieldData<array1D> &lineConstants )
     {
         using enum Axis::ENUMDATA;
         using enum TransportCoefficients::ENUMDATA;
@@ -344,6 +348,12 @@ public:
 
 
         // Continuity for pressure
+        floatType pressureWideStencil = 0.0f;
+        if constexpr ( MI == MomentumInterpolation::Implicit ) {
+            pressureWideStencil = - m_fvCoeffs.Cont.AP[ee](i, j, k) * m_fields.P( ig+2, jg  , kg  ) 
+                                  - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields.P( ig-2, jg  , kg  );
+        }
+
         floatType bP = lineConstants.P(i)
 
                      - m_fvCoeffs.Cont.AU[X][sCU::cLeft ](i) * m_fields.U[X]( ig + sCU::iLeft , jg, kg)
@@ -352,8 +362,7 @@ public:
                      - m_fvCoeffs.Cont.AP[e](i, j, k) * m_fields.P( ig+1, jg  , kg  ) 
                      - m_fvCoeffs.Cont.AP[w](i, j, k) * m_fields.P( ig-1, jg  , kg  ) 
 
-                     - m_fvCoeffs.Cont.AP[ee](i, j, k) * m_fields.P( ig+2, jg  , kg  ) 
-                     - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields.P( ig-2, jg  , kg  );
+                     + pressureWideStencil;
 
 
         // Update P from continuity
@@ -588,16 +597,22 @@ private:
                                       );
 
             // Continuity equation
+            floatType pressureWideStencil = 0.0f;
+            if constexpr ( MI == MomentumInterpolation::Implicit ) {
+                pressureWideStencil = - m_fvCoeffs.Cont.AP[nn](i, j, k) * m_fields.P( ig  , jg+2, kg  )
+                                      - m_fvCoeffs.Cont.AP[ss](i, j, k) * m_fields.P( ig  , jg-2, kg  );
+            }
+
             m_lineConstants.P(i) = planeConstants.P(i, j)
 
                                  - m_fvCoeffs.Cont.AU[Y][sCV::cLeft ](j) * m_fields.U[Y]( ig, jg + sCV::iLeft , kg)
                                  - m_fvCoeffs.Cont.AU[Y][sCV::cRight](j) * m_fields.U[Y]( ig, jg + sCV::iRight, kg)
 
                                  - m_fvCoeffs.Cont.AP[n](i, j, k) * m_fields.P( ig  , jg+1, kg  ) 
-                                 - m_fvCoeffs.Cont.AP[s](i, j, k) * m_fields.P( ig  , jg-1, kg  ) 
- 
-                                 - m_fvCoeffs.Cont.AP[nn](i, j, k) * m_fields.P( ig  , jg+2, kg  )
-                                 - m_fvCoeffs.Cont.AP[ss](i, j, k) * m_fields.P( ig  , jg-2, kg  );
+                                 - m_fvCoeffs.Cont.AP[s](i, j, k) * m_fields.P( ig  , jg-1, kg  )
+                                 
+                                 + pressureWideStencil;
+
         }
 
     }
@@ -748,7 +763,14 @@ private:
 
                                             );
 
+
                 // Continuity equation
+                floatType pressureWideStencil = 0.0f;
+                if constexpr ( MI == MomentumInterpolation::Implicit ) {
+                    pressureWideStencil = - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields.P( ig  , jg  , kg+2) 
+                                          - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields.P( ig  , jg  , kg-2);
+                }
+
                 m_planeConstants.P(i, j) = m_fvCoeffs.Cont.B(i, j, k)
 
                                          - m_fvCoeffs.Cont.AU[Z][sCW::cLeft ](k) * m_fields.U[Z]( ig, jg, kg + sCW::iLeft )
@@ -757,8 +779,8 @@ private:
                                          - m_fvCoeffs.Cont.AP[t](i, j, k) * m_fields.P( ig  , jg  , kg+1) 
                                          - m_fvCoeffs.Cont.AP[b](i, j, k) * m_fields.P( ig  , jg  , kg-1)
         
-                                         - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields.P( ig  , jg  , kg+2) 
-                                         - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields.P( ig  , jg  , kg-2);
+                                         + pressureWideStencil;
+                
             }
         }
 
