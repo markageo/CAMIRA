@@ -799,7 +799,7 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation<MI> &continuityEqua
                                                  ) * LoCellLengthInv;
 
                 // Cell on east side
-                continuitySourceTerm(HiIndex) -= ( coeffSparse0 * P( G(HiWWest) )
+                continuitySourceTerm(HiIndex) += ( coeffSparse0 * P( G(HiWWest) )
                                                  + coeffSparse1 * P( G(HiWest)  )
                                                  + coeffSparse2 * P( G(HiIndex) )
                                                  + coeffSparse3 * P( G(HiEast)  )
