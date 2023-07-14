@@ -144,44 +144,51 @@ class ReaderStream
 
         // Read data. Whitespace is removed unless it is inside quotes
         std::string ReadData() {
+
+            enum DataState {
+                Quoted, Unquoted
+            };
+
             std::string data;
-            char quoteChar;
-            SkipWhitespace();
-            if        (*m_linePos == '"') {  // Double quotes
-                quoteChar = '\"';
-                ++m_linePos;
-            } else if (*m_linePos == '\'') {  // Single quotes
-                quoteChar = '\'';
-                ++m_linePos;
-            } else {                          // No quotes, ignore whitespace
-                quoteChar = '\0';
-            }
+            DataState dataState = Unquoted;
+            bool keepReadingLine = true;
 
-            while (1) {
-                if (quoteChar == '\0') {
+            for ( /* NULL */ ; m_linePos != m_inputLine.end() && keepReadingLine; m_linePos++) {
+                
+                switch ( dataState ) {
+                    case Quoted:
 
-                    SkipWhitespace();
-                    if (m_linePos == m_inputLine.end()) 
-                        break; 
+                        if ( *m_linePos == '"' ) {
+                            dataState = Unquoted;
+                            break;
+                        }
 
-                    if (SeperatorChar(*m_linePos))
-                        break;
-                    
-                    if (AtCommentSymbol()) 
+                        if ( m_linePos == ( m_inputLine.end()-1 )  &&  *m_linePos != '"' ) {
+                            throw std::runtime_error( ErrorString(noClosingQuotesError, *this) );
+                        }
+
+                        data += *m_linePos;
                         break;
 
-                } else {
-                    if (*m_linePos == quoteChar) {
-                        ++m_linePos;
+                    case Unquoted:
+                        
+                        SkipWhitespace();
+
+                        if ( AtCommentSymbol() || SeperatorChar(*m_linePos) ) {
+                            keepReadingLine = false;
+                            break;
+                        }
+                            
+
+                        if ( *m_linePos == '"' ) {
+                            dataState = Quoted;
+                            break;
+                        }
+
+                        data += *m_linePos;
                         break;
-                    }
-                    if (m_linePos == m_inputLine.end()) {
-                        throw std::runtime_error( ErrorString(noClosingQuotesError, *this) );
-                        break;
-                    }
                 }
-                data += *m_linePos;
-                ++m_linePos;
+
             }
             SkipWhitespace();
             return data;
