@@ -1,5 +1,6 @@
 # Add libraries
 add_library(libs InputParser.cpp
+                 CSVReader.cpp
                  InputProcessing.cpp
                  SweepTransformations.cpp
                  FiniteVolumeStructures.cpp

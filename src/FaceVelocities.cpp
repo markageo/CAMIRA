@@ -77,9 +77,9 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities,
         }
             
 
-        case BC::uniform:
+        case BC::fixed:
         {
-            faceVelocities[component].chip(faceEndIndex, axis) = faceVelocities[component].chip(faceEndIndex, axis).constant( boundaryConditions[component][boundaryPatch].value );
+            faceVelocities[component].chip(faceEndIndex, axis) = faceVelocities[component].chip(faceEndIndex, axis).constant( boundaryConditions[component][boundaryPatch].uniformValue );
             break;
         }
             

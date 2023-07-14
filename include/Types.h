@@ -91,7 +91,7 @@ struct BoundaryConditions
     enum ENUMDATA 
     {
         zeroGradient,
-        uniform,
+        fixed,
         extrapolated,
     };
     const static int count = 3;

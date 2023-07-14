@@ -143,9 +143,9 @@ namespace
                     break;
                 }
 
-                case BC::uniform: 
+                case BC::fixed: 
                 {
-                    vertexField.chip(faceEndIndex, axis) = vertexField.chip(faceEndIndex, axis).constant( boundaryConditions[boundaryPatch].value );
+                    vertexField.chip(faceEndIndex, axis) = vertexField.chip(faceEndIndex, axis).constant( boundaryConditions[boundaryPatch].uniformValue );
                     break;
                 }
                     

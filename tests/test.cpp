@@ -78,12 +78,12 @@ int main(int argc, char const *argv[])
 
     // Read and store boundary conditions for each case
     CFD::EnumVector<CFD::BoundaryConditions, CFD::InputData> velTestInputData;
-    velTestInputData[BC::uniform] = CFD::ReadInputData(testConfig.testInputDirectory + testConfig.velUniformTestInputFilename);
+    velTestInputData[BC::fixed] = CFD::ReadInputData(testConfig.testInputDirectory + testConfig.velUniformTestInputFilename);
     velTestInputData[BC::zeroGradient] = CFD::ReadInputData(testConfig.testInputDirectory + testConfig.velZeroGradientTestInputFilename);
     velTestInputData[BC::extrapolated] = CFD::ReadInputData(testConfig.testInputDirectory + testConfig.velExtrapolatedTestInputFilename);
 
     // Generate new mesh
-    mesh = CFD::Mesh(velTestInputData[BC::uniform]);
+    mesh = CFD::Mesh(velTestInputData[BC::fixed]);
 
     // Allocate fields
     CFD::ArrayAllocator<CFD::Fields, CFD::array3D> fields({F::U, F::V, F::W, F::P}, mesh.nCells + 2*CFD::nGhost);
