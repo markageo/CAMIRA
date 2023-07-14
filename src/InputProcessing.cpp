@@ -2,6 +2,7 @@
 #include "InputProcessing.h"
 #include "FiniteVolume.h"
 #include "Types.h"
+#include "CSVReader.h"
 
 #include "Boost/boost/property_tree/ptree.hpp"
 #include <Eigen/Geometry>
@@ -286,8 +287,78 @@ namespace
                                        Boundary Conditions
     \*-------------------------------------------------------------------------------------*/
 
+    // Checks the line that a valid value for the boundary condition has been given
+    void CheckForBCValue( std::string::const_iterator &stringIterator,
+                               const std::string &bcTypeString )
+    {
+        if (*stringIterator != MULTI_DELIMITER_CHAR) {
+            throw std::runtime_error( "Expected value for " + bcTypeString + " boundary condition."  );
+        }
+        stringIterator++;
+    }
+
+
+
+    // Read uniform BC value. Assumes that the string iterator is after the comma
+    floatType GetUniformBCValue( std::string::const_iterator &stringIterator,
+                                 const std::string &boundaryString )
+    {
+
+        // Read the value to end of line
+        std::string bcValueString;
+        while (stringIterator != boundaryString.end()) {            
+            bcValueString += *stringIterator;
+            stringIterator++;
+        }
+
+        return String2Type<floatType>(bcValueString);
+    }
+
+
+    // Read uniform BC value. Assumes that the string iterator is after the comma
+    InputData::Profile1D GetProfile1DValue( std::string::const_iterator &stringIterator,
+                                            const std::string &boundaryString )
+    {
+        InputData::Profile1D profile1D;
+
+        // Read the filename, which is after the comma and up to the end of the line
+        std::string filename;
+        for ( /* NULL */; stringIterator != boundaryString.end(); stringIterator++ ) { 
+            filename += *stringIterator;
+        }
+
+        // Read in profile data from csv file
+        std::vector< std::vector< std::string > > profileData = ReadCSV( filename );
+
+        // First column tells us the axis
+        if        ( profileData[0][0] == "x" ) {
+            profile1D.axis = Axis::X;
+        } else if ( profileData[0][0] == "y" ) {
+            profile1D.axis = Axis::Y;
+        } else if ( profileData[0][0] == "z" ) {
+            profile1D.axis = Axis::Z;
+        } else {
+            throw std::runtime_error( "Invalid axis name in profile file '" + filename + "'."  );
+        }
+
+        // First column is the coordinate points, second column is the actual data
+        intType nRows = profileData.size();
+        intType nHeaderRows = 1;
+        profile1D.coordinates = array1D( nRows - nHeaderRows );
+        profile1D.values      = array1D( nRows - nHeaderRows );
+
+        for ( intType i = 0; i != nRows-nHeaderRows; i++ ) {
+            profile1D.coordinates(i) = String2Type<floatType>( profileData[i+nHeaderRows][0] );
+            profile1D.values(i)      = String2Type<floatType>( profileData[i+nHeaderRows][1] );
+        }
+
+        return profile1D;
+    }
+
+
+
     InputData::BoundaryConditionData ReadBoundaryValueString( const std::string &fieldString,
-                                                                  const pt::ptree &boundaryPatchTree )
+                                                              const pt::ptree &boundaryPatchTree )
     {
         using BC = BoundaryConditions::ENUMDATA;
 
@@ -296,7 +367,6 @@ namespace
 
         InputData::BoundaryConditionData bcStruct;
         std::string bcTypeString;
-        std::string bcValueString;
         std::string::const_iterator stringIterator = boundaryString.begin();
 
         // Read the boundary condition type
@@ -314,38 +384,33 @@ namespace
         // Store the type, some don't need a value
         if        (bcTypeString == "uniform") {
 
-            bcStruct.type = BC::uniform;
+            CheckForBCValue( stringIterator, bcTypeString );
+            bcStruct.uniformValue = GetUniformBCValue( stringIterator, boundaryString );
+            bcStruct.hasUniformValue = true;
+            bcStruct.type = BC::fixed;
+
+        } else if (bcTypeString == "profile1D") {
+
+            CheckForBCValue( stringIterator, bcTypeString );
+            bcStruct.profile1D = GetProfile1DValue( stringIterator, boundaryString );
+            bcStruct.hasProfile1D = true;
+            bcStruct.type = BC::fixed;
 
         } else if (bcTypeString == "zeroGradient") {
 
             bcStruct.type = BC::zeroGradient;
-            bcStruct.value = 0.0;
+            bcStruct.uniformValue = 0.0;
             return bcStruct;
 
         } else if (bcTypeString == "extrapolated") {
+
             bcStruct.type = BC::extrapolated;
-            bcStruct.value = 0.0;
+            bcStruct.uniformValue = 0.0;
             return bcStruct;
+
         } else {
+
             throw std::runtime_error( "'" + bcTypeString + "' is not a valid boundary condition type." );
-        }
-
-
-        // Check for expected value
-        if (*stringIterator != MULTI_DELIMITER_CHAR) {
-            throw std::runtime_error( "Expected value for " + bcTypeString + " boundary condition."  );
-        }
-        stringIterator++;
-
-        // Read the value to end of line
-        while (stringIterator != boundaryString.end()) {            
-            bcValueString += *stringIterator;
-            stringIterator++;
-        }
-
-        // Convert and store value
-        if (bcStruct.type == BC::uniform) {
-            bcStruct.value = String2Type<floatType>(bcValueString);
         }
 
         return bcStruct;

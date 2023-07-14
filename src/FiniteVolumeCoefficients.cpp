@@ -33,8 +33,8 @@ BoundaryConditions::ENUMDATA GetDiffusionBC( const EnumVector< Axis, EnumVector<
     // Only check the field that in the direction of the current axis
     if (velocityComponent == axis) {
 
-        if (MomBoundaryConditions[axis1][boundaryPatch].type == BC::uniform && 
-            MomBoundaryConditions[axis2][boundaryPatch].type == BC::uniform) {
+        if (MomBoundaryConditions[axis1][boundaryPatch].type == BC::fixed && 
+            MomBoundaryConditions[axis2][boundaryPatch].type == BC::fixed) {
             return BC::zeroGradient;
         }
     }
@@ -64,9 +64,9 @@ void DiffusionPositiveBoundary( EnumVector< Axis,  EnumVector<TransportCoefficie
             /* NULL */
             break;
 
-        case BC::uniform:
+        case BC::fixed:
             diff[axis][p   ](iCellBound)     +=   2*mesh.cellLengthsInv[axis](iCellBound);
-            boundaryConstants[boundaryPatch] += - 2*mesh.cellLengthsInv[axis](iCellBound) * boundaryConditionStructs[boundaryPatch].value;
+            boundaryConstants[boundaryPatch] += - 2*mesh.cellLengthsInv[axis](iCellBound) * boundaryConditionStructs[boundaryPatch].uniformValue;
             break;
 
         case BC::extrapolated:
@@ -102,9 +102,9 @@ void DiffusionNegativeBoundary( EnumVector< Axis, EnumVector<TransportCoefficien
             /* NULL */
             break;
 
-        case BC::uniform:
+        case BC::fixed:
             diff[axis][p   ](iCellBound)     +=   2*mesh.cellLengthsInv[axis](iCellBound);
-            boundaryConstants[boundaryPatch] += - 2*mesh.cellLengthsInv[axis](iCellBound) * boundaryConditionStructs[boundaryPatch].value;
+            boundaryConstants[boundaryPatch] += - 2*mesh.cellLengthsInv[axis](iCellBound) * boundaryConditionStructs[boundaryPatch].uniformValue;
             break;
 
         case BC::extrapolated:
@@ -275,9 +275,9 @@ void AdvectionPositiveBoundary( EnumVector<TransportCoefficients, array3D> &coef
                                               * faceFluxes[axis].chip(iFaceBound, axis).constant( mesh.cellLengthsInv[axis](iCellBound) );
             break;
 
-        case BC::uniform:
+        case BC::fixed:
             boundaryConstants[boundaryPatch]  = faceFluxes[axis].chip(iFaceBound, axis)
-                                              * faceFluxes[axis].chip(iFaceBound, axis).constant( boundaryConditionStructs[boundaryPatch].value * mesh.cellLengthsInv[axis](iCellBound) );
+                                              * faceFluxes[axis].chip(iFaceBound, axis).constant( boundaryConditionStructs[boundaryPatch].uniformValue * mesh.cellLengthsInv[axis](iCellBound) );
             break;
 
         case BC::extrapolated:
@@ -316,9 +316,9 @@ void AdvectionNegativeBoundary( EnumVector<TransportCoefficients, array3D> &coef
                                               *   faceFluxes[axis].chip(iFaceBound, axis).constant( mesh.cellLengthsInv[axis](iCellBound) );
             break;
 
-        case BC::uniform:
+        case BC::fixed:
             boundaryConstants[boundaryPatch]  = - faceFluxes[axis].chip(iFaceBound, axis)
-                                              *   faceFluxes[axis].chip(iFaceBound, axis).constant( boundaryConditionStructs[boundaryPatch].value * mesh.cellLengthsInv[axis](iCellBound) );
+                                              *   faceFluxes[axis].chip(iFaceBound, axis).constant( boundaryConditionStructs[boundaryPatch].uniformValue * mesh.cellLengthsInv[axis](iCellBound) );
             break;
 
         case BC::extrapolated:
@@ -449,10 +449,10 @@ void InterpolationPositiveBoundary( EnumVector< TransportCoefficients, array1D >
             coeffs[west]( iCellBound ) += 0;
             break;
 
-        case BC::uniform:
+        case BC::fixed:
             coeffs[p   ]( iCellBound ) += 0;
             coeffs[west]( iCellBound ) += 0;
-            boundaryConstants[boundaryPatch] += boundaryConditionStructs[boundaryPatch].value;
+            boundaryConstants[boundaryPatch] += boundaryConditionStructs[boundaryPatch].uniformValue;
             break;
 
         case BC::extrapolated:
@@ -489,10 +489,10 @@ void InterpolationNegativeBoundary( EnumVector< TransportCoefficients, array1D >
             coeffs[east]( iCellBound ) +=   0;
             break;
 
-        case BC::uniform:
+        case BC::fixed:
             coeffs[p   ]( iCellBound ) += 0;
             coeffs[east]( iCellBound ) += 0;
-            boundaryConstants[boundaryPatch] += - boundaryConditionStructs[boundaryPatch].value;
+            boundaryConstants[boundaryPatch] += - boundaryConditionStructs[boundaryPatch].uniformValue;
             break;
 
         case BC::extrapolated:

@@ -49,6 +49,7 @@ BoundaryConditions
     // Wall
     +x {
         u = uniform, 0
+        //u = profile1D, "input/test_profile.prof"
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient

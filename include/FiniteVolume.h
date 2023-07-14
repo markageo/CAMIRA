@@ -39,7 +39,7 @@ struct MomentumEquation {
     array3D B;                                                               // Source Term (RHS)
     array3D diagCoeffInv;                                                    // Inverse of diagonal coefficient
     EnumVector< Axis, EnumVector<TransportCoefficients, array1D> > diff;     // Diffusion coefficients (LHS)
-    EnumVector< BoundaryPatches, floatType > boundaryDiff, boundaryP;        // Constant terms that come from uniform BC (LHS)
+    EnumVector< BoundaryPatches, floatType > boundaryDiff, boundaryP;        // Constant terms that come from fixed BC (LHS)
     EnumVector< BoundaryPatches, array2D > boundaryVel;       
     floatType relaxation;
 };
@@ -54,7 +54,7 @@ struct ContinuityEquation {
     array3D B;                                                              // Source term (RHS)
     EnumVector< Axis, std::array< array1D, 4 > > mwiSparseCoeffs;           // Unweighted MWI coefficients from the sparse pressure gradient (LHS)
     EnumVector< Axis, std::array< array1D, 2 > > mwiCompactCoeffs;          // Unweighted MWI coefficients from the compact pressure gradient (LHS)
-    EnumVector< BoundaryPatches, array2D > boundaryP;                       // Constant terms that come from uniform BC (LHS)
+    EnumVector< BoundaryPatches, array2D > boundaryP;                       // Constant terms that come from fixed BC (LHS)
     EnumVector< BoundaryPatches, floatType > boundaryVel;
     floatType relaxation;
 };
