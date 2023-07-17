@@ -71,7 +71,7 @@ Axis::ENUMDATA AxisTransformationMap::CodeAxis(const A userAxis) const
 }
 
 // If code axis is mapped to the negative direction of a user axis
-bool AxisTransformationMap::IsCodeAxisReversed( const A codeAxis ) const
+bool AxisTransformationMap::CodeAxisReversed( const A codeAxis ) const
 {
     BP positiveCodePatch = LUT::PositivePatch[ codeAxis ];
     BP mappedUserPatch   = UserPatch( positiveCodePatch );
@@ -96,7 +96,7 @@ Axis::ENUMDATA AxisTransformationMap::UserAxis(const A codeAxis) const
 }
 
 // If user axis is mapped to the negative direction of a code axis
-bool AxisTransformationMap::IsUserAxisReversed( const A userAxis ) const
+bool AxisTransformationMap::UserAxisReversed( const A userAxis ) const
 {
     BP positiveUserPatch = LUT::PositivePatch[ userAxis ];
     BP mappedCodePatch   = CodePatch( positiveUserPatch );
@@ -106,6 +106,26 @@ bool AxisTransformationMap::IsUserAxisReversed( const A userAxis ) const
     }
     return false;
 }
+
+
+
+/*-------------------------------------------------------------------------------------*\
+                                    Helper Functions
+\*-------------------------------------------------------------------------------------*/
+
+namespace  
+{
+
+    // Returns a copy of a 1D array that has been reversed 
+    array1D ReversedArray1D( array1D &array )
+    {
+        Eigen::array<bool, 1> rev({true});
+        return array.reverse( rev );
+    };
+
+}   // end anonymous namespace
+
+
 
 
 
@@ -245,7 +265,7 @@ namespace
         auto &boundaryConditions = inputData.boundaryConditions;
 
         // Temporary for boundary conditions as user specifies them
-        auto boundaryConditionsUser = boundaryConditions;
+        const auto boundaryConditionsUser = boundaryConditions;
         fVector3 domainSizeUser = inputData.domainSize;
         
         EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
@@ -258,10 +278,25 @@ namespace
         // Transform boundary condition directions
         EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA patch) { 
 
-            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                boundaryConditions.U[axis][patch] = boundaryConditionsUser.U[axis][ axisTransformation.UserPatch( patch ) ];
+            ForAllFieldData( [&] ( intType f) {
+
+                boundaryConditions[f][patch] = boundaryConditionsUser[f][ axisTransformation.UserPatch( patch ) ];
+
+                // Boundary profiles need to be transformed
+                if ( boundaryConditions[f][patch].hasProfile1D ) {
+                    InputData::Profile1D &profile1d = boundaryConditions[f][patch].profile1D;
+                    const InputData::Profile1D profile1dUser = profile1d;
+
+                    profile1d.axis = axisTransformation.CodeAxis( profile1dUser.axis );
+
+                    if ( axisTransformation.UserAxisReversed( profile1dUser.axis ) ) {
+                        profile1d.coordinates = - ReversedArray1D( profile1d.coordinates );
+                        profile1d.values      = - ReversedArray1D( profile1d.values );
+                    }
+
+                }
+
             } );
-            boundaryConditions.P[patch] = boundaryConditionsUser.P[ axisTransformation.UserPatch( patch ) ];
 
         } );
 
@@ -306,7 +341,7 @@ namespace
             inputData.meshSegments[ codeAxis ] = userMeshSegments[ axisTransformation.UserAxis( codeAxis ) ];
             inputData.domainSize( codeAxis )   = userDomainSize[ axisTransformation.UserAxis( codeAxis ) ];
 
-            if ( axisTransformation.IsCodeAxisReversed( codeAxis ) ) {
+            if ( axisTransformation.CodeAxisReversed( codeAxis ) ) {
                 ReverseMesh(inputData.meshSegments[ codeAxis ]);
             }
 
@@ -393,14 +428,6 @@ namespace
     }
 
 
-    // Returns a copy of a 1D array that has been reversed 
-    array1D ReversedArray1D( array1D &array )
-    {
-        Eigen::array<bool, 1> rev({true});
-        return array.reverse( rev );
-    };
-
-
     // Reverses a mesh along a coordinate direction
     void ReverseMeshAxis(Mesh &mesh, const Axis::ENUMDATA axis)
     {
@@ -448,7 +475,7 @@ void TransformToUserCoordinates( Mesh &mesh,
     EnumFor<Axis>( [&] (Axis::ENUMDATA userAxis) {
 
         Axis::ENUMDATA codeAxis = axisTransformation.CodeAxis( userAxis );
-        bool reverseAxis = axisTransformation.IsUserAxisReversed( userAxis );
+        bool reverseAxis = axisTransformation.UserAxisReversed( userAxis );
 
         CopyMeshAxis( mesh, codeMesh, userAxis, codeAxis );
 

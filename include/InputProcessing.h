@@ -36,12 +36,12 @@ struct InputData
     };
     EnumVector< Axis, std::vector< MeshSegment > > meshSegments;
 
+    // Boundary conditions
     struct Profile1D {
         Axis::ENUMDATA axis;
         array1D coordinates, values;
     };
 
-    // Boundary conditions
     struct BoundaryConditionData {
         BoundaryConditions::ENUMDATA type;
         floatType uniformValue;    
