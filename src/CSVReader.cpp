@@ -99,7 +99,6 @@ std::vector< std::string > ReadRow( const std::string &row )
     }
 
     return rowFields;
-
 }
 
 
