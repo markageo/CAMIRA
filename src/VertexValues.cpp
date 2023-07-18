@@ -119,7 +119,7 @@ namespace
     void SetBoundaryFaces( array3D &vertexField,
                            const array3D &field,
                            const Mesh &mesh,
-                           const EnumVector< BoundaryPatches, InputData::BoundaryConditionData > &boundaryConditions )
+                           const EnumVector< BoundaryPatches, InputData::BoundaryConditionInputData > &boundaryConditions )
     {
         using BC = BoundaryConditions::ENUMDATA;
 
@@ -292,7 +292,7 @@ namespace
 // Assumes ghost cells have been removed
 array3D InterpolateToVertex( const array3D &field,
                              const Mesh &mesh, 
-                             const EnumVector< BoundaryPatches, InputData::BoundaryConditionData > &boundaryConditions )
+                             const EnumVector< BoundaryPatches, InputData::BoundaryConditionInputData > &boundaryConditions )
 {
     array3D vertexField( field.dimension(0)+1, field.dimension(1)+1, field.dimension(2)+1 );
     vertexField.setZero();

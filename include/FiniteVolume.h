@@ -60,6 +60,11 @@ struct ContinuityEquation {
 };
 
 
+struct BoundaryConditionData {
+    BoundaryConditions::ENUMDATA type;
+    array2D value;
+};
+
 
 // Structure to store finite volume discrete equation coefficients (Picard linearisation)
 template< MomentumInterpolation MI >
@@ -71,10 +76,12 @@ struct FVCoefficients
     // rectilinear grid.
 
     FVCoefficients(const iVector3 &);
-
+    
     EnumVector<Axis, MomentumEquation> Mom;
     ContinuityEquation< MI > Cont;
+    FieldData< EnumVector< BoundaryPatches, BoundaryConditionData > > bcData;
     iVector3 nCells;
+    
 };
 
 

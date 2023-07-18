@@ -429,7 +429,7 @@ template struct ContinuityEquation< MomentumInterpolation::SemiExplicit >;
 
 // Coefficients class constructor
 template< MomentumInterpolation MI >
-FVCoefficients<MI>::FVCoefficients(const iVector3 &dims) :
+FVCoefficients<MI>::FVCoefficients( const iVector3 &dims ) :
     Mom( { MomentumEquation(X, dims),  MomentumEquation(Y, dims),  MomentumEquation(Z, dims) } ),
     Cont( dims ),
     nCells( dims )

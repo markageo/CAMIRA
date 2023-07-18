@@ -42,15 +42,15 @@ struct InputData
         array1D coordinates, values;
     };
 
-    struct BoundaryConditionData {
+    struct BoundaryConditionInputData {
         BoundaryConditions::ENUMDATA type;
         floatType uniformValue;    
         Profile1D profile1D;
         bool hasUniformValue = false,
              hasProfile1D    = false;
     };
-    using FieldBoundaryConditions =  FieldData< EnumVector< BoundaryPatches, BoundaryConditionData  > >;
-    FieldBoundaryConditions boundaryConditions;
+    using FieldBoundaryConditions = EnumVector< BoundaryPatches, BoundaryConditionInputData >;
+    FieldData< FieldBoundaryConditions > boundaryConditions;
 
 
     // Initial conditions
