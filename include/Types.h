@@ -213,6 +213,16 @@ constexpr std::array<Axis::ENUMDATA, 6> BoundaryPatchAxis{ Axis::X,    // xPosit
                                                            Axis::Z};   // zNegative
 
 
+// Axis orthogonal to a given one
+constexpr std::array<Axis::ENUMDATA, 3> LoOrthogonalAxis{ Axis::Y,
+                                                          Axis::X,
+                                                          Axis::X };
+
+constexpr std::array<Axis::ENUMDATA, 3> HiOrthogonalAxis{ Axis::Z,
+                                                          Axis::Z,
+                                                          Axis::Y };
+ 
+
 }   // end namespace LUT
 
 

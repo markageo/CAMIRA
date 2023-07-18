@@ -317,7 +317,8 @@ namespace
 
     // Read uniform BC value. Assumes that the string iterator is after the comma
     InputData::Profile1D GetProfile1DValue( std::string::const_iterator &stringIterator,
-                                            const std::string &boundaryString )
+                                            const std::string &boundaryString,
+                                            const BoundaryPatches::ENUMDATA boundaryPatch )
     {
         InputData::Profile1D profile1D;
 
@@ -341,6 +342,11 @@ namespace
             throw std::runtime_error( "Invalid axis name in profile file '" + filename + "'."  );
         }
 
+        // The profile must be orthogonal to the normal of the given patch
+        if ( profile1D.axis == LUT::BoundaryPatchAxis[ boundaryPatch ] ) {
+            throw std::runtime_error( "Profile axis must be in the plane of the specified patch." );
+        }
+
         // First column is the coordinate points, second column is the actual data
         intType nRows = profileData.size();
         intType nHeaderRows = 1;
@@ -357,15 +363,16 @@ namespace
 
 
 
-    InputData::BoundaryConditionData ReadBoundaryValueString( const std::string &fieldString,
-                                                              const pt::ptree &boundaryPatchTree )
+    InputData::BoundaryConditionInputData ReadBoundaryValueString( const std::string &fieldString,
+                                                                   const pt::ptree &boundaryPatchTree,
+                                                                   const BoundaryPatches::ENUMDATA boundaryPatch )
     {
         using BC = BoundaryConditions::ENUMDATA;
 
         // Get the boundary condition string from the tree string
         std::string boundaryString = boundaryPatchTree.get<std::string>( fieldString );
 
-        InputData::BoundaryConditionData bcStruct;
+        InputData::BoundaryConditionInputData bcStruct;
         std::string bcTypeString;
         std::string::const_iterator stringIterator = boundaryString.begin();
 
@@ -392,7 +399,7 @@ namespace
         } else if (bcTypeString == "profile1D") {
 
             CheckForBCValue( stringIterator, bcTypeString );
-            bcStruct.profile1D = GetProfile1DValue( stringIterator, boundaryString );
+            bcStruct.profile1D = GetProfile1DValue( stringIterator, boundaryString, boundaryPatch );
             bcStruct.hasProfile1D = true;
             bcStruct.type = BC::fixed;
 
@@ -437,12 +444,12 @@ namespace
             boundaryPatchTreePointer = &( boundaryConditionsTree.get_child( patchString ) );
 
             // Momentum 
-            inputData.boundaryConditions.U[X][patchEnum] = ReadBoundaryValueString( "u", *boundaryPatchTreePointer );
-            inputData.boundaryConditions.U[Y][patchEnum] = ReadBoundaryValueString( "v", *boundaryPatchTreePointer );
-            inputData.boundaryConditions.U[Z][patchEnum] = ReadBoundaryValueString( "w", *boundaryPatchTreePointer );
+            inputData.boundaryConditions.U[X][patchEnum] = ReadBoundaryValueString( "u", *boundaryPatchTreePointer, patchEnum );
+            inputData.boundaryConditions.U[Y][patchEnum] = ReadBoundaryValueString( "v", *boundaryPatchTreePointer, patchEnum );
+            inputData.boundaryConditions.U[Z][patchEnum] = ReadBoundaryValueString( "w", *boundaryPatchTreePointer, patchEnum );
 
             // Pressure
-            inputData.boundaryConditions.P[patchEnum] = ReadBoundaryValueString( "p", *boundaryPatchTreePointer );
+            inputData.boundaryConditions.P[patchEnum] = ReadBoundaryValueString( "p", *boundaryPatchTreePointer, patchEnum );
 
         }
 

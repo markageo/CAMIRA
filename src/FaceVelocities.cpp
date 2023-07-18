@@ -48,7 +48,7 @@ void InteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities,
 void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities, 
                             const EnumVector<Axis, array3D> &cellVelocities, 
                             const Mesh &mesh, 
-                            const EnumVector< Axis, EnumVector< BoundaryPatches, InputData::BoundaryConditionData > >& boundaryConditions,
+                            const EnumVector< Axis, EnumVector< BoundaryPatches, InputData::BoundaryConditionInputData > >& boundaryConditions,
                             const BoundaryPatches::ENUMDATA boundaryPatch,
                             const Axis::ENUMDATA component )
 {

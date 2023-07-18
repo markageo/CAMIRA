@@ -12,11 +12,131 @@ namespace
 {
 
 /*---------------------------------------------------------------------------------------------------------------*\
+                                              Boundary Condition Data
+\*---------------------------------------------------------------------------------------------------------------*/
+
+// Interpolates user defined profile onto the mesh in 1D. Points that are outside the user defined region are set 
+// to the value of the nearest point.
+array1D InterpProfile1D( const array1D x,
+                         const array1D v, 
+                         const array1D xquery )
+{
+    const intType nValuePoints = x.size(); 
+    const intType nQueryPoints = xquery.size(); 
+    array1D vquery = array1D( nQueryPoints );
+
+    intType i = 0;
+    for ( intType iq = 0; iq != nQueryPoints; iq++ ) {
+
+        bool isBelowMinPoint = ( xquery(iq) <= x(0) );
+        if ( isBelowMinPoint ) {
+            vquery(iq) = v(0);
+            continue;
+        }
+
+        bool isAboveMaxPoint = ( xquery(iq) >= x(nValuePoints-1) );
+        if ( isAboveMaxPoint ) {
+            vquery(iq) = v(nValuePoints-1);
+            continue;
+        }
+
+        // Internal points
+        while ( i != nValuePoints ) {
+
+            bool isBetweenPoints = ( xquery(iq) >= x(i) )  &&  ( xquery(iq) <= x(i+1) );
+            if ( isBetweenPoints ) {
+
+                // Interpolate
+                floatType v0 = v( i ),
+                          v1 = v( i + 1 ),
+                          x0 = x( i ),
+                          x1 = x( i + 1);
+                vquery(iq) = v0 + ( xquery(iq) - x0 ) * ( v1 - v0 ) / ( x1 - x0 );
+                break;
+            }
+            i++;
+        }
+
+    }
+
+    return vquery;
+}
+
+
+
+// Interpolates a 1D profile onto a meshed boundary face
+array2D SetBoundaryProfile1D( const InputData::Profile1D &profile1D,   
+                              const Mesh& mesh,
+                              const BoundaryPatches::ENUMDATA boundaryPatch )
+{
+    Axis::ENUMDATA profileAxis  = profile1D.axis,
+                   normalAxis   = LUT::BoundaryPatchAxis[ boundaryPatch ],
+                   constantAxis = static_cast< Axis::ENUMDATA >( 3 - profileAxis - normalAxis );
+
+    // 1D profile on the mesh points
+    array1D interpolatedProfile1D = InterpProfile1D( profile1D.coordinates, profile1D.values, mesh.cellCenters[profileAxis] );
+
+    // Copy out in 2D
+    intType nCellsLo = mesh.nCells( LUT::LoOrthogonalAxis[normalAxis] ),
+            nCellsHi = mesh.nCells( LUT::HiOrthogonalAxis[normalAxis] );
+    array2D boundaryPatchValues( nCellsLo, nCellsHi );
+    for ( intType i = 0; i != mesh.nCells(constantAxis); i++ ) {
+        boundaryPatchValues.chip(i, constantAxis) = interpolatedProfile1D;
+    }
+
+    return boundaryPatchValues;
+}
+
+
+
+// Sets a constant value for a boundary face patch
+array2D SetBoundaryProfileConstant( const floatType value,   
+                                    const Mesh& mesh,
+                                    const BoundaryPatches::ENUMDATA boundaryPatch )
+{
+    Axis::ENUMDATA normalAxis   = LUT::BoundaryPatchAxis[ boundaryPatch ];
+
+    intType nCellsLo = mesh.nCells( LUT::LoOrthogonalAxis[normalAxis] ),
+            nCellsHi = mesh.nCells( LUT::HiOrthogonalAxis[normalAxis] );
+
+    return array2D( nCellsLo, nCellsHi ).setConstant( value );
+}
+
+
+
+void SetBoundaryConditionData( FieldData< EnumVector< BoundaryPatches, BoundaryConditionData > > &bcData,
+                               const FieldData< InputData::FieldBoundaryConditions > &bcConfigData,
+                               const Mesh &mesh )
+{
+    ForAllFieldData( [&] (intType f) {
+
+        EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
+
+            const auto &bcConfig = bcConfigData[f][bp];
+
+            bcData[f][bp].type = bcConfig.type;
+
+            if ( bcConfig.hasUniformValue ) 
+                bcData[f][bp].value = SetBoundaryProfileConstant( bcConfig.uniformValue, mesh, bp );
+
+            if ( bcConfig.hasProfile1D ) 
+                bcData[f][bp].value = SetBoundaryProfile1D( bcConfig.profile1D, mesh, bp );
+
+        } );
+
+    } );
+}
+
+
+
+
+
+/*---------------------------------------------------------------------------------------------------------------*\
                                                     Diffusion
 \*---------------------------------------------------------------------------------------------------------------*/
 
 // Check if continuity equation implies a zero gradient boundary condition. This occurs if both orthogonal fields have a uniform BC
-BoundaryConditions::ENUMDATA GetDiffusionBC( const EnumVector< Axis, EnumVector< BoundaryPatches, InputData::BoundaryConditionData > > &MomBoundaryConditions, 
+BoundaryConditions::ENUMDATA GetDiffusionBC( const EnumVector< Axis, EnumVector< BoundaryPatches, InputData::BoundaryConditionInputData > > &MomBoundaryConditions, 
                                              const BoundaryPatches::ENUMDATA boundaryPatch, 
                                              const Axis::ENUMDATA velocityComponent )
 {
@@ -47,7 +167,7 @@ BoundaryConditions::ENUMDATA GetDiffusionBC( const EnumVector< Axis, EnumVector<
 void DiffusionPositiveBoundary( EnumVector< Axis,  EnumVector<TransportCoefficients, array1D> > &diff, 
                                 EnumVector< BoundaryPatches, floatType > &boundaryConstants,
                                 const Mesh &mesh,  
-                                const EnumVector< BoundaryPatches, InputData::BoundaryConditionData > &boundaryConditionStructs,
+                                const EnumVector< BoundaryPatches, InputData::BoundaryConditionInputData > &boundaryConditionStructs,
                                 const Axis::ENUMDATA axis)
 {
     using BC = BoundaryConditions::ENUMDATA;
@@ -85,7 +205,7 @@ void DiffusionPositiveBoundary( EnumVector< Axis,  EnumVector<TransportCoefficie
 void DiffusionNegativeBoundary( EnumVector< Axis, EnumVector<TransportCoefficients, array1D> > &diff, 
                                 EnumVector< BoundaryPatches, floatType > &boundaryConstants,
                                 const Mesh &mesh,  
-                                const EnumVector< BoundaryPatches, InputData::BoundaryConditionData > &boundaryConditionStructs,
+                                const EnumVector< BoundaryPatches, InputData::BoundaryConditionInputData > &boundaryConditionStructs,
                                 const Axis::ENUMDATA axis)
 {
     using BC = BoundaryConditions::ENUMDATA;
@@ -257,7 +377,7 @@ void AdvectionPositiveBoundary( EnumVector<TransportCoefficients, array3D> &coef
                                 EnumVector<BoundaryPatches, array2D> &boundaryConstants,
                                 const EnumVector<Axis, array3D> &faceFluxes, 
                                 const Mesh &mesh,  
-                                const EnumVector< BoundaryPatches, InputData::BoundaryConditionData > &boundaryConditionStructs,
+                                const EnumVector< BoundaryPatches, InputData::BoundaryConditionInputData > &boundaryConditionStructs,
                                 const Axis::ENUMDATA axis)
 {
     using BC = BoundaryConditions::ENUMDATA;
@@ -298,7 +418,7 @@ void AdvectionNegativeBoundary( EnumVector<TransportCoefficients, array3D> &coef
                                 EnumVector<BoundaryPatches, array2D> &boundaryConstants,
                                 const EnumVector<Axis, CFD::array3D> &faceFluxes, 
                                 const Mesh &mesh,  
-                                const EnumVector< BoundaryPatches, InputData::BoundaryConditionData > &boundaryConditionStructs,
+                                const EnumVector< BoundaryPatches, InputData::BoundaryConditionInputData > &boundaryConditionStructs,
                                 const Axis::ENUMDATA axis)
 {
     using BC = BoundaryConditions::ENUMDATA;
@@ -430,7 +550,7 @@ void AddDiffusion( EnumVector< TransportCoefficients, array3D > &velCoeffs,
 void InterpolationPositiveBoundary( EnumVector< TransportCoefficients, array1D > &coeffs, 
                                     EnumVector< BoundaryPatches, floatType > &boundaryConstants,
                                     const Mesh &mesh,  
-                                    const EnumVector< BoundaryPatches, InputData::BoundaryConditionData > &boundaryConditionStructs,
+                                    const EnumVector< BoundaryPatches, InputData::BoundaryConditionInputData > &boundaryConditionStructs,
                                     const Axis::ENUMDATA axis)
 {
 
@@ -470,7 +590,7 @@ void InterpolationPositiveBoundary( EnumVector< TransportCoefficients, array1D >
 void InterpolationNegativeBoundary( EnumVector< TransportCoefficients, array1D > &coeffs, 
                                     EnumVector< BoundaryPatches, floatType > &boundaryConstants,
                                     const Mesh &mesh,  
-                                    const EnumVector< BoundaryPatches, InputData::BoundaryConditionData > &boundaryConditionStructs, 
+                                    const EnumVector< BoundaryPatches, InputData::BoundaryConditionInputData > &boundaryConditionStructs, 
                                     const Axis::ENUMDATA axis)
 {
 
@@ -511,7 +631,7 @@ void InterpolationNegativeBoundary( EnumVector< TransportCoefficients, array1D >
 void SetFaceInterpolatedCoefficients( EnumVector<CFD::TransportCoefficients, CFD::array1D> &coeffs, 
                                       EnumVector< BoundaryPatches, floatType > &boundaryConstants, 
                                       const Mesh &mesh, 
-                                      const EnumVector< BoundaryPatches, InputData::BoundaryConditionData> &boundaryConditionStructs, 
+                                      const EnumVector< BoundaryPatches, InputData::BoundaryConditionInputData> &boundaryConditionStructs, 
                                       const Axis::ENUMDATA axis)
 { 
     using enum Axis::ENUMDATA;
@@ -981,6 +1101,9 @@ FVCoefficients<MI> InitialiseFVCoefficients( const Mesh &mesh,
 
     // Default construct the coefficients class
     FVCoefficients<MI> fvCoeffs(mesh.nCells);
+
+    // Set the boundary condition data
+    SetBoundaryConditionData( fvCoeffs.bcData, inputData.boundaryConditions, mesh );
 
     // Momentum equations
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
