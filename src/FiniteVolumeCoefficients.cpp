@@ -80,8 +80,9 @@ array2D SetBoundaryProfile1D( const InputData::Profile1D &profile1D,
     intType nCellsLo = mesh.nCells( LUT::LoOrthogonalAxis[normalAxis] ),
             nCellsHi = mesh.nCells( LUT::HiOrthogonalAxis[normalAxis] );
     array2D boundaryPatchValues( nCellsLo, nCellsHi );
+    int constantAxis2D = ( constantAxis == LUT::LoOrthogonalAxis[normalAxis] ) ? 0 : 1; // 3D axis enums cannot be used on the 2D plane
     for ( intType i = 0; i != mesh.nCells(constantAxis); i++ ) {
-        boundaryPatchValues.chip(i, constantAxis) = interpolatedProfile1D;
+        boundaryPatchValues.chip(i, constantAxis2D) = interpolatedProfile1D;
     }
 
     return boundaryPatchValues;
