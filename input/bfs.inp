@@ -1,17 +1,17 @@
-// Lid driven cavity
+// Backwards facing step with no inflow region
 
 Model {
     rho  = 1
-    nu   = 0.005
+    nu   = 0.05
 }
 
 Mesh {
 
-    domain = (1, 1, 1)
+    domain = (5, 1, 1)
 
     Grid x {
         Segment {
-            bounds     = (0, 1)
+            bounds     = (0, 5)
             nCells     = 50
             biasFactor = 1
         }
@@ -19,8 +19,14 @@ Mesh {
 
     Grid y {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 50
+            bounds     = (0, 0.5)
+            nCells     = 5
+            biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (0.5, 1)
+            nCells     = 5
             biasFactor = 1
         }
     }
@@ -28,7 +34,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 50
+            nCells     = 5
             biasFactor = 1
         }
     }
@@ -37,7 +43,7 @@ Mesh {
 
 InitialConditions
 {
-    u = 0
+    u = 1
     v = 0
     w = 0
     p = 0
@@ -46,25 +52,25 @@ InitialConditions
 
 BoundaryConditions
 {
-    // Wall
+    // Outflow
     +x {
-        u = uniform, 0
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform, 0
+    }
+
+    // Inflow
+    -x {
+        u = profile1D, "input/bfs_inflow.prof"
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
     }
 
     // Wall
-    -x {
-        u = uniform, 0
-        v = uniform, 0
-        w = uniform, 0
-        p = zeroGradient
-    }
-
-    // Driven
     +y {
-        u = uniform, 1
+        u = uniform, 0
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
@@ -119,11 +125,11 @@ Solver {
         maxIterations = 1
         maxResiduals = 1e-4
 
-        planeSweepDirection = +x
-        lineSweepDirection = +z
+        planeSweepDirection = +z
+        lineSweepDirection = +y
 
-        momentumRelaxation = (1.25, 1.25, 1.25)
-        pressureRelaxation = 1.3
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
 
     }
 
@@ -138,7 +144,7 @@ Output {
     Monitors {
         Probe {
             filename = "output/probe1.csv"
-            location = (0.5, 0.6, 0.5)
+            location = (1, 0.5, 0.5)
         }
     }
 

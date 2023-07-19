@@ -99,7 +99,7 @@ CFD::InputData::InputData() :
 
 
 /*-------------------------------------------------------------------------------------*\
-                                      Translators
+                                   Helper Functions
 \*-------------------------------------------------------------------------------------*/
 
 // Convert string to given numeric type T.
@@ -112,6 +112,21 @@ String2Type(const std::string &str)
     strstream >> num;
     return num;
 }
+
+
+// Return string with no whitespace
+std::string RemoveWhitespace( std::string str )
+{
+    str.erase(remove_if(str.begin(), str.end(), isspace), str.end());
+    return str;
+}
+
+
+/*-------------------------------------------------------------------------------------*\
+                                      Translators
+\*-------------------------------------------------------------------------------------*/
+
+
 
 
 // Parse vector string into an std::vector
@@ -303,7 +318,6 @@ namespace
     floatType GetUniformBCValue( std::string::const_iterator &stringIterator,
                                  const std::string &boundaryString )
     {
-
         // Read the value to end of line
         std::string bcValueString;
         while (stringIterator != boundaryString.end()) {            
@@ -332,11 +346,12 @@ namespace
         std::vector< std::vector< std::string > > profileData = ReadCSV( filename );
 
         // First column tells us the axis
-        if        ( profileData[0][0] == "x" ) {
+        std::string axisString = RemoveWhitespace( profileData[0][0] );
+        if        ( axisString == "x" ) {
             profile1D.axis = Axis::X;
-        } else if ( profileData[0][0] == "y" ) {
+        } else if ( axisString == "y" ) {
             profile1D.axis = Axis::Y;
-        } else if ( profileData[0][0] == "z" ) {
+        } else if ( axisString == "z" ) {
             profile1D.axis = Axis::Z;
         } else {
             throw std::runtime_error( "Invalid axis name in profile file '" + filename + "'."  );
