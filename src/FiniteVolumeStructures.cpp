@@ -384,7 +384,7 @@ using enum Axis::ENUMDATA;
 
 // Momentum equations constructor
 MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis, 
-                                                    const iVector3 &dims) :
+                                    const iVector3 &dims) :
     AU( { EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, X), dims),
           EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, Y), dims),
           EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, Z), dims) }  ),
@@ -394,12 +394,11 @@ MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis,
     diff({ EnumVector<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims(X) ),
            EnumVector<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims(Y) ),
            EnumVector<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims(Z) ) }),
-    boundaryDiff( 0.0f ),
-    boundaryP( 0.0f ),
-    boundaryVel( {array2D( dims(Y), dims(Z) ).setZero(), array2D( dims(Y), dims(Z) ).setZero(),
-                  array2D( dims(X), dims(Z) ).setZero(), array2D( dims(X), dims(Z) ).setZero(),
-                  array2D( dims(X), dims(Y) ).setZero(), array2D( dims(X), dims(Y) ).setZero()} ),    // This doesn't follow right hand rule
-    relaxation( 1.0f )
+    diffBoundary( 0.0f ),
+    BUBoundary(),
+    BPBoundary(),   // These should be dimensioned only if needed
+    relaxation( 1.0f ),
+    component( axis )
 {};
 
 
@@ -417,10 +416,8 @@ ContinuityEquation<MI>::ContinuityEquation( const iVector3 &dims ) :
     mwiCompactCoeffs( { std::array<array1D, 2>{ array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero() } ,
                         std::array<array1D, 2>{ array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero() } ,
                         std::array<array1D, 2>{ array1D(dims(Z)+1).setZero(), array1D(dims(Z)+1).setZero() } } ),
-    boundaryP( {array2D( dims(Y), dims(Z) ).setZero(), array2D( dims(Y), dims(Z) ).setZero(),
-                array2D( dims(X), dims(Z) ).setZero(), array2D( dims(X), dims(Z) ).setZero(),
-                array2D( dims(X), dims(Y) ).setZero(), array2D( dims(X), dims(Y) ).setZero()} ),     // This doesn't follow right hand rule
-    boundaryVel( 0.0f ),
+    BUBoundary(),
+    BPBoundary(),   // These should be dimensioned only if needed
     relaxation( 1.0f )
 {};
 template struct ContinuityEquation< MomentumInterpolation::Implicit >;
