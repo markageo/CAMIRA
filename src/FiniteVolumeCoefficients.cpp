@@ -259,7 +259,7 @@ void AdvectionPositiveBoundary( EnumVector<TransportCoefficients, array3D> &coef
                                 EnumVector<BoundaryPatches, array2D> &boundaryConstants,
                                 const EnumVector<Axis, array3D> &faceFluxes, 
                                 const Mesh &mesh,  
-                                const EnumVector< BoundaryPatches, BoundaryConditionConfig > &boundaryConditionStructs,
+                                const BoundaryConditionData &boundaryConditionStructs,
                                 const Axis::ENUMDATA axis)
 {
     using BC = BoundaryConditions::ENUMDATA;
@@ -301,7 +301,7 @@ void AdvectionNegativeBoundary( EnumVector<TransportCoefficients, array3D> &coef
                                 EnumVector<BoundaryPatches, array2D> &boundaryConstants,
                                 const EnumVector<Axis, CFD::array3D> &faceFluxes, 
                                 const Mesh &mesh,  
-                                const EnumVector< BoundaryPatches, BoundaryConditionConfig > &boundaryConditionStructs,
+                                const BoundaryConditionData &boundaryConditionStructs,
                                 const Axis::ENUMDATA axis)
 {
     using BC = BoundaryConditions::ENUMDATA;
@@ -341,7 +341,7 @@ void AdvectionNegativeBoundary( EnumVector<TransportCoefficients, array3D> &coef
 
 void SetAdvectionCoefficients( MomentumEquation &momentumEquation,
                                const EnumVector<Axis, array3D> &faceFluxes, 
-                               const EnumVector< BoundaryPatches, BoundaryConditionConfig > boundaryConditions,
+                               const BoundaryConditionData &boundaryConditions,
                                const Mesh &mesh )
 {
     using enum TransportCoefficients::ENUMDATA;
@@ -1028,9 +1028,7 @@ void AllocateBoundaryConstants( FVCoefficients< MI > &fvCoeffs,
 
             if ( bcData.U[axis][bp].type == BoundaryConditions::fixed ) {
 
-                EnumFor<Axis>( [&] (Axis::ENUMDATA momAxis) {
-                    fvCoeffs.Mom[momAxis].BUBoundary[bp] = array2D(patchDimLo, patchDimHi).setZero();
-                } );
+                fvCoeffs.Mom[axis].BUBoundary[bp] = array2D(patchDimLo, patchDimHi).setZero();
                 fvCoeffs.Cont.BUBoundary[bp] = array2D(patchDimLo, patchDimHi).setZero();
 
             }
