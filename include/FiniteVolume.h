@@ -60,10 +60,12 @@ struct ContinuityEquation {
 };
 
 
-struct BoundaryConditionData {
+struct BoundaryConditionConfig {
     BoundaryConditions::ENUMDATA type;
     array2D value;
 };
+using BoundaryConditionData = EnumVector< BoundaryPatches, BoundaryConditionConfig >;
+
 
 
 // Structure to store finite volume discrete equation coefficients (Picard linearisation)
@@ -79,7 +81,6 @@ struct FVCoefficients
     
     EnumVector<Axis, MomentumEquation> Mom;
     ContinuityEquation< MI > Cont;
-    FieldData< EnumVector< BoundaryPatches, BoundaryConditionData > > bcData;
     iVector3 nCells;
     
 };
@@ -91,17 +92,18 @@ FieldData<array3D> InitialiseFields(const Mesh &, const InputData &);
 // Remove ghost cells from a 3D array
 void RemoveGhostCells( array3D &, const intType);
 
-
+// Calculate and set boundary condition data for all fields
+FieldData< BoundaryConditionData > SetBoundaryConditionData( const InputData &, const Mesh & );
 
 
 
 // -------------------------------------- Definition in FaceVelocities.cpp -------------------------------------- //
 
 // Allocate and initialise face velocities
-EnumVector<Axis, array3D> InitialiseFaceFluxes(const Mesh &, const EnumVector<Axis, array3D> &, const InputData &);
+EnumVector<Axis, array3D> InitialiseFaceFluxes(const Mesh &, const EnumVector<Axis, array3D> &, const FieldData< BoundaryConditionData > &);
 
 // Update face velocities
-void UpdateFaceFluxes( EnumVector<Axis, array3D> &, const Mesh &, const EnumVector<Axis, array3D> &, const InputData &);
+void UpdateFaceFluxes( EnumVector<Axis, array3D> &, const Mesh &, const EnumVector<Axis, array3D> &, const FieldData< BoundaryConditionData > &);
 
 
 
@@ -111,11 +113,19 @@ void UpdateFaceFluxes( EnumVector<Axis, array3D> &, const Mesh &, const EnumVect
 
 // Allocate and initialise finite volume coefficients
 template< MomentumInterpolation MI >
-FVCoefficients<MI> InitialiseFVCoefficients(const Mesh &, const FieldData<array3D> &, const EnumVector<Axis, array3D> &, const InputData &);
+FVCoefficients<MI> InitialiseFVCoefficients( const Mesh &, 
+                                             const FieldData< array3D > &, 
+                                             const EnumVector< Axis, array3D > &, 
+                                             const FieldData< BoundaryConditionData > &, 
+                                             const InputData &);
 
-// Update finite volume coefficients (Picard linearisation)
+// Update finite volume coefficients 
 template< MomentumInterpolation MI >
-void UpdateFVCoefficients(FVCoefficients<MI> &, const Mesh &, const FieldData<array3D> &, const EnumVector<Axis, array3D> &, const InputData &);
+void UpdateFVCoefficients( FVCoefficients<MI> &, 
+                           const Mesh &, 
+                           const FieldData< array3D > &, 
+                           const EnumVector< Axis, array3D > &,
+                           const FieldData< BoundaryConditionData > &);
 
 
 // ---------------------------------------- Definition in VertexValues.cpp -------------------------------------- //
