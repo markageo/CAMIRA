@@ -131,7 +131,7 @@ void UpdateFVCoefficients( FVCoefficients<MI> &,
 // ---------------------------------------- Definition in VertexValues.cpp -------------------------------------- //
 
 
-FieldData<array3D> GetVertexFields( const FieldData<array3D> &, const Mesh &, const InputData & );
+FieldData<array3D> GetVertexFields( const FieldData<array3D> &, const Mesh &, const FieldData< BoundaryConditionData > & );
 
 
 
