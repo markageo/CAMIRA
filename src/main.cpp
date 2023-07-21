@@ -21,10 +21,11 @@ int main(int argc, char const *argv[])
                                          Input Processing
     \*-------------------------------------------------------------------------------------*/
 
+    TIC("Input Processing")
     CFD::InputData inputData = CFD::InputDataFromCommandLine(argc, argv);
 
     CFD::AxisTransformationMap axisTransformation = CFD::TransformUserInputData( inputData );
-
+    TOC()
 
     /*-------------------------------------------------------------------------------------*\
                                               Solve
@@ -38,16 +39,21 @@ int main(int argc, char const *argv[])
     CFD::FieldData<CFD::array3D> fields = CFD::InitialiseFields( mesh, inputData );
     TOC();
 
+    TIC("Boundary Condition Processing")
+    CFD::FieldData< CFD::BoundaryConditionData > bcData = SetBoundaryConditionData( inputData, mesh );
+    TOC()
+
+
     TIC("Solver");
     switch ( inputData.schemes.momentumInterpolation )
     {
         using MI = CFD::MomentumInterpolation;
         case ( MI::Implicit ):
-            CFD::SweepSolve< MI::Implicit >(fields, mesh, inputData, axisTransformation);
+            CFD::SweepSolve< MI::Implicit >(fields, mesh, bcData, inputData, axisTransformation);
             break;
 
         case ( MI::SemiExplicit ):
-            CFD::SweepSolve< MI::SemiExplicit >(fields, mesh, inputData, axisTransformation);
+            CFD::SweepSolve< MI::SemiExplicit >(fields, mesh, bcData, inputData, axisTransformation);
             break;
     }
     TOC();
@@ -63,7 +69,7 @@ int main(int argc, char const *argv[])
         CFD::RemoveGhostCells(fields[f], CFD::nGhost);
     } );
 
-    CFD::FieldData<CFD::array3D> vertexFields = GetVertexFields( fields, mesh, inputData );
+    CFD::FieldData<CFD::array3D> vertexFields = GetVertexFields( fields, mesh, bcData );
 
     // Undo the boundary condition transformation
     CFD::TransformToUserCoordinates(mesh, fields, vertexFields, axisTransformation);

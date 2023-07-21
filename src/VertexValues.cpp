@@ -54,55 +54,29 @@ namespace
     }
 
 
-
-    // Returns a plane which the field is interpolated onto the cell vertices
-    array2D InterpolateVertexPlane( const array3D &field,
-                                    const Mesh &mesh,
-                                    const Axis::ENUMDATA axis,
-                                    const intType k )
+    array2D CellPlaneToVertexPlane( const array2D &cellPlane, 
+                                    const array1D &interpFactors1,
+                                    const array1D &interpFactors2 )
     {
-        Axis::ENUMDATA axis1 = ( axis == Axis::X ) ? Axis::Y : Axis::X;
-        Axis::ENUMDATA axis2 = ( axis == Axis::Z ) ? Axis::Y : Axis::Z;
-
-        // Interpolate in directions parallel to the boundary face
-        array2D vertexPlane( field.dimension(axis1)+1, field.dimension(axis2)+1 );
-
-        arrayIndex3D idx00, idx10, idx01, idx11;
-        idx00[axis] = k;
-        idx10[axis] = k;
-        idx01[axis] = k;
-        idx11[axis] = k;
+        array2D vertexPlane( cellPlane.dimension(0)+1, cellPlane.dimension(1)+1 );
 
         for ( intType i = 1; i != vertexPlane.dimension(0)-1; i++ ) {
             for ( intType j = 1; j != vertexPlane.dimension(1)-1; j++ ) {
 
-                // Indexing
-                idx00[axis1] = i-1;
-                idx00[axis2] = j-1;
-
-                idx10[axis1] = i;
-                idx10[axis2] = j-1;
-
-                idx01[axis1] = i-1;
-                idx01[axis2] = j;
-
-                idx11[axis1] = i;
-                idx11[axis2] = j;
-
 
                 // Points to interpolation from
-                floatType c00 = field( idx00 ),
-                          c10 = field( idx10 ),
-                          c01 = field( idx01 ),
-                          c11 = field( idx11 );
+                floatType c00 = cellPlane( i-1, j-1 ),
+                          c10 = cellPlane( i  , j-1 ),
+                          c01 = cellPlane( i-1, j   ),
+                          c11 = cellPlane( i  , j   );
 
                 // Linear interpolation in j direction
-                floatType lambdaY = mesh.interpFactors[axis2](j);
+                floatType lambdaY = interpFactors2(j);
                 floatType c0 = ( 1-lambdaY ) * c00  +  lambdaY * c01,
                           c1 = ( 1-lambdaY ) * c10  +  lambdaY * c11;
 
                 // Linear interpolation in i direction
-                floatType lambdaX = mesh.interpFactors[axis1](i);
+                floatType lambdaX = interpFactors1(i);
                 floatType c = ( 1-lambdaX ) * c0  +  lambdaX * c1;
 
                 vertexPlane(i, j) = c;
@@ -119,7 +93,7 @@ namespace
     void SetBoundaryFaces( array3D &vertexField,
                            const array3D &field,
                            const Mesh &mesh,
-                           const EnumVector< BoundaryPatches, InputData::BoundaryConditionInputData > &boundaryConditions )
+                           const BoundaryConditionData &boundaryConditions )
     {
         using BC = BoundaryConditions::ENUMDATA;
 
@@ -134,34 +108,36 @@ namespace
                 faceEndIndex = 0;
             }
 
+
+            Axis::ENUMDATA axis1 = LUT::LoOrthogonalAxis[ axis ];
+            Axis::ENUMDATA axis2 = LUT::HiOrthogonalAxis[ axis ];
             switch ( boundaryConditions[boundaryPatch].type ) {
                 case BC::zeroGradient: 
                 {
                     intType k = ( boundaryPatch == LUT::PositivePatch[ axis ] ) ? mesh.nCells(axis)-1 : 0;
-                    array2D offBoundary = InterpolateVertexPlane( field, mesh, axis, k );
-                    vertexField.chip(faceEndIndex, axis) = offBoundary;  
+                    vertexField.chip(faceEndIndex, axis) = CellPlaneToVertexPlane( field.chip(k, axis), mesh.interpFactors[axis1], mesh.interpFactors[axis2] );
                     break;
                 }
 
                 case BC::fixed: 
                 {
-                    vertexField.chip(faceEndIndex, axis) = vertexField.chip(faceEndIndex, axis).constant( boundaryConditions[boundaryPatch].uniformValue );
+                    vertexField.chip(faceEndIndex, axis) = CellPlaneToVertexPlane( boundaryConditions[boundaryPatch].value, mesh.interpFactors[axis1], mesh.interpFactors[axis2] );
                     break;
                 }
                     
                 case BC::extrapolated: 
                 {
                     intType k_p = ( boundaryPatch == LUT::PositivePatch[ axis ] ) ? mesh.nCells(axis)-1 : 0;
-                    array2D offBoundary_p = InterpolateVertexPlane( field, mesh, axis, k_p );
+                    array2D offBoundary_p = CellPlaneToVertexPlane( field.chip(k_p, axis), mesh.interpFactors[axis1], mesh.interpFactors[axis2] );
 
                     intType k_a = ( boundaryPatch == LUT::PositivePatch[ axis ] ) ? k_p-1 : k_p+1;
-                    array2D offBoundary_a = InterpolateVertexPlane( field, mesh, axis, k_a );
+                    array2D offBoundary_a = CellPlaneToVertexPlane( field.chip(k_a, axis), mesh.interpFactors[axis1], mesh.interpFactors[axis2] );;
 
                     floatType extrapFactor_p = mesh.extrapFactors[boundaryPatch].p;
                     floatType extrapFactor_a = mesh.extrapFactors[boundaryPatch].a;
 
                     vertexField.chip(faceEndIndex, axis) = offBoundary_p * offBoundary_p.constant( extrapFactor_p )
-                                                        + offBoundary_a * offBoundary_a.constant( extrapFactor_a );
+                                                         + offBoundary_a * offBoundary_a.constant( extrapFactor_a );
                     break;
                 }
                     
@@ -292,7 +268,7 @@ namespace
 // Assumes ghost cells have been removed
 array3D InterpolateToVertex( const array3D &field,
                              const Mesh &mesh, 
-                             const EnumVector< BoundaryPatches, InputData::BoundaryConditionInputData > &boundaryConditions )
+                             const BoundaryConditionData &boundaryConditions )
 {
     array3D vertexField( field.dimension(0)+1, field.dimension(1)+1, field.dimension(2)+1 );
     vertexField.setZero();
@@ -312,11 +288,11 @@ array3D InterpolateToVertex( const array3D &field,
 
 FieldData<array3D> GetVertexFields( const FieldData<array3D> &fields, 
                                     const Mesh &mesh,
-                                    const InputData &inputData )
+                                    const FieldData< BoundaryConditionData > &bcData )
 {
     FieldData<array3D> vertexFields;
     ForAllFieldData( [&] (intType f) {
-        vertexFields[f] = InterpolateToVertex( fields[f], mesh, inputData.boundaryConditions[f] );
+        vertexFields[f] = InterpolateToVertex( fields[f], mesh, bcData[f] );
     } );
     return vertexFields;
 }

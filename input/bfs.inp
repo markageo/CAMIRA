@@ -2,12 +2,12 @@
 
 Model {
     rho  = 1
-    nu   = 0.01
+    nu   = 0.005
 }
 
 Mesh {
 
-    domain = (5, 1, 1)
+    domain = (5, 3, 1)
 
     Grid x {
         Segment {
@@ -25,8 +25,8 @@ Mesh {
         }
 
         Segment {
-            bounds     = (0.5, 1)
-            nCells     = 10
+            bounds     = (0.5, 3)
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -68,12 +68,12 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Wall
+    // Freestream
     +y {
-        u = uniform, 0
-        v = uniform, 0
-        w = uniform, 0
-        p = zeroGradient
+        u = uniform, 1
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform, 0
     }
 
     // Wall
@@ -122,7 +122,7 @@ Solver {
     LinearSolver {
 
         type = SUGS
-        maxIterations = 1
+        maxIterations = 2
         maxResiduals = 1e-4
 
         planeSweepDirection = +z

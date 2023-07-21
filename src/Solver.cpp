@@ -944,6 +944,7 @@ private:
 template< MomentumInterpolation MI >
 void SweepSolve( FieldData<array3D> &fields,
                  const Mesh &mesh,
+                 const FieldData< BoundaryConditionData > &bcData,
                  const InputData &inputData,
                  const AxisTransformationMap &axisTransformation)
 {
@@ -955,7 +956,6 @@ void SweepSolve( FieldData<array3D> &fields,
     const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
 
     // Initialise
-    FieldData< BoundaryConditionData > bcData = SetBoundaryConditionData( inputData, mesh );
     EnumVector<Axis, array3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
     FVCoefficients<MI> fvCoeffs = InitialiseFVCoefficients<MI>(mesh, fields, faceFluxes, bcData, inputData);
     FieldData<array3D> fieldsOld = fields;
@@ -1012,7 +1012,7 @@ void SweepSolve( FieldData<array3D> &fields,
         }
     }
 }
-template void SweepSolve<MomentumInterpolation::Implicit>( FieldData<array3D> &, const Mesh &, const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::SemiExplicit>( FieldData<array3D> &, const Mesh &, const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::Implicit>( FieldData<array3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::SemiExplicit>( FieldData<array3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
 
 } // end namespace CFD

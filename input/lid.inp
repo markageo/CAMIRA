@@ -11,25 +11,43 @@ Mesh {
 
     Grid x {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 50
-            biasFactor = 1
+            bounds     = (0, 0.5)
+            nCells     = 25
+            biasFactor = 3
+        }
+
+        Segment {
+            bounds     = (0.5, 1)
+            nCells     = 25
+            biasFactor = -3
         }
     }
 
     Grid y {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 50
-            biasFactor = 1
+            bounds     = (0, 0.5)
+            nCells     = 25
+            biasFactor = 3
+        }
+
+        Segment {
+            bounds     = (0.5, 1)
+            nCells     = 25
+            biasFactor = -3
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 50
-            biasFactor = 1
+            bounds     = (0, 0.5)
+            nCells     = 25
+            biasFactor = 3
+        }
+
+        Segment {
+            bounds     = (0.5, 1)
+            nCells     = 25
+            biasFactor = -3
         }
     }
 }
@@ -122,8 +140,8 @@ Solver {
         planeSweepDirection = +x
         lineSweepDirection = +z
 
-        momentumRelaxation = (1.25, 1.25, 1.25)
-        pressureRelaxation = 1.3
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
 
     }
 
