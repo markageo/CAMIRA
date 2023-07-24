@@ -19,6 +19,9 @@ struct InputData
     // Constructor
     InputData();
 
+    // File directory of input file
+    std::string inputFileDirectory;
+
     // Model
     floatType rho, nu;
 

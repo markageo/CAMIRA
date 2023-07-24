@@ -62,7 +62,7 @@ BoundaryConditions
 
     // Inflow
     -x {
-        u = profile1D, "input/bfs_inflow.prof"
+        u = profile1D, "bfs_inflow.prof"
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
