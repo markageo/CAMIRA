@@ -260,8 +260,8 @@ Mesh::Mesh(const InputData &inputData) :
         EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
 
             // Axis are ordered by numbering
-            Axis::ENUMDATA axis1 = ( axis == Axis::X ) ? Axis::Y : Axis::X;
-            Axis::ENUMDATA axis2 = ( axis == Axis::Z ) ? Axis::Y : Axis::Z;
+            Axis::ENUMDATA axis1 = LUT::LoOrthogonalAxis[ axis ];
+            Axis::ENUMDATA axis2 = LUT::HiOrthogonalAxis[ axis ];
             CalculateCellFaceAreas(cellFaceAreas[axis], cellLengths[axis1], cellLengths[axis2]);
 
         } );
