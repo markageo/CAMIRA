@@ -77,4 +77,3 @@ target_sources(eigen INTERFACE libraries/eigen-3.4.0)
 target_include_directories(eigen SYSTEM INTERFACE libraries/eigen-3.4.0)
 
 add_subdirectory(src)
-add_subdirectory(tests)

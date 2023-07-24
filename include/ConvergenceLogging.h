@@ -190,7 +190,7 @@ class ConsoleLog
                       << "U residual: " << residuals.U[ m_AT.CodeAxis(X) ] << ",   "
                       << "V residual: " << residuals.U[ m_AT.CodeAxis(Y) ] << ",   "
                       << "W residual: " << residuals.U[ m_AT.CodeAxis(Z) ] << ",   "
-                      << "P residual: " << residuals.P                   << ",   "
+                      << "Coninuity residual: " << residuals.P             << ",   "
                       << "Global Mass residual: " << massFluxResidual << "\n";
         }
 
