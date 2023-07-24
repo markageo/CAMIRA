@@ -423,7 +423,7 @@ public:
                 jV = j + sCV::iCoupled;
                 jW = j;
 
-                #pragma GCC ivdep
+                CFD_PRAGMA_VECTORIZE
                 for (intType i = iStart; i != iLength; i++) {
 
                     iU = i + sCU::iCoupled;
@@ -567,8 +567,7 @@ private:
         intType jgW{ G(jW) }, kgW{ G(kW) };
         intType   jg{ G(j) },   kg{ G(k) };
 
-        // U momentum
-        #pragma GCC ivdep
+        CFD_PRAGMA_VECTORIZE
         for ( intType i = 0; i != m_ni; i++ ) {
             intType ig{ G(i) };
 
@@ -729,10 +728,9 @@ private:
         intType kgW{ G(kW) };
         intType  kg{ G(k) };
 
-        #pragma GCC ivdep
         for ( intType j = 0; j != m_nj; j++ ) {
 
-            #pragma GCC ivdep
+            CFD_PRAGMA_VECTORIZE
             for ( intType i = 0; i != m_ni; i++ ) {
                 intType ig{ G(i) }, jg{ G(j) };
 

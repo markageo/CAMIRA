@@ -399,7 +399,7 @@ void AddDiffusion( MomentumEquation &momentumEquation,
                       ynj = diffCoeffs[Y][n](j),
                       ysj = diffCoeffs[Y][s](j);
 
-            #pragma GCC ivdep
+            CFD_PRAGMA_VECTORIZE
             for (intType i = 0; i != mesh.nCells(X); i++) {
 
                 velCoeffs[p](i, j, k) += diffCoeffs[X][p](i) + ypj + zpk;
