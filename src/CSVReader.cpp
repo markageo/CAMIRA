@@ -1,6 +1,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
+#include <stdexcept>
 
 
 enum class ReaderState {
@@ -109,6 +110,9 @@ std::vector< std::vector< std::string > > ReadCSV( const std::string &filename )
     std::ifstream fStream( filename );
     std::vector< std::vector< std::string > > data;
     std::string rowString;
+
+    if ( !fStream )
+         throw std::runtime_error( "Failed reading CSV file '" + filename + "'" );
 
     while( !fStream.eof() ) {
         std::getline( fStream, rowString );
