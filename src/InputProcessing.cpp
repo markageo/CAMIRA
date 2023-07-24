@@ -344,14 +344,14 @@ namespace
         }
 
         // First column is the coordinate points, second column is the actual data
-        intType nRows = profileData.size();
+        intType nRows = static_cast<intType>( profileData.size() );
         intType nHeaderRows = 1;
         profile1D.coordinates = array1D( nRows - nHeaderRows );
         profile1D.values      = array1D( nRows - nHeaderRows );
 
         for ( intType i = 0; i != nRows-nHeaderRows; i++ ) {
-            profile1D.coordinates(i) = IO::String2Type<floatType>( profileData[i+nHeaderRows][0] );
-            profile1D.values(i)      = IO::String2Type<floatType>( profileData[i+nHeaderRows][1] );
+            profile1D.coordinates(i) = IO::String2Type<floatType>( profileData[ static_cast<size_t>( i+nHeaderRows) ][0]  );
+            profile1D.values(i)      = IO::String2Type<floatType>( profileData[ static_cast<size_t>( i+nHeaderRows) ][1]  );
         }
 
         return profile1D;

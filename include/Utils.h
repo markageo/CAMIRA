@@ -10,6 +10,7 @@
 #include <sstream>
 #include <string>
 
+// Profiling macros
 #ifdef PROFILING
 #   if !defined(TIC) || !defined(TOC)
 #       include "profiler/profiler.h"
@@ -29,6 +30,16 @@
 #       define TOC(name)
 #   endif
 #endif
+
+
+// Compiler specific macros
+#if defined(__clang__)
+#   define CFD_PRAGMA_VECTORIZE _Pragma("clang loop vectorize(enable)")
+# elif defined(__GNUC__) || defined(__GNUG__)
+#   define CFD_PRAGMA_VECTORIZE _Pragma("GCC ivdep")
+# else
+#   define CFD_PRAGMA_VECTORIZE
+# endif
 
 
 namespace UTIL
