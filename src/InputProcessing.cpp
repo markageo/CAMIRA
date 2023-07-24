@@ -309,7 +309,8 @@ namespace
     // Read uniform BC value. Assumes that the string iterator is after the comma
     InputData::Profile1D GetProfile1DValue( std::string::const_iterator &stringIterator,
                                             const std::string &boundaryString,
-                                            const BoundaryPatches::ENUMDATA boundaryPatch )
+                                            const BoundaryPatches::ENUMDATA boundaryPatch,
+                                            const std::string &inputFileDirectory )
     {
         InputData::Profile1D profile1D;
 
@@ -318,6 +319,9 @@ namespace
         for ( /* NULL */; stringIterator != boundaryString.end(); stringIterator++ ) { 
             filename += *stringIterator;
         }
+
+        // Add the directory to the input filename
+        filename = inputFileDirectory + "/" + filename;
 
         // Read in profile data from csv file
         std::vector< std::vector< std::string > > profileData = ReadCSV( filename );
@@ -357,7 +361,8 @@ namespace
 
     InputData::BoundaryConditionInputData ReadBoundaryValueString( const std::string &fieldString,
                                                                    const pt::ptree &boundaryPatchTree,
-                                                                   const BoundaryPatches::ENUMDATA boundaryPatch )
+                                                                   const BoundaryPatches::ENUMDATA boundaryPatch,
+                                                                   const std::string &inputFileDirectory )
     {
         using BC = BoundaryConditions::ENUMDATA;
 
@@ -391,7 +396,7 @@ namespace
         } else if (bcTypeString == "profile1D") {
 
             CheckForBCValue( stringIterator, bcTypeString );
-            bcStruct.profile1D = GetProfile1DValue( stringIterator, boundaryString, boundaryPatch );
+            bcStruct.profile1D = GetProfile1DValue( stringIterator, boundaryString, boundaryPatch, inputFileDirectory );
             bcStruct.hasProfile1D = true;
             bcStruct.type = BC::fixed;
 
@@ -436,12 +441,12 @@ namespace
             boundaryPatchTreePointer = &( boundaryConditionsTree.get_child( patchString ) );
 
             // Momentum 
-            inputData.boundaryConditions.U[X][patchEnum] = ReadBoundaryValueString( "u", *boundaryPatchTreePointer, patchEnum );
-            inputData.boundaryConditions.U[Y][patchEnum] = ReadBoundaryValueString( "v", *boundaryPatchTreePointer, patchEnum );
-            inputData.boundaryConditions.U[Z][patchEnum] = ReadBoundaryValueString( "w", *boundaryPatchTreePointer, patchEnum );
+            inputData.boundaryConditions.U[X][patchEnum] = ReadBoundaryValueString( "u", *boundaryPatchTreePointer, patchEnum, inputData.inputFileDirectory );
+            inputData.boundaryConditions.U[Y][patchEnum] = ReadBoundaryValueString( "v", *boundaryPatchTreePointer, patchEnum, inputData.inputFileDirectory );
+            inputData.boundaryConditions.U[Z][patchEnum] = ReadBoundaryValueString( "w", *boundaryPatchTreePointer, patchEnum, inputData.inputFileDirectory );
 
             // Pressure
-            inputData.boundaryConditions.P[patchEnum] = ReadBoundaryValueString( "p", *boundaryPatchTreePointer, patchEnum );
+            inputData.boundaryConditions.P[patchEnum] = ReadBoundaryValueString( "p", *boundaryPatchTreePointer, patchEnum, inputData.inputFileDirectory );
 
         }
 
@@ -698,11 +703,13 @@ namespace
 
 
 // Parse input file and read into InputData structure
-CFD::InputData CFD::ReadInputData(const std::string &inputFileName) 
+CFD::InputData CFD::ReadInputData(const std::string &inputFilename) 
 {
-    pt::ptree tree = ParseFile(inputFileName);
-    
+    pt::ptree tree = ParseFile(inputFilename);
+
     InputData inputData;
+    inputData.inputFileDirectory = IO::RelativePath( inputFilename );
+
     ReadModel(inputData, tree);
     ReadMesh(inputData, tree);
     ReadBoundaryConditions(inputData, tree);

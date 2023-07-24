@@ -31,7 +31,16 @@ std::string RemoveWhitespace( std::string str )
 }
 
 
-}   // end namespace UTIL
+// Return relative path to given filename (LINUX FILESYSTEMS ONLY)
+std::string RelativePath( const std::string &filename ) 
+{ 
+    std::string::const_iterator stringIterator = filename.end();
+    for ( /* NULL */ ; *stringIterator != '/' && stringIterator != filename.begin(); stringIterator--) {};
+    return std::string( filename.begin(), stringIterator );
+}
+
+
+}   // end namespace IO
 
 
 #endif // IO_UTILS
