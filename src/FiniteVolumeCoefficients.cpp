@@ -27,9 +27,8 @@ BoundaryConditions::ENUMDATA GetDiffusionBC( const EnumVector< Axis, EnumVector<
     const Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[boundaryPatch];
 
     // Set the field we need to check based on the axis
-    Axis::ENUMDATA axis1 = ( axis == Axis::X ) ? Axis::Y : Axis::X;
-    Axis::ENUMDATA axis2 = ( axis == Axis::Z ) ? Axis::Y : Axis::Z;
-
+    Axis::ENUMDATA axis1 = LUT::LoOrthogonalAxis[ axis ];
+    Axis::ENUMDATA axis2 = LUT::LoOrthogonalAxis[ axis ];
 
     // Only check the field that in the direction of the current axis
     if (velocityComponent == axis) {
