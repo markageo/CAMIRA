@@ -7,4 +7,5 @@ target_sources( libs
         CSVReader.h 
         InputParser.h 
         InputProcessing.h 
-        VTKWriter.h )
+        VTKWriter.h 
+        ArrayIO.h )

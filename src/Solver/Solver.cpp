@@ -4,10 +4,12 @@
 #include "StaggerIndexing.h"
 
 #include "../Types.h"
+#include "../Macros.h"
 #include "../IO/InputProcessing.h"
 #include "../Tools/SweepTransformations.h"
+#include "../Tools/FVTools.h"
+#include "../Tools/FVLookups.h"
 #include "../FiniteVolume/FiniteVolume.h"
-#include "../Utils.h"
 
 #include <type_traits>
 #include <iostream>
@@ -15,6 +17,8 @@
 
 namespace CFD
 {
+
+using namespace FVT;
 
 namespace
 {
@@ -302,6 +306,7 @@ public:
                              const intType k,
                              const FieldData<array1D> &lineConstants )
     {
+        using namespace FVT;
         using enum Axis::ENUMDATA;
         using enum TransportCoefficients::ENUMDATA;
 

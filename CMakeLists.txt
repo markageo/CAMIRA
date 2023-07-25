@@ -64,9 +64,6 @@ else()
 endif()
 
 
-# include directories
-include_directories(src)
-
 # Add libraries
 include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings
 add_subdirectory(libraries/fmt-10.0.0)

@@ -1,7 +1,7 @@
-#ifndef UTILS
-#define UTILS
+#ifndef ARRAY_IO
+#define ARRAY_IO
 
-#include "Types.h"
+#include "../Types.h"
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include <fstream>
@@ -10,39 +10,8 @@
 #include <sstream>
 #include <string>
 
-// Profiling macros
-#ifdef PROFILING
-#   if !defined(TIC) || !defined(TOC)
-#       include "profiler/profiler.h"
-#       define TIC(name) PROF::prof.tic(name);
-#       define TOC(name) PROF::prof.toc(name);
-#   endif
 
-    namespace PROF {
-        inline profiler<perf_counter::clock<time_units::SECONDS>> prof;
-    }
-
-#else
-#   ifndef TIC
-#       define TIC(name)
-#   endif
-#   ifndef TOC
-#       define TOC(name)
-#   endif
-#endif
-
-
-// Compiler specific macros
-#if defined(__clang__)
-#   define CFD_PRAGMA_VECTORIZE _Pragma("clang loop vectorize(enable)")
-# elif defined(__GNUC__) || defined(__GNUG__)
-#   define CFD_PRAGMA_VECTORIZE _Pragma("GCC ivdep")
-# else
-#   define CFD_PRAGMA_VECTORIZE
-# endif
-
-
-namespace UTIL
+namespace CFD
 {
 
 // Write eigen tensor to a file for debugging
@@ -93,7 +62,7 @@ void WriteArray(const std::string &filename, const T &array, const int precision
 
 
 // Functions used for constructing arrays in ReadArray function
-namespace 
+namespace CFD_INTERNAL
 {
 
     // Template specialization for constructing array
@@ -150,7 +119,7 @@ T ReadArray(const std::string &filename)
     }
 
     // Array to return
-    T array( ConstructArray<T>(dims) );
+    T array( CFD_INTERNAL::ConstructArray<T>(dims) );
  
     // Read into the tensor, tensor must be column major, stride by number of columns to account 
     // for reading order not being continguous.
@@ -173,7 +142,7 @@ T ReadArray(const std::string &filename)
 
 
 
-}   // end namespace UTIL
+}   // end namespace CFD
 
 
-#endif // UTILS
+#endif // ARRAY_IO
