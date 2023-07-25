@@ -1,12 +1,13 @@
 #include "Solver.h"
-#include "Types.h"
-#include "InputProcessing.h"
-#include "SweepTransformations.h"
-#include "FiniteVolume.h"
 #include "ConvergenceLogging.h"
 #include "FieldProbe.h"
 #include "StaggerIndexing.h"
-#include "Utils.h"
+
+#include "../Types.h"
+#include "../IO/InputProcessing.h"
+#include "../Tools/SweepTransformations.h"
+#include "../FiniteVolume/FiniteVolume.h"
+#include "../Utils.h"
 
 #include <type_traits>
 #include <iostream>

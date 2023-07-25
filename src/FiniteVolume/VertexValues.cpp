@@ -155,8 +155,8 @@ namespace
     {
 
         EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-            Axis::ENUMDATA axis1 = ( axis == Axis::X ) ? Axis::Y : Axis::X;
-            Axis::ENUMDATA axis2 = ( axis == Axis::Z ) ? Axis::Y : Axis::Z;
+            Axis::ENUMDATA axis1 = LUT::LoOrthogonalAxis[ axis ];
+            Axis::ENUMDATA axis2 = LUT::HiOrthogonalAxis[ axis ];
 
             // Indexing for each edge
             std::array<intType, 2> iVals{ 0, vertexField.dimension(axis1)-1 },

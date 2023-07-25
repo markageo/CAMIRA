@@ -1,6 +1,5 @@
 #include "FiniteVolume.h"
-
-#include "Utils.h"
+#include "../Utils.h"
 
 #include <algorithm>
 #include <iostream>
@@ -208,9 +207,9 @@ void SetDiffusionCoeffients( MomentumEquation &momentumEquation,
 
 // Upwind coefficients
 void UpwindInterior( EnumVector<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
-             const EnumVector<Axis, array3D> &faceFluxes, 
-             const Mesh &mesh,
-             const Axis::ENUMDATA axis )
+                     const EnumVector<Axis, array3D> &faceFluxes, 
+                     const Mesh &mesh,
+                     const Axis::ENUMDATA axis )
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;

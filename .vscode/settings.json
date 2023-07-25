@@ -86,6 +86,7 @@
         "specialfunctions": "cpp",
         "hash_map": "cpp",
         "alignedvector3": "cpp",
-        "*.lxx": "cpp"
+        "*.lxx": "cpp",
+        "geometry": "cpp"
     }
 }

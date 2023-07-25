@@ -1,8 +1,8 @@
 #ifndef FIELD_PROBE
 #define FIELD_PROBE
 
-#include "Types.h"
-#include "FiniteVolume.h"
+#include "../Types.h"
+#include "../FiniteVolume/FiniteVolume.h"
 
 namespace CFD
 {
