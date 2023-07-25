@@ -792,12 +792,12 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation<MI> &continuityEqua
                           coeffCompact1 = d * mwiCompactCoeffs[1](idx);
 
                 // Cell on west side 
-                continuityPressureCoeffs[p    ](LoIndex) += coeffCompact0 * LoCellLengthInv;
-                continuityPressureCoeffs[east ](LoIndex) += coeffCompact1 * LoCellLengthInv;
+                continuityPressureCoeffs[p    ](LoIndex) +=   coeffCompact0 * LoCellLengthInv;
+                continuityPressureCoeffs[east ](LoIndex)  =   coeffCompact1 * LoCellLengthInv;
 
                 // Cell on east side
-                continuityPressureCoeffs[west ](HiIndex) -= coeffCompact0 * HiCellLengthInv;
-                continuityPressureCoeffs[p    ](HiIndex) -= coeffCompact1 * HiCellLengthInv;
+                continuityPressureCoeffs[west ](HiIndex)  = - coeffCompact0 * HiCellLengthInv;
+                continuityPressureCoeffs[p    ](HiIndex) += - coeffCompact1 * HiCellLengthInv;
 
 
                 // Explicit sparse difference ---------------------------------------------------------------------------
