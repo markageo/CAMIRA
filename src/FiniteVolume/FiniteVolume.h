@@ -89,9 +89,6 @@ struct FVCoefficients
 // Allocate and initialise the fields
 FieldData<array3D> InitialiseFields(const Mesh &, const InputData &);
 
-// Remove ghost cells from a 3D array
-void RemoveGhostCells( array3D &, const intType);
-
 // Calculate and set boundary condition data for all fields
 FieldData< BoundaryConditionData > SetBoundaryConditionData( const InputData &, const Mesh & );
 
