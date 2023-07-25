@@ -4,6 +4,7 @@
 
 #include "../FiniteVolume/FiniteVolume.h"
 #include "../Types.h"
+#include "../Tools/FVLookups.h"
 
 #include "Boost/boost/property_tree/ptree.hpp"
 #include <Eigen/Geometry>

@@ -1,7 +1,11 @@
 #include "FiniteVolume.h"
+#include "../Tools/FVTools.h"
+#include "../Tools/FVLookups.h"
 
 namespace CFD
 {
+
+using namespace FVT;
 
 namespace
 {

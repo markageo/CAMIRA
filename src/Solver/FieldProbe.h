@@ -3,6 +3,7 @@
 
 #include "../Types.h"
 #include "../FiniteVolume/FiniteVolume.h"
+#include "../Tools/FVTools.h"
 
 namespace CFD
 {
@@ -46,6 +47,7 @@ class FieldProbe
         // For arrays with ghost cells
         floatType GetFieldValue( const array3D &field ) const
         {
+            using namespace FVT;
             using enum Axis::ENUMDATA;
             const floatType c000 = field( G( m_latticeIndex[X](0), m_latticeIndex[Y](0), m_latticeIndex[Z](0) ) ),
                             c100 = field( G( m_latticeIndex[X](1), m_latticeIndex[Y](0), m_latticeIndex[Z](0) ) ),

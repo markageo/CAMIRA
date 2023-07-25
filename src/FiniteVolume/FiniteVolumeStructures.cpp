@@ -1,4 +1,6 @@
 #include "FiniteVolume.h"
+#include "../Tools/FVTools.h"
+#include "../Tools/FVLookups.h"
 
 #include <cmath>
 

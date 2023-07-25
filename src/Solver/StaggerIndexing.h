@@ -1,4 +1,5 @@
 #include "../Types.h"
+#include "../Tools/FVLookups.h"
 #include <type_traits>
 
 namespace CFD
