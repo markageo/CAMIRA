@@ -239,17 +239,23 @@ void UpwindInterior( EnumVector<CFD::TransportCoefficients, CFD::array3D> &coeff
                 LoIndex[axis] -= 1;
 
                 floatType uf = faceFluxes[ axis ](i, j, k);
-                if ( uf >= 0 ) {
+                // if ( uf >= 0 ) {
                     
-                    coeffs[p   ](LoIndex) +=   uf * mesh.cellLengthsInv[axis]( LoIndex[axis] );
-                    coeffs[west](HiIndex)  = - uf * mesh.cellLengthsInv[axis]( HiIndex[axis] );
+                //     coeffs[p   ](LoIndex) +=   uf * mesh.cellLengthsInv[axis]( LoIndex[axis] );
+                //     coeffs[west](HiIndex)  = - uf * mesh.cellLengthsInv[axis]( HiIndex[axis] );
 
-                } else {
+                // } else {
 
-                    coeffs[east](LoIndex)  =   uf * mesh.cellLengthsInv[axis]( LoIndex[axis] );
-                    coeffs[p   ](HiIndex) += - uf * mesh.cellLengthsInv[axis]( HiIndex[axis] );
+                //     coeffs[east](LoIndex)  =   uf * mesh.cellLengthsInv[axis]( LoIndex[axis] );
+                //     coeffs[p   ](HiIndex) += - uf * mesh.cellLengthsInv[axis]( HiIndex[axis] );
 
-                }
+                // }
+
+                coeffs[p   ](LoIndex) += std::max(   uf * mesh.cellLengthsInv[axis]( LoIndex[axis] ), static_cast<floatType>(0.0f) );
+                coeffs[east](LoIndex)  = std::min(   uf * mesh.cellLengthsInv[axis]( LoIndex[axis] ), static_cast<floatType>(0.0f) );
+
+                coeffs[p   ](HiIndex) += std::max( - uf * mesh.cellLengthsInv[axis]( HiIndex[axis] ), static_cast<floatType>(0.0f) );
+                coeffs[west](HiIndex)  = std::min( - uf * mesh.cellLengthsInv[axis]( HiIndex[axis] ), static_cast<floatType>(0.0f) );
 
             }
         }
@@ -683,6 +689,11 @@ void MWInterpolationInteriorImplicit( ContinuityEquation<MI> &continuityEquation
                                     west  = LUT::LoCoeff[axis],
                                     wwest = LUT::LoLoCoeff[axis];
 
+    // Set the first most plane to zero only. We do this so that the high coefficients can be set in place, and less coefficients have to 
+    // be zeroed upon re-linearisation.
+    continuityPressureCoeffs[east ].chip(0, axis) = continuityPressureCoeffs[west ].chip(0, axis).constant( 0.0f );
+    continuityPressureCoeffs[west ].chip(0, axis) = continuityPressureCoeffs[west ].chip(0, axis).constant( 0.0f );
+
     for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
@@ -705,14 +716,14 @@ void MWInterpolationInteriorImplicit( ContinuityEquation<MI> &continuityEquation
                 continuityPressureCoeffs[west ](LoIndex) += coeff0 * LoCellLengthInv;
                 continuityPressureCoeffs[p    ](LoIndex) += coeff1 * LoCellLengthInv;
                 continuityPressureCoeffs[east ](LoIndex) += coeff2 * LoCellLengthInv;
-                continuityPressureCoeffs[eeast](LoIndex) += coeff3 * LoCellLengthInv;
+                continuityPressureCoeffs[eeast](LoIndex)  = coeff3 * LoCellLengthInv;
 
                 // Cell on east side
                 floatType HiCellLengthInv = mesh.cellLengthsInv[axis]( HiIndex[axis] );
-                continuityPressureCoeffs[wwest](HiIndex) -= coeff0 * HiCellLengthInv;
-                continuityPressureCoeffs[west ](HiIndex) -= coeff1 * HiCellLengthInv;
-                continuityPressureCoeffs[p    ](HiIndex) -= coeff2 * HiCellLengthInv;
-                continuityPressureCoeffs[east ](HiIndex) -= coeff3 * HiCellLengthInv;
+                continuityPressureCoeffs[wwest](HiIndex)  = - coeff0 * HiCellLengthInv;
+                continuityPressureCoeffs[west ](HiIndex)  = - coeff1 * HiCellLengthInv;
+                continuityPressureCoeffs[p    ](HiIndex) += - coeff2 * HiCellLengthInv;
+                continuityPressureCoeffs[east ](HiIndex)  = - coeff3 * HiCellLengthInv;
 
             }
         }
@@ -1058,12 +1069,12 @@ void AllocateBoundaryConstants( FVCoefficients< MI > &fvCoeffs,
 template< MomentumInterpolation MI >
 void ZeroNonlinearCoeffs( FVCoefficients<MI> &fvCoeffs )
 {
+    using enum TransportCoefficients::ENUMDATA;
+    
     // Zero momentum equations
     EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
 
-        EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
-                fvCoeffs.Mom[axis].AU[axis][tc].setZero();
-        } );
+        fvCoeffs.Mom[axis].AU[axis][p].setZero();
 
         EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
             fvCoeffs.Mom[axis].BUBoundary[bp].setZero();
@@ -1073,14 +1084,14 @@ void ZeroNonlinearCoeffs( FVCoefficients<MI> &fvCoeffs )
 
     } );
 
+    
     // Zero continuity equation
-    EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
-            fvCoeffs.Cont.AP[tc].setZero();
-    } );
+    fvCoeffs.Cont.AP[p].setZero();
 
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
         fvCoeffs.Cont.BPBoundary[bp].setZero();
     } );
+
     fvCoeffs.Cont.B.setZero();
 }
 
