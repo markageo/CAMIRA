@@ -43,13 +43,34 @@ namespace FVT
     }
 
 
+    // --------------------------------------------------- Remove Ghost Cells -------------------------------------------------- //
+
+    template< typename arrayType >
+    void RemoveGhostCells( arrayType &array, 
+                           const intType nGhostCells)
+    {
+        static_assert(std::is_same<arrayType, CFD::array1D   >::value ||
+                      std::is_same<arrayType, CFD::array2D   >::value ||
+                      std::is_same<arrayType, CFD::array3D   >::value,
+                      "Template parameter must be struct containing ENUMDATA type.");
+
+        Eigen::array< Eigen::Index, array.NumDimensions > offsets, extents;
+        for ( intType i = 0; i != array.NumDimensions; i++ ) {
+            offsets[i] = nGhostCells;
+            extents[i] = array.dimension(i) - 2*nGhostCells;
+        }
+
+        array = array3D( array ).slice(offsets, extents);
+    }
+
 
     // --------------------------------------------------- Cell Face Indexing -------------------------------------------------- //
 
 
 
 
-}   // end namespace FVU
+
+}   // end namespace FVT
 
 }   // end namespace CFD
 

@@ -573,18 +573,6 @@ template struct FVCoefficients< MomentumInterpolation::SemiExplicit >;
 \*-------------------------------------------------------------------------------------*/
 
 
-void RemoveGhostCells( array3D &array, 
-                       const intType nGhostCells)
-{
-    arrayIndex3D offsets = { nGhostCells, nGhostCells, nGhostCells },
-                 extents = { array.dimension(0) - 2*nGhostCells, 
-                             array.dimension(1) - 2*nGhostCells,
-                             array.dimension(2) - 2*nGhostCells };
-                                              
-    array = array3D( array ).slice(offsets, extents);
-}
-
-
 FieldData<array3D> InitialiseFields( const Mesh &mesh, 
                                      const InputData &inputData )
 {
