@@ -1,8 +1,8 @@
 #ifndef FINITE_VOLUME   
 #define FINITE_VOLUME
 
-#include "Types.h"
-#include "InputProcessing.h"
+#include "../Types.h"
+#include "../IO/InputProcessing.h"
 #include <vector>
 
 namespace CFD

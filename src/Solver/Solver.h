@@ -1,10 +1,10 @@
 #ifndef SOLVER
 #define SOLVER
 
-#include "InputProcessing.h"
-#include "Types.h"
-#include "FiniteVolume.h"
-#include "SweepTransformations.h"
+#include "../IO/InputProcessing.h"
+#include "../Types.h"
+#include "../FiniteVolume/FiniteVolume.h"
+#include "../Tools/SweepTransformations.h"
 
 namespace CFD
 {

@@ -5,12 +5,14 @@
 \*---------------------------------------------------------------------------*/
 
 #include "Types.h"
-#include "InputProcessing.h"
-#include "SweepTransformations.h"
-#include "FiniteVolume.h"
-#include "VTKWriter.h"
-#include "Solver.h"
 #include "Utils.h"
+
+#include "IO/InputProcessing.h"
+#include "IO/VTKWriter.h"
+#include "Tools/SweepTransformations.h"
+#include "FiniteVolume/FiniteVolume.h"
+#include "Solver/Solver.h"
+
 #include <iostream>
 #include <fmt/core.h>
 

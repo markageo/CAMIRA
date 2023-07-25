@@ -1,9 +1,9 @@
-#include "InputParser.h"
 #include "InputProcessing.h"
-#include "FiniteVolume.h"
-#include "Types.h"
+#include "InputParser.h"
 #include "CSVReader.h"
-#include "IOUtils.h"
+
+#include "../FiniteVolume/FiniteVolume.h"
+#include "../Types.h"
 
 #include "Boost/boost/property_tree/ptree.hpp"
 #include <Eigen/Geometry>
@@ -100,10 +100,48 @@ CFD::InputData::InputData() :
 
 
 /*-------------------------------------------------------------------------------------*\
-                                      Translators
+                                    Helper Functions
 \*-------------------------------------------------------------------------------------*/
 
+namespace 
+{
 
+    // Convert string to given numeric type T.
+    template <typename T> T 
+    String2Type(const std::string &str)
+    {
+        // NOTE: This does not work for ints in scientific notation.
+        std::istringstream strstream(str);
+        T num;
+        strstream >> num;
+        return num;
+    }
+
+
+    // Return string with no whitespace
+    std::string RemoveWhitespace( std::string str )
+    {
+        str.erase(remove_if(str.begin(), str.end(), isspace), str.end());
+        return str;
+    }
+
+
+    // Return relative path to given filename (LINUX FILESYSTEMS ONLY)
+    std::string RelativePath( const std::string &filename ) 
+    { 
+        std::string::const_iterator stringIterator = filename.end();
+        for ( /* NULL */ ; *stringIterator != '/' && stringIterator != filename.begin(); stringIterator--) {};
+        return std::string( filename.begin(), stringIterator );
+    }
+
+
+}   // end anonymous namespace
+
+
+
+/*-------------------------------------------------------------------------------------*\
+                                      Translators
+\*-------------------------------------------------------------------------------------*/
 
 
 // Parse vector string into an std::vector
@@ -121,12 +159,12 @@ std::vector<T> ParseVectorString( const std::string &vecString )
     
     while ( stringIterator != vecString.end() ) {
         if ( *stringIterator == VECTOR_END_CHAR ) {
-            vec.push_back( IO::String2Type<T>(valueString) );
+            vec.push_back( String2Type<T>(valueString) );
             break;
         }
 
         if ( *stringIterator == VECTOR_DELIMITER_CHAR ) {
-            vec.push_back( IO::String2Type<T>(valueString) );
+            vec.push_back( String2Type<T>(valueString) );
             valueString.clear();
         } else {
             valueString += *stringIterator;
@@ -302,7 +340,7 @@ namespace
             stringIterator++;
         }
 
-        return IO::String2Type<floatType>(bcValueString);
+        return String2Type<floatType>(bcValueString);
     }
 
 
@@ -327,7 +365,7 @@ namespace
         std::vector< std::vector< std::string > > profileData = ReadCSV( filename );
 
         // First column tells us the axis
-        std::string axisString = IO::RemoveWhitespace( profileData[0][0] );
+        std::string axisString = RemoveWhitespace( profileData[0][0] );
         if        ( axisString == "x" ) {
             profile1D.axis = Axis::X;
         } else if ( axisString == "y" ) {
@@ -350,8 +388,8 @@ namespace
         profile1D.values      = array1D( nRows - nHeaderRows );
 
         for ( intType i = 0; i != nRows-nHeaderRows; i++ ) {
-            profile1D.coordinates(i) = IO::String2Type<floatType>( profileData[ static_cast<size_t>( i+nHeaderRows) ][0]  );
-            profile1D.values(i)      = IO::String2Type<floatType>( profileData[ static_cast<size_t>( i+nHeaderRows) ][1]  );
+            profile1D.coordinates(i) = String2Type<floatType>( profileData[ static_cast<size_t>( i+nHeaderRows) ][0]  );
+            profile1D.values(i)      = String2Type<floatType>( profileData[ static_cast<size_t>( i+nHeaderRows) ][1]  );
         }
 
         return profile1D;
@@ -708,7 +746,7 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFilename)
     pt::ptree tree = ParseFile(inputFilename);
 
     InputData inputData;
-    inputData.inputFileDirectory = IO::RelativePath( inputFilename );
+    inputData.inputFileDirectory = RelativePath( inputFilename );
 
     ReadModel(inputData, tree);
     ReadMesh(inputData, tree);

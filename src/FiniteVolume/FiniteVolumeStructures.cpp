@@ -2,8 +2,6 @@
 
 #include <cmath>
 
-#include <iostream>
-
 namespace CFD
 {
 

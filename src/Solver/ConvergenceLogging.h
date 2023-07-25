@@ -1,9 +1,10 @@
 #ifndef SOLVER_LOGGING
 #define SOLVER_LOGGING
 
-#include "Types.h"
+#include "../Types.h"
+#include "../Tools/SweepTransformations.h"
+
 #include "Solver.h"
-#include "SweepTransformations.h"
 #include "FieldProbe.h"
 
 #include <fstream>

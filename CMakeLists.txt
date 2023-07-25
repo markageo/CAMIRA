@@ -65,7 +65,7 @@ endif()
 
 
 # include directories
-include_directories(include)
+include_directories(src)
 
 # Add libraries
 include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings

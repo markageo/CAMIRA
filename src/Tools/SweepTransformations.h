@@ -1,9 +1,9 @@
 #ifndef SWEEP_TRANSFORMATIONS
 #define SWEEP_TRANSFORMATIONS
 
-#include "Types.h"
-#include "InputProcessing.h"
-#include "FiniteVolume.h"
+#include "../Types.h"
+#include "../IO/InputProcessing.h"
+#include "../FiniteVolume/FiniteVolume.h"
 
 // The problem is remapped so that the plane sweeping direction is always in the z direction and
 // the line sweeping direction is always in the y direction (in the code). This is more memory

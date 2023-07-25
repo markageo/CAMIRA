@@ -1,29 +1,17 @@
 # Add libraries
-add_library(libs InputParser.cpp
-                 CSVReader.cpp
-                 InputProcessing.cpp
-                 SweepTransformations.cpp
-                 FiniteVolumeStructures.cpp
-                 FaceVelocities.cpp
-                 FiniteVolumeCoefficients.cpp
-                 VertexValues.cpp
-                 Solver.cpp)
+add_library(libs "")
 
-# Model library
-add_library(model INTERFACE)
+# Source subdirectories
+add_subdirectory(FiniteVolume)
+add_subdirectory(IO)
+add_subdirectory(Solver)
+add_subdirectory(Tools)
 
+# Link libraries
 target_link_libraries(libs PUBLIC fmt::fmt)
 target_link_libraries(libs PUBLIC eigen)
-
-# Model library
-target_link_libraries(model INTERFACE compiler_flags)
 target_link_libraries(libs PRIVATE compiler_flags)
-
-
-target_link_libraries(model INTERFACE libs)
-target_link_libraries(model INTERFACE fmt::fmt)
-target_link_libraries(model INTERFACE eigen)
 
 # Main executable
 add_executable(main main.cpp)
-target_link_libraries(main PUBLIC model)
+target_link_libraries(main PUBLIC libs)
