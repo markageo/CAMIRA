@@ -702,7 +702,7 @@ void MWInterpolationInteriorImplicit( ContinuityEquation<MI> &continuityEquation
                              LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
 
-                floatType d = MWIWeightingCoeff( {i, j, k}, momentumDiagCoeffInv, axis );
+                floatType d =  0.5f * ( momentumDiagCoeffInv( HiIndex )  +  momentumDiagCoeffInv( LoIndex ) );   
 
                 // Coefficients for westmost to eastmost cell
                 intType idx = HiIndex[axis];
@@ -776,9 +776,8 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation<MI> &continuityEqua
                 arrayIndex3D HiIndex = { i, j, k },
                              LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
-                intType idx = HiIndex[axis];
-
-                floatType d = MWIWeightingCoeff( {i, j, k}, momentumDiagCoeffInv, axis );
+                
+                floatType d =  0.5f * ( momentumDiagCoeffInv( HiIndex )  +  momentumDiagCoeffInv( LoIndex ) );   
 
                 floatType LoCellLengthInv = mesh.cellLengthsInv[axis]( LoIndex[axis] ),
                           HiCellLengthInv = mesh.cellLengthsInv[axis]( HiIndex[axis] );
@@ -788,6 +787,7 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation<MI> &continuityEqua
                                 
 
                 // Coefficients for westmost to eastmost cell
+                intType idx = HiIndex[axis];
                 floatType coeffCompact0 = d * mwiCompactCoeffs[0](idx),
                           coeffCompact1 = d * mwiCompactCoeffs[1](idx);
 

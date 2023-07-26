@@ -54,7 +54,7 @@ namespace FVT
                       std::is_same<arrayType, CFD::array3D   >::value,
                       "Template parameter must be struct containing ENUMDATA type.");
 
-        Eigen::array< Eigen::Index, array.NumDimensions > offsets, extents;
+        Eigen::array< Eigen::Index, arrayType::NumDimensions > offsets, extents;
         for ( intType i = 0; i != array.NumDimensions; i++ ) {
             offsets[i] = nGhostCells;
             extents[i] = array.dimension(i) - 2*nGhostCells;

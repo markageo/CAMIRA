@@ -52,6 +52,9 @@ namespace
         FieldData<floatType> residuals{0};
         FieldData<floatType> scalingFactor{0};
 
+        // Temporaries to allow vector reductions
+        floatType lineResidualU{0}     , lineResidualV{0}     , lineResidualW{0}     , lineResidualP{0},
+                  lineScalingFactorU{0}, lineScalingFactorV{0}, lineScalingFactorW{0};
 
         for ( intType k = 0; k != fvCoeffs.nCells[Z]; k++ ) {
             for ( intType j = 0; j != fvCoeffs.nCells[Y]; j++ ) {
@@ -60,7 +63,7 @@ namespace
                     intType ig{ G(i) }, jg{ G(j) }, kg{ G(k) };
 
                     // U momentum
-                    residuals.U[X] += abs( 
+                    lineResidualU  += abs( 
                                             fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) 
                                           + fvCoeffs.Mom[X].AU[X][n](i, j, k) * fields.U[X]( ig  , jg+1, kg  ) 
                                           + fvCoeffs.Mom[X].AU[X][e](i, j, k) * fields.U[X]( ig+1, jg  , kg  ) 
@@ -75,11 +78,11 @@ namespace
 
                                           - fvCoeffs.Mom[X].B(i, j, k)  );
 
-                    scalingFactor.U[X] += abs( fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) );
+                    lineScalingFactorU += abs( fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) );
 
 
                     // V momentum
-                    residuals.U[Y] += abs( 
+                    lineResidualV   += abs( 
                                             fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) 
                                           + fvCoeffs.Mom[Y].AU[Y][n](i, j, k) * fields.U[Y]( ig  , jg+1, kg  ) 
                                           + fvCoeffs.Mom[Y].AU[Y][e](i, j, k) * fields.U[Y]( ig+1, jg  , kg  ) 
@@ -94,11 +97,11 @@ namespace
 
                                           - fvCoeffs.Mom[Y].B(i, j, k)  );
 
-                    scalingFactor.U[Y] += abs( fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) );
+                    lineScalingFactorV += abs( fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) );
 
 
                     // W momentm
-                    residuals.U[Z] += abs( 
+                    lineResidualW   += abs( 
                                             fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) 
                                           + fvCoeffs.Mom[Z].AU[Z][n](i, j, k) * fields.U[Z]( ig  , jg+1, kg  ) 
                                           + fvCoeffs.Mom[Z].AU[Z][e](i, j, k) * fields.U[Z]( ig+1, jg  , kg  ) 
@@ -113,7 +116,7 @@ namespace
 
                                           - fvCoeffs.Mom[Z].B(i, j, k)  );
 
-                    scalingFactor.U[Z] += abs( fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) );
+                    lineScalingFactorW += abs( fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) );
 
 
                     // Continuity 
@@ -126,7 +129,7 @@ namespace
                                               + fvCoeffs.Cont.AP[tt](i, j, k) * fields.P( ig  , jg  , kg+2) 
                                               + fvCoeffs.Cont.AP[bb](i, j, k) * fields.P( ig  , jg  , kg-2);
                     }
-                    residuals.P += abs( 
+                    lineResidualP   += abs( 
                                       fvCoeffs.Cont.AU[X][e](i) * fields.U[X]( ig+1, jg  , kg  )
                                     + fvCoeffs.Cont.AU[X][p](i) * fields.U[X]( ig  , jg  , kg  )
                                     + fvCoeffs.Cont.AU[X][w](i) * fields.U[X]( ig-1, jg  , kg  )
@@ -154,6 +157,24 @@ namespace
                 }
             }
         }
+
+        // U momentum
+        residuals.U[X] = lineResidualU;
+        scalingFactor.U[X] = lineScalingFactorU;
+
+        // V momentum
+        residuals.U[Y] = lineResidualV;
+        scalingFactor.U[Y] = lineScalingFactorV;
+
+
+        // W momentm
+        residuals.U[Z] = lineResidualW;
+        scalingFactor.U[Z] = lineScalingFactorW;
+
+        // Continuity 
+        residuals.P = lineResidualP;
+
+
 
         EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
             residuals.U[axis] /= scalingFactor.U[axis];
