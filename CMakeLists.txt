@@ -10,17 +10,16 @@ check_ipo_supported(RESULT supported OUTPUT error)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 # specify the C++ standard
-add_library(compiler_flags INTERFACE)
 set (CMAKE_CXX_STANDARD 20)
-target_compile_features(compiler_flags INTERFACE cxx_std_20)
 
 # Add compiler flags
-set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
-set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
-target_compile_options(compiler_flags INTERFACE
-    "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic;-std=c++2a;-march=native>>"
-    "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
-)
+add_library(compiler_flags INTERFACE)
+target_compile_features(compiler_flags INTERFACE cxx_std_20)
+target_compile_options(compiler_flags INTERFACE "-std=c++2a;-march=native")
+
+add_library(warning_flags INTERFACE)
+target_compile_features(warning_flags INTERFACE cxx_std_20)
+target_compile_options(warning_flags INTERFACE "-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic")
 
 
 # Add address sanitizer to the debug build
@@ -74,7 +73,7 @@ add_subdirectory(libraries/fmt-10.0.0)
 # Eigen library, need to do it this way to not get warnings from it
 add_library(eigen INTERFACE)
 target_sources(eigen INTERFACE libraries/eigen-3.4.0)
-target_include_directories(eigen INTERFACE libraries/eigen-3.4.0)
+target_include_directories(eigen SYSTEM INTERFACE libraries/eigen-3.4.0)
 
 add_subdirectory(src)
 
