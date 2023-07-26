@@ -7,9 +7,10 @@ add_subdirectory(IO)
 add_subdirectory(Solver)
 add_subdirectory(Tools)
 
-# Link librar
+# Link libraries
 target_link_libraries(libs PUBLIC fmt::fmt)
 target_link_libraries(libs PUBLIC eigen)
+target_link_libraries(libs PRIVATE warning_flags)
 target_link_libraries(libs PUBLIC compiler_flags)
 
 # Main executable
