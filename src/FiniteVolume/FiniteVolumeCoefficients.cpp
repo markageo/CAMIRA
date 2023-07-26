@@ -239,18 +239,6 @@ void UpwindInterior( EnumVector<CFD::TransportCoefficients, CFD::array3D> &coeff
                 LoIndex[axis] -= 1;
 
                 floatType uf = faceFluxes[ axis ](i, j, k);
-                // if ( uf >= 0 ) {
-                    
-                //     coeffs[p   ](LoIndex) +=   uf * mesh.cellLengthsInv[axis]( LoIndex[axis] );
-                //     coeffs[west](HiIndex)  = - uf * mesh.cellLengthsInv[axis]( HiIndex[axis] );
-
-                // } else {
-
-                //     coeffs[east](LoIndex)  =   uf * mesh.cellLengthsInv[axis]( LoIndex[axis] );
-                //     coeffs[p   ](HiIndex) += - uf * mesh.cellLengthsInv[axis]( HiIndex[axis] );
-
-                // }
-
                 coeffs[p   ](LoIndex) += std::max(   uf * mesh.cellLengthsInv[axis]( LoIndex[axis] ), static_cast<floatType>(0.0f) );
                 coeffs[east](LoIndex)  = std::min(   uf * mesh.cellLengthsInv[axis]( LoIndex[axis] ), static_cast<floatType>(0.0f) );
 
@@ -929,7 +917,6 @@ void SetMomentumInterpolationCoefficients( FVCoefficients<MI> &fvCoeffs,
     // Correction is zero at the boundary faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-
         if        constexpr ( MI == MomentumInterpolation::Implicit ) {
 
             MWInterpolationInteriorImplicit(fvCoeffs.Cont, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
@@ -1192,30 +1179,48 @@ void UpdateFVCoefficients( FVCoefficients<MI> &fvCoeffs,
 {
     using TC = TransportCoefficients::ENUMDATA;
 
+    TIC("Coefficitne Update")
+
+    TIC("Zeroing")
     ZeroNonlinearCoeffs( fvCoeffs );
+    TOC()
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
         // Advection terms
+        TIC("Advection")
         SetAdvectionCoefficients(fvCoeffs.Mom[axis], faceFluxes, bcData.U[axis], mesh);
+        TOC()
 
         // Add diffusion to velocity terms
+        TIC("Add diffusion")
         AddDiffusion(fvCoeffs.Mom[axis], bcData.U[axis], mesh);
+        TOC()
 
         // Inverse of AP coefficient
+        TIC("Inverse AP")
         fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
+        TOC();
 
         // Add boundary constants to source terms
+        TIC("Momentum boundary constants")
         AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
+        TOC()
 
     } );
 
 
     // Set the momentum interpolation coefficients
+    TIC("MWI")
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, bcData, fields.P);
+    TOC()
 
     // Add boundary constants to source terms
+    TIC("Continuity boundary constants")
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
+    TOC()
+
+    TOC()
 
 }
 template void UpdateFVCoefficients(FVCoefficients<MomentumInterpolation::Implicit> &, const Mesh &, const FieldData<array3D> &, const EnumVector<Axis, array3D> &, const FieldData< BoundaryConditionData > &);

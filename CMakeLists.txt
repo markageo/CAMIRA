@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 3.15)
 # set the project name and version
 project(Coupled-Sweep-NS VERSION 1.0)
 
+include(CheckIPOSupported)
+check_ipo_supported(RESULT supported OUTPUT error)
+
 # Default executable location
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
@@ -15,7 +18,7 @@ target_compile_features(compiler_flags INTERFACE cxx_std_20)
 set(gcc_like_cxx "$<COMPILE_LANG_AND_ID:CXX,ARMClang,AppleClang,Clang,GNU,LCC>")
 set(msvc_cxx "$<COMPILE_LANG_AND_ID:CXX,MSVC>")
 target_compile_options(compiler_flags INTERFACE
-    "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic;-std=c++2a>>"
+    "$<${gcc_like_cxx}:$<BUILD_INTERFACE:-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic;-std=c++2a;-march=native>>"
     "$<${msvc_cxx}:$<BUILD_INTERFACE:-W3>>"
 )
 
@@ -71,6 +74,13 @@ add_subdirectory(libraries/fmt-10.0.0)
 # Eigen library, need to do it this way to not get warnings from it
 add_library(eigen INTERFACE)
 target_sources(eigen INTERFACE libraries/eigen-3.4.0)
-target_include_directories(eigen SYSTEM INTERFACE libraries/eigen-3.4.0)
+target_include_directories(eigen INTERFACE libraries/eigen-3.4.0)
 
 add_subdirectory(src)
+
+if( supported )
+    message(STATUS "IPO / LTO enabled")
+    set_property(TARGET main PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+    message(STATUS "IPO / LTO not supported: <${error}>")
+endif()
