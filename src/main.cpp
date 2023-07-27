@@ -85,7 +85,7 @@ int main(int argc, char const *argv[])
 
     using enum CFD::Axis::ENUMDATA;
 
-    VTK::VTKWriterConfig config( mesh.nCells[X]+1, mesh.nCells[Y]+1, mesh.nCells[Z]+1 );
+    VTK::VTKWriterConfig config( mesh.nFacesNormal[X](X), mesh.nFacesNormal[Y](Y), mesh.nFacesNormal[Z](Z) );
         config.SetWriteMode( VTK::WriteModes::BINARY );
     VTK::gridVectorType<CFD::floatType> gridVector = {mesh.cellFaces[X].data(), mesh.cellFaces[Y].data(), mesh.cellFaces[Z].data()};
 

@@ -1,3 +1,6 @@
+#ifndef STAGGER_INDEXING
+#define STAGGER_INDEXING
+
 #include "../Types.h"
 #include "../Tools/FVLookups.h"
 #include <type_traits>
@@ -137,3 +140,5 @@ class StaggerIndexing
 
 
 }   // end namespace CFD
+
+#endif // STAGGER_INDEXING
