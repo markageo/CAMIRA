@@ -43,6 +43,27 @@ namespace FVT
     }
 
 
+
+
+
+    // --------------------------------------------------- Cell Face Indexing -------------------------------------------------- //
+
+    // Returns start and end indexing for looping over internal faces of a mesh for a given normal direction.
+    // Intended to be used as returning a structured binding.
+    inline std::tuple<iVector3, iVector3> FaceInternalIndices( const Mesh &mesh, 
+                                                               const Axis::ENUMDATA axis )
+    {
+        iVector3 startIndex = {0, 0, 0};
+        iVector3 nFaces = mesh.nFacesNormal[axis];
+        startIndex(axis) += 1;
+        nFaces(axis) -= 1;
+        return { startIndex, nFaces };
+    }
+
+
+
+
+
     // --------------------------------------------------- Remove Ghost Cells -------------------------------------------------- //
 
     template< typename arrayType >
@@ -62,12 +83,6 @@ namespace FVT
 
         array = array3D( array ).slice(offsets, extents);
     }
-
-
-    // --------------------------------------------------- Cell Face Indexing -------------------------------------------------- //
-
-
-
 
 
 }   // end namespace FVT

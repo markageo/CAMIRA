@@ -189,12 +189,27 @@ intType TotalCells(const std::vector<InputData::MeshSegment> &meshSegments)
     return totalCells;
 }
 
+
+
+iVector3 NumberOfFaces( const iVector3 &nCells,
+                       Axis::ENUMDATA axis)
+{
+    iVector3 nFaces;
+    EnumFor<Axis>( [&] (Axis::ENUMDATA a) {
+        nFaces(a) = nCells(a);
+    } );
+    nFaces(axis) += 1;  // There is one more faces than cells in the normal direction
+    return nFaces;
+}
+
 }   // end anonymous namespace
 
 
 // Constructor, creates the mesh
 Mesh::Mesh(const InputData &inputData) :
     nCells( { TotalCells(inputData.meshSegments[Axis::X]),  TotalCells(inputData.meshSegments[Axis::Y]), TotalCells(inputData.meshSegments[Axis::Z])} ),
+
+    nFacesNormal( { NumberOfFaces( nCells, Axis::X ), NumberOfFaces( nCells, Axis::Y ), NumberOfFaces( nCells, Axis::Z ) } ),
 
     cellCenters( {{Axis::ENUMDATA::X, nCells(0)},
                   {Axis::ENUMDATA::Y, nCells(1)},

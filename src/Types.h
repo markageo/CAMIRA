@@ -152,38 +152,38 @@ enum class FaceInterpolationSchemes {
 namespace CFD_INTERNAL
 {
 
-// Contain the types needed when constructing multidimensional arrays. 1D arrays are not constructed using arrays for
-// their indices.
-template<class B>
-struct dimTypes
-{ 
-    using dimsArray = intType;
-    using dimsArrayInternal = intType;
+    // Contain the types needed when constructing multidimensional arrays. 1D arrays are not constructed using arrays for
+    // their indices.
+    template<class B>
+    struct dimTypes
+    { 
+        using dimsArray = intType;
+        using dimsArrayInternal = intType;
 
-    static dimsArrayInternal ConvertDimsArrayInternal( dimsArray dims ) 
-    { return dims; }
-};
+        static dimsArrayInternal ConvertDimsArrayInternal( dimsArray dims ) 
+        { return dims; }
+    };
 
-// Specialisation for multidimensional arrays, which are constructed using arrays for thier dimensions
-template<class B>
-requires( std::is_same< B, array2D >::value || std::is_same< B, array3D >::value )
-struct dimTypes<B>
-{ 
-    using dimsArray = Eigen::Array<intType, B::NumDimensions, 1>;
-    using dimsArrayInternal = Eigen::array<intType, B::NumDimensions>;
+    // Specialisation for multidimensional arrays, which are constructed using arrays for thier dimensions
+    template<class B>
+    requires( std::is_same< B, array2D >::value || std::is_same< B, array3D >::value )
+    struct dimTypes<B>
+    { 
+        using dimsArray = Eigen::Array<intType, B::NumDimensions, 1>;
+        using dimsArrayInternal = Eigen::array<intType, B::NumDimensions>;
 
-    // For converting Eigen::Array to Eigen::array. 
-    // Only Eigen::array<Eigen::Index, ...> can be used to construct tensors.
-    static dimsArrayInternal ConvertDimsArrayInternal( const dimsArray &dims ) 
-    {
-        dimsArrayInternal dimsInternal;
-        for ( Eigen::Index i = 0; i != B::NumDimensions; i++ ) {
-            dimsInternal[ static_cast<size_t>( i ) ] = dims(i);
+        // For converting Eigen::Array to Eigen::array. 
+        // Only Eigen::array<Eigen::Index, ...> can be used to construct tensors.
+        static dimsArrayInternal ConvertDimsArrayInternal( const dimsArray &dims ) 
+        {
+            dimsArrayInternal dimsInternal;
+            for ( Eigen::Index i = 0; i != B::NumDimensions; i++ ) {
+                dimsInternal[ static_cast<size_t>( i ) ] = dims(i);
+            }
+            return dimsInternal;
         }
-        return dimsInternal;
-    }
-    
-};
+        
+    };
 
 }   //  end namespace CFD_INTERNAL
 
