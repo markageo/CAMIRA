@@ -15,6 +15,7 @@ struct Mesh
 {
     Mesh(const InputData &);
     iVector3 nCells;
+    EnumVector<Axis, iVector3> nFacesNormal;
     EnumVector<Axis, array1D> cellCenters, 
                               cellFaces,            // cellFaces[axis](i) -> cellFaces[axis](i - 1/2)
                               cellLengths, 

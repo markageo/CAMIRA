@@ -218,14 +218,7 @@ void UpwindInterior( EnumVector<CFD::TransportCoefficients, CFD::array3D> &coeff
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    // Starting index and number of faces to iterate over
-    iVector3 startIndex, nFaces;
-    EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
-        startIndex[a] = 0;
-        nFaces[a] = faceFluxes[ axis ].dimension(a);
-    } );
-    startIndex[axis] += 1;
-    nFaces[axis] -= 1;
+    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
 
     TransportCoefficients::ENUMDATA east = LUT::HiCoeff[axis], 
                                     west = LUT::LoCoeff[axis];
@@ -662,15 +655,6 @@ void MWInterpolationInteriorImplicit( ContinuityEquation<MI> &continuityEquation
     const std::array< array1D, 4 > &mwiSparseCoeffs                      = continuityEquation.mwiSparseCoeffs[axis];
     const std::array< array1D, 2 > &mwiCompactCoeffs                     = continuityEquation.mwiCompactCoeffs[axis];
 
-    // Starting index and number of faces to iterate over
-    iVector3 startIndex, nFaces;
-    EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
-        startIndex[a] = 0;
-        nFaces[a] = mesh.nCells[a];
-    } );
-    startIndex[axis] += 1;
-
-
     // Cell indexing
     TransportCoefficients::ENUMDATA east  = LUT::HiCoeff[axis], 
                                     eeast = LUT::HiHiCoeff[axis],
@@ -681,6 +665,8 @@ void MWInterpolationInteriorImplicit( ContinuityEquation<MI> &continuityEquation
     // be zeroed upon re-linearisation.
     continuityPressureCoeffs[east ].chip(0, axis) = continuityPressureCoeffs[west ].chip(0, axis).constant( 0.0f );
     continuityPressureCoeffs[west ].chip(0, axis) = continuityPressureCoeffs[west ].chip(0, axis).constant( 0.0f );
+
+    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
 
     for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
@@ -738,24 +724,17 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation<MI> &continuityEqua
     const std::array< array1D, 4 > &mwiSparseCoeffs                      = continuityEquation.mwiSparseCoeffs[axis];
     const std::array< array1D, 2 > &mwiCompactCoeffs                     = continuityEquation.mwiCompactCoeffs[axis];
 
-    // Starting index and number of faces to iterate over
-    iVector3 startIndex, nFaces;
-    EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
-        startIndex[a] = 0;
-        nFaces[a] = mesh.nCells[a];
-    } );
-    startIndex[axis] += 1;
-
     // For getting the index of a neighbouring cell
     auto NeighbourIndex = [] ( arrayIndex3D index, intType shift, Axis::ENUMDATA shiftAxis ) { 
         index[shiftAxis] += shift; 
         return index; 
     };
 
-
     // Cell indexing
     TransportCoefficients::ENUMDATA east  = LUT::HiCoeff[axis], 
                                     west  = LUT::LoCoeff[axis];
+
+    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
 
     for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
@@ -841,19 +820,13 @@ void MWInterpolationNegativeBoundary( EnumVector<BoundaryPatches, array2D> &cont
     Axis::ENUMDATA axis1 = LUT::LoOrthogonalAxis[axis],
                    axis2 = LUT::HiOrthogonalAxis[axis];
 
-
-    iVector3 startIndex, nCells;
-    EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
-        startIndex[a] = 0;
-        nCells[a] = mesh.nCells[a];
-    } );
-
+    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
     startIndex[axis] = 1;
-    nCells[axis] = startIndex[axis] + 1;
+    nFaces[axis] = startIndex[axis] + 1;
 
-    for (intType k = startIndex[Z]; k != nCells[Z]; k++) {
-        for (intType j = startIndex[Y]; j != nCells[Y]; j++) {
-            for (intType i = startIndex[X]; i != nCells[X]; i++) {
+    for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+        for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
                 arrayIndex3D idx = { i, j, k };
                 floatType d = MWIWeightingCoeff( idx, momentumDiagCoeffInv, axis );
@@ -880,18 +853,13 @@ void MWInterpolationPositiveBoundary( EnumVector<BoundaryPatches, array2D> &cont
     Axis::ENUMDATA axis1 = LUT::LoOrthogonalAxis[axis],
                    axis2 = LUT::HiOrthogonalAxis[axis];
 
-    iVector3 startIndex, nCells;
-    EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
-        startIndex[a] = 0;
-        nCells[a] = mesh.nCells[a];
-    } );
-
+    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
     startIndex[axis] = mesh.nCells[axis] - 1;
-    nCells[axis] = startIndex[axis] + 1;
+    nFaces[axis] = startIndex[axis] + 1;
 
-    for (intType k = startIndex[Z]; k != nCells[Z]; k++) {
-        for (intType j = startIndex[Y]; j != nCells[Y]; j++) {
-            for (intType i = startIndex[X]; i != nCells[X]; i++) {
+    for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+        for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
                 arrayIndex3D idx = { i, j, k };
                 floatType d = MWIWeightingCoeff( idx, momentumDiagCoeffInv, axis );

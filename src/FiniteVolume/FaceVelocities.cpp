@@ -22,14 +22,7 @@ void InteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities,
     array3D &faceVel = faceVelocities[ velocityComponent ];
     const array3D &cellVel = cellVelocities[ velocityComponent ];
 
-    // Starting index and number of faces to iterate over
-    iVector3 startIndex, nFaces;
-    EnumFor<Axis>( [&] ( Axis::ENUMDATA a) {
-        startIndex[a] = 0;
-        nFaces[a] = faceVelocities[ velocityComponent ].dimension(a);
-    } );
-    startIndex[axis] += 1;
-    nFaces[axis] -= 1;
+    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
 
     for (intType k = startIndex[Z]; k != nFaces[Z]; k++ ) {
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
