@@ -210,6 +210,7 @@ void SetDiffusionCoeffients( MomentumEquation &momentumEquation,
 
 
 // Upwind coefficients
+// Assumes that the 'p' coefficient has been set to zero
 void UpwindInterior( EnumVector<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
                      const EnumVector<Axis, array3D> &faceFluxes, 
                      const Mesh &mesh,
@@ -328,24 +329,38 @@ void AdvectionNegativeBoundary( EnumVector<TransportCoefficients, array3D> &coef
 }
 
 
-void SetAdvectionCoefficients( MomentumEquation &momentumEquation,
-                               const EnumVector<Axis, array3D> &faceFluxes, 
-                               const BoundaryConditionData &boundaryConditions,
-                               const Mesh &mesh )
+void SetInteriorAdvectionCoefficients( MomentumEquation &momentumEquation,
+                                       const EnumVector<Axis, array3D> &faceFluxes,
+                                       const Mesh &mesh )
 {
     using enum TransportCoefficients::ENUMDATA;
     
     auto &coeffs            = momentumEquation.AU[ momentumEquation.component ];
-    auto &boundaryConstants = momentumEquation.BUBoundary;
-
-
-    // For now assumes that all coefficiencients are set to zero
 
     // Upwind internal faces
     EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
 
         // Upwind internal faces
         UpwindInterior(coeffs, faceFluxes, mesh, axis);
+
+    } );
+
+}
+
+
+
+void SetBoundaryAdvectionCoefficients( MomentumEquation &momentumEquation,
+                                       const EnumVector<Axis, array3D> &faceFluxes, 
+                                       const BoundaryConditionData &boundaryConditions,
+                                       const Mesh &mesh )
+{
+    using enum TransportCoefficients::ENUMDATA;
+    
+    auto &coeffs            = momentumEquation.AU[ momentumEquation.component ];
+    auto &boundaryConstants = momentumEquation.BUBoundary;
+
+    // Upwind internal faces
+    EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
 
         // Boundary faces
         AdvectionPositiveBoundary(coeffs, boundaryConstants, faceFluxes, mesh, boundaryConditions, axis);
@@ -354,8 +369,6 @@ void SetAdvectionCoefficients( MomentumEquation &momentumEquation,
     } );
 
 }
-
-
 
 
 
@@ -881,7 +894,7 @@ void SetMomentumInterpolationCoefficients( FVCoefficients<MI> &fvCoeffs,
                                            const FieldData< BoundaryConditionData > &bcData,
                           [[maybe_unused]] const array3D &P )
 {
-    // Assumes that coefficients are set to zero
+    // Assumes that 'p' coefficient is set to zero
     // Correction is zero at the boundary faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
@@ -1085,7 +1098,8 @@ FVCoefficients<MI> InitialiseFVCoefficients( const Mesh &mesh,
         SetDiffusionCoeffients(fvCoeffs.Mom[axis], bcData, inputData.nu, mesh);
 
         // Advection terms
-        SetAdvectionCoefficients(fvCoeffs.Mom[axis], faceFluxes, bcData.U[axis], mesh);
+        SetInteriorAdvectionCoefficients(fvCoeffs.Mom[axis], faceFluxes, mesh);
+        SetBoundaryAdvectionCoefficients(fvCoeffs.Mom[axis], faceFluxes, bcData.U[axis], mesh);
 
         // Add diffusion to velocity terms
         AddDiffusion(fvCoeffs.Mom[axis], bcData.U[axis], mesh);
@@ -1147,18 +1161,34 @@ void UpdateFVCoefficients( FVCoefficients<MI> &fvCoeffs,
 {
     using TC = TransportCoefficients::ENUMDATA;
 
-    TIC("Coefficitne Update")
+    TIC("Coefficient Update")
 
     TIC("Zeroing")
     ZeroNonlinearCoeffs( fvCoeffs );
     TOC()
 
+    // The Picard coefficients for all momentum equations are the same, so just use the ones from the U momentum equation after 
+    // its been set
+    TIC("Advection")
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        if ( axis == Axis::X ) {
+            SetInteriorAdvectionCoefficients(fvCoeffs.Mom[axis], faceFluxes, mesh);
+        } else {
+            EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
+                fvCoeffs.Mom[axis].AU[axis][tc] = fvCoeffs.Mom[Axis::X].AU[Axis::X][tc];
+            } );
+        }
+    } );
+
+    // Boundaries need to be done after since they can affect the internal coefficients
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        SetBoundaryAdvectionCoefficients(fvCoeffs.Mom[axis], faceFluxes, bcData.U[axis], mesh);
+    } );
+    TOC()
+
+
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-        // Advection terms
-        TIC("Advection")
-        SetAdvectionCoefficients(fvCoeffs.Mom[axis], faceFluxes, bcData.U[axis], mesh);
-        TOC()
 
         // Add diffusion to velocity terms
         TIC("Add diffusion")
