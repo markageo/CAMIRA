@@ -106,26 +106,57 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities,
 
 
 
-EnumVector<Axis, array3D> InitialiseFaceFluxes( const Mesh &mesh, 
-                                                const EnumVector<Axis, array3D> &cellVelocities, 
-                                                const FieldData< BoundaryConditionData > &bcData)
-{
-    // Faces are staggered in the negative direction:
-    //   cellFaceVelocity_x(i, j, k) -> u(i-1/2, j    , k    )
-    //   cellFaceVelocity_y(i, j, k) -> u(i    , j-1/2, k    )
-    //   cellFaceVelocity_z(i, j, k) -> u(i    , j    , k-1/2)
-    // Subscript indicates the normal direction of the face.
-    EnumVector<Axis, array3D> faceFluxes( {{Axis::X, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
-                                           {Axis::Y, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},
-                                           {Axis::Z, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} );
-                                                     
-    UpdateFaceFluxes(faceFluxes, mesh, cellVelocities, bcData);
+// ---------------------------------------- Face Velocities ----------------------------------------
 
-    return faceFluxes;
+// Calculates face velocity fluxes. i.e. normal component of velocity on faces
+void UpdateFaceVelocities( EnumVector< Axis, EnumVector< Axis, array3D > > &faceVelocities, 
+                           const Mesh &mesh, 
+                           const EnumVector< Axis, array3D > &cellVelocities, 
+                           const FieldData< BoundaryConditionData > &bcData )
+{
+    // Internal faces
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        EnumFor<Axis>( [&] (Axis::ENUMDATA velocityComponent) {
+            InteriorFaceVelocity( faceVelocities[axis], cellVelocities, mesh, axis, velocityComponent);
+        } );
+    } );
+    
+    // Boundary faces
+    EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {
+
+        Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
+        EnumFor<Axis>( [&] (Axis::ENUMDATA velocityComponent) {
+            BoundaryFaceVelocitiy( faceVelocities[axis], cellVelocities, mesh, bcData.U, boundaryPatch, velocityComponent );
+        } );
+
+    } );
 }
 
 
 
+EnumVector< Axis, EnumVector<Axis, array3D> > InitialiseFaceVelocities( const Mesh &mesh, 
+                                                                        const EnumVector<Axis, array3D> &cellVelocities, 
+                                                                        const FieldData< BoundaryConditionData > &bcData)
+{
+    // First index is the face normal. Second index is the velocity components.
+    // Faces are staggered in the negative direction:
+    //   cellFaceVelocity[X][X](i, j, k) -> u(i-1/2, j    , k    )
+    //   cellFaceVelocity[Y][X](i, j, k) -> u(i    , j-1/2, k    )
+    //   cellFaceVelocity[Z][X](i, j, k) -> u(i    , j    , k-1/2)
+    // Subscript indicates the normal direction of the face.
+    EnumVector< Axis, EnumVector<Axis, array3D> > faceVelocities( { EnumVector<Axis, array3D>( array3D(mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    ).setZero() ),
+                                                                    EnumVector<Axis, array3D>( array3D(mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    ).setZero() ),
+                                                                    EnumVector<Axis, array3D>( array3D(mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1).setZero() ) } );
+                                                     
+    UpdateFaceVelocities(faceVelocities, mesh, cellVelocities, bcData);
+
+    return faceVelocities;
+}
+
+
+
+
+// ---------------------------------------- Face Fluxes ----------------------------------------
 
 // Calculates face velocity fluxes. i.e. normal component of velocity on faces
 void UpdateFaceFluxes( EnumVector< Axis, array3D > &faceFluxes, 
@@ -145,6 +176,26 @@ void UpdateFaceFluxes( EnumVector< Axis, array3D > &faceFluxes,
         BoundaryFaceVelocitiy( faceFluxes, cellVelocities, mesh, bcData.U, boundaryPatch, axis );
 
     } );
+}
+
+
+
+EnumVector<Axis, array3D> InitialiseFaceFluxes( const Mesh &mesh, 
+                                                const EnumVector<Axis, array3D> &cellVelocities, 
+                                                const FieldData< BoundaryConditionData > &bcData)
+{
+    // Faces are staggered in the negative direction:
+    //   cellFaceFlux[X](i, j, k) -> u(i-1/2, j    , k    )
+    //   cellFaceFlux[Y](i, j, k) -> u(i    , j-1/2, k    )
+    //   cellFaceFlux[Z](i, j, k) -> u(i    , j    , k-1/2)
+    // Subscript indicates the normal direction of the face.
+    EnumVector<Axis, array3D> faceFluxes( {{Axis::X, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
+                                           {Axis::Y, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},
+                                           {Axis::Z, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} );
+                                                     
+    UpdateFaceFluxes(faceFluxes, mesh, cellVelocities, bcData);
+
+    return faceFluxes;
 }
 
 
