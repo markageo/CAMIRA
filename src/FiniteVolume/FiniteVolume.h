@@ -32,9 +32,8 @@ struct Mesh
 };
 
 
-
 struct MomentumEquation {
-    MomentumEquation(const Axis::ENUMDATA, const iVector3 &);
+    MomentumEquation(const Axis::ENUMDATA, const iVector3 &, Linearisation);
     EnumVector< Axis, EnumVector< TransportCoefficients, array3D > > AU;     // Velocity coefficients (LHS)
     EnumVector<TransportCoefficients, array1D> AP;                           // Pressure coefficients (LHS)
     array3D B;                                                               // Source Term (RHS)
@@ -44,13 +43,12 @@ struct MomentumEquation {
     EnumVector< BoundaryPatches, array2D   > BUBoundary, BPBoundary;         // Constant terms that come from fixed BC (LHS)
     floatType relaxation;
     Axis::ENUMDATA component;                                                // The momentum component
+    Linearisation linearisation;
 };
 
 
-
-template< MomentumInterpolation MI >
 struct ContinuityEquation {
-    ContinuityEquation(const iVector3 &);
+    ContinuityEquation(const iVector3 &, MomentumInterpolation);
     EnumVector< Axis, EnumVector< TransportCoefficients, array1D > > AU;    // Velocity coefficients (LHS)
     EnumVector<TransportCoefficients, array3D> AP;                          // Pressure coefficients (LHS)
     array3D B;                                                              // Source term (RHS)
@@ -58,6 +56,7 @@ struct ContinuityEquation {
     EnumVector< Axis, std::array< array1D, 2 > > mwiCompactCoeffs;          // Unweighted MWI coefficients from the compact pressure gradient (LHS)
     EnumVector< BoundaryPatches, array2D   > BUBoundary, BPBoundary;        // Constant terms that come from fixed BC (LHS)
     floatType relaxation; 
+    MomentumInterpolation momentumInterpolation;
 };
 
 
@@ -69,19 +68,13 @@ using BoundaryConditionData = EnumVector< BoundaryPatches, BoundaryConditionConf
 
 
 
-// Structure to store finite volume discrete equation coefficients (Picard linearisation)
-template< MomentumInterpolation MI >
+// Structure to store finite volume discrete equation coefficients
 struct FVCoefficients
 {
-    // In the finite volume formulation, all equations are divided by the cell volume. This 
-    // means that the pressure coefficients in the momentum equations and the velocity 
-    // coefficients in the continuity equations can be stored in 1D arrays when using a 
-    // rectilinear grid.
-
-    FVCoefficients(const iVector3 &);
+    FVCoefficients(const iVector3 &, Linearisation, MomentumInterpolation);
     
-    EnumVector<Axis, MomentumEquation> Mom;
-    ContinuityEquation< MI > Cont;
+    EnumVector<Axis, MomentumEquation > Mom;
+    ContinuityEquation Cont;
     iVector3 nCells;
     
 };
@@ -110,16 +103,14 @@ void UpdateFaceFluxes( EnumVector<Axis, array3D> &, const Mesh &, const EnumVect
 // ---------------------------------- Definition in FiniteVolumeCoefficients.cpp --------------------------------- //
 
 // Allocate and initialise finite volume coefficients
-template< MomentumInterpolation MI >
-FVCoefficients<MI> InitialiseFVCoefficients( const Mesh &, 
-                                             const FieldData< array3D > &, 
-                                             const EnumVector< Axis, array3D > &, 
-                                             const FieldData< BoundaryConditionData > &, 
-                                             const InputData &);
+FVCoefficients InitialiseFVCoefficients( const Mesh &, 
+                                         const FieldData< array3D > &, 
+                                         const EnumVector< Axis, array3D > &, 
+                                         const FieldData< BoundaryConditionData > &, 
+                                         const InputData &);
 
 // Update finite volume coefficients 
-template< MomentumInterpolation MI >
-void UpdateFVCoefficients( FVCoefficients<MI> &, 
+void UpdateFVCoefficients( FVCoefficients &, 
                            const Mesh &, 
                            const FieldData< array3D > &, 
                            const EnumVector< Axis, array3D > &,

@@ -31,7 +31,7 @@ class LineSolver
 public:
     LineSolver( FieldData<array3D> &fields,
                 const FieldData<array3D> &fieldsOld,
-                const FVCoefficients<MI> &fvCoeffs) : 
+                const FVCoefficients &fvCoeffs) : 
                     m_fields( fields ),
                     m_fvCoeffs( fvCoeffs ),
                     m_lineConstants( array1D( fvCoeffs.nCells(Axis::X) ) ),
@@ -60,7 +60,7 @@ public:
 
 private:
     FieldData<array3D> &m_fields;
-    const FVCoefficients<MI> &m_fvCoeffs;
+    const FVCoefficients &m_fvCoeffs;
 
     std::unique_ptr<TriadSolver<TC::e, Vstag, Wstag, MI>> m_triadSolverEast;
     std::unique_ptr<TriadSolver<TC::w, Vstag, Wstag, MI>> m_triadSolverWest;

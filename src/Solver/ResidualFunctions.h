@@ -34,7 +34,7 @@ inline FieldData<floatType> L1DiffResiduals( const FieldData<array3D> &fields1,
 // Calculate the absolute residual of each equation from the finite volume stencil
 template< MomentumInterpolation MI > [[ maybe_unused ]]
 inline FieldData<floatType> StencilResiduals( const FieldData<array3D> &fields,
-                                        const FVCoefficients<MI> &fvCoeffs )
+                                              const FVCoefficients &fvCoeffs )
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
@@ -205,8 +205,8 @@ inline floatType BoundaryMassFluxResidual( const EnumVector<Axis, array3D> &face
 // Normalise the residual by the first iteration
 [[ maybe_unused ]]
 inline void NormaliseResiduals( FieldData<floatType> &residuals,
-                        FieldData<floatType> &residualsScaleFactor,
-                        const intType nIterations )
+                                FieldData<floatType> &residualsScaleFactor,
+                                const intType nIterations )
 {
     if (nIterations == 1) {
 

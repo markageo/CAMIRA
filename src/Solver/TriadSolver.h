@@ -40,7 +40,7 @@ class TriadSolver
 public:
     TriadSolver( FieldData<array3D> &fields,
                  const FieldData<array3D> &fieldsOld,
-                 const FVCoefficients<MI> &fvCoeffs ) : 
+                 const FVCoefficients &fvCoeffs ) : 
                     m_fields( fields ),
                     m_fieldsOld( fieldsOld ),
                     m_fvCoeffs( fvCoeffs ),
@@ -204,7 +204,7 @@ public:
 private:
     FieldData<array3D> &m_fields;
     const FieldData<array3D> &m_fieldsOld;
-    const FVCoefficients<MI> &m_fvCoeffs;
+    const FVCoefficients &m_fvCoeffs;
     const intType m_ni, m_nj, m_nk;
     array3D m_K;
 

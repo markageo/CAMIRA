@@ -27,7 +27,7 @@ class LinearSolver
 public:
     LinearSolver( FieldData<array3D> &fields,
                   const FieldData<array3D> &fieldsOld,
-                  const FVCoefficients<MI> &fvCoeffs, 
+                  const FVCoefficients &fvCoeffs, 
                   const InputData::LinearSolverSettings &linearSolverSettings) : 
                     m_fields( fields ),
                     m_maxIterations( linearSolverSettings.maxIterations ),
