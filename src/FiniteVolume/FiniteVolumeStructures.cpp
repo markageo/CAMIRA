@@ -428,7 +428,7 @@ FieldData< BoundaryConditionData > SetBoundaryConditionData( const InputData &in
 namespace
 {
 
-std::vector< TransportCoefficients::ENUMDATA > MomentumVelocityEnums( const Axis::ENUMDATA momentumEquation, 
+std::vector< TransportCoefficients::ENUMDATA > PicardEnums( const Axis::ENUMDATA momentumEquation, 
                                                                       const Axis::ENUMDATA velocity)
 {
     using enum Axis::ENUMDATA;
@@ -486,6 +486,81 @@ std::vector< TransportCoefficients::ENUMDATA > MomentumVelocityEnums( const Axis
 }
 
 
+std::vector< TransportCoefficients::ENUMDATA > NewtonEnums( const Axis::ENUMDATA momentumEquation, 
+                                                            const Axis::ENUMDATA velocity)
+{
+    using enum Axis::ENUMDATA;
+    using C = TransportCoefficients::ENUMDATA;
+
+    switch ( momentumEquation ) {
+        case X: 
+
+            switch ( velocity ) {
+                case X: 
+                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
+                    break;
+                case Y:
+                    return {C::p, C::n, C::s};
+                    break;
+                case Z:
+                    return {C::p, C::t, C::b};
+                    break;
+            }
+            break;
+
+        case Y: 
+
+            switch ( velocity ) {
+                case X: 
+                    return {C::p, C::e, C::w};
+                    break;
+                case Y:
+                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
+                    break;
+                case Z:
+                    return {C::p, C::t, C::b};;
+                    break;
+            }
+            break;
+
+        case Z:
+
+            switch ( velocity ) {
+                case X: 
+                    return {C::p, C::e, C::w};
+                    break;
+
+                case Y:
+                    return {C::p, C::n, C::s};
+                    break;
+
+                case Z:
+                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
+                    break;
+            }
+            break;
+    }
+    return {};
+}
+
+
+
+std::vector< TransportCoefficients::ENUMDATA > MomentumVelocityEnums( const Axis::ENUMDATA momentumEquation, 
+                                                                      const Axis::ENUMDATA velocity,
+                                                                      Linearisation li )
+{
+    switch ( li ) {
+        case Linearisation::Picard:
+            return PicardEnums( momentumEquation, velocity );
+
+        case Linearisation::Newton:
+            return NewtonEnums( momentumEquation, velocity );
+    }
+    return {};
+}                                                                      
+
+
+
 std::vector< TransportCoefficients::ENUMDATA > MomentumPressureEnums( const Axis::ENUMDATA momentumEquation )
 {
     using enum Axis::ENUMDATA;
@@ -508,21 +583,20 @@ std::vector< TransportCoefficients::ENUMDATA > MomentumPressureEnums( const Axis
 }
 
 
-// Pressure coefficients are different depending on momentum interpolation treatement
-template< MomentumInterpolation MI >
-std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums() = delete;
 
-template<>
-std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums< MomentumInterpolation::Implicit >() {
+std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums( MomentumInterpolation mi ) 
+{
     using C = TransportCoefficients::ENUMDATA;
-    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b, C::nn, C::ee, C::ss, C::ww, C::tt, C::bb};
+    switch ( mi ) {
+        case MomentumInterpolation::Implicit:
+            return {C::p, C::n, C::e, C::s, C::w, C::t, C::b, C::nn, C::ee, C::ss, C::ww, C::tt, C::bb};  
+
+        case MomentumInterpolation::SemiExplicit:
+            return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
+    }
+    return {};
 }
 
-template<>
-std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums< MomentumInterpolation::SemiExplicit >() {
-    using C = TransportCoefficients::ENUMDATA;
-    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
-}
 
 
 
@@ -534,10 +608,11 @@ using enum Axis::ENUMDATA;
 
 // Momentum equations constructor
 MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis, 
-                                    const iVector3 &dims) :
-    AU( { EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, X), dims),
-          EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, Y), dims),
-          EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, Z), dims) }  ),
+                                    const iVector3 &dims,
+                                    Linearisation li ) :
+    AU( { EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, X, li), dims),
+          EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, Y, li), dims),
+          EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, Z, li), dims) }  ),
     AP( MomentumPressureEnums( axis ), dims( axis ) ),
     B( CFD::array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
     diagCoeffInv( CFD::array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
@@ -548,17 +623,18 @@ MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis,
     BUBoundary(),
     BPBoundary(),   // These should be dimensioned only if needed
     relaxation( 1.0f ),
-    component( axis )
+    component( axis ),
+    linearisation( li )
 {};
 
 
 // Continuity equations constructor
-template< MomentumInterpolation MI >
-ContinuityEquation<MI>::ContinuityEquation( const iVector3 &dims ) :
+ContinuityEquation::ContinuityEquation( const iVector3 &dims,
+                                        MomentumInterpolation mi ) :
     AU( { EnumVector<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims( X )),
           EnumVector<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims( Y )),
           EnumVector<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims( Z )) } ),
-    AP( ContinuityPressureEnums<MI>(), dims ),
+    AP( ContinuityPressureEnums( mi ), dims ),
     B( array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
     mwiSparseCoeffs( { std::array<array1D, 4>{ array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero() } ,
                        std::array<array1D, 4>{ array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero() } ,
@@ -568,21 +644,20 @@ ContinuityEquation<MI>::ContinuityEquation( const iVector3 &dims ) :
                         std::array<array1D, 2>{ array1D(dims(Z)+1).setZero(), array1D(dims(Z)+1).setZero() } } ),
     BUBoundary(),
     BPBoundary(),   // These should be dimensioned only if needed
-    relaxation( 1.0f )
+    relaxation( 1.0f ),
+    momentumInterpolation( mi )
 {};
-template struct ContinuityEquation< MomentumInterpolation::Implicit >;
-template struct ContinuityEquation< MomentumInterpolation::SemiExplicit >;
 
 
 // Coefficients class constructor
-template< MomentumInterpolation MI >
-FVCoefficients<MI>::FVCoefficients( const iVector3 &dims ) :
-    Mom( { MomentumEquation(X, dims),  MomentumEquation(Y, dims),  MomentumEquation(Z, dims) } ),
-    Cont( dims ),
+FVCoefficients::FVCoefficients( const iVector3 &dims, 
+                                Linearisation li,
+                                MomentumInterpolation mi ) :
+    Mom( { MomentumEquation(X, dims, li),  MomentumEquation(Y, dims, li),  MomentumEquation(Z, dims, li) } ),
+    Cont( dims, mi ),
     nCells( dims )
 {};
-template struct FVCoefficients< MomentumInterpolation::Implicit >;
-template struct FVCoefficients< MomentumInterpolation::SemiExplicit >;
+
 
 
 /*-------------------------------------------------------------------------------------*\

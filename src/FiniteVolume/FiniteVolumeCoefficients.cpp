@@ -654,8 +654,7 @@ floatType MWIWeightingCoeff( const arrayIndex3D &idx,
 
 
 // Fully implicit momentum interpolation coefficient for internal faces
-template< MomentumInterpolation MI >
-void MWInterpolationInteriorImplicit( ContinuityEquation<MI> &continuityEquation,
+void MWInterpolationInteriorImplicit( ContinuityEquation &continuityEquation,
                                       const array3D &momentumDiagCoeffInv,
                                       const Mesh &mesh,
                                       const Axis::ENUMDATA axis )
@@ -721,8 +720,7 @@ void MWInterpolationInteriorImplicit( ContinuityEquation<MI> &continuityEquation
 
 
 // Semi explicit momentum interpolation coefficient for internal faces
-template< MomentumInterpolation MI > 
-void MWInterpolationInteriorSemiExplicit( ContinuityEquation<MI> &continuityEquation, 
+void MWInterpolationInteriorSemiExplicit( ContinuityEquation &continuityEquation, 
                                           const array3D &P,
                                           const array3D &momentumDiagCoeffInv,
                                           const Mesh &mesh,
@@ -888,8 +886,7 @@ void MWInterpolationPositiveBoundary( EnumVector<BoundaryPatches, array2D> &cont
 
 
 // Set momentum interpolation coefficients
-template< MomentumInterpolation MI >
-void SetMomentumInterpolationCoefficients( FVCoefficients<MI> &fvCoeffs,
+void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
                                            const Mesh &mesh,
                                            const FieldData< BoundaryConditionData > &bcData,
                           [[maybe_unused]] const array3D &P )
@@ -898,15 +895,17 @@ void SetMomentumInterpolationCoefficients( FVCoefficients<MI> &fvCoeffs,
     // Correction is zero at the boundary faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-        if        constexpr ( MI == MomentumInterpolation::Implicit ) {
+        switch ( fvCoeffs.Cont.momentumInterpolation ) {
 
-            MWInterpolationInteriorImplicit(fvCoeffs.Cont, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
+            case MomentumInterpolation::Implicit:
+                MWInterpolationInteriorImplicit(fvCoeffs.Cont, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
+                break;
 
-        } else if constexpr ( MI == MomentumInterpolation::SemiExplicit ) {
-
-            MWInterpolationInteriorSemiExplicit(fvCoeffs.Cont, P, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
-
+            case MomentumInterpolation::SemiExplicit:
+                 MWInterpolationInteriorSemiExplicit(fvCoeffs.Cont, P, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
+                 break;
         }
+
 
         // Boundary constants
         if ( bcData.P[ LUT::PositivePatch[axis] ].type == BoundaryConditions::fixed ) 
@@ -954,8 +953,7 @@ void AddMomentumBoundaryConstants( MomentumEquation &momCoeffs )
 }
 
 
-template< MomentumInterpolation MI >
-void AddContinuityBoundaryConstants( ContinuityEquation<MI> &contCoeffs )
+void AddContinuityBoundaryConstants( ContinuityEquation &contCoeffs )
 {
     BoundaryPatches::ENUMDATA positivePatch, negativePatch;
     intType iEnd;
@@ -992,8 +990,7 @@ void AddContinuityBoundaryConstants( ContinuityEquation<MI> &contCoeffs )
 \*---------------------------------------------------------------------------------------------------------------*/
 
 // Allocate the 2D arrays which store constant values of boundary conditions if they are needed
-template< MomentumInterpolation MI >
-void AllocateBoundaryConstants( FVCoefficients< MI > &fvCoeffs, 
+void AllocateBoundaryConstants( FVCoefficients &fvCoeffs, 
                                 const FieldData< BoundaryConditionData > &bcData )
 {
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
@@ -1034,8 +1031,7 @@ void AllocateBoundaryConstants( FVCoefficients< MI > &fvCoeffs,
 
 
 // Set the coefficients that need to be relinearised to zero
-template< MomentumInterpolation MI >
-void ZeroNonlinearCoeffs( FVCoefficients<MI> &fvCoeffs )
+void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
 {
     using enum TransportCoefficients::ENUMDATA;
     
@@ -1076,17 +1072,16 @@ void ZeroNonlinearCoeffs( FVCoefficients<MI> &fvCoeffs )
 
 
 // Allocate and initialise finite volume coefficients for momentum and continuity equations
-template< MomentumInterpolation MI >
-FVCoefficients<MI> InitialiseFVCoefficients( const Mesh &mesh,
-                                             const FieldData<array3D> &fields,
-                                             const EnumVector<Axis, array3D> &faceFluxes, 
-                                             const FieldData< BoundaryConditionData > &bcData,
-                                             const InputData &inputData)
+FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
+                                         const FieldData<array3D> &fields,
+                                         const EnumVector<Axis, array3D> &faceFluxes, 
+                                         const FieldData< BoundaryConditionData > &bcData,
+                                         const InputData &inputData)
 {
     using TC = TransportCoefficients::ENUMDATA;
 
     // Default construct the coefficients class
-    FVCoefficients<MI> fvCoeffs(mesh.nCells);
+    FVCoefficients fvCoeffs(mesh.nCells, inputData.schemes.linearisation, inputData.schemes.momentumInterpolation);
 
     // Allocate boundary constant arrays for fixed boundary conditions
     AllocateBoundaryConstants( fvCoeffs, bcData );
@@ -1144,16 +1139,13 @@ FVCoefficients<MI> InitialiseFVCoefficients( const Mesh &mesh,
 
     return fvCoeffs;
 }
-template  FVCoefficients<MomentumInterpolation::Implicit> InitialiseFVCoefficients( const Mesh &, const FieldData<array3D> &, const EnumVector<Axis, array3D> &, const FieldData< BoundaryConditionData > &, const InputData &);
-template  FVCoefficients<MomentumInterpolation::SemiExplicit> InitialiseFVCoefficients( const Mesh &, const FieldData<array3D> &, const EnumVector<Axis, array3D> &, const FieldData< BoundaryConditionData > &, const InputData &);
 
 
 
 
 
 // Update linearisation in momenum and continuity equations
-template< MomentumInterpolation MI >
-void UpdateFVCoefficients( FVCoefficients<MI> &fvCoeffs, 
+void UpdateFVCoefficients( FVCoefficients &fvCoeffs, 
                            const Mesh &mesh,
                            const FieldData<array3D> &fields,
                            const EnumVector<Axis, array3D> &faceFluxes,
@@ -1221,8 +1213,6 @@ void UpdateFVCoefficients( FVCoefficients<MI> &fvCoeffs,
     TOC()
 
 }
-template void UpdateFVCoefficients(FVCoefficients<MomentumInterpolation::Implicit> &, const Mesh &, const FieldData<array3D> &, const EnumVector<Axis, array3D> &, const FieldData< BoundaryConditionData > &);
-template void UpdateFVCoefficients(FVCoefficients<MomentumInterpolation::SemiExplicit> &, const Mesh &, const FieldData<array3D> &, const EnumVector<Axis, array3D> &, const FieldData< BoundaryConditionData > & );
 
 
 }   // end namespace CFD

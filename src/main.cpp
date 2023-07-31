@@ -47,19 +47,36 @@ int main(int argc, char const *argv[])
     TOC()
 
     TIC("Solver");
-    switch (inputData.schemes.momentumInterpolation)
-    {
-        using MI = CFD::MomentumInterpolation;
-    case (MI::Implicit):
-        CFD::SweepSolve<MI::Implicit>(fields, mesh, bcData, inputData, axisTransformation);
-        break;
+    switch ( inputData.schemes.momentumInterpolation ) {
 
-    case (MI::SemiExplicit):
-        CFD::SweepSolve<MI::SemiExplicit>(fields, mesh, bcData, inputData, axisTransformation);
-        break;
+        using MI = CFD::MomentumInterpolation;
+        using LI = CFD::Linearisation;
+
+        case ( MI::Implicit ):
+           switch ( inputData.schemes.linearisation ) {
+                case ( LI::Picard ):
+                    CFD::SweepSolve< MI::Implicit, LI::Picard >(fields, mesh, bcData, inputData, axisTransformation);
+                    break;
+
+                case ( LI::Newton ):
+                    CFD::SweepSolve< MI::Implicit, LI::Newton >(fields, mesh, bcData, inputData, axisTransformation);
+                    break;
+            }
+            break;
+
+        case ( MI::SemiExplicit ):
+            switch ( inputData.schemes.linearisation ) {
+                case ( LI::Picard ):
+                    CFD::SweepSolve< MI::SemiExplicit, LI::Picard >(fields, mesh, bcData, inputData, axisTransformation);
+                    break;
+
+                case ( LI::Newton ):
+                    CFD::SweepSolve< MI::SemiExplicit, LI::Newton >(fields, mesh, bcData, inputData, axisTransformation);
+                    break;
+            }
+            break;
     }
     TOC();
-
 
     /*-------------------------------------------------------------------------------------*\
                                              Output

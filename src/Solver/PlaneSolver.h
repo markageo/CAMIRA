@@ -29,7 +29,7 @@ class PlaneSolver
 public:
     PlaneSolver( FieldData<array3D> &fields,
                  const FieldData<array3D> &fieldsOld,
-                 const FVCoefficients<MI> &fvCoeffs) : 
+                 const FVCoefficients &fvCoeffs) : 
                     m_fields( fields ),
                     m_fvCoeffs( fvCoeffs ),
                     m_planeConstants( array2D( fvCoeffs.nCells(Axis::X), fvCoeffs.nCells(Axis::Y) ) ),
@@ -60,7 +60,7 @@ public:
 private:
 
     FieldData<array3D> &m_fields;
-    const FVCoefficients<MI> &m_fvCoeffs;
+    const FVCoefficients &m_fvCoeffs;
 
     std::unique_ptr< LineSolver<TC::n, Wstag, MI> > m_lineSolverNorth;
     std::unique_ptr< LineSolver<TC::s, Wstag, MI> > m_lineSolverSouth;
