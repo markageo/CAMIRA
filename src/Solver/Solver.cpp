@@ -28,6 +28,8 @@ void SweepSolve( FieldData<array3D> &fields,
 {
     using enum Axis::ENUMDATA;
 
+    constexpr bool isNewtonLinearisation = ( LI == Linearisation::Newton );
+
     // Extract from input data
     const InputData::LinearSolverSettings linearSolverSettings = inputData.linearSolverSettings;
     const intType maxOuterIterations = inputData.schemes.maxOuterIterations;
@@ -36,9 +38,9 @@ void SweepSolve( FieldData<array3D> &fields,
     // Initialise
     EnumVector<Axis, array3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
     EnumVector< Axis, EnumVector< Axis, array3D> > faceAdvectedVelocities;
-    if constexpr ( LI == Linearisation::Newton ) {
+    if constexpr ( isNewtonLinearisation ) 
         faceAdvectedVelocities = InitialiseAdvectedFaceVelocities( mesh, fields.U, faceFluxes, bcData );
-    }
+
     FieldData<array3D> fieldsOld = fields;
     FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceAdvectedVelocities, faceFluxes, bcData, inputData);
 
@@ -75,6 +77,9 @@ void SweepSolve( FieldData<array3D> &fields,
         linearSolver.Solve();
 
         UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
+        if constexpr ( isNewtonLinearisation )
+            UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
+
         UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
 
         residualsOuter   = StencilResiduals<MI>(fields, fvCoeffs); 
