@@ -85,7 +85,7 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities,
                             const Mesh &mesh, 
                             const EnumVector< Axis, BoundaryConditionData >& boundaryConditions,
                             const BoundaryPatches::ENUMDATA boundaryPatch,
-                            const Axis::ENUMDATA component )
+                            const Axis::ENUMDATA velocityComponent )
 {
     using BC = BoundaryConditions::ENUMDATA;
     
@@ -103,18 +103,18 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities,
         fieldEndIndex = 0;
     }
 
-    switch ( boundaryConditions[component][boundaryPatch].type ) 
+    switch ( boundaryConditions[velocityComponent][boundaryPatch].type ) 
     {    
         case BC::zeroGradient:
         {
-            faceVelocities[component].chip(faceEndIndex, axis) = cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex, axis);          
+            faceVelocities[axis].chip(faceEndIndex, axis) = cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex, axis);          
             break;
         }
             
 
         case BC::fixed:
         {
-            faceVelocities[component].chip(faceEndIndex, axis) = boundaryConditions[component][boundaryPatch].value;
+            faceVelocities[axis].chip(faceEndIndex, axis) = boundaryConditions[velocityComponent][boundaryPatch].value;
             break;
         }
             
@@ -123,10 +123,10 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities,
         {
             floatType extrapFactor_p = mesh.extrapFactors[boundaryPatch].p;
             floatType extrapFactor_a = mesh.extrapFactors[boundaryPatch].a;
-            faceVelocities[component].chip(faceEndIndex, axis) = cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex  , axis) 
-                                                                    * cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
-                                                               + cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex+1, axis) 
-                                                                    * cellVelocities[component].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
+            faceVelocities[axis].chip(faceEndIndex, axis) = cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex  , axis) 
+                                                                    * cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
+                                                               + cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex+1, axis) 
+                                                                    * cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
             break;
         }
             
@@ -153,16 +153,15 @@ void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector< Axis, array3D >
     // Internal faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         EnumFor<Axis>( [&] (Axis::ENUMDATA velocityComponent) {
-            UpwindInteriorFaceVelocity( faceAdvectedVelocities[axis], cellVelocities, faceFluxes, mesh, axis, velocityComponent);
+            UpwindInteriorFaceVelocity( faceAdvectedVelocities[velocityComponent], cellVelocities, faceFluxes, mesh, axis, velocityComponent);
         } );
     } );
     
     // Boundary faces
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {
 
-        Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
         EnumFor<Axis>( [&] (Axis::ENUMDATA velocityComponent) {
-            BoundaryFaceVelocitiy( faceAdvectedVelocities[axis], cellVelocities, mesh, bcData.U, boundaryPatch, velocityComponent );
+            BoundaryFaceVelocitiy( faceAdvectedVelocities[velocityComponent], cellVelocities, mesh, bcData.U, boundaryPatch, velocityComponent );
         } );
 
     } );
@@ -175,12 +174,11 @@ EnumVector< Axis, EnumVector<Axis, array3D> > InitialiseAdvectedFaceVelocities( 
                                                                                 const EnumVector<Axis, array3D> &faceFluxes,
                                                                                 const FieldData< BoundaryConditionData > &bcData)
 {
-    // First index is the face normal. Second index is the velocity components.
+    // First index is the velocity component. Second index is the face normal.
     // Faces are staggered in the negative direction:
     //   cellFaceVelocity[X][X](i, j, k) -> u(i-1/2, j    , k    )
-    //   cellFaceVelocity[Y][X](i, j, k) -> u(i    , j-1/2, k    )
-    //   cellFaceVelocity[Z][X](i, j, k) -> u(i    , j    , k-1/2)
-    // Subscript indicates the normal direction of the face.
+    //   cellFaceVelocity[X][Y](i, j, k) -> u(i    , j-1/2, k    )
+    //   cellFaceVelocity[X][Z](i, j, k) -> u(i    , j    , k-1/2)
     EnumVector< Axis, EnumVector<Axis, array3D> > faceAdvectedVelocities( EnumVector<Axis, array3D> ( {{Axis::X, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
                                                                                                        {Axis::Y, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},
                                                                                                        {Axis::Z, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} ) );
