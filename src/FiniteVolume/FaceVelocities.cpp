@@ -143,7 +143,7 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities,
 
 // ---------------------------------------- Face Advected Velocities ----------------------------------------
 
-// Calculates face velocity fluxes. i.e. normal component of velocity on faces
+// Calculates advected face velocities
 void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector< Axis, array3D > > &faceAdvectedVelocities, 
                                    const Mesh &mesh, 
                                    const EnumVector< Axis, array3D > &cellVelocities, 
@@ -181,9 +181,10 @@ EnumVector< Axis, EnumVector<Axis, array3D> > InitialiseAdvectedFaceVelocities( 
     //   cellFaceVelocity[Y][X](i, j, k) -> u(i    , j-1/2, k    )
     //   cellFaceVelocity[Z][X](i, j, k) -> u(i    , j    , k-1/2)
     // Subscript indicates the normal direction of the face.
-    EnumVector< Axis, EnumVector<Axis, array3D> > faceAdvectedVelocities( { EnumVector<Axis, array3D>( array3D(mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    ).setZero() ),
-                                                                    EnumVector<Axis, array3D>( array3D(mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    ).setZero() ),
-                                                                    EnumVector<Axis, array3D>( array3D(mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1).setZero() ) } );
+    EnumVector< Axis, EnumVector<Axis, array3D> > faceAdvectedVelocities( EnumVector<Axis, array3D> ( {{Axis::X, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
+                                                                                                       {Axis::Y, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},
+                                                                                                       {Axis::Z, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} ) );
+
                                                      
     UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, cellVelocities, faceFluxes, bcData);
 

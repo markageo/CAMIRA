@@ -90,10 +90,26 @@ FieldData< BoundaryConditionData > SetBoundaryConditionData( const InputData &, 
 // -------------------------------------- Definition in FaceVelocities.cpp -------------------------------------- //
 
 // Allocate and initialise face velocities
-EnumVector<Axis, array3D> InitialiseFaceFluxes(const Mesh &, const EnumVector<Axis, array3D> &, const FieldData< BoundaryConditionData > &);
+EnumVector<Axis, array3D> InitialiseFaceFluxes( const Mesh &, 
+                                                const EnumVector<Axis, array3D> &, 
+                                                const FieldData< BoundaryConditionData > &);
+
+EnumVector< Axis, EnumVector<Axis, array3D> > InitialiseAdvectedFaceVelocities( const Mesh &, 
+                                                                                const EnumVector<Axis, array3D> &, 
+                                                                                const EnumVector<Axis, array3D> &, 
+                                                                                const FieldData< BoundaryConditionData > &);
 
 // Update face velocities
-void UpdateFaceFluxes( EnumVector<Axis, array3D> &, const Mesh &, const EnumVector<Axis, array3D> &, const FieldData< BoundaryConditionData > &);
+void UpdateFaceFluxes( EnumVector<Axis, array3D> &, 
+                       const Mesh &, 
+                       const EnumVector<Axis, array3D> &, 
+                       const FieldData< BoundaryConditionData > &);
+
+void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, array3D> > &, 
+                                   const Mesh &, 
+                                   const EnumVector<Axis, array3D> &, 
+                                   const EnumVector<Axis, array3D> &, 
+                                   const FieldData< BoundaryConditionData > &);
 
 
 
@@ -104,6 +120,7 @@ void UpdateFaceFluxes( EnumVector<Axis, array3D> &, const Mesh &, const EnumVect
 // Allocate and initialise finite volume coefficients
 FVCoefficients InitialiseFVCoefficients( const Mesh &, 
                                          const FieldData< array3D > &, 
+                                         const EnumVector< Axis, EnumVector< Axis, array3D> > &,
                                          const EnumVector< Axis, array3D > &, 
                                          const FieldData< BoundaryConditionData > &, 
                                          const InputData &);
@@ -112,6 +129,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &,
 void UpdateFVCoefficients( FVCoefficients &, 
                            const Mesh &, 
                            const FieldData< array3D > &, 
+                           const EnumVector< Axis, EnumVector< Axis, array3D> > &,
                            const EnumVector< Axis, array3D > &,
                            const FieldData< BoundaryConditionData > &);
 

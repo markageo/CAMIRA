@@ -19,7 +19,8 @@ using namespace FVT;
 
 template < TransportCoefficients::ENUMDATA Vstag,
            TransportCoefficients::ENUMDATA Wstag,
-           MomentumInterpolation MI >
+           MomentumInterpolation MI,
+           Linearisation LI >
 class LineSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -38,12 +39,12 @@ public:
                     m_ni( fvCoeffs.nCells(Axis::X) )
     {
         if (m_ni == 1) {
-            m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag, MI>>(fields, fieldsOld, fvCoeffs);
+            m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag, MI, LI>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep2D;
             StateUpdater = &LineSolver::UpdateState2D;
         } else {
-            m_triadSolverEast = std::make_unique<TriadSolver<TC::e, Vstag, Wstag, MI>>(fields, fieldsOld, fvCoeffs);
-            m_triadSolverWest = std::make_unique<TriadSolver<TC::w, Vstag, Wstag, MI>>(fields, fieldsOld, fvCoeffs);
+            m_triadSolverEast = std::make_unique<TriadSolver<TC::e, Vstag, Wstag, MI, LI>>(fields, fieldsOld, fvCoeffs);
+            m_triadSolverWest = std::make_unique<TriadSolver<TC::w, Vstag, Wstag, MI, LI>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep3D;
             StateUpdater = &LineSolver::UpdateState3D;
         }
@@ -62,9 +63,9 @@ private:
     FieldData<array3D> &m_fields;
     const FVCoefficients &m_fvCoeffs;
 
-    std::unique_ptr<TriadSolver<TC::e, Vstag, Wstag, MI>> m_triadSolverEast;
-    std::unique_ptr<TriadSolver<TC::w, Vstag, Wstag, MI>> m_triadSolverWest;
-    std::unique_ptr<TriadSolver<TC::p, Vstag, Wstag, MI>> m_triadSolverCenter;
+    std::unique_ptr<TriadSolver<TC::e, Vstag, Wstag, MI, LI>> m_triadSolverEast;
+    std::unique_ptr<TriadSolver<TC::w, Vstag, Wstag, MI, LI>> m_triadSolverWest;
+    std::unique_ptr<TriadSolver<TC::p, Vstag, Wstag, MI, LI>> m_triadSolverCenter;
 
     FieldData<array1D> m_lineConstants;
 
@@ -134,13 +135,21 @@ private:
             intType ig{ G(i) };
 
             // U momentum
+            floatType newtonStencilX = 0.0f;
+            if constexpr ( LI == Linearisation::Newton ) {
+                newtonStencilX = - m_fvCoeffs.Mom[X].AU[Y][n]( i, j, k ) * m_fields.U[Y]( ig, jg+1, kg )
+                                 - m_fvCoeffs.Mom[X].AU[Y][s]( i, j, k ) * m_fields.U[Y]( ig, jg-1, kg );
+            }
             m_lineConstants.U[X](i) = planeConstants.U[X](i, j)
                                     + ( 
                                       - m_fvCoeffs.Mom[X].AU[X][n](i, j, k) * m_fields.U[X]( ig  , jg+1, kg  )
                                       - m_fvCoeffs.Mom[X].AU[X][s](i, j, k) * m_fields.U[X]( ig  , jg-1, kg  )
+
+                                      + newtonStencilX
                                       );
 
             // V momentum
+            floatType newtonStencilY = 0.0f;
             m_lineConstants.U[Y](i) = planeConstants.U[Y](i, jV)
                                     + (
                                       - m_fvCoeffs.Mom[Y].AU[Y][n](i, jV, kV) * m_fields.U[Y]( ig  , jgV+1, kgV  )  
@@ -148,13 +157,22 @@ private:
 
                                       - m_fvCoeffs.Mom[Y].AP[sVP::cLeft ](jV) * m_fields.P( ig, jgV + sVP::iLeft , kgV)
                                       - m_fvCoeffs.Mom[Y].AP[sVP::cRight](jV) * m_fields.P( ig, jgV + sVP::iRight, kgV)
+
+                                      + newtonStencilY
                                       );
 
             // W momentum
+            floatType newtonStencilZ = 0.0f;
+            if constexpr ( LI == Linearisation::Newton ) {
+                newtonStencilZ = - m_fvCoeffs.Mom[Z].AU[Y][n]( i, jW, kW ) * m_fields.U[Y]( ig, jgW+1, kgW )
+                                 - m_fvCoeffs.Mom[Z].AU[Y][s]( i, jW, kW ) * m_fields.U[Y]( ig, jgW-1, kgW );
+            }
             m_lineConstants.U[Z](i) = planeConstants.U[Z](i, jW)
                                     + ( 
                                       - m_fvCoeffs.Mom[Z].AU[Z][n](i, jW, kW) * m_fields.U[Z]( ig  , jgW+1, kgW  ) 
                                       - m_fvCoeffs.Mom[Z].AU[Z][s](i, jW, kW) * m_fields.U[Z]( ig  , jgW-1, kgW  ) 
+                                      
+                                      + newtonStencilZ
                                       );
 
             // Continuity equation

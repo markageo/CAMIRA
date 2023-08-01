@@ -18,7 +18,8 @@ namespace CFD
 
 using namespace FVT;
 
-template< MomentumInterpolation MI >
+template< MomentumInterpolation MI,
+          Linearisation LI >
 class LinearSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -42,12 +43,12 @@ public:
                     m_nk( fvCoeffs.nCells(A::Z) )
     {
         if (m_nk == 1) {
-            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI>>(fields, fieldsOld, fvCoeffs);
+            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI, LI>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LinearSolver::Sweep2D;
             StateUpdater = &LinearSolver::UpdateState2D;
         } else {
-            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t, MI>>(fields, fieldsOld, fvCoeffs);
-            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI>>(fields, fieldsOld, fvCoeffs);
+            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t, MI, LI>>(fields, fieldsOld, fvCoeffs);
+            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI, LI>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &LinearSolver::Sweep3D;
             StateUpdater = &LinearSolver::UpdateState3D;
         }
@@ -95,9 +96,9 @@ private:
     const FieldData<floatType> m_maxResiduals;
     const FieldData<floatType> m_relaxation;
 
-    std::unique_ptr<PlaneSolver<TC::t, MI>> m_planeSolverTop;
-    std::unique_ptr<PlaneSolver<TC::b, MI>> m_planeSolverBottom;
-    std::unique_ptr<PlaneSolver<TC::p, MI>> m_planeSolverCenter;
+    std::unique_ptr<PlaneSolver<TC::t, MI, LI>> m_planeSolverTop;
+    std::unique_ptr<PlaneSolver<TC::b, MI, LI>> m_planeSolverBottom;
+    std::unique_ptr<PlaneSolver<TC::p, MI, LI>> m_planeSolverCenter;
 
     void (LinearSolver::*SolutionUpdater)(void);
     void (LinearSolver::*StateUpdater)(void);
@@ -140,7 +141,7 @@ private:
 
 
     template <TC Wstag>
-    void UpdateAndRelax( std::unique_ptr<PlaneSolver<Wstag, MI>> &planeSolver, intType k )
+    void UpdateAndRelax( std::unique_ptr<PlaneSolver<Wstag, MI, LI>> &planeSolver, intType k )
     {
         using enum TransportCoefficients::ENUMDATA;
         using enum Axis::ENUMDATA;
