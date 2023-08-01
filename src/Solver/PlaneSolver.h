@@ -18,7 +18,8 @@ namespace CFD
 using namespace FVT;
 
 template <TransportCoefficients::ENUMDATA Wstag, 
-          MomentumInterpolation MI>
+          MomentumInterpolation MI,
+          Linearisation LI>
 class PlaneSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -37,12 +38,12 @@ public:
                     m_nj( fvCoeffs.nCells(Axis::Y) )
     {
         if (m_nj == 1) {
-            m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag, MI>>(fields, fieldsOld, fvCoeffs);
+            m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag, MI, LI>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &PlaneSolver::Sweep2D;
             StateUpdater = &PlaneSolver::UpdateState2D;
         } else {
-            m_lineSolverNorth = std::make_unique<LineSolver<TC::n, Wstag, MI>>(fields, fieldsOld, fvCoeffs);
-            m_lineSolverSouth = std::make_unique<LineSolver<TC::s, Wstag, MI>>(fields, fieldsOld, fvCoeffs);
+            m_lineSolverNorth = std::make_unique<LineSolver<TC::n, Wstag, MI, LI>>(fields, fieldsOld, fvCoeffs);
+            m_lineSolverSouth = std::make_unique<LineSolver<TC::s, Wstag, MI, LI>>(fields, fieldsOld, fvCoeffs);
             SolutionUpdater = &PlaneSolver::Sweep3D;
             StateUpdater = &PlaneSolver::UpdateState3D;
         }
@@ -62,9 +63,9 @@ private:
     FieldData<array3D> &m_fields;
     const FVCoefficients &m_fvCoeffs;
 
-    std::unique_ptr< LineSolver<TC::n, Wstag, MI> > m_lineSolverNorth;
-    std::unique_ptr< LineSolver<TC::s, Wstag, MI> > m_lineSolverSouth;
-    std::unique_ptr< LineSolver<TC::p, Wstag, MI> > m_lineSolverCenter;
+    std::unique_ptr< LineSolver<TC::n, Wstag, MI, LI> > m_lineSolverNorth;
+    std::unique_ptr< LineSolver<TC::s, Wstag, MI, LI> > m_lineSolverSouth;
+    std::unique_ptr< LineSolver<TC::p, Wstag, MI, LI> > m_lineSolverCenter;
 
     FieldData<array2D> m_planeConstants;
 
@@ -129,23 +130,36 @@ private:
                 intType ig{ G(i) }, jg{ G(j) };
 
                 // U momentum
-                m_planeConstants.U[X](i, j) = ( m_fvCoeffs.Mom[X].B(i, j, k)
+                floatType newtonStencilX = 0.0f;
+                if constexpr ( LI == Linearisation::Newton ) {
+                    newtonStencilX = - m_fvCoeffs.Mom[X].AU[Z][t](i, j, k) * m_fields.U[Z]( ig, jg, kg+1 )
+                                     - m_fvCoeffs.Mom[X].AU[Z][b](i, j, k) * m_fields.U[Z]( ig, jg, kg+1 );
+                }
+                m_planeConstants.U[X](i, j) = m_fvCoeffs.Mom[X].B(i, j, k)
 
-                                              - m_fvCoeffs.Mom[X].AU[X][t](i, j, k) * m_fields.U[X]( ig  , jg  , kg+1) 
-                                              - m_fvCoeffs.Mom[X].AU[X][b](i, j, k) * m_fields.U[X]( ig  , jg  , kg-1)
+                                            - m_fvCoeffs.Mom[X].AU[X][t](i, j, k) * m_fields.U[X]( ig  , jg  , kg+1) 
+                                            - m_fvCoeffs.Mom[X].AU[X][b](i, j, k) * m_fields.U[X]( ig  , jg  , kg-1)
+                                            
+                                            + newtonStencilX;
 
-                                              );
 
                 // V momentum
-                m_planeConstants.U[Y](i, j) = ( m_fvCoeffs.Mom[Y].B(i, j, k)
+                floatType newtonStencilY = 0.0f;
+                if constexpr ( LI == Linearisation::Newton ) {
+                    newtonStencilY = - m_fvCoeffs.Mom[Y].AU[Z][t](i, j, k) * m_fields.U[Z]( ig, jg, kg+1 )
+                                     - m_fvCoeffs.Mom[Y].AU[Z][b](i, j, k) * m_fields.U[Z]( ig, jg, kg+1 );
+                }
+                m_planeConstants.U[Y](i, j) = m_fvCoeffs.Mom[Y].B(i, j, k)
 
-                                              - m_fvCoeffs.Mom[Y].AU[Y][t](i, j, k) * m_fields.U[Y]( ig  , jg  , kg+1) 
-                                              - m_fvCoeffs.Mom[Y].AU[Y][b](i, j, k) * m_fields.U[Y]( ig  , jg  , kg-1)
+                                            - m_fvCoeffs.Mom[Y].AU[Y][t](i, j, k) * m_fields.U[Y]( ig  , jg  , kg+1) 
+                                            - m_fvCoeffs.Mom[Y].AU[Y][b](i, j, k) * m_fields.U[Y]( ig  , jg  , kg-1)
 
-                                              );
+                                            + newtonStencilY;
+                                            
 
                 // W momentum 
-                m_planeConstants.U[Z](i, j) = ( m_fvCoeffs.Mom[Z].B(i, j, kW)
+                floatType newtonStencilZ = 0.0f;
+                m_planeConstants.U[Z](i, j) = m_fvCoeffs.Mom[Z].B(i, j, kW)
                                 
                                             - m_fvCoeffs.Mom[Z].AU[Z][t](i, j, kW) * m_fields.U[Z]( ig  , jg  , kgW+1) 
                                             - m_fvCoeffs.Mom[Z].AU[Z][b](i, j, kW) * m_fields.U[Z]( ig  , jg  , kgW-1)
@@ -153,7 +167,7 @@ private:
                                             - m_fvCoeffs.Mom[Z].AP[sWP::cLeft ](kW) * m_fields.P( ig, jg, kgW + sWP::iLeft ) 
                                             - m_fvCoeffs.Mom[Z].AP[sWP::cRight](kW) * m_fields.P( ig, jg, kgW + sWP::iRight)
 
-                                            );
+                                            + newtonStencilZ;
 
 
                 // Continuity equation
@@ -162,7 +176,6 @@ private:
                     pressureWideStencil = - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields.P( ig  , jg  , kg+2) 
                                           - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields.P( ig  , jg  , kg-2);
                 }
-
                 m_planeConstants.P(i, j) = m_fvCoeffs.Cont.B(i, j, k)
 
                                          - m_fvCoeffs.Cont.AU[Z][sCW::cLeft ](k) * m_fields.U[Z]( ig, jg, kg + sCW::iLeft )

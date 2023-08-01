@@ -17,7 +17,8 @@ namespace CFD
 template < TransportCoefficients::ENUMDATA Ustag,
            TransportCoefficients::ENUMDATA Vstag,
            TransportCoefficients::ENUMDATA Wstag, 
-           MomentumInterpolation MI>
+           MomentumInterpolation MI, 
+           Linearisation LI>
 class TriadSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -78,6 +79,7 @@ public:
 
         // Precompute momentum RHS divided by AP coefficients
         // U momentum
+        floatType newtonStencilX = 0.0f;
         floatType bU = ( lineConstants.U[X](iU)  
 
                        - m_fvCoeffs.Mom[X].AU[X][e](iU, jU, kU) * m_fields.U[X]( igU+1, jgU  , kgU  )
@@ -86,23 +88,39 @@ public:
                        - m_fvCoeffs.Mom[X].AP[sUP::cLeft ](iU) * m_fields.P( igU + sUP::iLeft , jgU, kgU)
                        - m_fvCoeffs.Mom[X].AP[sUP::cRight](iU) * m_fields.P( igU + sUP::iRight, jgU, kgU) 
 
+                       + newtonStencilX
+
                        ) * m_fvCoeffs.Mom[X].diagCoeffInv(iU, jU, kU);
 
 
         // V momentum
+        floatType newtonStencilY = 0.0f;
+        if constexpr ( LI == Linearisation::Newton ) {
+            newtonStencilY = - m_fvCoeffs.Mom[Y].AU[X][e](iV, jV, kV) * m_fields.U[X]( igV+1, jgV  , kgV  )
+                             - m_fvCoeffs.Mom[Y].AU[X][w](iV, jV, kV) * m_fields.U[X]( igV-1, jgV  , kgV  );
+        }
         floatType bV = ( lineConstants.U[Y](iV)
 
                        - m_fvCoeffs.Mom[Y].AU[Y][e](iV, jV, kV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
                        - m_fvCoeffs.Mom[Y].AU[Y][w](iV, jV, kV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
 
+                       + newtonStencilY
+
                        ) * m_fvCoeffs.Mom[Y].diagCoeffInv(iV, jV, kV);
 
 
         // W momentum
+        floatType newtonStencilZ = 0.0f;
+        if constexpr ( LI == Linearisation::Newton ) {
+            newtonStencilZ = - m_fvCoeffs.Mom[Z].AU[X][e](iW, jW, kW) * m_fields.U[X]( igW+1, jgW  , kgW  )
+                             - m_fvCoeffs.Mom[Z].AU[X][w](iW, jW, kW) * m_fields.U[X]( igW-1, jgW  , kgW  );
+        }
         floatType bW = ( lineConstants.U[Z](iW)
 
                        - m_fvCoeffs.Mom[Z].AU[Z][e](iW, jW, kW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
                        - m_fvCoeffs.Mom[Z].AU[Z][w](iW, jW, kW) * m_fields.U[Z]( igW-1, jgW  , kgW  ) 
+
+                       + newtonStencilZ
 
                        ) * m_fvCoeffs.Mom[Z].diagCoeffInv(iW, jW, kW);
 

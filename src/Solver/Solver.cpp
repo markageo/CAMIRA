@@ -35,8 +35,12 @@ void SweepSolve( FieldData<array3D> &fields,
 
     // Initialise
     EnumVector<Axis, array3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
-    FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceFluxes, bcData, inputData);
+    EnumVector< Axis, EnumVector< Axis, array3D> > faceAdvectedVelocities;
+    if constexpr ( LI == Linearisation::Newton ) {
+        faceAdvectedVelocities = InitialiseAdvectedFaceVelocities( mesh, fields.U, faceFluxes, bcData );
+    }
     FieldData<array3D> fieldsOld = fields;
+    FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceAdvectedVelocities, faceFluxes, bcData, inputData);
 
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
@@ -56,7 +60,7 @@ void SweepSolve( FieldData<array3D> &fields,
     ConsoleLog consoleLog( axisTransformation );
 
     // Instantiate linear solver, this holds references to the fields
-    LinearSolver<MI> linearSolver(fields, fieldsOld, fvCoeffs, linearSolverSettings);
+    LinearSolver<MI, LI> linearSolver(fields, fieldsOld, fvCoeffs, linearSolverSettings);
 
 
     // Outer iterations
@@ -71,7 +75,7 @@ void SweepSolve( FieldData<array3D> &fields,
         linearSolver.Solve();
 
         UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
-        UpdateFVCoefficients(fvCoeffs, mesh, fields, faceFluxes, bcData);
+        UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
 
         residualsOuter   = StencilResiduals<MI>(fields, fvCoeffs); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
