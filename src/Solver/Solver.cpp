@@ -82,7 +82,8 @@ void SweepSolve( FieldData<array3D> &fields,
 
         UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
 
-        residualsOuter   = StencilResiduals<MI>(fields, fvCoeffs); 
+        residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs); 
+        // residualsOuter   = L1DiffResiduals(fields, fieldsOld); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
 
         massFluxResidual = BoundaryMassFluxResidual(faceFluxes, mesh);

@@ -268,9 +268,9 @@ void AdvectionPositiveBoundary( EnumVector<TransportCoefficients, array3D> &coef
             break;
 
         case BC::fixed:
-            boundaryConstants[boundaryPatch]  = laggedVelocity[axis].chip(iFaceBound, axis)
-                                              * boundaryConditionStructs[boundaryPatch].value
-                                              * laggedVelocity[axis].chip(iFaceBound, axis).constant( mesh.cellLengthsInv[axis](iCellBound) );
+            boundaryConstants[boundaryPatch]  += laggedVelocity[axis].chip(iFaceBound, axis)
+                                               * boundaryConditionStructs[boundaryPatch].value
+                                               * laggedVelocity[axis].chip(iFaceBound, axis).constant( mesh.cellLengthsInv[axis](iCellBound) );
             break;
 
         case BC::extrapolated:
@@ -310,9 +310,9 @@ void AdvectionNegativeBoundary( EnumVector<TransportCoefficients, array3D> &coef
             break;
 
         case BC::fixed:
-            boundaryConstants[boundaryPatch]  = - laggedVelocity[axis].chip(iFaceBound, axis)
-                                              *   boundaryConditionStructs[boundaryPatch].value 
-                                              *   laggedVelocity[axis].chip(iFaceBound, axis).constant( mesh.cellLengthsInv[axis](iCellBound) );
+            boundaryConstants[boundaryPatch]  += - laggedVelocity[axis].chip(iFaceBound, axis)
+                                               *   boundaryConditionStructs[boundaryPatch].value 
+                                               *   laggedVelocity[axis].chip(iFaceBound, axis).constant( mesh.cellLengthsInv[axis](iCellBound) );
             break;
 
         case BC::extrapolated:

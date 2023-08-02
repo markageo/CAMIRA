@@ -16,7 +16,7 @@ using namespace FVT;
 // Calculated as the L1 norm of the difference between two arrays.
 [[ maybe_unused ]]
 inline FieldData<floatType> L1DiffResiduals( const FieldData<array3D> &fields1,
-                                        const FieldData<array3D> &fields2 )
+                                             const FieldData<array3D> &fields2 )
 {
     FieldData<floatType> result;
     ForAllFieldData( [&] (intType i) { 
@@ -116,9 +116,9 @@ inline FieldData<floatType> StencilResiduals( const FieldData<array3D> &fields,
 
 
                 // W momentm
-                floatType newtonStencilW = 0.0f;
+                floatType newtonStencilZ = 0.0f;
                 if constexpr ( LI == Linearisation::Newton ) {
-                    newtonStencilY = fvCoeffs.Mom[Z].AU[X][e](i, j, k) * fields.U[X]( ig+1, jg  , kg  )
+                    newtonStencilZ = fvCoeffs.Mom[Z].AU[X][e](i, j, k) * fields.U[X]( ig+1, jg  , kg  )
                                    + fvCoeffs.Mom[Z].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[Z].AU[X][w](i, j, k) * fields.U[X]( ig-1, jg  , kg  )
                     
@@ -139,7 +139,7 @@ inline FieldData<floatType> StencilResiduals( const FieldData<array3D> &fields,
                                         + fvCoeffs.Mom[Z].AP[p](k) * fields.P( ig  , jg  , kg  )
                                         + fvCoeffs.Mom[Z].AP[b](k) * fields.P( ig  , jg  , kg-1)
 
-                                        + newtonStencilW
+                                        + newtonStencilZ
 
                                         - fvCoeffs.Mom[Z].B(i, j, k)  );
 

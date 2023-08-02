@@ -31,6 +31,7 @@ void LinearInterpolationInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVel
                              HiIndex = idx,
                              LoIndex = idx;
                 LoIndex[axis] -= 1;
+
                 floatType interpFactor = mesh.interpFactors[ axis ]( idx[axis] );
                 faceVel( idx ) = (1 - interpFactor)*cellVel( G(LoIndex) ) + interpFactor*cellVel( G(HiIndex) );
 
@@ -159,11 +160,9 @@ void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector< Axis, array3D >
     
     // Boundary faces
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {
-
         EnumFor<Axis>( [&] (Axis::ENUMDATA velocityComponent) {
             BoundaryFaceVelocitiy( faceAdvectedVelocities[velocityComponent], cellVelocities, mesh, bcData.U, boundaryPatch, velocityComponent );
         } );
-
     } );
 }
 
@@ -209,8 +208,8 @@ void UpdateFaceFluxes( EnumVector< Axis, array3D > &faceFluxes,
     // Boundary faces
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {
 
-        Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
-        BoundaryFaceVelocitiy( faceFluxes, cellVelocities, mesh, bcData.U, boundaryPatch, axis );
+        Axis::ENUMDATA velocityComponent = LUT::BoundaryPatchAxis[ boundaryPatch ];
+        BoundaryFaceVelocitiy( faceFluxes, cellVelocities, mesh, bcData.U, boundaryPatch, velocityComponent );
 
     } );
 }
