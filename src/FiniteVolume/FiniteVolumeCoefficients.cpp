@@ -1213,9 +1213,6 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
         SetFaceInterpolatedCoefficients(fvCoeffs.Mom[axis].AP, fvCoeffs.Mom[axis].BPBoundary, mesh, bcData.P, axis);
         DivideMomentumPressureByDensity(fvCoeffs.Mom[axis], inputData.rho);
 
-        // Add boundary constants to source terms
-        AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
-
         // Relaxation factor
         fvCoeffs.Mom[axis].relaxation = inputData.schemes.implicitRelaxation.U[axis];
 
@@ -1236,19 +1233,20 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
 
     // Momentum Weighted interpolation
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, bcData, fields.P);
-    
-    // Add boundary constants to source terms
-    AddContinuityBoundaryConstants(fvCoeffs.Cont);
+        
 
     // Add Newton Linearisation terms if selected
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         if ( fvCoeffs.Mom[axis].linearisation == Linearisation::Newton )
             AddAdvectionNewtonCoefficients(fvCoeffs.Mom[axis], faceAdvectedVelocities, faceFluxes, bcData.U[axis], mesh);
+
+        // Add boundary constants to source terms
+        AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
+        AddContinuityBoundaryConstants(fvCoeffs.Cont);
     } );
 
     // Relaxation factor
     fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation.P;
-
 
     return fvCoeffs;
 }
@@ -1295,7 +1293,6 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-
         // Add diffusion to velocity terms
         TIC("Add diffusion")
         AddDiffusion(fvCoeffs.Mom[axis], bcData.U[axis], mesh);
@@ -1306,11 +1303,6 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
         fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
         TOC();
 
-        // Add boundary constants to source terms
-        TIC("Momentum boundary constants")
-        AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
-        TOC()
-
     } );
 
 
@@ -1319,23 +1311,28 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, bcData, fields.P);
     TOC()
 
-    // Add boundary constants to source terms
-    TIC("Continuity boundary constants")
-    AddContinuityBoundaryConstants(fvCoeffs.Cont);
-    TOC()
 
-
-    // Add Newton Linearisation terms if selected
-    TIC("Newton advection")
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+         // Add Newton Linearisation terms if selected
+        TIC("Newton advection")
         if ( fvCoeffs.Mom[axis].linearisation == Linearisation::Newton )
             AddAdvectionNewtonCoefficients(fvCoeffs.Mom[axis], faceAdvectedVelocities, faceFluxes, bcData.U[axis], mesh);
+        TOC()
+
+         // Add boundary constants to source terms
+        TIC("Momentum boundary constants")
+        AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
+        TOC()
+
+        TIC("Continuity boundary constants")
+        AddContinuityBoundaryConstants(fvCoeffs.Cont);
+        TOC()
+
     } );
-    TOC()
     
 
     TOC()
-
 }
 
 
