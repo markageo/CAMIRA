@@ -1244,8 +1244,8 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
             
         // Add boundary constants to source terms
         AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
-        AddContinuityBoundaryConstants(fvCoeffs.Cont);
     } );
+    AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
     // Relaxation factor
     fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation.P;
@@ -1329,11 +1329,11 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
         AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
         TOC()
 
-        TIC("Continuity boundary constants")
-        AddContinuityBoundaryConstants(fvCoeffs.Cont);
-        TOC()
-
     } );
+
+    TIC("Continuity boundary constants")
+    AddContinuityBoundaryConstants(fvCoeffs.Cont);
+    TOC()
     
 
     TOC()
