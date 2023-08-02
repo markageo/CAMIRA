@@ -127,14 +127,14 @@ Solver {
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 1000
-        maxOuterResiduals = 0
+        maxOuterResiduals = 1e-5
 
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 3
+        maxIterations = 1
         maxResiduals = 1e-4
 
         planeSweepDirection = +x
