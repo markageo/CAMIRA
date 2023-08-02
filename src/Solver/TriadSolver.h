@@ -80,6 +80,11 @@ public:
         // Precompute momentum RHS divided by AP coefficients
         // U momentum
         floatType newtonStencilX = 0.0f;
+        if constexpr ( LI == Linearisation::Newton ) {
+            newtonStencilX = - m_fvCoeffs.Mom[X].AU[Y][sCV::cCoupled]( i, j, k ) * m_fields.U[Y]( ig, jg+sCV::iCoupled, kg )
+
+                             - m_fvCoeffs.Mom[X].AU[Z][sCW::cCoupled]( i, j, k ) * m_fields.U[Z]( ig, jg, kg+sCW::iRight );
+        }
         floatType bU = ( lineConstants.U[X](iU)  
 
                        - m_fvCoeffs.Mom[X].AU[X][e](iU, jU, kU) * m_fields.U[X]( igU+1, jgU  , kgU  )
@@ -95,10 +100,6 @@ public:
 
         // V momentum
         floatType newtonStencilY = 0.0f;
-        if constexpr ( LI == Linearisation::Newton ) {
-            newtonStencilY = - m_fvCoeffs.Mom[Y].AU[X][e](iV, jV, kV) * m_fields.U[X]( igV+1, jgV  , kgV  )
-                             - m_fvCoeffs.Mom[Y].AU[X][w](iV, jV, kV) * m_fields.U[X]( igV-1, jgV  , kgV  );
-        }
         floatType bV = ( lineConstants.U[Y](iV)
 
                        - m_fvCoeffs.Mom[Y].AU[Y][e](iV, jV, kV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
@@ -111,10 +112,6 @@ public:
 
         // W momentum
         floatType newtonStencilZ = 0.0f;
-        if constexpr ( LI == Linearisation::Newton ) {
-            newtonStencilZ = - m_fvCoeffs.Mom[Z].AU[X][e](iW, jW, kW) * m_fields.U[X]( igW+1, jgW  , kgW  )
-                             - m_fvCoeffs.Mom[Z].AU[X][w](iW, jW, kW) * m_fields.U[X]( igW-1, jgW  , kgW  );
-        }
         floatType bW = ( lineConstants.U[Z](iW)
 
                        - m_fvCoeffs.Mom[Z].AU[Z][e](iW, jW, kW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
@@ -131,7 +128,6 @@ public:
             pressureWideStencil = - m_fvCoeffs.Cont.AP[ee](i, j, k) * m_fields.P( ig+2, jg  , kg  ) 
                                   - m_fvCoeffs.Cont.AP[ww](i, j, k) * m_fields.P( ig-2, jg  , kg  );
         }
-
         floatType bP = lineConstants.P(i)
 
                      - m_fvCoeffs.Cont.AU[X][sCU::cLeft ](i) * m_fields.U[X]( ig + sCU::iLeft , jg, kg)

@@ -137,8 +137,8 @@ private:
             // U momentum
             floatType newtonStencilX = 0.0f;
             if constexpr ( LI == Linearisation::Newton ) {
-                newtonStencilX = - m_fvCoeffs.Mom[X].AU[Y][n]( i, j, k ) * m_fields.U[Y]( ig, jg+1, kg )
-                                 - m_fvCoeffs.Mom[X].AU[Y][s]( i, j, k ) * m_fields.U[Y]( ig, jg-1, kg );
+                newtonStencilX = - m_fvCoeffs.Mom[X].AU[Y][sCV::cLeft ]( i, j, k ) * m_fields.U[Y]( ig, jg+sCV::iLeft , kg )
+                                 - m_fvCoeffs.Mom[X].AU[Y][sCV::cRight]( i, j, k ) * m_fields.U[Y]( ig, jg+sCV::iRight, kg );
             }
             m_lineConstants.U[X](i) = planeConstants.U[X](i, j)
                                     + ( 
@@ -150,6 +150,13 @@ private:
 
             // V momentum
             floatType newtonStencilY = 0.0f;
+            if constexpr ( LI == Linearisation::Newton ) {
+                newtonStencilY = - m_fvCoeffs.Mom[Y].AU[X][e]( i, jV, kV ) * m_fields.U[X]( ig  , jgV+1, kgV   )
+                                 - m_fvCoeffs.Mom[Y].AU[X][p]( i, jV, kV ) * m_fields.U[X]( ig  , jgV  , kgV   )
+                                 - m_fvCoeffs.Mom[Y].AU[X][w]( i, jV, kV ) * m_fields.U[X]( ig  , jgV-1, kgV   )
+
+                                 - m_fvCoeffs.Mom[Y].AU[Z][sCW::cCoupled]( i, jV, kV ) * m_fields.U[Z]( ig, jgV, kgV+sCW::iCoupled );
+            }
             m_lineConstants.U[Y](i) = planeConstants.U[Y](i, jV)
                                     + (
                                       - m_fvCoeffs.Mom[Y].AU[Y][n](i, jV, kV) * m_fields.U[Y]( ig  , jgV+1, kgV  )  
@@ -163,10 +170,6 @@ private:
 
             // W momentum
             floatType newtonStencilZ = 0.0f;
-            if constexpr ( LI == Linearisation::Newton ) {
-                newtonStencilZ = - m_fvCoeffs.Mom[Z].AU[Y][n]( i, jW, kW ) * m_fields.U[Y]( ig, jgW+1, kgW )
-                                 - m_fvCoeffs.Mom[Z].AU[Y][s]( i, jW, kW ) * m_fields.U[Y]( ig, jgW-1, kgW );
-            }
             m_lineConstants.U[Z](i) = planeConstants.U[Z](i, jW)
                                     + ( 
                                       - m_fvCoeffs.Mom[Z].AU[Z][n](i, jW, kW) * m_fields.U[Z]( ig  , jgW+1, kgW  ) 
