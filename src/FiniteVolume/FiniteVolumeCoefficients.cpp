@@ -1206,7 +1206,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
         // Add diffusion to velocity terms
         AddDiffusion(fvCoeffs.Mom[axis], bcData.U[axis], mesh);
 
-        // Inverse of AP coefficient
+        // Inverse of AP coefficient (Picard)
         fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
 
         // Momentum pressure terms
@@ -1237,9 +1237,11 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
 
     // Add Newton Linearisation terms if selected
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        if ( fvCoeffs.Mom[axis].linearisation == Linearisation::Newton )
+        if ( fvCoeffs.Mom[axis].linearisation == Linearisation::Newton ) {
             AddAdvectionNewtonCoefficients(fvCoeffs.Mom[axis], faceAdvectedVelocities, faceFluxes, bcData.U[axis], mesh);
-
+            fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
+        }
+            
         // Add boundary constants to source terms
         AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
         AddContinuityBoundaryConstants(fvCoeffs.Cont);
@@ -1298,8 +1300,8 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
         AddDiffusion(fvCoeffs.Mom[axis], bcData.U[axis], mesh);
         TOC()
 
-        // Inverse of AP coefficient
-        TIC("Inverse AP")
+        // Inverse of AP coefficient (Picard)
+        TIC("Inverse AP (Picard)")
         fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
         TOC();
 
@@ -1314,10 +1316,12 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-         // Add Newton Linearisation terms if selected
+        // Add Newton Linearisation terms if selected
         TIC("Newton advection")
-        if ( fvCoeffs.Mom[axis].linearisation == Linearisation::Newton )
+        if ( fvCoeffs.Mom[axis].linearisation == Linearisation::Newton ) {
             AddAdvectionNewtonCoefficients(fvCoeffs.Mom[axis], faceAdvectedVelocities, faceFluxes, bcData.U[axis], mesh);
+            fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
+        }
         TOC()
 
          // Add boundary constants to source terms
