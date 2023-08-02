@@ -10,11 +10,64 @@ using namespace FVT;
 namespace
 {
 
-void LinearInterpolationInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities, 
-                                              const EnumVector<Axis, array3D> &cellVelocities, 
+void LinearInterpInteriorFaceVelocityWithMWI( EnumVector<Axis, array3D> &faceVelocities, 
+                                              const FieldData<array3D> &cellFields, 
+                                              const FVCoefficients &fvCoeffs,
                                               const Mesh &mesh, 
                                               const Axis::ENUMDATA axis,
                                               const Axis::ENUMDATA velocityComponent )
+{
+    using enum Axis::ENUMDATA;
+
+    array3D &faceVel = faceVelocities[ velocityComponent ];
+    const array3D &cellVel = cellFields.U[ velocityComponent ];
+    const array3D &cellPressure = cellFields.P;
+    const array3D &momentumDiagCoeffInv = fvCoeffs.Mom[axis].diagCoeffInv;
+    const std::array<array1D, 4> &mwiSparseCoeffs  = fvCoeffs.Cont.mwiSparseCoeffs[axis];
+    const std::array<array1D, 2> &mwiCompactCoeffs = fvCoeffs.Cont.mwiCompactCoeffs[axis];
+
+    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+
+    for (intType k = startIndex[Z]; k != nFaces[Z]; k++ ) {
+        for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+
+                arrayIndex3D idx = {i, j, k},
+                             HiIndex = idx,
+                             LoIndex = idx,
+                             LoLoIndex = idx,
+                             HiHiIndex = idx;
+                LoIndex[axis]   -= 1;
+                LoLoIndex[axis] -= 2;
+                HiHiIndex[axis] += 1;
+
+                floatType interpFactor = mesh.interpFactors[ axis ]( idx[axis] );
+                faceVel( idx ) = (1 - interpFactor)*cellVel( G(LoIndex) ) + interpFactor*cellVel( G(HiIndex) );
+
+                // Add MWI correction
+                floatType d = 0.5f * ( momentumDiagCoeffInv( HiIndex )  +  momentumDiagCoeffInv( LoIndex ) );
+                floatType coeff0 = d *   mwiSparseCoeffs[0]( idx[axis] ),
+                          coeff1 = d * ( mwiSparseCoeffs[1]( idx[axis] ) + mwiCompactCoeffs[0]( idx[axis] ) ),
+                          coeff2 = d * ( mwiSparseCoeffs[2]( idx[axis] ) + mwiCompactCoeffs[1]( idx[axis] ) ),
+                          coeff3 = d *   mwiSparseCoeffs[3]( idx[axis] );
+
+                faceVel( idx ) += coeff0 * cellPressure( G(LoLoIndex) )
+                                + coeff1 * cellPressure( G(LoIndex) )
+                                + coeff2 * cellPressure( G(HiIndex) )
+                                + coeff3 * cellPressure( G(HiHiIndex) );
+
+            }
+        }
+    }
+}
+
+
+
+void LinearInterpInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities, 
+                                       const EnumVector<Axis, array3D> &cellVelocities, 
+                                       const Mesh &mesh, 
+                                       const Axis::ENUMDATA axis,
+                                       const Axis::ENUMDATA velocityComponent )
 {
     using enum Axis::ENUMDATA;
 
@@ -202,7 +255,7 @@ void UpdateFaceFluxes( EnumVector< Axis, array3D > &faceFluxes,
 {
     // Internal faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        LinearInterpolationInteriorFaceVelocity( faceFluxes, cellVelocities, mesh, axis, axis);
+        LinearInterpInteriorFaceVelocity( faceFluxes, cellVelocities, mesh, axis, axis);
     } );
     
     // Boundary faces
@@ -214,6 +267,27 @@ void UpdateFaceFluxes( EnumVector< Axis, array3D > &faceFluxes,
     } );
 }
 
+
+// Calculates face velocity fluxes. i.e. normal component of velocity on faces with MWI correction
+void UpdateFaceFluxesWithMWI( EnumVector< Axis, array3D > &faceFluxes, 
+                              const Mesh &mesh, 
+                              const FieldData<array3D> &cellFields,
+                              const FVCoefficients &fvCoeffs, 
+                              const FieldData< BoundaryConditionData > &bcData )
+{
+    // Internal faces
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        LinearInterpInteriorFaceVelocityWithMWI( faceFluxes, cellFields, fvCoeffs, mesh, axis, axis);
+    } );
+    
+    // Boundary faces
+    EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {
+
+        Axis::ENUMDATA velocityComponent = LUT::BoundaryPatchAxis[ boundaryPatch ];
+        BoundaryFaceVelocitiy( faceFluxes, cellFields.U, mesh, bcData.U, boundaryPatch, velocityComponent );
+
+    } );
+}
 
 
 EnumVector<Axis, array3D> InitialiseFaceFluxes( const Mesh &mesh, 

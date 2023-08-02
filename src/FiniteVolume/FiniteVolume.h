@@ -105,6 +105,12 @@ void UpdateFaceFluxes( EnumVector<Axis, array3D> &,
                        const EnumVector<Axis, array3D> &, 
                        const FieldData< BoundaryConditionData > &);
 
+void UpdateFaceFluxesWithMWI( EnumVector<Axis, array3D> &, 
+                              const Mesh &, 
+                              const FieldData<array3D> &,
+                              const FVCoefficients &, 
+                              const FieldData< BoundaryConditionData > &);
+
 void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, array3D> > &, 
                                    const Mesh &, 
                                    const EnumVector<Axis, array3D> &, 
