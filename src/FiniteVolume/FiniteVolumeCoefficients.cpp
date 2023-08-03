@@ -1231,9 +1231,9 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
 
     } );
 
+
     // Momentum Weighted interpolation
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, bcData, fields.P);
-        
 
     // Add Newton Linearisation terms if selected
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
@@ -1245,6 +1245,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
         // Add boundary constants to source terms
         AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
     } );
+
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
     // Relaxation factor

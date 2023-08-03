@@ -114,15 +114,13 @@ void UpwindInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities,
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
-                arrayIndex3D idx = {i, j, k},
-                             HiIndex = idx,
-                             LoIndex = idx;
-                LoIndex[axis] -= 1;
+                arrayIndex3D idx = {i, j, k};
 
                 if ( faceFluxes[axis](idx) >= 0.0f ) {
-                    faceVel( idx ) = cellVel( G(LoIndex) );
+                    idx[axis] -= 1;
+                    faceVel( idx ) = cellVel( G(idx) );
                 } else {
-                    faceVel( idx ) = cellVel( G(HiIndex) );
+                    faceVel( idx ) = cellVel( G(idx) );
                 }
 
             }
@@ -178,9 +176,9 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities,
             floatType extrapFactor_p = mesh.extrapFactors[boundaryPatch].p;
             floatType extrapFactor_a = mesh.extrapFactors[boundaryPatch].a;
             faceVelocities[axis].chip(faceEndIndex, axis) = cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex  , axis) 
-                                                                    * cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
-                                                               + cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex+1, axis) 
-                                                                    * cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
+                                                                * cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
+                                                          + cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex+1, axis) 
+                                                                * cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
             break;
         }
             

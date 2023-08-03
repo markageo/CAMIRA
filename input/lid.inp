@@ -118,7 +118,7 @@ Solver {
 
     Schemes {
 
-        linearisation           = Newton
+        linearisation           = Picard
         momentumInterpolation   = implicit
         advectionScheme         = upwind
         faceInterpolationScheme = weightedLinear
@@ -134,8 +134,8 @@ Solver {
     LinearSolver {
 
         type = SUGS
-        maxIterations = 1
-        maxResiduals = 1e-4
+        maxIterations = 2
+        maxResiduals = 1e-1
 
         planeSweepDirection = +x
         lineSweepDirection = +y
