@@ -218,7 +218,7 @@ inline FieldData<floatType> StencilResiduals( const FieldData<array3D> &fields,
 // Calculate global mass flux residual at the domain boundary
 [[ maybe_unused ]]
 inline floatType BoundaryMassFluxResidual( const EnumVector<Axis, array3D> &faceFluxes,
-                                    const Mesh &mesh )
+                                           const Mesh &mesh )
 {
     floatType massFluxResidual = 0.0f;
 
