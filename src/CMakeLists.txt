@@ -18,5 +18,8 @@ add_executable(main main.cpp)
 target_link_libraries(main PUBLIC libs)
 
 # Field transformation executable
-add_executable(soltransform soltransform.cpp)
-target_link_libraries(soltransform PUBLIC libs)
+if ( CFD_TRANSFORMATIONS )
+    add_executable(soltransform soltransform.cpp)
+    target_link_libraries(soltransform PUBLIC libs)
+endif()
+

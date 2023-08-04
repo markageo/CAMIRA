@@ -27,17 +27,14 @@ std::tuple<std::string, std::string, std::string> ReadCommandLineInputs(int argc
 int main(int argc, char const *argv[])
 {
 
-    using namespace CFD;
-
     // Read command line data
     auto [ inputFilename, originalFieldFilename, transformedFieldFilename ] = ReadCommandLineInputs( argc, argv );
 
     // Read just the axis transformation from the input file
-    auto [planeSweepDirection, lineSweepDirection] = ReadSweepDirections( inputFilename );
-    AxisTransformationMap axisTransformation = CreateAxisTransformation( planeSweepDirection, lineSweepDirection );
+    auto [planeSweepDirection, lineSweepDirection] = CFD::ReadSweepDirections( inputFilename );
+    CFD::AxisTransformationMap axisTransformation = CFD::CreateAxisTransformation( planeSweepDirection, lineSweepDirection );
 
     // Read and store the field
-
 
     // Transform the field
 
