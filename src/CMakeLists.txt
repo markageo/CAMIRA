@@ -13,6 +13,10 @@ target_link_libraries(libs PUBLIC eigen)
 target_link_libraries(libs PRIVATE warning_flags)
 target_link_libraries(libs PUBLIC compiler_flags)
 
-# Main executable
+# Main solver executable
 add_executable(main main.cpp)
 target_link_libraries(main PUBLIC libs)
+
+# Field transformation executable
+add_executable(soltransform soltransform.cpp)
+target_link_libraries(soltransform PUBLIC libs)

@@ -27,7 +27,7 @@ int main(int argc, char const *argv[])
     TIC("Input Processing")
     CFD::InputData inputData = CFD::InputDataFromCommandLine(argc, argv);
 
-    CFD::AxisTransformationMap axisTransformation = CFD::TransformUserInputData( inputData );
+    CFD::AxisTransformationMap axisTransformation = CFD::TransformUserInputData(inputData);
     TOC()
 
     /*-------------------------------------------------------------------------------------*\
@@ -35,32 +35,30 @@ int main(int argc, char const *argv[])
     \*-------------------------------------------------------------------------------------*/
 
     TIC("Meshing");
-    CFD::Mesh mesh( inputData );
+    CFD::Mesh mesh(inputData);
     TOC();
 
     TIC("Field Allocation");
-    CFD::FieldData<CFD::array3D> fields = CFD::InitialiseFields( mesh, inputData );
+    CFD::FieldData<CFD::array3D> fields = CFD::InitialiseFields(mesh, inputData);
     TOC();
 
     TIC("Boundary Condition Processing")
-    CFD::FieldData< CFD::BoundaryConditionData > bcData = SetBoundaryConditionData( inputData, mesh );
+    CFD::FieldData<CFD::BoundaryConditionData> bcData = SetBoundaryConditionData(inputData, mesh);
     TOC()
 
-
     TIC("Solver");
-    switch ( inputData.schemes.momentumInterpolation )
+    switch (inputData.schemes.momentumInterpolation)
     {
         using MI = CFD::MomentumInterpolation;
-        case ( MI::Implicit ):
-            CFD::SweepSolve< MI::Implicit >(fields, mesh, bcData, inputData, axisTransformation);
-            break;
+    case (MI::Implicit):
+        CFD::SweepSolve<MI::Implicit>(fields, mesh, bcData, inputData, axisTransformation);
+        break;
 
-        case ( MI::SemiExplicit ):
-            CFD::SweepSolve< MI::SemiExplicit >(fields, mesh, bcData, inputData, axisTransformation);
-            break;
+    case (MI::SemiExplicit):
+        CFD::SweepSolve<MI::SemiExplicit>(fields, mesh, bcData, inputData, axisTransformation);
+        break;
     }
     TOC();
-
 
     /*-------------------------------------------------------------------------------------*\
                                          Post-Processing
@@ -68,16 +66,14 @@ int main(int argc, char const *argv[])
 
     TIC("Post Processing");
     // Remove ghost cells from the fields
-    CFD::ForAllFieldData( [&] (CFD::intType f) {
-        CFD::FVT::RemoveGhostCells(fields[f], CFD::nGhost);
-    } );
+    CFD::ForAllFieldData([&](CFD::intType f)
+                         { CFD::FVT::RemoveGhostCells(fields[f], CFD::nGhost); });
 
-    CFD::FieldData<CFD::array3D> vertexFields = GetVertexFields( fields, mesh, bcData );
+    CFD::FieldData<CFD::array3D> vertexFields = GetVertexFields(fields, mesh, bcData);
 
     // Undo the boundary condition transformation
     CFD::TransformToUserCoordinates(mesh, fields, vertexFields, axisTransformation);
     TOC();
-
 
     /*-------------------------------------------------------------------------------------*\
                                              Output
@@ -85,17 +81,17 @@ int main(int argc, char const *argv[])
 
     using enum CFD::Axis::ENUMDATA;
 
-    VTK::VTKWriterConfig config( mesh.nFacesNormal[X](X), mesh.nFacesNormal[Y](Y), mesh.nFacesNormal[Z](Z) );
-        config.SetWriteMode( VTK::WriteModes::BINARY );
+    VTK::VTKWriterConfig config(mesh.nFacesNormal[X](X), mesh.nFacesNormal[Y](Y), mesh.nFacesNormal[Z](Z));
+    config.SetWriteMode(VTK::WriteModes::BINARY);
     VTK::gridVectorType<CFD::floatType> gridVector = {mesh.cellFaces[X].data(), mesh.cellFaces[Y].data(), mesh.cellFaces[Z].data()};
 
-    VTK::scalarMapType<CFD::floatType> scalarMap = { {"Pressure", VTK::GridTypes::CELL_DATA , fields.P.data()      },
-                                                     {"Pressure", VTK::GridTypes::POINT_DATA, vertexFields.P.data()} };
+    VTK::scalarMapType<CFD::floatType> scalarMap = {{"Pressure", VTK::GridTypes::CELL_DATA, fields.P.data()},
+                                                    {"Pressure", VTK::GridTypes::POINT_DATA, vertexFields.P.data()}};
 
-    VTK::vectorMapType<CFD::floatType> vectorMap = { {"Velocity", VTK::GridTypes::POINT_DATA, {vertexFields.U[X].data(), vertexFields.U[Y].data(), vertexFields.U[Z].data() }},
-                                                     {"Velocity", VTK::GridTypes::CELL_DATA , {fields.U[X].data()      , fields.U[Y].data()      , fields.U[Z].data()       }} };
+    VTK::vectorMapType<CFD::floatType> vectorMap = {{"Velocity", VTK::GridTypes::POINT_DATA, {vertexFields.U[X].data(), vertexFields.U[Y].data(), vertexFields.U[Z].data()}},
+                                                    {"Velocity", VTK::GridTypes::CELL_DATA, {fields.U[X].data(), fields.U[Y].data(), fields.U[Z].data()}}};
     VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
-    
+
     TIC("Writer");
     writer.WriteData(inputData.fieldOutputFilename, "CFD simulation output");
     TOC();

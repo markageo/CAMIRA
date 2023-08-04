@@ -10,6 +10,10 @@
 #include <utility>
 #include <filesystem>
 
+
+namespace INP
+{
+
 // Characters used to define structure of input files
 #define COMMENT_CHAR_1         '/'
 #define COMMENT_CHAR_2         '/' // Can make null character (\0) if comment symbol is only one character
@@ -502,3 +506,5 @@ pt::ptree ParseFile(const std::string &inputFileName)
     return pt;
     
 }
+
+}   // end namespace INP

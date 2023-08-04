@@ -497,29 +497,29 @@ namespace
     \*-------------------------------------------------------------------------------------*/
 
 
-    CFD::BoundaryPatches::ENUMDATA ReadAxisDirection(const std::string &axisString)
+    CFD::BoundaryPatches::ENUMDATA String2BoundaryPatch(const std::string &bpString)
     {
         using BP = CFD::BoundaryPatches::ENUMDATA;
-        if        ( axisString == "+x" ) {
+        if        ( bpString == "+x" ) {
             return BP::xPositive;
 
-        } else if ( axisString == "-x" ) {
+        } else if ( bpString == "-x" ) {
             return BP::xNegative;
 
-        } else if ( axisString == "+y" ) {
+        } else if ( bpString == "+y" ) {
             return BP::yPositive;
         
-        } else if ( axisString == "-y" ) {
+        } else if ( bpString == "-y" ) {
             return BP::yNegative;
 
-        } else if ( axisString == "+z" ) {
+        } else if ( bpString == "+z" ) {
             return BP::zPositive;
 
-        } else if ( axisString == "-z" ) {
+        } else if ( bpString == "-z" ) {
             return BP::zNegative;
 
         } else {
-            // throw ERROR - invalid sweeping direction
+            throw std::runtime_error( "'" + bpString + "' is an invalid axis direction" );
             return BP::xPositive;
         }
     }
@@ -623,11 +623,11 @@ namespace
 
         // Plane sweep direction
         valueString = linearSolverTree.get<std::string>( "planeSweepDirection" );
-        inputData.linearSolverSettings.planeSweepDirection = ReadAxisDirection( valueString );
+        inputData.linearSolverSettings.planeSweepDirection = String2BoundaryPatch( valueString );
 
         // Line sweep direction
         valueString = linearSolverTree.get<std::string>( "lineSweepDirection" );
-        inputData.linearSolverSettings.lineSweepDirection = ReadAxisDirection( valueString );
+        inputData.linearSolverSettings.lineSweepDirection = String2BoundaryPatch( valueString );
 
     }
 
@@ -744,7 +744,7 @@ namespace
 // Parse input file and read into InputData structure
 CFD::InputData CFD::ReadInputData(const std::string &inputFilename) 
 {
-    pt::ptree tree = ParseFile(inputFilename);
+    pt::ptree tree = INP::ParseFile(inputFilename);
 
     InputData inputData;
     inputData.inputFileDirectory = RelativePath( inputFilename );
@@ -757,4 +757,21 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFilename)
     ReadOutput(inputData, tree);
 
     return inputData;
+}
+
+// Parse input file and just read sweep directions
+std::tuple< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > CFD::ReadSweepDirections( const std::string &inputFilename )
+{
+    pt::ptree tree = INP::ParseFile(inputFilename);
+    const pt::ptree &linearSolverTree = tree.get_child("Solver").get_child("LinearSolver");
+
+    // Plane sweep direction
+    std::string valueString = linearSolverTree.get<std::string>( "planeSweepDirection" );
+    BoundaryPatches::ENUMDATA planeSweepDirection = String2BoundaryPatch( valueString );
+
+    // Line sweep direction
+    valueString = linearSolverTree.get<std::string>( "lineSweepDirection" );
+    BoundaryPatches::ENUMDATA lineSweepDirection = String2BoundaryPatch( valueString );
+
+    return { planeSweepDirection, lineSweepDirection };
 }

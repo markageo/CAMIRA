@@ -6,6 +6,7 @@
 #include <vector>
 #include <utility>
 #include <map>
+#include <tuple>
 
 namespace CFD
 {
@@ -101,6 +102,8 @@ struct InputData
 InputData ReadInputData(const std::string &);
 
 InputData InputDataFromCommandLine(int, char const **);
+
+std::tuple< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > ReadSweepDirections( const std::string & );
 
 
 } // end namespace CFD
