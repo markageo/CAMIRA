@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.001
+    nu   = 0.1
 }
 
 Mesh {
@@ -13,7 +13,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 4)
-            nCells     = 64
+            nCells     = 128
             biasFactor = 1
         }
     }
@@ -22,14 +22,14 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 0.25)
-            nCells     = 8
-            biasFactor = 2
+            nCells     = 16
+            biasFactor = 1
         }
 
          Segment {
             bounds     = (0.25, 0.5)
-            nCells     = 8
-            biasFactor = -2
+            nCells     = 16
+            biasFactor = 1
         }
     }
 
@@ -37,14 +37,14 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.25)
-            nCells     = 8
-            biasFactor = 2
+            nCells     = 16
+            biasFactor = 1
         }
 
          Segment {
             bounds     = (0.25, 0.5)
-            nCells     = 8
-            biasFactor = -2
+            nCells     = 16
+            biasFactor = 1
         }
     }
     
@@ -53,7 +53,7 @@ Mesh {
 
 InitialConditions
 {
-    u = 1
+    u = 0
     v = 0
     w = 0
     p = 0
@@ -116,9 +116,9 @@ BoundaryConditions
 Solver {
 
     Schemes {
-        linearisation = Picard
-        momentumInterpolation = implicit
-        advectionScheme = upwind
+        linearisation           = Newton
+        momentumInterpolation   = implicit
+        advectionScheme         = upwind
         faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (1, 1, 1)
@@ -131,11 +131,11 @@ Solver {
     LinearSolver {
 
         type = SUGS
-        maxIterations = 1
-        maxResiduals = 1e-4
+        maxIterations = 5
+        maxResiduals = 1e-2
 
-        planeSweepDirection = +y
-        lineSweepDirection = +x
+        planeSweepDirection = +x
+        lineSweepDirection = +z
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
@@ -152,7 +152,7 @@ Output {
 
     Monitors {
         Probe {
-            filename = "probe1.csv"
+            filename = "output/probe1.csv"
             location = (0.5, 0.98, 0.5)
         }
     }
