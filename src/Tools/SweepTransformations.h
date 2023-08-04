@@ -56,6 +56,9 @@ class AxisTransformationMap
 };
 
 
+// Return a transformation map from a plane and line sweeping direction
+AxisTransformationMap CreateAxisTransformation( BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA ); 
+
 // Transform user input data so that sweeping is consistent with solver
 AxisTransformationMap TransformUserInputData( InputData & );
 

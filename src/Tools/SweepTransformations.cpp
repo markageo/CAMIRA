@@ -199,50 +199,6 @@ namespace
 
 
 
-    // Sets the axis transformation map based on the sweeping directions
-    AxisTransformationMap SetAxisTransformation( InputData &inputData) 
-    {
-        using BP = CFD::BoundaryPatches::ENUMDATA;
-        using directionVector = Eigen::Matrix<CFD::intType, 3, 1>;
-
-        AxisTransformationMap axisTransformation;
-
-        // User input for plane sweep direction
-        BP planeSweepDirection = inputData.linearSolverSettings.planeSweepDirection;
-        directionVector planeSweepVector = Axis2Vector( planeSweepDirection );
-
-        // User input for line sweep direction
-        BP lineSweepDirection = inputData.linearSolverSettings.lineSweepDirection;
-        directionVector lineSweepVector = Axis2Vector( lineSweepDirection );
-
-        // Plane and line sweep direction must be orthogonal
-        if ( abs( planeSweepVector.dot( lineSweepVector ) ) == 1 ) {
-            // throw ERROR - plane and line sweep directions cannot be the same
-        }
-
-        // Point sweep direction, chosen to make right handed coordinate system
-        directionVector pointSweepVector = lineSweepVector.cross( planeSweepVector );
-        BP pointSweepDirection = Vector2Axis( pointSweepVector );
-
-        // Update the axisTransformation map
-        axisTransformation.Set( BP::xPositive, pointSweepDirection);
-        axisTransformation.Set( BP::xNegative, Vector2Axis( -pointSweepVector ));
-
-        axisTransformation.Set( BP::yPositive, lineSweepDirection);
-        axisTransformation.Set( BP::yNegative, Vector2Axis( -lineSweepVector ));
-
-        axisTransformation.Set( BP::zPositive, planeSweepDirection);
-        axisTransformation.Set( BP::zNegative, Vector2Axis( -planeSweepVector ));
-
-        // Change the sweep direction
-        inputData.linearSolverSettings.planeSweepDirection = BP::zPositive;
-        inputData.linearSolverSettings.lineSweepDirection  = BP::yPositive;
-
-        return axisTransformation;
-    }
-
-
-    
     // Transform user FieldData struct to code coordinates. Only transforms the momentum equations part.
     template< typename T >
     void TransformFieldDataToCode( FieldData<T> &fieldData,
@@ -385,10 +341,55 @@ namespace
 
 
 
+
+
+// Sets the axis transformation map based on the sweeping directions
+AxisTransformationMap CreateAxisTransformation( BoundaryPatches::ENUMDATA planeSweepDirection,
+                                                BoundaryPatches::ENUMDATA lineSweepDirection ) 
+{
+    using BP = CFD::BoundaryPatches::ENUMDATA;
+    using directionVector = Eigen::Matrix<CFD::intType, 3, 1>;
+
+    AxisTransformationMap axisTransformation;
+
+    // User input for plane sweep direction
+    directionVector planeSweepVector = Axis2Vector( planeSweepDirection );
+
+    // User input for line sweep direction
+    directionVector lineSweepVector = Axis2Vector( lineSweepDirection );
+
+    // Plane and line sweep direction must be orthogonal
+    if ( abs( planeSweepVector.dot( lineSweepVector ) ) == 1 ) {
+        // throw ERROR - plane and line sweep directions cannot be the same
+    }
+
+    // Point sweep direction, chosen to make right handed coordinate system
+    directionVector pointSweepVector = lineSweepVector.cross( planeSweepVector );
+    BP pointSweepDirection = Vector2Axis( pointSweepVector );
+
+    // Update the axisTransformation map
+    axisTransformation.Set( BP::xPositive, pointSweepDirection);
+    axisTransformation.Set( BP::xNegative, Vector2Axis( -pointSweepVector ));
+
+    axisTransformation.Set( BP::yPositive, lineSweepDirection);
+    axisTransformation.Set( BP::yNegative, Vector2Axis( -lineSweepVector ));
+
+    axisTransformation.Set( BP::zPositive, planeSweepDirection);
+    axisTransformation.Set( BP::zNegative, Vector2Axis( -planeSweepVector ));
+
+    return axisTransformation;
+}
+
+
+
+
 AxisTransformationMap TransformUserInputData(InputData &inputData )
 {
     
-    AxisTransformationMap axisTransformation = SetAxisTransformation( inputData );
+    AxisTransformationMap axisTransformation = CreateAxisTransformation( inputData.linearSolverSettings.planeSweepDirection,
+                                                                      inputData.linearSolverSettings.lineSweepDirection );
+    inputData.linearSolverSettings.planeSweepDirection = BoundaryPatches::zPositive;
+    inputData.linearSolverSettings.lineSweepDirection  = BoundaryPatches::yPositive;
 
     TransformBoundaryConditions( inputData, axisTransformation );
     TransformInitialConditions( inputData, axisTransformation );
