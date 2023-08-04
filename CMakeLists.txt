@@ -49,20 +49,20 @@ else()
 endif()
 
 
-# Use VTK library for output (if available)
-option ( CFD_USE_VTK_LIB "Use VTK library for input/ouput if available. Not using this limits some functionality." off)
-if ( CFD_USE_VTK_LIB )
+# Create field transformation execultable, this requires the VTK library
+option ( CFD_TRANSFORMATIONS "Create field transformation executable. This requires the VTK library." off)
+if ( CFD_TRANSFORMATIONS )
 
 	find_package( VTK )
 	if ( ${VTK_FOUND} )
-		message( STATUS "VTK library found successfully and will be used for IO" )
+		message( STATUS "VTK library found successfully." )
 		add_compile_definitions( USE_VTK_LIB )
 	else()
-		message( FATAL_ERROR "Could not locate VTK library installation!" )
+		message( FATAL_ERROR "Could not locate VTK library installation! This is required for field transformation executable!" )
 	endif()
 
 else()
-	message( STATUS "VTK library not being used for IO, some functionality will be limited." )
+	message( STATUS "Field transformation executable will not be created." )
 endif()
 
 
