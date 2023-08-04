@@ -222,7 +222,7 @@ inline floatType BoundaryMassFluxResidual( const EnumVector<Axis, array3D> &face
 {
     floatType massFluxResidual = 0.0f;
 
-    EnumFor<Axis>([&](Axis::ENUMDATA axis) {
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
         // Positive face, area normal is in positive direction
         auto faceFluxesPositive = faceFluxes[axis].chip( mesh.nCells(axis), axis ) * mesh.cellFaceAreas[axis];
