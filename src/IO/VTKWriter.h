@@ -81,15 +81,29 @@ class VTKWriterConfig
 {
     public:
 
-        VTKWriterConfig(sizeType, sizeType, sizeType);
+        VTKWriterConfig(sizeType dimX, sizeType dimY, sizeType dimZ) :
+            m_dims{dimX, dimY, dimZ},
+            m_writeMode( WriteModes::ASCII ), 
+            m_ASCIIPrecision( DEFAULT_ASCII_PRECISION )
+            {};
 
-        void SetWriteMode(WriteModes);
-        void SetASCIIPrecision(int);
+        void SetWriteMode(WriteModes writeMode)
+        { m_writeMode = writeMode; }
 
-        const std::array<sizeType, 3> &dims() const;
-        sizeType dim(sizeType) const;
-        WriteModes WriteMode() const;
-        const int &ASCIIPrecision() const;
+        void SetASCIIPrecision(int ASCIIPrecision )
+        { m_ASCIIPrecision = ASCIIPrecision; }
+
+        const std::array<sizeType, 3> &dims() const
+        { return m_dims; } 
+
+        sizeType dim(sizeType i) const
+        { return m_dims[ static_cast<size_t>(i) ]; }
+
+        WriteModes WriteMode() const
+        { return m_writeMode; }
+
+        const int &ASCIIPrecision() const
+        { return m_ASCIIPrecision; }
 
     private:
 
@@ -98,44 +112,6 @@ class VTKWriterConfig
         int m_ASCIIPrecision;
 
 };
-
-
-// ------------------------------------- Class Member Definitions ------------------------------------- //
-
-// Constructor sets default values
-VTKWriterConfig::VTKWriterConfig(sizeType dimX, sizeType dimY, sizeType dimZ) :
-    m_dims{dimX, dimY, dimZ},
-    m_writeMode( WriteModes::ASCII ), 
-    m_ASCIIPrecision( DEFAULT_ASCII_PRECISION )
-    {};
-
-
-// Dimensions
-sizeType VTKWriterConfig::dim(sizeType i) const
-{ return m_dims[ static_cast<size_t>(i) ]; }
-
-const std::array<sizeType, 3> &VTKWriterConfig::dims() const
-{ return m_dims; } 
-
-
-// Write mode set
-void VTKWriterConfig::SetWriteMode(WriteModes writeMode) 
-{ m_writeMode = writeMode; }
-
-// Write mode get
-WriteModes VTKWriterConfig::WriteMode() const
-{ return m_writeMode; }
-
-
-// ASCII precision set
-void VTKWriterConfig::SetASCIIPrecision(int ASCIIPrecision) 
-{ m_ASCIIPrecision = ASCIIPrecision; }
-
-// ASCII precision get
-const int &VTKWriterConfig::ASCIIPrecision() const
-{ return m_ASCIIPrecision; }
-
-
 
 
 
@@ -161,7 +137,6 @@ class VTKWriter
 
     private:
 
-        VTKWriterConfig m_config;
         std::ofstream m_outputFileStream;
         std::string m_writeMode;
         std::string m_outputDataType;
@@ -193,7 +168,6 @@ VTKWriter<T>::VTKWriter(const gridVectorType<T> &gridVector,
                         const scalarMapType<T> &scalarMap, 
                         const vectorMapType<T> &vectorMap, 
                         const VTKWriterConfig &config) : 
-    m_config(config),
     m_gridDims( config.dims() ),
     m_nPointData( m_gridDims[0] * m_gridDims[1] * m_gridDims[2] ),
     m_nCellData( (m_gridDims[0]-1) * (m_gridDims[1]-1) * (m_gridDims[2]-1) ),
