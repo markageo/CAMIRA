@@ -13,7 +13,7 @@ namespace CFD
 
 // ----------------------------------------------------- Type Aliases ----------------------------------------------------- //
 
-#ifdef DOUBLE_PRECISION
+#ifdef CFD_DOUBLE_PRECISION
     using floatType = double;
 #else
     using floatType = float;

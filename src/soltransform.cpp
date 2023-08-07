@@ -13,11 +13,15 @@
 #include <tuple>
 
 
+#include <vtkRectilinearGridReader.h>
+#include <vtkAOSDataArrayTemplate.h>
+
+
 std::tuple<std::string, std::string, std::string> ReadCommandLineInputs(int argc, char const *argv[])
 {
     std::string inputFilename, originalFieldFilename, transformedFieldFilename;
-    if ( argc != 3 ) {
-        throw std::invalid_argument("Invalid command line options.");
+    if ( argc != 4 ) {
+        throw std::invalid_argument("Invalid command line arguments.");
     } 
     return { argv[1], argv[2], argv[3] };
 }
@@ -35,10 +39,35 @@ int main(int argc, char const *argv[])
     CFD::AxisTransformationMap axisTransformation = CFD::CreateAxisTransformation( planeSweepDirection, lineSweepDirection );
 
     // Read and store the field
+    vtkNew< vtkRectilinearGridReader > gridReader;
+    gridReader->SetFileName( originalFieldFilename.c_str() );
+    gridReader->Update();
 
     // Transform the field
 
     // Write the transformed field
+
+
+    // ---------------------------------- TESTING
+
+    std::string testFilename = "test_field.vtk";
+    CFD::intType ni{10}, nj{11}, nk{12};
+    // CFD::array3D arr(ni, nj, nk);
+    CFD::array1D arr(ni);
+    arr.setRandom();
+
+    vtkNew< vtkAOSDataArrayTemplate< double > > vtkArr;
+    vtkArr->SetArray( arr.data(), arr.size(), 1);
+
+    for ( CFD::intType i = 0; i != arr.size(); i++ ) {
+        std::cout << "Eigen: " << arr(i) << "   "
+                  << "VTK  : " << vtkArr->GetValue(i)
+                  << "\n";
+
+    }
+
+
+    // ------------------------------------------
 
 
     return 0;
