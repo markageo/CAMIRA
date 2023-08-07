@@ -205,7 +205,9 @@ iVector3 NumberOfFaces( const iVector3 &nCells,
 }   // end anonymous namespace
 
 
-// Constructor, creates the mesh
+
+
+// Constructor, creates the mesh from user inputdata
 Mesh::Mesh(const InputData &inputData) :
     nCells( { TotalCells(inputData.meshSegments[Axis::X]),  TotalCells(inputData.meshSegments[Axis::Y]), TotalCells(inputData.meshSegments[Axis::Z])} ),
 
