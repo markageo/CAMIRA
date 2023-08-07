@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.15)
 # set the project name and version
 project(Coupled-Sweep-NS VERSION 1.0)
 
-include(CheckIPOSupported)
-check_ipo_supported(RESULT supported OUTPUT error)
+# include(CheckIPOSupported)
+# check_ipo_supported(RESULT supported OUTPUT error)
 
 # Default executable location
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
@@ -43,7 +43,7 @@ endif()
 option ( CFD_DOUBLE_PRECISION "Double precision for CFD." on )
 if ( CFD_DOUBLE_PRECISION )
 	message( STATUS "Compiling in double precision" )
-	add_compile_definitions( DOUBLE_PRECISION )
+	add_compile_definitions( CFD_DOUBLE_PRECISION )
 else()
 	message( STATUS "Compiling in single precision" )
 endif()
@@ -53,7 +53,38 @@ endif()
 option ( CFD_TRANSFORMATIONS "Create field transformation executable. This requires the VTK library." off)
 if ( CFD_TRANSFORMATIONS )
 
-	find_package( VTK )
+	# find_package( VTK COMPONENTS 
+	# 			  CommonCore
+	# 			  CommonExecutionModel
+	# 			  IOXMLParser
+	# 			  CommonDataModel
+	# 			  CommonMisc
+	# 			  CommonSystem
+	# 			  IOCore
+	# 			  vtksys
+	# 			  IOLegacy
+	# 			  )
+
+	find_package(VTK COMPONENTS 
+				ChartsCore
+				CommonColor
+				CommonCore
+				CommonDataModel
+				FiltersCore
+				FiltersGeneral
+				FiltersSources
+				IOLegacy
+				InteractionStyle
+				RenderingContext2D
+				RenderingContextOpenGL2
+				RenderingCore
+				RenderingFreeType
+				RenderingGL2PSOpenGL2
+				RenderingLabel
+				RenderingOpenGL2
+				ViewsContext2D )
+  
+
 	if ( ${VTK_FOUND} )
 		message( STATUS "VTK library found successfully." )
 		add_compile_definitions( USE_VTK_LIB )
@@ -77,9 +108,11 @@ target_include_directories(eigen SYSTEM INTERFACE libraries/eigen-3.4.0)
 
 add_subdirectory(src)
 
-if( supported )
-    message(STATUS "IPO / LTO enabled")
-    set_property(TARGET main PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-else()
-    message(STATUS "IPO / LTO not supported: <${error}>")
-endif()
+# Link time optimisation
+# if( supported )
+#     message(STATUS "IPO / LTO enabled")
+#     set_property(TARGET main PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+# else()
+#     message(STATUS "IPO / LTO not supported: <${error}>")
+# endif()
+

@@ -21,5 +21,9 @@ target_link_libraries(main PUBLIC libs)
 if ( CFD_TRANSFORMATIONS )
     add_executable(soltransform soltransform.cpp)
     target_link_libraries(soltransform PUBLIC libs)
+    target_link_libraries(soltransform PUBLIC ${VTK_LIBRARIES})
+
+    vtk_module_autoinit( TARGETS soltransform
+                         MODULES ${VTK_LIBRARIES} )
 endif()
 
