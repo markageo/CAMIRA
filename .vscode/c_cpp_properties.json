@@ -3,7 +3,8 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "/usr/local/include/vtk-9.2"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",

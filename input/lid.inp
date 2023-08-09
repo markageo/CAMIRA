@@ -12,13 +12,13 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 50
+            nCells     = 25
             biasFactor = 2
         }
 
         Segment {
             bounds     = (0.5, 1)
-            nCells     = 50
+            nCells     = 25
             biasFactor = -2
         }
     }
@@ -26,13 +26,13 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 50
+            nCells     = 25
             biasFactor = 2
         }
 
         Segment {
             bounds     = (0.5, 1)
-            nCells     = 50
+            nCells     = 25
             biasFactor = -2
         }
     }
@@ -40,13 +40,13 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 50
+            nCells     = 25
             biasFactor = 2
         }
 
         Segment {
             bounds     = (0.5, 1)
-            nCells     = 50
+            nCells     = 25
             biasFactor = -2
         }
     }
