@@ -4,36 +4,23 @@
    Mark George
 \*---------------------------------------------------------------------------*/
 
+#include "soltransform.h"
+
 #include "Types.h"
+#include "IO/VTKWriter.h"
 
 #include "IO/InputProcessing.h"
 #include "Tools/SweepTransformations.h"
-
+#include "Tools/FVTools.h"
 #include <iostream>
 #include <tuple>
 
-
+#include <vtkType.h>
+#include <vtkCellData.h>
 #include <vtkRectilinearGrid.h>
 #include <vtkRectilinearGridReader.h>
 #include <vtkAOSDataArrayTemplate.h>
 
-
-std::tuple<std::string, std::string, std::string> ReadCommandLineInputs(int argc, char const *argv[])
-{
-    std::string inputFilename, originalFieldFilename, transformedFieldFilename;
-    if ( argc != 4 ) {
-        throw std::invalid_argument("Invalid command line arguments.");
-    } 
-    return { argv[1], argv[2], argv[3] };
-}
-
-int testfunc( CFD::array1D &arr )
-{
-    if (arr(1) > 0.0f) {
-        return 23;
-    }
-    return -1;
-}
 
 int main(int argc, char const *argv[])
 {
@@ -51,44 +38,63 @@ int main(int argc, char const *argv[])
     vtkGridReader->Update();
     vtkRectilinearGrid* vtkGrid = vtkGridReader->GetOutput();
     
-    // Create mesh of the original field
-    int dims[3];
-    vtkGrid->GetCellDims( dims );
-    CFD::iVector3 nCells( dims[0], dims[1], dims[2] );
+    using namespace CFD;
 
+    // Make sure the data type in the file is the same type as the code
+    if ( vtkGrid->GetScalarType() == VTK_DOUBLE ) {
 
-    CFD::floatType storage[3] = {2, 3, 4};
-    Eigen::TensorMap<CFD::array1D> nCells2( storage, 3 );
-    std::cout << testfunc( nCells2 ) << "\n";
+        if ( !std::is_same<CFD::floatType, double>::value )
+            throw std::runtime_error( "Type mismatch. VTK file to transform must be in double precision" );
 
+    } else if ( vtkGrid->GetScalarType() == VTK_FLOAT ) {
 
-    std::cout << vtkGrid->GetNumberOfCells() << "  " << vtkGrid->GetNumberOfPoints() << "\n";
+        if ( !std::is_same<CFD::floatType, float>::value )
+            throw std::runtime_error( "Type mismatch. VTK file to transform must be in single precision" );
 
-    std::cout << nCells(0) << " " << nCells(1) << " " << nCells(2) << "\n"; 
+    }
 
+    // Copy fields into Eigen Tensors
+    EnumVector<Axis, array1D > cellFaces = GetCellFaces( vtkGrid );
+    FieldData<array3D> cellFields        = GetCellFields( vtkGrid );
+    FieldData<array3D> vertexFields      = GetVertexFields( vtkGrid );
 
     // Transform the field
+
 
     // Write the transformed field
 
 
     // ---------------------------------- TESTING
 
-    std::string testFilename = "test_field.vtk";
-    CFD::intType ni{10}, nj{11}, nk{12};
-    // CFD::array3D arr(ni, nj, nk);
-    CFD::array1D arr(ni);
-    arr.setRandom();
+    // std::string testFilename = "test_field.vtk";
+    // CFD::intType ni{10}, nj{11}, nk{12};
+    // // CFD::array3D arr(ni, nj, nk);
+    // CFD::array1D arr(ni);
+    // arr.setRandom();
 
-    vtkNew< vtkAOSDataArrayTemplate< double > > vtkArr;
-    vtkArr->SetArray( arr.data(), arr.size(), 1);
+    // vtkNew< vtkAOSDataArrayTemplate< CFD::floatType > > vtkArr;
+    // vtkArr->SetArray( arr.data(), arr.size(), 1);
 
-    for ( CFD::intType i = 0; i != arr.size(); i++ ) {
-        std::cout << "Eigen: " << arr(i) << "   "
-                  << "VTK  : " << vtkArr->GetValue(i)
-                  << "\n";
+    // for ( CFD::intType i = 0; i != arr.size(); i++ ) {
+    //     std::cout << "Eigen: " << arr(i) << "   "
+    //               << "VTK  : " << vtkArr->GetValue(i)
+    //               << "\n";
 
-    }
+    // }
+
+
+    VTK::VTKWriterConfig config(cellFaces[Axis::X].size(), cellFaces[Axis::Y].size(), cellFaces[Axis::Z].size());
+    config.SetWriteMode(VTK::WriteModes::ASCII);
+    VTK::gridVectorType<CFD::floatType> gridVector = {cellFaces[Axis::X].data(), cellFaces[Axis::Y].data(), cellFaces[Axis::Z].data()};
+
+    VTK::scalarMapType<CFD::floatType> scalarMap = {{"Pressure", VTK::GridTypes::CELL_DATA, cellFields.P.data()}};
+
+    VTK::vectorMapType<CFD::floatType> vectorMap = {{"Velocity", VTK::GridTypes::CELL_DATA, {cellFields.U[Axis::X].data(), cellFields.U[Axis::Y].data(), cellFields.U[Axis::Z].data()}}};
+    
+    VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
+
+
+    writer.WriteData("output/test_rewrite.vtk", "CFD simulation output");
 
 
     // ------------------------------------------

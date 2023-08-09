@@ -528,7 +528,7 @@ void TransformToUserCoordinates( Mesh &mesh,
 //                 ReverseMeshAxis(grid, userAxis);
 //             }
 //         } else {
-//             grid[ userAxis ] = codeGrid[ soureAxis ];
+//             grid[ userAxis ] = codeGrid[ sourceAxis ];
 //             if ( reverseAxis ) {
 //                 grid[axis] = - ReversedArray1D( grid[axis] );
 //             }

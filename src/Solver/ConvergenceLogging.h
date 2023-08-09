@@ -3,9 +3,11 @@
 
 #include "../Types.h"
 #include "../Tools/SweepTransformations.h"
+#include "../Tools/FVTools.h"
 
 #include "Solver.h"
 #include "FieldProbe.h"
+#include "../IO/VTKWriter.h"
 
 #include <fstream>
 #include <iomanip>
@@ -13,6 +15,7 @@
 #include <sstream>
 #include <string>
 #include <iomanip>
+#include <memory>
 
 namespace CFD
 {
@@ -200,6 +203,53 @@ class ConsoleLog
         AxisTransformationMap m_AT;
         int m_precision;
 };
+
+
+
+// Writes the raw field to file (including ghost nodes). This is intended for writing during the solution process, and is to
+// be transformed and processed later.
+class RawFieldWriter
+{
+    public:
+        RawFieldWriter( const FieldData<array3D> &fields, 
+                        const Mesh &mesh,
+                        const std::string &baseFilename ) :
+            m_baseFilename( baseFilename )
+            {
+                using enum Axis::ENUMDATA;
+
+                // Add ghost cells (faces)
+                Eigen::array<std::pair<int, int>, 1> paddings;
+                paddings[0] = std::make_pair(nGhost, nGhost);
+                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                    m_cellFaces[axis] = mesh.cellFaces[axis].pad( paddings );
+                } );
+
+                // Config for the writer
+                VTK::VTKWriterConfig config(m_cellFaces[X].size(), m_cellFaces[Y].size(), m_cellFaces[Z].size());
+                    config.SetWriteMode(VTK::WriteModes::BINARY);
+                VTK::gridVectorType<CFD::floatType> gridVector = { m_cellFaces[X].data(), m_cellFaces[Y].data(), m_cellFaces[Z].data() };
+                VTK::scalarMapType<CFD::floatType> scalarMap = { {"Pressure", VTK::GridTypes::CELL_DATA, fields.P.data()} };
+                VTK::vectorMapType<CFD::floatType> vectorMap = { {"Velocity", VTK::GridTypes::CELL_DATA, {fields.U[X].data(), fields.U[Y].data(), fields.U[Z].data()}} };
+
+                // Instantiate the writer
+                m_vtkWriter = std::make_unique<VTK::VTKWriter<floatType>>(gridVector, scalarMap, vectorMap, config);
+
+            };
+
+            void WriteData( intType iterationNumber )
+            { m_vtkWriter->WriteData( AppendFilename( iterationNumber ), "Raw solver field output with ghost cells." ); }
+
+
+    private:
+        EnumVector<Axis, array1D> m_cellFaces;  // The writer will have a reference to this
+        std::unique_ptr< VTK::VTKWriter<floatType> > m_vtkWriter;
+        const std::string m_baseFilename;
+
+        std::string AppendFilename( intType iterationNumber )
+        { return m_baseFilename + "_" + std::to_string(iterationNumber) + ".vtk"; }
+};
+
 
 }   // end namespace CFD
 
