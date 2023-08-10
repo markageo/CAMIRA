@@ -248,7 +248,7 @@ class FieldWriter
         const std::string m_baseFilename;
 
         std::string AppendFilename( intType iterationNumber )
-        { return m_baseFilename + "_" + std::to_string(iterationNumber) + ".vtk"; }
+        { return m_baseFilename + std::to_string(iterationNumber) + ".vtk"; }
 
 
         void SetWriter()
@@ -279,14 +279,24 @@ class FieldWriter
 
         void TransformData()
         {
+            TIC("Transform Data")
+
+            TIC("Removing Ghost")
             ForAllFieldData([&](intType f) { 
                 m_transformedFields[f] = FVT::RemoveGhostCells(m_fields[f], nGhost); 
             });
+            TOC()
 
+            TIC("Vertex Fields")
             m_transformedVertexFields = GetVertexFields(m_transformedFields, m_mesh, m_bcData);
+            TOC()
 
+            TIC("Transformations")
             TransformFieldToUserCoordinates( m_transformedFields      , m_axisTransformation );
             TransformFieldToUserCoordinates( m_transformedVertexFields, m_axisTransformation );
+            TOC()
+
+            TOC()
         }
 
 };

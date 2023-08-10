@@ -89,6 +89,7 @@ struct InputData
     // Ouput
     std::string residualHistoryFilename;
     std::string fieldOutputFilename;
+    intType fieldWriteInterval;
 
     struct ProbeData {
         std::string filename;

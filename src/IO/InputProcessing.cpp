@@ -731,6 +731,9 @@ namespace
         // Field output filename
         inputData.fieldOutputFilename = outputTree.get<std::string>( "fieldOutputFilename" );
 
+        // Write interval for fields
+        inputData.fieldWriteInterval = outputTree.get<intType>( "fieldWriteInterval" );
+
         // Probes
         ReadMonitors( inputData, outputTree );
 

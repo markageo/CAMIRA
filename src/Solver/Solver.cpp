@@ -51,6 +51,7 @@ void SweepSolve( FieldData<array3D> &fields,
     }
     std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
     
+    FieldWriter fieldWriter( fields, mesh, bcData, axisTransformation, "output/field" );
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 
@@ -59,6 +60,11 @@ void SweepSolve( FieldData<array3D> &fields,
 
 
     // Outer iterations
+    bool writeFields = ( inputData.fieldWriteInterval > 0 );
+    if ( writeFields ) {
+        fieldWriter.WriteData( 0 );
+    }
+        
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
         linearSolver.UpdateState();
@@ -74,7 +80,6 @@ void SweepSolve( FieldData<array3D> &fields,
 
         probeValues      = FieldProbeValues(fields, fieldProbes); 
         
-
         fieldsOld = fields;
 
         consoleLog.WriteResiduals( residualsOuter, massFluxResidual, nOuterIterations );
@@ -82,13 +87,19 @@ void SweepSolve( FieldData<array3D> &fields,
         for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
             probeLogFiles[p].WriteData( probeValues[p], nOuterIterations );
         }
+        if ( writeFields && (nOuterIterations % inputData.fieldWriteInterval) == 0 ) {
+            fieldWriter.WriteData( nOuterIterations );
+        }
 
         if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
             std::cout << "*** OUTER ITERATIONS CONVERGED ***"
                         << "\n\n";
             break;
         }
+
     }
+
+
 }
 template void SweepSolve<MomentumInterpolation::Implicit>( FieldData<array3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
 template void SweepSolve<MomentumInterpolation::SemiExplicit>( FieldData<array3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
