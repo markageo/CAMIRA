@@ -8,6 +8,7 @@
 #include "Solver.h"
 #include "FieldProbe.h"
 #include "../IO/VTKWriter.h"
+#include "../Macros.h"
 
 #include <fstream>
 #include <iomanip>
@@ -206,48 +207,88 @@ class ConsoleLog
 
 
 
-// Writes the raw field to file (including ghost nodes). This is intended for writing during the solution process, and is to
-// be transformed and processed later.
-class RawFieldWriter
+// Postprocesses the fields and writes to file
+class FieldWriter
 {
     public:
-        RawFieldWriter( const FieldData<array3D> &fields, 
-                        const Mesh &mesh,
-                        const std::string &baseFilename ) :
+        FieldWriter( const FieldData<array3D> &fields, 
+                     const Mesh &mesh,
+                     const FieldData< BoundaryConditionData > &bcData,
+                     const AxisTransformationMap &axisTransformation,
+                     const std::string &baseFilename ) :
+            m_fields( fields ),
+            m_mesh( mesh ),
+            m_bcData( bcData ),
+            m_axisTransformation( axisTransformation ),
+            m_transformedMesh( mesh ),
             m_baseFilename( baseFilename )
             {
-                using enum Axis::ENUMDATA;
-
-                // Add ghost cells (faces)
-                Eigen::array<std::pair<int, int>, 1> paddings;
-                paddings[0] = std::make_pair(nGhost, nGhost);
-                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                    m_cellFaces[axis] = mesh.cellFaces[axis].pad( paddings );
-                } );
-
-                // Config for the writer
-                VTK::VTKWriterConfig config(m_cellFaces[X].size(), m_cellFaces[Y].size(), m_cellFaces[Z].size());
-                    config.SetWriteMode(VTK::WriteModes::BINARY);
-                VTK::gridVectorType<CFD::floatType> gridVector = { m_cellFaces[X].data(), m_cellFaces[Y].data(), m_cellFaces[Z].data() };
-                VTK::scalarMapType<CFD::floatType> scalarMap = { {"Pressure", VTK::GridTypes::CELL_DATA, fields.P.data()} };
-                VTK::vectorMapType<CFD::floatType> vectorMap = { {"Velocity", VTK::GridTypes::CELL_DATA, {fields.U[X].data(), fields.U[Y].data(), fields.U[Z].data()}} };
-
-                // Instantiate the writer
-                m_vtkWriter = std::make_unique<VTK::VTKWriter<floatType>>(gridVector, scalarMap, vectorMap, config);
-
+                // Mesh only needs to be transformed once
+                TransformMeshToUserCoordinates( m_transformedMesh, m_axisTransformation );
             };
 
             void WriteData( intType iterationNumber )
-            { m_vtkWriter->WriteData( AppendFilename( iterationNumber ), "Raw solver field output with ghost cells." ); }
+            { 
+                TransformData();
+                SetWriter();
+                std::string message = "CFD solution at iteration " + std::to_string( iterationNumber );
+                m_vtkWriter->WriteData( AppendFilename( iterationNumber ), message ); 
+            }
 
 
     private:
-        EnumVector<Axis, array1D> m_cellFaces;  // The writer will have a reference to this
+        const FieldData<array3D> &m_fields;
+        const Mesh &m_mesh;
+        const FieldData< BoundaryConditionData > &m_bcData;
+        const AxisTransformationMap &m_axisTransformation;
+        FieldData<array3D> m_transformedFields;
+        FieldData<array3D> m_transformedVertexFields;
+        Mesh m_transformedMesh;
         std::unique_ptr< VTK::VTKWriter<floatType> > m_vtkWriter;
         const std::string m_baseFilename;
 
         std::string AppendFilename( intType iterationNumber )
         { return m_baseFilename + "_" + std::to_string(iterationNumber) + ".vtk"; }
+
+
+        void SetWriter()
+        {
+            using enum Axis::ENUMDATA;
+            VTK::VTKWriterConfig config( m_transformedMesh.cellFaces[X].size(), 
+                                         m_transformedMesh.cellFaces[Y].size(), 
+                                         m_transformedMesh.cellFaces[Z].size() );
+                config.SetWriteMode(VTK::WriteModes::BINARY);
+                
+            VTK::gridVectorType<CFD::floatType> gridVector = { m_transformedMesh.cellFaces[X].data(), 
+                                                               m_transformedMesh.cellFaces[Y].data(), 
+                                                               m_transformedMesh.cellFaces[Z].data() };
+
+            VTK::scalarCollectionType<floatType> scalarMap = { {"Pressure", VTK::GridTypes::CELL_DATA, m_transformedFields.P.data()},
+                                                               {"Pressure", VTK::GridTypes::POINT_DATA, m_transformedVertexFields.P.data()}};
+
+            VTK::vectorCollectionType<floatType> vectorMap = { {"Velocity", VTK::GridTypes::CELL_DATA, { m_transformedFields.U[X].data(), 
+                                                                                                         m_transformedFields.U[Y].data(), 
+                                                                                                         m_transformedFields.U[Z].data()}},
+                                                               {"Velocity", VTK::GridTypes::POINT_DATA, { m_transformedVertexFields.U[X].data(), 
+                                                                                                          m_transformedVertexFields.U[Y].data(), 
+                                                                                                          m_transformedVertexFields.U[Z].data()}} };
+        
+            m_vtkWriter = std::make_unique<VTK::VTKWriter<floatType>>(gridVector, scalarMap, vectorMap, config);
+        }
+
+
+        void TransformData()
+        {
+            ForAllFieldData([&](intType f) { 
+                m_transformedFields[f] = FVT::RemoveGhostCells(m_fields[f], nGhost); 
+            });
+
+            m_transformedVertexFields = GetVertexFields(m_transformedFields, m_mesh, m_bcData);
+
+            TransformFieldToUserCoordinates( m_transformedFields      , m_axisTransformation );
+            TransformFieldToUserCoordinates( m_transformedVertexFields, m_axisTransformation );
+        }
+
 };
 
 
