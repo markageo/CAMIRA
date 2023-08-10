@@ -3,7 +3,7 @@
 
 
 // Profiling macros
-#ifdef PROFILING
+#ifdef CFD_PROFILING
 #   if !defined(TIC) || !defined(TOC)
 #       include "profiler/profiler.h"
 #       define TIC(name) PROF::prof.tic(name);
