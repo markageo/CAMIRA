@@ -464,14 +464,9 @@ namespace
 
 
 
-void TransformToUserCoordinates( Mesh &mesh, 
-                                 FieldData<array3D> &fields, 
-                                 FieldData<array3D> &vertexFields,
-                                 const AxisTransformationMap &axisTransformation )                                  
+void TransformMeshToUserCoordinates( Mesh &mesh,
+                                     const AxisTransformationMap &axisTransformation)
 {
-    Eigen::array<intType , Axis::count> shuffleArray;
-    Eigen::array<bool, Axis::count> reverseArray;
-
     // Temporary copy of the mesh to take data from 
     Mesh codeMesh = mesh;
 
@@ -486,6 +481,22 @@ void TransformToUserCoordinates( Mesh &mesh,
             ReverseMeshAxis(mesh, userAxis);
         }
 
+    } );
+
+}
+
+
+void TransformFieldToUserCoordinates( FieldData<array3D> &fieldData,
+                                     const AxisTransformationMap &axisTransformation )
+{
+    Eigen::array<intType , Axis::count> shuffleArray;
+    Eigen::array<bool, Axis::count> reverseArray;
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA userAxis) {
+
+        Axis::ENUMDATA codeAxis = axisTransformation.CodeAxis( userAxis );
+        bool reverseAxis = axisTransformation.UserAxisReversed( userAxis );
+
         // Shuffle and reverse arrays used for 3D arrays
         shuffleArray[ userAxis ] = codeAxis;
         reverseArray[ userAxis ] = reverseAxis;
@@ -494,62 +505,11 @@ void TransformToUserCoordinates( Mesh &mesh,
 
     // 3D arrays
     ForAllFieldData( [&] (intType f) {
-        fields[f] = array3D( fields[f] ).shuffle(shuffleArray).reverse(reverseArray);   // Have to make a copy
-        vertexFields[f] = array3D( vertexFields[f] ).shuffle(shuffleArray).reverse(reverseArray);
+        fieldData[f] = array3D( fieldData[f] ).shuffle(shuffleArray).reverse(reverseArray);   // Have to make a copy
     } );
-    TransformAxisVectorToUser( fields.U, axisTransformation );
-    TransformAxisVectorToUser( vertexFields.U, axisTransformation );
-
+    TransformAxisVectorToUser( fieldData.U, axisTransformation );
 }
 
-
-// // This can either take a full mesh or just an array to the cell centers/cell faces
-// template<typename gridType> 
-// requires( std::is_same<gridType, Mesh>::value || std::is_same<gridType, EnumVector<Axis, array1D>>::value )
-// void TransformToUserCoordinates( gridType &grid, 
-//                                  FieldData<array3D> &fields, 
-//                                  FieldData<array3D> &vertexFields,
-//                                  const AxisTransformationMap &axisTransformation )                                  
-// {
-//     Eigen::array<intType , Axis::count> shuffleArray;
-//     Eigen::array<bool, Axis::count> reverseArray;
-
-//     // Temporary copy of the mesh to take data from 
-//     gridType codeGrid = grid;
-
-//     EnumFor<Axis>( [&] (Axis::ENUMDATA userAxis) {
-
-//         Axis::ENUMDATA codeAxis = axisTransformation.CodeAxis( userAxis );
-//         bool reverseAxis = axisTransformation.UserAxisReversed( userAxis );
-
-//         if constexpr ( std::is_same< gridType, Mesh >::value ) {
-//             CopyMeshAxis( grid, codeGrid, userAxis, codeAxis );
-//             if ( reverseAxis ) {
-//                 ReverseMeshAxis(grid, userAxis);
-//             }
-//         } else {
-//             grid[ userAxis ] = codeGrid[ sourceAxis ];
-//             if ( reverseAxis ) {
-//                 grid[axis] = - ReversedArray1D( grid[axis] );
-//             }
-//         }
-
-//         // Shuffle and reverse arrays used for 3D arrays
-//         shuffleArray[ userAxis ] = codeAxis;
-//         reverseArray[ userAxis ] = reverseAxis;
-
-//     } );
-
-//     // 3D arrays
-//     ForAllFieldData( [&] (intType f) {
-//         fields[f] = array3D( fields[f] ).shuffle(shuffleArray).reverse(reverseArray);   // Have to make a copy
-//         vertexFields[f] = array3D( vertexFields[f] ).shuffle(shuffleArray).reverse(reverseArray);
-//     } );
-//     TransformAxisVectorToUser( fields.U, axisTransformation );
-//     TransformAxisVectorToUser( vertexFields.U, axisTransformation );
-// }
-// template void TransformToUserCoordinates<Mesh>(Mesh &, FieldData<array3D> &, FieldData<array3D> &, const AxisTransformationMap & );
-// template void TransformToUserCoordinates<EnumVector<Axis, array1D>>(EnumVector<Axis, array1D> &, FieldData<array3D> &, FieldData<array3D> &, const AxisTransformationMap & );  
 
 
 }   // end namespace CFD
