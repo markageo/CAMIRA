@@ -148,6 +148,7 @@ Output {
 
     residualHistoryFilename = "residual_history.csv"
     fieldOutputFilename = "fields.vtk"
+    fieldWriteInterval = 0
 
     Monitors {
         Probe {

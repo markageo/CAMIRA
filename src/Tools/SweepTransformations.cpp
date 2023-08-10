@@ -448,7 +448,7 @@ namespace
 
     template< typename T >
     void TransformAxisVectorToUser( EnumVector<Axis, T> &fieldsVector,
-                                     const AxisTransformationMap& axisTransformation )
+                                    const AxisTransformationMap& axisTransformation )
     {
         // Create temporary copy to move data from 
         EnumVector<Axis, T> codeFieldsVector = fieldsVector;
@@ -509,6 +509,13 @@ void TransformFieldToUserCoordinates( FieldData<array3D> &fieldData,
     } );
     TransformAxisVectorToUser( fieldData.U, axisTransformation );
 }
+
+// TODO
+// void TransformBCDataToUserCoordinates( FieldData<BoundaryConditionData> &fieldData,
+//                                        const AxisTransformationMap &axisTransformation )
+// {
+
+// }
 
 
 

@@ -298,8 +298,8 @@ namespace
     // Interpolates user defined profile onto the mesh in 1D. Points that are outside the user defined region are set 
     // to the value of the nearest point.
     array1D InterpProfile1D( const array1D x,
-                            const array1D v, 
-                            const array1D xquery )
+                             const array1D v, 
+                             const array1D xquery )
     {
         const intType nValuePoints = x.size(); 
         const intType nQueryPoints = xquery.size(); 
@@ -328,9 +328,9 @@ namespace
 
                     // Interpolate
                     floatType v0 = v( i ),
-                            v1 = v( i + 1 ),
-                            x0 = x( i ),
-                            x1 = x( i + 1);
+                              v1 = v( i + 1 ),
+                              x0 = x( i ),
+                              x1 = x( i + 1);
                     vquery(iq) = v0 + ( xquery(iq) - x0 ) * ( v1 - v0 ) / ( x1 - x0 );
                     break;
                 }
@@ -346,8 +346,8 @@ namespace
 
     // Interpolates a 1D profile onto a meshed boundary face
     array2D SetBoundaryProfile1D( const InputData::Profile1D &profile1D,   
-                                const Mesh& mesh,
-                                const BoundaryPatches::ENUMDATA boundaryPatch )
+                                  const Mesh& mesh,
+                                  const BoundaryPatches::ENUMDATA boundaryPatch )
     {
         Axis::ENUMDATA profileAxis  = profile1D.axis,
                     normalAxis   = LUT::BoundaryPatchAxis[ boundaryPatch ],
