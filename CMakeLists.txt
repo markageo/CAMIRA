@@ -49,33 +49,6 @@ else()
 endif()
 
 
-# Create field transformation execultable, this requires the VTK library
-option ( CFD_TRANSFORMATIONS "Create field transformation executable. This requires the VTK library." off)
-if ( CFD_TRANSFORMATIONS )
-
-	find_package( VTK COMPONENTS 
-				  CommonCore
-				  CommonExecutionModel
-				  IOXMLParser
-				  CommonDataModel
-				  CommonMisc
-				  CommonSystem
-				  IOCore
-				  vtksys
-				  IOLegacy
-				  )
-
-	if ( ${VTK_FOUND} )
-		message( STATUS "VTK library found successfully." )
-		add_compile_definitions( USE_VTK_LIB )
-	else()
-		message( FATAL_ERROR "Could not locate VTK library installation! This is required for field transformation executable!" )
-	endif()
-
-else()
-	message( STATUS "Field transformation executable will not be created." )
-endif()
-
 
 # Add libraries
 include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings

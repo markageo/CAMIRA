@@ -17,13 +17,4 @@ target_link_libraries(libs PUBLIC compiler_flags)
 add_executable(main main.cpp)
 target_link_libraries(main PUBLIC libs)
 
-# Field transformation executable
-if ( CFD_TRANSFORMATIONS )
-    add_executable(soltransform soltransform.cpp)
-    target_link_libraries(soltransform PUBLIC libs)
-    target_link_libraries(soltransform PUBLIC ${VTK_LIBRARIES})
-
-    vtk_module_autoinit( TARGETS soltransform
-                         MODULES ${VTK_LIBRARIES} )
-endif()
 
