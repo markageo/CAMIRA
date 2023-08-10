@@ -101,7 +101,7 @@ int main(int argc, char const *argv[])
     TOC();
 
 // Display profiling information
-#ifdef PROFILING
+#ifdef CFD_PROFILING
     std::cout << PROF::prof;
 #endif
 

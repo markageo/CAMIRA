@@ -35,7 +35,7 @@ endif()
 option ( CFD_PROFILING "Enable CFD Profiling Tickers" off )
 if ( CFD_PROFILING )
 	message( STATUS "CFD profiling tickers are on!" )
-	add_compile_definitions( PROFILING )
+	add_compile_definitions( CFD_PROFILING )
 endif()
 
 # Selection of solver precision
