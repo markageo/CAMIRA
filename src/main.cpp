@@ -74,7 +74,9 @@ int main(int argc, char const *argv[])
     CFD::FieldData<CFD::array3D> vertexFields = GetVertexFields(fields, mesh, bcData);
 
     // Undo the boundary condition transformation
-    CFD::TransformToUserCoordinates(mesh, fields, vertexFields, axisTransformation);
+    CFD::TransformMeshToUserCoordinates( mesh, axisTransformation );
+    CFD::TransformFieldToUserCoordinates( fields, axisTransformation );
+    CFD::TransformFieldToUserCoordinates( vertexFields, axisTransformation );
     TOC();
 
     /*-------------------------------------------------------------------------------------*\
@@ -87,11 +89,11 @@ int main(int argc, char const *argv[])
     config.SetWriteMode(VTK::WriteModes::BINARY);
     VTK::gridVectorType<CFD::floatType> gridVector = {mesh.cellFaces[X].data(), mesh.cellFaces[Y].data(), mesh.cellFaces[Z].data()};
 
-    VTK::scalarMapType<CFD::floatType> scalarMap = {{"Pressure", VTK::GridTypes::CELL_DATA, fields.P.data()},
-                                                    {"Pressure", VTK::GridTypes::POINT_DATA, vertexFields.P.data()}};
+    VTK::scalarCollectionType<CFD::floatType> scalarMap = { {"Pressure", VTK::GridTypes::CELL_DATA, fields.P.data()},
+                                                            {"Pressure", VTK::GridTypes::POINT_DATA, vertexFields.P.data()}};
 
-    VTK::vectorMapType<CFD::floatType> vectorMap = {{"Velocity", VTK::GridTypes::POINT_DATA, {vertexFields.U[X].data(), vertexFields.U[Y].data(), vertexFields.U[Z].data()}},
-                                                    {"Velocity", VTK::GridTypes::CELL_DATA, {fields.U[X].data(), fields.U[Y].data(), fields.U[Z].data()}}};
+    VTK::vectorCollectionType<CFD::floatType> vectorMap = { {"Velocity", VTK::GridTypes::POINT_DATA, {vertexFields.U[X].data(), vertexFields.U[Y].data(), vertexFields.U[Z].data()}},
+                                                            {"Velocity", VTK::GridTypes::CELL_DATA, {fields.U[X].data(), fields.U[Y].data(), fields.U[Z].data()}}};
     VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
 
     TIC("Writer");

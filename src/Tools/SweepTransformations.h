@@ -62,8 +62,10 @@ AxisTransformationMap CreateAxisTransformation( BoundaryPatches::ENUMDATA, Bound
 // Transform user input data so that sweeping is consistent with solver
 AxisTransformationMap TransformUserInputData( InputData & );
 
-// Transform back to the coordinates consistentent with the input file 
-void TransformToUserCoordinates(Mesh &, FieldData<array3D> &, FieldData<array3D> &, const AxisTransformationMap &);
+// Transform back to the coordinates consistentent with the user input
+void TransformMeshToUserCoordinates( Mesh &, const AxisTransformationMap &);
+
+void TransformFieldToUserCoordinates( FieldData<array3D> &, const AxisTransformationMap &);
 
 
 } // end namespace CFD
