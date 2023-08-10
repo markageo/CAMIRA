@@ -38,16 +38,16 @@ if ( CFD_PROFILING )
 	add_compile_definitions( PROFILING )
 endif()
 
+# Selection of solver precision
+set(CFD_PRECISION "double" CACHE STRING "Precision of floating point numbers to compile in.")
+set_property(CACHE CFD_PRECISION PROPERTY STRINGS single double)
 
-# Option for compiling with double precision
-option ( CFD_DOUBLE_PRECISION "Double precision for CFD." on )
-if ( CFD_DOUBLE_PRECISION )
+if ( CFD_PRECISION STREQUAL "double" )
 	message( STATUS "Compiling in double precision" )
 	add_compile_definitions( CFD_DOUBLE_PRECISION )
-else()
+elseif ( CFD_PRECISION STREQUAL "single" )
 	message( STATUS "Compiling in single precision" )
 endif()
-
 
 
 # Add libraries
