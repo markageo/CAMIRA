@@ -15,6 +15,7 @@
 #include <vtkPointData.h>
 #include <vtkRectilinearGrid.h>
 #include <vtkRectilinearGridReader.h>
+#include <vtkRectilinearGridWriter.h>
 #include <vtkAOSDataArrayTemplate.h>
 
 
