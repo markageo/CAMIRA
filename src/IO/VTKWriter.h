@@ -14,14 +14,13 @@
 namespace VTK
 {
     
-#define DEFAULT_ASCII_PRECISION     6   // Maybe name this something else since it is now in a header
+#define CFD_VTK_DEFAULT_ASCII_PRECISION     6  
 
-// Data writing mdoes
 enum class WriteModes {
     ASCII, BINARY
 };
 
-// Point or cell data
+
 enum class GridTypes {
     CELL_DATA, POINT_DATA
 };
@@ -34,18 +33,20 @@ struct ScalarData {
     const T * dataPointer; 
 };
 
+
 template< typename T >
 struct VectorData {
     std::string fieldName;
     GridTypes gridType;
-    std::vector<const T*> dataPointers; 
+    std::vector<const T *> dataPointers; 
 };
+
 
 // Type aliases
 using sizeType = long;
-template<typename T> using gridVectorType = std::vector<const T *>;
-template<typename T> using scalarMapType = std::vector< ScalarData<T> >;
-template<typename T> using vectorMapType = std::vector< VectorData<T> >;
+template<typename T> using gridVectorType       = std::vector<const T *>;
+template<typename T> using scalarCollectionType = std::vector< ScalarData<T> >;
+template<typename T> using vectorCollectionType = std::vector< VectorData<T> >;
 
 
 // Utility functions
@@ -84,7 +85,7 @@ class VTKWriterConfig
         VTKWriterConfig(sizeType dimX, sizeType dimY, sizeType dimZ) :
             m_dims{dimX, dimY, dimZ},
             m_writeMode( WriteModes::ASCII ), 
-            m_ASCIIPrecision( DEFAULT_ASCII_PRECISION )
+            m_ASCIIPrecision( CFD_VTK_DEFAULT_ASCII_PRECISION )
             {};
 
         void SetWriteMode(WriteModes writeMode)
@@ -128,9 +129,9 @@ class VTKWriter
                   "Data must be either double or float type!");
 
     public:
-        VTKWriter(const gridVectorType<T> &, const scalarMapType<T> &, const vectorMapType<T> &, const VTKWriterConfig &);
-        VTKWriter(const gridVectorType<T> &, const scalarMapType<T> &, const VTKWriterConfig &);
-        VTKWriter(const gridVectorType<T> &, const vectorMapType<T> &, const VTKWriterConfig &);
+        VTKWriter(const gridVectorType<T> &, const scalarCollectionType<T> &, const vectorCollectionType<T> &, const VTKWriterConfig &);
+        VTKWriter(const gridVectorType<T> &, const scalarCollectionType<T> &, const VTKWriterConfig &);
+        VTKWriter(const gridVectorType<T> &, const vectorCollectionType<T> &, const VTKWriterConfig &);
         VTKWriter(const gridVectorType<T> &, const VTKWriterConfig &);
 
         int WriteData(const std::string &, const std::string &);
@@ -147,8 +148,8 @@ class VTKWriter
         sizeType m_nPointData, m_nCellData;
 
         gridVectorType<T> m_gridVector;
-        scalarMapType<T> m_scalarMapPointData, m_scalarMapCellData;
-        vectorMapType<T> m_vectorMapPointData, m_vectorMapCellData;
+        scalarCollectionType<T> m_scalarPointCollection, m_scalarCellCollection;
+        vectorCollectionType<T> m_vectorPointCollection, m_vectorCellCollection;
 
         std::function<void(T)> DataProperWriteFunc;
         void WriteDataArray(const T *, const sizeType &) const ;
@@ -156,7 +157,7 @@ class VTKWriter
         void WriteDatasetRectilinearGrid();
         void WriteDataAttributeScalar(const std::string &, const T *, const sizeType);
         void WriteDataAttributeVector(const std::string &, const std::vector<const T *> &, const sizeType);
-        void WriteFieldData( const scalarMapType<T>, const vectorMapType<T>, const sizeType);
+        void WriteFieldData( const scalarCollectionType<T>, const vectorCollectionType<T>, const sizeType);
 };
 
 
@@ -165,8 +166,8 @@ class VTKWriter
 // Constructors
 template<typename T>
 VTKWriter<T>::VTKWriter(const gridVectorType<T> &gridVector, 
-                        const scalarMapType<T> &scalarMap, 
-                        const vectorMapType<T> &vectorMap, 
+                        const scalarCollectionType<T> &scalarMap, 
+                        const vectorCollectionType<T> &vectorMap, 
                         const VTKWriterConfig &config) : 
     m_gridDims( config.dims() ),
     m_nPointData( m_gridDims[0] * m_gridDims[1] * m_gridDims[2] ),
@@ -205,11 +206,11 @@ VTKWriter<T>::VTKWriter(const gridVectorType<T> &gridVector,
         for ( const auto &scalarData : scalarMap ) {
             switch ( scalarData.gridType ) {
                 case GridTypes::POINT_DATA:
-                    m_scalarMapPointData.push_back( scalarData );
+                    m_scalarPointCollection.push_back( scalarData );
                     break;
 
                 case GridTypes::CELL_DATA:  
-                    m_scalarMapCellData.push_back( scalarData );
+                    m_scalarCellCollection.push_back( scalarData );
                     break;
             }
         }
@@ -218,11 +219,11 @@ VTKWriter<T>::VTKWriter(const gridVectorType<T> &gridVector,
         for ( const auto &vectorData : vectorMap ) {
             switch ( vectorData.gridType ) {
                 case GridTypes::POINT_DATA:
-                    m_vectorMapPointData.push_back( vectorData );
+                    m_vectorPointCollection.push_back( vectorData );
                     break;
 
                 case GridTypes::CELL_DATA:  
-                    m_vectorMapCellData.push_back( vectorData );
+                    m_vectorCellCollection.push_back( vectorData );
                     break;
             }
         }
@@ -232,14 +233,14 @@ VTKWriter<T>::VTKWriter(const gridVectorType<T> &gridVector,
 
 template<typename T>
 VTKWriter<T>::VTKWriter(const gridVectorType<T> &gridVector, 
-                        const scalarMapType<T> &scalarMap, 
+                        const scalarCollectionType<T> &scalarMap, 
                         const VTKWriterConfig &config) : 
     VTKWriter(gridVector, scalarMap, {}, config) {}
 
 
 template<typename T>
 VTKWriter<T>::VTKWriter(const gridVectorType<T> &gridVector, 
-                        const vectorMapType<T> &vectorMap, 
+                        const vectorCollectionType<T> &vectorMap, 
                         const VTKWriterConfig &config) : 
     VTKWriter(gridVector, {}, vectorMap, config) {}
 
@@ -292,13 +293,13 @@ int VTKWriter<T>::WriteData(const std::string &filename,
     m_outputFileStream << "POINT_DATA"
                        << " " << m_nPointData
                        << "\n";
-    WriteFieldData(m_scalarMapPointData, m_vectorMapPointData, m_nPointData);
+    WriteFieldData(m_scalarPointCollection, m_vectorPointCollection, m_nPointData);
 
     // Cell data
     m_outputFileStream << "CELL_DATA"
                        << " " << m_nCellData
                        << "\n";
-    WriteFieldData(m_scalarMapCellData, m_vectorMapCellData, m_nCellData);
+    WriteFieldData(m_scalarCellCollection, m_vectorCellCollection, m_nCellData);
 
     m_outputFileStream.flush();
     m_outputFileStream.close();
@@ -389,9 +390,9 @@ void VTKWriter<T>::WriteDataAttributeVector(const std::string &vectorFieldName,
 
 
 template<typename T>
-void VTKWriter<T>::WriteFieldData( const scalarMapType<T> scalarMap,
-                     const vectorMapType<T> vectorMap,
-                     const sizeType nPoints)
+void VTKWriter<T>::WriteFieldData( const scalarCollectionType<T> scalarMap,
+                                   const vectorCollectionType<T> vectorMap,
+                                   const sizeType nPoints)
 {
     // Scalars
     for (const auto& scalarData : scalarMap) {
