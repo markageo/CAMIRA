@@ -66,9 +66,11 @@ namespace FVT
 
     // --------------------------------------------------- Remove Ghost Cells -------------------------------------------------- //
 
+
+    // Return a copy with ghost cells removed. Has to make a copy anyway.
     template< typename arrayType >
-    void RemoveGhostCells( arrayType &array, 
-                           const intType nGhostCells)
+    arrayType RemoveGhostCells( const arrayType &array, 
+                                const intType nGhostCells)
     {
         static_assert(std::is_same<arrayType, CFD::array1D   >::value ||
                       std::is_same<arrayType, CFD::array2D   >::value ||
@@ -76,12 +78,12 @@ namespace FVT
                       "Template parameter must be struct containing ENUMDATA type.");
 
         Eigen::array< Eigen::Index, arrayType::NumDimensions > offsets, extents;
-        for ( intType i = 0; i != array.NumDimensions; i++ ) {
+        for ( size_t i = 0; i != array.NumDimensions; i++ ) {
             offsets[i] = nGhostCells;
             extents[i] = array.dimension(i) - 2*nGhostCells;
         }
 
-        array = array3D( array ).slice(offsets, extents);
+        return array3D( array ).slice(offsets, extents);
     }
 
 

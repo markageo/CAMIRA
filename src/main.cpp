@@ -68,7 +68,7 @@ int main(int argc, char const *argv[])
     TIC("Post Processing");
     // Remove ghost cells from the fields
     CFD::ForAllFieldData([&](CFD::intType f) { 
-        CFD::FVT::RemoveGhostCells(fields[f], CFD::nGhost); 
+        fields[f] = CFD::FVT::RemoveGhostCells(fields[f], CFD::nGhost); 
     });
 
     CFD::FieldData<CFD::array3D> vertexFields = GetVertexFields(fields, mesh, bcData);
