@@ -33,10 +33,10 @@ int main(int argc, char const *argv[])
     CFD::AxisTransformationMap axisTransformation = CFD::CreateAxisTransformation( planeSweepDirection, lineSweepDirection );
 
     // Read and store the field
-    vtkNew< vtkRectilinearGridReader > vtkGridReader;
-    vtkGridReader->SetFileName( originalFieldFilename.c_str() );
-    vtkGridReader->Update();
-    vtkRectilinearGrid* vtkGrid = vtkGridReader->GetOutput();
+    vtkNew< vtkRectilinearGridReader > vtkReader;
+    vtkReader->SetFileName( originalFieldFilename.c_str() );
+    vtkReader->Update();
+    vtkRectilinearGrid* vtkGrid = vtkReader->GetOutput();
     
     using namespace CFD;
 
@@ -59,9 +59,16 @@ int main(int argc, char const *argv[])
     FieldData<array3D> vertexFields      = GetVertexFields( vtkGrid );
 
     // Transform the field
+    // TODO
 
+    // Put the transformed field into the Rectilinear grid object
+    
 
     // Write the transformed field
+    vtkNew< vtkRectilinearGridWriter > vtkWriter;
+    vtkWriter->SetFileName( transformedFieldFilename.c_str() );
+    vtkWriter->SetInputData( vtkGrid );
+    vtkWriter->Write();
 
 
     // ---------------------------------- TESTING
@@ -87,9 +94,9 @@ int main(int argc, char const *argv[])
     config.SetWriteMode(VTK::WriteModes::ASCII);
     VTK::gridVectorType<CFD::floatType> gridVector = {cellFaces[Axis::X].data(), cellFaces[Axis::Y].data(), cellFaces[Axis::Z].data()};
 
-    VTK::scalarMapType<CFD::floatType> scalarMap = {{"Pressure", VTK::GridTypes::CELL_DATA, cellFields.P.data()}};
+    VTK::scalarCollectionType<CFD::floatType> scalarMap = {{"Pressure", VTK::GridTypes::CELL_DATA, cellFields.P.data()}};
 
-    VTK::vectorMapType<CFD::floatType> vectorMap = {{"Velocity", VTK::GridTypes::CELL_DATA, {cellFields.U[Axis::X].data(), cellFields.U[Axis::Y].data(), cellFields.U[Axis::Z].data()}}};
+    VTK::vectorCollectionType<CFD::floatType> vectorMap = {{"Velocity", VTK::GridTypes::CELL_DATA, {cellFields.U[Axis::X].data(), cellFields.U[Axis::Y].data(), cellFields.U[Axis::Z].data()}}};
     
     VTK::VTKWriter writer(gridVector, scalarMap, vectorMap, config);
 
