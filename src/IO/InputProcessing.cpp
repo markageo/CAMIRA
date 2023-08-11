@@ -15,6 +15,7 @@
 #include <fstream>
 #include <algorithm>
 #include <map>
+#include <filesystem>
 
 #define VECTOR_START_CHAR       '('
 #define VECTOR_END_CHAR         ')'
@@ -696,27 +697,24 @@ namespace
         }
     }
 
+
+    void VerifyWriteDirectory( const std::string &fileDir ) 
+    {
+        std::filesystem::path filepath = std::string(fileDir);
+        bool filePathExists = std::filesystem::is_directory(filepath.parent_path());
+        if ( !filePathExists ) {
+            throw std::runtime_error("Cannot find or access directory '" + std::string(filepath.parent_path()) + "'. Please Make sure it exists.");
+        }
+    }
+
+
     void VerifyOutputFiles( InputData &inputData ) 
     {
-        // Fields
-        std::ofstream fileStream( inputData.fieldOutputFilename );
-        if ( !fileStream )
-            throw std::runtime_error("File '" + inputData.fieldOutputFilename + "' cannot be written to or accessed.");
-
-        // Residual history
-        fileStream.close();
-        fileStream.open( inputData.residualHistoryFilename );
-        if ( !fileStream )
-            throw std::runtime_error("File '" + inputData.residualHistoryFilename + "' cannot be written to or accessed.");
-
-        // Probes
+        VerifyWriteDirectory( inputData.fieldOutputFilename );
+        VerifyWriteDirectory( inputData.residualHistoryFilename );
         for ( const auto &probe : inputData.probes ) {
-            fileStream.close();
-            fileStream.open( probe.filename );
-            if ( !fileStream )
-                throw std::runtime_error("File '" + probe.filename + "' cannot be written to or accessed.");
+            VerifyWriteDirectory( probe.filename );
         }
-
     }
 
 
