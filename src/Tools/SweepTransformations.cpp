@@ -447,17 +447,34 @@ namespace
 
 
     template< typename T >
-    void TransformAxisVectorToUser( EnumVector<Axis, T> &fieldsVector,
+    void TransformAxisVectorToUser( EnumVector<Axis, T> &axisVector,
                                     const AxisTransformationMap& axisTransformation )
     {
         // Create temporary copy to move data from 
-        EnumVector<Axis, T> codeFieldsVector = fieldsVector;
+        EnumVector<Axis, T> codeAxisVector = axisVector;
 
-        EnumFor<Axis>([&] (Axis::ENUMDATA userAxis) { // User axis
+        EnumFor<Axis>([&] (Axis::ENUMDATA userAxis) { 
 
-            fieldsVector[ userAxis ] = codeFieldsVector[ axisTransformation.CodeAxis( userAxis ) ];
+            axisVector[ userAxis ] = codeAxisVector[ axisTransformation.CodeAxis( userAxis ) ];
 
         } );
+    }
+
+
+
+    template< typename T >
+    void TransformBoundaryPatchVectorToUser( EnumVector<BoundaryPatches, T> &boundaryPatchVector,
+                                             const AxisTransformationMap& axisTransformation )
+    {
+        // Create temporary copy to move data from 
+        EnumVector<BoundaryPatches, T> codeBoundaryPatchVector = boundaryPatchVector;
+
+        EnumFor<BoundaryPatches>([&] (BoundaryPatches::ENUMDATA userBP) { 
+
+            boundaryPatchVector[ userBP ] = codeBoundaryPatchVector[ axisTransformation.CodePatch( userBP ) ];
+
+        } );
+
     }
 
 }   // end anonymous namespace
@@ -510,13 +527,52 @@ void TransformFieldToUserCoordinates( FieldData<array3D> &fieldData,
     TransformAxisVectorToUser( fieldData.U, axisTransformation );
 }
 
+
 // TODO
-// void TransformBCDataToUserCoordinates( FieldData<BoundaryConditionData> &fieldData,
-//                                        const AxisTransformationMap &axisTransformation )
-// {
+void TransformBCDataToUserCoordinates( FieldData<BoundaryConditionData> &bcData,
+                                       const AxisTransformationMap &axisTransformation )
+{
+    // Temporary copy of the original to data from
+    FieldData<BoundaryConditionData> codeBcData = bcData;
 
-// }
+    // Transform the EnumVector
+    TransformAxisVectorToUser( bcData.U, axisTransformation );
+    ForAllFieldData( [&] (intType f) {
+        TransformBoundaryPatchVectorToUser( bcData[f], axisTransformation );
+    } );
+    
+    
+    // Transform the fixed boundary array
+    EnumFor<Axis>( [&] (Axis::ENUMDATA userAxis) {
 
+        Axis::ENUMDATA userAxis1 = LUT::LoOrthogonalAxis[userAxis],
+                       userAxis2 = LUT::HiOrthogonalAxis[userAxis];
+
+        Axis::ENUMDATA codeAxis  = axisTransformation.CodeAxis( userAxis ),
+                       codeAxis1 = LUT::LoOrthogonalAxis[codeAxis],
+                       codeAxis2 = LUT::HiOrthogonalAxis[codeAxis];
+
+
+        bool reverseAxis1 = axisTransformation.UserAxisReversed( userAxis1 ),
+             reverseAxis2 = axisTransformation.UserAxisReversed( userAxis2 );
+
+        Eigen::array<intType , Axis::count-1> shuffleArray;
+        Eigen::array<bool, Axis::count-1>     reverseArray;
+
+        shuffleArray[ userAxis1 ] = codeAxis1;
+        shuffleArray[ userAxis2 ] = codeAxis2;
+
+        reverseArray[ userAxis1 ] = reverseAxis1;
+        reverseArray[ userAxis2 ] = reverseAxis2;
+
+        ForAllFieldData( [&] (intType f) {
+            bcData[f][ LUT::PositivePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray);
+            bcData[f][ LUT::PositivePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray);
+        } );
+
+    } );
+
+}
 
 
 }   // end namespace CFD

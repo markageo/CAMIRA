@@ -114,7 +114,7 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 2000
+        maxOuterIterations = 11
         maxOuterResiduals = 1e-6
 
     }
@@ -140,7 +140,7 @@ Output {
 
     residualHistoryFilename = "output/residual_history.csv"
     fieldOutputFilename = "output/fields.vtk"
-    fieldWriteInterval = 0
+    fieldWriteInterval = 1
 
     Monitors {
         Probe {
