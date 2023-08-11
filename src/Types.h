@@ -219,7 +219,7 @@ class EnumVector
         // Constructors for general types
         EnumVector() {};
         EnumVector( const T &data ) { std::fill( m_dataVector.begin(), m_dataVector.end(), data ); };
-        EnumVector( const std::array<T, enumStruct::count> &arr ) : m_dataVector( arr ) {};
+        constexpr EnumVector( const std::array<T, enumStruct::count> &arr ) : m_dataVector( arr ) {};
 
         // Special constructors for array objects, all having same dimenions
         EnumVector(const std::vector< ENUMDATA > &coeffs, const dimsArray &dims) 
@@ -243,14 +243,23 @@ class EnumVector
         }
 
         // Strong type indexing
-        T &operator[](const typename enumStruct::ENUMDATA idx)
+        constexpr T &operator[](const typename enumStruct::ENUMDATA idx)
         { return m_dataVector[idx]; }
 
-        const T &operator[](const typename enumStruct::ENUMDATA idx) const 
+        constexpr const T &operator[](const typename enumStruct::ENUMDATA idx) const 
         { return m_dataVector[idx]; }
+
+
+        // Only allowed when the object is holding axis data since the enum values should not change
+        constexpr T &operator[](const size_t idx) requires( std::is_same<enumStruct, Axis>::value )
+        { return m_dataVector[idx]; }
+
+        constexpr const T &operator[](const size_t idx) const requires( std::is_same<enumStruct, Axis>::value )
+        { return m_dataVector[idx]; }
+
 
         // Get underlying data
-        std::array<T, enumStruct::count> &get()
+        constexpr std::array<T, enumStruct::count> &get()
         { return m_dataVector; }
 
     private:
