@@ -113,21 +113,21 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 1000
+        maxOuterIterations = 10000
         maxOuterResiduals = 1e-4
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 1
+        maxIterations = 10
         maxResiduals = 1e-5
 
         planeSweepDirection = +z
         lineSweepDirection = +y
 
-        momentumRelaxation = (1, 1, 1)
-        pressureRelaxation = 1
+        momentumRelaxation = (1.1, 1.1, 1.1)
+        pressureRelaxation = 1.2
 
     }
 

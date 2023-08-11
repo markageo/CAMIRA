@@ -51,7 +51,7 @@ void SweepSolve( FieldData<array3D> &fields,
     }
     std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
     
-    FieldWriter fieldWriter( fields, mesh, bcData, axisTransformation, "output/field" );
+    FieldWriter fieldWriter( fields, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 
@@ -87,14 +87,16 @@ void SweepSolve( FieldData<array3D> &fields,
         for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
             probeLogFiles[p].WriteData( probeValues[p], nOuterIterations );
         }
-        if ( writeFields && (nOuterIterations % inputData.fieldWriteInterval) == 0 ) {
-            fieldWriter.WriteData( nOuterIterations );
-        }
-
+        
         if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
+            fieldWriter.WriteData( nOuterIterations );
             std::cout << "*** OUTER ITERATIONS CONVERGED ***"
                         << "\n\n";
             break;
+        }
+
+        if ( writeFields && (nOuterIterations % inputData.fieldWriteInterval) == 0 ) {
+            fieldWriter.WriteData( nOuterIterations );
         }
 
     }

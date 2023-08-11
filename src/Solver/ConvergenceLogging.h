@@ -217,14 +217,14 @@ class FieldWriter
                      const AxisTransformationMap &axisTransformation,
                      const std::string &baseFilename ) :
             m_fields( fields ),
-            m_mesh( mesh ),
-            m_bcData( bcData ),
             m_axisTransformation( axisTransformation ),
             m_transformedMesh( mesh ),
-            m_baseFilename( baseFilename )
+            m_transformedBcData( bcData ),
+            m_baseFilename( RemoveVTKFileExtension( baseFilename ) )
             {
-                // Mesh only needs to be transformed once
+                // Only needs to be transformed once
                 TransformMeshToUserCoordinates( m_transformedMesh, m_axisTransformation );
+                TransformBCDataToUserCoordinates( m_transformedBcData, m_axisTransformation );
             };
 
             void WriteData( intType iterationNumber )
@@ -238,17 +238,27 @@ class FieldWriter
 
     private:
         const FieldData<array3D> &m_fields;
-        const Mesh &m_mesh;
-        const FieldData< BoundaryConditionData > &m_bcData;
         const AxisTransformationMap &m_axisTransformation;
         FieldData<array3D> m_transformedFields;
         FieldData<array3D> m_transformedVertexFields;
         Mesh m_transformedMesh;
+        FieldData< BoundaryConditionData > m_transformedBcData;
         std::unique_ptr< VTK::VTKWriter<floatType> > m_vtkWriter;
         const std::string m_baseFilename;
 
         std::string AppendFilename( intType iterationNumber )
-        { return m_baseFilename + std::to_string(iterationNumber) + ".vtk"; }
+        { return m_baseFilename  + "_iter" + std::to_string(iterationNumber) + ".vtk"; }
+
+        std::string RemoveVTKFileExtension( const std::string &filename )
+        {
+            // Check if there is a .vtk extension and remove it
+            size_t lastPointPosition = filename.find_last_of(".");
+            if ( filename.substr( lastPointPosition ) == ".vtk" ) {
+                std::cout << "inside" << "\n\n";
+                return filename.substr( 0, lastPointPosition );
+            }
+            return filename;
+        }
 
 
         void SetWriter()
@@ -279,24 +289,11 @@ class FieldWriter
 
         void TransformData()
         {
-            TIC("Transform Data")
-
-            TIC("Removing Ghost")
             ForAllFieldData([&](intType f) { 
                 m_transformedFields[f] = FVT::RemoveGhostCells(m_fields[f], nGhost); 
             });
-            TOC()
-
-            TIC("Vertex Fields")
-            m_transformedVertexFields = GetVertexFields(m_transformedFields, m_mesh, m_bcData);
-            TOC()
-
-            TIC("Transformations")
-            TransformFieldToUserCoordinates( m_transformedFields      , m_axisTransformation );
-            TransformFieldToUserCoordinates( m_transformedVertexFields, m_axisTransformation );
-            TOC()
-
-            TOC()
+            TransformFieldToUserCoordinates( m_transformedFields, m_axisTransformation );
+            m_transformedVertexFields = GetVertexFields(m_transformedFields, m_transformedMesh, m_transformedBcData);
         }
 
 };
