@@ -528,7 +528,7 @@ void TransformFieldToUserCoordinates( FieldData<array3D> &fieldData,
 }
 
 
-// TODO
+
 void TransformBCDataToUserCoordinates( FieldData<BoundaryConditionData> &bcData,
                                        const AxisTransformationMap &axisTransformation )
 {
@@ -559,11 +559,19 @@ void TransformBCDataToUserCoordinates( FieldData<BoundaryConditionData> &bcData,
         Eigen::array<intType , Axis::count-1> shuffleArray;
         Eigen::array<bool, Axis::count-1>     reverseArray;
 
-        shuffleArray[ userAxis1 ] = codeAxis1;
-        shuffleArray[ userAxis2 ] = codeAxis2;
+        if ( userAxis1 != codeAxis1 ) 
+            shuffleArray[ 0 ] = codeAxis1;
 
-        reverseArray[ userAxis1 ] = reverseAxis1;
-        reverseArray[ userAxis2 ] = reverseAxis2;
+        if ( userAxis2 != codeAxis2 )
+            shuffleArray[ 1 ] = codeAxis2;
+
+
+        if ( reverseAxis1 )
+            reverseArray[ 0 ] = true;
+
+        if ( reverseAxis2 )
+            reverseArray[ 1 ] = true;
+
 
         ForAllFieldData( [&] (intType f) {
             bcData[f][ LUT::PositivePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray);
