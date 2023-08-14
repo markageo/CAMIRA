@@ -19,7 +19,7 @@ void LinearInterpInteriorFaceVelocityWithMWI( EnumVector<Axis, array3D> &faceVel
 {
     using enum Axis::ENUMDATA;
 
-    array3D &faceVel = faceVelocities[ velocityComponent ];
+    array3D &faceVel = faceVelocities[ axis ];
     const array3D &cellVel = cellFields.U[ velocityComponent ];
     const array3D &cellPressure = cellFields.P;
     const array3D &momentumDiagCoeffInv = fvCoeffs.Mom[axis].diagCoeffInv;
@@ -64,15 +64,14 @@ void LinearInterpInteriorFaceVelocityWithMWI( EnumVector<Axis, array3D> &faceVel
 
 
 void LinearInterpInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities, 
-                                       const EnumVector<Axis, array3D> &cellVelocities, 
+                                       const array3D &cellVelocities, 
                                        const Mesh &mesh, 
-                                       const Axis::ENUMDATA axis,
-                                       const Axis::ENUMDATA velocityComponent )
+                                       const Axis::ENUMDATA axis)
 {
     using enum Axis::ENUMDATA;
 
-    array3D &faceVel = faceVelocities[ velocityComponent ];
-    const array3D &cellVel = cellVelocities[ velocityComponent ];
+    array3D &faceVel = faceVelocities[ axis ];
+    // const array3D &cellVel = cellVelocities[ velocityComponent ];
 
     auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
 
@@ -86,7 +85,7 @@ void LinearInterpInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities
                 LoIndex[axis] -= 1;
 
                 floatType interpFactor = mesh.interpFactors[ axis ]( idx[axis] );
-                faceVel( idx ) = (1 - interpFactor)*cellVel( G(LoIndex) ) + interpFactor*cellVel( G(HiIndex) );
+                faceVel( idx ) = (1 - interpFactor)*cellVelocities( G(LoIndex) ) + interpFactor*cellVelocities( G(HiIndex) );
 
             }
         }
@@ -97,16 +96,15 @@ void LinearInterpInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities
 
 
 void UpwindInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities, 
-                                 const EnumVector<Axis, array3D> &cellVelocities, 
+                                 const array3D &cellVelocities, 
                                  const EnumVector<Axis, array3D> &faceFluxes,
                                  const Mesh &mesh, 
-                                 const Axis::ENUMDATA axis,
-                                 const Axis::ENUMDATA velocityComponent )
+                                 const Axis::ENUMDATA axis)
 {
     using enum Axis::ENUMDATA;
 
-    array3D &faceVel = faceVelocities[ velocityComponent ];
-    const array3D &cellVel = cellVelocities[ velocityComponent ];
+    array3D &faceVel = faceVelocities[ axis ];
+    // const array3D &cellVel = cellVelocities[ velocityComponent ];
 
     auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
 
@@ -118,9 +116,9 @@ void UpwindInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities,
 
                 if ( faceFluxes[axis](idx) >= 0.0f ) {
                     idx[axis] -= 1;
-                    faceVel( idx ) = cellVel( G(idx) );
+                    faceVel( idx ) = cellVelocities( G(idx) );
                 } else {
-                    faceVel( idx ) = cellVel( G(idx) );
+                    faceVel( idx ) = cellVelocities( G(idx) );
                 }
 
             }
@@ -159,7 +157,7 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities,
     {    
         case BC::zeroGradient:
         {
-            faceVelocities[axis].chip(faceEndIndex, axis) = cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex, axis);          
+            faceVelocities[axis].chip(faceEndIndex, axis) = cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex, axis);          
             break;
         }
             
@@ -175,10 +173,10 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities,
         {
             floatType extrapFactor_p = mesh.extrapFactors[boundaryPatch].p;
             floatType extrapFactor_a = mesh.extrapFactors[boundaryPatch].a;
-            faceVelocities[axis].chip(faceEndIndex, axis) = cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex  , axis) 
-                                                                * cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
-                                                          + cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex+1, axis) 
-                                                                * cellVelocities[axis].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
+            faceVelocities[axis].chip(faceEndIndex, axis) = cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex  , axis) 
+                                                                * cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
+                                                          + cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex+1, axis) 
+                                                                * cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
             break;
         }
             
@@ -205,7 +203,7 @@ void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector< Axis, array3D >
     // Internal faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         EnumFor<Axis>( [&] (Axis::ENUMDATA velocityComponent) {
-            UpwindInteriorFaceVelocity( faceAdvectedVelocities[velocityComponent], cellVelocities, faceFluxes, mesh, axis, velocityComponent);
+            UpwindInteriorFaceVelocity( faceAdvectedVelocities[velocityComponent], cellVelocities[velocityComponent], faceFluxes, mesh, axis);
         } );
     } );
     
@@ -253,7 +251,7 @@ void UpdateFaceFluxes( EnumVector< Axis, array3D > &faceFluxes,
 {
     // Internal faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        LinearInterpInteriorFaceVelocity( faceFluxes, cellVelocities, mesh, axis, axis);
+        LinearInterpInteriorFaceVelocity( faceFluxes, cellVelocities[axis], mesh, axis);
     } );
     
     // Boundary faces
