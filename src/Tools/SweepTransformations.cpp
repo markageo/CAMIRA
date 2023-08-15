@@ -532,39 +532,36 @@ void TransformFieldToUserCoordinates( FieldData<array3D> &fieldData,
 void TransformBCDataToUserCoordinates( FieldData<BoundaryConditionData> &bcData,
                                        const AxisTransformationMap &axisTransformation )
 {
-    // Temporary copy of the original to data from
-    FieldData<BoundaryConditionData> codeBcData = bcData;
-
+    
     // Transform the EnumVector
     TransformAxisVectorToUser( bcData.U, axisTransformation );
     ForAllFieldData( [&] (intType f) {
         TransformBoundaryPatchVectorToUser( bcData[f], axisTransformation );
     } );
-    
-    
+
+
     // Transform the fixed boundary array
     EnumFor<Axis>( [&] (Axis::ENUMDATA userAxis) {
 
-        Axis::ENUMDATA userAxis1 = LUT::LoOrthogonalAxis[userAxis],
-                       userAxis2 = LUT::HiOrthogonalAxis[userAxis];
+        Axis::ENUMDATA userAxis1 = LUT::LoOrthogonalAxis[ userAxis ],
+                       userAxis2 = LUT::HiOrthogonalAxis[ userAxis ];
+
+        Axis::ENUMDATA userTransformedAxis1 = axisTransformation.CodeAxis( userAxis1 ),
+                       userTransformedAxis2 = axisTransformation.CodeAxis( userAxis2 );
 
         Axis::ENUMDATA codeAxis  = axisTransformation.CodeAxis( userAxis ),
-                       codeAxis1 = LUT::LoOrthogonalAxis[codeAxis],
-                       codeAxis2 = LUT::HiOrthogonalAxis[codeAxis];
-
+                       codeAxis1 = LUT::LoOrthogonalAxis[ codeAxis ],
+                       codeAxis2 = LUT::HiOrthogonalAxis[ codeAxis ];
 
         bool reverseAxis1 = axisTransformation.UserAxisReversed( userAxis1 ),
              reverseAxis2 = axisTransformation.UserAxisReversed( userAxis2 );
 
-        Eigen::array<intType , Axis::count-1> shuffleArray;
-        Eigen::array<bool, Axis::count-1>     reverseArray;
+        Eigen::array<int , Axis::count-1> shuffleArray = {0, 1};
+        Eigen::array<bool, Axis::count-1> reverseArray = {false, false};
 
-        if ( userAxis1 != codeAxis1 ) 
-            shuffleArray[ 0 ] = codeAxis1;
-
-        if ( userAxis2 != codeAxis2 )
-            shuffleArray[ 1 ] = codeAxis2;
-
+        bool shouldTranspose =  ( codeAxis1 != userTransformedAxis1 ) || ( codeAxis2 != userTransformedAxis2 );
+        if ( shouldTranspose )
+            shuffleArray = {1, 0};
 
         if ( reverseAxis1 )
             reverseArray[ 0 ] = true;
@@ -572,10 +569,9 @@ void TransformBCDataToUserCoordinates( FieldData<BoundaryConditionData> &bcData,
         if ( reverseAxis2 )
             reverseArray[ 1 ] = true;
 
-
         ForAllFieldData( [&] (intType f) {
-            bcData[f][ LUT::PositivePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray);
-            bcData[f][ LUT::PositivePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray);
+            bcData[f][ LUT::PositivePatch[userAxis] ].value = array2D( bcData[f][ LUT::PositivePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray) );
+            bcData[f][ LUT::NegativePatch[userAxis] ].value = array2D( bcData[f][ LUT::NegativePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray) );
         } );
 
     } );
