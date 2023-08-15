@@ -118,7 +118,7 @@ Solver {
 
     Schemes {
 
-        linearisation           = Picard
+        linearisation           = Newton
         momentumInterpolation   = implicit
         advectionScheme         = upwind
         faceInterpolationScheme = weightedLinear
@@ -138,7 +138,7 @@ Solver {
         maxResiduals = 1e-1
 
         planeSweepDirection = +x
-        lineSweepDirection = +y
+        lineSweepDirection = +z
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
@@ -152,7 +152,7 @@ Output {
 
     residualHistoryFilename = "output/residual_history.csv"
     fieldOutputFilename = "output/fields.vtk"
-    fieldWriteInterval = 5
+    fieldWriteInterval = 1
 
     Monitors {
         Probe {

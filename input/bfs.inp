@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.05
+    nu   = 0.005
 }
 
 Mesh {
@@ -114,7 +114,7 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 11
+        maxOuterIterations = 100
         maxOuterResiduals = 1e-6
 
     }
@@ -122,7 +122,7 @@ Solver {
     LinearSolver {
 
         type = SUGS
-        maxIterations = 10
+        maxIterations = 1
         maxResiduals = 1e-2
 
         planeSweepDirection = +z
