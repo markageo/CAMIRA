@@ -146,9 +146,9 @@ Solver {
 
 Output {
 
-    residualHistoryFilename = "residual_history.csv"
-    fieldOutputFilename = "fields.vtk"
-    fieldWriteInterval = 0
+    residualHistoryFilename = "output/residual_history.csv"
+    fieldOutputFilename = "output/fields.vtk"
+    fieldWriteInterval = 1
 
     Monitors {
         Probe {

@@ -71,7 +71,6 @@ void LinearInterpInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities
     using enum Axis::ENUMDATA;
 
     array3D &faceVel = faceVelocities[ axis ];
-    // const array3D &cellVel = cellVelocities[ velocityComponent ];
 
     auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
 
@@ -104,7 +103,6 @@ void UpwindInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities,
     using enum Axis::ENUMDATA;
 
     array3D &faceVel = faceVelocities[ axis ];
-    // const array3D &cellVel = cellVelocities[ velocityComponent ];
 
     auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
 

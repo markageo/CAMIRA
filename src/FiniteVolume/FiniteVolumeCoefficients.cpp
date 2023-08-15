@@ -379,7 +379,7 @@ void SetBoundaryAdvectionPicardCoefficients( MomentumEquation &momentumEquation,
 \*---------------------------------------------------------------------------------------------------------------*/
 
 
-void NewtonInteriorImplicit( EnumVector<CFD::TransportCoefficients, CFD::array3D> &coeffs, 
+void NewtonInteriorImplicit( EnumVector< TransportCoefficients, array3D > &coeffs, 
                              const EnumVector< Axis, array3D > &faceAdvectedVelocities,  
                              const Mesh &mesh,
                              const Axis::ENUMDATA axis )
@@ -433,7 +433,7 @@ void NewtonConstants( array3D &B,
 
                 floatType yFluxDiff = mesh.cellLengthsInv[Y](j) 
                                     * ( faceFluxes[Y](i, j+1, k) * faceAdvectedVelocities[Y](i, j+1, k) 
-                                      - faceFluxes[Y](i, j  , k) * faceAdvectedVelocities[Y](i, j, k) );
+                                      - faceFluxes[Y](i, j  , k) * faceAdvectedVelocities[Y](i, j  , k) );
 
                 floatType zFluxDiff = mesh.cellLengthsInv[Z](k) 
                                     * ( faceFluxes[Z](i, j, k+1) * faceAdvectedVelocities[Z](i, j, k+1) 
@@ -1147,11 +1147,34 @@ void AllocateBoundaryConstants( FVCoefficients &fvCoeffs,
 void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
 {
     using enum TransportCoefficients::ENUMDATA;
+    using enum Axis::ENUMDATA;
     
     // Zero momentum equations
     EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
 
         fvCoeffs.Mom[axis].AU[axis][p].setZero();
+
+        if ( fvCoeffs.Mom[axis].linearisation == Linearisation::Newton ) {
+
+            if ( axis != X ) {
+                fvCoeffs.Mom[axis].AU[X][e].setZero();
+                fvCoeffs.Mom[axis].AU[X][p].setZero();
+                fvCoeffs.Mom[axis].AU[X][w].setZero();
+            }
+            
+            if ( axis != Y ) {
+                fvCoeffs.Mom[axis].AU[Y][n].setZero();
+                fvCoeffs.Mom[axis].AU[Y][p].setZero();
+                fvCoeffs.Mom[axis].AU[Y][s].setZero();
+            }
+
+            if ( axis != Z ) {
+                fvCoeffs.Mom[axis].AU[Z][t].setZero();
+                fvCoeffs.Mom[axis].AU[Z][p].setZero();
+                fvCoeffs.Mom[axis].AU[Z][b].setZero();
+            }
+            
+        } 
 
         EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
             fvCoeffs.Mom[axis].BUBoundary[bp].setZero();
@@ -1284,10 +1307,9 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     // The Picard coefficients for all momentum equations are the same, so just use the ones from the U momentum equation after 
     // its been set
     TIC("Picard advection")
+    SetInteriorAdvectionPicardCoefficients(fvCoeffs.Mom[Axis::X], faceFluxes, mesh);
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        if ( axis == Axis::X ) {
-            SetInteriorAdvectionPicardCoefficients(fvCoeffs.Mom[axis], faceFluxes, mesh);
-        } else {
+        if ( axis != Axis::X ) {
             EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
                 fvCoeffs.Mom[axis].AU[axis][tc] = fvCoeffs.Mom[Axis::X].AU[Axis::X][tc];
             } );
@@ -1314,7 +1336,6 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
         TOC();
 
     } );
-
 
     // Set the momentum interpolation coefficients
     TIC("MWI")
