@@ -56,14 +56,13 @@ namespace
 
 
     array2D CellPlaneToVertexPlane( const array2D &cellPlane, 
-                                    const array1D &interpFactors1,
-                                    const array1D &interpFactors2 )
+                                    const array1D &interpFactors0,
+                                    const array1D &interpFactors1 )
     {
         array2D vertexPlane( cellPlane.dimension(0)+1, cellPlane.dimension(1)+1 );
 
-        for ( intType i = 1; i != vertexPlane.dimension(0)-1; i++ ) {
-            for ( intType j = 1; j != vertexPlane.dimension(1)-1; j++ ) {
-
+        for ( intType j = 1; j != vertexPlane.dimension(1)-1; j++ ) {
+            for ( intType i = 1; i != vertexPlane.dimension(0)-1; i++ ) {
 
                 // Points to interpolation from
                 floatType c00 = cellPlane( i-1, j-1 ),
@@ -72,12 +71,12 @@ namespace
                           c11 = cellPlane( i  , j   );
 
                 // Linear interpolation in j direction
-                floatType lambdaY = interpFactors2(j);
+                floatType lambdaY = interpFactors1(j);
                 floatType c0 = ( 1-lambdaY ) * c00  +  lambdaY * c01,
                           c1 = ( 1-lambdaY ) * c10  +  lambdaY * c11;
 
                 // Linear interpolation in i direction
-                floatType lambdaX = interpFactors1(i);
+                floatType lambdaX = interpFactors0(i);
                 floatType c = ( 1-lambdaX ) * c0  +  lambdaX * c1;
 
                 vertexPlane(i, j) = c;
