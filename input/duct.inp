@@ -132,10 +132,13 @@ Solver {
 
         type = SUGS
         maxIterations = 5
-        maxResiduals = 1e-2
+        maxResiduals = 1e-1
 
         planeSweepDirection = +x
         lineSweepDirection = +z
+
+        //planeSweepDirection = +z
+        //lineSweepDirection = +y
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
