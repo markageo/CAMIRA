@@ -151,9 +151,9 @@ private:
             // V momentum
             floatType newtonStencilY = 0.0f;
             if constexpr ( LI == Linearisation::Newton ) {
-                newtonStencilY = - m_fvCoeffs.Mom[Y].AU[X][e]( i, jV, kV ) * m_fields.U[X]( ig  , jgV+1, kgV   )
-                                 - m_fvCoeffs.Mom[Y].AU[X][p]( i, jV, kV ) * m_fields.U[X]( ig  , jgV  , kgV   )
-                                 - m_fvCoeffs.Mom[Y].AU[X][w]( i, jV, kV ) * m_fields.U[X]( ig  , jgV-1, kgV   )
+                newtonStencilY = - m_fvCoeffs.Mom[Y].AU[X][e]( i, jV, kV ) * m_fields.U[X]( ig+1, jgV  , kgV  )
+                                 - m_fvCoeffs.Mom[Y].AU[X][p]( i, jV, kV ) * m_fields.U[X]( ig  , jgV  , kgV  )
+                                 - m_fvCoeffs.Mom[Y].AU[X][w]( i, jV, kV ) * m_fields.U[X]( ig-1, jgV  , kgV  )
 
                                  - m_fvCoeffs.Mom[Y].AU[Z][sCW::cCoupled]( i, jV, kV ) * m_fields.U[Z]( ig, jgV, kgV+sCW::iCoupled );
             }
