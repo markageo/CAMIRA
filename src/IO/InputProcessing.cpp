@@ -701,7 +701,11 @@ namespace
     void VerifyWriteDirectory( const std::string &fileDir ) 
     {
         std::filesystem::path filepath = std::string(fileDir);
-        bool filePathExists = std::filesystem::is_directory(filepath.parent_path());
+        if ( filepath.parent_path().empty() ) { // The user can specify the exectuable path
+            return;
+        }
+
+        bool filePathExists = std::filesystem::exists(filepath.parent_path());
         if ( !filePathExists ) {
             throw std::runtime_error("Cannot find or access directory '" + std::string(filepath.parent_path()) + "'. Please Make sure it exists.");
         }
