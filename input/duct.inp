@@ -137,9 +137,6 @@ Solver {
         planeSweepDirection = +x
         lineSweepDirection = +z
 
-        //planeSweepDirection = +z
-        //lineSweepDirection = +y
-
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
@@ -151,7 +148,7 @@ Output {
 
     residualHistoryFilename = "output/residual_history.csv"
     fieldOutputFilename = "output/fields.vtk"
-    fieldWriteInterval = 1
+    fieldWriteInterval = 0
 
     Monitors {
         Probe {
