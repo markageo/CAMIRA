@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <vector>
 
 namespace CFD
 {
@@ -378,7 +379,7 @@ void SetBoundaryAdvectionPicardCoefficients( MomentumEquation &momentumEquation,
                                        Momentum Newton Advection Coefficients
 \*---------------------------------------------------------------------------------------------------------------*/
 
-
+[[maybe_unused]]
 void NewtonInteriorImplicit( EnumVector< TransportCoefficients, array3D > &coeffs, 
                              const EnumVector< Axis, array3D > &faceAdvectedVelocities,  
                              const Mesh &mesh,
@@ -416,6 +417,57 @@ void NewtonInteriorImplicit( EnumVector< TransportCoefficients, array3D > &coeff
 
 
 
+// Templated to allow compiler autovectorisation
+template< Axis::ENUMDATA axis > [[maybe_unused]]
+void NewtonInteriorImplicit2( EnumVector< TransportCoefficients, array3D > &coeffs, 
+                             const EnumVector< Axis, array3D > &faceAdvectedVelocities,  
+                             const Mesh &mesh)
+{
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+
+    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+
+    TransportCoefficients::ENUMDATA east = LUT::HiCoeff[axis], 
+                                    west = LUT::LoCoeff[axis];
+    
+    for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+        for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+
+            // Left side cells
+            CFD_PRAGMA_VECTORIZE
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+                
+                arrayIndex3D LoIndex = { i, j, k };
+                LoIndex[axis] -= 1;
+                intType idx = LoIndex[axis];
+                
+                floatType coeffLo = faceAdvectedVelocities[axis](i, j, k) * mesh.cellLengthsInv[axis]( idx );
+                coeffs[p   ](LoIndex) += coeffLo * ( 1 - mesh.interpFactors[axis]( idx ) );
+                coeffs[east](LoIndex) += coeffLo * mesh.interpFactors[axis]( idx );
+
+            }
+
+            // Right side cells
+            CFD_PRAGMA_VECTORIZE
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+                
+                arrayIndex3D HiIndex = { i, j, k };
+                intType idx = HiIndex[axis];
+
+                floatType coeffHi = faceAdvectedVelocities[axis](i, j, k) * mesh.cellLengthsInv[axis]( idx );
+                coeffs[p   ](HiIndex) += - coeffHi * mesh.interpFactors[axis]( idx );
+                coeffs[west](HiIndex) += - coeffHi * ( 1 - mesh.interpFactors[axis]( idx ) );
+
+            }
+        }
+    }
+
+}
+
+
+
+
 void NewtonConstants( array3D &B,
                       const EnumVector< Axis, array3D > &faceAdvectedVelocities,
                       const EnumVector< Axis, array3D > &faceFluxes,
@@ -425,6 +477,8 @@ void NewtonConstants( array3D &B,
 
     for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
         for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
+
+            CFD_PRAGMA_VECTORIZE
             for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
 
                 floatType xFluxDiff = mesh.cellLengthsInv[X](i) 
@@ -458,18 +512,30 @@ void AddAdvectionNewtonCoefficients( MomentumEquation &momentumEquation,
     const auto &faceVelComp = faceAdvectedVelocities[momentumEquation.component];
     auto &boundaryConstants = momentumEquation.BUBoundary;
     
+    using enum Axis::ENUMDATA;
+    // TIC("Implicit interior terms")
+    // NewtonInteriorImplicit2<X>(momentumEquation.AU[X], faceVelComp, mesh );
+    // NewtonInteriorImplicit2<Y>(momentumEquation.AU[Y], faceVelComp, mesh );
+    // NewtonInteriorImplicit2<Z>(momentumEquation.AU[Z], faceVelComp, mesh );
+    // TOC()
+
     // Implicit terms
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         auto &coeffs            = momentumEquation.AU[ axis ];
-    
+        TIC("Implicit interior terms")
         NewtonInteriorImplicit(coeffs, faceVelComp, mesh, axis );
+        TOC()
 
+        TIC("Implicit boundary terms")
         AdvectionPositiveBoundary(coeffs, boundaryConstants, faceVelComp, mesh, boundaryConditions[axis], axis);
         AdvectionNegativeBoundary(coeffs, boundaryConstants, faceVelComp, mesh, boundaryConditions[axis], axis);
+        TOC()
     } );
 
     // Explicit terms
+    TIC("Explicit terms")
     NewtonConstants( momentumEquation.B, faceVelComp, faceFluxes, mesh );
+    TOC()
 }
 
 

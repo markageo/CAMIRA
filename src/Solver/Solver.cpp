@@ -73,17 +73,24 @@ void SweepSolve( FieldData<array3D> &fields,
         
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
+        TIC("Solver Update State")
         linearSolver.UpdateState();
+        TOC()
+        TIC("Linear Solver")
         linearSolver.Solve();
+        TOC()
 
+        TIC("Update face values")
         UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
-        if constexpr ( isNewtonLinearisation )
+        if constexpr ( isNewtonLinearisation ) {
             UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
-
+        }
+        TOC()
+        TIC("Update Coefficients")
         UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
-
+        TOC()
+        TIC("Residuals and logging")
         residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs); 
-        // residualsOuter   = L1DiffResiduals(fields, fieldsOld); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
 
         massFluxResidual = BoundaryMassFluxResidual(faceFluxes, mesh);
@@ -97,6 +104,7 @@ void SweepSolve( FieldData<array3D> &fields,
         for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
             probeLogFiles[p].WriteData( probeValues[p], nOuterIterations );
         }
+        TOC()
         
         if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
             fieldWriter.WriteData( nOuterIterations );
@@ -108,6 +116,7 @@ void SweepSolve( FieldData<array3D> &fields,
         if ( writeFields && (nOuterIterations % inputData.fieldWriteInterval) == 0 ) {
             fieldWriter.WriteData( nOuterIterations );
         }
+        
 
     }
 

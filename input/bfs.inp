@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.005
+    nu   = 0.05
 }
 
 Mesh {
@@ -114,8 +114,8 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 100
-        maxOuterResiduals = 1e-6
+        maxOuterIterations = 1000
+        maxOuterResiduals = 1e-4
 
     }
     
@@ -140,7 +140,7 @@ Output {
 
     residualHistoryFilename = "output/residual_history.csv"
     fieldOutputFilename = "output/fields.vtk"
-    fieldWriteInterval = 1
+    fieldWriteInterval = 0
 
     Monitors {
         Probe {
