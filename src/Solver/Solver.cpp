@@ -113,9 +113,11 @@ void SweepSolve( FieldData<array3D> &fields,
             break;
         }
 
+        TIC("Writing Feilds")
         if ( writeFields && (nOuterIterations % inputData.fieldWriteInterval) == 0 ) {
             fieldWriter.WriteData( nOuterIterations );
         }
+        TOC()
         
 
     }

@@ -19,7 +19,7 @@ target_compile_options(compiler_flags INTERFACE "-std=c++2a;-march=native")
 
 add_library(warning_flags INTERFACE)
 target_compile_features(warning_flags INTERFACE cxx_std_20)
-target_compile_options(warning_flags INTERFACE "-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic;-fopt-info-vec=optimization_report.txt")
+target_compile_options(warning_flags INTERFACE "-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic;-fopt-info-vec-all=optimization_report.txt")
 
 
 # Add address sanitizer to the debug build
