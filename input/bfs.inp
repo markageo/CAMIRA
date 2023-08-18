@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.05
+    nu   = 0.005
 }
 
 Mesh {
@@ -106,7 +106,7 @@ Solver {
 
     Schemes {
 
-        linearisation           = Newton
+        linearisation           = Picard
         momentumInterpolation   = implicit
         advectionScheme         = upwind
         faceInterpolationScheme = weightedLinear
@@ -115,7 +115,7 @@ Solver {
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 1000
-        maxOuterResiduals = 1e-4
+        maxOuterResiduals = 1e-5
 
     }
     
