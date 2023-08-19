@@ -391,14 +391,16 @@ void SetInteriorAdvectionPicardCoefficients( MomentumEquation &momentumEquation,
     
     auto &coeffs            = momentumEquation.AU[ momentumEquation.component ];
 
-    using enum Axis::ENUMDATA;
-    UpwindInteriorPicard_autoVec<X>(coeffs, faceFluxes, mesh);
-    UpwindInteriorPicard_autoVec<Y>(coeffs, faceFluxes, mesh);
-    UpwindInteriorPicard_autoVec<Z>(coeffs, faceFluxes, mesh);
-
-    // EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
-    //     UpwindInteriorPicard(coeffs, faceFluxes, mesh, axis);
-    // } );
+    #if defined( CFD_USE_AUTOVEC_FUNCTIONS )
+        using enum Axis::ENUMDATA;
+        UpwindInteriorPicard_autoVec<X>(coeffs, faceFluxes, mesh);
+        UpwindInteriorPicard_autoVec<Y>(coeffs, faceFluxes, mesh);
+        UpwindInteriorPicard_autoVec<Z>(coeffs, faceFluxes, mesh);
+    #else
+        EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
+            UpwindInteriorPicard(coeffs, faceFluxes, mesh, axis);
+        } );
+    #endif
 
 }
 
@@ -534,7 +536,7 @@ void NewtonInteriorImplicit_autoVec( EnumVector< TransportCoefficients, array3D 
                     HiCellLengthInv = mesh.cellLengthsInv[axis]( i );
                     HiInterpFactor  = mesh.interpFactors[axis]( i );
                 }
-                
+
                 arrayIndex3D HiIndex = { i, j, k };
 
                 floatType coeffHi = faceAdvectedVelocities[axis](i, j, k) * HiCellLengthInv;
@@ -594,16 +596,21 @@ void AddAdvectionNewtonCoefficients( MomentumEquation &momentumEquation,
     const auto &faceVelComp = faceAdvectedVelocities[momentumEquation.component];
     auto &boundaryConstants = momentumEquation.BUBoundary;
     
-    using enum Axis::ENUMDATA;
-    NewtonInteriorImplicit_autoVec<X>(momentumEquation.AU[X], faceVelComp, mesh );
-    NewtonInteriorImplicit_autoVec<Y>(momentumEquation.AU[Y], faceVelComp, mesh );
-    NewtonInteriorImplicit_autoVec<Z>(momentumEquation.AU[Z], faceVelComp, mesh );
-
     // Implicit terms
+    #if defined( CFD_USE_AUTOVEC_FUNCTIONS )
+        using enum Axis::ENUMDATA;
+        NewtonInteriorImplicit_autoVec<X>(momentumEquation.AU[X], faceVelComp, mesh );
+        NewtonInteriorImplicit_autoVec<Y>(momentumEquation.AU[Y], faceVelComp, mesh );
+        NewtonInteriorImplicit_autoVec<Z>(momentumEquation.AU[Z], faceVelComp, mesh );
+    #else
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            NewtonInteriorImplicit(momentumEquation.AU[axis], faceVelComp, mesh, axis );
+        } );
+    #endif
+
+    // Implicit boundary terms
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         auto &coeffs            = momentumEquation.AU[ axis ];
-        // NewtonInteriorImplicit(coeffs, faceVelComp, mesh, axis );
-
         AdvectionPositiveBoundary(coeffs, boundaryConstants, faceVelComp, mesh, boundaryConditions[axis], axis);
         AdvectionNegativeBoundary(coeffs, boundaryConstants, faceVelComp, mesh, boundaryConditions[axis], axis);
     } );
@@ -1038,7 +1045,6 @@ void MWInterpolationInteriorImplicit_autoVec( ContinuityEquation &continuityEqua
                 }
 
                 arrayIndex3D HiIndex = { i, j, k };
-                intType idx = HiIndex[axis];
 
                 // Cell on east side
                 continuityPressureCoeffs[wwest](HiIndex)  = - mwiLineCoeffs[i][0] * HiCellLengthInv;
@@ -1056,7 +1062,6 @@ void MWInterpolationInteriorImplicit_autoVec( ContinuityEquation &continuityEqua
 
                 arrayIndex3D LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
-                intType idx = LoIndex[axis];
 
                 // Cell on west side 
                 continuityPressureCoeffs[west ](LoIndex) += mwiLineCoeffs[i][0] * LoCellLengthInv;
@@ -1247,39 +1252,40 @@ void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
     // Assumes that 'p' coefficient is set to zero
     // Correction is zero at the boundary faces
 
-    using enum Axis::ENUMDATA;
-    switch ( fvCoeffs.Cont.momentumInterpolation ) {
+    #if defined( CFD_USE_AUTOVEC_FUNCTIONS )
+        using enum Axis::ENUMDATA;
+        switch ( fvCoeffs.Cont.momentumInterpolation ) {
 
-        case MomentumInterpolation::Implicit:
-            MWInterpolationInteriorImplicit_autoVec<X>(fvCoeffs.Cont, fvCoeffs.Mom[X].diagCoeffInv, mesh);
-            MWInterpolationInteriorImplicit_autoVec<Y>(fvCoeffs.Cont, fvCoeffs.Mom[Y].diagCoeffInv, mesh);
-            MWInterpolationInteriorImplicit_autoVec<Z>(fvCoeffs.Cont, fvCoeffs.Mom[Z].diagCoeffInv, mesh);
-            break;
-
-        case MomentumInterpolation::SemiExplicit:
-                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                    MWInterpolationInteriorSemiExplicit(fvCoeffs.Cont, P, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
-                } );
+            case MomentumInterpolation::Implicit:
+                MWInterpolationInteriorImplicit_autoVec<X>(fvCoeffs.Cont, fvCoeffs.Mom[X].diagCoeffInv, mesh);
+                MWInterpolationInteriorImplicit_autoVec<Y>(fvCoeffs.Cont, fvCoeffs.Mom[Y].diagCoeffInv, mesh);
+                MWInterpolationInteriorImplicit_autoVec<Z>(fvCoeffs.Cont, fvCoeffs.Mom[Z].diagCoeffInv, mesh);
                 break;
-    }
+
+            case MomentumInterpolation::SemiExplicit:
+                    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                        MWInterpolationInteriorSemiExplicit(fvCoeffs.Cont, P, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
+                    } );
+                    break;
+        }
+    #else
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            switch ( fvCoeffs.Cont.momentumInterpolation ) {
+                case MomentumInterpolation::Implicit:
+                    MWInterpolationInteriorImplicit(fvCoeffs.Cont, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
+                    break;
+
+                case MomentumInterpolation::SemiExplicit:
+                     MWInterpolationInteriorSemiExplicit(fvCoeffs.Cont, P, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
+                     break;
+            }
+        } );
+    #endif
 
 
-
+    // Boundary constants
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-
-        // switch ( fvCoeffs.Cont.momentumInterpolation ) {
-
-        //     case MomentumInterpolation::Implicit:
-        //         MWInterpolationInteriorImplicit(fvCoeffs.Cont, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
-        //         break;
-
-        //     case MomentumInterpolation::SemiExplicit:
-        //          MWInterpolationInteriorSemiExplicit(fvCoeffs.Cont, P, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
-        //          break;
-        // }
-
-
-        // Boundary constants
+        
         if ( bcData.P[ LUT::PositivePatch[axis] ].type == BoundaryConditions::fixed ) 
             MWInterpolationPositiveBoundary(fvCoeffs.Cont.BPBoundary, fvCoeffs.Mom[axis].BPBoundary, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
 

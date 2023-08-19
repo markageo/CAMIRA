@@ -38,6 +38,7 @@ if ( CFD_PROFILING )
 	add_compile_definitions( CFD_PROFILING )
 endif()
 
+
 # Selection of solver precision
 set(CFD_PRECISION "double" CACHE STRING "Precision of floating point numbers to compile in.")
 set_property(CACHE CFD_PRECISION PROPERTY STRINGS single double)
@@ -47,6 +48,16 @@ if ( CFD_PRECISION STREQUAL "double" )
 	add_compile_definitions( CFD_DOUBLE_PRECISION )
 elseif ( CFD_PRECISION STREQUAL "single" )
 	message( STATUS "Compiling in single precision" )
+endif()
+
+
+# Use of functions which were written for the compiler to autovectorise
+option ( CFD_USE_AUTOVEC_FUNCTIONS "Use functions written for the compiler to auto vectorize." on )
+if ( CFD_USE_AUTOVEC_FUNCTIONS )
+	message( STATUS "Using Auto Vectorization functions." )
+	add_compile_definitions( CFD_USE_AUTOVEC_FUNCTIONS )
+else()
+	message( STATUS "Not useing Auto Vectorization functions." )
 endif()
 
 
