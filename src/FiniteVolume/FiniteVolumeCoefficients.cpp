@@ -485,20 +485,44 @@ void NewtonInteriorImplicit_autoVec( EnumVector< TransportCoefficients, array3D 
     TransportCoefficients::ENUMDATA east = LUT::HiCoeff[axis], 
                                     west = LUT::LoCoeff[axis];
     
+    // These will get set at different levels of the nested loop depending on what axis is
+    floatType LoCellLengthInv, HiCellLengthInv,
+              LoInterpFactor , HiInterpFactor;
+
+
     for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+
+        if constexpr ( axis == Z ) {
+            LoCellLengthInv = mesh.cellLengthsInv[axis]( k-1 );
+            HiCellLengthInv = mesh.cellLengthsInv[axis]( k   );
+            LoInterpFactor  = mesh.interpFactors[axis]( k-1 );
+            HiInterpFactor  = mesh.interpFactors[axis]( k   );
+        }
+
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+
+            if constexpr ( axis == Y ) {
+                LoCellLengthInv = mesh.cellLengthsInv[axis]( j-1 );
+                HiCellLengthInv = mesh.cellLengthsInv[axis]( j   );
+                LoInterpFactor  = mesh.interpFactors[axis]( j-1 );
+                HiInterpFactor  = mesh.interpFactors[axis]( j   );
+            }
 
             // Left side cells
             CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
                 
+                if constexpr ( axis == X ) {
+                    LoCellLengthInv = mesh.cellLengthsInv[axis]( i-1 );
+                    LoInterpFactor  = mesh.interpFactors[axis]( i-1 );
+                }
+
                 arrayIndex3D LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
-                intType idx = LoIndex[axis];
                 
-                floatType coeffLo = faceAdvectedVelocities[axis](i, j, k) * mesh.cellLengthsInv[axis]( idx );
-                coeffs[p   ](LoIndex) += coeffLo * ( 1 - mesh.interpFactors[axis]( idx ) );
-                coeffs[east](LoIndex) += coeffLo * mesh.interpFactors[axis]( idx );
+                floatType coeffLo = faceAdvectedVelocities[axis](i, j, k) * LoCellLengthInv;
+                coeffs[p   ](LoIndex) += coeffLo * ( 1 - LoInterpFactor );
+                coeffs[east](LoIndex) += coeffLo * LoInterpFactor;
 
             }
 
@@ -506,12 +530,16 @@ void NewtonInteriorImplicit_autoVec( EnumVector< TransportCoefficients, array3D 
             CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
                 
+                if constexpr ( axis == X ) {
+                    HiCellLengthInv = mesh.cellLengthsInv[axis]( i );
+                    HiInterpFactor  = mesh.interpFactors[axis]( i );
+                }
+                
                 arrayIndex3D HiIndex = { i, j, k };
-                intType idx = HiIndex[axis];
 
-                floatType coeffHi = faceAdvectedVelocities[axis](i, j, k) * mesh.cellLengthsInv[axis]( idx );
-                coeffs[p   ](HiIndex) += - coeffHi * mesh.interpFactors[axis]( idx );
-                coeffs[west](HiIndex) += - coeffHi * ( 1 - mesh.interpFactors[axis]( idx ) );
+                floatType coeffHi = faceAdvectedVelocities[axis](i, j, k) * HiCellLengthInv;
+                coeffs[p   ](HiIndex) += - coeffHi * HiInterpFactor;
+                coeffs[west](HiIndex) += - coeffHi * ( 1 - HiInterpFactor );
 
             }
         }
