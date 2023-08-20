@@ -1078,6 +1078,7 @@ void MWInterpolationInteriorImplicit_autoVec( ContinuityEquation &continuityEqua
 
 
 // Semi explicit momentum interpolation coefficient for internal faces
+[[maybe_unused]]
 void MWInterpolationInteriorSemiExplicit( ContinuityEquation &continuityEquation, 
                                           const array3D &P,
                                           const array3D &momentumDiagCoeffInv,
@@ -1176,6 +1177,161 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation &continuityEquation
 
 
 
+// Semi explicit momentum interpolation coefficient for internal faces
+// Autovectorisation friendly version
+template< Axis::ENUMDATA axis > [[maybe_unused]]
+void MWInterpolationInteriorSemiExplicit_autoVec( ContinuityEquation &continuityEquation, 
+                                                  const array3D &P,
+                                                  const array3D &momentumDiagCoeffInv,
+                                                  const Mesh &mesh )
+{
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+
+    // Unpack
+    EnumVector<TransportCoefficients, array3D> &continuityPressureCoeffs = continuityEquation.AP;
+    array3D &continuitySourceTerm                                        = continuityEquation.B;
+    const std::array< array1D, 4 > &mwiSparseCoeffs                      = continuityEquation.mwiSparseCoeffs[axis];
+    const std::array< array1D, 2 > &mwiCompactCoeffs                     = continuityEquation.mwiCompactCoeffs[axis];
+
+    // For getting the index of a neighbouring cell
+    auto NeighbourIndex = [] ( arrayIndex3D index, intType shift, Axis::ENUMDATA shiftAxis ) { 
+        index[shiftAxis] += shift; 
+        return index; 
+    };
+
+    // Cell indexing
+    TransportCoefficients::ENUMDATA east  = LUT::HiCoeff[axis], 
+                                    west  = LUT::LoCoeff[axis];
+
+    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+
+    floatType HiCellLengthInv,
+              LoCellLengthInv;
+
+    for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+
+        if constexpr ( axis == Z ) {
+            HiCellLengthInv = mesh.cellLengthsInv[axis]( k   );
+            LoCellLengthInv = mesh.cellLengthsInv[axis]( k-1 );
+        }
+
+        for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+
+            if constexpr ( axis == Y ) {
+                HiCellLengthInv = mesh.cellLengthsInv[axis]( j   );
+                LoCellLengthInv = mesh.cellLengthsInv[axis]( j-1 );
+            }
+
+            std::vector< std::array< floatType, 4 > > mwiLineSparseCoeffs( nFaces[X] );
+            std::vector< std::array< floatType, 2 > > mwiLineCompactCoeffs( nFaces[X] );
+
+            CFD_PRAGMA_VECTORIZE
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+
+                arrayIndex3D HiIndex = { i, j, k },
+                             LoIndex = { i, j, k };
+                LoIndex[axis] -= 1;
+                
+                floatType d =  0.5f * ( momentumDiagCoeffInv( HiIndex )  +  momentumDiagCoeffInv( LoIndex ) );   
+
+                // Coefficients for westmost to eastmost cell
+                intType idx = HiIndex[axis];
+                mwiLineCompactCoeffs[i][0] = d * mwiCompactCoeffs[0](idx),
+                mwiLineCompactCoeffs[i][1] = d * mwiCompactCoeffs[1](idx);
+
+                mwiLineSparseCoeffs[i][0]  = d * mwiSparseCoeffs[0](idx),
+                mwiLineSparseCoeffs[i][1]  = d * mwiSparseCoeffs[1](idx),
+                mwiLineSparseCoeffs[i][2]  = d * mwiSparseCoeffs[2](idx),
+                mwiLineSparseCoeffs[i][3]  = d * mwiSparseCoeffs[3](idx);
+
+            }
+
+
+            // Implicit compact difference --------------------------------------------------------------------------
+
+            CFD_PRAGMA_VECTORIZE
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+
+                if constexpr ( axis == X ) {
+                    HiCellLengthInv = mesh.cellLengthsInv[axis]( i );
+                }
+
+                arrayIndex3D HiIndex = { i, j, k };
+
+                // Cell on east side
+                continuityPressureCoeffs[west ](HiIndex)  = - mwiLineCompactCoeffs[i][0] * HiCellLengthInv;
+                continuityPressureCoeffs[p    ](HiIndex) += - mwiLineCompactCoeffs[i][1] * HiCellLengthInv;
+            }
+
+
+            CFD_PRAGMA_VECTORIZE
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+
+                if constexpr ( axis == X ) {
+                    LoCellLengthInv = mesh.cellLengthsInv[axis]( i-1 );
+                }
+
+                arrayIndex3D LoIndex = { i, j, k };
+                LoIndex[axis] -= 1;
+
+                // Cell on west side 
+                continuityPressureCoeffs[p    ](LoIndex) += mwiLineCompactCoeffs[i][0] * LoCellLengthInv;
+                continuityPressureCoeffs[east ](LoIndex)  = mwiLineCompactCoeffs[i][1] * LoCellLengthInv;
+            }
+
+
+            // Explicit sparse difference ---------------------------------------------------------------------------
+
+            CFD_PRAGMA_VECTORIZE
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+
+                if constexpr ( axis == X ) {
+                    HiCellLengthInv = mesh.cellLengthsInv[axis]( i );
+                }
+
+                arrayIndex3D HiIndex = { i, j, k };
+
+                arrayIndex3D HiWWest = NeighbourIndex( HiIndex, -2, axis ),
+                             HiWest  = NeighbourIndex( HiIndex, -1, axis ),
+                             HiEast  = NeighbourIndex( HiIndex,  1, axis );
+
+                // Cell on east side
+                continuitySourceTerm(HiIndex) += ( mwiLineSparseCoeffs[i][0] * P( G(HiWWest) )
+                                                 + mwiLineSparseCoeffs[i][1] * P( G(HiWest)  )
+                                                 + mwiLineSparseCoeffs[i][2] * P( G(HiIndex) )
+                                                 + mwiLineSparseCoeffs[i][3] * P( G(HiEast)  )
+                                                 ) * HiCellLengthInv;
+            }
+
+
+            CFD_PRAGMA_VECTORIZE
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+
+                if constexpr ( axis == X ) {
+                    LoCellLengthInv = mesh.cellLengthsInv[axis]( i-1 );
+                }
+
+                arrayIndex3D LoIndex = { i, j, k };
+                LoIndex[axis] -= 1;
+
+                arrayIndex3D LoWest  = NeighbourIndex( LoIndex, -1, axis ),
+                             LoEast  = NeighbourIndex( LoIndex,  1, axis ),
+                             LoEEast = NeighbourIndex( LoIndex,  2, axis );
+
+                // Cell on west side 
+                continuitySourceTerm(LoIndex) -= ( mwiLineSparseCoeffs[i][0] * P( G(LoWest)  )
+                                                 + mwiLineSparseCoeffs[i][1] * P( G(LoIndex) )
+                                                 + mwiLineSparseCoeffs[i][2] * P( G(LoEast)  )
+                                                 + mwiLineSparseCoeffs[i][3] * P( G(LoEEast) )
+                                                 ) * LoCellLengthInv;
+            }
+        }
+    }
+
+}
+
+
 // Boundary constants that come from MWI for negative side boundary
 void MWInterpolationNegativeBoundary( EnumVector<BoundaryPatches, array2D> &continuityBoundaryPressure,
                                       const EnumVector<BoundaryPatches, array2D> &momentumBoundaryPressure,
@@ -1263,10 +1419,10 @@ void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
                 break;
 
             case MomentumInterpolation::SemiExplicit:
-                    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                        MWInterpolationInteriorSemiExplicit(fvCoeffs.Cont, P, fvCoeffs.Mom[axis].diagCoeffInv, mesh, axis);
-                    } );
-                    break;
+                MWInterpolationInteriorSemiExplicit_autoVec<X>(fvCoeffs.Cont, P, fvCoeffs.Mom[X].diagCoeffInv, mesh);
+                MWInterpolationInteriorSemiExplicit_autoVec<Y>(fvCoeffs.Cont, P, fvCoeffs.Mom[Y].diagCoeffInv, mesh);
+                MWInterpolationInteriorSemiExplicit_autoVec<Z>(fvCoeffs.Cont, P, fvCoeffs.Mom[Z].diagCoeffInv, mesh);
+                break;
         }
     #else
         EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
