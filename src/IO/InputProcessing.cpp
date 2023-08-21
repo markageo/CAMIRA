@@ -316,6 +316,44 @@ namespace
 
 
     /*-------------------------------------------------------------------------------------*\
+                                         Solid Geometry
+    \*-------------------------------------------------------------------------------------*/
+
+    void ReadSolidGeometry( InputData &inputData, 
+                            const pt::ptree &tree)
+    {
+        // It's ok if no geometry is specified
+        boost::optional<const pt::ptree &> solidGeometryTreeOptional = tree.get_child_optional( "SolidGeometry" );
+        if ( !solidGeometryTreeOptional )
+            return;
+
+        const pt::ptree &solidGeometryTree = solidGeometryTreeOptional.get();
+
+        // Read blocks
+        InputData::SolidBlockData tempBlockData;
+        std::vector< floatType > tempCenterPosition, tempDimensions, tempRotation;
+        for (auto solidObject : solidGeometryTree) {
+            if (solidObject.first != "Block") {
+                throw std::runtime_error(  "'" + solidObject.first + "' is not a valid SolidGeometry object." );
+            }
+
+            tempCenterPosition = solidObject.second.get< std::vector<floatType> >( "centerPosition" ); 
+            tempDimensions     = solidObject.second.get< std::vector<floatType> >( "dimensions" ); 
+            tempRotation       = solidObject.second.get< std::vector<floatType> >( "rotation" ); 
+
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                tempBlockData.centerPosition(axis) = tempCenterPosition[axis];
+                tempBlockData.dimensions(axis)     = tempDimensions[axis];
+                tempBlockData.rotation(axis)       = tempRotation[axis];
+            } );
+
+            inputData.solidBlocks.push_back( tempBlockData );
+        }
+
+    }
+
+
+    /*-------------------------------------------------------------------------------------*\
                                        Boundary Conditions
     \*-------------------------------------------------------------------------------------*/
 
@@ -759,6 +797,7 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFilename)
 
     ReadModel(inputData, tree);
     ReadMesh(inputData, tree);
+    ReadSolidGeometry(inputData, tree);
     ReadBoundaryConditions(inputData, tree);
     ReadInitialConditions(inputData, tree);
     ReadSolver(inputData, tree);
