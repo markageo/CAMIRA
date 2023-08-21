@@ -4,8 +4,6 @@
 #include <ctime>
 #include <chrono>
 
-#include <fmt/core.h>
-
 namespace PROF {
 
 enum time_units {

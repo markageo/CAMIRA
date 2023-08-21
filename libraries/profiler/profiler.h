@@ -98,6 +98,37 @@ private:
                     "name"_a = name, 
                     "pad"_a = "", "time"_a = time_delta, 
                     "percnt"_a = percentage_time, "counter"_a = nCalls);
+            
+            if (children.size()) {
+                delta_type val = time_delta - children_time();
+                percentage_time = 100.0 * val / total;
+                std::string str = "self";
+                fmt::print(out, format_string,
+                    "digits"_a = Counter::digits(),
+                    "level"_a = level + indentLevel/2, 
+                    "width"_a = width - level - str.size() - indentLevel/2, 
+                    "units"_a = Counter::units(), 
+                    "name"_a = str, 
+                    "pad"_a = "", "time"_a = time_delta, 
+                    "percnt"_a = percentage_time, "counter"_a = nCalls);
+            }
+
+            for (auto& [childName, child] : children)
+                child.print(out, childName, level + indentLevel, total, width, indentLevel);
+        }
+
+        void print_fmt(std::ostream& out, const std::string& name, int level, delta_type total, size_t width, size_t indentLevel) const {
+            using namespace fmt::literals;
+            auto percentage_time = 100 * time_delta / total;
+            constexpr auto format_string = "[{pad:>{level}}{name}:{pad:>{width}}{time:>15.{digits}f}{units}] [nCalls {counter}] ({percnt:>6.2f}%)\n"; 
+            fmt::print(out, format_string,
+                    "digits"_a = Counter::digits(),
+                    "level"_a = level, 
+                    "width"_a = width - level - name.size(), 
+                    "units"_a = Counter::units(), 
+                    "name"_a = name, 
+                    "pad"_a = "", "time"_a = time_delta, 
+                    "percnt"_a = percentage_time, "counter"_a = nCalls);
 
             if (children.size()) {
                 delta_type val = time_delta - children_time();
@@ -133,12 +164,12 @@ private:
 
     void print(std::ostream &out) const {
         if (m_stack.back() != &m_root)
-            fmt::print(out, "Warning! Profile is incomplete.\n");
+            out << "Warning! Profile is incomplete.\n";
         m_root.print(out, m_name, 0, m_root.time_delta, m_root.total_width(m_name, 0, m_indentLevel), m_indentLevel);
     }
 
     friend std::ostream& operator<<(std::ostream &out, const profiler &prof) {
-        fmt::print(out, "\n");
+        out << "\n";
         prof.print(out);
         return out;
     }

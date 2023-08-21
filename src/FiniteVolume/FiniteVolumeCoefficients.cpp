@@ -268,7 +268,7 @@ void UpwindInteriorPicard_autoVec( EnumVector<CFD::TransportCoefficients, CFD::a
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
 
             // Left side cells
-            CFD_PRAGMA_VECTORIZE
+            // CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
                 
                 arrayIndex3D  LoIndex = { i, j, k };
@@ -282,7 +282,7 @@ void UpwindInteriorPicard_autoVec( EnumVector<CFD::TransportCoefficients, CFD::a
 
 
             // Right side cells
-            CFD_PRAGMA_VECTORIZE
+            // CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
                 
                 arrayIndex3D HiIndex = { i, j, k };
@@ -393,9 +393,9 @@ void SetInteriorAdvectionPicardCoefficients( MomentumEquation &momentumEquation,
 
     #if defined( CFD_USE_AUTOVEC_FUNCTIONS )
         using enum Axis::ENUMDATA;
-        UpwindInteriorPicard_autoVec<X>(coeffs, faceFluxes, mesh);
-        UpwindInteriorPicard_autoVec<Y>(coeffs, faceFluxes, mesh);
-        UpwindInteriorPicard_autoVec<Z>(coeffs, faceFluxes, mesh);
+        UpwindInteriorPicard_autoVec<Axis::X>(coeffs, faceFluxes, mesh);
+        UpwindInteriorPicard_autoVec<Axis::Y>(coeffs, faceFluxes, mesh);
+        UpwindInteriorPicard_autoVec<Axis::Z>(coeffs, faceFluxes, mesh);
     #else
         EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
             UpwindInteriorPicard(coeffs, faceFluxes, mesh, axis);
@@ -511,7 +511,7 @@ void NewtonInteriorImplicit_autoVec( EnumVector< TransportCoefficients, array3D 
             }
 
             // Left side cells
-            CFD_PRAGMA_VECTORIZE
+            // CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
                 
                 if constexpr ( axis == X ) {
@@ -520,7 +520,7 @@ void NewtonInteriorImplicit_autoVec( EnumVector< TransportCoefficients, array3D 
                 }
 
                 arrayIndex3D LoIndex = { i, j, k };
-                LoIndex[axis] -= 1;
+                LoIndex[axis] -= 1; 
                 
                 floatType coeffLo = faceAdvectedVelocities[axis](i, j, k) * LoCellLengthInv;
                 coeffs[p   ](LoIndex) += coeffLo * ( 1 - LoInterpFactor );
@@ -529,7 +529,7 @@ void NewtonInteriorImplicit_autoVec( EnumVector< TransportCoefficients, array3D 
             }
 
             // Right side cells
-            CFD_PRAGMA_VECTORIZE
+            // CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
                 
                 if constexpr ( axis == X ) {
@@ -599,9 +599,9 @@ void AddAdvectionNewtonCoefficients( MomentumEquation &momentumEquation,
     // Implicit terms
     #if defined( CFD_USE_AUTOVEC_FUNCTIONS )
         using enum Axis::ENUMDATA;
-        NewtonInteriorImplicit_autoVec<X>(momentumEquation.AU[X], faceVelComp, mesh );
-        NewtonInteriorImplicit_autoVec<Y>(momentumEquation.AU[Y], faceVelComp, mesh );
-        NewtonInteriorImplicit_autoVec<Z>(momentumEquation.AU[Z], faceVelComp, mesh );
+        NewtonInteriorImplicit_autoVec<Axis::X>(momentumEquation.AU[X], faceVelComp, mesh );
+        NewtonInteriorImplicit_autoVec<Axis::Y>(momentumEquation.AU[Y], faceVelComp, mesh );
+        NewtonInteriorImplicit_autoVec<Axis::Z>(momentumEquation.AU[Z], faceVelComp, mesh );
     #else
         EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
             NewtonInteriorImplicit(momentumEquation.AU[axis], faceVelComp, mesh, axis );
@@ -1018,9 +1018,9 @@ void MWInterpolationInteriorImplicit_autoVec( ContinuityEquation &continuityEqua
             
 
             // Precalculate the coefficients on each face to save recalculation in the seperate vectorised loops
-            std::vector< std::array< floatType, 4 > > mwiLineCoeffs( nFaces[X] );
+            std::vector< std::array< floatType, 4 > > mwiLineCoeffs( static_cast<size_t>( nFaces[X] ) );
 
-            CFD_PRAGMA_VECTORIZE
+            // CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
                 arrayIndex3D HiIndex = { i, j, k },
@@ -1031,13 +1031,14 @@ void MWInterpolationInteriorImplicit_autoVec( ContinuityEquation &continuityEqua
 
                 // Coefficients for westmost to eastmost cell
                 intType idx = HiIndex[axis];
-                mwiLineCoeffs[i][0] = d * mwiSparseCoeffs[0](idx),
-                mwiLineCoeffs[i][1] = d * ( mwiSparseCoeffs[1](idx) + mwiCompactCoeffs[0](idx) ),
-                mwiLineCoeffs[i][2] = d * ( mwiSparseCoeffs[2](idx) + mwiCompactCoeffs[1](idx) ),
-                mwiLineCoeffs[i][3] = d * mwiSparseCoeffs[3](idx);
+                size_t iv = static_cast< size_t >( i );
+                mwiLineCoeffs[iv][0] = d * mwiSparseCoeffs[0](idx),
+                mwiLineCoeffs[iv][1] = d * ( mwiSparseCoeffs[1](idx) + mwiCompactCoeffs[0](idx) ),
+                mwiLineCoeffs[iv][2] = d * ( mwiSparseCoeffs[2](idx) + mwiCompactCoeffs[1](idx) ),
+                mwiLineCoeffs[iv][3] = d * mwiSparseCoeffs[3](idx);
             }
 
-            CFD_PRAGMA_VECTORIZE
+            // CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
                 if constexpr ( axis == X ) {
@@ -1045,15 +1046,16 @@ void MWInterpolationInteriorImplicit_autoVec( ContinuityEquation &continuityEqua
                 }
 
                 arrayIndex3D HiIndex = { i, j, k };
+                size_t iv = static_cast< size_t >( i );
 
                 // Cell on east side
-                continuityPressureCoeffs[wwest](HiIndex)  = - mwiLineCoeffs[i][0] * HiCellLengthInv;
-                continuityPressureCoeffs[west ](HiIndex)  = - mwiLineCoeffs[i][1] * HiCellLengthInv;
-                continuityPressureCoeffs[p    ](HiIndex) += - mwiLineCoeffs[i][2] * HiCellLengthInv;
-                continuityPressureCoeffs[east ](HiIndex)  = - mwiLineCoeffs[i][3] * HiCellLengthInv;
+                continuityPressureCoeffs[wwest](HiIndex)  = - mwiLineCoeffs[iv][0] * HiCellLengthInv;
+                continuityPressureCoeffs[west ](HiIndex)  = - mwiLineCoeffs[iv][1] * HiCellLengthInv;
+                continuityPressureCoeffs[p    ](HiIndex) += - mwiLineCoeffs[iv][2] * HiCellLengthInv;
+                continuityPressureCoeffs[east ](HiIndex)  = - mwiLineCoeffs[iv][3] * HiCellLengthInv;
             }
 
-            CFD_PRAGMA_VECTORIZE
+            // CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
                 if constexpr ( axis == X ) {
@@ -1062,12 +1064,13 @@ void MWInterpolationInteriorImplicit_autoVec( ContinuityEquation &continuityEqua
 
                 arrayIndex3D LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
+                size_t iv = static_cast< size_t >( i );
 
                 // Cell on west side 
-                continuityPressureCoeffs[west ](LoIndex) += mwiLineCoeffs[i][0] * LoCellLengthInv;
-                continuityPressureCoeffs[p    ](LoIndex) += mwiLineCoeffs[i][1] * LoCellLengthInv;
-                continuityPressureCoeffs[east ](LoIndex) += mwiLineCoeffs[i][2] * LoCellLengthInv;
-                continuityPressureCoeffs[eeast](LoIndex)  = mwiLineCoeffs[i][3] * LoCellLengthInv;
+                continuityPressureCoeffs[west ](LoIndex) += mwiLineCoeffs[iv][0] * LoCellLengthInv;
+                continuityPressureCoeffs[p    ](LoIndex) += mwiLineCoeffs[iv][1] * LoCellLengthInv;
+                continuityPressureCoeffs[east ](LoIndex) += mwiLineCoeffs[iv][2] * LoCellLengthInv;
+                continuityPressureCoeffs[eeast](LoIndex)  = mwiLineCoeffs[iv][3] * LoCellLengthInv;
             }
 
         }
@@ -1223,10 +1226,10 @@ void MWInterpolationInteriorSemiExplicit_autoVec( ContinuityEquation &continuity
                 LoCellLengthInv = mesh.cellLengthsInv[axis]( j-1 );
             }
 
-            std::vector< std::array< floatType, 4 > > mwiLineSparseCoeffs( nFaces[X] );
-            std::vector< std::array< floatType, 2 > > mwiLineCompactCoeffs( nFaces[X] );
+            std::vector< std::array< floatType, 4 > > mwiLineSparseCoeffs( static_cast<size_t>( nFaces[X] ) );
+            std::vector< std::array< floatType, 2 > > mwiLineCompactCoeffs( static_cast<size_t>( nFaces[X] ) );
 
-            CFD_PRAGMA_VECTORIZE
+            // CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
                 arrayIndex3D HiIndex = { i, j, k },
@@ -1237,20 +1240,21 @@ void MWInterpolationInteriorSemiExplicit_autoVec( ContinuityEquation &continuity
 
                 // Coefficients for westmost to eastmost cell
                 intType idx = HiIndex[axis];
-                mwiLineCompactCoeffs[i][0] = d * mwiCompactCoeffs[0](idx),
-                mwiLineCompactCoeffs[i][1] = d * mwiCompactCoeffs[1](idx);
+                size_t iv = static_cast< size_t >( i );
+                mwiLineCompactCoeffs[iv][0] = d * mwiCompactCoeffs[0](idx),
+                mwiLineCompactCoeffs[iv][1] = d * mwiCompactCoeffs[1](idx);
 
-                mwiLineSparseCoeffs[i][0]  = d * mwiSparseCoeffs[0](idx),
-                mwiLineSparseCoeffs[i][1]  = d * mwiSparseCoeffs[1](idx),
-                mwiLineSparseCoeffs[i][2]  = d * mwiSparseCoeffs[2](idx),
-                mwiLineSparseCoeffs[i][3]  = d * mwiSparseCoeffs[3](idx);
+                mwiLineSparseCoeffs[iv][0]  = d * mwiSparseCoeffs[0](idx),
+                mwiLineSparseCoeffs[iv][1]  = d * mwiSparseCoeffs[1](idx),
+                mwiLineSparseCoeffs[iv][2]  = d * mwiSparseCoeffs[2](idx),
+                mwiLineSparseCoeffs[iv][3]  = d * mwiSparseCoeffs[3](idx);
 
             }
 
 
             // Implicit compact difference --------------------------------------------------------------------------
 
-            CFD_PRAGMA_VECTORIZE
+            // CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
                 if constexpr ( axis == X ) {
@@ -1258,14 +1262,15 @@ void MWInterpolationInteriorSemiExplicit_autoVec( ContinuityEquation &continuity
                 }
 
                 arrayIndex3D HiIndex = { i, j, k };
+                size_t iv = static_cast< size_t >( i );
 
                 // Cell on east side
-                continuityPressureCoeffs[west ](HiIndex)  = - mwiLineCompactCoeffs[i][0] * HiCellLengthInv;
-                continuityPressureCoeffs[p    ](HiIndex) += - mwiLineCompactCoeffs[i][1] * HiCellLengthInv;
+                continuityPressureCoeffs[west ](HiIndex)  = - mwiLineCompactCoeffs[iv][0] * HiCellLengthInv;
+                continuityPressureCoeffs[p    ](HiIndex) += - mwiLineCompactCoeffs[iv][1] * HiCellLengthInv;
             }
 
 
-            CFD_PRAGMA_VECTORIZE
+            // CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
                 if constexpr ( axis == X ) {
@@ -1274,16 +1279,17 @@ void MWInterpolationInteriorSemiExplicit_autoVec( ContinuityEquation &continuity
 
                 arrayIndex3D LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
+                size_t iv = static_cast< size_t >( i );
 
                 // Cell on west side 
-                continuityPressureCoeffs[p    ](LoIndex) += mwiLineCompactCoeffs[i][0] * LoCellLengthInv;
-                continuityPressureCoeffs[east ](LoIndex)  = mwiLineCompactCoeffs[i][1] * LoCellLengthInv;
+                continuityPressureCoeffs[p    ](LoIndex) += mwiLineCompactCoeffs[iv][0] * LoCellLengthInv;
+                continuityPressureCoeffs[east ](LoIndex)  = mwiLineCompactCoeffs[iv][1] * LoCellLengthInv;
             }
 
 
             // Explicit sparse difference ---------------------------------------------------------------------------
 
-            CFD_PRAGMA_VECTORIZE
+            // CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
                 if constexpr ( axis == X ) {
@@ -1291,21 +1297,22 @@ void MWInterpolationInteriorSemiExplicit_autoVec( ContinuityEquation &continuity
                 }
 
                 arrayIndex3D HiIndex = { i, j, k };
+                size_t iv = static_cast< size_t >( i );
 
                 arrayIndex3D HiWWest = NeighbourIndex( HiIndex, -2, axis ),
                              HiWest  = NeighbourIndex( HiIndex, -1, axis ),
                              HiEast  = NeighbourIndex( HiIndex,  1, axis );
 
                 // Cell on east side
-                continuitySourceTerm(HiIndex) += ( mwiLineSparseCoeffs[i][0] * P( G(HiWWest) )
-                                                 + mwiLineSparseCoeffs[i][1] * P( G(HiWest)  )
-                                                 + mwiLineSparseCoeffs[i][2] * P( G(HiIndex) )
-                                                 + mwiLineSparseCoeffs[i][3] * P( G(HiEast)  )
+                continuitySourceTerm(HiIndex) += ( mwiLineSparseCoeffs[iv][0] * P( G(HiWWest) )
+                                                 + mwiLineSparseCoeffs[iv][1] * P( G(HiWest)  )
+                                                 + mwiLineSparseCoeffs[iv][2] * P( G(HiIndex) )
+                                                 + mwiLineSparseCoeffs[iv][3] * P( G(HiEast)  )
                                                  ) * HiCellLengthInv;
             }
 
 
-            CFD_PRAGMA_VECTORIZE
+            // CFD_PRAGMA_VECTORIZE
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
                 if constexpr ( axis == X ) {
@@ -1314,16 +1321,17 @@ void MWInterpolationInteriorSemiExplicit_autoVec( ContinuityEquation &continuity
 
                 arrayIndex3D LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
+                size_t iv = static_cast< size_t >( i );
 
                 arrayIndex3D LoWest  = NeighbourIndex( LoIndex, -1, axis ),
                              LoEast  = NeighbourIndex( LoIndex,  1, axis ),
                              LoEEast = NeighbourIndex( LoIndex,  2, axis );
 
                 // Cell on west side 
-                continuitySourceTerm(LoIndex) -= ( mwiLineSparseCoeffs[i][0] * P( G(LoWest)  )
-                                                 + mwiLineSparseCoeffs[i][1] * P( G(LoIndex) )
-                                                 + mwiLineSparseCoeffs[i][2] * P( G(LoEast)  )
-                                                 + mwiLineSparseCoeffs[i][3] * P( G(LoEEast) )
+                continuitySourceTerm(LoIndex) -= ( mwiLineSparseCoeffs[iv][0] * P( G(LoWest)  )
+                                                 + mwiLineSparseCoeffs[iv][1] * P( G(LoIndex) )
+                                                 + mwiLineSparseCoeffs[iv][2] * P( G(LoEast)  )
+                                                 + mwiLineSparseCoeffs[iv][3] * P( G(LoEEast) )
                                                  ) * LoCellLengthInv;
             }
         }
@@ -1413,15 +1421,15 @@ void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
         switch ( fvCoeffs.Cont.momentumInterpolation ) {
 
             case MomentumInterpolation::Implicit:
-                MWInterpolationInteriorImplicit_autoVec<X>(fvCoeffs.Cont, fvCoeffs.Mom[X].diagCoeffInv, mesh);
-                MWInterpolationInteriorImplicit_autoVec<Y>(fvCoeffs.Cont, fvCoeffs.Mom[Y].diagCoeffInv, mesh);
-                MWInterpolationInteriorImplicit_autoVec<Z>(fvCoeffs.Cont, fvCoeffs.Mom[Z].diagCoeffInv, mesh);
+                MWInterpolationInteriorImplicit_autoVec<Axis::X>(fvCoeffs.Cont, fvCoeffs.Mom[X].diagCoeffInv, mesh);
+                MWInterpolationInteriorImplicit_autoVec<Axis::Y>(fvCoeffs.Cont, fvCoeffs.Mom[Y].diagCoeffInv, mesh);
+                MWInterpolationInteriorImplicit_autoVec<Axis::Z>(fvCoeffs.Cont, fvCoeffs.Mom[Z].diagCoeffInv, mesh);
                 break;
 
             case MomentumInterpolation::SemiExplicit:
-                MWInterpolationInteriorSemiExplicit_autoVec<X>(fvCoeffs.Cont, P, fvCoeffs.Mom[X].diagCoeffInv, mesh);
-                MWInterpolationInteriorSemiExplicit_autoVec<Y>(fvCoeffs.Cont, P, fvCoeffs.Mom[Y].diagCoeffInv, mesh);
-                MWInterpolationInteriorSemiExplicit_autoVec<Z>(fvCoeffs.Cont, P, fvCoeffs.Mom[Z].diagCoeffInv, mesh);
+                MWInterpolationInteriorSemiExplicit_autoVec<Axis::X>(fvCoeffs.Cont, P, fvCoeffs.Mom[X].diagCoeffInv, mesh);
+                MWInterpolationInteriorSemiExplicit_autoVec<Axis::Y>(fvCoeffs.Cont, P, fvCoeffs.Mom[Y].diagCoeffInv, mesh);
+                MWInterpolationInteriorSemiExplicit_autoVec<Axis::Z>(fvCoeffs.Cont, P, fvCoeffs.Mom[Z].diagCoeffInv, mesh);
                 break;
         }
     #else
