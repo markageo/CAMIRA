@@ -1,0 +1,161 @@
+// Backwards facing step with no inflow region
+
+Model {
+    rho  = 1
+    nu   = 0.005
+}
+
+Mesh {
+
+    domain = (5, 3, 1)
+
+    Grid x {
+        Segment {
+            bounds     = (0, 5)
+            nCells     = 100
+            biasFactor = 1
+        }
+    }
+
+    Grid y {
+        Segment {
+            bounds     = (0, 0.5)
+            nCells     = 10
+            biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (0.5, 3)
+            nCells     = 50
+            biasFactor = 1
+        }
+    }
+
+    Grid z {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 20
+            biasFactor = 1
+        }
+    }
+}
+
+
+InitialConditions
+{
+    u = 1
+    v = 0
+    w = 0
+    p = 0
+}
+
+
+BoundaryConditions
+{
+    // Outflow
+    +x {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform, 0
+    }
+
+    // Inflow
+    -x {
+        u = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Freestream
+    +y {
+        u = uniform, 1
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform, 0
+    }
+
+    // Wall
+    -y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    +z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+}
+
+
+SolidGeometry {
+    Block {
+        centerPosition = (1, 1, 1)
+        dimensions     = (1, 1, 1)
+        rotation       = (0, 0, 45)
+    }
+}
+
+
+Solver {
+
+    Schemes {
+
+        linearisation           = Picard
+        momentumInterpolation   = semiExplicit
+        advectionScheme         = upwind
+        faceInterpolationScheme = weightedLinear
+
+        implicitMomentumRelaxation = (1, 1, 1)
+        implicitPressureRelaxation = 1
+
+        maxOuterIterations = 1000
+        maxOuterResiduals = 1e-5
+
+    }
+    
+    LinearSolver {
+
+        type = SUGS
+        maxIterations = 2
+        maxResiduals = 1e-2
+
+        planeSweepDirection = +z
+        lineSweepDirection = +y
+
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
+
+    }
+
+}
+
+
+Output {
+
+    residualHistoryFilename = "output/residual_history.csv"
+    fieldOutputFilename = "output/fields.vtk"
+    fieldWriteInterval = 0
+
+    Monitors {
+        Probe {
+            filename = "output/probe1.csv"
+            location = (1, 0.5, 0.5)
+        }
+    }
+
+}

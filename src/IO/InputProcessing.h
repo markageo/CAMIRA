@@ -40,6 +40,14 @@ struct InputData
     };
     EnumVector< Axis, std::vector< MeshSegment > > meshSegments;
 
+    // Solid Geometry
+    struct SolidBlockData {
+        fVector3 centerPosition, 
+                 dimensions, 
+                 rotation;
+    };
+    std::vector< SolidBlockData > solidBlocks;
+
     // Boundary conditions
     struct Profile1D {
         Axis::ENUMDATA axis;
