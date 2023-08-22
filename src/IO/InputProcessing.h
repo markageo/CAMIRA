@@ -28,7 +28,7 @@ struct InputData
 
 
     // Domain size
-    fVector3 domainSize;
+    fArray3 domainSize;
 
 
     // Mesh
@@ -42,7 +42,7 @@ struct InputData
 
     // Solid Geometry
     struct SolidBlockData {
-        fVector3 centerPosition, 
+        fArray3 centerPosition, 
                  dimensions, 
                  rotation;
     };
@@ -51,7 +51,7 @@ struct InputData
     // Boundary conditions
     struct Profile1D {
         Axis::ENUMDATA axis;
-        array1D coordinates, values;
+        Tensor1D coordinates, values;
     };
 
     struct BoundaryConditionInputData {
@@ -102,7 +102,7 @@ struct InputData
 
     struct ProbeData {
         std::string filename;
-        fVector3 location;
+        fArray3 location;
     };
     std::vector< ProbeData > probes;
 

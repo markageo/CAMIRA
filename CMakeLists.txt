@@ -60,14 +60,18 @@ else()
 	message( STATUS "Not useing Auto Vectorization functions." )
 endif()
 
-
 # Add libraries
 include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings
 
-# Eigen library, need to do it this way to not get warnings from it
+# Eigen library, need to do it this way to not get warnings from it when compiling with Clang
 add_library(eigen INTERFACE)
 target_sources(eigen INTERFACE libraries/eigen-3.4.0)
 target_include_directories(eigen SYSTEM INTERFACE libraries/eigen-3.4.0)
+
+# CGAL library
+find_package(CGAL REQUIRED 
+			 COMPONENTS Qt5
+			 PATHS libraries/CGAL-5.6 NO_DEFAULT_PATH )
 
 add_subdirectory(src)
 

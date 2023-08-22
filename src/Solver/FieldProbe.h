@@ -14,7 +14,7 @@ class FieldProbe
     public:
 
         FieldProbe( const Mesh &mesh,
-                    const fVector3 &probePoint ) :
+                    const fArray3 &probePoint ) :
             m_probePoint( probePoint )
         {
             EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
@@ -45,7 +45,7 @@ class FieldProbe
         }
 
         // For arrays with ghost cells
-        floatType GetFieldValue( const array3D &field ) const
+        floatType GetFieldValue( const Tensor3D &field ) const
         {
             using namespace FVT;
             using enum Axis::ENUMDATA;
@@ -74,15 +74,15 @@ class FieldProbe
             return c;
         }
 
-        const fVector3& Coordinates() const
+        const fArray3& Coordinates() const
         { return m_probePoint; }
 
         floatType Coordinate( const intType axis ) const
         { return m_probePoint( axis ); }
 
     private:
-        fVector3 m_probePoint;
-        EnumVector<Axis, iVector2> m_latticeIndex;    // Index of lattice points to itnerpolate from
+        fArray3 m_probePoint;
+        EnumVector<Axis, iArray2> m_latticeIndex;    // Index of lattice points to itnerpolate from
         EnumVector<Axis, floatType> m_latticeCoord;   // Normalised coordinates in the lattice
     
 };

@@ -211,7 +211,7 @@ class ConsoleLog
 class FieldWriter
 {
     public:
-        FieldWriter( const FieldData<array3D> &fields, 
+        FieldWriter( const FieldData<Tensor3D> &fields, 
                      const Mesh &mesh,
                      const FieldData< BoundaryConditionData > &bcData,
                      const AxisTransformationMap &axisTransformation,
@@ -237,10 +237,10 @@ class FieldWriter
 
 
     private:
-        const FieldData<array3D> &m_fields;
+        const FieldData<Tensor3D> &m_fields;
         const AxisTransformationMap &m_axisTransformation;
-        FieldData<array3D> m_transformedFields;
-        FieldData<array3D> m_transformedVertexFields;
+        FieldData<Tensor3D> m_transformedFields;
+        FieldData<Tensor3D> m_transformedVertexFields;
         Mesh m_transformedMesh;
         FieldData< BoundaryConditionData > m_transformedBcData;
         std::unique_ptr< VTK::VTKWriter<floatType> > m_vtkWriter;

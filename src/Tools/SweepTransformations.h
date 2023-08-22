@@ -64,7 +64,7 @@ AxisTransformationMap TransformUserInputData( InputData & );
 
 // Transform back to the coordinates consistentent with the user input
 void TransformMeshToUserCoordinates( Mesh &, const AxisTransformationMap &);
-void TransformFieldToUserCoordinates( FieldData<array3D> &, const AxisTransformationMap &);
+void TransformFieldToUserCoordinates( FieldData<Tensor3D> &, const AxisTransformationMap &);
 void TransformBCDataToUserCoordinates( FieldData<BoundaryConditionData> &, const AxisTransformationMap & );
 
 
