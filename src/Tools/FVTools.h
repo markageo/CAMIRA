@@ -50,11 +50,11 @@ namespace FVT
 
     // Returns start and end indexing for looping over internal faces of a mesh for a given normal direction.
     // Intended to be used as returning a structured binding.
-    inline std::tuple<iVector3, iVector3> FaceInternalIndices( const Mesh &mesh, 
+    inline std::tuple<iArray3, iArray3> FaceInternalIndices( const Mesh &mesh, 
                                                                const Axis::ENUMDATA axis )
     {
-        iVector3 startIndex = {0, 0, 0};
-        iVector3 nFaces = mesh.nFacesNormal[axis];
+        iArray3 startIndex = {0, 0, 0};
+        iArray3 nFaces = mesh.nFacesNormal[axis];
         startIndex(axis) += 1;
         nFaces(axis) -= 1;
         return { startIndex, nFaces };
@@ -72,9 +72,9 @@ namespace FVT
     arrayType RemoveGhostCells( const arrayType &array, 
                                 const intType nGhostCells)
     {
-        static_assert(std::is_same<arrayType, CFD::array1D   >::value ||
-                      std::is_same<arrayType, CFD::array2D   >::value ||
-                      std::is_same<arrayType, CFD::array3D   >::value,
+        static_assert(std::is_same<arrayType, CFD::Tensor1D   >::value ||
+                      std::is_same<arrayType, CFD::Tensor2D   >::value ||
+                      std::is_same<arrayType, CFD::Tensor3D   >::value,
                       "Template parameter must be struct containing ENUMDATA type.");
 
         Eigen::array< Eigen::Index, arrayType::NumDimensions > offsets, extents;
@@ -83,7 +83,7 @@ namespace FVT
             extents[i] = array.dimension(i) - 2*nGhostCells;
         }
 
-        return array3D( array ).slice(offsets, extents);
+        return Tensor3D( array ).slice(offsets, extents);
     }
 
 

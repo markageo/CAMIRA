@@ -26,8 +26,8 @@ class LinearSolver
     using A = Axis::ENUMDATA;
 
 public:
-    LinearSolver( FieldData<array3D> &fields,
-                  const FieldData<array3D> &fieldsOld,
+    LinearSolver( FieldData<Tensor3D> &fields,
+                  const FieldData<Tensor3D> &fieldsOld,
                   const FVCoefficients &fvCoeffs, 
                   const InputData::LinearSolverSettings &linearSolverSettings) : 
                     m_fields( fields ),
@@ -35,8 +35,8 @@ public:
                     m_maxResiduals( linearSolverSettings.maxResiduals ),
                     m_relaxation( linearSolverSettings.relaxation ),
 
-                    m_delta( array2D( m_fields.P.dimension(A::X), m_fields.P.dimension(A::Y) ) ),
-                    m_oldPlane( array2D( m_fields.P.dimension(A::X), m_fields.P.dimension(A::Y) ) ),
+                    m_delta( Tensor2D( m_fields.P.dimension(A::X), m_fields.P.dimension(A::Y) ) ),
+                    m_oldPlane( Tensor2D( m_fields.P.dimension(A::X), m_fields.P.dimension(A::Y) ) ),
 
                     m_ni( fvCoeffs.nCells(A::X) ),
                     m_nj( fvCoeffs.nCells(A::Y) ),
@@ -90,7 +90,7 @@ public:
 
 private:
 
-    FieldData<array3D> &m_fields;
+    FieldData<Tensor3D> &m_fields;
     const intType m_maxIterations;
     const FieldData<floatType> m_maxResiduals;
     const FieldData<floatType> m_relaxation;
@@ -102,7 +102,7 @@ private:
     void (LinearSolver::*SolutionUpdater)(void);
     void (LinearSolver::*StateUpdater)(void);
 
-    FieldData<array2D> m_delta, m_oldPlane;
+    FieldData<Tensor2D> m_delta, m_oldPlane;
     FieldData<floatType> m_residuals, m_residualsInitialInv;
     FieldData<intType> m_kS;
 
@@ -156,7 +156,7 @@ private:
             auto fieldPlane = m_fields[f].chip( G(m_kS[f]), Z );
             m_delta[f] = m_delta[f].constant( m_relaxation[f] ) * (fieldPlane - m_oldPlane[f]); // Relaxed change in plane
             fieldPlane = m_oldPlane[f] + m_delta[f];                                            // Relax
-            m_residuals[f] += static_cast<array0D>( m_delta[f].abs().sum() )(0);                // Add to residual count
+            m_residuals[f] += static_cast<Tensor0D>( m_delta[f].abs().sum() )(0);                // Add to residual count
         } );
     }
 };

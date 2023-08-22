@@ -39,8 +39,8 @@ class TriadSolver
     using sWP = typename StaggerIndexing< Axis::Z, Wstag >::MomentumPressure;
 
 public:
-    TriadSolver( FieldData<array3D> &fields,
-                 const FieldData<array3D> &fieldsOld,
+    TriadSolver( FieldData<Tensor3D> &fields,
+                 const FieldData<Tensor3D> &fieldsOld,
                  const FVCoefficients &fvCoeffs ) : 
                     m_fields( fields ),
                     m_fieldsOld( fieldsOld ),
@@ -48,7 +48,7 @@ public:
                     m_ni( fvCoeffs.nCells(0) ),
                     m_nj( fvCoeffs.nCells(1) ),
                     m_nk (fvCoeffs.nCells(2) ),
-                    m_K( array3D(m_ni, m_nj, m_nk).setZero() )
+                    m_K( Tensor3D(m_ni, m_nj, m_nk).setZero() )
     { UpdateGlobalConstants(); };
 
 
@@ -59,7 +59,7 @@ public:
     inline void UpdateTriad( const intType i, 
                              const intType j, 
                              const intType k,
-                             const FieldData<array1D> &lineConstants )
+                             const FieldData<Tensor1D> &lineConstants )
     {
         using namespace FVT;
         using enum Axis::ENUMDATA;
@@ -218,11 +218,11 @@ public:
 
 
 private:
-    FieldData<array3D> &m_fields;
-    const FieldData<array3D> &m_fieldsOld;
+    FieldData<Tensor3D> &m_fields;
+    const FieldData<Tensor3D> &m_fieldsOld;
     const FVCoefficients &m_fvCoeffs;
     const intType m_ni, m_nj, m_nk;
-    array3D m_K;
+    Tensor3D m_K;
 
 };
 

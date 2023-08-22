@@ -7,6 +7,14 @@
 #include "Types.h"
 #include "Macros.h"
 
+#include "Geometry/Geometry.h"
+
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Polyhedron_3.h>
+#include <CGAL/IO/Polyhedron_iostream.h>
+#include <CGAL/draw_polyhedron.h>
+#include <fstream>
+
 #include "IO/InputProcessing.h"
 #include "IO/VTKWriter.h"
 #include "Tools/SweepTransformations.h"
@@ -38,44 +46,55 @@ int main(int argc, char const *argv[])
     TOC();
 
     TIC("Field Allocation");
-    CFD::FieldData<CFD::array3D> fields = CFD::InitialiseFields(mesh, inputData);
+    CFD::FieldData<CFD::Tensor3D> fields = CFD::InitialiseFields(mesh, inputData);
     TOC();
 
     TIC("Boundary Condition Processing")
     CFD::FieldData<CFD::BoundaryConditionData> bcData = SetBoundaryConditionData(inputData, mesh);
     TOC()
 
-    TIC("Solver");
-    switch ( inputData.schemes.momentumInterpolation ) {
+    TIC("Geometry Creation")
 
-        using MI = CFD::MomentumInterpolation;
-        using LI = CFD::Linearisation;
+    typedef CGAL::Exact_predicates_inexact_constructions_kernel  Kernel;
+    typedef CGAL::Polyhedron_3<Kernel>                       Polyhedron;
+    
+    CFD::Polyhedron P = CFD::MakeGeometry( inputData );
 
-        case ( MI::Implicit ):
-           switch ( inputData.schemes.linearisation ) {
-                case ( LI::Picard ):
-                    CFD::SweepSolve< MI::Implicit, LI::Picard >(fields, mesh, bcData, inputData, axisTransformation);
-                    break;
+    CGAL::draw( P );
 
-                case ( LI::Newton ):
-                    CFD::SweepSolve< MI::Implicit, LI::Newton >(fields, mesh, bcData, inputData, axisTransformation);
-                    break;
-            }
-            break;
+    TOC()
 
-        case ( MI::SemiExplicit ):
-            switch ( inputData.schemes.linearisation ) {
-                case ( LI::Picard ):
-                    CFD::SweepSolve< MI::SemiExplicit, LI::Picard >(fields, mesh, bcData, inputData, axisTransformation);
-                    break;
+    // TIC("Solver");
+    // switch ( inputData.schemes.momentumInterpolation ) {
 
-                case ( LI::Newton ):
-                    CFD::SweepSolve< MI::SemiExplicit, LI::Newton >(fields, mesh, bcData, inputData, axisTransformation);
-                    break;
-            }
-            break;
-    }
-    TOC();
+    //     using MI = CFD::MomentumInterpolation;
+    //     using LI = CFD::Linearisation;
+
+    //     case ( MI::Implicit ):
+    //        switch ( inputData.schemes.linearisation ) {
+    //             case ( LI::Picard ):
+    //                 CFD::SweepSolve< MI::Implicit, LI::Picard >(fields, mesh, bcData, inputData, axisTransformation);
+    //                 break;
+
+    //             case ( LI::Newton ):
+    //                 CFD::SweepSolve< MI::Implicit, LI::Newton >(fields, mesh, bcData, inputData, axisTransformation);
+    //                 break;
+    //         }
+    //         break;
+
+    //     case ( MI::SemiExplicit ):
+    //         switch ( inputData.schemes.linearisation ) {
+    //             case ( LI::Picard ):
+    //                 CFD::SweepSolve< MI::SemiExplicit, LI::Picard >(fields, mesh, bcData, inputData, axisTransformation);
+    //                 break;
+
+    //             case ( LI::Newton ):
+    //                 CFD::SweepSolve< MI::SemiExplicit, LI::Newton >(fields, mesh, bcData, inputData, axisTransformation);
+    //                 break;
+    //         }
+    //         break;
+    // }
+    // TOC();
 
     /*-------------------------------------------------------------------------------------*\
                                              Output

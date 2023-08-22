@@ -20,7 +20,7 @@ namespace CFD
 {
 
 template< MomentumInterpolation MI, Linearisation LI >
-void SweepSolve( FieldData<array3D> &fields,
+void SweepSolve( FieldData<Tensor3D> &fields,
                  const Mesh &mesh,
                  const FieldData< BoundaryConditionData > &bcData,
                  const InputData &inputData,
@@ -36,12 +36,12 @@ void SweepSolve( FieldData<array3D> &fields,
     const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
 
     // Initialise
-    EnumVector<Axis, array3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
-    EnumVector< Axis, EnumVector< Axis, array3D> > faceAdvectedVelocities;
+    EnumVector<Axis, Tensor3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
+    EnumVector< Axis, EnumVector< Axis, Tensor3D> > faceAdvectedVelocities;
     if constexpr ( isNewtonLinearisation ) 
         faceAdvectedVelocities = InitialiseAdvectedFaceVelocities( mesh, fields.U, faceFluxes, bcData );
 
-    FieldData<array3D> fieldsOld = fields;
+    FieldData<Tensor3D> fieldsOld = fields;
     FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceAdvectedVelocities, faceFluxes, bcData, inputData);
 
     // Initialise residuals
@@ -141,10 +141,10 @@ void SweepSolve( FieldData<array3D> &fields,
 
 
 }
-template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Picard>( FieldData<array3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Picard>( FieldData<array3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Newton>( FieldData<array3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Newton>( FieldData<array3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Picard>( FieldData<Tensor3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Picard>( FieldData<Tensor3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Newton>( FieldData<Tensor3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Newton>( FieldData<Tensor3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
 
 
 } // end namespace CFD

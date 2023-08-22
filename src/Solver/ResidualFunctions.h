@@ -17,14 +17,14 @@ using namespace FVT;
 
 // Calculated as the L1 norm of the difference between two arrays.
 [[ maybe_unused ]]
-inline FieldData<floatType> L1DiffResiduals( const FieldData<array3D> &fields1,
-                                             const FieldData<array3D> &fields2 )
+inline FieldData<floatType> L1DiffResiduals( const FieldData<Tensor3D> &fields1,
+                                             const FieldData<Tensor3D> &fields2 )
 {
     FieldData<floatType> result;
     ForAllFieldData( [&] (intType i) { 
 
         auto fieldDiff = fields2[i] - fields1[i];  // auto lazily evaluates
-        result[i] = static_cast<array0D>( fieldDiff.abs().mean() )(0); 
+        result[i] = static_cast<Tensor0D>( fieldDiff.abs().mean() )(0); 
 
     });
 
@@ -36,7 +36,7 @@ inline FieldData<floatType> L1DiffResiduals( const FieldData<array3D> &fields1,
 // Calculate the absolute residual of each equation from the finite volume stencil
 template< MomentumInterpolation MI,
           Linearisation LI > [[ maybe_unused ]]
-inline FieldData<floatType> StencilResiduals( const FieldData<array3D> &fields,
+inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
                                               const FVCoefficients &fvCoeffs )
 {
     using enum Axis::ENUMDATA;
@@ -221,7 +221,7 @@ inline FieldData<floatType> StencilResiduals( const FieldData<array3D> &fields,
 
 // Calculate global mass flux residual at the domain boundary
 [[ maybe_unused ]]
-inline floatType BoundaryMassFluxResidual( const EnumVector<Axis, array3D> &faceFluxes,
+inline floatType BoundaryMassFluxResidual( const EnumVector<Axis, Tensor3D> &faceFluxes,
                                            const Mesh &mesh )
 {
     floatType massFluxResidual = 0.0f;
@@ -230,11 +230,11 @@ inline floatType BoundaryMassFluxResidual( const EnumVector<Axis, array3D> &face
 
         // Positive face, area normal is in positive direction
         auto faceFluxesPositive = faceFluxes[axis].chip( mesh.nCells(axis), axis ) * mesh.cellFaceAreas[axis];
-        massFluxResidual += static_cast<array0D>( faceFluxesPositive.sum() )(0);
+        massFluxResidual += static_cast<Tensor0D>( faceFluxesPositive.sum() )(0);
 
         // Negative face, area normal is in negative direction
         auto faceFluxesNegative = - faceFluxes[axis].chip( 0, axis ) * mesh.cellFaceAreas[axis];
-        massFluxResidual += static_cast<array0D>( faceFluxesNegative.sum() )(0);
+        massFluxResidual += static_cast<Tensor0D>( faceFluxesNegative.sum() )(0);
 
     });
 
