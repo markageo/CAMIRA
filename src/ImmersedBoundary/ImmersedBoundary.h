@@ -15,12 +15,12 @@ using CellIDTensor3D = Eigen::Tensor< CellType, 3 >;
 // ----------------------------------------- Definition in IBData.cpp ---------------------------------------- //
 
 struct IBGhostCell {
-    static constexpr intType numInterpolationPoints = 4;
-    fVector3 boundaryPointCoordinates;
-    fVector3 imagePointCoordiantes;
-    std::array< TensorIndex3D, numInterpolationPoints > fluidCellIndices;
+    static constexpr intType numInterpPoints = 4;
+    using InterpMatrix = Eigen::Matrix< floatType, numInterpPoints, numInterpPoints >;
+
+    std::array< TensorIndex3D, numInterpPoints > fluidCellIndices;
     TensorIndex3D ghostCellIndex;
-    Eigen::Matrix< floatType, numInterpolationPoints, numInterpolationPoints > interpolationMatrixInv;
+    InterpMatrix pointsMatrixInv;
 };
 
 struct IBData {
@@ -29,7 +29,7 @@ struct IBData {
 };
 
 
-IBData CreateImmersedBoundaryData( const CellIDTensor3D &, const Mesh & );
+IBData CreateImmersedBoundaryData( const Polyhedron &, const CellIDTensor3D &, const Mesh & );
 
 
 
