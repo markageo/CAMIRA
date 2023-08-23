@@ -1,5 +1,5 @@
 target_sources( libs 
     PRIVATE 
-        SolidBlock.cpp 
+        Geometry.cpp 
     PRIVATE 
         Geometry.h )

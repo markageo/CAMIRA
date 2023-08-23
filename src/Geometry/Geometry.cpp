@@ -2,12 +2,9 @@
 
 #include <Eigen/Dense>
 
-#include <CGAL/Exact_integer.h>
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>
-#include <CGAL/Nef_polyhedron_3.h>
 #include <CGAL/Homogeneous.h>
-
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
 
 
