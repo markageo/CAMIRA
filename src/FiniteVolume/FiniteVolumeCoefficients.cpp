@@ -890,17 +890,29 @@ void SetMomentumInterpolationCompactConstants( std::array< array1D, 2 > &mwiComp
 }
 
 
-
-// Cell weighting coefficient for MWI. The given idx is the face index
-floatType MWIWeightingCoeff( const arrayIndex3D &idx, 
+// Cell weighting coefficient for MWI.
+floatType MWIWeightingCoeff( const arrayIndex3D &LoIndex,
+                             const arrayIndex3D &HiIndex,
                              const array3D &AUUpInv, 
+                             const Mesh& mesh,
                              const Axis::ENUMDATA axis)
 {
-    arrayIndex3D HiIndex = idx,
-                 LoIndex = idx;
-    LoIndex[axis] -= 1;
-    return 0.5f * ( AUUpInv( HiIndex )  +  AUUpInv( LoIndex ) ); 
+    intType idx = HiIndex[axis];    // Axis index of the face
+    floatType interpFactor = mesh.interpFactors[axis]( idx );
+    return  ( 1.0f - interpFactor ) *  AUUpInv( LoIndex )  +  interpFactor * AUUpInv( HiIndex );
 }
+
+
+// // Cell weighting coefficient for MWI. The given idx is the face index
+// floatType MWIWeightingCoeff( const arrayIndex3D &idx, 
+//                              const array3D &AUUpInv, 
+//                              const Axis::ENUMDATA axis)
+// {
+//     arrayIndex3D HiIndex = idx,
+//                  LoIndex = idx;
+//     LoIndex[axis] -= 1;
+//     return 0.5f * ( AUUpInv( HiIndex )  +  AUUpInv( LoIndex ) ); 
+// }
 
 
 
@@ -940,7 +952,7 @@ void MWInterpolationInteriorImplicit( ContinuityEquation &continuityEquation,
                              LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
 
-                floatType d =  0.5f * ( momentumDiagCoeffInv( HiIndex )  +  momentumDiagCoeffInv( LoIndex ) );   
+                floatType d = MWIWeightingCoeff( LoIndex, HiIndex, momentumDiagCoeffInv, mesh, axis );
 
                 // Coefficients for westmost to eastmost cell
                 intType idx = HiIndex[axis];
@@ -1027,7 +1039,7 @@ void MWInterpolationInteriorImplicit_autoVec( ContinuityEquation &continuityEqua
                              LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
 
-                floatType d =  0.5f * ( momentumDiagCoeffInv( HiIndex )  +  momentumDiagCoeffInv( LoIndex ) );   
+                floatType d = MWIWeightingCoeff( LoIndex, HiIndex, momentumDiagCoeffInv, mesh, axis ); 
 
                 // Coefficients for westmost to eastmost cell
                 intType idx = HiIndex[axis];
@@ -1116,8 +1128,8 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation &continuityEquation
                 arrayIndex3D HiIndex = { i, j, k },
                              LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
-                
-                floatType d =  0.5f * ( momentumDiagCoeffInv( HiIndex )  +  momentumDiagCoeffInv( LoIndex ) );   
+                 
+                floatType d = MWIWeightingCoeff( LoIndex, HiIndex, momentumDiagCoeffInv, mesh, axis );
 
                 floatType LoCellLengthInv = mesh.cellLengthsInv[axis]( LoIndex[axis] ),
                           HiCellLengthInv = mesh.cellLengthsInv[axis]( HiIndex[axis] );
@@ -1236,7 +1248,7 @@ void MWInterpolationInteriorSemiExplicit_autoVec( ContinuityEquation &continuity
                              LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
                 
-                floatType d =  0.5f * ( momentumDiagCoeffInv( HiIndex )  +  momentumDiagCoeffInv( LoIndex ) );   
+                floatType d = MWIWeightingCoeff( LoIndex, HiIndex, momentumDiagCoeffInv, mesh, axis );
 
                 // Coefficients for westmost to eastmost cell
                 intType idx = HiIndex[axis];
@@ -1361,8 +1373,12 @@ void MWInterpolationNegativeBoundary( EnumVector<BoundaryPatches, array2D> &cont
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
-                arrayIndex3D idx = { i, j, k };
-                floatType d = MWIWeightingCoeff( idx, momentumDiagCoeffInv, axis );
+                arrayIndex3D idx = { i, j, k },
+                             HiIndex = { i, j, k },
+                             LoIndex = HiIndex;
+                LoIndex[axis] -= 1;
+
+                floatType d = MWIWeightingCoeff( LoIndex, HiIndex, momentumDiagCoeffInv, mesh, axis );
                 continuityBoundaryPressure[ negativePatch ]( idx[axis1], idx[axis2] ) = d * (1 - mesh.interpFactors[axis]( idx[axis] )) * momentumBoundaryPressure[ negativePatch ]( idx[axis1], idx[axis2] )
                                                                                           * mesh.cellLengthsInv[axis]( idx[axis] );
             }
@@ -1394,8 +1410,12 @@ void MWInterpolationPositiveBoundary( EnumVector<BoundaryPatches, array2D> &cont
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
-                arrayIndex3D idx = { i, j, k };
-                floatType d = MWIWeightingCoeff( idx, momentumDiagCoeffInv, axis );
+                arrayIndex3D idx = { i, j, k },
+                             HiIndex = { i, j, k },
+                             LoIndex = HiIndex;
+                LoIndex[axis] -= 1;
+
+                floatType d = MWIWeightingCoeff( LoIndex, HiIndex, momentumDiagCoeffInv, mesh, axis );
                 continuityBoundaryPressure[ positivePatch ]( idx[axis1], idx[axis2] ) = d * mesh.interpFactors[axis]( idx[axis] ) * momentumBoundaryPressure[ positivePatch ]( idx[axis1], idx[axis2] )
                                                                                           * mesh.cellLengthsInv[axis]( idx[axis] );
             }
