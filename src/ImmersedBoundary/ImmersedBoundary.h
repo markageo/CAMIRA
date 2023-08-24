@@ -7,7 +7,9 @@
 namespace CFD {
 
 enum class CellType {
-    Fluid, Ghost, Solid
+    Fluid = 0, 
+    Ghost = 1, 
+    Solid = 2
 };
 using CellIDTensor3D = Eigen::Tensor< CellType, 3 >;
 

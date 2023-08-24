@@ -55,7 +55,7 @@ void TagSolidCells( CellIDTensor3D &cellID,
                           yq = mesh.cellCenters[Y](j),
                           zq = mesh.cellCenters[Z](k);
 
-                if ( !PointInside( geometry, xq, yq, zq ) ) {
+                if ( PointInside( geometry, xq, yq, zq ) ) {
                     cellID(i, j, k) = CellType::Solid;
                 } 
 
@@ -79,12 +79,33 @@ void TagGhostCells( CellIDTensor3D &cellID,
                     continue;
                 }
 
-                bool hasNeighbouringFluidCell =  ( cellID(i+1, j  , k  ) == CellType::Fluid )
-                                              || ( cellID(i-1, j  , k  ) == CellType::Fluid )
-                                              || ( cellID(i  , j+1, k  ) == CellType::Fluid )
-                                              || ( cellID(i  , j-1, k  ) == CellType::Fluid )
-                                              || ( cellID(i  , j  , k+1) == CellType::Fluid )
-                                              || ( cellID(i  , j  , k-1) == CellType::Fluid );
+                bool fluidEast   = false,
+                     fluidWest   = false,
+                     fluidNorth  = false,
+                     fluidSouth  = false,
+                     fluidTop    = false,
+                     fluidBottom = false;
+
+                if ( i != 0 ) 
+                    fluidWest = cellID(i-1, j  , k  )   == CellType::Fluid;
+
+                if ( i != mesh.nCells[X]-1 ) 
+                    fluidEast = cellID(i+1, j  , k  )   == CellType::Fluid;
+
+                if ( j != 0 ) 
+                    fluidSouth  = cellID(i  ,j-1, k  )  == CellType::Fluid;
+
+                if ( j != mesh.nCells[Y]-1 ) 
+                    fluidNorth = cellID(i  , j+1, k  )  == CellType::Fluid;
+
+                if ( k != 0 )
+                    fluidBottom = cellID(i  , j  , k-1) == CellType::Fluid;
+
+                if ( k != mesh.nCells[Z]-1 ) 
+                    fluidTop = cellID(i  , j  , k+1)    == CellType::Fluid;
+
+
+                bool hasNeighbouringFluidCell = fluidEast || fluidWest || fluidNorth || fluidSouth || fluidTop || fluidBottom;
                 if ( hasNeighbouringFluidCell ) {
                     cellID(i, j, k) = CellType::Ghost;
                 }
