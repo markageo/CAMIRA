@@ -4,6 +4,7 @@ add_library(libs "")
 # Source subdirectories
 add_subdirectory(FiniteVolume)
 add_subdirectory(Geometry)
+add_subdirectory(ImmersedBoundary)
 add_subdirectory(IO)
 add_subdirectory(Solver)
 add_subdirectory(Tools)

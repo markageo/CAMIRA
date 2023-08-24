@@ -1,6 +1,6 @@
 #include "ImmersedBoundary.h"
 
-#include "Geometry.h"
+#include "../Geometry/Geometry.h"
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>
@@ -67,8 +67,7 @@ void TagSolidCells( CellIDTensor3D &cellID,
 
 
 void TagGhostCells( CellIDTensor3D &cellID,
-                    const Mesh &mesh, 
-                    const Polyhedron &geometry )
+                    const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;
 
@@ -112,7 +111,7 @@ CellIDTensor3D TagCells( const Mesh &mesh,
 
     TagSolidCells( cellID, mesh, geometry );
     
-    TagGhostCells( cellID, mesh, geometry );
+    TagGhostCells( cellID, mesh );
 
     return cellID;
 }
