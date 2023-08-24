@@ -921,7 +921,6 @@ floatType MWIWeightingCoeff( const TensorIndex3D &LoIndex,
 }
 
 
-
 // Fully implicit momentum interpolation coefficient for internal faces
 [[maybe_unused]]
 void MWInterpolationInteriorImplicit( ContinuityEquation &continuityEquation,
