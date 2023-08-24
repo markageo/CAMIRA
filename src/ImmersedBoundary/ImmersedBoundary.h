@@ -20,6 +20,7 @@ struct IBGhostCell {
 
     std::array< TensorIndex3D, numInterpPoints > fluidCellIndices;
     TensorIndex3D ghostCellIndex;
+    fVector3 imagePointCoordinates;
     InterpMatrix pointsMatrixInv;
 };
 
