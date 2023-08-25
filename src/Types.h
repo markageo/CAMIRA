@@ -2,6 +2,7 @@
 #define TYPES
 
 #include <unsupported/Eigen/CXX11/Tensor>
+#include <Eigen/Dense>
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>

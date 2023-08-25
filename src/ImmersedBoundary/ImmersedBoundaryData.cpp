@@ -1,6 +1,8 @@
 #include "ImmersedBoundary.h"
 #include "../Tools/FVLookups.h"
 
+#include "../IO/ArrayIO.h"
+
 #include <vector>
 #include <utility>
 #include <algorithm>
@@ -40,6 +42,26 @@ fVector3 ClosestBoundaryPoint( const Polyhedron &polyhedron,
 
 
 
+// Check if a given index is within the domain bounds
+bool OutOfBounds( const TensorIndex3D &index,
+                  const Mesh &mesh )
+{
+    // Can't use EnumFor since return statements inside loop
+    for ( int a = 0; a != Axis::count; a++ ) {  
+        Axis::ENUMDATA axis = static_cast<Axis::ENUMDATA>(a);
+
+        if ( index[axis] < 0 )
+            return true;
+
+        if ( index[axis] > mesh.nCells[axis]-1 )
+            return true;
+    }
+
+    return false;
+}
+
+
+
 // Add fluid points and their distance squared to the foundPoints vector which are within a shell around the LoCornerIndex point in the mesh.
 void SearchShell( std::vector< std::pair<TensorIndex3D, floatType> > &foundPoints,
                   const intType searchShellSize,
@@ -54,51 +76,54 @@ void SearchShell( std::vector< std::pair<TensorIndex3D, floatType> > &foundPoint
     { return { mesh.cellCenters[X](index[X]), mesh.cellCenters[Y](index[Y]), mesh.cellCenters[Z](index[Z]) }; };
 
 
-    // Iterate the points in this shell
-    EnumFor<Axis>( [&] (Axis::ENUMDATA shellAxis) {
+    TensorIndex3D shellLowerBound, shellUpperBound;
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        shellLowerBound[axis] = LoCornerIndex[axis] - (searchShellSize-1);
+        shellUpperBound[axis] = LoCornerIndex[axis] + searchShellSize;
+    } );
 
-        Axis::ENUMDATA shellAxis1 = LUT::LoOrthogonalAxis[ shellAxis ],
-                        shellAxis2 = LUT::HiOrthogonalAxis[ shellAxis ];
+    for ( intType k = shellLowerBound[Z]; k <= shellUpperBound[Z]; k++ ) {
+        for ( intType j = shellLowerBound[Y]; j <= shellUpperBound[Y]; j++ ) {
+            for ( intType i = shellLowerBound[X]; i <= shellUpperBound[X]; i++ ) {
 
-        std::array<intType, 2> deltaShellAxisVals = { -(searchShellSize-1), searchShellSize };
-        for ( intType deltaShellAxis : deltaShellAxisVals ) {
-            for ( intType deltaShellAxis1 = -(searchShellSize - 1); deltaShellAxis1 < searchShellSize; deltaShellAxis1++ ) {
-                for ( intType deltaShellAxis2 = -(searchShellSize - 1); deltaShellAxis2 < searchShellSize; deltaShellAxis2++ ) {
+                bool OnShellBoundaryZ = ( k == shellLowerBound[Z] ) || ( k == shellUpperBound[Z] ),
+                     OnShellBoundaryY = ( j == shellLowerBound[Y] ) || ( j == shellUpperBound[Y] ),
+                     OnShellBoundaryX = ( i == shellLowerBound[X] ) || ( i == shellUpperBound[X] );
                 
-
-                    // Set the index array for this shell point
-                    TensorIndex3D shellIndexDelta = {0, 0, 0};
-                    shellIndexDelta[shellAxis ]   = deltaShellAxis;
-                    shellIndexDelta[shellAxis1]   = deltaShellAxis1;
-                    shellIndexDelta[shellAxis2]   = deltaShellAxis1;
-                    TensorIndex3D shellPointIndex = LoCornerIndex;
-                    EnumFor<Axis>([&] (Axis::ENUMDATA si) { shellPointIndex[si] += shellIndexDelta[si]; } );
-
-                    // Shell point must be a fluid node
-                    if ( cellID( shellPointIndex ) != CellType::Fluid ) {
-                        continue;
-                    }
-
-                    // Positive vector of shell point
-                    fVector3 shellPoint = CellCoordinate( shellPointIndex );
-
-                    // Distance squared from query point to shell point
-                    floatType shellPointDistance2 = ( shellPoint - queryPoint ).squaredNorm();
-
-                    // Add this distance and index to the vectors
-                    foundPoints.push_back( std::make_pair( shellPointIndex, shellPointDistance2 ) );
-
+                if ( !(OnShellBoundaryX || OnShellBoundaryY || OnShellBoundaryZ) ) {
+                    continue;
                 }
+
+                TensorIndex3D shellPointIndex = {i, j, k};
+
+                if ( OutOfBounds( shellPointIndex, mesh ) ) {
+                    continue;
+                }
+
+                if ( cellID( shellPointIndex ) != CellType::Fluid ) {
+                    continue;
+                }
+
+                // Position vector of shell point
+                fVector3 shellPoint = CellCoordinate( shellPointIndex );
+
+                // Distance squared from query point to shell point
+                floatType shellPointDistance2 = ( shellPoint - queryPoint ).squaredNorm();
+
+                // Add this distance and index to the vectors
+                foundPoints.push_back( std::make_pair( shellPointIndex, shellPointDistance2 ) );
+
             }
         }
-
-    } );
+    }
 
 }
 
 
 
 // Find Lo index of nodal box which surrounds the query point
+// If the query point is between a node and the boundary, then the Lo index will be 
+// outside the domain bounds
 TensorIndex3D FindLoCornerIndex( const fVector3 &queryPoint,
                                  const TensorIndex3D &startingPointIndex, 
                                  const Mesh &mesh )
@@ -110,6 +135,11 @@ TensorIndex3D FindLoCornerIndex( const fVector3 &queryPoint,
              HiCornerIsOnHiSide = false;
 
         while ( !LoCornerIsOnLoSide && !HiCornerIsOnHiSide ) {
+
+            bool axisOutOfBounds =  ( LoCornerIndex[axis] < 0 ) || ( LoCornerIndex[axis] > mesh.nCells[axis]-1 );
+            if ( axisOutOfBounds ) {
+                break;
+            }
 
             LoCornerIsOnLoSide = mesh.cellCenters[axis]( LoCornerIndex[axis] ) <= queryPoint(axis);
             if ( !LoCornerIsOnLoSide ) {
@@ -132,15 +162,15 @@ TensorIndex3D FindLoCornerIndex( const fVector3 &queryPoint,
 
 
 // Return index of nearest fluid cells to query point
-std::array< TensorIndex3D, IBGhostCell::numInterpPoints > NearestFluidCellIndices( const fVector3 &queryPoint, 
+std::array< TensorIndex3D, IBGhostCell::numFluidInterpPoints > NearestFluidCellIndices( const fVector3 &queryPoint, 
                                                                                    const TensorIndex3D &startingPointIndex,
                                                                                    const CellIDTensor3D &cellID,
                                                                                    const Mesh &mesh )
 {
-    constexpr intType numPointsToFind = IBGhostCell::numInterpPoints;
-    std::array< TensorIndex3D, IBGhostCell::numInterpPoints > nearestPointIndices;
+    constexpr intType numPointsToFind = IBGhostCell::numFluidInterpPoints;
+    std::array< TensorIndex3D, IBGhostCell::numFluidInterpPoints > nearestPointIndices;
 
-    TensorIndex3D LoCornerIndex = FindLoCornerIndex( queryPoint, startingPointIndex, mesh );
+    TensorIndex3D LoCornerIndex = FindLoCornerIndex( queryPoint, startingPointIndex, mesh );    // This could be out of bounds
 
     std::vector< std::pair<TensorIndex3D, floatType> > foundPoints;
 
@@ -172,13 +202,23 @@ std::array< TensorIndex3D, IBGhostCell::numInterpPoints > NearestFluidCellIndice
         throw std::runtime_error("Immersed boundary geometry error! Not enough fluid interpolation cells found.");
     }
 
+
+    // DEBUGGING
+    Tensor3D cellIDCasted = cellID.cast<floatType>();
+
+    for ( const auto &nearestPoint : nearestPointIndices ) {
+        cellIDCasted( nearestPoint ) = -1.0f;
+    }
+    WriteArray( "cellID_nearest_points.dbg", cellIDCasted );
+
+
     return nearestPointIndices;
 }
 
 
 
 // Construct the matrix that is used to determine the polynomial coefficients for interpolating the image point
-IBGhostCell::InterpMatrix GetPointsMatrixInv( const std::array< TensorIndex3D, IBGhostCell::numInterpPoints > &fluidCellIndices,
+IBGhostCell::InterpMatrix GetPointsMatrixInv( const std::array< TensorIndex3D, IBGhostCell::numFluidInterpPoints > &fluidCellIndices,
                                               const fVector3 &boundaryPoint, 
                                               const Mesh &mesh)
 {
@@ -245,13 +285,13 @@ IBData CreateImmersedBoundaryData( const Polyhedron &geometry,
                 fVector3 imagePoint = boundaryPoint + normalVector;
 
                 // Find nearest fluid cells for interpolation
-                std::array< TensorIndex3D, IBGhostCell::numInterpPoints > fluidCellIndices = NearestFluidCellIndices( boundaryPoint, ghostPointIndex, cellID, mesh );
+                std::array< TensorIndex3D, IBGhostCell::numFluidInterpPoints > fluidCellIndices = NearestFluidCellIndices( boundaryPoint, ghostPointIndex, cellID, mesh );
 
                 // Form the interpolation coefficient matrix
-                IBGhostCell::InterpMatrix pointsMatrixInv = GetPointsMatrixInv( fluidCellIndices, boundaryPoint, mesh );
+                // IBGhostCell::InterpMatrix pointsMatrixInv = GetPointsMatrixInv( fluidCellIndices, boundaryPoint, mesh );
 
                 // Fill up the ghost cell data struct
-                ibData.ghostCells.push_back( { fluidCellIndices, ghostPointIndex, imagePoint, pointsMatrixInv } );
+                // ibData.ghostCells.push_back( { fluidCellIndices, ghostPointIndex, imagePoint, pointsMatrixInv } );
 
             }
         }

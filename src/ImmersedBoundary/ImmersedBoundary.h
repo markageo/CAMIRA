@@ -18,6 +18,7 @@ using CellIDTensor3D = Eigen::Tensor< CellType, 3 >;
 
 struct IBGhostCell {
     static constexpr intType numInterpPoints = 4;
+    static constexpr intType numFluidInterpPoints = numInterpPoints - 1;
     using InterpMatrix = Eigen::Matrix< floatType, numInterpPoints, numInterpPoints >;
 
     std::array< TensorIndex3D, numInterpPoints > fluidCellIndices;

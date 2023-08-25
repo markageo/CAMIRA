@@ -8,6 +8,8 @@
 #include "Macros.h"
 
 #include "Geometry/Geometry.h"
+#include "ImmersedBoundary/ImmersedBoundary.h"
+#include "IO/ArrayIO.h"
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Polyhedron_3.h>
@@ -60,8 +62,15 @@ int main(int argc, char const *argv[])
     
     CFD::Polyhedron P = CFD::MakeGeometry( inputData );
 
-    CGAL::draw( P );
+    // CGAL::draw( P );
 
+    CFD::CellIDTensor3D cellID =  TagCells( mesh, P);
+
+    CFD::Tensor3D cellIDCasted = cellID.cast<CFD::floatType>();
+    CFD::WriteArray( "cellID.dbg", cellIDCasted );
+
+    CFD::IBData ibData = CFD::CreateImmersedBoundaryData( P, cellID, mesh );
+    
     TOC()
 
     // TIC("Solver");

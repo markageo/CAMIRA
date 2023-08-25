@@ -908,6 +908,7 @@ void SetMomentumInterpolationCompactConstants( std::array< Tensor1D, 2 > &mwiCom
 }
 
 
+
 // Cell weighting coefficient for MWI.
 floatType MWIWeightingCoeff( const TensorIndex3D &LoIndex,
                              const TensorIndex3D &HiIndex,
@@ -919,6 +920,7 @@ floatType MWIWeightingCoeff( const TensorIndex3D &LoIndex,
     floatType interpFactor = mesh.interpFactors[axis]( idx );
     return  ( 1.0f - interpFactor ) *  AUUpInv( LoIndex )  +  interpFactor * AUUpInv( HiIndex );
 }
+
 
 
 // Fully implicit momentum interpolation coefficient for internal faces
