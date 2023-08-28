@@ -22,7 +22,7 @@ namespace
 
 
 // Return true if all values in array are the same value
-bool IsConstantArray( const array2D &array )
+bool IsConstantArray( const Tensor2D &array )
 {
     floatType testValue = array(0, 0);
     const Eigen::Tensor<bool, 0> isConstant = ( array == testValue ).all();

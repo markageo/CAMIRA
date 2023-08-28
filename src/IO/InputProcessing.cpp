@@ -324,9 +324,10 @@ namespace
     {
         // It's ok if no geometry is specified
         boost::optional<const pt::ptree &> solidGeometryTreeOptional = tree.get_child_optional( "SolidGeometry" );
-        if ( !solidGeometryTreeOptional )
+        if ( !solidGeometryTreeOptional ) {
             return;
-
+        }
+            
         const pt::ptree &solidGeometryTree = solidGeometryTreeOptional.get();
 
         // Read blocks
@@ -350,6 +351,12 @@ namespace
             inputData.solidBlocks.push_back( tempBlockData );
         }
 
+        if ( inputData.solidBlocks.empty() ) {
+            inputData.hasIBGeometry = false;
+        } else {
+            inputData.hasIBGeometry = true;
+        }
+        
     }
 
 

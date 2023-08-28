@@ -28,6 +28,7 @@ class LinearSolver
 public:
     LinearSolver( FieldData<Tensor3D> &fields,
                   const FieldData<Tensor3D> &fieldsOld,
+                  const Tensor3D &mask,
                   const FVCoefficients &fvCoeffs, 
                   const InputData::LinearSolverSettings &linearSolverSettings) : 
                     m_fields( fields ),
@@ -43,12 +44,12 @@ public:
                     m_nk( fvCoeffs.nCells(A::Z) )
     {
         if (m_nk == 1) {
-            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI, LI>>(fields, fieldsOld, fvCoeffs);
+            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
             SolutionUpdater = &LinearSolver::Sweep2D;
             StateUpdater = &LinearSolver::UpdateState2D;
         } else {
-            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t, MI, LI>>(fields, fieldsOld, fvCoeffs);
-            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI, LI>>(fields, fieldsOld, fvCoeffs);
+            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
+            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
             SolutionUpdater = &LinearSolver::Sweep3D;
             StateUpdater = &LinearSolver::UpdateState3D;
         }

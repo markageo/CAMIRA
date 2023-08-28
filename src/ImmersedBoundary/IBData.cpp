@@ -202,16 +202,6 @@ std::array< TensorIndex3D, IBGhostCell::numFluidInterpPoints > NearestFluidCellI
         throw std::runtime_error("Immersed boundary geometry error! Not enough fluid interpolation cells found.");
     }
 
-
-    // DEBUGGING
-    Tensor3D cellIDCasted = cellID.cast<floatType>();
-
-    for ( const auto &nearestPoint : nearestPointIndices ) {
-        cellIDCasted( nearestPoint ) = -1.0f;
-    }
-    WriteArray( "cellID_nearest_points.dbg", cellIDCasted );
-
-
     return nearestPointIndices;
 }
 
@@ -231,9 +221,9 @@ IBGhostCell::InterpMatrix GetPointsMatrixInv( const std::array< TensorIndex3D, I
 
     for ( intType i = 1; i != IBGhostCell::numInterpPoints; i++ ) {
 
-        floatType xf = mesh.cellCenters[X]( fluidCellIndices[i][X] ),
-                  yf = mesh.cellCenters[Y]( fluidCellIndices[i][Y] ),
-                  zf = mesh.cellCenters[Z]( fluidCellIndices[i][Z] );
+        floatType xf = mesh.cellCenters[X]( fluidCellIndices[i-1][X] ),
+                  yf = mesh.cellCenters[Y]( fluidCellIndices[i-1][Y] ),
+                  zf = mesh.cellCenters[Z]( fluidCellIndices[i-1][Z] );
 
          pointsMatrixInv.row(i) = MatrixRow{1.0f, xf, yf, zf};
     }
@@ -242,15 +232,11 @@ IBGhostCell::InterpMatrix GetPointsMatrixInv( const std::array< TensorIndex3D, I
 }
 
 
-}   // end anonymous namespace
 
 
-
-
-
-IBData CreateImmersedBoundaryData( const Polyhedron &geometry,
-                                   const CellIDTensor3D &cellID, 
-                                   const Mesh &mesh )
+IBData ConstructIBData( const Polyhedron &geometry,
+                        const CellIDTensor3D &cellID, 
+                        const Mesh &mesh )
 {
 
     using enum Axis::ENUMDATA;
@@ -288,10 +274,10 @@ IBData CreateImmersedBoundaryData( const Polyhedron &geometry,
                 std::array< TensorIndex3D, IBGhostCell::numFluidInterpPoints > fluidCellIndices = NearestFluidCellIndices( boundaryPoint, ghostPointIndex, cellID, mesh );
 
                 // Form the interpolation coefficient matrix
-                // IBGhostCell::InterpMatrix pointsMatrixInv = GetPointsMatrixInv( fluidCellIndices, boundaryPoint, mesh );
+                IBGhostCell::InterpMatrix pointsMatrixInv = GetPointsMatrixInv( fluidCellIndices, boundaryPoint, mesh );
 
                 // Fill up the ghost cell data struct
-                // ibData.ghostCells.push_back( { fluidCellIndices, ghostPointIndex, imagePoint, pointsMatrixInv } );
+                ibData.ghostCells.push_back( { fluidCellIndices, ghostPointIndex, imagePoint, pointsMatrixInv } );
 
             }
         }
@@ -302,4 +288,29 @@ IBData CreateImmersedBoundaryData( const Polyhedron &geometry,
 }
 
 
+}   // end anonymous namespace
+
+
+
+
+IBData CreateImmersedBoundaryData( const InputData &inputData, 
+                                   const Mesh &mesh )
+{
+    using enum Axis::ENUMDATA;
+
+    IBData ibData;
+
+    if ( !inputData.hasIBGeometry ) {
+        ibData.mask = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setConstant( 1.0f );
+        return ibData;
+    }
+
+    Polyhedron P = MakeGeometry( inputData );
+    CellIDTensor3D cellID =  TagCells( mesh, P);
+    ibData = ConstructIBData( P, cellID, mesh );
+
+    return ibData;
 }
+
+
+}   // end namespace CFD
