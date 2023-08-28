@@ -1,6 +1,7 @@
 target_sources( libs 
     PRIVATE 
-        ImmersedBoundaryData.cpp
-        ImmersedBoundaryGeometry.cpp 
+        IBData.cpp
+        IBGeometry.cpp 
+        IBSolverFunctions.cpp
     PRIVATE 
         ImmersedBoundary.h )

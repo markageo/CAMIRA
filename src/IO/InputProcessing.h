@@ -47,6 +47,7 @@ struct InputData
                  rotation;
     };
     std::vector< SolidBlockData > solidBlocks;
+    bool hasIBGeometry;
 
     // Boundary conditions
     struct Profile1D {

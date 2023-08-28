@@ -2,6 +2,8 @@
 #include "ConvergenceLogging.h"
 #include "FieldProbe.h"
 
+#include "../ImmersedBoundary/ImmersedBoundary.h"
+
 #include "../Types.h"
 #include "../Macros.h"
 #include "../IO/InputProcessing.h"
@@ -35,7 +37,12 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     const intType maxOuterIterations = inputData.schemes.maxOuterIterations;
     const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
 
-    // Initialise
+    // Immersed boundary
+    IBData ibData = CreateImmersedBoundaryData( inputData, mesh );
+    SetGhostCellValues( fields, ibData );
+
+
+    // Finite Volume
     EnumVector<Axis, Tensor3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
     EnumVector< Axis, EnumVector< Axis, Tensor3D> > faceAdvectedVelocities;
     if constexpr ( isNewtonLinearisation ) 
@@ -62,7 +69,7 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     ConsoleLog consoleLog( axisTransformation );
 
     // Instantiate linear solver, this holds references to the fields
-    LinearSolver<MI, LI> linearSolver(fields, fieldsOld, fvCoeffs, linearSolverSettings);
+    LinearSolver<MI, LI> linearSolver(fields, fieldsOld, ibData.mask, fvCoeffs, linearSolverSettings);
 
 
     // Outer iterations
@@ -74,26 +81,17 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     TIC("Solver Loop")
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
-        TIC("Solver Update State")
         linearSolver.UpdateState();
-        TOC()
-
-        TIC("Linear Solver")
         linearSolver.Solve();
-        TOC()
 
-        TIC("Update face values")
+        SetGhostCellValues( fields, ibData );
+
         UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
         if constexpr ( isNewtonLinearisation ) {
             UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
         }
-        TOC()
-
-        TIC("Update Coefficients")
         UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
-        TOC()
 
-        TIC("Residuals and logging")
         residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
 
@@ -109,7 +107,6 @@ void SweepSolve( FieldData<Tensor3D> &fields,
             probeLogFiles[p].WriteData( probeValues[p], nOuterIterations );
         }
 
-        TOC()
         
         if ( ResidualsDiverged(residualsOuter) ) {
             fieldWriter.WriteData( nOuterIterations );
@@ -129,14 +126,10 @@ void SweepSolve( FieldData<Tensor3D> &fields,
             break;
         }
 
-        TIC("Writing Fields")
         if ( writeFields && (nOuterIterations % inputData.fieldWriteInterval) == 0 ) {
             fieldWriter.WriteData( nOuterIterations );
-        }
-        TOC()
-
+        }   
     }
-
     TOC()
 
 

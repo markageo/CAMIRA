@@ -312,7 +312,7 @@ inline bool ResidualsDiverged( const FieldData<floatType> &residuals )
 
 
 // Update a vector of field probes
-inline std::vector< FieldData<floatType> > SetFieldProbeValues( const FieldData<array3D> &fields,
+inline std::vector< FieldData<floatType> > SetFieldProbeValues( const FieldData<Tensor3D> &fields,
                                                                 const std::vector<FieldProbe> &fieldProbes )
 {
     std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
