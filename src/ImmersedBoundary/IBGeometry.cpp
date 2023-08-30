@@ -87,23 +87,22 @@ void TagGhostCells( CellIDTensor3D &cellID,
                      fluidBottom = false;
 
                 if ( i != 0 ) 
-                    fluidWest = cellID(i-1, j  , k  )   == CellType::Fluid;
+                    fluidWest   = ( cellID(i-1, j  , k  )   == CellType::Fluid );
 
                 if ( i != mesh.nCells[X]-1 ) 
-                    fluidEast = cellID(i+1, j  , k  )   == CellType::Fluid;
+                    fluidEast   = ( cellID(i+1, j  , k  )   == CellType::Fluid );
 
                 if ( j != 0 ) 
-                    fluidSouth  = cellID(i  ,j-1, k  )  == CellType::Fluid;
+                    fluidSouth  = ( cellID(i  ,j-1, k  )    == CellType::Fluid );
 
                 if ( j != mesh.nCells[Y]-1 ) 
-                    fluidNorth = cellID(i  , j+1, k  )  == CellType::Fluid;
+                    fluidNorth  = ( cellID(i  , j+1, k  )   == CellType::Fluid );
 
                 if ( k != 0 )
-                    fluidBottom = cellID(i  , j  , k-1) == CellType::Fluid;
+                    fluidBottom = ( cellID(i  , j  , k-1)   == CellType::Fluid );
 
                 if ( k != mesh.nCells[Z]-1 ) 
-                    fluidTop = cellID(i  , j  , k+1)    == CellType::Fluid;
-
+                    fluidTop    = ( cellID(i  , j  , k+1)   == CellType::Fluid );
 
                 bool hasNeighbouringFluidCell = fluidEast || fluidWest || fluidNorth || fluidSouth || fluidTop || fluidBottom;
                 if ( hasNeighbouringFluidCell ) {

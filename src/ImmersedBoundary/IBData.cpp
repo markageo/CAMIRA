@@ -131,11 +131,11 @@ IBData ConstructIBData( const Polyhedron &geometry,
         for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
             for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
 
-                if ( cellID( i, j, k ) != CellType::Ghost ) {
+                if ( cellID(i, j, k) == CellType::Fluid ) {
+                    ibData.mask(i, j, k) = 1.0f;
+                }
 
-                    if ( cellID(i, j, k) == CellType::Fluid ) {
-                        ibData.mask(i, j, k) = 1.0f;
-                    }
+                if ( cellID( i, j, k ) != CellType::Ghost ) {
                     continue;
                 }
 

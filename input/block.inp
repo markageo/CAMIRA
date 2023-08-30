@@ -7,12 +7,12 @@ Model {
 
 Mesh {
 
-    domain = (5, 3, 3)
+    domain = (7.5, 3, 3)
 
     Grid x {
         Segment {
-            bounds     = (0, 5)
-            nCells     = 100
+            bounds     = (0, 7.5)
+            nCells     = 150
             biasFactor = 1
         }
     }
@@ -100,8 +100,9 @@ SolidGeometry {
     Block {
         centerPosition = (1.5, 1.5, 1.5)
         dimensions     = (1, 1, 1)
-        rotation       = (0, 45, 0)
+        rotation       = (0, 0, 0)
     }
+
 }
 
 
@@ -110,14 +111,14 @@ Solver {
     Schemes {
 
         linearisation           = Picard
-        momentumInterpolation   = semiExplicit
+        momentumInterpolation   = implicit
         advectionScheme         = upwind
         faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 300
+        maxOuterIterations = 200
         maxOuterResiduals = 1e-5
 
     }
@@ -131,8 +132,8 @@ Solver {
         planeSweepDirection = +z
         lineSweepDirection = +y
 
-        momentumRelaxation = (1, 1, 1)
-        pressureRelaxation = 1
+        momentumRelaxation = (1.1, 1.1, 1.1)
+        pressureRelaxation = 1.2
 
     }
 

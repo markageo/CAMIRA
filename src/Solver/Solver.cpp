@@ -10,6 +10,7 @@
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 
 #include "../IO/ArrayIO.h"
+#include "../IO/VTKWriter.h"
 
 #include "TriadSolver.h"
 #include "LineSolver.h"
@@ -40,8 +41,8 @@ void SweepSolve( FieldData<Tensor3D> &fields,
 
     // Immersed boundary
     IBData ibData = CreateImmersedBoundaryData( inputData, mesh );
-    SetGhostCellValues( fields, ibData );
     MaskFields( fields, ibData.mask );
+    SetGhostCellValues( fields, ibData );
 
     // Finite Volume
     EnumVector<Axis, Tensor3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
@@ -93,7 +94,7 @@ void SweepSolve( FieldData<Tensor3D> &fields,
         }
         UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
 
-        residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs); 
+        residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs, ibData.mask); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
 
         massFluxResidual = BoundaryMassFluxResidual(faceFluxes, mesh);
