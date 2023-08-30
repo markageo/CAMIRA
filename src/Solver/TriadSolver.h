@@ -227,7 +227,7 @@ public:
 private:
     FieldData<Tensor3D> &m_fields;
     const FieldData<Tensor3D> &m_fieldsOld;
-    const Tensor3D m_mask;
+    const Tensor3D &m_mask;
     const FVCoefficients &m_fvCoeffs;
     const intType m_ni, m_nj, m_nk;
     Tensor3D m_K;

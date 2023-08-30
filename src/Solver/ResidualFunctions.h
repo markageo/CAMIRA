@@ -36,7 +36,8 @@ inline FieldData<floatType> L1DiffResiduals( const FieldData<Tensor3D> &fields1,
 template< MomentumInterpolation MI,
           Linearisation LI > [[ maybe_unused ]]
 inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
-                                              const FVCoefficients &fvCoeffs )
+                                              const FVCoefficients &fvCoeffs,
+                                              const Tensor3D &mask )
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
@@ -45,8 +46,8 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
     FieldData<floatType> scalingFactor{0};
 
     // Temporaries to allow vector reductions
-    floatType lineResidualU{0}     , lineResidualV{0}     , lineResidualW{0}     , lineResidualP{0},
-              lineScalingFactorU{0}, lineScalingFactorV{0}, lineScalingFactorW{0};
+    floatType residualU{0}     , residualV{0}     , residualW{0}     , residualP{0},
+              scalingFactorU{0}, scalingFactorV{0}, scalingFactorW{0};
 
     for ( intType k = 0; k != fvCoeffs.nCells[Z]; k++ ) {
         for ( intType j = 0; j != fvCoeffs.nCells[Y]; j++ ) {
@@ -65,7 +66,8 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
                                    + fvCoeffs.Mom[X].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[X].AU[Z][b](i, j, k) * fields.U[Z]( ig  , jg  , kg-1);
                 }
-                lineResidualU  += abs( 
+                residualU  += mask(i, j, k)
+                            * abs( 
                                           fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) 
                                         + fvCoeffs.Mom[X].AU[X][n](i, j, k) * fields.U[X]( ig  , jg+1, kg  ) 
                                         + fvCoeffs.Mom[X].AU[X][e](i, j, k) * fields.U[X]( ig+1, jg  , kg  ) 
@@ -82,7 +84,7 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
 
                                         - fvCoeffs.Mom[X].B(i, j, k)  );
 
-                lineScalingFactorU += abs( fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) );
+                scalingFactorU += mask(i, j, k) * abs( fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) );
 
 
                 // V momentum
@@ -96,7 +98,8 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
                                    + fvCoeffs.Mom[Y].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[Y].AU[Z][b](i, j, k) * fields.U[Z]( ig  , jg  , kg-1);      
                 }
-                lineResidualV   += abs( 
+                residualV   += mask(i, j, k) 
+                             * abs( 
                                           fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) 
                                         + fvCoeffs.Mom[Y].AU[Y][n](i, j, k) * fields.U[Y]( ig  , jg+1, kg  ) 
                                         + fvCoeffs.Mom[Y].AU[Y][e](i, j, k) * fields.U[Y]( ig+1, jg  , kg  ) 
@@ -113,7 +116,7 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
 
                                         - fvCoeffs.Mom[Y].B(i, j, k)  );
 
-                lineScalingFactorV += abs( fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) );
+                scalingFactorV += mask(i, j, k) * abs( fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) );
 
 
                 // W momentm
@@ -127,7 +130,8 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
                                    + fvCoeffs.Mom[Z].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[Z].AU[Y][s](i, j, k) * fields.U[Y]( ig  , jg-1, kg  );    
                 }
-                lineResidualW   += abs( 
+                residualW   += mask(i, j, k)
+                             * abs( 
                                           fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) 
                                         + fvCoeffs.Mom[Z].AU[Z][n](i, j, k) * fields.U[Z]( ig  , jg+1, kg  ) 
                                         + fvCoeffs.Mom[Z].AU[Z][e](i, j, k) * fields.U[Z]( ig+1, jg  , kg  ) 
@@ -144,7 +148,7 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
 
                                         - fvCoeffs.Mom[Z].B(i, j, k)  );
 
-                lineScalingFactorW += abs( fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) );
+                scalingFactorW +=  mask(i, j, k) * abs( fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) );
 
 
                 // Continuity 
@@ -157,7 +161,8 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
                                         + fvCoeffs.Cont.AP[tt](i, j, k) * fields.P( ig  , jg  , kg+2) 
                                         + fvCoeffs.Cont.AP[bb](i, j, k) * fields.P( ig  , jg  , kg-2);
                 }
-                lineResidualP   += abs( 
+                residualP   += mask(i, j, k) 
+                             * abs( 
                                     fvCoeffs.Cont.AU[X][e](i) * fields.U[X]( ig+1, jg  , kg  )
                                   + fvCoeffs.Cont.AU[X][p](i) * fields.U[X]( ig  , jg  , kg  )
                                   + fvCoeffs.Cont.AU[X][w](i) * fields.U[X]( ig-1, jg  , kg  )
@@ -187,20 +192,20 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
     }
 
     // U momentum
-    residuals.U[X] = lineResidualU;
-    scalingFactor.U[X] = lineScalingFactorU;
+    residuals.U[X] = residualU;
+    scalingFactor.U[X] = scalingFactorU;
 
     // V momentum
-    residuals.U[Y] = lineResidualV;
-    scalingFactor.U[Y] = lineScalingFactorV;
+    residuals.U[Y] = residualV;
+    scalingFactor.U[Y] = scalingFactorV;
 
 
     // W momentm
-    residuals.U[Z] = lineResidualW;
-    scalingFactor.U[Z] = lineScalingFactorW;
+    residuals.U[Z] = residualW;
+    scalingFactor.U[Z] = scalingFactorW;
 
     // Continuity 
-    residuals.P = lineResidualP;
+    residuals.P = residualP;
 
 
 

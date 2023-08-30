@@ -9,13 +9,14 @@ namespace CFD
 void SetGhostCellValues( FieldData<Tensor3D> &fields, 
                          const IBData &ibData )
 {
+    using FVT::G;
     for ( const IBGhostCell &ibGhostCell : ibData.ghostCells ) {
 
         EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
             floatType imagePointValue = ibGhostCell.fieldProbe.GetFieldValue( fields[axis] );
 
-            fields[axis]( ibGhostCell.ghostCellIndex ) = ibGhostCell.extrapCoeff * imagePointValue;
+            fields[axis]( G( ibGhostCell.ghostCellIndex ) ) = ibGhostCell.extrapCoeff * imagePointValue;
 
         } ); 
     }
