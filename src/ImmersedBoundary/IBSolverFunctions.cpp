@@ -1,5 +1,7 @@
 #include "ImmersedBoundary.h"
 
+#include "../Tools/FVTools.h"
+
 namespace CFD
 {
 
@@ -8,6 +10,7 @@ void SetGhostCellValues( FieldData<Tensor3D> &fields,
                          const IBData &ibData )
 {
     using enum Axis::ENUMDATA;
+    using FVT::G;
     using ipVector = Eigen::Matrix< floatType, IBGhostCell::numInterpPoints, 1 >;
 
     for ( const IBGhostCell &ibGhostCell : ibData.ghostCells ) {
@@ -16,21 +19,24 @@ void SetGhostCellValues( FieldData<Tensor3D> &fields,
 
             // Vector of field values
             ipVector fieldValues = { 0.0f,  // Boundary value
-                                     fields.U[axis]( ibGhostCell.fluidCellIndices[0] ),
-                                     fields.U[axis]( ibGhostCell.fluidCellIndices[1] ),
-                                     fields.U[axis]( ibGhostCell.fluidCellIndices[2] ) };
+                                     fields.U[axis]( G( ibGhostCell.fluidCellIndices[0] ) ),
+                                     fields.U[axis]( G( ibGhostCell.fluidCellIndices[1] ) ),
+                                     fields.U[axis]( G( ibGhostCell.fluidCellIndices[2] ) ) };
 
             // Polynomial weighting coefficients
             ipVector weightingCoeffs = ibGhostCell.pointsMatrixInv * fieldValues;
 
+            // Image point value
+            floatType ImagePointValue = weightingCoeffs(0)
+                                      + weightingCoeffs(1) * ibGhostCell.imagePointCoordinates(0)
+                                      + weightingCoeffs(2) * ibGhostCell.imagePointCoordinates(1)
+                                      + weightingCoeffs(3) * ibGhostCell.imagePointCoordinates(2);
+
             // Ghost cell value
-            floatType ghostCellValue = weightingCoeffs(0)
-                                     + weightingCoeffs(1) * ibGhostCell.imagePointCoordinates(0)
-                                     + weightingCoeffs(2) * ibGhostCell.imagePointCoordinates(1)
-                                     + weightingCoeffs(3) * ibGhostCell.imagePointCoordinates(2);
+            floatType ghostCellValue = - ImagePointValue;
 
             // Set the ghost cell
-            fields.U[axis]( ibGhostCell.ghostCellIndex ) = ghostCellValue;
+            fields.U[axis]( G( ibGhostCell.ghostCellIndex ) ) = ghostCellValue;
 
         } ); 
     }

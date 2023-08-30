@@ -7,7 +7,7 @@ Model {
 
 Mesh {
 
-    domain = (5, 3, 1)
+    domain = (5, 3, 3)
 
     Grid x {
         Segment {
@@ -20,15 +20,15 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 3)
-            nCells     = 15
+            nCells     = 30
             biasFactor = 1
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 5
+            bounds     = (0, 3)
+            nCells     = 30
             biasFactor = 1
         }
     }
@@ -62,11 +62,11 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Freestream
+    // Wall
     +y {
-        u = uniform, 1
-        v = zeroGradient
-        w = zeroGradient
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
         p = uniform, 0
     }
 
@@ -98,7 +98,7 @@ BoundaryConditions
 
 SolidGeometry {
     Block {
-        centerPosition = (1.5, 0.5, 0.5)
+        centerPosition = (1.5, 1.5, 1.5)
         dimensions     = (1, 1, 1)
         rotation       = (0, 0, 0)
     }

@@ -16,6 +16,7 @@
 #include <CGAL/algorithm.h>
 #include <CGAL/Side_of_triangle_mesh.h>
 
+#include <utility>
 
 namespace CFD
 {
@@ -37,6 +38,7 @@ fVector3 ClosestBoundaryPoint( const Polyhedron &polyhedron,
     tree.accelerate_distance_queries();
 
     Point closest_point = tree.closest_point( Point( queryPoint(0), queryPoint(1), queryPoint(2)) );
+
     return { closest_point[0], closest_point[1], closest_point[2] };
 }
 
@@ -214,10 +216,10 @@ IBGhostCell::InterpMatrix GetPointsMatrixInv( const std::array< TensorIndex3D, I
 {
     using enum Axis::ENUMDATA;
     using MatrixRow = Eigen::Matrix<floatType, 1, IBGhostCell::numInterpPoints>;
-    IBGhostCell::InterpMatrix pointsMatrixInv;
+    IBGhostCell::InterpMatrix pointsMatrix;
 
     // First row is the boundary point
-    pointsMatrixInv.row(0) = MatrixRow{1.0f, boundaryPoint(0), boundaryPoint(1), boundaryPoint(2)};
+    pointsMatrix.row(0) = MatrixRow{1.0f, boundaryPoint(0), boundaryPoint(1), boundaryPoint(2)};
 
     for ( intType i = 1; i != IBGhostCell::numInterpPoints; i++ ) {
 
@@ -225,10 +227,10 @@ IBGhostCell::InterpMatrix GetPointsMatrixInv( const std::array< TensorIndex3D, I
                   yf = mesh.cellCenters[Y]( fluidCellIndices[i-1][Y] ),
                   zf = mesh.cellCenters[Z]( fluidCellIndices[i-1][Z] );
 
-         pointsMatrixInv.row(i) = MatrixRow{1.0f, xf, yf, zf};
+         pointsMatrix.row(i) = MatrixRow{1.0f, xf, yf, zf};
     }
 
-    return pointsMatrixInv.inverse();
+    return pointsMatrix.inverse();
 }
 
 
