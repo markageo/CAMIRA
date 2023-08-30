@@ -156,7 +156,6 @@ public:
                   maskedRelaxationY = m_fvCoeffs.Mom[Y].relaxation * m_mask( iV, jV, kV ),
                   maskedRelaxationZ = m_fvCoeffs.Mom[Z].relaxation * m_mask( iW, jW, kW );
 
-
         // Update U from momentum
         m_fields.U[X]( igU, jgU, kgU ) = ( 1 - maskedRelaxationX) * m_fieldsOld.U[X]( igU, jgU, kgU )
                                        + maskedRelaxationX * ( bU - m_fvCoeffs.Mom[X].AP[sUP::cCoupled](iU) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[X].diagCoeffInv(iU, jU, kU) );

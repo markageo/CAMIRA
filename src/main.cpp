@@ -55,57 +55,57 @@ int main(int argc, char const *argv[])
     CFD::FieldData<CFD::BoundaryConditionData> bcData = SetBoundaryConditionData(inputData, mesh);
     TOC()
 
-    TIC("Geometry Creation")
+    // TIC("Geometry Creation")
 
-    typedef CGAL::Exact_predicates_inexact_constructions_kernel  Kernel;
-    typedef CGAL::Polyhedron_3<Kernel>                       Polyhedron;
+    // typedef CGAL::Exact_predicates_inexact_constructions_kernel  Kernel;
+    // typedef CGAL::Polyhedron_3<Kernel>                       Polyhedron;
     
-    CFD::Polyhedron P = CFD::MakeGeometry( inputData );
+    // CFD::Polyhedron P = CFD::MakeGeometry( inputData );
 
-    CGAL::draw( P );
+    // CGAL::draw( P );
 
-    // CFD::CellIDTensor3D cellID =  TagCells( mesh, P);
+    // // CFD::CellIDTensor3D cellID =  TagCells( mesh, P);
 
-    // CFD::Tensor3D cellIDCasted = cellID.cast<CFD::floatType>();
-    // CFD::WriteArray( "cellID.dbg", cellIDCasted );
+    // // CFD::Tensor3D cellIDCasted = cellID.cast<CFD::floatType>();
+    // // CFD::WriteArray( "cellID.dbg", cellIDCasted );
 
-    // CFD::IBData ibData = CFD::CreateImmersedBoundaryData( P, cellID, mesh );
+    // // CFD::IBData ibData = CFD::CreateImmersedBoundaryData( P, cellID, mesh );
 
-    // CFD::SetGhostCellValues( fields, ibData );
+    // // CFD::SetGhostCellValues( fields, ibData );
     
-    TOC()
+    // TOC()
 
-    // TIC("Solver");
-    // switch ( inputData.schemes.momentumInterpolation ) {
+    TIC("Solver");
+    switch ( inputData.schemes.momentumInterpolation ) {
 
-    //     using MI = CFD::MomentumInterpolation;
-    //     using LI = CFD::Linearisation;
+        using MI = CFD::MomentumInterpolation;
+        using LI = CFD::Linearisation;
 
-    //     case ( MI::Implicit ):
-    //        switch ( inputData.schemes.linearisation ) {
-    //             case ( LI::Picard ):
-    //                 CFD::SweepSolve< MI::Implicit, LI::Picard >(fields, mesh, bcData, inputData, axisTransformation);
-    //                 break;
+        case ( MI::Implicit ):
+           switch ( inputData.schemes.linearisation ) {
+                case ( LI::Picard ):
+                    CFD::SweepSolve< MI::Implicit, LI::Picard >(fields, mesh, bcData, inputData, axisTransformation);
+                    break;
 
-    //             case ( LI::Newton ):
-    //                 CFD::SweepSolve< MI::Implicit, LI::Newton >(fields, mesh, bcData, inputData, axisTransformation);
-    //                 break;
-    //         }
-    //         break;
+                case ( LI::Newton ):
+                    CFD::SweepSolve< MI::Implicit, LI::Newton >(fields, mesh, bcData, inputData, axisTransformation);
+                    break;
+            }
+            break;
 
-    //     case ( MI::SemiExplicit ):
-    //         switch ( inputData.schemes.linearisation ) {
-    //             case ( LI::Picard ):
-    //                 CFD::SweepSolve< MI::SemiExplicit, LI::Picard >(fields, mesh, bcData, inputData, axisTransformation);
-    //                 break;
+        case ( MI::SemiExplicit ):
+            switch ( inputData.schemes.linearisation ) {
+                case ( LI::Picard ):
+                    CFD::SweepSolve< MI::SemiExplicit, LI::Picard >(fields, mesh, bcData, inputData, axisTransformation);
+                    break;
 
-    //             case ( LI::Newton ):
-    //                 CFD::SweepSolve< MI::SemiExplicit, LI::Newton >(fields, mesh, bcData, inputData, axisTransformation);
-    //                 break;
-    //         }
-    //         break;
-    // }
-    // TOC();
+                case ( LI::Newton ):
+                    CFD::SweepSolve< MI::SemiExplicit, LI::Newton >(fields, mesh, bcData, inputData, axisTransformation);
+                    break;
+            }
+            break;
+    }
+    TOC();
 
     /*-------------------------------------------------------------------------------------*\
                                              Output

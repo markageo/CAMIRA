@@ -9,40 +9,34 @@ namespace CFD
 void SetGhostCellValues( FieldData<Tensor3D> &fields, 
                          const IBData &ibData )
 {
-    using enum Axis::ENUMDATA;
-    using FVT::G;
-    using ipVector = Eigen::Matrix< floatType, IBGhostCell::numInterpPoints, 1 >;
-
     for ( const IBGhostCell &ibGhostCell : ibData.ghostCells ) {
 
         EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-            // Vector of field values
-            ipVector fieldValues = { 0.0f,  // Boundary value
-                                     fields.U[axis]( G( ibGhostCell.fluidCellIndices[0] ) ),
-                                     fields.U[axis]( G( ibGhostCell.fluidCellIndices[1] ) ),
-                                     fields.U[axis]( G( ibGhostCell.fluidCellIndices[2] ) ) };
+            floatType imagePointValue = ibGhostCell.fieldProbe.GetFieldValue( fields[axis] );
 
-            // Polynomial weighting coefficients
-            ipVector weightingCoeffs = ibGhostCell.pointsMatrixInv * fieldValues;
-
-            // Image point value
-            floatType ImagePointValue = weightingCoeffs(0)
-                                      + weightingCoeffs(1) * ibGhostCell.imagePointCoordinates(0)
-                                      + weightingCoeffs(2) * ibGhostCell.imagePointCoordinates(1)
-                                      + weightingCoeffs(3) * ibGhostCell.imagePointCoordinates(2);
-
-            // Ghost cell value
-            floatType ghostCellValue = - ImagePointValue;
-
-            // Set the ghost cell
-            fields.U[axis]( G( ibGhostCell.ghostCellIndex ) ) = ghostCellValue;
+            fields[axis]( ibGhostCell.ghostCellIndex ) = ibGhostCell.extrapCoeff * imagePointValue;
 
         } ); 
     }
-
 }
 
+
+
+void MaskFields( FieldData<Tensor3D> &fields, 
+                 const Tensor3D &mask )
+{
+    Eigen::array<Eigen::Index, 3> offsets = { nGhost, nGhost, nGhost };
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+        Eigen::array<Eigen::Index, 3> extents = { fields.U[axis].dimension(0) - 2*nGhost,
+                                                  fields.U[axis].dimension(1) - 2*nGhost,
+                                                  fields.U[axis].dimension(2) - 2*nGhost };
+
+        fields.U[axis].slice( offsets, extents ) *= mask;
+    } );
+}
 
 
 }   // end namespace CFD
