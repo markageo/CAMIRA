@@ -16,7 +16,7 @@
 #include <CGAL/algorithm.h>
 #include <CGAL/Side_of_triangle_mesh.h>
 
-#include <utility>
+#include <cmath>
 
 namespace CFD
 {
@@ -64,175 +64,56 @@ bool OutOfBounds( const TensorIndex3D &index,
 
 
 
-// Add fluid points and their distance squared to the foundPoints vector which are within a shell around the LoCornerIndex point in the mesh.
-void SearchShell( std::vector< std::pair<TensorIndex3D, floatType> > &foundPoints,
-                  const intType searchShellSize,
-                  const fVector3 &queryPoint,
-                  const TensorIndex3D &LoCornerIndex,
-                  const CellIDTensor3D &cellID,
-                  const Mesh &mesh )
+floatType DiagonalCellDistance( const TensorIndex3D &cellIndex,
+                                const Mesh &mesh )
 {
-    using enum Axis::ENUMDATA;
-
-    auto CellCoordinate = [&] ( const TensorIndex3D &index ) -> fVector3
-    { return { mesh.cellCenters[X](index[X]), mesh.cellCenters[Y](index[Y]), mesh.cellCenters[Z](index[Z]) }; };
-
-
-    TensorIndex3D shellLowerBound, shellUpperBound;
+    floatType distanceSq = 0.0;
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        shellLowerBound[axis] = LoCornerIndex[axis] - (searchShellSize-1);
-        shellUpperBound[axis] = LoCornerIndex[axis] + searchShellSize;
+        distanceSq += pow( mesh.cellLengths[axis]( cellIndex[axis] ), 2 );
     } );
-
-    for ( intType k = shellLowerBound[Z]; k <= shellUpperBound[Z]; k++ ) {
-        for ( intType j = shellLowerBound[Y]; j <= shellUpperBound[Y]; j++ ) {
-            for ( intType i = shellLowerBound[X]; i <= shellUpperBound[X]; i++ ) {
-
-                bool OnShellBoundaryZ = ( k == shellLowerBound[Z] ) || ( k == shellUpperBound[Z] ),
-                     OnShellBoundaryY = ( j == shellLowerBound[Y] ) || ( j == shellUpperBound[Y] ),
-                     OnShellBoundaryX = ( i == shellLowerBound[X] ) || ( i == shellUpperBound[X] );
-                
-                if ( !(OnShellBoundaryX || OnShellBoundaryY || OnShellBoundaryZ) ) {
-                    continue;
-                }
-
-                TensorIndex3D shellPointIndex = {i, j, k};
-
-                if ( OutOfBounds( shellPointIndex, mesh ) ) {
-                    continue;
-                }
-
-                if ( cellID( shellPointIndex ) != CellType::Fluid ) {
-                    continue;
-                }
-
-                // Position vector of shell point
-                fVector3 shellPoint = CellCoordinate( shellPointIndex );
-
-                // Distance squared from query point to shell point
-                floatType shellPointDistance2 = ( shellPoint - queryPoint ).squaredNorm();
-
-                // Add this distance and index to the vectors
-                foundPoints.push_back( std::make_pair( shellPointIndex, shellPointDistance2 ) );
-
-            }
-        }
-    }
-
+    return sqrt( distanceSq );
 }
 
 
 
-// Find Lo index of nodal box which surrounds the query point
-// If the query point is between a node and the boundary, then the Lo index will be 
-// outside the domain bounds
-TensorIndex3D FindLoCornerIndex( const fVector3 &queryPoint,
-                                 const TensorIndex3D &startingPointIndex, 
+// Determine the length of the image point from the immersed boundary. We take this as the maximum 
+// diagonal length of the cells surrounging the ghost cell
+floatType GetImagePointDistance( const TensorIndex3D &ghostPointIndex, 
                                  const Mesh &mesh )
 {
-    TensorIndex3D LoCornerIndex = startingPointIndex;
-    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+    floatType maxValue = 0.0f;
+    std::array<intType, 3> deltaIndex = {-1, 0, 1};
 
-        bool LoCornerIsOnLoSide = false,
-             HiCornerIsOnHiSide = false;
+    for ( intType dk : deltaIndex ) {
+        for ( intType dj : deltaIndex ) {
+            for ( intType di : deltaIndex ) {
 
-        while ( !LoCornerIsOnLoSide && !HiCornerIsOnHiSide ) {
+                bool isNeighbour = ( dk != 0 ) || ( dj != 0 ) || ( di != 0 );
+                if ( !isNeighbour ) {
+                    continue;
+                }
 
-            bool axisOutOfBounds =  ( LoCornerIndex[axis] < 0 ) || ( LoCornerIndex[axis] > mesh.nCells[axis]-1 );
-            if ( axisOutOfBounds ) {
-                break;
+                TensorIndex3D neighbourIndex = ghostPointIndex;
+                neighbourIndex[0] += di;
+                neighbourIndex[1] += dj;
+                neighbourIndex[2] += dk;
+
+                if ( OutOfBounds( neighbourIndex, mesh ) ) {
+                    continue;
+                }
+
+                floatType diagonalCellDistance = DiagonalCellDistance( neighbourIndex, mesh ); 
+
+                if ( diagonalCellDistance >= maxValue ) {
+                    maxValue = diagonalCellDistance;
+                }
+
             }
-
-            LoCornerIsOnLoSide = mesh.cellCenters[axis]( LoCornerIndex[axis] ) <= queryPoint(axis);
-            if ( !LoCornerIsOnLoSide ) {
-                LoCornerIndex[axis]--;
-            }
-
-            HiCornerIsOnHiSide = mesh.cellCenters[axis]( LoCornerIndex[axis] + 1 ) > queryPoint(axis);
-            if ( !HiCornerIsOnHiSide ) {
-                LoCornerIndex[axis]++;
-            }
-
-        }
-
-    } );
-
-    return LoCornerIndex;
-}
-
-
-
-
-// Return index of nearest fluid cells to query point
-std::array< TensorIndex3D, IBGhostCell::numFluidInterpPoints > NearestFluidCellIndices( const fVector3 &queryPoint, 
-                                                                                   const TensorIndex3D &startingPointIndex,
-                                                                                   const CellIDTensor3D &cellID,
-                                                                                   const Mesh &mesh )
-{
-    constexpr intType numPointsToFind = IBGhostCell::numFluidInterpPoints;
-    std::array< TensorIndex3D, IBGhostCell::numFluidInterpPoints > nearestPointIndices;
-
-    TensorIndex3D LoCornerIndex = FindLoCornerIndex( queryPoint, startingPointIndex, mesh );    // This could be out of bounds
-
-    std::vector< std::pair<TensorIndex3D, floatType> > foundPoints;
-
-    intType maxSearchShellSize = 3;
-    bool foundEnoughPoints = false;
-    for ( intType searchShellSize = 1; searchShellSize < maxSearchShellSize; searchShellSize++ ) {
-
-        SearchShell( foundPoints, searchShellSize, queryPoint, LoCornerIndex, cellID, mesh );
-
-        if ( foundPoints.size() >= numPointsToFind ) {
-
-            foundEnoughPoints = true;
-
-            // Sort the points
-            std::sort( foundPoints.begin(), foundPoints.end(), [](const std::pair<TensorIndex3D, floatType> &a, const std::pair<TensorIndex3D, floatType> &b) {
-                return a.second < b.second;
-            } );
-
-            // Take the nearest ones
-            for ( intType i = 0; i != numPointsToFind; i++ ) {
-                nearestPointIndices[i] = foundPoints[i].first;
-            }
-
-            break;
         }
     }
 
-    if ( !foundEnoughPoints ) {
-        throw std::runtime_error("Immersed boundary geometry error! Not enough fluid interpolation cells found.");
-    }
-
-    return nearestPointIndices;
+    return maxValue;
 }
-
-
-
-// Construct the matrix that is used to determine the polynomial coefficients for interpolating the image point
-IBGhostCell::InterpMatrix GetPointsMatrixInv( const std::array< TensorIndex3D, IBGhostCell::numFluidInterpPoints > &fluidCellIndices,
-                                              const fVector3 &boundaryPoint, 
-                                              const Mesh &mesh)
-{
-    using enum Axis::ENUMDATA;
-    using MatrixRow = Eigen::Matrix<floatType, 1, IBGhostCell::numInterpPoints>;
-    IBGhostCell::InterpMatrix pointsMatrix;
-
-    // First row is the boundary point
-    pointsMatrix.row(0) = MatrixRow{1.0f, boundaryPoint(0), boundaryPoint(1), boundaryPoint(2)};
-
-    for ( intType i = 1; i != IBGhostCell::numInterpPoints; i++ ) {
-
-        floatType xf = mesh.cellCenters[X]( fluidCellIndices[i-1][X] ),
-                  yf = mesh.cellCenters[Y]( fluidCellIndices[i-1][Y] ),
-                  zf = mesh.cellCenters[Z]( fluidCellIndices[i-1][Z] );
-
-         pointsMatrix.row(i) = MatrixRow{1.0f, xf, yf, zf};
-    }
-
-    return pointsMatrix.inverse();
-}
-
 
 
 
@@ -269,24 +150,29 @@ IBData ConstructIBData( const Polyhedron &geometry,
                 // Get the normal vector
                 fVector3 normalVector = boundaryPoint - ghostPoint;
 
+                // Distance from ghost point to boundary
+                floatType ghostPointDistance = normalVector.norm();
+
+                // Determine the distance of the image point from the boundary
+                floatType imagePointDistance = GetImagePointDistance( ghostPointIndex, mesh );
+
                 // Determine coordinates of image point
-                fVector3 imagePoint = boundaryPoint + normalVector;
+                fVector3 imagePoint = boundaryPoint + imagePointDistance * normalVector.normalized();
 
-                // Find nearest fluid cells for interpolation
-                std::array< TensorIndex3D, IBGhostCell::numFluidInterpPoints > fluidCellIndices = NearestFluidCellIndices( boundaryPoint, ghostPointIndex, cellID, mesh );
+                // Create the field probe for linear interpolation
+                FieldProbe fieldProbe( mesh, imagePoint.array() );
 
-                // Form the interpolation coefficient matrix
-                IBGhostCell::InterpMatrix pointsMatrixInv = GetPointsMatrixInv( fluidCellIndices, boundaryPoint, mesh );
+                // Coefficient for extrapolation from image point to ghost point
+                floatType extrapCoeff = 1.0f - ( imagePointDistance + ghostPointDistance ) / imagePointDistance;
 
                 // Fill up the ghost cell data struct
-                ibData.ghostCells.push_back( { fluidCellIndices, ghostPointIndex, imagePoint, pointsMatrixInv } );
+                ibData.ghostCells.push_back( { fieldProbe, ghostPointIndex, extrapCoeff } );
 
             }
         }
     }
 
     return ibData;
-
 }
 
 

@@ -6,7 +6,7 @@
 #include "../Tools/FVTools.h"
 
 #include "Solver.h"
-#include "FieldProbe.h"
+#include "../Tools/FieldProbe.h"
 #include "../IO/VTKWriter.h"
 #include "../Macros.h"
 

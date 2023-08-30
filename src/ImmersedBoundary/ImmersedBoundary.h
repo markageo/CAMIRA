@@ -3,6 +3,7 @@
 
 #include "../Types.h"
 #include "../Geometry/Geometry.h"
+#include "../Tools/FieldProbe.h"
 
 namespace CFD {
 
@@ -17,14 +18,9 @@ using CellIDTensor3D = Eigen::Tensor< CellType, 3 >;
 // --------------------------------------- Definition in IBData.cpp -------------------------------------- //
 
 struct IBGhostCell {
-    static constexpr intType numInterpPoints = 4;
-    static constexpr intType numFluidInterpPoints = numInterpPoints - 1;
-    using InterpMatrix = Eigen::Matrix< floatType, numInterpPoints, numInterpPoints >;
-
-    std::array< TensorIndex3D, numFluidInterpPoints > fluidCellIndices;
+    FieldProbe fieldProbe;
     TensorIndex3D ghostCellIndex;
-    fVector3 imagePointCoordinates;
-    InterpMatrix pointsMatrixInv;
+    floatType extrapCoeff;
 };
 
 struct IBData {
@@ -54,7 +50,8 @@ CellIDTensor3D TagCells( const Mesh &, const Polyhedron & );
 void SetGhostCellValues( FieldData<Tensor3D> &, const IBData & );
 
 
-
+// Set all solid cells in the mask to zero 
+void MaskFields( FieldData<Tensor3D> &, const Tensor3D & );
 
 }   // end namespace CFD
 

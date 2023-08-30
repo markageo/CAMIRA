@@ -7,7 +7,6 @@
 #include <CGAL/Homogeneous.h>
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
 
-
 #include <cmath>
 
 namespace CFD

@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.05
+    nu   = 0.01
 }
 
 Mesh {
@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 5)
-            nCells     = 50
+            nCells     = 100
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 3)
-            nCells     = 30
+            nCells     = 60
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 3)
-            nCells     = 30
+            nCells     = 60
             biasFactor = 1
         }
     }
@@ -67,7 +67,7 @@ BoundaryConditions
         u = uniform, 0
         v = uniform, 0
         w = uniform, 0
-        p = uniform, 0
+        p = zeroGradient
     }
 
     // Wall
@@ -100,7 +100,7 @@ SolidGeometry {
     Block {
         centerPosition = (1.5, 1.5, 1.5)
         dimensions     = (1, 1, 1)
-        rotation       = (0, 0, 0)
+        rotation       = (0, 45, 0)
     }
 }
 
@@ -117,7 +117,7 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 1000
+        maxOuterIterations = 300
         maxOuterResiduals = 1e-5
 
     }
@@ -143,7 +143,7 @@ Output {
 
     residualHistoryFilename = "output/residual_history.csv"
     fieldOutputFilename = "output/fields.vtk"
-    fieldWriteInterval = 0
+    fieldWriteInterval = 1
 
     Monitors {
         Probe {

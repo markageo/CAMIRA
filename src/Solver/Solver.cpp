@@ -1,13 +1,11 @@
 #include "Solver.h"
 #include "ConvergenceLogging.h"
-#include "FieldProbe.h"
-
-
 
 #include "../Types.h"
 #include "../Macros.h"
 #include "../IO/InputProcessing.h"
 #include "../Tools/SweepTransformations.h"
+#include "../Tools/FieldProbe.h"
 #include "../FiniteVolume/FiniteVolume.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 
@@ -43,13 +41,7 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     // Immersed boundary
     IBData ibData = CreateImmersedBoundaryData( inputData, mesh );
     SetGhostCellValues( fields, ibData );
-
-    // DEBUGGING ------------------------------------------------------------------------------------------
-    WriteArray( "field_UX.dbg", fields.U[0] );
-    WriteArray( "field_UY.dbg", fields.U[1] );
-    WriteArray( "field_UZ.dbg", fields.U[2] );
-
-    // ----------------------------------------------------------------------------------------------------
+    MaskFields( fields, ibData.mask );
 
     // Finite Volume
     EnumVector<Axis, Tensor3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);

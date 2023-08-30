@@ -1,10 +1,9 @@
 #ifndef RESIDUAL_FUNCTIONS
 #define RESIDUAL_FUNCTIONS
 
-#include "FieldProbe.h"
-
 #include "../Types.h"
 #include "../FiniteVolume/FiniteVolume.h"
+#include "../Tools/FieldProbe.h"
 #include "../Tools/FVTools.h"
 #include "../Macros.h"
 
