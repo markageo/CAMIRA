@@ -310,8 +310,8 @@ namespace
 
 
     template< typename AxisArray3 >
-    AxisArray3 TransformAxisArray3Code( const AxisArray3 &userArray, 
-                                        const AxisTransformationMap &axisTransformation )
+    AxisArray3 TransformAxisArray3ToCode( const AxisArray3 &userArray, 
+                                          const AxisTransformationMap &axisTransformation )
     {
         static_assert( std::is_same< AxisArray3, fArray3 >::value ||
                        std::is_same< AxisArray3, iArray3 >::value );
@@ -320,6 +320,30 @@ namespace
         EnumFor<Axis>([&] (Axis::ENUMDATA codeAxis) { 
 
             codeArray[ codeAxis ] = userArray[ axisTransformation.UserAxis( codeAxis ) ];
+
+        } );
+
+        return codeArray;
+    }
+
+
+    // Used for arrays that represent coordinates in the mesh
+    template< typename AxisArray3 >
+    AxisArray3 TransformPositionArray3ToCode( const AxisArray3 &userArray, 
+                                              const AxisTransformationMap &axisTransformation )
+    {
+        static_assert( std::is_same< AxisArray3, fArray3 >::value ||
+                       std::is_same< AxisArray3, fVector3 >::value );
+
+        AxisArray3 codeArray = userArray;    
+        EnumFor<Axis>([&] (Axis::ENUMDATA codeAxis) { 
+
+            codeArray[ codeAxis ] = userArray[ axisTransformation.UserAxis( codeAxis ) ];
+
+            bool axisReversed = axisTransformation.CodeAxisReversed( codeAxis );
+            if ( axisReversed ) {
+                codeArray[ codeAxis ] *= -1.0f;
+            }
 
         } );
 
@@ -336,9 +360,9 @@ namespace
         using enum BoundaryPatches::ENUMDATA;
 
         for ( InputData::SolidBlockData &solidBlock : inputData.solidBlocks ) {
-            solidBlock.centerPosition = TransformAxisArray3Code( solidBlock.centerPosition, axisTransformation );
-            solidBlock.dimensions     = TransformAxisArray3Code( solidBlock.dimensions    , axisTransformation );
-            solidBlock.rotation       = TransformAxisArray3Code( solidBlock.rotation      , axisTransformation );
+            solidBlock.centerPosition = TransformPositionArray3ToCode( solidBlock.centerPosition, axisTransformation );
+            solidBlock.dimensions     = TransformAxisArray3ToCode( solidBlock.dimensions    , axisTransformation );
+            solidBlock.rotation       = TransformAxisArray3ToCode( solidBlock.rotation      , axisTransformation );
         }
     }
 
@@ -367,10 +391,7 @@ namespace
     {
         // Probe locations
         for ( auto &probe : inputData.probes ) {
-            fArray3 probeLocationUser = probe.location;
-            EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
-                probe.location( codeAxis ) = probeLocationUser( axisTransformation.UserAxis( codeAxis ) ); 
-            } );
+            probe.location = TransformPositionArray3ToCode( probe.location, axisTransformation );
         }
     }
 
