@@ -93,7 +93,7 @@ void TagGhostCells( CellIDTensor3D &cellID,
                     fluidEast   = ( cellID(i+1, j  , k  )   == CellType::Fluid );
 
                 if ( j != 0 ) 
-                    fluidSouth  = ( cellID(i  ,j-1, k  )    == CellType::Fluid );
+                    fluidSouth  = ( cellID(i  , j-1, k  )   == CellType::Fluid );
 
                 if ( j != mesh.nCells[Y]-1 ) 
                     fluidNorth  = ( cellID(i  , j+1, k  )   == CellType::Fluid );

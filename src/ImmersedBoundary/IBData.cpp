@@ -135,7 +135,7 @@ IBData ConstructIBData( const Polyhedron &geometry,
                     ibData.mask(i, j, k) = 1.0f;
                 }
 
-                if ( cellID( i, j, k ) != CellType::Ghost ) {
+                if ( cellID(i, j, k) != CellType::Ghost ) {
                     continue;
                 }
 
@@ -196,6 +196,7 @@ IBData CreateImmersedBoundaryData( const InputData &inputData,
     Polyhedron P = MakeGeometry( inputData );
     CellIDTensor3D cellID =  TagCells( mesh, P);
     ibData = ConstructIBData( P, cellID, mesh );
+    ibData.cellID = cellID;
 
     return ibData;
 }

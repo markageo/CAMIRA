@@ -44,6 +44,31 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     MaskFields( fields, ibData.mask );
     SetGhostCellValues( fields, ibData );
 
+
+
+    // // DEBUGGING ----------------------------------------------------------------------------------
+
+    // VTK::VTKWriterConfig config( mesh.cellFaces[X].size(), 
+    //                              mesh.cellFaces[Y].size(), 
+    //                              mesh.cellFaces[Z].size() );
+    // config.SetWriteMode(VTK::WriteModes::BINARY);
+        
+    // VTK::gridVectorType<CFD::floatType> gridVector = { mesh.cellFaces[X].data(), 
+    //                                                    mesh.cellFaces[Y].data(), 
+    //                                                    mesh.cellFaces[Z].data() };
+
+    // Tensor3D castedCellID = ibData.cellID.cast<floatType>();
+    // VTK::scalarCollectionType<floatType> scalarMap = { {"cellID", VTK::GridTypes::CELL_DATA, castedCellID.data()},
+    //                                                    {"mask"  , VTK::GridTypes::CELL_DATA, ibData.mask.data()}};
+
+    // VTK::VTKWriter cellIDWriter( gridVector, scalarMap, config );
+
+    // cellIDWriter.WriteData( "cellID.vtk", "IB tagging data" );
+
+    // // --------------------------------------------------------------------------------------------
+
+
+
     // Finite Volume
     EnumVector<Axis, Tensor3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
     EnumVector< Axis, EnumVector< Axis, Tensor3D> > faceAdvectedVelocities;
@@ -94,7 +119,8 @@ void SweepSolve( FieldData<Tensor3D> &fields,
         }
         UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
 
-        residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs, ibData.mask); 
+        // residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs, ibData.mask); 
+        residualsOuter   = L1DiffResiduals(fields, fieldsOld); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
 
         massFluxResidual = BoundaryMassFluxResidual(faceFluxes, mesh);
