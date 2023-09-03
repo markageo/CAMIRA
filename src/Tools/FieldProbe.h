@@ -9,7 +9,7 @@
 namespace CFD
 {
 
-// https://en.wikipedia.org/wiki/Trilinear_interpolation
+// Calculate values and gradients between points using linear interpolation
 class FieldProbe
 {
     public:
@@ -45,7 +45,9 @@ class FieldProbe
 
         }
 
+
         // For arrays with ghost cells
+        // https://en.wikipedia.org/wiki/Trilinear_interpolation
         floatType GetFieldValue( const Tensor3D &field ) const
         {
             using namespace FVT;
@@ -75,6 +77,25 @@ class FieldProbe
             return c;
         }
 
+
+        // For arrays with ghost cells
+        fVector3 GetFieldGradient( const Tensor3D &field ) const
+        {
+            using namespace FVT;
+            using enum Axis::ENUMDATA;
+
+            fVector3 gradientVector;
+
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+
+
+            } );
+
+            return gradientVector;
+        }
+
+
         const fArray3& Coordinates() const
         { return m_probePoint; }
 
@@ -83,7 +104,7 @@ class FieldProbe
 
     private:
         fArray3 m_probePoint;
-        EnumVector<Axis, iArray2> m_latticeIndex;    // Index of lattice points to itnerpolate from
+        EnumVector<Axis, iArray2> m_latticeIndex;     // Index of lattice points to interpolate from
         EnumVector<Axis, floatType> m_latticeCoord;   // Normalised coordinates in the lattice
     
 };

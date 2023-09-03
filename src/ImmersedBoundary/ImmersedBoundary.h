@@ -23,9 +23,16 @@ struct IBGhostCell {
     floatType extrapCoeff;
 };
 
+// struct IBGhostCell {
+//     FieldProbe fieldProbe;
+//     TensorIndex3D ghostCellIndex;
+//     floatType extrapImageVelocityCoeff, extrapImageGradientCoeff;
+// };
+
 struct IBData {
     std::vector< IBGhostCell > ghostCells;
     Tensor3D mask;
+    CellIDTensor3D cellID;
 };
 
 

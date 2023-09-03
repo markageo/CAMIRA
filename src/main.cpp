@@ -63,15 +63,6 @@ int main(int argc, char const *argv[])
     // CFD::Polyhedron P = CFD::MakeGeometry( inputData );
 
     // CGAL::draw( P );
-
-    // // CFD::CellIDTensor3D cellID =  TagCells( mesh, P);
-
-    // // CFD::Tensor3D cellIDCasted = cellID.cast<CFD::floatType>();
-    // // CFD::WriteArray( "cellID.dbg", cellIDCasted );
-
-    // // CFD::IBData ibData = CFD::CreateImmersedBoundaryData( P, cellID, mesh );
-
-    // // CFD::SetGhostCellValues( fields, ibData );
     
     // TOC()
 

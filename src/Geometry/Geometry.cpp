@@ -7,6 +7,15 @@
 #include <CGAL/Homogeneous.h>
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
 
+#include <CGAL/Surface_mesh_default_triangulation_3.h>
+#include <CGAL/Complex_2_in_triangulation_3.h>
+#include <CGAL/make_surface_mesh.h>
+#include <CGAL/Implicit_surface_3.h>
+#include <CGAL/IO/facets_in_complex_2_to_triangle_mesh.h>
+#include <CGAL/Surface_mesh.h>
+
+#include <CGAL/boost/graph/helpers.h>
+
 #include <cmath>
 
 namespace CFD
@@ -14,6 +23,10 @@ namespace CFD
 
 namespace 
 {
+
+/*-------------------------------------------------------------------------------------*\
+                                        Blocks
+\*-------------------------------------------------------------------------------------*/
 
 std::array< fVector3, 8> GetBlockVertices( const InputData::SolidBlockData &blockData )
 {
@@ -147,15 +160,14 @@ Polyhedron MakeBlockPolyhedron( const InputData::SolidBlockData &solidBlockData 
 
 
 
-std::vector< Polyhedron > MakeBlocks( const InputData &inputData )
+void AddBlocks( std::vector< Polyhedron > &geometryPolyhedra,
+                const InputData &inputData )
 {
-    std::vector< Polyhedron > blockVector;
     for ( const InputData::SolidBlockData &solidBlockData : inputData.solidBlocks ) {
 
-        blockVector.push_back( MakeBlockPolyhedron( solidBlockData ) );
+        geometryPolyhedra.push_back( MakeBlockPolyhedron( solidBlockData ) );
 
     }
-    return blockVector;
 }
 
 
@@ -163,12 +175,92 @@ std::vector< Polyhedron > MakeBlocks( const InputData &inputData )
 
 
 
+/*-------------------------------------------------------------------------------------*\
+                                        Spheres
+\*-------------------------------------------------------------------------------------*/
+
+
+// Makes triangulated sphere surface
+Polyhedron MakeSpherePolyhedron( const InputData::SolidSphereData &solidSphereData )
+{
+    using enum Axis::ENUMDATA;
+    
+    using Tr       = CGAL::Surface_mesh_default_triangulation_3;
+    using C2t3     = CGAL::Complex_2_in_triangulation_3<Tr>;
+    using GT       = Tr::Geom_traits;
+    using Sphere_3 = GT::Sphere_3;
+    using Point_3  = GT::Point_3;
+    using FT       = GT::FT;
+
+    typedef FT (*Function)(Point_3);
+    using Surface_3 = CGAL::Implicit_surface_3<GT, Function>;
+    using Surface_mesh = CGAL::Surface_mesh<Point_3>;
+
+    // Implicit function for sphere surface
+    floatType radius2 = std::pow( solidSphereData.diameter / 2.0f, 2 );
+    Point_3 centerPosition = Point_3( solidSphereData.centerPosition(X), 
+                                      solidSphereData.centerPosition(Y), 
+                                      solidSphereData.centerPosition(Z) );
+    auto sphere_function = [&] (Point_3 p) -> FT
+    {
+        const FT x2 = std::pow( ( p.x() - centerPosition.x() ), 2 ), 
+                 y2 = std::pow( ( p.y() - centerPosition.y() ), 2 ),
+                 z2 = std::pow( ( p.z() - centerPosition.z() ), 2 );
+        return x2 + y2 + z2 - radius2;
+    };
+
+    Tr tr;            // 3D-Delaunay triangulation
+    C2t3 c2t3 (tr);   // 2D-complex in 3D-Delaunay triangulation
+
+    // defining the surface
+    Surface_3 surface( sphere_function,                     // pointer to function
+                       Sphere_3(centerPosition, 2.0f * radius2) ); // bounding sphere
+
+    // Meshing criteria
+    CGAL::Surface_mesh_default_criteria_3<Tr> criteria( 30.0f,  // angular bound
+                                                        0.1f,   // radius bound
+                                                        0.1f);  // distance bound
+
+    // meshing surface
+    CGAL::make_surface_mesh(c2t3, surface, criteria, CGAL::Non_manifold_tag());
+    Surface_mesh sm;
+    CGAL::facets_in_complex_2_to_triangle_mesh(c2t3, sm);
+
+    // Convert to Polyhedron
+    Polyhedron P;
+    CGAL::copy_face_graph(sm, P);
+
+    return P;
+}
+
+
+void AddSpheres( std::vector< Polyhedron > &geometryPolyhedra,
+                 const InputData &inputData )
+{
+    for ( const InputData::SolidSphereData &solidSphereData : inputData.solidSpheres ) {
+
+        geometryPolyhedra.push_back( MakeSpherePolyhedron( solidSphereData ) );
+
+    }
+}
+
+
+
+/*-------------------------------------------------------------------------------------*\
+                                   Complete Geometry
+\*-------------------------------------------------------------------------------------*/
+
+
 Polyhedron MakeGeometry( const InputData &inputData )
 {
-    std::vector< Polyhedron > blockPolyhedronVector = MakeBlocks( inputData );
+
+    std::vector< Polyhedron > geometryPolyhedra;
+    AddBlocks( geometryPolyhedra, inputData );
+    AddSpheres( geometryPolyhedra, inputData );
+
     Polyhedron P;
-    for ( Polyhedron & blockPolyhedron : blockPolyhedronVector ) {
-        CGAL::Polygon_mesh_processing::corefine_and_compute_union( blockPolyhedron, P, P );
+    for ( Polyhedron & polyhedron : geometryPolyhedra ) {
+        CGAL::Polygon_mesh_processing::corefine_and_compute_union( polyhedron, P, P );
     }
 
     return P;

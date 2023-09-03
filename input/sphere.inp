@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.1
+    nu   = 0.01
 }
 
 Mesh {
@@ -97,10 +97,9 @@ BoundaryConditions
 
 
 SolidGeometry {
-    Block {
+    Sphere {
         centerPosition = (1.5, 1.5, 1.5)
-        dimensions     = (1, 1, 1)
-        rotation       = (0, 45, 0)
+        diameter       = 1
     }
 }
 
