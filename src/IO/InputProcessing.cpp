@@ -319,6 +319,45 @@ namespace
                                          Solid Geometry
     \*-------------------------------------------------------------------------------------*/
 
+    void ReadBlockData( InputData &inputData,
+                        const std::pair<const std::string, pt::ptree> &solidObject )
+    {
+        InputData::SolidBlockData tempBlockData;
+        std::vector< floatType > tempCenterPosition, tempDimensions, tempRotation;
+        tempCenterPosition = solidObject.second.get< std::vector<floatType> >( "centerPosition" ); 
+        tempDimensions     = solidObject.second.get< std::vector<floatType> >( "dimensions" ); 
+        tempRotation       = solidObject.second.get< std::vector<floatType> >( "rotation" ); 
+
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            tempBlockData.centerPosition(axis) = tempCenterPosition[axis];
+            tempBlockData.dimensions(axis)     = tempDimensions[axis];
+            tempBlockData.rotation(axis)       = tempRotation[axis];
+        } );
+
+        inputData.solidBlocks.push_back( tempBlockData );
+    }
+
+
+
+    void ReadSphereData( InputData &inputData,
+                        const std::pair<const std::string, pt::ptree> &solidObject )
+    {
+        InputData::SolidSphereData tempSphereData;
+        std::vector< floatType > tempCenterPosition;
+        floatType tempDiameter;
+        tempCenterPosition = solidObject.second.get< std::vector<floatType> >( "centerPosition" ); 
+        tempDiameter       = solidObject.second.get< floatType >( "diameter" );
+
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            tempSphereData.centerPosition(axis) = tempCenterPosition[axis];
+        } );
+        tempSphereData.diameter = tempDiameter;
+
+        inputData.solidSpheres.push_back( tempSphereData );
+    }
+
+
+
     void ReadSolidGeometry( InputData &inputData, 
                             const pt::ptree &tree)
     {
@@ -331,32 +370,22 @@ namespace
         const pt::ptree &solidGeometryTree = solidGeometryTreeOptional.get();
 
         // Read blocks
-        InputData::SolidBlockData tempBlockData;
-        std::vector< floatType > tempCenterPosition, tempDimensions, tempRotation;
         for (auto solidObject : solidGeometryTree) {
-            if (solidObject.first != "Block") {
-                throw std::runtime_error(  "'" + solidObject.first + "' is not a valid SolidGeometry object." );
+
+            if ( solidObject.first == "Block" ) {
+                ReadBlockData( inputData, solidObject );
+                inputData.hasIBGeometry = true;
+                continue;
             }
 
-            tempCenterPosition = solidObject.second.get< std::vector<floatType> >( "centerPosition" ); 
-            tempDimensions     = solidObject.second.get< std::vector<floatType> >( "dimensions" ); 
-            tempRotation       = solidObject.second.get< std::vector<floatType> >( "rotation" ); 
+            if ( solidObject.first == "Sphere" ) {
+                ReadSphereData( inputData, solidObject );
+                inputData.hasIBGeometry = true;
+                continue;
+            }
 
-            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                tempBlockData.centerPosition(axis) = tempCenterPosition[axis];
-                tempBlockData.dimensions(axis)     = tempDimensions[axis];
-                tempBlockData.rotation(axis)       = tempRotation[axis];
-            } );
-
-            inputData.solidBlocks.push_back( tempBlockData );
-        }
-
-        if ( inputData.solidBlocks.empty() ) {
-            inputData.hasIBGeometry = false;
-        } else {
-            inputData.hasIBGeometry = true;
-        }
-        
+            throw std::runtime_error(  "'" + solidObject.first + "' is not a valid SolidGeometry object." );
+        }        
     }
 
 
