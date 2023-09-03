@@ -359,10 +359,16 @@ namespace
         using enum Axis::ENUMDATA;
         using enum BoundaryPatches::ENUMDATA;
 
+        // Blocks
         for ( InputData::SolidBlockData &solidBlock : inputData.solidBlocks ) {
             solidBlock.centerPosition = TransformPositionArray3ToCode( solidBlock.centerPosition, axisTransformation );
             solidBlock.dimensions     = TransformAxisArray3ToCode( solidBlock.dimensions    , axisTransformation );
             solidBlock.rotation       = TransformAxisArray3ToCode( solidBlock.rotation      , axisTransformation );
+        }
+
+        // Spheres
+        for ( InputData::SolidSphereData &solidSphere : inputData.solidSpheres ) {
+            solidSphere.centerPosition = TransformPositionArray3ToCode( solidSphere.centerPosition, axisTransformation );
         }
     }
 

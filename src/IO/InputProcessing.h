@@ -46,7 +46,12 @@ struct InputData
                  dimensions, 
                  rotation;
     };
+    struct SolidSphereData {
+        fArray3 centerPosition;
+        floatType diameter;
+    };
     std::vector< SolidBlockData > solidBlocks;
+    std::vector< SolidSphereData > solidSpheres; 
     bool hasIBGeometry;
 
     // Boundary conditions
