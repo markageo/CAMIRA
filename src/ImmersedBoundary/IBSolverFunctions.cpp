@@ -16,7 +16,12 @@ void SetGhostCellValues( FieldData<Tensor3D> &fields,
 
             floatType imagePointValue = ibGhostCell.fieldProbe.GetFieldValue( fields[axis] );
 
-            fields[axis]( G( ibGhostCell.ghostCellIndex ) ) = ibGhostCell.extrapCoeff * imagePointValue;
+            fVector3 imagePointGradientVector = ibGhostCell.fieldProbe.GetFieldGradient( fields[axis] );
+
+            floatType imagePointNormalGradient = imagePointGradientVector.dot( ibGhostCell.normalUnitVector );
+
+            fields[axis]( G( ibGhostCell.ghostCellIndex ) ) = ibGhostCell.extrapImageVelocityCoeff * imagePointValue
+                                                            + ibGhostCell.extrapImageGradientCoeff * imagePointNormalGradient;
 
         } ); 
     }
