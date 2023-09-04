@@ -253,6 +253,9 @@ class FieldWriter
         {
             // Check if there is a .vtk extension and remove it
             size_t lastPointPosition = filename.find_last_of(".");
+            if ( lastPointPosition == std::string::npos ) {
+                return filename;
+            }
             if ( filename.substr( lastPointPosition ) == ".vtk" ) {
                 return filename.substr( 0, lastPointPosition );
             }
