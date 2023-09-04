@@ -20,14 +20,9 @@ using CellIDTensor3D = Eigen::Tensor< CellType, 3 >;
 struct IBGhostCell {
     FieldProbe fieldProbe;
     TensorIndex3D ghostCellIndex;
-    floatType extrapCoeff;
+    floatType extrapImageVelocityCoeff, extrapImageGradientCoeff;
+    fVector3 normalUnitVector;
 };
-
-// struct IBGhostCell {
-//     FieldProbe fieldProbe;
-//     TensorIndex3D ghostCellIndex;
-//     floatType extrapImageVelocityCoeff, extrapImageGradientCoeff;
-// };
 
 struct IBData {
     std::vector< IBGhostCell > ghostCells;

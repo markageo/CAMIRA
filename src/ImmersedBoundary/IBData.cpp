@@ -156,17 +156,23 @@ IBData ConstructIBData( const Polyhedron &geometry,
                 // Determine the distance of the image point from the boundary
                 floatType imagePointDistance = GetImagePointDistance( ghostPointIndex, mesh );
 
+                // Outward pointing unit normal vector
+                fVector3 normalUnitVector = normalVector.normalized();
+
                 // Determine coordinates of image point
-                fVector3 imagePoint = boundaryPoint + imagePointDistance * normalVector.normalized();
+                fVector3 imagePoint = boundaryPoint + imagePointDistance * normalUnitVector;
 
                 // Create the field probe for linear interpolation
                 FieldProbe fieldProbe( mesh, imagePoint.array() );
 
-                // Coefficient for extrapolation from image point to ghost point
-                floatType extrapCoeff = 1.0f - ( imagePointDistance + ghostPointDistance ) / imagePointDistance;
+                // Coefficients for extrapolation from image point to ghost point
+                floatType extrapImageVelocityCoeff = 1.0f - std::pow( ( imagePointDistance + ghostPointDistance ) / imagePointDistance , 2 );
+
+                floatType extrapImageGradientCoeff = imagePointDistance + ghostPointDistance 
+                                                   - std::pow( imagePointDistance + ghostPointDistance , 2 ) / imagePointDistance;
 
                 // Fill up the ghost cell data struct
-                ibData.ghostCells.push_back( { fieldProbe, ghostPointIndex, extrapCoeff } );
+                ibData.ghostCells.push_back( { fieldProbe, ghostPointIndex, extrapImageVelocityCoeff, extrapImageGradientCoeff, -normalUnitVector } );
 
             }
         }

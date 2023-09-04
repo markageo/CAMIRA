@@ -253,7 +253,6 @@ void AddSpheres( std::vector< Polyhedron > &geometryPolyhedra,
 
 Polyhedron MakeGeometry( const InputData &inputData )
 {
-
     std::vector< Polyhedron > geometryPolyhedra;
     AddBlocks( geometryPolyhedra, inputData );
     AddSpheres( geometryPolyhedra, inputData );
