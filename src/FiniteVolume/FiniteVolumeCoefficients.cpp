@@ -20,6 +20,17 @@ namespace
                                                     Diffusion
 \*---------------------------------------------------------------------------------------------------------------*/
 
+
+// Return true if all values in array are the same value
+bool IsConstantArray( const array2D &array )
+{
+    floatType testValue = array(0, 0);
+    Eigen::Tensor<bool, 0> isConstant = ( array == array.constant( testValue ) ).all();
+    return isConstant(0);
+}
+
+
+
 // Check if continuity equation implies a zero gradient boundary condition. This occurs if both orthogonal fields have a uniform BC
 BoundaryConditions::ENUMDATA GetDiffusionBC( const EnumVector< Axis, EnumVector< BoundaryPatches, BoundaryConditionConfig > > &MomBoundaryConditions, 
                                              const BoundaryPatches::ENUMDATA boundaryPatch, 
@@ -37,9 +48,16 @@ BoundaryConditions::ENUMDATA GetDiffusionBC( const EnumVector< Axis, EnumVector<
     // Only check the field that in the direction of the current axis
     if (velocityComponent == axis) {
 
+        // Only possible if we have a fixed velocity BC
         if (MomBoundaryConditions[axis1][boundaryPatch].type == BC::fixed && 
             MomBoundaryConditions[axis2][boundaryPatch].type == BC::fixed) {
-            return BC::zeroGradient;
+
+            // Gradient is only zero if boundary value is the same all over
+            if ( IsConstantArray( MomBoundaryConditions[axis1][boundaryPatch].value ) &&
+                 IsConstantArray( MomBoundaryConditions[axis2][boundaryPatch].value ) ) {
+                return BC::zeroGradient;
+            }     
+
         }
     }
 
@@ -901,18 +919,6 @@ floatType MWIWeightingCoeff( const arrayIndex3D &LoIndex,
     floatType interpFactor = mesh.interpFactors[axis]( idx );
     return  ( 1.0f - interpFactor ) *  AUUpInv( LoIndex )  +  interpFactor * AUUpInv( HiIndex );
 }
-
-
-// // Cell weighting coefficient for MWI. The given idx is the face index
-// floatType MWIWeightingCoeff( const arrayIndex3D &idx, 
-//                              const array3D &AUUpInv, 
-//                              const Axis::ENUMDATA axis)
-// {
-//     arrayIndex3D HiIndex = idx,
-//                  LoIndex = idx;
-//     LoIndex[axis] -= 1;
-//     return 0.5f * ( AUUpInv( HiIndex )  +  AUUpInv( LoIndex ) ); 
-// }
 
 
 
