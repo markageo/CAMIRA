@@ -71,6 +71,7 @@ void SweepSolve( FieldData<array3D> &fields,
         fieldWriter.WriteData( 0 );
     }
         
+    TIC("Solver Loop")
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
         TIC("Solver Update State")
@@ -121,6 +122,7 @@ void SweepSolve( FieldData<array3D> &fields,
         
 
     }
+    TOC()
 
 
 }
