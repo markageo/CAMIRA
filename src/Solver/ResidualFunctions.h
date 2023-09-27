@@ -8,6 +8,8 @@
 #include "../Tools/FVTools.h"
 #include "../Macros.h"
 
+#include <cmath>
+
 namespace CFD
 {
 
@@ -204,7 +206,9 @@ inline FieldData<floatType> StencilResiduals( const FieldData<array3D> &fields,
 
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        residuals.U[axis] /= scalingFactor.U[axis];
+        if ( scalingFactor.U[axis] != 0.0f ) { // Division by zero
+            residuals.U[axis] /= scalingFactor.U[axis];
+        }
     } );
 
     // ForAllFieldData( [&] (intType f) {
@@ -272,11 +276,11 @@ inline void NormaliseResiduals( FieldData<floatType> &residuals,
 // Check if residual tolerence is met
 [[ maybe_unused ]]
 inline bool MetResidualTolerence( const FieldData<floatType> &residuals,
-                            const FieldData<floatType> &residualsTarget )
+                                  const FieldData<floatType> &residualsTarget )
 {
     for ( intType i = 0; i != FieldData<floatType>::nData; i++ ) {  // Can't use ForAllFieldData since returning inside loop
 
-        if ( residuals[i] > residualsTarget[i] ) 
+        if ( residuals[i] > residualsTarget[i] )
             return false;
 
     }
@@ -285,9 +289,31 @@ inline bool MetResidualTolerence( const FieldData<floatType> &residuals,
 
 
 
+// Check if any residuals have diverged
+[[ maybe_unused ]]
+inline bool ResidualsDiverged( const FieldData<floatType> &residuals )
+{
+    for ( intType i = 0; i != FieldData<floatType>::nData; i++ ) {
+
+        // Check if the compiler honours nans and infinities
+        #ifdef CFD_HONOR_INFINITIES_AND_NANS
+            if ( !std::isfinite( residuals[i] ) ) 
+                return true;
+        #else
+            #define CFD_MAX_RESIDUAL_BEFORE_DIVERGENCE 1e8f
+            if ( residuals[i] > CFD_MAX_RESIDUAL_BEFORE_DIVERGENCE )
+                return true;
+        #endif
+
+    }
+    return false;
+}
+
+
+
 // Update a vector of field probes
-inline std::vector< FieldData<floatType> > FieldProbeValues( const FieldData<array3D> &fields,
-                                                             const std::vector<FieldProbe> &fieldProbes )
+inline std::vector< FieldData<floatType> > SetFieldProbeValues( const FieldData<array3D> &fields,
+                                                                const std::vector<FieldProbe> &fieldProbes )
 {
     std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
 

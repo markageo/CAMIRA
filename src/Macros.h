@@ -24,15 +24,35 @@
 #endif
 
 
-// Compiler specific macros
+// Loop autovectorisation
 #if defined(__clang__)
 #   define CFD_PRAGMA_VECTORIZE _Pragma("clang loop vectorize(enable)")
+
 # elif defined(__GNUC__) || defined(__GNUG__)
 #   define CFD_PRAGMA_VECTORIZE _Pragma("GCC ivdep")
+
 # else
 #   define CFD_PRAGMA_VECTORIZE
+
 # endif
 
+
+// If compiled with -ffast-math (specifically -ffinite-math-only), compiler assumes nans cannot occur.
+// This may be important in certain functions.
+# if defined(__clang__)
+#   if !defined(__FAST_MATH__)
+#       define CFD_HONOR_INFINITIES_AND_NANS
+#   endif
+
+# elif defined(__GNUC__) || defined(__GNUG__)
+#   if (HONOR_INFINITIES) && (HONOR_NANS)
+#       define CFD_HONOR_INFINITIES_AND_NANS
+#   endif
+
+# else
+#   define CFD_HONOR_INFINITIES_AND_NANS
+
+# endif
 
 
 #endif // CFD_MACROS

@@ -77,6 +77,7 @@ void SweepSolve( FieldData<array3D> &fields,
         TIC("Solver Update State")
         linearSolver.UpdateState();
         TOC()
+
         TIC("Linear Solver")
         linearSolver.Solve();
         TOC()
@@ -87,16 +88,18 @@ void SweepSolve( FieldData<array3D> &fields,
             UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
         }
         TOC()
+
         TIC("Update Coefficients")
         UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
         TOC()
+
         TIC("Residuals and logging")
         residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
 
         massFluxResidual = BoundaryMassFluxResidual(faceFluxes, mesh);
 
-        probeValues      = FieldProbeValues(fields, fieldProbes); 
+        probeValues      = SetFieldProbeValues(fields, fieldProbes); 
         
         fieldsOld = fields;
 
@@ -105,16 +108,22 @@ void SweepSolve( FieldData<array3D> &fields,
         for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
             probeLogFiles[p].WriteData( probeValues[p], nOuterIterations );
         }
+
         TOC()
         
-        if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
+        if ( ResidualsDiverged(residualsOuter) ) {
             fieldWriter.WriteData( nOuterIterations );
-            std::cout << "*** OUTER ITERATIONS CONVERGED ***"
-                        << "\n\n";
+            std::cout << "*** SOLUTION DIVERGED ***" << "\n\n";
             break;
         }
 
-        TIC("Writing Feilds")
+        if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
+            fieldWriter.WriteData( nOuterIterations );
+            std::cout << "*** SOLUTION CONVERGED ***" << "\n\n";
+            break;
+        }
+
+        TIC("Writing Fields")
         if ( writeFields && (nOuterIterations % inputData.fieldWriteInterval) == 0 ) {
             fieldWriter.WriteData( nOuterIterations );
         }

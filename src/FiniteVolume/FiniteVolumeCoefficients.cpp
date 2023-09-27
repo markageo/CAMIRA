@@ -25,7 +25,7 @@ namespace
 bool IsConstantArray( const array2D &array )
 {
     floatType testValue = array(0, 0);
-    Eigen::Tensor<bool, 0> isConstant = ( array == array.constant( testValue ) ).all();
+    const Eigen::Tensor<bool, 0> isConstant = ( array == testValue ).all();
     return isConstant(0);
 }
 
@@ -1762,15 +1762,11 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
 {
     using TC = TransportCoefficients::ENUMDATA;
 
-    TIC("Coefficient Update")
 
-    TIC("Zeroing")
     ZeroNonlinearCoeffs( fvCoeffs );
-    TOC()
 
     // The Picard coefficients for all momentum equations are the same, so just use the ones from the U momentum equation after 
     // its been set
-    TIC("Picard advection")
     SetInteriorAdvectionPicardCoefficients(fvCoeffs.Mom[Axis::X], faceFluxes, mesh);
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         if ( axis != Axis::X ) {
@@ -1784,51 +1780,35 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         SetBoundaryAdvectionPicardCoefficients(fvCoeffs.Mom[axis], faceFluxes, bcData.U[axis], mesh);
     } );
-    TOC()
 
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
         // Add diffusion to velocity terms
-        TIC("Add diffusion")
         AddDiffusion(fvCoeffs.Mom[axis], bcData.U[axis], mesh);
-        TOC()
 
         // Inverse of AP coefficient (Picard)
-        TIC("Inverse AP (Picard)")
         fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
-        TOC();
 
     } );
 
     // Set the momentum interpolation coefficients
-    TIC("MWI")
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, bcData, fields.P);
-    TOC()
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
         // Add Newton Linearisation terms if selected
-        TIC("Newton advection")
         if ( fvCoeffs.Mom[axis].linearisation == Linearisation::Newton ) {
             AddAdvectionNewtonCoefficients(fvCoeffs.Mom[axis], faceAdvectedVelocities, faceFluxes, bcData.U, mesh);
             fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
         }
-        TOC()
 
          // Add boundary constants to source terms
-        TIC("Momentum boundary constants")
         AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
-        TOC()
 
     } );
 
-    TIC("Continuity boundary constants")
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
-    TOC()
-    
-
-    TOC()
 }
 
 
