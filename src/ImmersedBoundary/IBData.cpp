@@ -125,19 +125,17 @@ IBData ConstructIBData( const Polyhedron &geometry,
     using enum Axis::ENUMDATA;
 
     IBData ibData;
-    ibData.mask = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setZero();
+    ibData.mask = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setConstant( 1.0f );
 
     for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
         for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
             for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
 
-                if ( cellID(i, j, k) == CellType::Fluid ) {
-                    ibData.mask(i, j, k) = 1.0f;
-                }
-
                 if ( cellID(i, j, k) != CellType::Ghost ) {
                     continue;
                 }
+
+                ibData.mask(i, j, k) = 0.0f;
 
                 fVector3 ghostPoint = { mesh.cellCenters[X](i), 
                                         mesh.cellCenters[Y](j),
