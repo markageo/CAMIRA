@@ -60,7 +60,7 @@ public:
         using enum Axis::ENUMDATA;
         using enum TransportCoefficients::ENUMDATA;
 
-        for ( intType nIterations = 1; nIterations <= m_maxIterations; nIterations++ )
+        for ( intType nIterations = 1 ; nIterations <= m_maxIterations; nIterations++ )
         {
             // Reset residuals
             ForAllFieldData( [&] (intType f) { m_residuals[f] = 0.0f; });
@@ -74,11 +74,10 @@ public:
 
             // Check residual tolerence
             if ( MetResidualTolerence(m_residuals, m_maxResiduals) ) {
-                std::cout << "*** INNER ITERATIONS CONVERGED ***"
-                            << "\n\n";
                 break;
             }
         }
+
     }
 
 
