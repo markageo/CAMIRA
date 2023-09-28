@@ -5,11 +5,9 @@
 #include <vector>
 #include <string>
 #include <optional>
-
 #include <iostream>
-
-#include <fmt/core.h>
-#include <fmt/ostream.h>
+#include <iomanip>
+#include <sstream>
 
 #include "clock.h"
 
@@ -17,7 +15,6 @@ namespace PROF {
 /// Profiler Class 
 /**
  *  \param Counter  
- *  \param IDENT_level 
 */
 template <class Counter = PROF::perf_counter::clock<> >
 class profiler {
@@ -86,72 +83,59 @@ private:
             return s;
         }
 
-        void print(std::ostream& out, const std::string& name, int level, delta_type total, size_t width, size_t indentLevel) const {
-            using namespace fmt::literals;
-            auto percentage_time = 100 * time_delta / total;
-            constexpr auto format_string = "[{pad:>{level}}{name}:{pad:>{width}}{time:>15.{digits}f}{units}] [nCalls {counter}] ({percnt:>6.2f}%)\n"; 
-            fmt::print(out, format_string,
-                    "digits"_a = Counter::digits(),
-                    "level"_a = level, 
-                    "width"_a = width - level - name.size(), 
-                    "units"_a = Counter::units(), 
-                    "name"_a = name, 
-                    "pad"_a = "", "time"_a = time_delta, 
-                    "percnt"_a = percentage_time, "counter"_a = nCalls);
+        void print(std::ostream& out, const std::string& name, int level, delta_type total, size_t nameWidth, size_t nCallsWidth, size_t indentLevel) const {
             
-            if (children.size()) {
-                delta_type val = time_delta - children_time();
-                percentage_time = 100.0 * val / total;
-                std::string str = "self";
-                fmt::print(out, format_string,
-                    "digits"_a = Counter::digits(),
-                    "level"_a = level + indentLevel/2, 
-                    "width"_a = width - level - str.size() - indentLevel/2, 
-                    "units"_a = Counter::units(), 
-                    "name"_a = str, 
-                    "pad"_a = "", "time"_a = time_delta, 
-                    "percnt"_a = percentage_time, "counter"_a = nCalls);
+            auto formatted_line = [&]( std::string nameString, delta_type time_value, size_t indenting ) -> std::string {
+                delta_type percentage_time = 100 * time_value / total;
+
+                std::ostringstream formatted;
+                formatted << "[" 
+                          << std::setw(level + indenting) << std::right << ""                                         // Indenting
+                          << nameString << ":"                                                                        // Name text
+                          << std::setw(nameWidth - level - nameString.size() - indenting) << std::right << ""         // Padding
+                          << std::setw(15) << std::fixed << std::setprecision(2) << time_value << Counter::units()    // Time
+                          << "]"
+
+                          << " [nCalls " << std::setw(nCallsWidth) << std::right  << nCalls << "]"               
+
+                          << " ("        << std::setw(6) << std::right << std::fixed << std::setprecision(2) << percentage_time << "%)\n";
+
+                return formatted.str();
+            };
+
+
+            // Total time
+            out << formatted_line( name, time_delta, 0 );
+
+            // Untimed sections
+            if (!children.empty()) {
+                delta_type delta_untimed = time_delta - children_time();
+                out << formatted_line( "Untimed", delta_untimed, indentLevel );
             }
 
-            for (auto& [childName, child] : children)
-                child.print(out, childName, level + indentLevel, total, width, indentLevel);
+            // Timed sections
+            for (const auto& [childName, child] : children)
+                child.print(out, childName, level + indentLevel, total, nameWidth, nCallsWidth, indentLevel);
         }
 
-        void print_fmt(std::ostream& out, const std::string& name, int level, delta_type total, size_t width, size_t indentLevel) const {
-            using namespace fmt::literals;
-            auto percentage_time = 100 * time_delta / total;
-            constexpr auto format_string = "[{pad:>{level}}{name}:{pad:>{width}}{time:>15.{digits}f}{units}] [nCalls {counter}] ({percnt:>6.2f}%)\n"; 
-            fmt::print(out, format_string,
-                    "digits"_a = Counter::digits(),
-                    "level"_a = level, 
-                    "width"_a = width - level - name.size(), 
-                    "units"_a = Counter::units(), 
-                    "name"_a = name, 
-                    "pad"_a = "", "time"_a = time_delta, 
-                    "percnt"_a = percentage_time, "counter"_a = nCalls);
-
-            if (children.size()) {
-                delta_type val = time_delta - children_time();
-                percentage_time = 100.0 * val / total;
-                std::string str = "self";
-                fmt::print(out, format_string,
-                    "digits"_a = Counter::digits(),
-                    "level"_a = level + indentLevel/2, 
-                    "width"_a = width - level - str.size() - indentLevel/2, 
-                    "units"_a = Counter::units(), 
-                    "name"_a = str, 
-                    "pad"_a = "", "time"_a = time_delta, 
-                    "percnt"_a = percentage_time, "counter"_a = nCalls);
-            }
-
-            for (auto& [childName, child] : children)
-                child.print(out, childName, level + indentLevel, total, width, indentLevel);
-        }
 
         size_t total_width(const std::string &name, int level, size_t indentLevel) const {
             size_t w = name.size() + level;
             for(auto const& [childName, child] : children)
                 w = std::max(w, child.total_width(childName, level + indentLevel, indentLevel));
+            return w;
+        }
+
+        size_t num_digits( size_t num ) const {
+            if ( num/10 == 0 )
+                return 1;
+            return 1 + num_digits(num / 10);
+        }
+
+        size_t nCalls_width() const {
+            size_t w = num_digits( nCalls );
+            for(auto const& [childName, child] : children)
+                w = std::max( w, child.nCalls_width() );
             return w;
         }
     };
@@ -165,7 +149,7 @@ private:
     void print(std::ostream &out) const {
         if (m_stack.back() != &m_root)
             out << "Warning! Profile is incomplete.\n";
-        m_root.print(out, m_name, 0, m_root.time_delta, m_root.total_width(m_name, 0, m_indentLevel), m_indentLevel);
+        m_root.print(out, m_name, 0, m_root.time_delta, m_root.total_width(m_name, 0, m_indentLevel), m_root.nCalls_width(), m_indentLevel);
     }
 
     friend std::ostream& operator<<(std::ostream &out, const profiler &prof) {

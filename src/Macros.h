@@ -11,7 +11,7 @@
 #   endif
 
     namespace PROF {
-        inline profiler<perf_counter::clock<time_units::SECONDS>> prof;
+        inline profiler<perf_counter::clock<time_units::SECONDS>> prof("CFD Profiling");
     }
 
 #else

@@ -63,7 +63,6 @@ endif()
 
 # Add libraries
 include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings
-add_subdirectory(libraries/fmt-10.0.0)
 
 # Eigen library, need to do it this way to not get warnings from it
 add_library(eigen INTERFACE)

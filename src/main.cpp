@@ -15,7 +15,6 @@
 #include "Solver/Solver.h"
 
 #include <iostream>
-#include <fmt/core.h>
 
 int main(int argc, char const *argv[])
 {
@@ -83,7 +82,7 @@ int main(int argc, char const *argv[])
     \*-------------------------------------------------------------------------------------*/
 
 
-    // Display profiling information
+    // Display profiling info to terminal and write to file
     #ifdef CFD_PROFILING
         std::cout << PROF::prof;
     #endif
