@@ -730,6 +730,9 @@ namespace
         // Residual history filename
         inputData.residualHistoryFilename = outputTree.get<std::string>( "residualHistoryFilename" );
 
+        // Profiling information filename
+        inputData.profilingFilename = outputTree.get<std::string>( "profilingFilename" );
+
         // Field output filename
         inputData.fieldOutputFilename = outputTree.get<std::string>( "fieldOutputFilename" );
 

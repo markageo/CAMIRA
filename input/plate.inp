@@ -136,8 +136,9 @@ Solver {
 Output {
 
     residualHistoryFilename = "residual_history.csv"
-    fieldOutputFilename = "fields.vtk"
-    fieldWriteInterval = 0
+    profilingFilename       = "output/profiling.dat"
+    fieldOutputFilename     = "fields.vtk"
+    fieldWriteInterval      = 0
 
     Monitors {
         Probe {
