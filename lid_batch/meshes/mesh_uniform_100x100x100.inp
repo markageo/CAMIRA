@@ -1,0 +1,31 @@
+// Mesh for lid driven cavity
+
+Mesh {
+
+    domain = (1, 1, 1)
+
+    Grid x {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 100
+            biasFactor = 1
+        }
+    }
+
+    Grid y {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 100
+            biasFactor = 1
+        }
+    }
+
+    Grid z {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 100
+            biasFactor = 1
+        }
+    }
+}
+

@@ -1,0 +1,114 @@
+// Lid driven cavity
+// This is intended to be used with a shell script for case automation, and is not a valid input file otherwise.
+// Uses of $KEYWORD are where the input file is intended to be modified by shell script.
+
+Model {
+    rho  = 1
+    nu   = $NU
+}
+
+#include "$MESH_FILENAME"
+
+InitialConditions
+{
+    u = 0
+    v = 0
+    w = 0
+    p = 0
+}
+
+
+BoundaryConditions
+{
+    // Wall
+    +x {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -x {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Driven
+    +y {
+        u = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    +z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+}
+
+
+Solver {
+
+    Schemes {
+
+        linearisation           = Picard
+        momentumInterpolation   = implicit
+        advectionScheme         = upwind
+        faceInterpolationScheme = weightedLinear
+
+        implicitMomentumRelaxation = (1, 1, 1)
+        implicitPressureRelaxation = 1
+
+        maxOuterIterations = 10000
+        maxOuterResiduals = 1e-5
+
+    }
+    
+    LinearSolver {
+
+        type = SUGS
+        maxIterations = 1
+        maxResiduals = 1e-1
+
+        planeSweepDirection = $PLANE_SWEEP_DIRECTION
+        lineSweepDirection = $LINE_SWEEP_DIRECTION
+
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
+
+    }
+
+}
+
+
+Output {
+
+    residualHistoryFilename = "$RESIDUAL_HISTORY_FILENAME"
+    profilingFilename       = "$PROFILING_FILENAME"
+    fieldOutputFilename     = "$FIELD_OUTPUT_FILENAME"
+    fieldWriteInterval      = 0
+
+}
