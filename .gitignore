@@ -12,5 +12,7 @@ tests/fv_coefficients/output/*
 *.csv
 *.dat
 
+lid_batch/results
+
 perf.data
 perf.data.old
