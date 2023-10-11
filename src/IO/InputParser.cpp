@@ -157,7 +157,7 @@ class ReaderStream
             DataState dataState = Unquoted;
             bool keepReadingLine = true;
 
-            for ( /* NULL */ ; m_linePos != m_inputLine.end() && keepReadingLine; m_linePos++) {
+            while ( m_linePos != m_inputLine.end() && keepReadingLine ) {
                 
                 switch ( dataState ) {
                     case Quoted:
@@ -192,6 +192,10 @@ class ReaderStream
                         data += *m_linePos;
                         break;
                 }
+
+                m_linePos++;
+                if ( dataState == Unquoted )
+                    SkipWhitespace();
 
             }
             SkipWhitespace();
