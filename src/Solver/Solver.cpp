@@ -157,6 +157,7 @@ void SweepSolve( FieldData<Tensor3D> &fields,
         if ( writeFields && (nOuterIterations % inputData.fieldWriteInterval) == 0 ) {
             fieldWriter.WriteData( nOuterIterations );
         }   
+        
     }
     TOC()
 
