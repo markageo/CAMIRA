@@ -117,6 +117,12 @@ void SweepSolve( FieldData<array3D> &fields,
             break;
         }
 
+        if ( nOuterIterations + 1 > maxOuterIterations ) {
+            fieldWriter.WriteData( nOuterIterations );
+            std::cout << "*** REACHED ITERATION LIMIT ***" << "\n\n";
+            break;
+        }
+
         if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
             fieldWriter.WriteData( nOuterIterations );
             std::cout << "*** SOLUTION CONVERGED ***" << "\n\n";
@@ -128,9 +134,9 @@ void SweepSolve( FieldData<array3D> &fields,
             fieldWriter.WriteData( nOuterIterations );
         }
         TOC()
-        
 
     }
+
     TOC()
 
 
