@@ -223,6 +223,165 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
 }
 
 
+
+// Calculate the local discrete equation residual field
+template< MomentumInterpolation MI,
+          Linearisation LI > [[ maybe_unused ]]
+inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fields,
+                                                  const FVCoefficients &fvCoeffs,
+                                                  const Tensor3D &mask )
+{
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+
+    FieldData<Tensor3D> residuals( Tensor3D( fvCoeffs.nCells[X], fvCoeffs.nCells[Y], fvCoeffs.nCells[Z] ) );
+    ForAllFieldData( [&] (intType f) {
+        residuals[f].setZero();
+    } );
+
+    for ( intType k = 0; k != fvCoeffs.nCells[Z]; k++ ) {
+        for ( intType j = 0; j != fvCoeffs.nCells[Y]; j++ ) {
+            for ( intType i = 0; i != fvCoeffs.nCells[X]; i++ ) {
+
+                intType ig{ G(i) }, jg{ G(j) }, kg{ G(k) };
+
+                // U momentum
+                floatType newtonStencilX = 0.0f;
+                if constexpr ( LI == Linearisation::Newton ) {
+                    newtonStencilX = fvCoeffs.Mom[X].AU[Y][n](i, j, k) * fields.U[Y]( ig  , jg+1, kg  )
+                                   + fvCoeffs.Mom[X].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  )
+                                   + fvCoeffs.Mom[X].AU[Y][s](i, j, k) * fields.U[Y]( ig  , jg-1, kg  )
+
+                                   + fvCoeffs.Mom[X].AU[Z][t](i, j, k) * fields.U[Z]( ig  , jg  , kg+1)
+                                   + fvCoeffs.Mom[X].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  )
+                                   + fvCoeffs.Mom[X].AU[Z][b](i, j, k) * fields.U[Z]( ig  , jg  , kg-1);
+                }
+                residuals.U[X](i, j, k) += mask(i, j, k)
+                                        * abs( 
+                                                      fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) 
+                                                    + fvCoeffs.Mom[X].AU[X][n](i, j, k) * fields.U[X]( ig  , jg+1, kg  ) 
+                                                    + fvCoeffs.Mom[X].AU[X][e](i, j, k) * fields.U[X]( ig+1, jg  , kg  ) 
+                                                    + fvCoeffs.Mom[X].AU[X][s](i, j, k) * fields.U[X]( ig  , jg-1, kg  ) 
+                                                    + fvCoeffs.Mom[X].AU[X][w](i, j, k) * fields.U[X]( ig-1, jg  , kg  ) 
+                                                    + fvCoeffs.Mom[X].AU[X][t](i, j, k) * fields.U[X]( ig  , jg  , kg+1) 
+                                                    + fvCoeffs.Mom[X].AU[X][b](i, j, k) * fields.U[X]( ig  , jg  , kg-1) 
+
+                                                    + fvCoeffs.Mom[X].AP[e](i) * fields.P( ig+1, jg  , kg  )
+                                                    + fvCoeffs.Mom[X].AP[p](i) * fields.P( ig  , jg  , kg  )
+                                                    + fvCoeffs.Mom[X].AP[w](i) * fields.P( ig-1, jg  , kg  )
+
+                                                    + newtonStencilX
+
+                                                    - fvCoeffs.Mom[X].B(i, j, k)  );
+
+
+
+                // V momentum
+                floatType newtonStencilY = 0.0f;
+                if constexpr ( LI == Linearisation::Newton ) {
+                    newtonStencilY = fvCoeffs.Mom[Y].AU[X][e](i, j, k) * fields.U[X]( ig+1, jg  , kg  )
+                                   + fvCoeffs.Mom[Y].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  )
+                                   + fvCoeffs.Mom[Y].AU[X][w](i, j, k) * fields.U[X]( ig-1, jg  , kg  )
+                    
+                                   + fvCoeffs.Mom[Y].AU[Z][t](i, j, k) * fields.U[Z]( ig  , jg  , kg+1)
+                                   + fvCoeffs.Mom[Y].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  )
+                                   + fvCoeffs.Mom[Y].AU[Z][b](i, j, k) * fields.U[Z]( ig  , jg  , kg-1);      
+                }
+                residuals.U[Y](i, j, k) += mask(i, j, k) 
+                                        * abs( 
+                                                      fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) 
+                                                    + fvCoeffs.Mom[Y].AU[Y][n](i, j, k) * fields.U[Y]( ig  , jg+1, kg  ) 
+                                                    + fvCoeffs.Mom[Y].AU[Y][e](i, j, k) * fields.U[Y]( ig+1, jg  , kg  ) 
+                                                    + fvCoeffs.Mom[Y].AU[Y][s](i, j, k) * fields.U[Y]( ig  , jg-1, kg  ) 
+                                                    + fvCoeffs.Mom[Y].AU[Y][w](i, j, k) * fields.U[Y]( ig-1, jg  , kg  ) 
+                                                    + fvCoeffs.Mom[Y].AU[Y][t](i, j, k) * fields.U[Y]( ig  , jg  , kg+1) 
+                                                    + fvCoeffs.Mom[Y].AU[Y][b](i, j, k) * fields.U[Y]( ig  , jg  , kg-1) 
+
+                                                    + fvCoeffs.Mom[Y].AP[n](j) * fields.P( ig  , jg+1, kg  )
+                                                    + fvCoeffs.Mom[Y].AP[p](j) * fields.P( ig  , jg  , kg  )
+                                                    + fvCoeffs.Mom[Y].AP[s](j) * fields.P( ig  , jg-1, kg  )
+
+                                                    + newtonStencilY
+
+                                                    - fvCoeffs.Mom[Y].B(i, j, k)  );
+
+
+                // W momentm
+                floatType newtonStencilZ = 0.0f;
+                if constexpr ( LI == Linearisation::Newton ) {
+                    newtonStencilZ = fvCoeffs.Mom[Z].AU[X][e](i, j, k) * fields.U[X]( ig+1, jg  , kg  )
+                                   + fvCoeffs.Mom[Z].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  )
+                                   + fvCoeffs.Mom[Z].AU[X][w](i, j, k) * fields.U[X]( ig-1, jg  , kg  )
+                    
+                                   + fvCoeffs.Mom[Z].AU[Y][n](i, j, k) * fields.U[Y]( ig  , jg+1, kg  )
+                                   + fvCoeffs.Mom[Z].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  )
+                                   + fvCoeffs.Mom[Z].AU[Y][s](i, j, k) * fields.U[Y]( ig  , jg-1, kg  );    
+                }
+                residuals.U[Z](i, j, k) += mask(i, j, k)
+                                        * abs( 
+                                                      fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) 
+                                                    + fvCoeffs.Mom[Z].AU[Z][n](i, j, k) * fields.U[Z]( ig  , jg+1, kg  ) 
+                                                    + fvCoeffs.Mom[Z].AU[Z][e](i, j, k) * fields.U[Z]( ig+1, jg  , kg  ) 
+                                                    + fvCoeffs.Mom[Z].AU[Z][s](i, j, k) * fields.U[Z]( ig  , jg-1, kg  ) 
+                                                    + fvCoeffs.Mom[Z].AU[Z][w](i, j, k) * fields.U[Z]( ig-1, jg  , kg  ) 
+                                                    + fvCoeffs.Mom[Z].AU[Z][t](i, j, k) * fields.U[Z]( ig  , jg  , kg+1) 
+                                                    + fvCoeffs.Mom[Z].AU[Z][b](i, j, k) * fields.U[Z]( ig  , jg  , kg-1) 
+
+                                                    + fvCoeffs.Mom[Z].AP[t](k) * fields.P( ig  , jg  , kg+1)
+                                                    + fvCoeffs.Mom[Z].AP[p](k) * fields.P( ig  , jg  , kg  )
+                                                    + fvCoeffs.Mom[Z].AP[b](k) * fields.P( ig  , jg  , kg-1)
+
+                                                    + newtonStencilZ
+
+                                                    - fvCoeffs.Mom[Z].B(i, j, k)  );
+
+
+                // Continuity 
+                floatType pressureWideStencil = 0.0f;
+                if constexpr ( MI == MomentumInterpolation::Implicit ) {
+                    pressureWideStencil = fvCoeffs.Cont.AP[nn](i, j, k) * fields.P( ig  , jg+2, kg  ) 
+                                        + fvCoeffs.Cont.AP[ee](i, j, k) * fields.P( ig+2, jg  , kg  ) 
+                                        + fvCoeffs.Cont.AP[ss](i, j, k) * fields.P( ig  , jg-2, kg  ) 
+                                        + fvCoeffs.Cont.AP[ww](i, j, k) * fields.P( ig-2, jg  , kg  ) 
+                                        + fvCoeffs.Cont.AP[tt](i, j, k) * fields.P( ig  , jg  , kg+2) 
+                                        + fvCoeffs.Cont.AP[bb](i, j, k) * fields.P( ig  , jg  , kg-2);
+                }
+                residuals.P(i, j, k) += mask(i, j, k) 
+                                     * abs( 
+                                           fvCoeffs.Cont.AU[X][e](i) * fields.U[X]( ig+1, jg  , kg  )
+                                         + fvCoeffs.Cont.AU[X][p](i) * fields.U[X]( ig  , jg  , kg  )
+                                         + fvCoeffs.Cont.AU[X][w](i) * fields.U[X]( ig-1, jg  , kg  )
+
+                                         + fvCoeffs.Cont.AU[Y][n](j) * fields.U[Y]( ig  , jg+1, kg  )
+                                         + fvCoeffs.Cont.AU[Y][p](j) * fields.U[Y]( ig  , jg  , kg  )
+                                         + fvCoeffs.Cont.AU[Y][s](j) * fields.U[Y]( ig  , jg-1, kg  )
+
+                                         + fvCoeffs.Cont.AU[Z][t](k) * fields.U[Z]( ig  , jg  , kg+1)
+                                         + fvCoeffs.Cont.AU[Z][p](k) * fields.U[Z]( ig  , jg  , kg  )
+                                         + fvCoeffs.Cont.AU[Z][b](k) * fields.U[Z]( ig  , jg  , kg-1)
+
+                                         + fvCoeffs.Cont.AP[p](i, j, k) * fields.P( ig  , jg  , kg  )
+                                         + fvCoeffs.Cont.AP[n](i, j, k) * fields.P( ig  , jg+1, kg  ) 
+                                         + fvCoeffs.Cont.AP[e](i, j, k) * fields.P( ig+1, jg  , kg  ) 
+                                         + fvCoeffs.Cont.AP[s](i, j, k) * fields.P( ig  , jg-1, kg  ) 
+                                         + fvCoeffs.Cont.AP[w](i, j, k) * fields.P( ig-1, jg  , kg  ) 
+                                         + fvCoeffs.Cont.AP[t](i, j, k) * fields.P( ig  , jg  , kg+1) 
+                                         + fvCoeffs.Cont.AP[b](i, j, k) * fields.P( ig  , jg  , kg-1)
+
+                                         + pressureWideStencil
+                                        
+                                         - fvCoeffs.Cont.B(i, j, k) );
+
+            }
+        }
+    }
+
+
+    return residuals;
+}
+
+
+
 // Calculate global mass flux residual at the domain boundary
 [[ maybe_unused ]]
 inline floatType BoundaryMassFluxResidual( const EnumVector<Axis, Tensor3D> &faceFluxes,
