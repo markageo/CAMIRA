@@ -568,7 +568,7 @@ void TransformMeshToUserCoordinates( Mesh &mesh,
 
 
 void TransformFieldToUserCoordinates( FieldData<Tensor3D> &fieldData,
-                                     const AxisTransformationMap &axisTransformation )
+                                      const AxisTransformationMap &axisTransformation )
 {
     Eigen::array<intType , Axis::count> shuffleArray;
     Eigen::array<bool, Axis::count> reverseArray;
