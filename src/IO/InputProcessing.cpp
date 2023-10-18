@@ -361,7 +361,10 @@ namespace
         }
 
         // Add the directory to the input filename
-        filename = inputFileDirectory + "/" + filename;
+        if ( !inputFileDirectory.empty() ){
+            filename = inputFileDirectory + "/" + filename;
+        }
+            
 
         // Read in profile data from csv file
         std::vector< std::vector< std::string > > profileData = ReadCSV( filename );
