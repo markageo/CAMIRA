@@ -41,8 +41,6 @@ void SweepSolve( FieldData<Tensor3D> &fields,
 
     // Immersed boundary
     IBData ibData = CreateImmersedBoundaryData( inputData, mesh );
-    MaskFields( fields, ibData.mask );
-    SetGhostCellValues( fields, ibData );
 
     // Finite Volume
     EnumVector<Axis, Tensor3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
@@ -89,8 +87,6 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     {
         linearSolver.UpdateState();
         linearSolver.Solve();
-
-        SetGhostCellValues( fields, ibData );
 
         UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
         if constexpr ( isNewtonLinearisation ) {

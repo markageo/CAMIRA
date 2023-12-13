@@ -5,29 +5,37 @@
 #include "../Geometry/Geometry.h"
 #include "../Tools/FieldProbe.h"
 
+#include <vector>
+
 namespace CFD {
 
 enum class CellType {
-    Fluid = 0, 
-    Ghost = 1, 
-    Solid = 2
+    Fluid    = 0, 
+    Solid    = 1
 };
 using CellIDTensor3D = Eigen::Tensor< CellType, 3 >;
 
 
 // --------------------------------------- Definition in IBData.cpp -------------------------------------- //
 
-struct IBGhostCell {
-    FieldProbe fieldProbe;
-    TensorIndex3D ghostCellIndex;
-    floatType extrapImageVelocityCoeff, extrapImageGradientCoeff;
-    fVector3 normalUnitVector;
+struct IBCell {
+    TensorIndex3D cellIndex;
+    
+    struct FaceData {
+        TransportCoefficients::ENUMDATA face;
+        floatType     interpCoeffCell,    // Interpolation coeff that multiplies with cell value
+                      interpCoeffIB;      // Interpolation coefficient that multiplies with the IB value
+        floatType     extrapFactor_p,     // Boundary cell extrapolation coefficient 
+                      extrapFactor_a;     // One from boundary cell extrapolation coefficient    
+        TensorIndex3D adjacentCellIndex;  // One from boundary cell index, for extrapolation 
+    };
+    std::vector< FaceData > facesData;
+       
 };
 
 struct IBData {
-    std::vector< IBGhostCell > ghostCells;
+    std::vector< IBCell > IBCells;
     Tensor3D mask;
-    CellIDTensor3D cellID;
 };
 
 
@@ -35,21 +43,7 @@ IBData CreateImmersedBoundaryData( const InputData &, const Mesh & );
 
 
 
-
-
-// --------------------------------- Definition in IBGeometry.cpp -------------------------------------- //
-
-// Create and ID array to identify different cells in immersed boundary
-CellIDTensor3D TagCells( const Mesh &, const Polyhedron & );
-
-
-
-
-
 // ------------------------------- Definition in IBSolverFunctions.cpp --------------------------------- //
-
-// Set ghost cell values in velocity fields
-void SetGhostCellValues( FieldData<Tensor3D> &, const IBData & );
 
 
 // Set all solid cells in the mask to zero 
