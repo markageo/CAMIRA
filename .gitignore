@@ -1,8 +1,9 @@
 main
 test
 
-build/*
-debug/*
+build
+debug
+output
 tests/mesh/output/*
 tests/face_velocities/output/*
 tests/fv_coefficients/output/*

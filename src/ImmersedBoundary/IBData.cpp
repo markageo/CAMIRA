@@ -15,6 +15,7 @@
 #include <CGAL/AABB_face_graph_triangle_primitive.h>
 #include <CGAL/algorithm.h>
 #include <CGAL/Side_of_triangle_mesh.h>
+#include <CGAL/squared_distance_3.h> 
 
 #include <cmath>
 
@@ -24,22 +25,72 @@ namespace CFD
 namespace 
 {
 
-// Find closes point on surface of polyhedron to the query point
-fVector3 ClosestBoundaryPoint( const Polyhedron &polyhedron, 
-                               const fVector3 &queryPoint) 
+// Determines if query point is inside given polyhedron geometry
+bool PointInside( const Polyhedron &polyhedron, 
+                  const floatType xq, 
+                  const floatType yq, 
+                  const floatType zq ) 
 {
     using Point        = Polyhedron::Point_3;
     using Primitive    = CGAL::AABB_face_graph_triangle_primitive<Polyhedron>;
     using Traits       = CGAL::AABB_traits<CGAL_Kernel, Primitive>;
     using Tree         = CGAL::AABB_tree<Traits>;
+    using Point_inside = CGAL::Side_of_triangle_mesh<Polyhedron, CGAL_Kernel>;
 
     // Construct AABB tree with a KdTree
     Tree tree(faces(polyhedron).first, faces(polyhedron).second, polyhedron);
     tree.accelerate_distance_queries();
 
-    Point closest_point = tree.closest_point( Point( queryPoint(0), queryPoint(1), queryPoint(2)) );
+    // Initialize the point-in-polyhedron tester
+    Point_inside inside_tester(tree);
+    
+    // Determine the side and return true if inside!
+    return inside_tester( Point( xq, yq, zq ) ) == CGAL::ON_BOUNDED_SIDE;
+}
 
-    return { closest_point[0], closest_point[1], closest_point[2] };
+
+
+// Returns the distance to the nearest intersection from the given point in the direction of the given ray.
+// https://stackoverflow.com/questions/69953358/to-calculate-intersections-between-a-ray-and-a-mesh
+floatType GetBoundaryDistance( const Polyhedron &polyhedron,
+                               const fVector3 &queryPointCoords,
+                               const fVector3 &rayDirection ) 
+{
+    using Point            = Polyhedron::Point_3;
+    using Vector           = CGAL_Kernel::Vector_3;
+    using Primitive        = CGAL::AABB_face_graph_triangle_primitive<Polyhedron>;
+    using Traits           = CGAL::AABB_traits<CGAL_Kernel, Primitive>;
+    using Tree             = CGAL::AABB_tree<Traits>;
+    using Ray              = CGAL_Kernel::Ray_3;    
+    using Ray_intersection = boost::optional<Tree::Intersection_and_primitive_id<Ray>::Type>;
+
+    Tree tree(faces(polyhedron).first, faces(polyhedron).second, polyhedron);
+    tree.accelerate_distance_queries();
+
+    Vector rayOrientation( rayDirection(0), rayDirection(1), rayDirection(2) );
+    Point  rayOrigin( queryPointCoords(0), queryPointCoords(1), queryPointCoords(2) );
+    Ray    ray( rayOrigin, rayOrientation );
+    std::vector<Ray_intersection> intersections;
+    tree.all_intersections( ray, std::back_inserter( intersections ) );
+
+    if ( intersections.empty() )
+        return 0;
+
+    floatType closestDistance = 0.0;
+    for ( auto it = intersections.begin(); it != intersections.end(); it++ ) {
+        auto intersection = (*it)->first;
+
+        if ( Point* p = boost::get<Point>(&intersection) ) {
+
+            floatType distance = CGAL::squared_distance( *p, rayOrigin );
+            if ( it == intersections.begin() || distance < closestDistance ) {
+                closestDistance = distance;
+            } 
+
+        }
+
+    }
+    return closestDistance;
 }
 
 
@@ -64,121 +115,214 @@ bool OutOfBounds( const TensorIndex3D &index,
 
 
 
-floatType DiagonalCellDistance( const TensorIndex3D &cellIndex,
-                                const Mesh &mesh )
+// Marks faces as either being in fluid or solid region
+EnumVector<Axis, CellIDTensor3D> TagCellFaces( const Mesh &mesh, 
+                                               const Polyhedron &geometry )
 {
-    floatType distanceSq = 0.0;
-    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        distanceSq += pow( mesh.cellLengths[axis]( cellIndex[axis] ), 2 );
+    using enum Axis::ENUMDATA;
+
+    EnumVector<Axis, CellIDTensor3D> faceIDs( { CellIDTensor3D(mesh.nFacesNormal[X](X), mesh.nFacesNormal[X](Y), mesh.nFacesNormal[X](Z)),
+                                                CellIDTensor3D(mesh.nFacesNormal[Y](X), mesh.nFacesNormal[Y](Y), mesh.nFacesNormal[Y](Z)),
+                                                CellIDTensor3D(mesh.nFacesNormal[Z](X), mesh.nFacesNormal[Z](Y), mesh.nFacesNormal[Z](Z)) } );
+
+    // Iterate though all cell faces
+    EnumFor<Axis>( [&] (Axis::ENUMDATA faceNormal) {
+        
+        for (intType k = 0; k != mesh.nFacesNormal[faceNormal](Z); k++) {
+            for (intType j = 0; j != mesh.nFacesNormal[faceNormal](Y); j++) {
+                for (intType i = 0; i != mesh.nFacesNormal[faceNormal](X); i++) {
+
+                    floatType xq = mesh.cellFaces[X](i),
+                              yq = mesh.cellFaces[Y](j),
+                              zq = mesh.cellFaces[Z](k);
+
+                    if ( PointInside( geometry, xq, yq, zq ) ) {
+                        faceIDs[faceNormal](i, j, k) = CellType::Solid;
+                    } else {
+                        faceIDs[faceNormal](i, j, k) = CellType::Fluid;
+                    }
+
+                }
+            }
+        }
+
     } );
-    return sqrt( distanceSq );
+
 }
 
 
 
-// Determine the length of the image point from the immersed boundary. We take this as the maximum 
-// diagonal length of the cells surrounging the ghost cell
-floatType GetImagePointDistance( const TensorIndex3D &ghostPointIndex, 
-                                 const Mesh &mesh )
+// Create a mask array for cell centers
+Tensor3D CreateCellMask( const EnumVector<Axis, CellIDTensor3D> &cellFaceIDs, 
+                         const Mesh &mesh )
 {
-    floatType maxValue = 0.0f;
-    std::array<intType, 3> deltaIndex = {-1, 0, 1};
+    using enum Axis::ENUMDATA;
 
-    for ( intType dk : deltaIndex ) {
-        for ( intType dj : deltaIndex ) {
-            for ( intType di : deltaIndex ) {
+    Tensor3D mask = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setConstant( 1.0f );
 
-                bool isNeighbour = ( dk != 0 ) || ( dj != 0 ) || ( di != 0 );
-                if ( !isNeighbour ) {
-                    continue;
-                }
+    // Iterate through each cell
+    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
+        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
+            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
 
-                TensorIndex3D neighbourIndex = ghostPointIndex;
-                neighbourIndex[0] += di;
-                neighbourIndex[1] += dj;
-                neighbourIndex[2] += dk;
+                // Mask it if the current cell has any faces which are tagged as solid
+                for ( intType a = 0; a != Axis::count; a++ ) {
+                    Axis::ENUMDATA faceNormal = static_cast<Axis::ENUMDATA>( a );
 
-                if ( OutOfBounds( neighbourIndex, mesh ) ) {
-                    continue;
-                }
+                    TensorIndex3D loFaceIndex = {i, j, k},
+                                  hiFaceIndex = {i, j, k};
+                    hiFaceIndex[faceNormal] += 1;
 
-                floatType diagonalCellDistance = DiagonalCellDistance( neighbourIndex, mesh ); 
+                    if ( cellFaceIDs[faceNormal](hiFaceIndex) == CellType::Solid || cellFaceIDs[faceNormal](loFaceIndex) == CellType::Solid ) {
+                        mask(i, j, k) = 0.0f;
+                        break;
+                    }
 
-                if ( diagonalCellDistance >= maxValue ) {
-                    maxValue = diagonalCellDistance;
                 }
 
             }
         }
     }
 
-    return maxValue;
+}
+
+
+
+// A wrapper for the find_if function which returns iterator to cell element in IBData object that corresponds to the given index. Returns
+// one past end iterator if does not exist.
+std::vector<IBCell>::iterator FindIBCell( IBData ibData, 
+                                          const TensorIndex3D forcedCellIndex )
+{
+    std::vector<IBCell>::iterator ibCellsIterator = std::find_if( ibData.IBCells.begin(), ibData.IBCells.end(), 
+                                                                  [&](IBCell ibCell) { return ( ibCell.cellIndex == forcedCellIndex ); } );
+
+    return ibCellsIterator;
+}
+
+
+
+// Sets face data information for a particular boundary cell that will contain a forcing term.
+void AddIBDataFace( IBData &ibData, 
+                    const TensorIndex3D &positiveSideFaceIndex, 
+                    const TensorIndex3D &forcedCellIndex, 
+                    const intType directionIndex, 
+                    const Axis::ENUMDATA faceNormal, 
+                    const Mesh &mesh, 
+                    const Polyhedron &geometry )
+{
+    using enum Axis::ENUMDATA;
+
+    // Check if cell is already inside the IBCells vector
+    std::vector<IBCell>::iterator ibCellsIterator = FindIBCell( ibData, forcedCellIndex );
+
+    if ( ibCellsIterator == ibData.IBCells.end() ) {
+        ibData.IBCells.emplace_back();
+        ibCellsIterator = ibData.IBCells.end() - 1;
+        ibCellsIterator->cellIndex = forcedCellIndex;
+    } 
+
+
+    // Create new element for this face
+    ibCellsIterator->facesData.emplace_back();
+    IBCell::FaceData &faceData = ibCellsIterator->facesData.back();
+
+
+    // Add the face coefficient 
+    if ( directionIndex == 1 ) {
+        faceData.face = LUT::LoCoeff[ faceNormal ];
+    } else if ( directionIndex == -1 ) {
+        faceData.face = LUT::HiCoeff[ faceNormal ];
+    }
+
+
+    // Index of adject face for extrapolation
+    faceData.adjacentCellIndex = forcedCellIndex;
+    faceData.adjacentCellIndex[faceNormal] += directionIndex;
+
+    // Distance of forced face and cell to boundary
+    fVector3 queryFacePointCoords( mesh.cellFaces[X](positiveSideFaceIndex[X]),
+                                   mesh.cellFaces[Y](positiveSideFaceIndex[Y]),
+                                   mesh.cellFaces[Z](positiveSideFaceIndex[Z]) );
+    fVector3 rayDirection( 0, 0, 0 );
+    rayDirection[ faceNormal ] = - directionIndex;
+
+    floatType ibFaceDistance = GetBoundaryDistance( geometry, queryFacePointCoords, rayDirection );
+    floatType ibCellDistance = ibFaceDistance + mesh.cellLengths[faceNormal]( forcedCellIndex[faceNormal] ) / 2.0;
+
+
+    // Interpolation coefficients
+    floatType cellHalfWidth  = mesh.cellLengths[ faceNormal ]( forcedCellIndex[faceNormal]);
+    faceData.interpCoeffCell = ibFaceDistance / ( cellHalfWidth + ibFaceDistance );
+    faceData.interpCoeffIB   = cellHalfWidth  / ( cellHalfWidth + ibFaceDistance );
+
+    // Extrapolation coefficients
+    floatType cellCenterSpacing = mesh.cellLengths[faceNormal]( forcedCellIndex[faceNormal] ) / 2.0 
+                                + mesh.cellLengths[faceNormal]( faceData.adjacentCellIndex[faceNormal] ) / 2.0;
+    faceData.extrapFactor_p = ( cellCenterSpacing + ibCellDistance ) / cellCenterSpacing;
+    faceData.extrapFactor_a =  - ibCellDistance / cellCenterSpacing;
 }
 
 
 
 IBData ConstructIBData( const Polyhedron &geometry,
-                        const CellIDTensor3D &cellID, 
                         const Mesh &mesh )
 {
 
     using enum Axis::ENUMDATA;
 
     IBData ibData;
-    ibData.mask = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setConstant( 1.0f );
+    
+    EnumVector<Axis, CellIDTensor3D> cellFaceIDs = TagCellFaces( mesh, geometry );
 
-    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
-        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
-            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
+    ibData.mask = CreateCellMask( cellFaceIDs, mesh );
 
-                if ( cellID(i, j, k) != CellType::Ghost ) {
-                    continue;
+    // Iterate though all cell faces
+    EnumFor<Axis>( [&] (Axis::ENUMDATA faceNormal) {
+        
+        
+        for (intType k = 0; k != mesh.nFacesNormal[faceNormal](Z); k++) {
+            for (intType j = 0; j != mesh.nFacesNormal[faceNormal](Y); j++) {
+                for (intType i = 0; i != mesh.nFacesNormal[faceNormal](X); i++) {
+
+                    if ( cellFaceIDs[faceNormal](i, j, k) == CellType::Fluid )
+                        continue;
+
+
+                    // Forced face on positive side
+                    TensorIndex3D positiveSideFaceIndex = {i, j, k};
+                    positiveSideFaceIndex[faceNormal] += 1;
+
+                    TensorIndex3D positiveForcedCellIndex = positiveSideFaceIndex;
+
+                    intType positiveDirectionIndex = 1; 
+
+                    if ( cellFaceIDs[faceNormal](positiveSideFaceIndex) == CellType::Fluid ) {
+                        AddIBDataFace( ibData, positiveSideFaceIndex, positiveForcedCellIndex, positiveDirectionIndex, faceNormal, mesh, geometry );
+                    }
+
+
+                    // Forced face on negative side
+                    TensorIndex3D negativeSideFaceIndex = {i, j, k};
+                    negativeSideFaceIndex[faceNormal] -= 1;
+
+                    TensorIndex3D negativeForcedCellIndex = negativeSideFaceIndex;
+                    negativeForcedCellIndex[faceNormal] -= 1;
+
+                    intType negativeDirectionIndex = -1; 
+
+                    if ( cellFaceIDs[faceNormal](negativeSideFaceIndex) == CellType::Fluid ) {
+                        AddIBDataFace( ibData, negativeSideFaceIndex, negativeForcedCellIndex, negativeDirectionIndex, faceNormal, mesh, geometry );
+                    }
+
                 }
-
-                ibData.mask(i, j, k) = 0.0f;
-
-                fVector3 ghostPoint = { mesh.cellCenters[X](i), 
-                                        mesh.cellCenters[Y](j),
-                                        mesh.cellCenters[Z](k) };
-                TensorIndex3D ghostPointIndex = {i, j, k};
-
-                // Find coordinates of nearest immersed boundary point
-                fVector3 boundaryPoint = ClosestBoundaryPoint( geometry, ghostPoint );
-
-                // Get the normal vector
-                fVector3 normalVector = boundaryPoint - ghostPoint;
-
-                // Distance from ghost point to boundary
-                floatType ghostPointDistance = normalVector.norm();
-
-                // Determine the distance of the image point from the boundary
-                floatType imagePointDistance = GetImagePointDistance( ghostPointIndex, mesh );
-
-                // Outward pointing unit normal vector
-                fVector3 normalUnitVector = normalVector.normalized();
-
-                // Determine coordinates of image point
-                fVector3 imagePoint = boundaryPoint + imagePointDistance * normalUnitVector;
-
-                // Create the field probe for linear interpolation
-                FieldProbe fieldProbe( mesh, imagePoint.array() );
-
-                // Coefficients for extrapolation from image point to ghost point
-                floatType extrapImageVelocityCoeff = 1.0f - std::pow( ( imagePointDistance + ghostPointDistance ) / imagePointDistance , 2 );
-
-                floatType extrapImageGradientCoeff = imagePointDistance + ghostPointDistance 
-                                                   - std::pow( imagePointDistance + ghostPointDistance , 2 ) / imagePointDistance;
-
-                // Fill up the ghost cell data struct
-                ibData.ghostCells.push_back( { fieldProbe, ghostPointIndex, extrapImageVelocityCoeff, extrapImageGradientCoeff, -normalUnitVector } );
-
             }
         }
-    }
+
+
+    } );
 
     return ibData;
 }
-
 
 }   // end anonymous namespace
 
@@ -198,9 +342,7 @@ IBData CreateImmersedBoundaryData( const InputData &inputData,
     }
 
     Polyhedron P = MakeGeometry( inputData );
-    CellIDTensor3D cellID =  TagCells( mesh, P);
-    ibData = ConstructIBData( P, cellID, mesh );
-    ibData.cellID = cellID;
+    ibData = ConstructIBData( P, mesh );
 
     return ibData;
 }
