@@ -4,6 +4,7 @@
 #include "../Types.h"
 #include "../Geometry/Geometry.h"
 #include "../Tools/FieldProbe.h"
+#include "../FiniteVolume/FiniteVolume.h"
 
 #include <vector>
 
@@ -22,12 +23,14 @@ struct IBCell {
     TensorIndex3D cellIndex;
     
     struct FaceData {
-        TransportCoefficients::ENUMDATA face;
+        Axis::ENUMDATA faceNormal;
+        intType faceIndexOffset;          // Converts cell index to face index. 0: face on low side, 1: face on high side
         floatType     interpCoeffCell,    // Interpolation coeff that multiplies with cell value
                       interpCoeffIB;      // Interpolation coefficient that multiplies with the IB value
         floatType     extrapFactor_p,     // Boundary cell extrapolation coefficient 
                       extrapFactor_a;     // One from boundary cell extrapolation coefficient    
         TensorIndex3D adjacentCellIndex;  // One from boundary cell index, for extrapolation 
+        FieldData<floatType> fieldValues;
     };
     std::vector< FaceData > facesData;
        
@@ -44,6 +47,17 @@ IBData CreateImmersedBoundaryData( const InputData &, const Mesh & );
 
 
 // ------------------------------- Definition in IBSolverFunctions.cpp --------------------------------- //
+
+// Add source terms to finite volume equations which include the effect of the immersed boundary
+void AddIBSourceTerms( FVCoefficients &, const IBData &, const EnumVector<Axis, Tensor3D> &, const FieldData<Tensor3D> &, const Mesh &, const InputData & );
+
+
+// Set the face velocities to their interpolated values according to the immersed boundary
+void SetIBFaceVelocities( EnumVector<Axis, Tensor3D> &, const IBData & );
+
+
+// Re-extrapolate and interpolate new field values onto the forced faces and store them in IBData
+void UpdateForcedFaceFieldValues( IBData &, const FieldData<Tensor3D> & );
 
 
 // Set all solid cells in the mask to zero 

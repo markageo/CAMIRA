@@ -226,12 +226,13 @@ void AddIBDataFace( IBData &ibData,
     ibCellsIterator->facesData.emplace_back();
     IBCell::FaceData &faceData = ibCellsIterator->facesData.back();
 
+    // Face location data relative to forced cell
+    faceData.faceNormal = faceNormal;
 
-    // Add the face coefficient 
     if ( directionIndex == 1 ) {
-        faceData.face = LUT::LoCoeff[ faceNormal ];
+        faceData.faceIndexOffset = 0;           // Zero due to the staggering of face index relative to cell index
     } else if ( directionIndex == -1 ) {
-        faceData.face = LUT::HiCoeff[ faceNormal ];
+        faceData.faceIndexOffset = 1;
     }
 
 
