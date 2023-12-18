@@ -95,26 +95,6 @@ floatType GetBoundaryDistance( const Polyhedron &polyhedron,
 
 
 
-// Check if a given index is within the domain bounds
-bool OutOfBounds( const TensorIndex3D &index,
-                  const Mesh &mesh )
-{
-    // Can't use EnumFor since return statements inside loop
-    for ( int a = 0; a != Axis::count; a++ ) {  
-        Axis::ENUMDATA axis = static_cast<Axis::ENUMDATA>(a);
-
-        if ( index[axis] < 0 )
-            return true;
-
-        if ( index[axis] > mesh.nCells[axis]-1 )
-            return true;
-    }
-
-    return false;
-}
-
-
-
 // Marks faces as either being in fluid or solid region
 EnumVector<Axis, CellIDTensor3D> TagCellFaces( const Mesh &mesh, 
                                                const Polyhedron &geometry )
@@ -147,6 +127,8 @@ EnumVector<Axis, CellIDTensor3D> TagCellFaces( const Mesh &mesh,
         }
 
     } );
+
+    return faceIDs;
 
 }
 
@@ -184,6 +166,7 @@ Tensor3D CreateCellMask( const EnumVector<Axis, CellIDTensor3D> &cellFaceIDs,
         }
     }
 
+    return mask;
 }
 
 
@@ -245,7 +228,7 @@ void AddIBDataFace( IBData &ibData,
                                    mesh.cellFaces[Y](positiveSideFaceIndex[Y]),
                                    mesh.cellFaces[Z](positiveSideFaceIndex[Z]) );
     fVector3 rayDirection( 0, 0, 0 );
-    rayDirection[ faceNormal ] = - directionIndex;
+    rayDirection[ faceNormal ] = - static_cast<floatType>(directionIndex);
 
     floatType ibFaceDistance = GetBoundaryDistance( geometry, queryFacePointCoords, rayDirection );
     floatType ibCellDistance = ibFaceDistance + mesh.cellLengths[faceNormal]( forcedCellIndex[faceNormal] ) / 2.0;
