@@ -208,10 +208,8 @@ floatType HiSideContinuityIBSource( const IBCell::FaceData &faceData,
 
 void AddIBSourceTerms( FVCoefficients &fvCoeffs,
                        const IBData &ibData, 
-                       const EnumVector<Axis, Tensor3D> &faceFluxes,
                        const FieldData<Tensor3D> &fields,
-                       const Mesh &mesh,
-                       const InputData &inputData )
+                       const Mesh &mesh )
 {
 
     // Iterate through each forced cell
@@ -221,9 +219,6 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
 
         // A source term is added for each forced face
         for ( auto &faceData : ibCell.facesData ) {
-
-            intType faceIndexOffset   = faceData.faceIndexOffset;
-            Axis::ENUMDATA faceNormal = faceData.faceNormal;
 
             if ( faceData.faceIndexOffset == 0 ) {          // Forced face on low side
 

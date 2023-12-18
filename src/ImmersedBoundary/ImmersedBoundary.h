@@ -49,7 +49,7 @@ IBData CreateImmersedBoundaryData( const InputData &, const Mesh & );
 // ------------------------------- Definition in IBSolverFunctions.cpp --------------------------------- //
 
 // Add source terms to finite volume equations which include the effect of the immersed boundary
-void AddIBSourceTerms( FVCoefficients &, const IBData &, const EnumVector<Axis, Tensor3D> &, const FieldData<Tensor3D> &, const Mesh &, const InputData & );
+void AddIBSourceTerms( FVCoefficients &, const IBData &, const FieldData<Tensor3D> &, const Mesh & );
 
 
 // Set the face velocities to their interpolated values according to the immersed boundary
