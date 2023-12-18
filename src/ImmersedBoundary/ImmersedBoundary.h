@@ -53,7 +53,7 @@ void AddIBSourceTerms( FVCoefficients &, const IBData &, const EnumVector<Axis, 
 
 
 // Set the face velocities to their interpolated values according to the immersed boundary
-void SetIBFaceVelocities( EnumVector<Axis, Tensor3D> &, const IBData & );
+void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &, const IBData & );
 
 
 // Re-extrapolate and interpolate new field values onto the forced faces and store them in IBData
