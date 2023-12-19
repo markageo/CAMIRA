@@ -150,23 +150,26 @@ public:
                                    - m_fvCoeffs.Cont.AU[Z][sCW::cCoupled](k) * bW 
                                    ) * m_K(i, j, k);
 
-
-        // Apply the mask through the relaxation factor
-        floatType maskedRelaxationX = m_fvCoeffs.Mom[X].relaxation * m_mask( iU, jU, kU ),
-                  maskedRelaxationY = m_fvCoeffs.Mom[Y].relaxation * m_mask( iV, jV, kV ),
-                  maskedRelaxationZ = m_fvCoeffs.Mom[Z].relaxation * m_mask( iW, jW, kW );
-
         // Update U from momentum
-        m_fields.U[X]( igU, jgU, kgU ) = ( 1 - maskedRelaxationX) * m_fieldsOld.U[X]( igU, jgU, kgU )
-                                       + maskedRelaxationX * ( bU - m_fvCoeffs.Mom[X].AP[sUP::cCoupled](iU) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[X].diagCoeffInv(iU, jU, kU) );
+        m_fields.U[X]( igU, jgU, kgU ) = ( 1 - m_fvCoeffs.Mom[X].relaxation) * m_fieldsOld.U[X]( igU, jgU, kgU )
+                                       + m_fvCoeffs.Mom[X].relaxation * ( bU - m_fvCoeffs.Mom[X].AP[sUP::cCoupled](iU) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[X].diagCoeffInv(iU, jU, kU) );
 
         // Update V from momentum
-        m_fields.U[Y]( igV, jgV, kgV ) = ( 1 - maskedRelaxationY ) * m_fieldsOld.U[Y]( igV, jgV, kgV )
-                                       + maskedRelaxationY * ( bV - m_fvCoeffs.Mom[Y].AP[sVP::cCoupled](jV) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Y].diagCoeffInv(iV, jV, kV) );
+        m_fields.U[Y]( igV, jgV, kgV ) = ( 1 - m_fvCoeffs.Mom[Y].relaxation ) * m_fieldsOld.U[Y]( igV, jgV, kgV )
+                                       + m_fvCoeffs.Mom[Y].relaxation * ( bV - m_fvCoeffs.Mom[Y].AP[sVP::cCoupled](jV) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Y].diagCoeffInv(iV, jV, kV) );
 
         // Update W from momentum
-        m_fields.U[Z]( igW, jgW, kgW ) = ( 1 - maskedRelaxationZ ) * m_fieldsOld.U[Z]( igW, jgW, kgW ) 
-                                       + maskedRelaxationZ * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(iW, jW, kW) );
+        m_fields.U[Z]( igW, jgW, kgW ) = ( 1 - m_fvCoeffs.Mom[Z].relaxation) * m_fieldsOld.U[Z]( igW, jgW, kgW ) 
+                                       + m_fvCoeffs.Mom[Z].relaxation * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(iW, jW, kW) );
+
+
+
+        // Only update the molecule if none of the cells are within the immersed boundary
+        floatType masterMask = m_mask(iU, jU, kU) * m_mask(iV, jV, kV) * m_mask(iW, jW, kW) * m_mask(i, j, k);
+        m_fields.P( ig, jg, kg )       *= masterMask;
+        m_fields.U[X]( igU, jgU, kgU ) *= masterMask;
+        m_fields.U[Y]( igV, jgV, kgV ) *= masterMask;
+        m_fields.U[Z]( igW, jgW, kgW ) *= masterMask;
 
     }
 

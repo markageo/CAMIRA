@@ -42,6 +42,24 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     // Immersed boundary
     IBData ibData = CreateImmersedBoundaryData( inputData, mesh );
 
+    // *************** FOR DEBUGGING ***************
+    VTK::VTKWriterConfig config( mesh.cellFaces[X].size(), 
+                                 mesh.cellFaces[Y].size(), 
+                                 mesh.cellFaces[Z].size() );
+        config.SetWriteMode(VTK::WriteModes::BINARY);
+        
+    VTK::gridVectorType<CFD::floatType> gridVector = { mesh.cellFaces[X].data(), 
+                                                       mesh.cellFaces[Y].data(), 
+                                                       mesh.cellFaces[Z].data() };
+
+    VTK::scalarCollectionType<floatType> scalarMap = { {"Mask", VTK::GridTypes::CELL_DATA, ibData.mask.data() } };
+
+    VTK::vectorCollectionType<floatType> vectorMap = {};
+
+    VTK::VTKWriter maskVTKWriter(gridVector, scalarMap, vectorMap, config);
+    maskVTKWriter.WriteData("mask.vtk", "Field mask array");
+    // *************** FOR DEBUGGING ***************
+
     // Finite Volume
     EnumVector<Axis, Tensor3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
     EnumVector< Axis, EnumVector< Axis, Tensor3D> > faceAdvectedVelocities;
@@ -50,6 +68,7 @@ void SweepSolve( FieldData<Tensor3D> &fields,
 
     FieldData<Tensor3D> fieldsOld = fields;
     FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceAdvectedVelocities, faceFluxes, bcData, inputData);
+    MaskFields(fields, ibData.mask);
 
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
@@ -68,9 +87,10 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 
-    // Local residuals fields and writer
+    // *************** FOR DEBUGGING ***************
     FieldData<Tensor3D> localResiduals;
     ResidualFieldWriter localResidualsFieldWriter( localResiduals, mesh, axisTransformation, "residuals/residual" );
+    // *************** FOR DEBUGGING ***************
 
     // Instantiate linear solver, this holds references to the fields
     LinearSolver<MI, LI> linearSolver(fields, fieldsOld, ibData.mask, fvCoeffs, linearSolverSettings);
@@ -88,14 +108,16 @@ void SweepSolve( FieldData<Tensor3D> &fields,
         linearSolver.UpdateState();
         linearSolver.Solve();
 
+        UpdateForcedFaceFieldValues(ibData, fields);
         UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
         if constexpr ( isNewtonLinearisation ) {
             UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
         }
+        SetIBFaceFluxes(faceFluxes, ibData);
         UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
+        AddIBSourceTerms(fvCoeffs, ibData, fields, mesh);
 
         residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs, ibData.mask); 
-        // residualsOuter   = L1DiffResiduals(fields, fieldsOld); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
 
         massFluxResidual = BoundaryMassFluxResidual(faceFluxes, mesh);
@@ -104,9 +126,10 @@ void SweepSolve( FieldData<Tensor3D> &fields,
         
         fieldsOld = fields;
 
-        //
+        // *************** FOR DEBUGGING ***************
         localResiduals = StencilResidualsField<MI, LI>( fields, fvCoeffs, ibData.mask );
         localResidualsFieldWriter.WriteData( nOuterIterations );
+        // *************** FOR DEBUGGING ***************
 
 
         consoleLog.WriteResiduals( residualsOuter, massFluxResidual, nOuterIterations );

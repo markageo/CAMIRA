@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 7.5)
-            nCells     = 150
+            nCells     = 75
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 3)
-            nCells     = 60
+            nCells     = 30
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 3)
-            nCells     = 60
+            nCells     = 30
             biasFactor = 1
         }
     }
@@ -142,8 +142,9 @@ Solver {
 Output {
 
     residualHistoryFilename = "output/residual_history.csv"
-    fieldOutputFilename = "output/fields.vtk"
-    fieldWriteInterval = 1
+    profilingFilename       = "output/profiling.dat"
+    fieldOutputFilename     = "output/fields.vtk"
+    fieldWriteInterval      = 1
 
     Monitors {
         Probe {
