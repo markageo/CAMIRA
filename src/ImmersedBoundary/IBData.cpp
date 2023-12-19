@@ -19,6 +19,8 @@
 
 #include <cmath>
 
+#include <iostream>
+
 namespace CFD
 {
 
@@ -173,7 +175,7 @@ Tensor3D CreateCellMask( const EnumVector<Axis, CellIDTensor3D> &cellFaceIDs,
 
 // A wrapper for the find_if function which returns iterator to cell element in IBData object that corresponds to the given index. Returns
 // one past end iterator if does not exist.
-std::vector<IBCell>::iterator FindIBCell( IBData ibData, 
+std::vector<IBCell>::iterator FindIBCell( IBData &ibData, 
                                           const TensorIndex3D forcedCellIndex )
 {
     std::vector<IBCell>::iterator ibCellsIterator = std::find_if( ibData.IBCells.begin(), ibData.IBCells.end(), 
@@ -203,7 +205,6 @@ void AddIBDataFace( IBData &ibData,
         ibCellsIterator = ibData.IBCells.end() - 1;
         ibCellsIterator->cellIndex = forcedCellIndex;
     } 
-
 
     // Create new element for this face
     ibCellsIterator->facesData.emplace_back();
