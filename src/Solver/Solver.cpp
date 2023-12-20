@@ -108,14 +108,11 @@ void SweepSolve( FieldData<Tensor3D> &fields,
         linearSolver.UpdateState();
         linearSolver.Solve();
 
-        UpdateForcedFaceFieldValues(ibData, fields);
         UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
         if constexpr ( isNewtonLinearisation ) {
             UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
         }
-        SetIBFaceFluxes(faceFluxes, ibData);
         UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
-        AddIBSourceTerms(fvCoeffs, ibData, fields, mesh);
 
         residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs, ibData.mask); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );

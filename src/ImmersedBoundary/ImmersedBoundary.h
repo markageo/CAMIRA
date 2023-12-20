@@ -10,34 +10,53 @@
 
 namespace CFD {
 
-enum class CellType {
-    Fluid    = 0, 
-    Solid    = 1
+enum CellType {
+    Solid    = 0,
+    Fluid    = 1 
 };
-using CellIDTensor3D = Eigen::Tensor< CellType, 3 >;
 
 
 // --------------------------------------- Definition in IBData.cpp -------------------------------------- //
 
+
+// For new method
 struct IBCell {
     TensorIndex3D cellIndex;
     
-    struct FaceData {
-        Axis::ENUMDATA faceNormal;
-        intType faceIndexOffset;          // Converts cell index to face index. 0: face on low side, 1: face on high side
-        floatType     interpCoeffCell,    // Interpolation coeff that multiplies with cell value
-                      interpCoeffIB;      // Interpolation coefficient that multiplies with the IB value
-        floatType     extrapFactor_p,     // Boundary cell extrapolation coefficient 
-                      extrapFactor_a;     // One from boundary cell extrapolation coefficient    
-        TensorIndex3D adjacentCellIndex;  // One from boundary cell index, for extrapolation 
-        FieldData<floatType> fieldValues;
+    struct SourceTermData {
+        Axis::ENUMDATA direction;
+        intType        directionIndex,        // Cell index offset, either +1 or -1.
+                       faceDirectionIndex;    // Face index offset, either 0 for lo side, or 1 for hi side
+
+        // Coefficients for interpolating onto the ghost cell
+        floatType cellInterpCoeff_p,          // Multiplies with cell value
+                  cellInterpCoeff_ib;         // Multiplies with IB value
+
+        // Coefficients for interpolating onto the face between the ghost cell
+        floatType faceInterpCoeff_p,          // Multiplies with cell value
+                  faceInterpCoeff_ib;         // Multiples with IB value
+
+        // Coefficients for extrapolating onto the immersed boundary surface
+        floatType     ibExtrapFactor_p,       // Boundary cell
+                      ibExtrapFactor_a;       // One interior of boundary cell  
+        TensorIndex3D adjacentCellIndex;      // One from boundary cell index, for extrapolation 
+
+        // Coefficients for the far pressure ghost cell to allow for correct MWI at the immersed boundary
+        floatType farPressureCoeff_p,   // Boundary cell
+                  farPressureCoeff_a,   // One interior of boundary cell
+                  farPressureCoeff_g;   // Ghost cell       
+
+        FieldData<floatType> ibFieldValues; // Value of fields on the immersed boundary surface at the intersection point
+
+        FieldData<floatType> ghostCellValues;
+        floatType farPressureGhostCellValue;
     };
-    std::vector< FaceData > facesData;
+    std::vector< SourceTermData > sourceTermsData;
        
 };
 
 struct IBData {
-    std::vector< IBCell > IBCells;
+    std::vector< IBCell > ibCells;
     Tensor3D mask;
 };
 
@@ -48,20 +67,27 @@ IBData CreateImmersedBoundaryData( const InputData &, const Mesh & );
 
 // ------------------------------- Definition in IBSolverFunctions.cpp --------------------------------- //
 
+
 // Add source terms to finite volume equations which include the effect of the immersed boundary
-void AddIBSourceTerms( FVCoefficients &, const IBData &, const FieldData<Tensor3D> &, const Mesh & );
+void AddIBSourceTerms( FVCoefficients &, const IBData & );
 
 
 // Set the face velocities to their interpolated values according to the immersed boundary
-void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &, const IBData & );
+void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &, const IBData &, const FieldData<Tensor3D> & );
 
 
-// Re-extrapolate and interpolate new field values onto the forced faces and store them in IBData
-void UpdateForcedFaceFieldValues( IBData &, const FieldData<Tensor3D> & );
+// Update values of ghost cells by re-interpolating from the immersed boundary
+void UpdateGhostCellValues( IBData &, const FieldData<Tensor3D> & );
+
+
+// Re-extrapolate the field values onto the immersed boundary surface at the points of intersection
+void UpdateIBFieldValues( IBData &, const FieldData<Tensor3D> & );
 
 
 // Set all solid cells in the mask to zero 
 void MaskFields( FieldData<Tensor3D> &, const Tensor3D & );
+
+
 
 }   // end namespace CFD
 
