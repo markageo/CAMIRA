@@ -76,7 +76,7 @@ floatType GetBoundaryDistance( const Polyhedron &polyhedron,
     tree.all_intersections( ray, std::back_inserter( intersections ) );
 
     if ( intersections.empty() )
-        return 0;
+        return 0.0f;
 
     floatType closestDistance = 0.0;
     for ( auto it = intersections.begin(); it != intersections.end(); it++ ) {
@@ -96,73 +96,25 @@ floatType GetBoundaryDistance( const Polyhedron &polyhedron,
 }
 
 
-
-// Marks faces as either being in fluid or solid region
-EnumVector<Axis, CellIDTensor3D> TagCellFaces( const Mesh &mesh, 
-                                               const Polyhedron &geometry )
-{
-    using enum Axis::ENUMDATA;
-
-    EnumVector<Axis, CellIDTensor3D> faceIDs( { CellIDTensor3D(mesh.nFacesNormal[X](X), mesh.nFacesNormal[X](Y), mesh.nFacesNormal[X](Z)),
-                                                CellIDTensor3D(mesh.nFacesNormal[Y](X), mesh.nFacesNormal[Y](Y), mesh.nFacesNormal[Y](Z)),
-                                                CellIDTensor3D(mesh.nFacesNormal[Z](X), mesh.nFacesNormal[Z](Y), mesh.nFacesNormal[Z](Z)) } );
-
-    // Iterate though all cell faces
-    EnumFor<Axis>( [&] (Axis::ENUMDATA faceNormal) {
-        
-        for (intType k = 0; k != mesh.nFacesNormal[faceNormal](Z); k++) {
-            for (intType j = 0; j != mesh.nFacesNormal[faceNormal](Y); j++) {
-                for (intType i = 0; i != mesh.nFacesNormal[faceNormal](X); i++) {
-
-                    floatType xq = mesh.cellFaces[X](i),
-                              yq = mesh.cellFaces[Y](j),
-                              zq = mesh.cellFaces[Z](k);
-
-                    if ( PointInside( geometry, xq, yq, zq ) ) {
-                        faceIDs[faceNormal](i, j, k) = CellType::Solid;
-                    } else {
-                        faceIDs[faceNormal](i, j, k) = CellType::Fluid;
-                    }
-
-                }
-            }
-        }
-
-    } );
-
-    return faceIDs;
-
-}
-
-
-
 // Create a mask array for cell centers
-Tensor3D CreateCellMask( const EnumVector<Axis, CellIDTensor3D> &cellFaceIDs, 
+Tensor3D CreateCellMask( const Polyhedron &geometry, 
                          const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;
 
     Tensor3D mask = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setConstant( 1.0f );
 
-    // Iterate through each cell
     for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
         for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
             for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
 
-                // Mask it if the current cell has any faces which are tagged as solid
-                for ( intType a = 0; a != Axis::count; a++ ) {
-                    Axis::ENUMDATA faceNormal = static_cast<Axis::ENUMDATA>( a );
+                floatType xq = mesh.cellCenters[X](i),
+                          yq = mesh.cellCenters[Y](j),
+                          zq = mesh.cellCenters[Z](k);
 
-                    TensorIndex3D loFaceIndex = {i, j, k},
-                                  hiFaceIndex = {i, j, k};
-                    hiFaceIndex[faceNormal] += 1;
-
-                    if ( cellFaceIDs[faceNormal](hiFaceIndex) == CellType::Solid || cellFaceIDs[faceNormal](loFaceIndex) == CellType::Solid ) {
-                        mask(i, j, k) = 0.0f;
-                        break;
-                    }
-
-                }
+                if ( PointInside( geometry, xq, yq, zq ) ) {
+                    mask(i, j, k) = CellType::Solid;
+                } 
 
             }
         }
@@ -173,78 +125,109 @@ Tensor3D CreateCellMask( const EnumVector<Axis, CellIDTensor3D> &cellFaceIDs,
 
 
 
-// A wrapper for the find_if function which returns iterator to cell element in IBData object that corresponds to the given index. Returns
-// one past end iterator if does not exist.
-std::vector<IBCell>::iterator FindIBCell( IBData &ibData, 
-                                          const TensorIndex3D forcedCellIndex )
-{
-    std::vector<IBCell>::iterator ibCellsIterator = std::find_if( ibData.IBCells.begin(), ibData.IBCells.end(), 
-                                                                  [&](IBCell ibCell) { return ( ibCell.cellIndex == forcedCellIndex ); } );
-
-    return ibCellsIterator;
-}
-
-
-
-// Sets face data information for a particular boundary cell that will contain a forcing term.
-void AddIBDataFace( IBData &ibData, 
-                    const TensorIndex3D &positiveSideFaceIndex, 
-                    const TensorIndex3D &forcedCellIndex, 
-                    const intType directionIndex, 
-                    const Axis::ENUMDATA faceNormal, 
-                    const Mesh &mesh, 
-                    const Polyhedron &geometry )
+// Sets data for a particular source term in a particular direciton for a particular cell
+void AddIBDataForDirection( IBCell &ibCell, 
+                            const Axis::ENUMDATA axis,
+                            const intType directionIndex,
+                            const Mesh &mesh,
+                            const Polyhedron &geometry)
 {
     using enum Axis::ENUMDATA;
 
-    // Check if cell is already inside the IBCells vector
-    std::vector<IBCell>::iterator ibCellsIterator = FindIBCell( ibData, forcedCellIndex );
+    ibCell.sourceTermsData.emplace_back();
+    IBCell::SourceTermData &sourceTermData = ibCell.sourceTermsData.back();
 
-    if ( ibCellsIterator == ibData.IBCells.end() ) {
-        ibData.IBCells.emplace_back();
-        ibCellsIterator = ibData.IBCells.end() - 1;
-        ibCellsIterator->cellIndex = forcedCellIndex;
-    } 
+    TensorIndex3D &cellIndex = ibCell.cellIndex;
 
-    // Create new element for this face
-    ibCellsIterator->facesData.emplace_back();
-    IBCell::FaceData &faceData = ibCellsIterator->facesData.back();
+    TensorIndex3D ghostCellIndex    = cellIndex;
+    ghostCellIndex[axis] += directionIndex;
 
-    // Face location data relative to forced cell
-    faceData.faceNormal = faceNormal;
+    TensorIndex3D interiorCellIndex = cellIndex;
+    interiorCellIndex[axis] -= directionIndex;
 
-    if ( directionIndex == 1 ) {
-        faceData.faceIndexOffset = 0;           // Zero due to the staggering of face index relative to cell index
-    } else if ( directionIndex == -1 ) {
-        faceData.faceIndexOffset = 1;
-    }
+    sourceTermData.direction          = axis;
+    sourceTermData.directionIndex     = directionIndex;
+    sourceTermData.faceDirectionIndex = ( directionIndex == 1 ) ? 1 : 0 ;
+    sourceTermData.adjacentCellIndex  = interiorCellIndex;
 
 
-    // Index of adject face for extrapolation
-    faceData.adjacentCellIndex = forcedCellIndex;
-    faceData.adjacentCellIndex[faceNormal] += directionIndex;
-
-    // Distance of forced face and cell to boundary
-    fVector3 queryFacePointCoords( mesh.cellFaces[X](positiveSideFaceIndex[X]),
-                                   mesh.cellFaces[Y](positiveSideFaceIndex[Y]),
-                                   mesh.cellFaces[Z](positiveSideFaceIndex[Z]) );
+    // Distance from cell to immersed boundary along this coordinate direction
+    fVector3 queryPointCoords( mesh.cellCenters[X](cellIndex[X]),
+                               mesh.cellCenters[Y](cellIndex[Y]),
+                               mesh.cellCenters[Z](cellIndex[Z]) );
     fVector3 rayDirection( 0, 0, 0 );
-    rayDirection[ faceNormal ] = - static_cast<floatType>(directionIndex);
-
-    floatType ibFaceDistance = GetBoundaryDistance( geometry, queryFacePointCoords, rayDirection );
-    floatType ibCellDistance = ibFaceDistance + mesh.cellLengths[faceNormal]( forcedCellIndex[faceNormal] ) / 2.0;
+    rayDirection[ axis ] = static_cast<floatType>( directionIndex );
+    floatType ibDistance   = GetBoundaryDistance(geometry, queryPointCoords, rayDirection);
 
 
-    // Interpolation coefficients
-    floatType cellHalfWidth  = mesh.cellLengths[ faceNormal ]( forcedCellIndex[faceNormal]);
-    faceData.interpCoeffCell = ibFaceDistance / ( cellHalfWidth + ibFaceDistance );
-    faceData.interpCoeffIB   = cellHalfWidth  / ( cellHalfWidth + ibFaceDistance );
+    // Interpolation coefficients onto ghost cell
+    floatType cellGhostDistance = abs( mesh.cellCenters[axis](ghostCellIndex[axis]) - mesh.cellCenters[axis](cellIndex[axis]) );
+    sourceTermData.cellInterpCoeff_p  = 1 - cellGhostDistance / ibDistance;
+    sourceTermData.cellInterpCoeff_ib = cellGhostDistance / ibDistance;
+
+
+    // Interpolation coefficients onto cell face between ghost cell
+    if        ( directionIndex == +1 ) {    // Face on Hi side
+
+        intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
+        sourceTermData.faceInterpCoeff_p  = 1 - mesh.interpFactors[axis](fidx);
+        sourceTermData.faceInterpCoeff_ib = mesh.interpFactors[axis](fidx);
+
+    } else if ( directionIndex == -1 ) {   // Face on Lo side
+
+        intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
+        sourceTermData.faceInterpCoeff_p  = mesh.interpFactors[axis](fidx);
+        sourceTermData.faceInterpCoeff_ib = 1 - mesh.interpFactors[axis](fidx);
+
+    }
+    
 
     // Extrapolation coefficients
-    floatType cellCenterSpacing = mesh.cellLengths[faceNormal]( forcedCellIndex[faceNormal] ) / 2.0 
-                                + mesh.cellLengths[faceNormal]( faceData.adjacentCellIndex[faceNormal] ) / 2.0;
-    faceData.extrapFactor_p = ( cellCenterSpacing + ibCellDistance ) / cellCenterSpacing;
-    faceData.extrapFactor_a =  - ibCellDistance / cellCenterSpacing;
+    floatType cellInteriorDistance = abs( mesh.cellCenters[axis](interiorCellIndex[axis]) - mesh.cellCenters[axis](cellIndex[axis]) ); 
+    sourceTermData.ibExtrapFactor_p = ( cellInteriorDistance + ibDistance ) / cellInteriorDistance;
+    sourceTermData.ibExtrapFactor_a = - ibDistance / cellInteriorDistance;
+
+
+    // Far pressure ghost cell coefficients
+    if        ( directionIndex == +1 ) {    // Ghost cell on Hi side
+
+        floatType dxp      = mesh.cellLengths[axis](cellIndex[axis]),
+                  dxe      = mesh.cellLengths[axis](ghostCellIndex[axis]),
+                  lambdaw  = mesh.interpFactors[axis](interiorCellIndex[axis]),
+                  lambdae  = mesh.interpFactors[axis](cellIndex[axis] + 1),
+                  lambdaee = mesh.interpFactors[axis](cellIndex[axis] + 2),
+                  le       = mesh.cellCenterDiffInv[axis](cellIndex[axis] + 1);
+
+        sourceTermData.farPressureCoeff_p = - (2 * dxe) / (lambdaee * le)
+                                            - (dxe / dxp) * (1 - lambdae - lambdaw) / lambdaee
+                                            + (1 - lambdae) / lambdaee;
+
+        sourceTermData.farPressureCoeff_a = (dxe / dxp) * (1 - lambdaw) / lambdaee;
+
+        sourceTermData.farPressureCoeff_g =   (2 * dxe) / (lambdaee * le)
+                                            - (dxe / dxp) * lambdae / lambdaee
+                                            - (1 - lambdae - lambdaee) / lambdaee;
+
+    } else if ( directionIndex == -1) {     // Ghost cell on Lo side
+
+        floatType dxp      = mesh.cellLengths[axis](cellIndex[axis]),
+                  dxw      = mesh.cellLengths[axis](ghostCellIndex[axis]),
+                  lambdae  = mesh.interpFactors[axis](interiorCellIndex[axis]),
+                  lambdaw  = mesh.interpFactors[axis](cellIndex[axis] - 0),
+                  lambdaww = mesh.interpFactors[axis](cellIndex[axis] - 1),
+                  lw       = mesh.cellCenterDiffInv[axis](cellIndex[axis] - 0);
+
+        sourceTermData.farPressureCoeff_p = - (2 * dxw) / ((1 - lambdaww) * lw)
+                                            + (dxw / dxp) * (1 - lambdae - lambdaw) / (1 - lambdaww)
+                                            + lambdaw / (1 - lambdaww);
+
+        sourceTermData.farPressureCoeff_a = (dxw / dxp) * lambdaw / (1 - lambdaww);
+
+        sourceTermData.farPressureCoeff_g =   (2 * dxw) / ((1 - lambdaww) * lw)
+                                            - (dxw / dxp) * (1 - lambdaw) / (1 - lambdaww)
+                                            + (1 - lambdaw - lambdaww) / (1 - lambdaww);
+
+    }
 }
 
 
@@ -257,57 +240,65 @@ IBData ConstructIBData( const Polyhedron &geometry,
 
     IBData ibData;
     
-    EnumVector<Axis, CellIDTensor3D> cellFaceIDs = TagCellFaces( mesh, geometry );
+    ibData.mask = CreateCellMask( geometry, mesh );
+    auto &mask = ibData.mask;
 
-    ibData.mask = CreateCellMask( cellFaceIDs, mesh );
+    // Iterate through all cells 
+    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
+        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
+            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
 
-    // Iterate though all cell faces
-    EnumFor<Axis>( [&] (Axis::ENUMDATA faceNormal) {
-        
-        
-        for (intType k = 0; k != mesh.nFacesNormal[faceNormal](Z); k++) {
-            for (intType j = 0; j != mesh.nFacesNormal[faceNormal](Y); j++) {
-                for (intType i = 0; i != mesh.nFacesNormal[faceNormal](X); i++) {
+                if ( static_cast<intType>( mask(i, j, k) ) != CellType::Fluid )
+                    continue;
 
-                    if ( cellFaceIDs[faceNormal](i, j, k) == CellType::Fluid )
-                        continue;
+                TensorIndex3D cellIndex{i, j, k};
+                bool cellHasBeenAdded = false;
 
+                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-                    // Forced face on positive side
-                    TensorIndex3D positiveSideFaceIndex = {i, j, k};
-                    positiveSideFaceIndex[faceNormal] += 1;
+                    // Solid on hi side
+                    TensorIndex3D hiSideCellIndex = cellIndex;
+                    hiSideCellIndex[axis] += 1;
+                    bool atHiBoundary = ( cellIndex[axis] == mesh.nCells[axis]-1  );
+                    if ( !atHiBoundary && static_cast<intType>( mask(hiSideCellIndex) ) == CellType::Solid ) {
+                        
+                        if ( !cellHasBeenAdded ) {
+                            ibData.ibCells.emplace_back();
+                            ibData.ibCells.back().cellIndex = cellIndex;
+                            cellHasBeenAdded = true;
+                        }
 
-                    TensorIndex3D positiveForcedCellIndex = positiveSideFaceIndex;
+                        IBCell &ibCell = ibData.ibCells.back();
+                        AddIBDataForDirection( ibCell, axis, +1, mesh, geometry );
 
-                    intType positiveDirectionIndex = 1; 
-
-                    if ( cellFaceIDs[faceNormal](positiveSideFaceIndex) == CellType::Fluid ) {
-                        AddIBDataFace( ibData, positiveSideFaceIndex, positiveForcedCellIndex, positiveDirectionIndex, faceNormal, mesh, geometry );
                     }
 
+                    // Solid on lo side
+                    TensorIndex3D loSideCellIndex = cellIndex;
+                    loSideCellIndex[axis] -= 1;
+                    bool atLoBoundary = ( cellIndex[axis] == 0  );
+                    if ( !atLoBoundary && static_cast<intType>( mask(loSideCellIndex) ) == CellType::Solid ) {
+                        
+                        if ( !cellHasBeenAdded ) {
+                            ibData.ibCells.emplace_back();
+                            ibData.ibCells.back().cellIndex = cellIndex;
+                            cellHasBeenAdded = true;
+                        }
 
-                    // Forced face on negative side
-                    TensorIndex3D negativeSideFaceIndex = {i, j, k};
-                    negativeSideFaceIndex[faceNormal] -= 1;
+                        IBCell &ibCell = ibData.ibCells.back();
+                        AddIBDataForDirection( ibCell, axis, -1, mesh, geometry );
 
-                    TensorIndex3D negativeForcedCellIndex = negativeSideFaceIndex;
-                    negativeForcedCellIndex[faceNormal] -= 1;
-
-                    intType negativeDirectionIndex = -1; 
-
-                    if ( cellFaceIDs[faceNormal](negativeSideFaceIndex) == CellType::Fluid ) {
-                        AddIBDataFace( ibData, negativeSideFaceIndex, negativeForcedCellIndex, negativeDirectionIndex, faceNormal, mesh, geometry );
                     }
 
-                }
+                } );
+
             }
         }
-
-
-    } );
+    }
 
     return ibData;
 }
+
 
 }   // end anonymous namespace
 

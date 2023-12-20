@@ -10,69 +10,65 @@ namespace
 {
 
 
-FieldData<floatType> GetForcedFaceValues( const TensorIndex3D &cellIndex,
-                                          const IBCell::FaceData &faceData, 
-                                          const FieldData<Tensor3D> &fields )
+FieldData<floatType> GetIBFieldValues( const TensorIndex3D &cellIndex,
+                                       const IBCell::SourceTermData &sourceTermData, 
+                                       const FieldData<Tensor3D> &fields )
 {
-    // Values of the field on the forced face
     FieldData<floatType> forcedFaceFieldValues;
 
     // The value of velocity on the boundary, just hard code this to zero to be a solid wall
     FieldData<floatType> ibFieldValues( 0.0f );
 
-    // Interpolate velocities onto the forced face
-    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                
-        forcedFaceFieldValues.U[axis] = faceData.interpCoeffCell * fields.U[axis](cellIndex)
-                                      + faceData.interpCoeffIB   * ibFieldValues.U[axis];
-
-    } );
-
     // Extrapolate pressure onto the immersed boundary
-    ibFieldValues.P = faceData.extrapFactor_p * fields.P(cellIndex)
-                    + faceData.extrapFactor_a * fields.P(faceData.adjacentCellIndex);
-
-    // Interpolate the pressure onto the forced face
-    forcedFaceFieldValues.P = faceData.interpCoeffCell * fields.P(cellIndex)
-                            + faceData.interpCoeffIB   * ibFieldValues.P;
+    ibFieldValues.P = sourceTermData.ibExtrapFactor_p * fields.P(cellIndex)
+                    + sourceTermData.ibExtrapFactor_a * fields.P(sourceTermData.adjacentCellIndex);
 
     return forcedFaceFieldValues;
 }
 
 
 
-floatType LoSideMomentumIBSource( const Axis::ENUMDATA momentumAxis,
-                                  const IBCell::FaceData &faceData, 
-                                  const TensorIndex3D &forcedCellIndex,
-                                  const FVCoefficients &fvCoeffs,
-                                  const FieldData<Tensor3D> &fields,
-                                  const Mesh &mesh ) 
+FieldData<floatType> GetGhostCellValues( const TensorIndex3D &cellIndex,
+                                         const IBCell::SourceTermData &sourceTermData, 
+                                         const FieldData<Tensor3D> &fields )
 {
-    Axis::ENUMDATA faceNormal = faceData.faceNormal;
-    intType fidx = forcedCellIndex[faceNormal] + faceData.faceIndexOffset;
-    TransportCoefficients::ENUMDATA loCoeff = LUT::LoCoeff[faceNormal];
-    floatType interpFactor = mesh.interpFactors[faceNormal](fidx);
+    FieldData<floatType> ghostCellValues;
 
-    // Velocity terms
-    floatType ibSource = - fvCoeffs.Mom[momentumAxis].AU[momentumAxis][loCoeff](forcedCellIndex) 
-                         * ( 1.0f / interpFactor )
-                         * faceData.fieldValues.U[momentumAxis]
-               
-                       +    fvCoeffs.Mom[momentumAxis].AU[momentumAxis][loCoeff](forcedCellIndex) 
-                         * ( (1.0f - interpFactor) / interpFactor )
-                         * fields.U[momentumAxis](forcedCellIndex);
+    ForAllFieldData( [&] (intType f) {
+        ghostCellValues[f] = sourceTermData.cellInterpCoeff_p * fields[f](cellIndex)
+                           + sourceTermData.cellInterpCoeff_ib   * sourceTermData.ibFieldValues[f];
+    } );
 
-    // Pressure terms
+    return ghostCellValues;
+}
+
+
+
+floatType GetFarPressureGhostCellValue( const TensorIndex3D &cellIndex,
+                                        const IBCell::SourceTermData &sourceTermData,
+                                        const FieldData<Tensor3D> &fields )
+{
+    return sourceTermData.farPressureCoeff_p * fields.P(cellIndex)
+         + sourceTermData.farPressureCoeff_a * fields.P(sourceTermData.adjacentCellIndex)
+         + sourceTermData.farPressureCoeff_g * sourceTermData.ghostCellValues.P;       
+}
+
+
+
+floatType MomentumIBSource( const Axis::ENUMDATA momentumAxis,
+                            const IBCell::SourceTermData &sourceTermData, 
+                            const TensorIndex3D &cellIndex,
+                            const FVCoefficients &fvCoeffs ) 
+{
+    Axis::ENUMDATA faceNormal = sourceTermData.direction;
+    TransportCoefficients::ENUMDATA coeff = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiCoeff[faceNormal] : LUT::LoCoeff[faceNormal];
+
+    // Velocity term
+    floatType ibSource = - fvCoeffs.Mom[momentumAxis].AU[momentumAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[momentumAxis];
+
+    // Pressure term
     if ( momentumAxis == faceNormal ) {
-
-        ibSource += - fvCoeffs.Mom[momentumAxis].AP[loCoeff](forcedCellIndex[faceNormal]) 
-                    * ( 1.0f / interpFactor )
-                    * faceData.fieldValues.P
-               
-                  +    fvCoeffs.Mom[momentumAxis].AP[loCoeff](forcedCellIndex[faceNormal]) 
-                    * ( (1.0f - interpFactor) / interpFactor )
-                    * fields.P(forcedCellIndex);
-
+        ibSource += - fvCoeffs.Mom[momentumAxis].AP[coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.P;
     }
 
     return ibSource;
@@ -80,167 +76,48 @@ floatType LoSideMomentumIBSource( const Axis::ENUMDATA momentumAxis,
 
 
 
-floatType HiSideMomentumIBSource( const Axis::ENUMDATA momentumAxis,
-                                  const IBCell::FaceData &faceData, 
-                                  const TensorIndex3D &forcedCellIndex,
-                                  const FVCoefficients &fvCoeffs,
-                                  const FieldData<Tensor3D> &fields,
-                                  const Mesh &mesh ) 
+floatType ContinuityIBSource( const IBCell::SourceTermData &sourceTermData, 
+                              const TensorIndex3D &cellIndex,
+                              const FVCoefficients &fvCoeffs ) 
 {
-    Axis::ENUMDATA faceNormal = faceData.faceNormal;
-    intType fidx = forcedCellIndex[faceNormal] + faceData.faceIndexOffset;
-    TransportCoefficients::ENUMDATA loCoeff = LUT::HiCoeff[faceNormal];
-    floatType interpFactor = mesh.interpFactors[faceNormal](fidx);
+    Axis::ENUMDATA faceNormal = sourceTermData.direction;
+    TransportCoefficients::ENUMDATA coeff  = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiCoeff[faceNormal]   : LUT::LoCoeff[faceNormal];
+    TransportCoefficients::ENUMDATA ccoeff = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiHiCoeff[faceNormal] : LUT::LoLoCoeff[faceNormal];
 
-    // Velocity terms
-    floatType ibSource = - fvCoeffs.Mom[momentumAxis].AU[momentumAxis][loCoeff](forcedCellIndex) 
-                         * ( 1.0f / ( 1.0f - interpFactor ) )
-                         * faceData.fieldValues.U[momentumAxis]
-               
-                       +    fvCoeffs.Mom[momentumAxis].AU[momentumAxis][loCoeff](forcedCellIndex) 
-                         * ( interpFactor / (1.0f - interpFactor) )
-                         * fields.U[momentumAxis](forcedCellIndex);
+    // Divergence term
+    floatType ibSource = - fvCoeffs.Cont.AU[faceNormal][coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.U[faceNormal];
 
     // Pressure terms
-    if ( momentumAxis == faceNormal ) {
-
-        ibSource += - fvCoeffs.Mom[momentumAxis].AP[loCoeff](forcedCellIndex[faceNormal]) 
-                    * ( 1.0f / ( 1.0f - interpFactor ) )
-                    * faceData.fieldValues.P
-               
-                  +    fvCoeffs.Mom[momentumAxis].AP[loCoeff](forcedCellIndex[faceNormal]) 
-                    * ( interpFactor / (1.0f - interpFactor) )
-                    * fields.P(forcedCellIndex);
-
-    }
+    ibSource += - fvCoeffs.Cont.AP[coeff ](cellIndex) * sourceTermData.ghostCellValues.P
+                - fvCoeffs.Cont.AP[ccoeff](cellIndex) * sourceTermData.farPressureGhostCellValue;
 
     return ibSource;
 }
-
-
-
-floatType LoSideContinuityIBSource( const IBCell::FaceData &faceData, 
-                                    const TensorIndex3D &forcedCellIndex,
-                                    const FVCoefficients &fvCoeffs,
-                                    const FieldData<Tensor3D> &fields,
-                                    const Mesh &mesh ) 
-{
-    Axis::ENUMDATA faceNormal = faceData.faceNormal;
-    intType fidx = forcedCellIndex[faceNormal] + faceData.faceIndexOffset;
-    TransportCoefficients::ENUMDATA loCoeff = LUT::LoCoeff[faceNormal];
-    floatType interpFactor = mesh.interpFactors[faceNormal](fidx);
-
-    floatType ibSource = - fvCoeffs.Cont.AU[faceNormal][loCoeff](forcedCellIndex[faceNormal]) 
-                         * ( 1.0f / interpFactor )
-                         * faceData.fieldValues.U[faceNormal]
-               
-                       +    fvCoeffs.Cont.AU[faceNormal][loCoeff](forcedCellIndex[faceNormal]) 
-                         * ( (1.0f - interpFactor) / interpFactor )
-                         * fields.U[faceNormal](forcedCellIndex);
-
-    // Pressure terms
-    intType ffidx = fidx - 1;
-    TransportCoefficients::ENUMDATA loloCoeff = LUT::LoLoCoeff[faceNormal];
-    floatType lw  = 1.0f / mesh.cellCenterDiffInv[faceNormal](fidx),
-              lww = 1.0f / mesh.cellCenterDiffInv[faceNormal](ffidx);
-    floatType wideExtrapCoeffCell = 1 - ( (lw + lww) / lw ) * ( 1 + interpFactor / (1-interpFactor) ),
-              wideExtrapCoeffFace =     ( (lw + lww) / lw ) * ( 1 / (1 - interpFactor) );
-
-    ibSource += - ( fvCoeffs.Cont.AP[loCoeff](forcedCellIndex) * ( 1.0f / (1 - interpFactor) )
-                  + fvCoeffs.Cont.AP[loloCoeff](forcedCellIndex) * wideExtrapCoeffFace 
-                  ) * faceData.fieldValues.P
-
-                + ( fvCoeffs.Cont.AP[loCoeff](forcedCellIndex) * ( interpFactor / (1 - interpFactor) )
-                  - fvCoeffs.Cont.AP[loloCoeff](forcedCellIndex) * wideExtrapCoeffCell 
-                  ) * fields.P(forcedCellIndex);
-
-    return ibSource;
-}
-
-
-
-floatType HiSideContinuityIBSource( const IBCell::FaceData &faceData, 
-                                    const TensorIndex3D &forcedCellIndex,
-                                    const FVCoefficients &fvCoeffs,
-                                    const FieldData<Tensor3D> &fields,
-                                    const Mesh &mesh ) 
-{
-    Axis::ENUMDATA faceNormal = faceData.faceNormal;
-    intType fidx = forcedCellIndex[faceNormal] + faceData.faceIndexOffset;
-    TransportCoefficients::ENUMDATA hiCoeff = LUT::HiCoeff[faceNormal];
-    floatType interpFactor = mesh.interpFactors[faceNormal](fidx);
-
-    // Velocity terms
-    floatType ibSource = - fvCoeffs.Cont.AU[faceNormal][hiCoeff](forcedCellIndex[faceNormal]) 
-                         * ( 1.0f / ( 1.0f - interpFactor ) )
-                         * faceData.fieldValues.U[faceNormal]
-               
-                       +    fvCoeffs.Cont.AU[faceNormal][hiCoeff](forcedCellIndex[faceNormal]) 
-                         * ( interpFactor / (1.0f - interpFactor) )
-                         * fields.U[faceNormal](forcedCellIndex);
-
-    // Pressure terms
-    intType ffidx = fidx + 1;
-    TransportCoefficients::ENUMDATA hihiCoeff = LUT::HiHiCoeff[faceNormal];
-    floatType le  = 1.0f / mesh.cellCenterDiffInv[faceNormal](fidx),
-              lee = 1.0f / mesh.cellCenterDiffInv[faceNormal](ffidx);
-    floatType wideExtrapCoeffCell = 1 - ( (le + lee) / le ) * ( 1 + (1-interpFactor) / interpFactor ),
-              wideExtrapCoeffFace =     ( (le + lee) / le ) * ( 1 / interpFactor );
-
-    ibSource += - ( fvCoeffs.Cont.AP[hiCoeff](forcedCellIndex) * ( 1.0f / interpFactor )
-                  + fvCoeffs.Cont.AP[hihiCoeff](forcedCellIndex) * wideExtrapCoeffFace 
-                  ) * faceData.fieldValues.P
-
-                + ( fvCoeffs.Cont.AP[hiCoeff](forcedCellIndex) * ( (1-interpFactor) / interpFactor )
-                  - fvCoeffs.Cont.AP[hihiCoeff](forcedCellIndex) * wideExtrapCoeffCell 
-                  ) * fields.P(forcedCellIndex);
-
-    return ibSource;
-}
-
 
 
 }   // end anonymous namespace
 
 
 
-
-
 void AddIBSourceTerms( FVCoefficients &fvCoeffs,
-                       const IBData &ibData, 
-                       const FieldData<Tensor3D> &fields,
-                       const Mesh &mesh )
+                       const IBData &ibData )
 {
 
     // Iterate through each forced cell
-    for ( auto &ibCell : ibData.IBCells ) { 
+    for ( auto &ibCell : ibData.ibCells ) { 
 
-        TensorIndex3D forcedCellIndex = ibCell.cellIndex;
+        TensorIndex3D cellIndex = ibCell.cellIndex;
 
         // A source term is added for each forced face
-        for ( auto &faceData : ibCell.facesData ) {
+        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
-            if ( faceData.faceIndexOffset == 0 ) {          // Forced face on low side
+            // Momentum equations
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                fvCoeffs.Mom[axis].B( cellIndex ) += MomentumIBSource( axis, sourceTermData, cellIndex, fvCoeffs );
+            } );
 
-                // Momentum equations
-                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                    fvCoeffs.Mom[axis].B( forcedCellIndex ) += LoSideMomentumIBSource( axis, faceData, forcedCellIndex, fvCoeffs, fields, mesh );
-                } );
-
-                // Continuity equation
-                fvCoeffs.Cont.B( forcedCellIndex ) += LoSideContinuityIBSource( faceData, forcedCellIndex, fvCoeffs, fields, mesh);
-
-            } else if ( faceData.faceIndexOffset == 1 ) {   // Forced face on high side
-
-                 // Momentum equations
-                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                    fvCoeffs.Mom[axis].B( forcedCellIndex ) += HiSideMomentumIBSource( axis, faceData, forcedCellIndex, fvCoeffs, fields, mesh );
-                } );
-
-                // Continuity equation
-                fvCoeffs.Cont.B( forcedCellIndex ) += HiSideContinuityIBSource( faceData, forcedCellIndex, fvCoeffs, fields, mesh );
-
-            }
+            // Continuity equation
+            fvCoeffs.Cont.B( cellIndex ) += ContinuityIBSource( sourceTermData, cellIndex, fvCoeffs );
 
         }
 
@@ -251,29 +128,46 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
 
 
 void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &faceFluxes,
-                      const IBData &ibData ) 
+                      const IBData &ibData,
+                      const FieldData<Tensor3D> &fields ) 
 {
-    for ( auto &ibCell : ibData.IBCells ) { 
-        for ( auto &faceData : ibCell.facesData ) {
+    for ( auto &ibCell : ibData.ibCells ) { 
+        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
+            Axis::ENUMDATA axis = sourceTermData.direction;
             TensorIndex3D faceIndex = ibCell.cellIndex;    
-            faceIndex[faceData.faceNormal] += faceData.faceIndexOffset;
+            faceIndex[axis] += sourceTermData.faceDirectionIndex;
 
-            faceFluxes[faceData.faceNormal](faceIndex) = faceData.fieldValues.U[faceData.faceNormal];
-
+            faceFluxes[axis](faceIndex) = sourceTermData.faceInterpCoeff_p  * fields.U[axis](ibCell.cellIndex)
+                                        + sourceTermData.faceInterpCoeff_ib * sourceTermData.ghostCellValues.U[axis];
         }
     }
 }
 
 
 
-void UpdateForcedFaceFieldValues( IBData &ibData, 
-                                  const FieldData<Tensor3D> &fields )
+void UpdateGhostCellValues( IBData &ibData, 
+                            const FieldData<Tensor3D> &fields )
 {
-    for ( auto &ibCell : ibData.IBCells ) { 
-        for ( auto &faceData : ibCell.facesData ) {
+    for ( auto &ibCell : ibData.ibCells ) { 
+        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
-            faceData.fieldValues = GetForcedFaceValues( ibCell.cellIndex, faceData, fields );
+            sourceTermData.ghostCellValues           = GetGhostCellValues( ibCell.cellIndex, sourceTermData, fields );
+            sourceTermData.farPressureGhostCellValue = GetFarPressureGhostCellValue( ibCell.cellIndex, sourceTermData, fields );
+
+        }
+    }
+} 
+
+
+
+void UpdateIBFieldValues( IBData &ibData, 
+                          const FieldData<Tensor3D> &fields )
+{
+    for ( auto &ibCell : ibData.ibCells ) { 
+        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
+
+            sourceTermData.ibFieldValues = GetIBFieldValues( ibCell.cellIndex, sourceTermData, fields );
 
         }
     }
