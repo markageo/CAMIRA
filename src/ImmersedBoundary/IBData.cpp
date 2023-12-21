@@ -84,7 +84,7 @@ floatType GetBoundaryDistance( const Polyhedron &polyhedron,
 
         if ( Point* p = boost::get<Point>(&intersection) ) {
 
-            floatType distance = CGAL::squared_distance( *p, rayOrigin );
+            floatType distance = sqrt( CGAL::squared_distance( *p, rayOrigin ) );
             if ( it == intersections.begin() || distance < closestDistance ) {
                 closestDistance = distance;
             } 
@@ -102,7 +102,7 @@ Tensor3D CreateCellMask( const Polyhedron &geometry,
 {
     using enum Axis::ENUMDATA;
 
-    Tensor3D mask = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setConstant( 1.0f );
+    Tensor3D mask = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setConstant( CellType::Fluid );
 
     for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
         for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
@@ -171,13 +171,13 @@ void AddIBDataForDirection( IBCell &ibCell,
 
         intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
         sourceTermData.faceInterpCoeff_p  = 1 - mesh.interpFactors[axis](fidx);
-        sourceTermData.faceInterpCoeff_ib = mesh.interpFactors[axis](fidx);
+        sourceTermData.faceInterpCoeff_g = mesh.interpFactors[axis](fidx);
 
     } else if ( directionIndex == -1 ) {   // Face on Lo side
 
         intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
         sourceTermData.faceInterpCoeff_p  = mesh.interpFactors[axis](fidx);
-        sourceTermData.faceInterpCoeff_ib = 1 - mesh.interpFactors[axis](fidx);
+        sourceTermData.faceInterpCoeff_g = 1 - mesh.interpFactors[axis](fidx);
 
     }
     
@@ -248,11 +248,11 @@ IBData ConstructIBData( const Polyhedron &geometry,
         for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
             for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
 
-                if ( static_cast<intType>( mask(i, j, k) ) != CellType::Fluid )
+                if ( static_cast<intType>( mask(i, j, k) ) == CellType::Solid )
                     continue;
 
                 TensorIndex3D cellIndex{i, j, k};
-                bool cellHasBeenAdded = false;
+                IBCell *ibCellPtr = nullptr;
 
                 EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
@@ -262,14 +262,13 @@ IBData ConstructIBData( const Polyhedron &geometry,
                     bool atHiBoundary = ( cellIndex[axis] == mesh.nCells[axis]-1  );
                     if ( !atHiBoundary && static_cast<intType>( mask(hiSideCellIndex) ) == CellType::Solid ) {
                         
-                        if ( !cellHasBeenAdded ) {
+                        if ( ibCellPtr == nullptr ) {
                             ibData.ibCells.emplace_back();
-                            ibData.ibCells.back().cellIndex = cellIndex;
-                            cellHasBeenAdded = true;
+                            ibCellPtr = &ibData.ibCells.back();
+                            ibCellPtr->cellIndex = cellIndex;
                         }
 
-                        IBCell &ibCell = ibData.ibCells.back();
-                        AddIBDataForDirection( ibCell, axis, +1, mesh, geometry );
+                        AddIBDataForDirection( *ibCellPtr, axis, +1, mesh, geometry );
 
                     }
 
@@ -279,14 +278,13 @@ IBData ConstructIBData( const Polyhedron &geometry,
                     bool atLoBoundary = ( cellIndex[axis] == 0  );
                     if ( !atLoBoundary && static_cast<intType>( mask(loSideCellIndex) ) == CellType::Solid ) {
                         
-                        if ( !cellHasBeenAdded ) {
+                        if ( ibCellPtr == nullptr ) {
                             ibData.ibCells.emplace_back();
-                            ibData.ibCells.back().cellIndex = cellIndex;
-                            cellHasBeenAdded = true;
+                            ibCellPtr = &ibData.ibCells.back();
+                            ibCellPtr->cellIndex = cellIndex;
                         }
 
-                        IBCell &ibCell = ibData.ibCells.back();
-                        AddIBDataForDirection( ibCell, axis, -1, mesh, geometry );
+                        AddIBDataForDirection( *ibCellPtr, axis, -1, mesh, geometry );
 
                     }
 
@@ -313,7 +311,7 @@ IBData CreateImmersedBoundaryData( const InputData &inputData,
     IBData ibData;
 
     if ( !inputData.hasIBGeometry ) {
-        ibData.mask = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setConstant( 1.0f );
+        ibData.mask = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setConstant( CellType::Fluid );
         return ibData;
     }
 

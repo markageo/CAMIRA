@@ -23,6 +23,35 @@
 namespace CFD
 {
 
+namespace
+{
+
+// Update face fluxes, immersed boundary data, and finite volume equation coefficients
+template< bool isNewtonLinearisation >
+void UpdateFVEquations( FVCoefficients &fvCoeffs,
+                        IBData &ibData,
+                        EnumVector<Axis, Tensor3D> &faceFluxes,
+                        EnumVector< Axis, EnumVector< Axis, Tensor3D> > &faceAdvectedVelocities,
+                        const FieldData<Tensor3D> &fields,
+                        const Mesh &mesh,
+                        const FieldData< BoundaryConditionData > &bcData )
+{
+    // UpdateIBData( ibData, fields );
+    UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
+    if constexpr ( isNewtonLinearisation ) {
+        UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
+    }
+    // SetIBFaceFluxes( faceFluxes, ibData, fields );
+    UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
+    // AddIBSourceTerms( fvCoeffs, ibData );
+}
+
+
+
+}   // end anonymous namespace
+
+
+
 template< MomentumInterpolation MI, Linearisation LI >
 void SweepSolve( FieldData<Tensor3D> &fields,
                  const Mesh &mesh,
@@ -61,6 +90,7 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     // *************** FOR DEBUGGING ***************
 
     // Finite Volume
+    MaskFields(fields, ibData.mask);
     EnumVector<Axis, Tensor3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
     EnumVector< Axis, EnumVector< Axis, Tensor3D> > faceAdvectedVelocities;
     if constexpr ( isNewtonLinearisation ) 
@@ -68,7 +98,8 @@ void SweepSolve( FieldData<Tensor3D> &fields,
 
     FieldData<Tensor3D> fieldsOld = fields;
     FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceAdvectedVelocities, faceFluxes, bcData, inputData);
-    MaskFields(fields, ibData.mask);
+    UpdateFVEquations<isNewtonLinearisation>( fvCoeffs, ibData, faceFluxes, faceAdvectedVelocities, fields, mesh, bcData );
+
 
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
@@ -108,11 +139,7 @@ void SweepSolve( FieldData<Tensor3D> &fields,
         linearSolver.UpdateState();
         linearSolver.Solve();
 
-        UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
-        if constexpr ( isNewtonLinearisation ) {
-            UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
-        }
-        UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
+        UpdateFVEquations<isNewtonLinearisation>( fvCoeffs, ibData, faceFluxes, faceAdvectedVelocities, fields, mesh, bcData );
 
         residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs, ibData.mask); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
