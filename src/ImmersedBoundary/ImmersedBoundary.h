@@ -34,7 +34,7 @@ struct IBCell {
 
         // Coefficients for interpolating onto the face between the ghost cell
         floatType faceInterpCoeff_p,          // Multiplies with cell value
-                  faceInterpCoeff_ib;         // Multiples with IB value
+                  faceInterpCoeff_g;          // Multiples with ghost cell value
 
         // Coefficients for extrapolating onto the immersed boundary surface
         floatType     ibExtrapFactor_p,       // Boundary cell
@@ -77,11 +77,7 @@ void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &, const IBData &, const FieldD
 
 
 // Update values of ghost cells by re-interpolating from the immersed boundary
-void UpdateGhostCellValues( IBData &, const FieldData<Tensor3D> & );
-
-
-// Re-extrapolate the field values onto the immersed boundary surface at the points of intersection
-void UpdateIBFieldValues( IBData &, const FieldData<Tensor3D> & );
+void UpdateIBData( IBData &, const FieldData<Tensor3D> & );
 
 
 // Set all solid cells in the mask to zero 

@@ -14,8 +14,6 @@ FieldData<floatType> GetIBFieldValues( const TensorIndex3D &cellIndex,
                                        const IBCell::SourceTermData &sourceTermData, 
                                        const FieldData<Tensor3D> &fields )
 {
-    FieldData<floatType> forcedFaceFieldValues;
-
     // The value of velocity on the boundary, just hard code this to zero to be a solid wall
     FieldData<floatType> ibFieldValues( 0.0f );
 
@@ -23,7 +21,7 @@ FieldData<floatType> GetIBFieldValues( const TensorIndex3D &cellIndex,
     ibFieldValues.P = sourceTermData.ibExtrapFactor_p * fields.P(cellIndex)
                     + sourceTermData.ibExtrapFactor_a * fields.P(sourceTermData.adjacentCellIndex);
 
-    return forcedFaceFieldValues;
+    return ibFieldValues;
 }
 
 
@@ -32,11 +30,11 @@ FieldData<floatType> GetGhostCellValues( const TensorIndex3D &cellIndex,
                                          const IBCell::SourceTermData &sourceTermData, 
                                          const FieldData<Tensor3D> &fields )
 {
-    FieldData<floatType> ghostCellValues;
+    FieldData<floatType> ghostCellValues( 0.0f );
 
     ForAllFieldData( [&] (intType f) {
-        ghostCellValues[f] = sourceTermData.cellInterpCoeff_p * fields[f](cellIndex)
-                           + sourceTermData.cellInterpCoeff_ib   * sourceTermData.ibFieldValues[f];
+        ghostCellValues[f] = sourceTermData.cellInterpCoeff_p  * fields[f](cellIndex)
+                           + sourceTermData.cellInterpCoeff_ib * sourceTermData.ibFieldValues[f];
     } );
 
     return ghostCellValues;
@@ -139,35 +137,25 @@ void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &faceFluxes,
             faceIndex[axis] += sourceTermData.faceDirectionIndex;
 
             faceFluxes[axis](faceIndex) = sourceTermData.faceInterpCoeff_p  * fields.U[axis](ibCell.cellIndex)
-                                        + sourceTermData.faceInterpCoeff_ib * sourceTermData.ghostCellValues.U[axis];
+                                        + sourceTermData.faceInterpCoeff_g * sourceTermData.ghostCellValues.U[axis];
         }
     }
 }
 
 
 
-void UpdateGhostCellValues( IBData &ibData, 
-                            const FieldData<Tensor3D> &fields )
+void UpdateIBData( IBData &ibData, 
+                   const FieldData<Tensor3D> &fields )
 {
     for ( auto &ibCell : ibData.ibCells ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
+            // Update values on the immersed boundary
+            sourceTermData.ibFieldValues = GetIBFieldValues( ibCell.cellIndex, sourceTermData, fields );
+
+            // Use the new immersed boundary values to update the ghost cells
             sourceTermData.ghostCellValues           = GetGhostCellValues( ibCell.cellIndex, sourceTermData, fields );
             sourceTermData.farPressureGhostCellValue = GetFarPressureGhostCellValue( ibCell.cellIndex, sourceTermData, fields );
-
-        }
-    }
-} 
-
-
-
-void UpdateIBFieldValues( IBData &ibData, 
-                          const FieldData<Tensor3D> &fields )
-{
-    for ( auto &ibCell : ibData.ibCells ) { 
-        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
-
-            sourceTermData.ibFieldValues = GetIBFieldValues( ibCell.cellIndex, sourceTermData, fields );
 
         }
     }
