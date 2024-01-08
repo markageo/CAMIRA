@@ -151,7 +151,7 @@ void AddIBDataForDirection( IBCell &ibCell,
     sourceTermData.adjacentCellIndex  = interiorCellIndex;
 
 
-    // Distance from cell to immersed boundary along this coordinate direction
+    // Distance from cell center to immersed boundary along this coordinate direction
     fVector3 queryPointCoords( mesh.cellCenters[X](cellIndex[X]),
                                mesh.cellCenters[Y](cellIndex[Y]),
                                mesh.cellCenters[Z](cellIndex[Z]) );
@@ -180,7 +180,7 @@ void AddIBDataForDirection( IBCell &ibCell,
         sourceTermData.faceInterpCoeff_g = 1 - mesh.interpFactors[axis](fidx);
 
     }
-    
+
 
     // Extrapolation coefficients
     floatType cellInteriorDistance = abs( mesh.cellCenters[axis](interiorCellIndex[axis]) - mesh.cellCenters[axis](cellIndex[axis]) ); 
@@ -196,7 +196,7 @@ void AddIBDataForDirection( IBCell &ibCell,
                   lambdaw  = mesh.interpFactors[axis](interiorCellIndex[axis]),
                   lambdae  = mesh.interpFactors[axis](cellIndex[axis] + 1),
                   lambdaee = mesh.interpFactors[axis](cellIndex[axis] + 2),
-                  le       = mesh.cellCenterDiffInv[axis](cellIndex[axis] + 1);
+                  le       = 1.0f /  mesh.cellCenterDiffInv[axis](cellIndex[axis] + 1);
 
         sourceTermData.farPressureCoeff_p = - (2 * dxe) / (lambdaee * le)
                                             - (dxe / dxp) * (1 - lambdae - lambdaw) / lambdaee
@@ -215,7 +215,7 @@ void AddIBDataForDirection( IBCell &ibCell,
                   lambdae  = mesh.interpFactors[axis](interiorCellIndex[axis]),
                   lambdaw  = mesh.interpFactors[axis](cellIndex[axis] - 0),
                   lambdaww = mesh.interpFactors[axis](cellIndex[axis] - 1),
-                  lw       = mesh.cellCenterDiffInv[axis](cellIndex[axis] - 0);
+                  lw       = 1.0f / mesh.cellCenterDiffInv[axis](cellIndex[axis] - 0);
 
         sourceTermData.farPressureCoeff_p = - (2 * dxw) / ((1 - lambdaww) * lw)
                                             + (dxw / dxp) * (1 - lambdae - lambdaw) / (1 - lambdaww)
@@ -228,6 +228,7 @@ void AddIBDataForDirection( IBCell &ibCell,
                                             + (1 - lambdaw - lambdaww) / (1 - lambdaww);
 
     }
+
 }
 
 
@@ -256,20 +257,21 @@ IBData ConstructIBData( const Polyhedron &geometry,
 
                 EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
+                    auto CheckIBCellPtr = [&] () {
+                        if ( ibCellPtr == nullptr ) {
+                            ibData.ibCells.emplace_back();
+                            ibCellPtr = &ibData.ibCells.back();
+                            ibCellPtr->cellIndex = cellIndex;
+                        } 
+                    };
+
                     // Solid on hi side
                     TensorIndex3D hiSideCellIndex = cellIndex;
                     hiSideCellIndex[axis] += 1;
                     bool atHiBoundary = ( cellIndex[axis] == mesh.nCells[axis]-1  );
                     if ( !atHiBoundary && static_cast<intType>( mask(hiSideCellIndex) ) == CellType::Solid ) {
-                        
-                        if ( ibCellPtr == nullptr ) {
-                            ibData.ibCells.emplace_back();
-                            ibCellPtr = &ibData.ibCells.back();
-                            ibCellPtr->cellIndex = cellIndex;
-                        }
-
+                        CheckIBCellPtr();
                         AddIBDataForDirection( *ibCellPtr, axis, +1, mesh, geometry );
-
                     }
 
                     // Solid on lo side
@@ -277,15 +279,8 @@ IBData ConstructIBData( const Polyhedron &geometry,
                     loSideCellIndex[axis] -= 1;
                     bool atLoBoundary = ( cellIndex[axis] == 0  );
                     if ( !atLoBoundary && static_cast<intType>( mask(loSideCellIndex) ) == CellType::Solid ) {
-                        
-                        if ( ibCellPtr == nullptr ) {
-                            ibData.ibCells.emplace_back();
-                            ibCellPtr = &ibData.ibCells.back();
-                            ibCellPtr->cellIndex = cellIndex;
-                        }
-
+                        CheckIBCellPtr();
                         AddIBDataForDirection( *ibCellPtr, axis, -1, mesh, geometry );
-
                     }
 
                 } );
