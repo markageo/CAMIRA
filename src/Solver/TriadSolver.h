@@ -142,7 +142,7 @@ public:
 
 
         // Update P from continuity
-        m_fields.P( ig, jg, kg ) = ( 1 - m_fvCoeffs.Cont.relaxation ) * m_fieldsOld.P( ig, jg, kg )
+        floatType newP = ( 1 - m_fvCoeffs.Cont.relaxation ) * m_fieldsOld.P( ig, jg, kg )
                                  + m_fvCoeffs.Cont.relaxation * 
                                    ( bP 
                                    - m_fvCoeffs.Cont.AU[X][sCU::cCoupled](i) * bU 
@@ -151,25 +151,25 @@ public:
                                    ) * m_K(i, j, k);
 
         // Update U from momentum
-        m_fields.U[X]( igU, jgU, kgU ) = ( 1 - m_fvCoeffs.Mom[X].relaxation) * m_fieldsOld.U[X]( igU, jgU, kgU )
+        floatType newU = ( 1 - m_fvCoeffs.Mom[X].relaxation) * m_fieldsOld.U[X]( igU, jgU, kgU )
                                        + m_fvCoeffs.Mom[X].relaxation * ( bU - m_fvCoeffs.Mom[X].AP[sUP::cCoupled](iU) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[X].diagCoeffInv(iU, jU, kU) );
 
         // Update V from momentum
-        m_fields.U[Y]( igV, jgV, kgV ) = ( 1 - m_fvCoeffs.Mom[Y].relaxation ) * m_fieldsOld.U[Y]( igV, jgV, kgV )
+        floatType newV = ( 1 - m_fvCoeffs.Mom[Y].relaxation ) * m_fieldsOld.U[Y]( igV, jgV, kgV )
                                        + m_fvCoeffs.Mom[Y].relaxation * ( bV - m_fvCoeffs.Mom[Y].AP[sVP::cCoupled](jV) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Y].diagCoeffInv(iV, jV, kV) );
 
         // Update W from momentum
-        m_fields.U[Z]( igW, jgW, kgW ) = ( 1 - m_fvCoeffs.Mom[Z].relaxation) * m_fieldsOld.U[Z]( igW, jgW, kgW ) 
+        floatType newW = ( 1 - m_fvCoeffs.Mom[Z].relaxation) * m_fieldsOld.U[Z]( igW, jgW, kgW ) 
                                        + m_fvCoeffs.Mom[Z].relaxation * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(iW, jW, kW) );
 
 
 
         // Only update the molecule if none of the cells are within the immersed boundary
         floatType masterMask = m_mask(iU, jU, kU) * m_mask(iV, jV, kV) * m_mask(iW, jW, kW) * m_mask(i, j, k);
-        m_fields.P( ig, jg, kg )       *= masterMask;
-        m_fields.U[X]( igU, jgU, kgU ) *= masterMask;
-        m_fields.U[Y]( igV, jgV, kgV ) *= masterMask;
-        m_fields.U[Z]( igW, jgW, kgW ) *= masterMask;
+        m_fields.P( ig, jg, kg )       = (1.0f - masterMask) * m_fields.P( ig, jg, kg )        +  masterMask * newP;
+        m_fields.U[X]( igU, jgU, kgU ) = (1.0f - masterMask) * m_fields.U[X]( igU, jgU, kgU )  +  masterMask * newU;
+        m_fields.U[Y]( igV, jgV, kgV ) = (1.0f - masterMask) * m_fields.U[Y]( igV, jgV, kgV )  +  masterMask * newV;
+        m_fields.U[Z]( igW, jgW, kgW ) = (1.0f - masterMask) * m_fields.U[Z]( igW, jgW, kgW )  +  masterMask * newW;
 
     }
 
