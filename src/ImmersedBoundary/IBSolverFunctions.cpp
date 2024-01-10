@@ -14,12 +14,14 @@ FieldData<floatType> GetIBFieldValues( const TensorIndex3D &cellIndex,
                                        const IBCell::SourceTermData &sourceTermData, 
                                        const FieldData<Tensor3D> &fields )
 {
+    using CFD::FVT::G;
+
     // The value of velocity on the boundary, just hard code this to zero to be a solid wall
     FieldData<floatType> ibFieldValues( 0.0f );
 
     // Extrapolate pressure onto the immersed boundary
-    ibFieldValues.P = sourceTermData.ibExtrapFactor_p * fields.P(cellIndex)
-                    + sourceTermData.ibExtrapFactor_a * fields.P(sourceTermData.adjacentCellIndex);
+    ibFieldValues.P = sourceTermData.ibExtrapFactor_p * fields.P( G(cellIndex) )
+                    + sourceTermData.ibExtrapFactor_a * fields.P( G(sourceTermData.adjacentCellIndex) );
 
     return ibFieldValues;
 }
@@ -30,10 +32,12 @@ FieldData<floatType> GetGhostCellValues( const TensorIndex3D &cellIndex,
                                          const IBCell::SourceTermData &sourceTermData, 
                                          const FieldData<Tensor3D> &fields )
 {
+    using CFD::FVT::G;
+
     FieldData<floatType> ghostCellValues( 0.0f );
 
     ForAllFieldData( [&] (intType f) {
-        ghostCellValues[f] = sourceTermData.cellInterpCoeff_p  * fields[f](cellIndex)
+        ghostCellValues[f] = sourceTermData.cellInterpCoeff_p  * fields[f]( G(cellIndex) )
                            + sourceTermData.cellInterpCoeff_ib * sourceTermData.ibFieldValues[f];
     } );
 
@@ -46,8 +50,10 @@ floatType GetFarPressureGhostCellValue( const TensorIndex3D &cellIndex,
                                         const IBCell::SourceTermData &sourceTermData,
                                         const FieldData<Tensor3D> &fields )
 {
-    return sourceTermData.farPressureCoeff_p * fields.P(cellIndex)
-         + sourceTermData.farPressureCoeff_a * fields.P(sourceTermData.adjacentCellIndex)
+    using CFD::FVT::G;
+
+    return sourceTermData.farPressureCoeff_p * fields.P( G(cellIndex) )
+         + sourceTermData.farPressureCoeff_a * fields.P( G(sourceTermData.adjacentCellIndex) )
          + sourceTermData.farPressureCoeff_g * sourceTermData.ghostCellValues.P;       
 }
 
@@ -79,8 +85,8 @@ floatType ContinuityIBSource( const IBCell::SourceTermData &sourceTermData,
                               const FVCoefficients &fvCoeffs ) 
 {
     Axis::ENUMDATA faceNormal = sourceTermData.direction;
-    TransportCoefficients::ENUMDATA coeff  = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiCoeff[faceNormal]   : LUT::LoCoeff[faceNormal];
-    TransportCoefficients::ENUMDATA ccoeff = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiHiCoeff[faceNormal] : LUT::LoLoCoeff[faceNormal];
+    TransportCoefficients::ENUMDATA coeff  = ( sourceTermData.directionIndex == +1 ) ? LUT::HiCoeff[faceNormal]   : LUT::LoCoeff[faceNormal];
+    TransportCoefficients::ENUMDATA ccoeff = ( sourceTermData.directionIndex == +1 ) ? LUT::HiHiCoeff[faceNormal] : LUT::LoLoCoeff[faceNormal];
 
     // Divergence term
     floatType ibSource = - fvCoeffs.Cont.AU[faceNormal][coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.U[faceNormal];
@@ -129,6 +135,8 @@ void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &faceFluxes,
                       const IBData &ibData,
                       const FieldData<Tensor3D> &fields ) 
 {
+    using CFD::FVT::G;
+
     for ( auto &ibCell : ibData.ibCells ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
@@ -136,7 +144,7 @@ void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &faceFluxes,
             TensorIndex3D faceIndex = ibCell.cellIndex;    
             faceIndex[axis] += sourceTermData.faceDirectionIndex;
 
-            faceFluxes[axis](faceIndex) = sourceTermData.faceInterpCoeff_p  * fields.U[axis](ibCell.cellIndex)
+            faceFluxes[axis](faceIndex) = sourceTermData.faceInterpCoeff_p * fields.U[axis]( G(ibCell.cellIndex) )
                                         + sourceTermData.faceInterpCoeff_g * sourceTermData.ghostCellValues.U[axis];
         }
     }
