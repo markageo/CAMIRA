@@ -21,7 +21,7 @@ FieldData<floatType> GetIBFieldValues( const TensorIndex3D &cellIndex,
 
     // Extrapolate pressure onto the immersed boundary
     ibFieldValues.P = sourceTermData.ibExtrapFactor_p * fields.P( G(cellIndex) )
-                    + sourceTermData.ibExtrapFactor_a * fields.P( G(sourceTermData.adjacentCellIndex) );
+                    + sourceTermData.ibExtrapFactor_a * fields.P( G(sourceTermData.cellIndex_a) );
 
     return ibFieldValues;
 }
@@ -37,8 +37,9 @@ FieldData<floatType> GetGhostCellValues( const TensorIndex3D &cellIndex,
     FieldData<floatType> ghostCellValues( 0.0f );
 
     ForAllFieldData( [&] (intType f) {
-        ghostCellValues[f] = sourceTermData.cellInterpCoeff_p  * fields[f]( G(cellIndex) )
-                           + sourceTermData.cellInterpCoeff_ib * sourceTermData.ibFieldValues[f];
+        ghostCellValues[f] = sourceTermData.ghostExtrapCoeff_p  * fields[f]( G(cellIndex) )
+                           + sourceTermData.ghostExtrapCoeff_a  * fields[f]( G(sourceTermData.cellIndex_a) )
+                           + sourceTermData.ghostExtrapCoeff_ib * sourceTermData.ibFieldValues[f];
     } );
 
     return ghostCellValues;
@@ -53,7 +54,7 @@ floatType GetFarPressureGhostCellValue( const TensorIndex3D &cellIndex,
     using CFD::FVT::G;
 
     return sourceTermData.farPressureCoeff_p * fields.P( G(cellIndex) )
-         + sourceTermData.farPressureCoeff_a * fields.P( G(sourceTermData.adjacentCellIndex) )
+         + sourceTermData.farPressureCoeff_a * fields.P( G(sourceTermData.cellIndex_a) )
          + sourceTermData.farPressureCoeff_g * sourceTermData.ghostCellValues.P;       
 }
 

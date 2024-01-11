@@ -36,14 +36,14 @@ void UpdateFVEquations( FVCoefficients &fvCoeffs,
                         const Mesh &mesh,
                         const FieldData< BoundaryConditionData > &bcData )
 {
-    // UpdateIBData( ibData, fields );
+    UpdateIBData( ibData, fields );
     UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
     if constexpr ( isNewtonLinearisation ) {
         UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
     }
-    // SetIBFaceFluxes( faceFluxes, ibData, fields );
+    SetIBFaceFluxes( faceFluxes, ibData, fields );
     UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
-    // AddIBSourceTerms( fvCoeffs, ibData );
+    AddIBSourceTerms( fvCoeffs, ibData );
 }
 
 
@@ -70,24 +70,6 @@ void SweepSolve( FieldData<Tensor3D> &fields,
 
     // Immersed boundary
     IBData ibData = CreateImmersedBoundaryData( inputData, mesh );
-
-    // *************** FOR DEBUGGING ***************
-    VTK::VTKWriterConfig config( mesh.cellFaces[X].size(), 
-                                 mesh.cellFaces[Y].size(), 
-                                 mesh.cellFaces[Z].size() );
-        config.SetWriteMode(VTK::WriteModes::BINARY);
-        
-    VTK::gridVectorType<CFD::floatType> gridVector = { mesh.cellFaces[X].data(), 
-                                                       mesh.cellFaces[Y].data(), 
-                                                       mesh.cellFaces[Z].data() };
-
-    VTK::scalarCollectionType<floatType> scalarMap = { {"Mask", VTK::GridTypes::CELL_DATA, ibData.mask.data() } };
-
-    VTK::vectorCollectionType<floatType> vectorMap = {};
-
-    VTK::VTKWriter maskVTKWriter(gridVector, scalarMap, vectorMap, config);
-    maskVTKWriter.WriteData("mask.vtk", "Field mask array");
-    // *************** FOR DEBUGGING ***************
 
     // Finite Volume
     MaskFields(fields, ibData.mask);

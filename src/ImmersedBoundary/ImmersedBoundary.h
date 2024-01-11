@@ -27,24 +27,25 @@ struct IBCell {
         Axis::ENUMDATA direction;
         intType        directionIndex,        // Cell index offset, either +1 or -1.
                        faceDirectionIndex;    // Face index offset, either 0 for lo side, or 1 for hi side
+        TensorIndex3D cellIndex_a;            // One from boundary cell index, for extrapolation 
 
-        // Coefficients for interpolating onto the ghost cell
-        floatType cellInterpCoeff_p,          // Multiplies with cell value
-                  cellInterpCoeff_ib;         // Multiplies with IB value
+        // Coefficients for extrapolating onto the ghost cell
+        floatType ghostExtrapCoeff_p,         // Multiplies with immediate cell value
+                  ghostExtrapCoeff_a,         // Multiplies with first interior cell
+                  ghostExtrapCoeff_ib;        // Multiplies with IB value
 
         // Coefficients for interpolating onto the face between the ghost cell
         floatType faceInterpCoeff_p,          // Multiplies with cell value
                   faceInterpCoeff_g;          // Multiples with ghost cell value
 
         // Coefficients for extrapolating onto the immersed boundary surface
-        floatType     ibExtrapFactor_p,       // Boundary cell
-                      ibExtrapFactor_a;       // One interior of boundary cell  
-        TensorIndex3D adjacentCellIndex;      // One from boundary cell index, for extrapolation 
-
+        floatType ibExtrapFactor_p,           // Boundary cell
+                  ibExtrapFactor_a;           // One interior of boundary cell  
+        
         // Coefficients for the far pressure ghost cell to allow for correct MWI at the immersed boundary
-        floatType farPressureCoeff_p,   // Boundary cell
-                  farPressureCoeff_a,   // One interior of boundary cell
-                  farPressureCoeff_g;   // Ghost cell       
+        floatType farPressureCoeff_p,        // Boundary cell
+                  farPressureCoeff_a,        // One interior of boundary cell
+                  farPressureCoeff_g;        // Ghost cell       
 
         FieldData<floatType> ibFieldValues; // Value of fields on the immersed boundary surface at the intersection point
 
