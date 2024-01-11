@@ -92,6 +92,8 @@ floatType GetBoundaryDistance( const Polyhedron &polyhedron,
         }
 
     }
+
+    // TODO: When in release build, this seams to sometimes to not pick up certain intersections.
     return closestDistance;
 }
 
@@ -148,7 +150,7 @@ void AddIBDataForDirection( IBCell &ibCell,
     sourceTermData.direction          = axis;
     sourceTermData.directionIndex     = directionIndex;
     sourceTermData.faceDirectionIndex = ( directionIndex == 1 ) ? 1 : 0 ;
-    sourceTermData.adjacentCellIndex  = interiorCellIndex;
+    sourceTermData.cellIndex_a  = interiorCellIndex;
 
 
     // Distance from cell center to immersed boundary along this coordinate direction
@@ -157,26 +159,39 @@ void AddIBDataForDirection( IBCell &ibCell,
                                mesh.cellCenters[Z](cellIndex[Z]) );
     fVector3 rayDirection( 0, 0, 0 );
     rayDirection[ axis ] = static_cast<floatType>( directionIndex );
-    floatType ibDistance   = GetBoundaryDistance(geometry, queryPointCoords, rayDirection);
+    floatType ibDistance = GetBoundaryDistance(geometry, queryPointCoords, rayDirection);   // Maybe shot ray outward from inside body? 
 
 
-    // Interpolation coefficients onto ghost cell
-    floatType cellGhostDistance = abs( mesh.cellCenters[axis](ghostCellIndex[axis]) - mesh.cellCenters[axis](cellIndex[axis]) );
-    sourceTermData.cellInterpCoeff_p  = 1 - cellGhostDistance / ibDistance;
-    sourceTermData.cellInterpCoeff_ib = cellGhostDistance / ibDistance;
+    // Extrapolation coefficients onto ghost cell. May use further points due to stability condition
+    bool meetsGhostStabilityCondition =  ibDistance >= ( mesh.cellLengths[axis](cellIndex[axis]) / 2.0f );
+    if ( meetsGhostStabilityCondition ) {
+
+        floatType cellGhostDistance = abs( mesh.cellCenters[axis](ghostCellIndex[axis]) - mesh.cellCenters[axis](cellIndex[axis]) );
+        sourceTermData.ghostExtrapCoeff_p  = 1 - cellGhostDistance / ibDistance;
+        sourceTermData.ghostExtrapCoeff_a  = 0.0f;
+        sourceTermData.ghostExtrapCoeff_ib = cellGhostDistance / ibDistance;
+
+    } else {
+
+        floatType cellGhostDistance = abs( mesh.cellCenters[axis](ghostCellIndex[axis]) - mesh.cellCenters[axis](interiorCellIndex[axis]) );
+        floatType ibDistance_a = ibDistance + abs( mesh.cellCenters[axis](interiorCellIndex[axis]) - mesh.cellCenters[axis](cellIndex[axis]) );
+        sourceTermData.ghostExtrapCoeff_p  = 0.0f;
+        sourceTermData.ghostExtrapCoeff_a  = 1 - cellGhostDistance / ibDistance_a;
+        sourceTermData.ghostExtrapCoeff_ib = cellGhostDistance / ibDistance_a;
+
+    }
 
 
     // Interpolation coefficients onto cell face between ghost cell
+    intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
     if        ( directionIndex == +1 ) {    // Face on Hi side
 
-        intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
-        sourceTermData.faceInterpCoeff_p  = 1 - mesh.interpFactors[axis](fidx);
+        sourceTermData.faceInterpCoeff_p = 1 - mesh.interpFactors[axis](fidx);
         sourceTermData.faceInterpCoeff_g = mesh.interpFactors[axis](fidx);
 
     } else if ( directionIndex == -1 ) {   // Face on Lo side
 
-        intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
-        sourceTermData.faceInterpCoeff_p  = mesh.interpFactors[axis](fidx);
+        sourceTermData.faceInterpCoeff_p = mesh.interpFactors[axis](fidx);
         sourceTermData.faceInterpCoeff_g = 1 - mesh.interpFactors[axis](fidx);
 
     }

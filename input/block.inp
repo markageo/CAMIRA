@@ -19,17 +19,29 @@ Mesh {
 
     Grid y {
         Segment {
-            bounds     = (0, 3)
-            nCells     = 30
-            biasFactor = 1
+            bounds     = (0, 1.5)
+            nCells     = 20
+            biasFactor = 2
+        }
+
+        Segment {
+            bounds     = (1.5, 3)
+            nCells     = 20
+            biasFactor = -2
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 3)
-            nCells     = 30
-            biasFactor = 1
+            bounds     = (0, 1.5)
+            nCells     = 20
+            biasFactor = 2
+        }
+
+        Segment {
+            bounds     = (1.5, 3)
+            nCells     = 20
+            biasFactor = -2
         }
     }
 }
@@ -98,8 +110,14 @@ BoundaryConditions
 
 SolidGeometry {
     Block {
-        centerPosition = (1.5, 1.5, 1.5)
+        centerPosition = (1.56, 1.5, 1.5)
         dimensions     = (1, 1, 1)
+        rotation       = (0, 0, 34)
+    }
+
+    Block {
+        centerPosition = (3.5, 2.25, 1.5)
+        dimensions     = (0.5, 0.5, 0.5)
         rotation       = (0, 0, 0)
     }
 }
@@ -128,7 +146,7 @@ Solver {
         maxIterations = 2
         maxResiduals = 1e-2
 
-        planeSweepDirection = +x
+        planeSweepDirection = +z
         lineSweepDirection = +y
 
         momentumRelaxation = (1, 1, 1)
