@@ -6,6 +6,7 @@
 #include <vector>
 #include <utility>
 #include <algorithm>
+#include <stdexcept>
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>
@@ -127,10 +128,35 @@ Tensor3D CreateCellMask( const Polyhedron &geometry,
 
 
 
+// Check if a cell is a fluid cell within the domain boundary
+bool CellIsFluid( const TensorIndex3D &cellIndex_a,
+                  const Tensor3D &mask,
+                  const Mesh &mesh )
+{
+
+    if ( static_cast<intType>( mask( cellIndex_a ) ) == CellType::Solid ) 
+        return false;
+
+    for ( intType axis = 0; axis != Axis::count; axis++ ) {
+
+         if ( cellIndex_a[axis] < 0 )
+            return false;
+
+        if ( cellIndex_a[axis] > ( mesh.nCells[axis] - 1 ) )
+            return false;
+
+    }
+
+    return true;
+}
+
+
+
 // Sets data for a particular source term in a particular direciton for a particular cell
 void AddIBDataForDirection( IBCell &ibCell, 
                             const Axis::ENUMDATA axis,
                             const intType directionIndex,
+                            const Tensor3D &mask,
                             const Mesh &mesh,
                             const Polyhedron &geometry)
 {
@@ -152,6 +178,10 @@ void AddIBDataForDirection( IBCell &ibCell,
     sourceTermData.faceDirectionIndex = ( directionIndex == 1 ) ? 1 : 0 ;
     sourceTermData.cellIndex_a  = interiorCellIndex;
 
+    // Ensure that there is enough space between the IB and other IBs and the domain boundary
+    if ( !CellIsFluid( interiorCellIndex, mask, mesh ) ) {
+        throw std::runtime_error( "Invalid immersed boundary geometry and mesh specification. Not enough fluid cells between solid and domain boundaries!" );
+    }
 
     // Distance from cell center to immersed boundary along this coordinate direction
     fVector3 queryPointCoords( mesh.cellCenters[X](cellIndex[X]),
@@ -286,7 +316,7 @@ IBData ConstructIBData( const Polyhedron &geometry,
                     bool atHiBoundary = ( cellIndex[axis] == mesh.nCells[axis]-1  );
                     if ( !atHiBoundary && static_cast<intType>( mask(hiSideCellIndex) ) == CellType::Solid ) {
                         CheckIBCellPtr();
-                        AddIBDataForDirection( *ibCellPtr, axis, +1, mesh, geometry );
+                        AddIBDataForDirection( *ibCellPtr, axis, +1, mask, mesh, geometry );
                     }
 
                     // Solid on lo side
@@ -295,7 +325,7 @@ IBData ConstructIBData( const Polyhedron &geometry,
                     bool atLoBoundary = ( cellIndex[axis] == 0  );
                     if ( !atLoBoundary && static_cast<intType>( mask(loSideCellIndex) ) == CellType::Solid ) {
                         CheckIBCellPtr();
-                        AddIBDataForDirection( *ibCellPtr, axis, -1, mesh, geometry );
+                        AddIBDataForDirection( *ibCellPtr, axis, -1, mask, mesh, geometry );
                     }
 
                 } );
