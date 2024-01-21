@@ -12,36 +12,24 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 7.5)
-            nCells     = 75
+            nCells     = 150
             biasFactor = 1
         }
     }
 
     Grid y {
         Segment {
-            bounds     = (0, 1.5)
-            nCells     = 20
-            biasFactor = 2
-        }
-
-        Segment {
-            bounds     = (1.5, 3)
-            nCells     = 20
-            biasFactor = -2
+            bounds     = (0, 3)
+            nCells     = 60
+            biasFactor = 1
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 1.5)
-            nCells     = 20
-            biasFactor = 2
-        }
-
-        Segment {
-            bounds     = (1.5, 3)
-            nCells     = 20
-            biasFactor = -2
+            bounds     = (0, 3)
+            nCells     = 60
+            biasFactor = 1
         }
     }
 }
@@ -110,14 +98,8 @@ BoundaryConditions
 
 SolidGeometry {
     Block {
-        centerPosition = (1.56, 1.5, 1.5)
+        centerPosition = (1.5, 0.5, 1.5)
         dimensions     = (1, 1, 1)
-        rotation       = (0, 0, 34)
-    }
-
-    Block {
-        centerPosition = (3.5, 2.25, 1.5)
-        dimensions     = (0.5, 0.5, 0.5)
         rotation       = (0, 0, 0)
     }
 }
@@ -135,7 +117,7 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 250
+        maxOuterIterations = 10000
         maxOuterResiduals = 1e-5
 
     }
@@ -149,8 +131,8 @@ Solver {
         planeSweepDirection = +z
         lineSweepDirection = +y
 
-        momentumRelaxation = (1, 1, 1)
-        pressureRelaxation = 1
+        momentumRelaxation = (1.1, 1.1, 1.1)
+        pressureRelaxation = 1.2
 
     }
 
@@ -162,7 +144,7 @@ Output {
     residualHistoryFilename = "output/residual_history.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
-    fieldWriteInterval      = 1
+    fieldWriteInterval      = 0
 
     Monitors {
         Probe {

@@ -28,7 +28,7 @@ namespace
                               c110 = field( i  , j  , k-1 ),
                               c111 = field( i  , j  , k   );
 
-                    // Linear interapolation in z direction
+                    // Linear interpolation in z direction
                     floatType lambdaZ = mesh.interpFactors[Z](k);
                     floatType c00 = ( 1-lambdaZ ) * c000  +  lambdaZ * c001,
                               c10 = ( 1-lambdaZ ) * c100  +  lambdaZ * c101,

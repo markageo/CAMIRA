@@ -18,8 +18,7 @@ enum CellType {
 
 // --------------------------------------- Definition in IBData.cpp -------------------------------------- //
 
-
-// For new method
+// Contains data for a single forced cell
 struct IBCell {
     TensorIndex3D cellIndex;
     
