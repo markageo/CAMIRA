@@ -36,14 +36,26 @@ void UpdateFVEquations( FVCoefficients &fvCoeffs,
                         const Mesh &mesh,
                         const FieldData< BoundaryConditionData > &bcData )
 {
+    TIC("Update FV Equations")
+    TIC("IB Data update")
     UpdateIBData( ibData, fields );
+    TOC()
+    TIC("Update Face Fluxes")
     UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
     if constexpr ( isNewtonLinearisation ) {
         UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
     }
+    TOC()
+    TIC("Set IB Face fluxes")
     SetIBFaceFluxes( faceFluxes, ibData, fields );
+    TOC()
+    TIC("Update FV Coefficients")
     UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
+    TOC()
+    TIC("Add IB source terms")
     AddIBSourceTerms( fvCoeffs, ibData );
+    TOC()
+    TOC()
 }
 
 
@@ -100,11 +112,6 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 
-    // *************** FOR DEBUGGING ***************
-    FieldData<Tensor3D> localResiduals;
-    ResidualFieldWriter localResidualsFieldWriter( localResiduals, mesh, axisTransformation, "residuals/residual" );
-    // *************** FOR DEBUGGING ***************
-
     // Instantiate linear solver, this holds references to the fields
     LinearSolver<MI, LI> linearSolver(fields, fieldsOld, ibData.mask, fvCoeffs, linearSolverSettings);
 
@@ -131,12 +138,6 @@ void SweepSolve( FieldData<Tensor3D> &fields,
         probeValues      = SetFieldProbeValues(fields, fieldProbes); 
         
         fieldsOld = fields;
-
-        // *************** FOR DEBUGGING ***************
-        localResiduals = StencilResidualsField<MI, LI>( fields, fvCoeffs, ibData.mask );
-        localResidualsFieldWriter.WriteData( nOuterIterations );
-        // *************** FOR DEBUGGING ***************
-
 
         consoleLog.WriteResiduals( residualsOuter, massFluxResidual, nOuterIterations );
         residualsLogFile.WriteData( residualsOuter, massFluxResidual, nOuterIterations );
