@@ -1,8 +1,6 @@
 #ifndef CFD_GEOMETRY
 #define CFD_GEOMETRY
 
-#include "../Types.h"
-#include "../FiniteVolume/FiniteVolume.h"
 #include "../IO/InputProcessing.h"
 
 #include <CGAL/Simple_cartesian.h>
