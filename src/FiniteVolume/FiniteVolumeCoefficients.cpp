@@ -1555,7 +1555,81 @@ void AddContinuityBoundaryConstants( ContinuityEquation &contCoeffs )
 
 
 /*---------------------------------------------------------------------------------------------------------------*\
-                                                General functions
+                                            Immersed Boundary Functions
+\*---------------------------------------------------------------------------------------------------------------*/
+
+
+floatType MomentumIBSource( const Axis::ENUMDATA momentumAxis,
+                            const IBCell::SourceTermData &sourceTermData, 
+                            const TensorIndex3D &cellIndex,
+                            const FVCoefficients &fvCoeffs ) 
+{
+    Axis::ENUMDATA faceNormal = sourceTermData.direction;
+    TransportCoefficients::ENUMDATA coeff = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiCoeff[faceNormal] : LUT::LoCoeff[faceNormal];
+
+    // Velocity term
+    floatType ibSource = - fvCoeffs.Mom[momentumAxis].AU[momentumAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[momentumAxis];
+
+    // Pressure term
+    if ( momentumAxis == faceNormal ) {
+        ibSource += - fvCoeffs.Mom[momentumAxis].AP[coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.P;
+    }
+
+    return ibSource;
+}
+
+
+
+floatType ContinuityIBSource( const IBCell::SourceTermData &sourceTermData, 
+                              const TensorIndex3D &cellIndex,
+                              const FVCoefficients &fvCoeffs ) 
+{
+    Axis::ENUMDATA faceNormal = sourceTermData.direction;
+    TransportCoefficients::ENUMDATA coeff  = ( sourceTermData.directionIndex == +1 ) ? LUT::HiCoeff[faceNormal]   : LUT::LoCoeff[faceNormal];
+    TransportCoefficients::ENUMDATA ccoeff = ( sourceTermData.directionIndex == +1 ) ? LUT::HiHiCoeff[faceNormal] : LUT::LoLoCoeff[faceNormal];
+
+    // Divergence term
+    floatType ibSource = - fvCoeffs.Cont.AU[faceNormal][coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.U[faceNormal];
+
+    // Pressure terms
+    ibSource += - fvCoeffs.Cont.AP[coeff ](cellIndex) * sourceTermData.ghostCellValues.P
+                - fvCoeffs.Cont.AP[ccoeff](cellIndex) * sourceTermData.farPressureGhostCellValue;
+
+    return ibSource;
+}
+
+
+
+void AddIBSourceTerms( FVCoefficients &fvCoeffs,
+                       const IBData &ibData )
+{
+
+    // Iterate through each forced cell
+    for ( auto &ibCell : ibData.ibCells ) { 
+
+        TensorIndex3D cellIndex = ibCell.cellIndex;
+
+        // A source term is added for each forced face
+        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
+
+            // Momentum equations
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                fvCoeffs.Mom[axis].B( cellIndex ) += MomentumIBSource( axis, sourceTermData, cellIndex, fvCoeffs );
+            } );
+
+            // Continuity equation
+            fvCoeffs.Cont.B( cellIndex ) += ContinuityIBSource( sourceTermData, cellIndex, fvCoeffs );
+
+        }
+
+    }
+
+}
+
+
+
+/*---------------------------------------------------------------------------------------------------------------*\
+                                                General Functions
 \*---------------------------------------------------------------------------------------------------------------*/
 
 // Allocate the 2D arrays which store constant values of boundary conditions if they are needed
@@ -1677,6 +1751,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
                                          const FieldData<Tensor3D> &fields,
                                          const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &faceAdvectedVelocities,
                                          const EnumVector<Axis, Tensor3D> &faceFluxes, 
+                                         const IBData &ibData,
                                          const FieldData< BoundaryConditionData > &bcData,
                                          const InputData &inputData)
 {
@@ -1746,6 +1821,9 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     // Relaxation factor
     fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation.P;
 
+    // Add effect if immersed boundary
+    AddIBSourceTerms( fvCoeffs, ibData );
+
     return fvCoeffs;
 }
 
@@ -1759,6 +1837,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
                            const FieldData<Tensor3D> &fields,
                            const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &faceAdvectedVelocities,
                            const EnumVector<Axis, Tensor3D> &faceFluxes,
+                           const IBData &ibData,
                            const FieldData< BoundaryConditionData > &bcData )
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -1810,6 +1889,9 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     } );
 
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
+
+    // Add effect of immersed boundary
+    AddIBSourceTerms( fvCoeffs, ibData );
 }
 
 

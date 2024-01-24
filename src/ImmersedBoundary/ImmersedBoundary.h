@@ -3,8 +3,7 @@
 
 #include "../Types.h"
 #include "../Geometry/Geometry.h"
-#include "../Tools/FieldProbe.h"
-#include "../FiniteVolume/FiniteVolume.h"
+#include "../FiniteVolume/Mesh.h"
 
 #include <vector>
 
@@ -34,7 +33,7 @@ struct IBCell {
                   faceExtrapCoeff_ib;        // Multiplies with IB value
 
         // Coefficients for extrapolating from face to ghost cell
-        floatType ghostExtrapCoeff_p,       // Multiplies with immediate cell vale
+        floatType ghostExtrapCoeff_p,       // Multiplies with immediate cell value
                   ghostExtrapCoeff_f;       // Multiplies with the face value
 
 
@@ -76,14 +75,6 @@ IBData CreateImmersedBoundaryData( const InputData &, const Mesh & );
 
 
 // ------------------------------- Definition in IBSolverFunctions.cpp --------------------------------- //
-
-
-// Add source terms to finite volume equations which include the effect of the immersed boundary
-void AddIBSourceTerms( FVCoefficients &, const IBData & );
-
-
-// Set the face velocities to their interpolated values according to the immersed boundary
-void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &, const IBData & );
 
 
 // Update values of ghost cells by re-interpolating from the immersed boundary

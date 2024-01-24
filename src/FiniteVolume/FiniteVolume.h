@@ -1,35 +1,16 @@
-#ifndef FINITE_VOLUME   
-#define FINITE_VOLUME
+#ifndef CFD_FINITE_VOLUME   
+#define CFD_FINITE_VOLUME
 
+#include "Mesh.h"
 #include "../Types.h"
 #include "../IO/InputProcessing.h"
+#include "../ImmersedBoundary/ImmersedBoundary.h"
 #include <vector>
 
 namespace CFD
 {
 
 // -------------------------------------- Definition in FiniteVolumeStructures.cpp -------------------------------------- //
-
-// Recitlinear mesh structure and mesher (on construction)
-struct Mesh
-{
-    Mesh(const InputData &);
-    iArray3 nCells;
-    EnumVector<Axis, iArray3> nFacesNormal;
-    EnumVector<Axis, Tensor1D> cellCenters, 
-                              cellFaces,            // cellFaces[axis](i) -> cellFaces[axis](i - 1/2)
-                              cellLengths, 
-                              cellLengthsInv,       // inverse of cell lengths
-                              cellCenterDiffInv,    // inverse of distance between cell centers, same convention as cell faces
-                              interpFactors;        // faceValue(i) = (1 - interpFactor(i))*cellValue(i-1) + interpFactor(i)*cellValue(i)
-    EnumVector<Axis, Tensor2D> cellFaceAreas;        // Index by X, Y, Z order, not right hand rule.
-
-    struct ExtrapFactorsStruct {
-        floatType p,    // Boundary cell 
-                  a;    // One from boundary cell
-    };
-    EnumVector< BoundaryPatches, ExtrapFactorsStruct > extrapFactors;
-};
 
 
 struct MomentumEquation {
@@ -39,10 +20,10 @@ struct MomentumEquation {
     Tensor3D B;                                                               // Source Term (RHS)
     Tensor3D diagCoeffInv;                                                    // Inverse of diagonal coefficient
     EnumVector< Axis, EnumVector<TransportCoefficients, Tensor1D> > diff;     // Diffusion coefficients (LHS)
-    EnumVector< BoundaryPatches, floatType > diffBoundary;                   // Diffusion coefficients for constant boundary conditions (LHS)
+    EnumVector< BoundaryPatches, floatType > diffBoundary;                    // Diffusion coefficients for constant boundary conditions (LHS)
     EnumVector< BoundaryPatches, Tensor2D   > BUBoundary, BPBoundary;         // Constant terms that come from fixed BC (LHS)
     floatType relaxation;
-    Axis::ENUMDATA component;                                                // The momentum component
+    Axis::ENUMDATA component;                                                 // The momentum component
     Linearisation linearisation;
 };
 
@@ -117,6 +98,8 @@ void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> 
                                    const EnumVector<Axis, Tensor3D> &, 
                                    const FieldData< BoundaryConditionData > &);
 
+void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &, 
+                      const IBData & );
 
 
 
@@ -127,7 +110,8 @@ void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> 
 FVCoefficients InitialiseFVCoefficients( const Mesh &, 
                                          const FieldData< Tensor3D > &, 
                                          const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &,
-                                         const EnumVector< Axis, Tensor3D > &, 
+                                         const EnumVector< Axis, Tensor3D > &,
+                                         const IBData &, 
                                          const FieldData< BoundaryConditionData > &, 
                                          const InputData &);
 
@@ -137,6 +121,7 @@ void UpdateFVCoefficients( FVCoefficients &,
                            const FieldData< Tensor3D > &, 
                            const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &,
                            const EnumVector< Axis, Tensor3D > &,
+                           const IBData &,
                            const FieldData< BoundaryConditionData > &);
 
 
@@ -149,4 +134,4 @@ FieldData<Tensor3D> GetVertexFields( const FieldData<Tensor3D> &, const Mesh &, 
 
 } // end namespace CFD
 
-#endif // FINITE_VOLUME
+#endif // CFD_FINITE_VOLUME

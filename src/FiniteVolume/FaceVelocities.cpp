@@ -303,4 +303,28 @@ EnumVector<Axis, Tensor3D> InitialiseFaceFluxes( const Mesh &mesh,
 }
 
 
+
+
+
+// ------------------------------------ Immersed Boundary Face Fluxes ------------------------------------
+
+void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &faceFluxes,
+                      const IBData &ibData ) 
+{
+    using CFD::FVT::G;
+
+    for ( auto &ibCell : ibData.ibCells ) { 
+        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
+
+            Axis::ENUMDATA axis = sourceTermData.direction;
+            TensorIndex3D faceIndex = ibCell.cellIndex;    
+            faceIndex[axis] += sourceTermData.faceDirectionIndex;
+
+            faceFluxes[axis](faceIndex) = sourceTermData.faceValues.U[axis];
+        }
+    }
+}
+
+
+
 } // end namespace CFD

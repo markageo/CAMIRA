@@ -2,6 +2,7 @@
 #define FV_TOOLS
 
 #include "../Types.h"
+#include "../FiniteVolume/Mesh.h"
 
 
 namespace CFD 

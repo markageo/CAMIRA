@@ -50,11 +50,9 @@ void UpdateFVEquations( FVCoefficients &fvCoeffs,
     SetIBFaceFluxes( faceFluxes, ibData );
     TOC()
     TIC("Update FV Coefficients")
-    UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
+    UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData);
     TOC()
-    TIC("Add IB source terms")
-    AddIBSourceTerms( fvCoeffs, ibData );
-    TOC()
+ 
     TOC()
 }
 
@@ -91,7 +89,7 @@ void SweepSolve( FieldData<Tensor3D> &fields,
         faceAdvectedVelocities = InitialiseAdvectedFaceVelocities( mesh, fields.U, faceFluxes, bcData );
 
     FieldData<Tensor3D> fieldsOld = fields;
-    FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceAdvectedVelocities, faceFluxes, bcData, inputData);
+    FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData, inputData);
     UpdateFVEquations<isNewtonLinearisation>( fvCoeffs, ibData, faceFluxes, faceAdvectedVelocities, fields, mesh, bcData );
 
 
