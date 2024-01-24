@@ -28,14 +28,15 @@ struct IBCell {
                        faceDirectionIndex;    // Face index offset, either 0 for lo side, or 1 for hi side
         TensorIndex3D cellIndex_a;            // One from boundary cell index, for extrapolation 
 
-        // Coefficients for extrapolating onto the ghost cell
-        floatType ghostExtrapCoeff_p,         // Multiplies with immediate cell value
-                  ghostExtrapCoeff_a,         // Multiplies with first interior cell
-                  ghostExtrapCoeff_ib;        // Multiplies with IB value
+        // Coefficients for extrapolating onto face
+        floatType faceExtrapCoeff_p,         // Multiplies with immediate cell value
+                  faceExtrapCoeff_a,         // Multiplies with first interior cell
+                  faceExtrapCoeff_ib;        // Multiplies with IB value
 
-        // Coefficients for interpolating onto the face between the ghost cell
-        floatType faceInterpCoeff_p,          // Multiplies with cell value
-                  faceInterpCoeff_g;          // Multiples with ghost cell value
+        // Coefficients for extrapolating from face to ghost cell
+        floatType ghostExtrapCoeff_p,       // Multiplies with immediate cell vale
+                  ghostExtrapCoeff_f;       // Multiplies with the face value
+
 
         // Coefficients for extrapolating onto the immersed boundary surface
         floatType ibExtrapFactor_p,           // Boundary cell
@@ -46,9 +47,18 @@ struct IBCell {
                   farPressureCoeff_a,        // One interior of boundary cell
                   farPressureCoeff_g;        // Ghost cell       
 
-        FieldData<floatType> ibFieldValues; // Value of fields on the immersed boundary surface at the intersection point
+        // Coordinate distance squared to the immersed boundary surface
+        floatType ibDistance2;
 
-        FieldData<floatType> ghostCellValues;
+        // Cell face normal area vector component. This has a sign.
+        floatType faceAreaComponent;
+
+        // Coefficient that multiplies with total velocity flux error
+        floatType velocityFluxCorrectionCoeff;
+
+        FieldData<floatType> ibValues,          // Field variables on immersed boundary surface at intersection point 
+                             faceValues,        // Field variables on face between ghost cell and interior cell  
+                             ghostCellValues;   // Field variables at ghost cell
         floatType farPressureGhostCellValue;
     };
     std::vector< SourceTermData > sourceTermsData;
@@ -73,7 +83,7 @@ void AddIBSourceTerms( FVCoefficients &, const IBData & );
 
 
 // Set the face velocities to their interpolated values according to the immersed boundary
-void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &, const IBData &, const FieldData<Tensor3D> & );
+void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &, const IBData & );
 
 
 // Update values of ghost cells by re-interpolating from the immersed boundary

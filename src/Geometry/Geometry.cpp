@@ -60,7 +60,7 @@ std::array< fVector3, 8> GetBlockVertices( const InputData::SolidBlockData &bloc
         EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
             // Rotate about origin
-            floatType angleRadians = blockData.rotation(axis) * M_PI / 180.0f;
+            floatType angleRadians = blockData.rotation(axis) * static_cast<floatType>( M_PI ) / 180.0f;
             Eigen::AngleAxis<floatType> R( angleRadians, unitVectors[axis] );
             vertexPoint = R * vertexPoint;
 
@@ -197,7 +197,7 @@ Polyhedron MakeSpherePolyhedron( const InputData::SolidSphereData &solidSphereDa
     using Surface_mesh = CGAL::Surface_mesh<Point_3>;
 
     // Implicit function for sphere surface
-    floatType radius2 = std::pow( solidSphereData.diameter / 2.0f, 2 );
+    floatType radius2 = std::pow( solidSphereData.diameter / 2.0f, 2.0f );
     Point_3 centerPosition = Point_3( solidSphereData.centerPosition(X), 
                                       solidSphereData.centerPosition(Y), 
                                       solidSphereData.centerPosition(Z) );
