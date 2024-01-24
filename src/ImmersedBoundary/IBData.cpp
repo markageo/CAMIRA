@@ -53,11 +53,11 @@ bool PointInside( const Polyhedron &polyhedron,
 
 
 
-// Returns the distance to the nearest intersection from the given point in the direction of the given ray.
+// Returns the distance squared to the nearest intersection from the given point in the direction of the given ray.
 // https://stackoverflow.com/questions/69953358/to-calculate-intersections-between-a-ray-and-a-mesh
-floatType GetBoundaryDistance( const Polyhedron &polyhedron,
-                               const fVector3 &queryPointCoords,
-                               const fVector3 &rayDirection ) 
+floatType GetBoundaryDistance2( const Polyhedron &polyhedron,
+                                const fVector3 &queryPointCoords,
+                                const fVector3 &rayDirection ) 
 {
     using Point            = Polyhedron::Point_3;
     using Vector           = CGAL_Kernel::Vector_3;
@@ -70,33 +70,17 @@ floatType GetBoundaryDistance( const Polyhedron &polyhedron,
     Tree tree(faces(polyhedron).first, faces(polyhedron).second, polyhedron);
     tree.accelerate_distance_queries();
 
-    Vector rayOrientation( rayDirection(0), rayDirection(1), rayDirection(2) );
-    Point  rayOrigin( queryPointCoords(0), queryPointCoords(1), queryPointCoords(2) );
-    Ray    ray( rayOrigin, rayOrientation );
-    std::vector<Ray_intersection> intersections;
-    tree.all_intersections( ray, std::back_inserter( intersections ) );
+    const Vector rayOrientation( rayDirection(0), rayDirection(1), rayDirection(2) );
+    const Point  rayOrigin( queryPointCoords(0), queryPointCoords(1), queryPointCoords(2) );
+    const Ray    ray( rayOrigin, rayOrientation );
+    Ray_intersection intersection = tree.first_intersection( ray );
 
-    if ( intersections.empty() )
-        return 0.0f;
+    Point* intersectionPoint = boost::get<Point>( &(intersection->first) ); 
+    floatType distance2 = static_cast<floatType>( CGAL::squared_distance( *intersectionPoint, rayOrigin ) );
 
-    floatType closestDistance = 0.0;
-    for ( auto it = intersections.begin(); it != intersections.end(); it++ ) {
-        auto intersection = (*it)->first;
-
-        if ( Point* p = boost::get<Point>(&intersection) ) {
-
-            floatType distance = sqrt( CGAL::squared_distance( *p, rayOrigin ) );
-            if ( it == intersections.begin() || distance < closestDistance ) {
-                closestDistance = distance;
-            } 
-
-        }
-
-    }
-
-    // TODO: When in release build, this seams to sometimes to not pick up certain intersections.
-    return closestDistance;
+    return distance2;
 }
+
 
 
 // Create a mask array for cell centers
@@ -189,40 +173,47 @@ void AddIBDataForDirection( IBCell &ibCell,
                                mesh.cellCenters[Z](cellIndex[Z]) );
     fVector3 rayDirection( 0, 0, 0 );
     rayDirection[ axis ] = static_cast<floatType>( directionIndex );
-    floatType ibDistance = GetBoundaryDistance(geometry, queryPointCoords, rayDirection);   // Maybe shot ray outward from inside body? 
+    sourceTermData.ibDistance2 = GetBoundaryDistance2(geometry, queryPointCoords, rayDirection);
+    floatType ibDistance = sqrt( sourceTermData.ibDistance2 );
 
+    // Face area vector
+    sourceTermData.faceAreaComponent = static_cast<floatType>( directionIndex )   // Gives the correct sign
+                                     * mesh.cellLengths[ LUT::LoOrthogonalAxis[axis] ]( cellIndex[ LUT::LoOrthogonalAxis[axis] ] )
+                                     * mesh.cellLengths[ LUT::HiOrthogonalAxis[axis] ]( cellIndex[ LUT::HiOrthogonalAxis[axis] ] );
+    
 
-    // Extrapolation coefficients onto ghost cell. May use further points due to stability condition
+    // Extrapolation coefficients onto face between ghost cell and fluid cell. May use further points due to stability condition
     bool meetsGhostStabilityCondition =  ibDistance >= ( mesh.cellLengths[axis](cellIndex[axis]) / 2.0f );
     if ( meetsGhostStabilityCondition ) {
 
-        floatType cellGhostDistance = abs( mesh.cellCenters[axis](ghostCellIndex[axis]) - mesh.cellCenters[axis](cellIndex[axis]) );
-        sourceTermData.ghostExtrapCoeff_p  = 1 - cellGhostDistance / ibDistance;
-        sourceTermData.ghostExtrapCoeff_a  = 0.0f;
-        sourceTermData.ghostExtrapCoeff_ib = cellGhostDistance / ibDistance;
+        floatType dxpOn2 = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f ;
+        sourceTermData.faceExtrapCoeff_p  = ( ibDistance - dxpOn2 ) / ( ibDistance );
+        sourceTermData.faceExtrapCoeff_a  = 0.0f;
+        sourceTermData.faceExtrapCoeff_ib = dxpOn2 / ibDistance;
 
     } else {
 
-        floatType cellGhostDistance = abs( mesh.cellCenters[axis](ghostCellIndex[axis]) - mesh.cellCenters[axis](interiorCellIndex[axis]) );
-        floatType ibDistance_a = ibDistance + abs( mesh.cellCenters[axis](interiorCellIndex[axis]) - mesh.cellCenters[axis](cellIndex[axis]) );
-        sourceTermData.ghostExtrapCoeff_p  = 0.0f;
-        sourceTermData.ghostExtrapCoeff_a  = 1 - cellGhostDistance / ibDistance_a;
-        sourceTermData.ghostExtrapCoeff_ib = cellGhostDistance / ibDistance_a;
+        floatType dxp = mesh.cellLengths[axis](cellIndex[axis]);
+        floatType dxa = mesh.cellLengths[axis](interiorCellIndex[axis]);
+        floatType denominator =  dxp / 2.0f   +  dxa / 2.0f  +  ibDistance;
+        sourceTermData.faceExtrapCoeff_p  = 0.0f;
+        sourceTermData.faceExtrapCoeff_a  = ( dxp / 2.0f - ibDistance ) / denominator;
+        sourceTermData.faceExtrapCoeff_ib = ( dxa / 2.0f + dxp ) / denominator;
 
     }
 
 
-    // Interpolation coefficients onto cell face between ghost cell
+    // Extrapolation coefficients from face to ghost cell
     intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
     if        ( directionIndex == +1 ) {    // Face on Hi side
 
-        sourceTermData.faceInterpCoeff_p = 1 - mesh.interpFactors[axis](fidx);
-        sourceTermData.faceInterpCoeff_g = mesh.interpFactors[axis](fidx);
+        sourceTermData.ghostExtrapCoeff_p = - (1 - mesh.interpFactors[axis](fidx)) / mesh.interpFactors[axis](fidx);
+        sourceTermData.ghostExtrapCoeff_f = 1.0f / mesh.interpFactors[axis](fidx);
 
     } else if ( directionIndex == -1 ) {   // Face on Lo side
 
-        sourceTermData.faceInterpCoeff_p = mesh.interpFactors[axis](fidx);
-        sourceTermData.faceInterpCoeff_g = 1 - mesh.interpFactors[axis](fidx);
+        sourceTermData.ghostExtrapCoeff_p = - mesh.interpFactors[axis](fidx) / (1.0f - mesh.interpFactors[axis](fidx));
+        sourceTermData.ghostExtrapCoeff_f = 1.0f / (1.0f - mesh.interpFactors[axis](fidx));
 
     }
 
@@ -272,6 +263,35 @@ void AddIBDataForDirection( IBCell &ibCell,
                                             - (dxw / dxp) * (1 - lambdaw) / (1 - lambdaww)
                                             + (1 - lambdaw - lambdaww) / (1 - lambdaww);
 
+    }
+
+}
+
+
+
+void SetVelocityFluxCorrectionCoefficient( IBData &ibData )
+{
+
+    // The denominator must be calculated seperately first
+    floatType denominator = 0.0f;
+    for ( auto &ibCell : ibData.ibCells ) { 
+        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
+
+            denominator += std::pow( abs( sourceTermData.faceAreaComponent) , 2.0f )
+                         * sourceTermData.ibDistance2;
+
+        }
+    }
+
+    // Now the coefficient for each cell
+    for ( auto &ibCell : ibData.ibCells ) { 
+        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
+
+           sourceTermData.velocityFluxCorrectionCoeff = ( sourceTermData.ibDistance2 
+                                                        * sourceTermData.faceAreaComponent 
+                                                        ) / denominator;
+
+        }
     }
 
 }
@@ -333,6 +353,9 @@ IBData ConstructIBData( const Polyhedron &geometry,
             }
         }
     }
+
+    // Calculate the coefficients for the velocity flux correction
+    SetVelocityFluxCorrectionCoefficient( ibData );
 
     return ibData;
 }

@@ -98,9 +98,9 @@ BoundaryConditions
 
 SolidGeometry {
     Block {
-        centerPosition = (1.5, 0.5, 1.5)
+        centerPosition = (1.5, 1.5, 1.5)
         dimensions     = (1, 1, 1)
-        rotation       = (0, 0, 0)
+       rotation       = (0, 0, 0)
     }
 }
 

@@ -47,7 +47,7 @@ void UpdateFVEquations( FVCoefficients &fvCoeffs,
     }
     TOC()
     TIC("Set IB Face fluxes")
-    SetIBFaceFluxes( faceFluxes, ibData, fields );
+    SetIBFaceFluxes( faceFluxes, ibData );
     TOC()
     TIC("Update FV Coefficients")
     UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
