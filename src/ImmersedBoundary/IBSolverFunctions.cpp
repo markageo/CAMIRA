@@ -141,7 +141,7 @@ void UpdateIBData( IBData &ibData,
     }
 
     // Correct them to globally conserve mass
-    CorrectIBFaceVelocities( ibData );
+    // CorrectIBFaceVelocities( ibData );
 
     for ( auto &ibCell : ibData.ibCells ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
