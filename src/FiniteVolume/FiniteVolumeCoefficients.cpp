@@ -1562,7 +1562,8 @@ void AddContinuityBoundaryConstants( ContinuityEquation &contCoeffs )
 floatType MomentumIBSource( const Axis::ENUMDATA momentumAxis,
                             const IBCell::SourceTermData &sourceTermData, 
                             const TensorIndex3D &cellIndex,
-                            const FVCoefficients &fvCoeffs ) 
+                            const FVCoefficients &fvCoeffs,
+                            const FieldData<Tensor3D> &fields ) 
 {
     Axis::ENUMDATA faceNormal = sourceTermData.direction;
     TransportCoefficients::ENUMDATA coeff = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiCoeff[faceNormal] : LUT::LoCoeff[faceNormal];
@@ -1582,8 +1583,11 @@ floatType MomentumIBSource( const Axis::ENUMDATA momentumAxis,
 
 floatType ContinuityIBSource( const IBCell::SourceTermData &sourceTermData, 
                               const TensorIndex3D &cellIndex,
-                              const FVCoefficients &fvCoeffs ) 
+                              const FVCoefficients &fvCoeffs,
+                              const FieldData<Tensor3D> &fields ) 
 {
+    using FVT::G;
+
     Axis::ENUMDATA faceNormal = sourceTermData.direction;
     TransportCoefficients::ENUMDATA coeff  = ( sourceTermData.directionIndex == +1 ) ? LUT::HiCoeff[faceNormal]   : LUT::LoCoeff[faceNormal];
     TransportCoefficients::ENUMDATA ccoeff = ( sourceTermData.directionIndex == +1 ) ? LUT::HiHiCoeff[faceNormal] : LUT::LoLoCoeff[faceNormal];
@@ -1600,7 +1604,26 @@ floatType ContinuityIBSource( const IBCell::SourceTermData &sourceTermData,
 
 
 
+floatType InteriorContinuityIBSource( const IBCell::SourceTermData &sourceTermData, 
+                                      const TensorIndex3D &cellIndex,
+                                      const FVCoefficients &fvCoeffs,
+                                      const FieldData<Tensor3D> &fields ) 
+{
+    using FVT::G;
+
+    Axis::ENUMDATA faceNormal = sourceTermData.direction;
+    TransportCoefficients::ENUMDATA ccoeff = ( sourceTermData.directionIndex == +1 ) ? LUT::HiHiCoeff[faceNormal] : LUT::LoLoCoeff[faceNormal];
+
+    // Far pressure term
+    floatType ibSource = - fvCoeffs.Cont.AP[ccoeff](cellIndex) * sourceTermData.ghostCellValues.P;
+
+    return ibSource;
+}
+
+
+
 void AddIBSourceTerms( FVCoefficients &fvCoeffs,
+                       const FieldData<Tensor3D> &fields,
                        const IBData &ibData )
 {
 
@@ -1614,12 +1637,71 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
 
             // Momentum equations
             EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                fvCoeffs.Mom[axis].B( cellIndex ) += MomentumIBSource( axis, sourceTermData, cellIndex, fvCoeffs );
+                fvCoeffs.Mom[axis].B( cellIndex ) += MomentumIBSource( axis, sourceTermData, cellIndex, fvCoeffs, fields );
             } );
 
             // Continuity equation
-            fvCoeffs.Cont.B( cellIndex ) += ContinuityIBSource( sourceTermData, cellIndex, fvCoeffs );
+            fvCoeffs.Cont.B( cellIndex ) += ContinuityIBSource( sourceTermData, cellIndex, fvCoeffs, fields );
 
+            // For the adjacent cell wide stencil term
+            fvCoeffs.Cont.B( sourceTermData.cellIndex_a ) += InteriorContinuityIBSource( sourceTermData, sourceTermData.cellIndex_a, fvCoeffs, fields );
+
+        }
+
+    }
+
+}
+
+
+
+void ChangeStencilToCentralAtIB( FVCoefficients &fvCoeffs,
+                                 const EnumVector<Axis, Tensor3D> &faceFluxes, 
+                                 const Mesh &mesh,
+                                 const IBData &ibData )
+{
+    using enum TransportCoefficients::ENUMDATA;
+
+    for ( auto &ibCell : ibData.ibCells ) { 
+
+        TensorIndex3D cellIndex = ibCell.cellIndex;
+
+        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
+
+            Axis::ENUMDATA faceNormal = sourceTermData.direction;
+            TensorIndex3D faceIndex = cellIndex;
+            faceIndex[faceNormal] += sourceTermData.faceDirectionIndex;
+            intType fidx = faceIndex[faceNormal],
+                    cidx = cellIndex[faceNormal];
+
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+                floatType uf = faceFluxes[faceNormal](faceIndex);
+                if ( sourceTermData.directionIndex == +1 ) {    // Face on Hi side
+
+                    // Subtract upwinding term
+                    TransportCoefficients::ENUMDATA hi = LUT::HiCoeff[faceNormal];
+                    fvCoeffs.Mom[axis].AU[axis][p ](cellIndex) -= std::max( uf * mesh.cellLengthsInv[faceNormal]( cidx ), static_cast<floatType>(0.0f) );
+                    fvCoeffs.Mom[axis].AU[axis][hi](cellIndex) -= std::min( uf * mesh.cellLengthsInv[faceNormal]( cidx ), static_cast<floatType>(0.0f) );
+
+                    // Add in central differencing term
+                    fvCoeffs.Mom[axis].AU[axis][p ](cellIndex) += uf * ( 1.0f - mesh.interpFactors[faceNormal]( fidx ) ) * mesh.cellLengthsInv[faceNormal]( cidx );
+                    fvCoeffs.Mom[axis].AU[axis][hi](cellIndex) += uf * mesh.interpFactors[faceNormal]( fidx ) * mesh.cellLengthsInv[faceNormal]( cidx );
+
+                } else {                                        // Face on Lo side    
+
+                    // Subtract upwinding term
+                    TransportCoefficients::ENUMDATA lo = LUT::LoCoeff[faceNormal];
+                    fvCoeffs.Mom[axis].AU[axis][p ](cellIndex) -= std::max( - uf * mesh.cellLengthsInv[faceNormal]( cidx ), static_cast<floatType>(0.0f) );
+                    fvCoeffs.Mom[axis].AU[axis][lo](cellIndex) -= std::min( - uf * mesh.cellLengthsInv[faceNormal]( cidx ), static_cast<floatType>(0.0f) );
+
+                    // Add in central differencing term
+                    fvCoeffs.Mom[axis].AU[axis][p ](cellIndex) += - uf * mesh.interpFactors[faceNormal]( fidx ) * mesh.cellLengthsInv[faceNormal]( cidx );
+                    fvCoeffs.Mom[axis].AU[axis][lo](cellIndex) += - uf * ( 1.0f - mesh.interpFactors[faceNormal]( fidx ) ) * mesh.cellLengthsInv[faceNormal]( cidx );
+
+                }
+
+            } );
+            
         }
 
     }
@@ -1788,6 +1870,9 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
 
     } );
 
+    // Use central differencing at immersed boundary
+    // ChangeStencilToCentralAtIB( fvCoeffs, faceFluxes, mesh, ibData );
+
 
     // Continuity equation
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
@@ -1822,7 +1907,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation.P;
 
     // Add effect if immersed boundary
-    AddIBSourceTerms( fvCoeffs, ibData );
+    AddIBSourceTerms( fvCoeffs, fields, ibData );
 
     return fvCoeffs;
 }
@@ -1861,6 +1946,8 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
         SetBoundaryAdvectionPicardCoefficients(fvCoeffs.Mom[axis], faceFluxes, bcData.U[axis], mesh);
     } );
 
+    // Use central differencing at immersed boundary
+    // ChangeStencilToCentralAtIB( fvCoeffs, faceFluxes, mesh, ibData );
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
@@ -1883,7 +1970,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
             fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
         }
 
-         // Add boundary constants to source terms
+        // Add boundary constants to source terms
         AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
 
     } );
@@ -1891,7 +1978,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
     // Add effect of immersed boundary
-    AddIBSourceTerms( fvCoeffs, ibData );
+    AddIBSourceTerms( fvCoeffs, fields, ibData );
 }
 
 

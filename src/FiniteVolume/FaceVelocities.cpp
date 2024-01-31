@@ -311,8 +311,6 @@ EnumVector<Axis, Tensor3D> InitialiseFaceFluxes( const Mesh &mesh,
 void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &faceFluxes,
                       const IBData &ibData ) 
 {
-    using CFD::FVT::G;
-
     for ( auto &ibCell : ibData.ibCells ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 

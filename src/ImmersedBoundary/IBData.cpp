@@ -160,7 +160,9 @@ void AddIBDataForDirection( IBCell &ibCell,
     sourceTermData.direction          = axis;
     sourceTermData.directionIndex     = directionIndex;
     sourceTermData.faceDirectionIndex = ( directionIndex == 1 ) ? 1 : 0 ;
-    sourceTermData.cellIndex_a  = interiorCellIndex;
+    sourceTermData.cellIndex_a        = interiorCellIndex;
+
+    intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
 
     // Ensure that there is enough space between the IB and other IBs and the domain boundary
     if ( !CellIsFluid( interiorCellIndex, mask, mesh ) ) {
@@ -176,11 +178,11 @@ void AddIBDataForDirection( IBCell &ibCell,
     sourceTermData.ibDistance2 = GetBoundaryDistance2(geometry, queryPointCoords, rayDirection);
     floatType ibDistance = sqrt( sourceTermData.ibDistance2 );
 
+
     // Face area vector
     sourceTermData.faceAreaComponent = static_cast<floatType>( directionIndex )   // Gives the correct sign
-                                     * mesh.cellLengths[ LUT::LoOrthogonalAxis[axis] ]( cellIndex[ LUT::LoOrthogonalAxis[axis] ] )
-                                     * mesh.cellLengths[ LUT::HiOrthogonalAxis[axis] ]( cellIndex[ LUT::HiOrthogonalAxis[axis] ] );
-    
+                                     * mesh.cellCenters[axis]( fidx );    
+
 
     // Extrapolation coefficients onto face between ghost cell and fluid cell. May use further points due to stability condition
     bool meetsGhostStabilityCondition =  ibDistance >= ( mesh.cellLengths[axis](cellIndex[axis]) / 2.0f );
@@ -204,7 +206,6 @@ void AddIBDataForDirection( IBCell &ibCell,
 
 
     // Extrapolation coefficients from face to ghost cell
-    intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
     if        ( directionIndex == +1 ) {    // Face on Hi side
 
         sourceTermData.ghostExtrapCoeff_p = - (1 - mesh.interpFactors[axis](fidx)) / mesh.interpFactors[axis](fidx);
@@ -241,23 +242,23 @@ void AddIBDataForDirection( IBCell &ibCell,
         sourceTermData.farPressureCoeff_a = (dxe / dxp) * (1 - lambdaw) / lambdaee;
 
         sourceTermData.farPressureCoeff_g =   (2 * dxe) / (lambdaee * le)
-                                            - (dxe / dxp) * lambdae / lambdaee
+                                            - (dxe / dxp) * (lambdae / lambdaee)
                                             - (1 - lambdae - lambdaee) / lambdaee;
 
     } else if ( directionIndex == -1) {     // Ghost cell on Lo side
 
         floatType dxp      = mesh.cellLengths[axis](cellIndex[axis]),
                   dxw      = mesh.cellLengths[axis](ghostCellIndex[axis]),
-                  lambdae  = mesh.interpFactors[axis](interiorCellIndex[axis]),
-                  lambdaw  = mesh.interpFactors[axis](cellIndex[axis] - 0),
+                  lambdae  = mesh.interpFactors[axis](interiorCellIndex[axis] + 1),
+                  lambdaw  = mesh.interpFactors[axis](cellIndex[axis]),
                   lambdaww = mesh.interpFactors[axis](cellIndex[axis] - 1),
-                  lw       = 1.0f / mesh.cellCenterDiffInv[axis](cellIndex[axis] - 0);
+                  lw       = 1.0f / mesh.cellCenterDiffInv[axis](cellIndex[axis]);
 
         sourceTermData.farPressureCoeff_p = - (2 * dxw) / ((1 - lambdaww) * lw)
                                             + (dxw / dxp) * (1 - lambdae - lambdaw) / (1 - lambdaww)
                                             + lambdaw / (1 - lambdaww);
 
-        sourceTermData.farPressureCoeff_a = (dxw / dxp) * lambdaw / (1 - lambdaww);
+        sourceTermData.farPressureCoeff_a = (dxw / dxp) * lambdae / (1 - lambdaww);
 
         sourceTermData.farPressureCoeff_g =   (2 * dxw) / ((1 - lambdaww) * lw)
                                             - (dxw / dxp) * (1 - lambdaw) / (1 - lambdaww)
