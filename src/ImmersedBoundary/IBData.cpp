@@ -181,7 +181,7 @@ void AddIBDataForDirection( IBCell &ibCell,
 
     // Face area vector
     sourceTermData.faceAreaComponent = static_cast<floatType>( directionIndex )   // Gives the correct sign
-                                     * mesh.cellCenters[axis]( fidx );    
+                                     * mesh.cellFaceAreas[axis]( fidx );    
 
 
     // Extrapolation coefficients onto face between ghost cell and fluid cell. May use further points due to stability condition
