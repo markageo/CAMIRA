@@ -57,7 +57,7 @@ floatType CalculateVelocityFluxError( IBData &ibData )
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
             Axis::ENUMDATA axis = sourceTermData.direction;
-            velocityFlux = sourceTermData.faceValues.U[axis] * sourceTermData.faceAreaComponent;
+            velocityFlux += sourceTermData.faceValues.U[axis] * sourceTermData.faceAreaComponent;
 
         }
     }
@@ -84,8 +84,6 @@ void CorrectIBFaceVelocities( IBData &ibData )
 
         }
     }
-
-
 }
 
 
@@ -141,7 +139,7 @@ void UpdateIBData( IBData &ibData,
     }
 
     // Correct them to globally conserve mass
-    // CorrectIBFaceVelocities( ibData );
+    CorrectIBFaceVelocities( ibData );
 
     for ( auto &ibCell : ibData.ibCells ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {

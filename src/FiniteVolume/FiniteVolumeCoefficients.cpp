@@ -1562,8 +1562,7 @@ void AddContinuityBoundaryConstants( ContinuityEquation &contCoeffs )
 floatType MomentumIBSource( const Axis::ENUMDATA momentumAxis,
                             const IBCell::SourceTermData &sourceTermData, 
                             const TensorIndex3D &cellIndex,
-                            const FVCoefficients &fvCoeffs,
-                            const FieldData<Tensor3D> &fields ) 
+                            const FVCoefficients &fvCoeffs )
 {
     Axis::ENUMDATA faceNormal = sourceTermData.direction;
     TransportCoefficients::ENUMDATA coeff = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiCoeff[faceNormal] : LUT::LoCoeff[faceNormal];
@@ -1583,8 +1582,7 @@ floatType MomentumIBSource( const Axis::ENUMDATA momentumAxis,
 
 floatType ContinuityIBSource( const IBCell::SourceTermData &sourceTermData, 
                               const TensorIndex3D &cellIndex,
-                              const FVCoefficients &fvCoeffs,
-                              const FieldData<Tensor3D> &fields ) 
+                              const FVCoefficients &fvCoeffs) 
 {
     using FVT::G;
 
@@ -1606,8 +1604,7 @@ floatType ContinuityIBSource( const IBCell::SourceTermData &sourceTermData,
 
 floatType InteriorContinuityIBSource( const IBCell::SourceTermData &sourceTermData, 
                                       const TensorIndex3D &cellIndex,
-                                      const FVCoefficients &fvCoeffs,
-                                      const FieldData<Tensor3D> &fields ) 
+                                      const FVCoefficients &fvCoeffs ) 
 {
     using FVT::G;
 
@@ -1623,7 +1620,6 @@ floatType InteriorContinuityIBSource( const IBCell::SourceTermData &sourceTermDa
 
 
 void AddIBSourceTerms( FVCoefficients &fvCoeffs,
-                       const FieldData<Tensor3D> &fields,
                        const IBData &ibData )
 {
 
@@ -1637,14 +1633,14 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
 
             // Momentum equations
             EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                fvCoeffs.Mom[axis].B( cellIndex ) += MomentumIBSource( axis, sourceTermData, cellIndex, fvCoeffs, fields );
+                fvCoeffs.Mom[axis].B( cellIndex ) += MomentumIBSource( axis, sourceTermData, cellIndex, fvCoeffs );
             } );
 
             // Continuity equation
-            fvCoeffs.Cont.B( cellIndex ) += ContinuityIBSource( sourceTermData, cellIndex, fvCoeffs, fields );
+            fvCoeffs.Cont.B( cellIndex ) += ContinuityIBSource( sourceTermData, cellIndex, fvCoeffs );
 
             // For the adjacent cell wide stencil term
-            fvCoeffs.Cont.B( sourceTermData.cellIndex_a ) += InteriorContinuityIBSource( sourceTermData, sourceTermData.cellIndex_a, fvCoeffs, fields );
+            fvCoeffs.Cont.B( sourceTermData.cellIndex_a ) += InteriorContinuityIBSource( sourceTermData, sourceTermData.cellIndex_a, fvCoeffs );
 
         }
 
@@ -1653,7 +1649,7 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
 }
 
 
-
+[[maybe_unused]]
 void ChangeStencilToCentralAtIB( FVCoefficients &fvCoeffs,
                                  const EnumVector<Axis, Tensor3D> &faceFluxes, 
                                  const Mesh &mesh,
@@ -1907,7 +1903,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation.P;
 
     // Add effect if immersed boundary
-    AddIBSourceTerms( fvCoeffs, fields, ibData );
+    AddIBSourceTerms( fvCoeffs, ibData );
 
     return fvCoeffs;
 }
@@ -1978,7 +1974,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
     // Add effect of immersed boundary
-    AddIBSourceTerms( fvCoeffs, fields, ibData );
+    AddIBSourceTerms( fvCoeffs, ibData );
 }
 
 
