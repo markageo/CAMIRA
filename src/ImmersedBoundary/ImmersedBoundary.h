@@ -47,7 +47,7 @@ struct IBCell {
                   farPressureCoeff_g;        // Ghost cell       
 
         // Coordinate distance squared to the immersed boundary surface
-        floatType ibDistance2;
+        floatType ibDistance;
 
         // Cell face normal area vector component. This has a sign.
         floatType faceAreaComponent;
