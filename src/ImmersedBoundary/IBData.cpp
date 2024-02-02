@@ -175,8 +175,8 @@ void AddIBDataForDirection( IBCell &ibCell,
                                mesh.cellCenters[Z](cellIndex[Z]) );
     fVector3 rayDirection( 0, 0, 0 );
     rayDirection[ axis ] = static_cast<floatType>( directionIndex );
-    sourceTermData.ibDistance2 = GetBoundaryDistance2(geometry, queryPointCoords, rayDirection);
-    floatType ibDistance = sqrt( sourceTermData.ibDistance2 );
+    sourceTermData.ibDistance = sqrt( GetBoundaryDistance2(geometry, queryPointCoords, rayDirection) );
+    floatType ibDistance = sourceTermData.ibDistance;
 
 
     // Face area vector
@@ -270,7 +270,8 @@ void AddIBDataForDirection( IBCell &ibCell,
 
 
 
-void SetVelocityFluxCorrectionCoefficient( IBData &ibData )
+void SetVelocityFluxCorrectionCoefficient( IBData &ibData,
+                                           const Mesh &mesh )
 {
 
     // The denominator must be calculated seperately first
@@ -278,8 +279,9 @@ void SetVelocityFluxCorrectionCoefficient( IBData &ibData )
     for ( auto &ibCell : ibData.ibCells ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
-            denominator += std::pow( abs( sourceTermData.faceAreaComponent) , 2.0f )
-                         * sourceTermData.ibDistance2;
+            floatType ibCellFaceDistance = abs( sourceTermData.ibDistance - mesh.cellLengths[sourceTermData.direction](ibCell.cellIndex) );
+
+            denominator += std::pow( abs( sourceTermData.faceAreaComponent * ibCellFaceDistance) , 2.0f );
 
         }
     }
@@ -288,7 +290,9 @@ void SetVelocityFluxCorrectionCoefficient( IBData &ibData )
     for ( auto &ibCell : ibData.ibCells ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
-           sourceTermData.velocityFluxCorrectionCoeff = ( sourceTermData.ibDistance2 
+            floatType ibCellFaceDistance = abs( sourceTermData.ibDistance - mesh.cellLengths[sourceTermData.direction](ibCell.cellIndex) );
+
+            sourceTermData.velocityFluxCorrectionCoeff = ( std::pow( ibCellFaceDistance, 2.0f ) 
                                                         * sourceTermData.faceAreaComponent 
                                                         ) / denominator;
 
@@ -356,7 +360,7 @@ IBData ConstructIBData( const Polyhedron &geometry,
     }
 
     // Calculate the coefficients for the velocity flux correction
-    SetVelocityFluxCorrectionCoefficient( ibData );
+    SetVelocityFluxCorrectionCoefficient( ibData, mesh );
 
     return ibData;
 }
