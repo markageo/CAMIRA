@@ -160,6 +160,7 @@ void AddIBDataForDirection( IBCell &ibCell,
     sourceTermData.direction          = axis;
     sourceTermData.directionIndex     = directionIndex;
     sourceTermData.faceDirectionIndex = ( directionIndex == 1 ) ? 1 : 0 ;
+    sourceTermData.cellIndex_g        = ghostCellIndex;
     sourceTermData.cellIndex_a        = interiorCellIndex;
 
     intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;

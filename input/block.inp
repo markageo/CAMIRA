@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.1
+    nu   = 0.05
 }
 
 Mesh {
@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 7.5)
-            nCells     = 75
+            nCells     = 150
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 3)
-            nCells     = 30
+            nCells     = 60
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 3)
-            nCells     = 30
+            nCells     = 60
             biasFactor = 1
         }
     }
@@ -110,7 +110,7 @@ Solver {
     Schemes {
 
         linearisation           = Picard
-        momentumInterpolation   = implicit
+        momentumInterpolation   = semiExplicit
         advectionScheme         = upwind
         faceInterpolationScheme = weightedLinear
 
@@ -144,7 +144,7 @@ Output {
     residualHistoryFilename = "output/residual_history.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
-    fieldWriteInterval      = 0
+    fieldWriteInterval      = 1
 
     Monitors {
         Probe {
