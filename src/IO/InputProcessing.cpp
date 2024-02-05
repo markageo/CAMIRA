@@ -316,6 +316,80 @@ namespace
 
 
     /*-------------------------------------------------------------------------------------*\
+                                         Solid Geometry
+    \*-------------------------------------------------------------------------------------*/
+
+    void ReadBlockData( InputData &inputData,
+                        const std::pair<const std::string, pt::ptree> &solidObject )
+    {
+        InputData::SolidBlockData tempBlockData;
+        std::vector< floatType > tempCenterPosition, tempDimensions, tempRotation;
+        tempCenterPosition = solidObject.second.get< std::vector<floatType> >( "centerPosition" ); 
+        tempDimensions     = solidObject.second.get< std::vector<floatType> >( "dimensions" ); 
+        tempRotation       = solidObject.second.get< std::vector<floatType> >( "rotation" ); 
+
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            tempBlockData.centerPosition(axis) = tempCenterPosition[axis];
+            tempBlockData.dimensions(axis)     = tempDimensions[axis];
+            tempBlockData.rotation(axis)       = tempRotation[axis];
+        } );
+
+        inputData.solidBlocks.push_back( tempBlockData );
+    }
+
+
+
+    void ReadSphereData( InputData &inputData,
+                        const std::pair<const std::string, pt::ptree> &solidObject )
+    {
+        InputData::SolidSphereData tempSphereData;
+        std::vector< floatType > tempCenterPosition;
+        floatType tempDiameter;
+        tempCenterPosition = solidObject.second.get< std::vector<floatType> >( "centerPosition" ); 
+        tempDiameter       = solidObject.second.get< floatType >( "diameter" );
+
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            tempSphereData.centerPosition(axis) = tempCenterPosition[axis];
+        } );
+        tempSphereData.diameter = tempDiameter;
+
+        inputData.solidSpheres.push_back( tempSphereData );
+    }
+
+
+
+    void ReadSolidGeometry( InputData &inputData, 
+                            const pt::ptree &tree)
+    {
+        // It's ok if no geometry is specified
+        boost::optional<const pt::ptree &> solidGeometryTreeOptional = tree.get_child_optional( "SolidGeometry" );
+        if ( !solidGeometryTreeOptional ) {
+            return;
+        }
+            
+        const pt::ptree &solidGeometryTree = solidGeometryTreeOptional.get();
+
+        // Read blocks
+        for (auto solidObject : solidGeometryTree) {
+
+            if ( solidObject.first == "Block" ) {
+                ReadBlockData( inputData, solidObject );
+                inputData.hasIBGeometry = true;
+                continue;
+            }
+
+            if ( solidObject.first == "Sphere" ) {
+                ReadSphereData( inputData, solidObject );
+                inputData.hasIBGeometry = true;
+                continue;
+            }
+
+            throw std::runtime_error(  "'" + solidObject.first + "' is not a valid SolidGeometry object." );
+        }        
+    }
+
+
+    /*-------------------------------------------------------------------------------------*\
                                        Boundary Conditions
     \*-------------------------------------------------------------------------------------*/
 
@@ -389,8 +463,8 @@ namespace
         // First column is the coordinate points, second column is the actual data
         intType nRows = static_cast<intType>( profileData.size() );
         intType nHeaderRows = 1;
-        profile1D.coordinates = array1D( nRows - nHeaderRows );
-        profile1D.values      = array1D( nRows - nHeaderRows );
+        profile1D.coordinates = Tensor1D( nRows - nHeaderRows );
+        profile1D.values      = Tensor1D( nRows - nHeaderRows );
 
         for ( intType i = 0; i != nRows-nHeaderRows; i++ ) {
             profile1D.coordinates(i) = String2Type<floatType>( profileData[ static_cast<size_t>( i+nHeaderRows) ][0]  );
@@ -762,6 +836,7 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFilename)
 
     ReadModel(inputData, tree);
     ReadMesh(inputData, tree);
+    ReadSolidGeometry(inputData, tree);
     ReadBoundaryConditions(inputData, tree);
     ReadInitialConditions(inputData, tree);
     ReadSolver(inputData, tree);

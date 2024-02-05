@@ -30,21 +30,22 @@ class LineSolver
     static_assert( (Wstag == TC::t) || (Wstag == TC::b) || (Wstag == TC::p), "Invalid W momentum staggering" );
 
 public:
-    LineSolver( FieldData<array3D> &fields,
-                const FieldData<array3D> &fieldsOld,
+    LineSolver( FieldData<Tensor3D> &fields,
+                const FieldData<Tensor3D> &fieldsOld,
+                const Tensor3D &mask,
                 const FVCoefficients &fvCoeffs) : 
                     m_fields( fields ),
                     m_fvCoeffs( fvCoeffs ),
-                    m_lineConstants( array1D( fvCoeffs.nCells(Axis::X) ) ),
+                    m_lineConstants( Tensor1D( fvCoeffs.nCells(Axis::X) ) ),
                     m_ni( fvCoeffs.nCells(Axis::X) )
     {
         if (m_ni == 1) {
-            m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag, MI, LI>>(fields, fieldsOld, fvCoeffs);
+            m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep2D;
             StateUpdater = &LineSolver::UpdateState2D;
         } else {
-            m_triadSolverEast = std::make_unique<TriadSolver<TC::e, Vstag, Wstag, MI, LI>>(fields, fieldsOld, fvCoeffs);
-            m_triadSolverWest = std::make_unique<TriadSolver<TC::w, Vstag, Wstag, MI, LI>>(fields, fieldsOld, fvCoeffs);
+            m_triadSolverEast = std::make_unique<TriadSolver<TC::e, Vstag, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
+            m_triadSolverWest = std::make_unique<TriadSolver<TC::w, Vstag, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep3D;
             StateUpdater = &LineSolver::UpdateState3D;
         }
@@ -52,7 +53,7 @@ public:
 
     void SolveLine( const intType j, 
                     const intType k, 
-                    const FieldData<array2D> &planeConstants)
+                    const FieldData<Tensor2D> &planeConstants)
     { (this->*SolutionUpdater)(j, k, planeConstants); }
 
     void UpdateState()
@@ -60,16 +61,16 @@ public:
 
 
 private:
-    FieldData<array3D> &m_fields;
+    FieldData<Tensor3D> &m_fields;
     const FVCoefficients &m_fvCoeffs;
 
     std::unique_ptr<TriadSolver<TC::e, Vstag, Wstag, MI, LI>> m_triadSolverEast;
     std::unique_ptr<TriadSolver<TC::w, Vstag, Wstag, MI, LI>> m_triadSolverWest;
     std::unique_ptr<TriadSolver<TC::p, Vstag, Wstag, MI, LI>> m_triadSolverCenter;
 
-    FieldData<array1D> m_lineConstants;
+    FieldData<Tensor1D> m_lineConstants;
 
-    void (LineSolver::*SolutionUpdater)(const intType, const intType, const FieldData<array2D> &);
+    void (LineSolver::*SolutionUpdater)(const intType, const intType, const FieldData<Tensor2D> &);
     void (LineSolver::*StateUpdater)(void);
 
     intType m_ni;
@@ -77,7 +78,7 @@ private:
     // For 3D simulations
     void Sweep3D( const intType j, 
                   const intType k, 
-                  const FieldData<array2D> &planeConstants)
+                  const FieldData<Tensor2D> &planeConstants)
     {
         UpdateLineConstants(j, k, planeConstants);
 
@@ -99,7 +100,7 @@ private:
     // For 2D simulations
     void Sweep2D( const intType j, 
                   const intType k,
-                  const FieldData<array2D> &planeConstants )
+                  const FieldData<Tensor2D> &planeConstants )
     { 
         UpdateLineConstants(j, k, planeConstants);
         m_triadSolverCenter->UpdateTriad(0, j, k, m_lineConstants); 
@@ -112,7 +113,7 @@ private:
     // Precalculate parts of stencil that are constant along a line
     void UpdateLineConstants( const intType j, 
                               const intType k, 
-                              const FieldData<array2D> &planeConstants )
+                              const FieldData<Tensor2D> &planeConstants )
     {
         using enum Axis::ENUMDATA;
         using enum TransportCoefficients::ENUMDATA;

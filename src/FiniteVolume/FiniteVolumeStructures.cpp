@@ -7,285 +7,6 @@
 namespace CFD
 {
 
-/*-------------------------------------------------------------------------------------*\
-                                         Mesh
-\*-------------------------------------------------------------------------------------*/
-
-namespace
-{
-
-std::vector<floatType> CalculateGrowthRates(const std::vector<InputData::MeshSegment> &meshSegments)
-{
-    size_t nSegments = meshSegments.size();
-    std::vector<floatType> growthRates(nSegments);
-
-    // Negative growth rate means shrinking grid
-    for (size_t i = 0; i != nSegments; i++) {
-        growthRates[i] = std::pow( std::abs(meshSegments[i].biasFactor) , 1.0f / static_cast<floatType>( meshSegments[i].nCells - 1 ) );
-        if (meshSegments[i].biasFactor < 0 )   
-            growthRates[i] = 1.0f/growthRates[i];
-    }
-
-    return growthRates;
-}
-
-
-void CalculateCellLengths(array1D &cellLengths, 
-                          const std::vector<InputData::MeshSegment> &meshSegments, 
-                          const std::vector<floatType> &growthRates)
-{
-    size_t nSegments = meshSegments.size();
-
-    floatType segmentLength, firstCellLength, geometricFactor;
-    int cellIndex = 0;
-    for (size_t s = 0; s != nSegments; s++) {    // Segments
-
-        if (growthRates[s] != 1.0f) { 
-            geometricFactor = (1.0f - std::pow( growthRates[s], static_cast<floatType>(meshSegments[s].nCells) )) / (1.0f - growthRates[s]);   // geometric series formula
-        } else {
-            geometricFactor = static_cast<floatType>( meshSegments[s].nCells );
-        }
-        segmentLength = meshSegments[s].upperBound - meshSegments[s].lowerBound;
-        firstCellLength = segmentLength / geometricFactor; 
-
-        for (int i = 0; i != meshSegments[s].nCells; i++) {        // Cells within segment
-            cellLengths( cellIndex ) = firstCellLength*std::pow( growthRates[s], static_cast<floatType>(i) );
-            cellIndex++;
-        }
-    }
-
-}
-
-
-void CalculateCellCenters(array1D &cellCenters, 
-                          const array1D &cellLengths,
-                          const floatType startPosition)
-{
-    intType nCellsTotal = cellLengths.size();
-
-    floatType previousCellPosition = startPosition, previousCellLength = 0.0f;
-    for (intType i = 0; i != nCellsTotal; i++) {
-        cellCenters(i) = previousCellPosition + previousCellLength/2.0f + cellLengths(i)/2.0f;
-        previousCellPosition = cellCenters(i);
-        previousCellLength = cellLengths(i);
-    }
-
-}
-
-
-void CalculateCellCenterDiffInv(array1D &cellCenterDiffInv, 
-                                const array1D &cellCenters)
-{
-    // First and last element dont correspond to valid values
-    intType nFaces = cellCenters.size() + 1;
-
-    for (intType i = 1; i != nFaces-1; i++) {
-        cellCenterDiffInv(i) = 1.0f/( cellCenters(i) - cellCenters(i-1) );
-    }
-}
-
-
-void CalculateCellFaces(array1D &cellFaces, 
-                        const array1D &cellLengths,
-                        const floatType startPosition)
-{
-    intType nFaces = cellFaces.size();
-
-    cellFaces(0) = startPosition;
-    for (intType i = 1; i != nFaces; i++) {
-        cellFaces(i) = cellFaces(i-1) + cellLengths(i-1);
-    }
-}
-
-
-void CalculateCellFaceAreas(array2D &cellFaceAreas, 
-                            const array1D &cellLengths_x, 
-                            const array1D &cellLengths_y)
-{
-    for (int j = 0; j != cellLengths_y.dimension(0); j++) {
-        for (int i = 0; i != cellLengths_x.dimension(0); i++) {
-            cellFaceAreas(i, j) = cellLengths_x(i) * cellLengths_y(j);
-        }
-    }
-}
-
-
-void CalculateInterpolationFactors_WeightedLinear( array1D &interpFactors, 
-                                                   const array1D &cellCenters, 
-                                                   const array1D &cellFaces) 
-{
-    for (int i = 1; i != interpFactors.size()-1; i++) {
-        interpFactors(i) = ( cellFaces(i) - cellCenters(i-1) ) 
-                         / ( cellCenters(i) - cellCenters(i-1) );
-    }
-}
-
-
-void CalculateInterpolationFactors_Average( array1D &interpFactors ) 
-{
-    for (int i = 1; i != interpFactors.size()-1; i++) {
-        interpFactors(i) = 0.5f;
-    }
-}
-
-
-Mesh::ExtrapFactorsStruct GetExtrapolationFactors(const array1D &cellLengths, 
-                                                  const intType fieldIndex_p, 
-                                                  const intType fieldIndex_a)
-{
-    floatType extrapFactor_p = ( 2.0f*cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) )
-                                / ( cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) );
-
-    floatType extrapFactor_a = - ( cellLengths(fieldIndex_p) )
-                                / ( cellLengths(fieldIndex_p) + cellLengths(fieldIndex_a) );
-    
-    return Mesh::ExtrapFactorsStruct{ extrapFactor_p, extrapFactor_a };
-}
-
-
-void CalculateExtrapolationFactors(EnumVector<BoundaryPatches, Mesh::ExtrapFactorsStruct > &extrapFactors, 
-                                   const EnumVector<Axis, array1D> &cellLengths, 
-                                   const Axis::ENUMDATA axis)
-{  
-
-    using enum BoundaryPatches::ENUMDATA;
-    using enum Axis::ENUMDATA;
-
-    BoundaryPatches::ENUMDATA patchPositive = LUT::PositivePatch[ axis ], 
-                              patchNegative = LUT::NegativePatch[ axis ];
-
-    // If mesh is only 1 cell think (such as in a 2D simulation), make the extrapolatino equal to the single cell
-    if ( cellLengths[axis].size() == 1 ) {
-        extrapFactors[patchPositive].a = 0.0f;
-        extrapFactors[patchPositive].p = 1.0f;
-
-        extrapFactors[patchNegative].a = 0.0f;
-        extrapFactors[patchNegative].p = 1.0f;
-        return;
-    }
-
-
-    
-    intType fieldIndex_p, fieldIndex_a; // Boundary cell node and the adjacent one
-
-    // Positive patch boundary
-    fieldIndex_p = cellLengths[axis].size() - 1;
-    fieldIndex_a = fieldIndex_p - 1;
-    extrapFactors[patchPositive] = GetExtrapolationFactors(cellLengths[axis], fieldIndex_p, fieldIndex_a);
-
-    // Negative patch boundary
-    fieldIndex_p = 0;
-    fieldIndex_a = fieldIndex_p + 1;
-    extrapFactors[patchNegative] = GetExtrapolationFactors(cellLengths[axis], fieldIndex_p, fieldIndex_a);
-}
-
-
-intType TotalCells(const std::vector<InputData::MeshSegment> &meshSegments)
-{
-    intType totalCells = 0;
-    for (auto segment : meshSegments) {
-        totalCells += segment.nCells;
-    }
-    return totalCells;
-}
-
-
-
-iVector3 NumberOfFaces( const iVector3 &nCells,
-                       Axis::ENUMDATA axis)
-{
-    iVector3 nFaces;
-    EnumFor<Axis>( [&] (Axis::ENUMDATA a) {
-        nFaces(a) = nCells(a);
-    } );
-    nFaces(axis) += 1;  // There is one more faces than cells in the normal direction
-    return nFaces;
-}
-
-}   // end anonymous namespace
-
-
-
-
-// Constructor, creates the mesh from user inputdata
-Mesh::Mesh(const InputData &inputData) :
-    nCells( { TotalCells(inputData.meshSegments[Axis::X]),  TotalCells(inputData.meshSegments[Axis::Y]), TotalCells(inputData.meshSegments[Axis::Z])} ),
-
-    nFacesNormal( { NumberOfFaces( nCells, Axis::X ), NumberOfFaces( nCells, Axis::Y ), NumberOfFaces( nCells, Axis::Z ) } ),
-
-    cellCenters( {{Axis::ENUMDATA::X, nCells(0)},
-                  {Axis::ENUMDATA::Y, nCells(1)},
-                  {Axis::ENUMDATA::Z, nCells(2)}} ),
-
-    cellFaces( {{Axis::ENUMDATA::X, nCells(0) + 1},
-                {Axis::ENUMDATA::Y, nCells(1) + 1},
-                {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
-
-    cellLengths( {{Axis::ENUMDATA::X, nCells(0)},
-                  {Axis::ENUMDATA::Y, nCells(1)},
-                  {Axis::ENUMDATA::Z, nCells(2)}} ),
-
-    cellLengthsInv( {{Axis::ENUMDATA::X, nCells(0)},
-                     {Axis::ENUMDATA::Y, nCells(1)},
-                     {Axis::ENUMDATA::Z, nCells(2)}} ),
-
-    cellCenterDiffInv( {{Axis::ENUMDATA::X, nCells(0) + 1},
-                        {Axis::ENUMDATA::Y, nCells(1) + 1},
-                        {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
-
-    interpFactors( {{Axis::ENUMDATA::X, nCells(0) + 1},
-                    {Axis::ENUMDATA::Y, nCells(1) + 1},
-                    {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
-
-    cellFaceAreas( {{Axis::ENUMDATA::X, {nCells(1), nCells(2)} },
-                    {Axis::ENUMDATA::Y, {nCells(0), nCells(2)} },
-                    {Axis::ENUMDATA::Z, {nCells(0), nCells(1)} }} ),
-
-    extrapFactors()
-
-    { 
-        std::vector< std::vector<floatType> > growthRates(Axis::count);
-
-        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-
-            growthRates[axis] = CalculateGrowthRates(inputData.meshSegments[axis]);
-
-            CalculateCellLengths(cellLengths[axis], inputData.meshSegments[axis], growthRates[axis]);
-            cellLengthsInv[axis] = cellLengths[axis].inverse();
-
-            CalculateCellCenters(cellCenters[axis], cellLengths[axis], inputData.meshSegments[axis].front().lowerBound);
-            CalculateCellCenterDiffInv(cellCenterDiffInv[axis], cellCenters[axis]);
-
-            CalculateCellFaces(cellFaces[axis], cellLengths[axis], inputData.meshSegments[axis].front().lowerBound);
-
-            switch ( inputData.schemes.faceInterpolationScheme ) {
-                case FaceInterpolationSchemes::Average:
-                    CalculateInterpolationFactors_Average(interpFactors[axis]);
-                    break;
-
-                case FaceInterpolationSchemes::WeightedLinear:
-                    CalculateInterpolationFactors_WeightedLinear(interpFactors[axis], cellCenters[axis], cellFaces[axis]);
-                    break;
-            }
-                        
-            CalculateExtrapolationFactors(extrapFactors, cellLengths, axis);
-
-        } );
-
-
-        // Cell face areas should be calculated on their own since they depend on other axis
-        EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
-
-            // Axis are ordered by numbering
-            Axis::ENUMDATA axis1 = LUT::LoOrthogonalAxis[ axis ];
-            Axis::ENUMDATA axis2 = LUT::HiOrthogonalAxis[ axis ];
-            CalculateCellFaceAreas(cellFaceAreas[axis], cellLengths[axis1], cellLengths[axis2]);
-
-        } );
-
-    };
-
-
 
 /*-------------------------------------------------------------------------------------*\
                                 BoundaryConditionData
@@ -297,13 +18,13 @@ namespace
 
     // Interpolates user defined profile onto the mesh in 1D. Points that are outside the user defined region are set 
     // to the value of the nearest point.
-    array1D InterpProfile1D( const array1D x,
-                             const array1D v, 
-                             const array1D xquery )
+    Tensor1D InterpProfile1D( const Tensor1D x,
+                             const Tensor1D v, 
+                             const Tensor1D xquery )
     {
         const intType nValuePoints = x.size(); 
         const intType nQueryPoints = xquery.size(); 
-        array1D vquery = array1D( nQueryPoints );
+        Tensor1D vquery = Tensor1D( nQueryPoints );
 
         intType i = 0;
         for ( intType iq = 0; iq != nQueryPoints; iq++ ) {
@@ -345,7 +66,7 @@ namespace
 
 
     // Interpolates a 1D profile onto a meshed boundary face
-    array2D SetBoundaryProfile1D( const InputData::Profile1D &profile1D,   
+    Tensor2D SetBoundaryProfile1D( const InputData::Profile1D &profile1D,   
                                   const Mesh& mesh,
                                   const BoundaryPatches::ENUMDATA boundaryPatch )
     {
@@ -354,12 +75,12 @@ namespace
                     constantAxis = static_cast< Axis::ENUMDATA >( 3 - profileAxis - normalAxis );
 
         // 1D profile on the mesh points
-        array1D interpolatedProfile1D = InterpProfile1D( profile1D.coordinates, profile1D.values, mesh.cellCenters[profileAxis] );
+        Tensor1D interpolatedProfile1D = InterpProfile1D( profile1D.coordinates, profile1D.values, mesh.cellCenters[profileAxis] );
 
         // Copy out in 2D
         intType nCellsLo = mesh.nCells( LUT::LoOrthogonalAxis[normalAxis] ),
                 nCellsHi = mesh.nCells( LUT::HiOrthogonalAxis[normalAxis] );
-        array2D boundaryPatchValues( nCellsLo, nCellsHi );
+        Tensor2D boundaryPatchValues( nCellsLo, nCellsHi );
         int constantAxis2D = ( constantAxis == LUT::LoOrthogonalAxis[normalAxis] ) ? 0 : 1; // 3D axis enums cannot be used on the 2D plane
         for ( intType i = 0; i != mesh.nCells(constantAxis); i++ ) {
             boundaryPatchValues.chip(i, constantAxis2D) = interpolatedProfile1D;
@@ -371,7 +92,7 @@ namespace
 
 
     // Sets a constant value for a boundary face patch
-    array2D SetBoundaryProfileConstant( const floatType value,   
+    Tensor2D SetBoundaryProfileConstant( const floatType value,   
                                         const Mesh& mesh,
                                         const BoundaryPatches::ENUMDATA boundaryPatch )
     {
@@ -380,7 +101,7 @@ namespace
         intType nCellsLo = mesh.nCells( LUT::LoOrthogonalAxis[normalAxis] ),
                 nCellsHi = mesh.nCells( LUT::HiOrthogonalAxis[normalAxis] );
 
-        return array2D( nCellsLo, nCellsHi ).setConstant( value );
+        return Tensor2D( nCellsLo, nCellsHi ).setConstant( value );
     }
 
 
@@ -608,17 +329,17 @@ using enum Axis::ENUMDATA;
 
 // Momentum equations constructor
 MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis, 
-                                    const iVector3 &dims,
+                                    const iArray3 &dims,
                                     Linearisation li ) :
-    AU( { EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, X, li), dims),
-          EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, Y, li), dims),
-          EnumVector<TransportCoefficients, array3D>( MomentumVelocityEnums(axis, Z, li), dims) }  ),
+    AU( { EnumVector<TransportCoefficients, Tensor3D>( MomentumVelocityEnums(axis, X, li), dims),
+          EnumVector<TransportCoefficients, Tensor3D>( MomentumVelocityEnums(axis, Y, li), dims),
+          EnumVector<TransportCoefficients, Tensor3D>( MomentumVelocityEnums(axis, Z, li), dims) }  ),
     AP( MomentumPressureEnums( axis ), dims( axis ) ),
-    B( CFD::array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
-    diagCoeffInv( CFD::array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
-    diff({ EnumVector<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims(X) ),
-           EnumVector<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims(Y) ),
-           EnumVector<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims(Z) ) }),
+    B( CFD::Tensor3D( dims(X), dims(Y), dims(Z) ).setZero() ),
+    diagCoeffInv( CFD::Tensor3D( dims(X), dims(Y), dims(Z) ).setZero() ),
+    diff({ EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::e, C::w}, dims(X) ),
+           EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::n, C::s}, dims(Y) ),
+           EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::t, C::b}, dims(Z) ) }),
     diffBoundary( 0.0f ),
     BUBoundary(),
     BPBoundary(),   // These should be dimensioned only if needed
@@ -629,19 +350,19 @@ MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis,
 
 
 // Continuity equations constructor
-ContinuityEquation::ContinuityEquation( const iVector3 &dims,
+ContinuityEquation::ContinuityEquation( const iArray3 &dims,
                                         MomentumInterpolation mi ) :
-    AU( { EnumVector<TransportCoefficients, array1D>( {C::p, C::e, C::w}, dims( X )),
-          EnumVector<TransportCoefficients, array1D>( {C::p, C::n, C::s}, dims( Y )),
-          EnumVector<TransportCoefficients, array1D>( {C::p, C::t, C::b}, dims( Z )) } ),
+    AU( { EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::e, C::w}, dims( X )),
+          EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::n, C::s}, dims( Y )),
+          EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::t, C::b}, dims( Z )) } ),
     AP( ContinuityPressureEnums( mi ), dims ),
-    B( array3D( dims(X), dims(Y), dims(Z) ).setZero() ),
-    mwiSparseCoeffs( { std::array<array1D, 4>{ array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero() } ,
-                       std::array<array1D, 4>{ array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero() } ,
-                       std::array<array1D, 4>{ array1D(dims(Z)+1).setZero(), array1D(dims(Z)+1).setZero(), array1D(dims(Z)+1).setZero(), array1D(dims(Z)+1).setZero() } } ),
-    mwiCompactCoeffs( { std::array<array1D, 2>{ array1D(dims(X)+1).setZero(), array1D(dims(X)+1).setZero() } ,
-                        std::array<array1D, 2>{ array1D(dims(Y)+1).setZero(), array1D(dims(Y)+1).setZero() } ,
-                        std::array<array1D, 2>{ array1D(dims(Z)+1).setZero(), array1D(dims(Z)+1).setZero() } } ),
+    B( Tensor3D( dims(X), dims(Y), dims(Z) ).setZero() ),
+    mwiSparseCoeffs( { std::array<Tensor1D, 4>{ Tensor1D(dims(X)+1).setZero(), Tensor1D(dims(X)+1).setZero(), Tensor1D(dims(X)+1).setZero(), Tensor1D(dims(X)+1).setZero() } ,
+                       std::array<Tensor1D, 4>{ Tensor1D(dims(Y)+1).setZero(), Tensor1D(dims(Y)+1).setZero(), Tensor1D(dims(Y)+1).setZero(), Tensor1D(dims(Y)+1).setZero() } ,
+                       std::array<Tensor1D, 4>{ Tensor1D(dims(Z)+1).setZero(), Tensor1D(dims(Z)+1).setZero(), Tensor1D(dims(Z)+1).setZero(), Tensor1D(dims(Z)+1).setZero() } } ),
+    mwiCompactCoeffs( { std::array<Tensor1D, 2>{ Tensor1D(dims(X)+1).setZero(), Tensor1D(dims(X)+1).setZero() } ,
+                        std::array<Tensor1D, 2>{ Tensor1D(dims(Y)+1).setZero(), Tensor1D(dims(Y)+1).setZero() } ,
+                        std::array<Tensor1D, 2>{ Tensor1D(dims(Z)+1).setZero(), Tensor1D(dims(Z)+1).setZero() } } ),
     BUBoundary(),
     BPBoundary(),   // These should be dimensioned only if needed
     relaxation( 1.0f ),
@@ -650,7 +371,7 @@ ContinuityEquation::ContinuityEquation( const iVector3 &dims,
 
 
 // Coefficients class constructor
-FVCoefficients::FVCoefficients( const iVector3 &dims, 
+FVCoefficients::FVCoefficients( const iArray3 &dims, 
                                 Linearisation li,
                                 MomentumInterpolation mi ) :
     Mom( { MomentumEquation(X, dims, li),  MomentumEquation(Y, dims, li),  MomentumEquation(Z, dims, li) } ),
@@ -665,14 +386,14 @@ FVCoefficients::FVCoefficients( const iVector3 &dims,
 \*-------------------------------------------------------------------------------------*/
 
 
-FieldData<array3D> InitialiseFields( const Mesh &mesh, 
+FieldData<Tensor3D> InitialiseFields( const Mesh &mesh, 
                                      const InputData &inputData )
 {
 
-    FieldData<array3D> fields( array3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero() );
+    FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero() );
 
-    arrayIndex3D offsets = {nGhost, nGhost, nGhost},
-                 extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
+    TensorIndex3D offsets = {nGhost, nGhost, nGhost},
+                  extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
 
     // Set initial values
     ForAllFieldData( [&] (intType i) { 

@@ -9,5 +9,4 @@ target_sources( libs
         TriadSolver.h 
         ResidualFunctions.h 
         StaggerIndexing.h 
-        FieldProbe.h 
         ConvergenceLogging.h )

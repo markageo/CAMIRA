@@ -2,6 +2,11 @@
 #define TYPES
 
 #include <unsupported/Eigen/CXX11/Tensor>
+#include <Eigen/Dense>
+
+#include <CGAL/Simple_cartesian.h>
+#include <CGAL/Polyhedron_3.h>
+
 #include <type_traits>
 #include <vector>
 #include <utility>
@@ -20,18 +25,21 @@ namespace CFD
 #endif
 
 using intType = Eigen::Index;
-using array0D = Eigen::Tensor<floatType, 0>;    // Column major
-using array1D = Eigen::Tensor<floatType, 1>;    // Column major
-using array2D = Eigen::Tensor<floatType, 2>;    // Column major
-using array3D = Eigen::Tensor<floatType, 3>;    // Column major
-using arrayIndex3D = Eigen::array<Eigen::Index, 3>;
-using arrayIndex2D = Eigen::array<Eigen::Index, 2>;
-using iVector3 = Eigen::Array<intType, 3, 1>;
-using iVector2 = Eigen::Array<intType, 2, 1>;
-using fVector3 = Eigen::Array<floatType, 3, 1>;
-using fVector2 = Eigen::Array<floatType, 2, 1>;
 
+using Tensor0D = Eigen::Tensor<floatType, 0>;    // Column major
+using Tensor1D = Eigen::Tensor<floatType, 1>;    // Column major
+using Tensor2D = Eigen::Tensor<floatType, 2>;    // Column major
+using Tensor3D = Eigen::Tensor<floatType, 3>;    // Column major
+using TensorIndex3D = Eigen::array<Eigen::Index, 3>;
+using TensorIndex2D = Eigen::array<Eigen::Index, 2>;
 
+using iArray3 = Eigen::Array<intType, 3, 1>;
+using iArray2 = Eigen::Array<intType, 2, 1>;
+using fArray3 = Eigen::Array<floatType, 3, 1>;
+using fArray2 = Eigen::Array<floatType, 2, 1>;
+
+using fVector3 = Eigen::Matrix<floatType, 3, 1>;
+using fVector2 = Eigen::Matrix<floatType, 2, 1>;
 
 
 
@@ -166,7 +174,7 @@ namespace CFD_INTERNAL
 
     // Specialisation for multidimensional arrays, which are constructed using arrays for thier dimensions
     template<class B>
-    requires( std::is_same< B, array2D >::value || std::is_same< B, array3D >::value )
+    requires( std::is_same< B, Tensor2D >::value || std::is_same< B, Tensor3D >::value )
     struct dimTypes<B>
     { 
         using dimsArray = Eigen::Array<intType, B::NumDimensions, 1>;
@@ -202,14 +210,14 @@ class EnumVector
 
     typedef typename enumStruct::ENUMDATA ENUMDATA;
 
-    static constexpr bool isArray = std::is_same< T, CFD::array3D >::value || 
-                                    std::is_same< T, CFD::array2D >::value || 
-                                    std::is_same< T, CFD::array1D >::value;
+    static constexpr bool isArray = std::is_same< T, CFD::Tensor3D >::value || 
+                                    std::is_same< T, CFD::Tensor2D >::value || 
+                                    std::is_same< T, CFD::Tensor1D >::value;
 
 
     // Construction for 1D arrays is handeled a bit differently
-    static constexpr bool isArrayND = std::is_same< T, CFD::array2D >::value ||
-                                      std::is_same< T, CFD::array3D >::value;
+    static constexpr bool isArrayND = std::is_same< T, CFD::Tensor2D >::value ||
+                                      std::is_same< T, CFD::Tensor3D >::value;
 
     using dimsArray =  typename CFD_INTERNAL::dimTypes<T>::dimsArray;
     using dimsArrayInternal =  typename CFD_INTERNAL::dimTypes<T>::dimsArrayInternal;

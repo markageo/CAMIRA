@@ -18,9 +18,9 @@ namespace CFD
 template<typename T>
 void WriteArray(const std::string &filename, const T &array, const int precision = 6)
 {
-    static_assert(std::is_same< T, CFD::array1D >::value ||
-                  std::is_same< T, CFD::array2D >::value ||
-                  std::is_same< T, CFD::array3D >::value,
+    static_assert(std::is_same< T, CFD::Tensor1D >::value ||
+                  std::is_same< T, CFD::Tensor2D >::value ||
+                  std::is_same< T, CFD::Tensor3D >::value,
                   "Array type invalid.");
 
     std::ofstream fileStream(filename);
@@ -70,21 +70,21 @@ namespace CFD_INTERNAL
     T ConstructArray(const std::array<CFD::intType, 3> &dims) = delete;
 
     template<> inline
-    CFD::array1D ConstructArray<CFD::array1D>(const std::array<CFD::intType, 3> &dims)
+    CFD::Tensor1D ConstructArray<CFD::Tensor1D>(const std::array<CFD::intType, 3> &dims)
     {
-        return CFD::array1D(dims[0]);
+        return CFD::Tensor1D(dims[0]);
     }
 
     template<> inline
-    CFD::array2D ConstructArray<CFD::array2D>(const std::array<CFD::intType, 3> &dims)
+    CFD::Tensor2D ConstructArray<CFD::Tensor2D>(const std::array<CFD::intType, 3> &dims)
     {
-        return CFD::array2D(dims[0], dims[1]);
+        return CFD::Tensor2D(dims[0], dims[1]);
     }
 
     template<> inline
-    CFD::array3D ConstructArray<CFD::array3D>(const std::array<CFD::intType, 3> &dims)
+    CFD::Tensor3D ConstructArray<CFD::Tensor3D>(const std::array<CFD::intType, 3> &dims)
     {
-        return CFD::array3D(dims[0], dims[1], dims[2]);
+        return CFD::Tensor3D(dims[0], dims[1], dims[2]);
     }
 
 }
@@ -95,9 +95,9 @@ template<typename T>
 T ReadArray(const std::string &filename)
 {
 
-    static_assert(std::is_same< T, CFD::array1D >::value ||
-                  std::is_same< T, CFD::array2D >::value ||
-                  std::is_same< T, CFD::array3D >::value,
+    static_assert(std::is_same< T, CFD::Tensor1D >::value ||
+                  std::is_same< T, CFD::Tensor2D >::value ||
+                  std::is_same< T, CFD::Tensor3D >::value,
                   "Array type invalid.");
 
     std::ifstream fileStream(filename);

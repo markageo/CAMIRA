@@ -28,22 +28,23 @@ class PlaneSolver
     static_assert( (Wstag == TC::t) || (Wstag == TC::b) || (Wstag == TC::p), "Invalid W momentum staggering" );
 
 public:
-    PlaneSolver( FieldData<array3D> &fields,
-                 const FieldData<array3D> &fieldsOld,
+    PlaneSolver( FieldData<Tensor3D> &fields,
+                 const FieldData<Tensor3D> &fieldsOld,
+                 const Tensor3D &mask,
                  const FVCoefficients &fvCoeffs) : 
                     m_fields( fields ),
                     m_fvCoeffs( fvCoeffs ),
-                    m_planeConstants( array2D( fvCoeffs.nCells(Axis::X), fvCoeffs.nCells(Axis::Y) ) ),
+                    m_planeConstants( Tensor2D( fvCoeffs.nCells(Axis::X), fvCoeffs.nCells(Axis::Y) ) ),
                     m_ni( fvCoeffs.nCells(Axis::X) ),
                     m_nj( fvCoeffs.nCells(Axis::Y) )
     {
         if (m_nj == 1) {
-            m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag, MI, LI>>(fields, fieldsOld, fvCoeffs);
+            m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
             SolutionUpdater = &PlaneSolver::Sweep2D;
             StateUpdater = &PlaneSolver::UpdateState2D;
         } else {
-            m_lineSolverNorth = std::make_unique<LineSolver<TC::n, Wstag, MI, LI>>(fields, fieldsOld, fvCoeffs);
-            m_lineSolverSouth = std::make_unique<LineSolver<TC::s, Wstag, MI, LI>>(fields, fieldsOld, fvCoeffs);
+            m_lineSolverNorth = std::make_unique<LineSolver<TC::n, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
+            m_lineSolverSouth = std::make_unique<LineSolver<TC::s, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
             SolutionUpdater = &PlaneSolver::Sweep3D;
             StateUpdater = &PlaneSolver::UpdateState3D;
         }
@@ -60,14 +61,14 @@ public:
 
 private:
 
-    FieldData<array3D> &m_fields;
+    FieldData<Tensor3D> &m_fields;
     const FVCoefficients &m_fvCoeffs;
 
     std::unique_ptr< LineSolver<TC::n, Wstag, MI, LI> > m_lineSolverNorth;
     std::unique_ptr< LineSolver<TC::s, Wstag, MI, LI> > m_lineSolverSouth;
     std::unique_ptr< LineSolver<TC::p, Wstag, MI, LI> > m_lineSolverCenter;
 
-    FieldData<array2D> m_planeConstants;
+    FieldData<Tensor2D> m_planeConstants;
 
     void (PlaneSolver::*SolutionUpdater)(const intType);
     void (PlaneSolver::*StateUpdater)();
