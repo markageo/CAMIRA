@@ -36,24 +36,13 @@ void UpdateFVEquations( FVCoefficients &fvCoeffs,
                         const Mesh &mesh,
                         const FieldData< BoundaryConditionData > &bcData )
 {
-    TIC("Update FV Equations")
-    TIC("IB Data update")
     UpdateIBData( ibData, fields );
-    TOC()
-    TIC("Update Face Fluxes")
     UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
     if constexpr ( isNewtonLinearisation ) {
         UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
     }
-    TOC()
-    TIC("Set IB Face fluxes")
     SetIBFaceFluxes( faceFluxes, ibData );
-    TOC()
-    TIC("Update FV Coefficients")
     UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData);
-    TOC()
- 
-    TOC()
 }
 
 
