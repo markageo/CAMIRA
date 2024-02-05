@@ -7,6 +7,15 @@
 #include "Types.h"
 #include "Macros.h"
 
+#include "Geometry/Geometry.h"
+#include "ImmersedBoundary/ImmersedBoundary.h"
+#include "IO/ArrayIO.h"
+
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Polyhedron_3.h>
+#include <CGAL/IO/Polyhedron_iostream.h>
+#include <CGAL/draw_polyhedron.h>
+
 #include "IO/InputProcessing.h"
 #include "IO/VTKWriter.h"
 #include "Tools/SweepTransformations.h"
@@ -14,6 +23,7 @@
 #include "FiniteVolume/FiniteVolume.h"
 #include "Solver/Solver.h"
 
+#include <fstream>
 #include <iostream>
 
 int main(int argc, char const *argv[])
@@ -38,12 +48,23 @@ int main(int argc, char const *argv[])
     TOC();
 
     TIC("Field Allocation");
-    CFD::FieldData<CFD::array3D> fields = CFD::InitialiseFields(mesh, inputData);
+    CFD::FieldData<CFD::Tensor3D> fields = CFD::InitialiseFields(mesh, inputData);
     TOC();
 
     TIC("Boundary Condition Processing")
     CFD::FieldData<CFD::BoundaryConditionData> bcData = SetBoundaryConditionData(inputData, mesh);
     TOC()
+
+    // TIC("Geometry Creation")
+
+    // typedef CGAL::Exact_predicates_inexact_constructions_kernel  Kernel;
+    // typedef CGAL::Polyhedron_3<Kernel>                       Polyhedron;
+    
+    // CFD::Polyhedron P = CFD::MakeGeometry( inputData );
+
+    // CGAL::draw( P );
+    
+    // TOC()
 
     TIC("Solver");
     switch ( inputData.schemes.momentumInterpolation ) {

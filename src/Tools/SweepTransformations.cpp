@@ -119,7 +119,7 @@ namespace
 {
 
     // Returns a copy of a 1D array that has been reversed 
-    array1D ReversedArray1D( array1D &array )
+    Tensor1D ReversedArray1D( Tensor1D &array )
     {
         Eigen::array<bool, 1> rev({true});
         return array.reverse( rev );
@@ -224,7 +224,7 @@ namespace
 
         // Temporary for boundary conditions as user specifies them
         const auto boundaryConditionsUser = boundaryConditions;
-        fVector3 domainSizeUser = inputData.domainSize;
+        fArray3 domainSizeUser = inputData.domainSize;
         
         EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
 
@@ -292,7 +292,7 @@ namespace
 
         // Create temporary copy of mesh data to take data from
         EnumVector<Axis, std::vector<InputData::MeshSegment> > userMeshSegments = inputData.meshSegments;
-        fVector3 userDomainSize = inputData.domainSize;
+        fArray3 userDomainSize = inputData.domainSize;
 
         EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
 
@@ -306,6 +306,73 @@ namespace
         } );
 
     }
+
+
+
+    template< typename AxisArray3 >
+    AxisArray3 TransformAxisArray3ToCode( const AxisArray3 &userArray, 
+                                          const AxisTransformationMap &axisTransformation )
+    {
+        static_assert( std::is_same< AxisArray3, fArray3 >::value ||
+                       std::is_same< AxisArray3, iArray3 >::value );
+
+        AxisArray3 codeArray = userArray;    
+        EnumFor<Axis>([&] (Axis::ENUMDATA codeAxis) { 
+
+            codeArray[ codeAxis ] = userArray[ axisTransformation.UserAxis( codeAxis ) ];
+
+        } );
+
+        return codeArray;
+    }
+
+
+    // Used for arrays that represent coordinates in the mesh
+    template< typename AxisArray3 >
+    AxisArray3 TransformPositionArray3ToCode( const AxisArray3 &userArray, 
+                                              const AxisTransformationMap &axisTransformation )
+    {
+        static_assert( std::is_same< AxisArray3, fArray3 >::value ||
+                       std::is_same< AxisArray3, fVector3 >::value );
+
+        AxisArray3 codeArray = userArray;    
+        EnumFor<Axis>([&] (Axis::ENUMDATA codeAxis) { 
+
+            codeArray[ codeAxis ] = userArray[ axisTransformation.UserAxis( codeAxis ) ];
+
+            bool axisReversed = axisTransformation.CodeAxisReversed( codeAxis );
+            if ( axisReversed ) {
+                codeArray[ codeAxis ] *= -1.0f;
+            }
+
+        } );
+
+        return codeArray;
+    }
+
+
+
+    // Remaps the geometry data
+    void TransformGeometry( InputData &inputData, 
+                            const AxisTransformationMap &axisTransformation )
+    {
+        using enum Axis::ENUMDATA;
+        using enum BoundaryPatches::ENUMDATA;
+
+        // Blocks
+        for ( InputData::SolidBlockData &solidBlock : inputData.solidBlocks ) {
+            solidBlock.centerPosition = TransformPositionArray3ToCode( solidBlock.centerPosition, axisTransformation );
+            solidBlock.dimensions     = TransformAxisArray3ToCode( solidBlock.dimensions    , axisTransformation );
+            solidBlock.rotation       = TransformAxisArray3ToCode( solidBlock.rotation      , axisTransformation );
+        }
+
+        // Spheres
+        for ( InputData::SolidSphereData &solidSphere : inputData.solidSpheres ) {
+            solidSphere.centerPosition = TransformPositionArray3ToCode( solidSphere.centerPosition, axisTransformation );
+        }
+    }
+
+
 
     // Remaps the initial conditions
     void TransformInitialConditions( InputData &inputData,
@@ -330,15 +397,11 @@ namespace
     {
         // Probe locations
         for ( auto &probe : inputData.probes ) {
-            fVector3 probeLocationUser = probe.location;
-            EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
-                probe.location( codeAxis ) = probeLocationUser( axisTransformation.UserAxis( codeAxis ) ); 
-            } );
+            probe.location = TransformPositionArray3ToCode( probe.location, axisTransformation );
         }
     }
 
 }   // end anonymous namespace
-
 
 
 
@@ -393,6 +456,7 @@ AxisTransformationMap TransformUserInputData(InputData &inputData )
 
     TransformBoundaryConditions( inputData, axisTransformation );
     TransformInitialConditions( inputData, axisTransformation );
+    TransformGeometry( inputData, axisTransformation );
     TransformMesh( inputData, axisTransformation );
     TransformSolver( inputData, axisTransformation );
     TransformOutput( inputData, axisTransformation );
@@ -447,8 +511,8 @@ namespace
 
 
     template< typename T >
-    void TransformAxisVectorToUser( EnumVector<Axis, T> &axisVector,
-                                    const AxisTransformationMap& axisTransformation )
+    void TransformAxisEnumVectorToUser( EnumVector<Axis, T> &axisVector,
+                                        const AxisTransformationMap& axisTransformation )
     {
         // Create temporary copy to move data from 
         EnumVector<Axis, T> codeAxisVector = axisVector;
@@ -463,8 +527,8 @@ namespace
 
 
     template< typename T >
-    void TransformBoundaryPatchVectorToUser( EnumVector<BoundaryPatches, T> &boundaryPatchVector,
-                                             const AxisTransformationMap& axisTransformation )
+    void TransformBoundaryPatchEnumVectorToUser( EnumVector<BoundaryPatches, T> &boundaryPatchVector,
+                                                 const AxisTransformationMap& axisTransformation )
     {
         // Create temporary copy to move data from 
         EnumVector<BoundaryPatches, T> codeBoundaryPatchVector = boundaryPatchVector;
@@ -503,8 +567,8 @@ void TransformMeshToUserCoordinates( Mesh &mesh,
 }
 
 
-void TransformFieldToUserCoordinates( FieldData<array3D> &fieldData,
-                                     const AxisTransformationMap &axisTransformation )
+void TransformFieldToUserCoordinates( FieldData<Tensor3D> &fieldData,
+                                      const AxisTransformationMap &axisTransformation )
 {
     Eigen::array<intType , Axis::count> shuffleArray;
     Eigen::array<bool, Axis::count> reverseArray;
@@ -522,9 +586,9 @@ void TransformFieldToUserCoordinates( FieldData<array3D> &fieldData,
 
     // 3D arrays
     ForAllFieldData( [&] (intType f) {
-        fieldData[f] = array3D( fieldData[f] ).shuffle(shuffleArray).reverse(reverseArray);   // Have to make a copy
+        fieldData[f] = Tensor3D( fieldData[f] ).shuffle(shuffleArray).reverse(reverseArray);   // Have to make a copy
     } );
-    TransformAxisVectorToUser( fieldData.U, axisTransformation );
+    TransformAxisEnumVectorToUser( fieldData.U, axisTransformation );
 }
 
 
@@ -534,9 +598,9 @@ void TransformBCDataToUserCoordinates( FieldData<BoundaryConditionData> &bcData,
 {
     
     // Transform the EnumVector
-    TransformAxisVectorToUser( bcData.U, axisTransformation );
+    TransformAxisEnumVectorToUser( bcData.U, axisTransformation );
     ForAllFieldData( [&] (intType f) {
-        TransformBoundaryPatchVectorToUser( bcData[f], axisTransformation );
+        TransformBoundaryPatchEnumVectorToUser( bcData[f], axisTransformation );
     } );
 
 
@@ -570,8 +634,8 @@ void TransformBCDataToUserCoordinates( FieldData<BoundaryConditionData> &bcData,
             reverseArray[ 1 ] = true;
 
         ForAllFieldData( [&] (intType f) {
-            bcData[f][ LUT::PositivePatch[userAxis] ].value = array2D( bcData[f][ LUT::PositivePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray) );
-            bcData[f][ LUT::NegativePatch[userAxis] ].value = array2D( bcData[f][ LUT::NegativePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray) );
+            bcData[f][ LUT::PositivePatch[userAxis] ].value = Tensor2D( bcData[f][ LUT::PositivePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray) );
+            bcData[f][ LUT::NegativePatch[userAxis] ].value = Tensor2D( bcData[f][ LUT::NegativePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray) );
         } );
 
     } );

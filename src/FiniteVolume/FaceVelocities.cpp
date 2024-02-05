@@ -10,8 +10,8 @@ using namespace FVT;
 namespace
 {
 
-void LinearInterpInteriorFaceVelocityWithMWI( EnumVector<Axis, array3D> &faceVelocities, 
-                                              const FieldData<array3D> &cellFields, 
+void LinearInterpInteriorFaceVelocityWithMWI( EnumVector<Axis, Tensor3D> &faceVelocities, 
+                                              const FieldData<Tensor3D> &cellFields, 
                                               const FVCoefficients &fvCoeffs,
                                               const Mesh &mesh, 
                                               const Axis::ENUMDATA axis,
@@ -19,12 +19,12 @@ void LinearInterpInteriorFaceVelocityWithMWI( EnumVector<Axis, array3D> &faceVel
 {
     using enum Axis::ENUMDATA;
 
-    array3D &faceVel = faceVelocities[ axis ];
-    const array3D &cellVel = cellFields.U[ velocityComponent ];
-    const array3D &cellPressure = cellFields.P;
-    const array3D &momentumDiagCoeffInv = fvCoeffs.Mom[axis].diagCoeffInv;
-    const std::array<array1D, 4> &mwiSparseCoeffs  = fvCoeffs.Cont.mwiSparseCoeffs[axis];
-    const std::array<array1D, 2> &mwiCompactCoeffs = fvCoeffs.Cont.mwiCompactCoeffs[axis];
+    Tensor3D &faceVel = faceVelocities[ axis ];
+    const Tensor3D &cellVel = cellFields.U[ velocityComponent ];
+    const Tensor3D &cellPressure = cellFields.P;
+    const Tensor3D &momentumDiagCoeffInv = fvCoeffs.Mom[axis].diagCoeffInv;
+    const std::array<Tensor1D, 4> &mwiSparseCoeffs  = fvCoeffs.Cont.mwiSparseCoeffs[axis];
+    const std::array<Tensor1D, 2> &mwiCompactCoeffs = fvCoeffs.Cont.mwiCompactCoeffs[axis];
 
     auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
 
@@ -32,7 +32,7 @@ void LinearInterpInteriorFaceVelocityWithMWI( EnumVector<Axis, array3D> &faceVel
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
-                arrayIndex3D idx = {i, j, k},
+                TensorIndex3D idx = {i, j, k},
                              HiIndex = idx,
                              LoIndex = idx,
                              LoLoIndex = idx,
@@ -63,14 +63,14 @@ void LinearInterpInteriorFaceVelocityWithMWI( EnumVector<Axis, array3D> &faceVel
 
 
 
-void LinearInterpInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities, 
-                                       const array3D &cellVelocities, 
+void LinearInterpInteriorFaceVelocity( EnumVector<Axis, Tensor3D> &faceVelocities, 
+                                       const Tensor3D &cellVelocities, 
                                        const Mesh &mesh, 
                                        const Axis::ENUMDATA axis)
 {
     using enum Axis::ENUMDATA;
 
-    array3D &faceVel = faceVelocities[ axis ];
+    Tensor3D &faceVel = faceVelocities[ axis ];
 
     auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
 
@@ -78,7 +78,7 @@ void LinearInterpInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
-                arrayIndex3D idx = {i, j, k},
+                TensorIndex3D idx = {i, j, k},
                              HiIndex = idx,
                              LoIndex = idx;
                 LoIndex[axis] -= 1;
@@ -94,15 +94,15 @@ void LinearInterpInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities
 
 
 
-void UpwindInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities, 
-                                 const array3D &cellVelocities, 
-                                 const EnumVector<Axis, array3D> &faceFluxes,
+void UpwindInteriorFaceVelocity( EnumVector<Axis, Tensor3D> &faceVelocities, 
+                                 const Tensor3D &cellVelocities, 
+                                 const EnumVector<Axis, Tensor3D> &faceFluxes,
                                  const Mesh &mesh, 
                                  const Axis::ENUMDATA axis)
 {
     using enum Axis::ENUMDATA;
 
-    array3D &faceVel = faceVelocities[ axis ];
+    Tensor3D &faceVel = faceVelocities[ axis ];
 
     auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
 
@@ -110,7 +110,7 @@ void UpwindInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities,
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
-                arrayIndex3D idx = {i, j, k};
+                TensorIndex3D idx = {i, j, k};
 
                 if ( faceFluxes[axis](idx) >= 0.0f ) {
                     idx[axis] -= 1;
@@ -128,8 +128,8 @@ void UpwindInteriorFaceVelocity( EnumVector<Axis, array3D> &faceVelocities,
 
 
 
-void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities, 
-                            const EnumVector<Axis, array3D> &cellVelocities, 
+void BoundaryFaceVelocitiy( EnumVector<Axis, Tensor3D> &faceVelocities, 
+                            const EnumVector<Axis, Tensor3D> &cellVelocities, 
                             const Mesh &mesh, 
                             const EnumVector< Axis, BoundaryConditionData >& boundaryConditions,
                             const BoundaryPatches::ENUMDATA boundaryPatch,
@@ -139,8 +139,8 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities,
     
     Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
     
-    static constexpr arrayIndex3D offsets = {nGhost, nGhost, nGhost};
-    arrayIndex3D extents = {mesh.nCells(Axis::X), mesh.nCells(Axis::Y), mesh.nCells(Axis::Z)};
+    static constexpr TensorIndex3D offsets = {nGhost, nGhost, nGhost};
+    TensorIndex3D extents = {mesh.nCells(Axis::X), mesh.nCells(Axis::Y), mesh.nCells(Axis::Z)};
     
     intType faceEndIndex, fieldEndIndex;
     if ( boundaryPatch == LUT::PositivePatch[ axis ] ) {
@@ -192,10 +192,10 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, array3D> &faceVelocities,
 // ---------------------------------------- Face Advected Velocities ----------------------------------------
 
 // Calculates advected face velocities
-void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector< Axis, array3D > > &faceAdvectedVelocities, 
+void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector< Axis, Tensor3D > > &faceAdvectedVelocities, 
                                    const Mesh &mesh, 
-                                   const EnumVector< Axis, array3D > &cellVelocities, 
-                                   const EnumVector< Axis, array3D > &faceFluxes,
+                                   const EnumVector< Axis, Tensor3D > &cellVelocities, 
+                                   const EnumVector< Axis, Tensor3D > &faceFluxes,
                                    const FieldData< BoundaryConditionData > &bcData )
 {
     // Internal faces
@@ -215,9 +215,9 @@ void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector< Axis, array3D >
 
 
 
-EnumVector< Axis, EnumVector<Axis, array3D> > InitialiseAdvectedFaceVelocities( const Mesh &mesh, 
-                                                                                const EnumVector<Axis, array3D> &cellVelocities, 
-                                                                                const EnumVector<Axis, array3D> &faceFluxes,
+EnumVector< Axis, EnumVector<Axis, Tensor3D> > InitialiseAdvectedFaceVelocities( const Mesh &mesh, 
+                                                                                const EnumVector<Axis, Tensor3D> &cellVelocities, 
+                                                                                const EnumVector<Axis, Tensor3D> &faceFluxes,
                                                                                 const FieldData< BoundaryConditionData > &bcData)
 {
     // First index is the velocity component. Second index is the face normal.
@@ -225,7 +225,7 @@ EnumVector< Axis, EnumVector<Axis, array3D> > InitialiseAdvectedFaceVelocities( 
     //   cellFaceVelocity[X][X](i, j, k) -> u(i-1/2, j    , k    )
     //   cellFaceVelocity[X][Y](i, j, k) -> u(i    , j-1/2, k    )
     //   cellFaceVelocity[X][Z](i, j, k) -> u(i    , j    , k-1/2)
-    EnumVector< Axis, EnumVector<Axis, array3D> > faceAdvectedVelocities( EnumVector<Axis, array3D> ( {{Axis::X, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
+    EnumVector< Axis, EnumVector<Axis, Tensor3D> > faceAdvectedVelocities( EnumVector<Axis, Tensor3D> ( {{Axis::X, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
                                                                                                        {Axis::Y, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},
                                                                                                        {Axis::Z, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} ) );
 
@@ -242,9 +242,9 @@ EnumVector< Axis, EnumVector<Axis, array3D> > InitialiseAdvectedFaceVelocities( 
 // ---------------------------------------- Face Fluxes ----------------------------------------
 
 // Calculates face velocity fluxes. i.e. normal component of velocity on faces
-void UpdateFaceFluxes( EnumVector< Axis, array3D > &faceFluxes, 
+void UpdateFaceFluxes( EnumVector< Axis, Tensor3D > &faceFluxes, 
                        const Mesh &mesh, 
-                       const EnumVector< Axis, array3D > &cellVelocities, 
+                       const EnumVector< Axis, Tensor3D > &cellVelocities, 
                        const FieldData< BoundaryConditionData > &bcData )
 {
     // Internal faces
@@ -263,9 +263,9 @@ void UpdateFaceFluxes( EnumVector< Axis, array3D > &faceFluxes,
 
 
 // Calculates face velocity fluxes. i.e. normal component of velocity on faces with MWI correction
-void UpdateFaceFluxesWithMWI( EnumVector< Axis, array3D > &faceFluxes, 
+void UpdateFaceFluxesWithMWI( EnumVector< Axis, Tensor3D > &faceFluxes, 
                               const Mesh &mesh, 
-                              const FieldData<array3D> &cellFields,
+                              const FieldData<Tensor3D> &cellFields,
                               const FVCoefficients &fvCoeffs, 
                               const FieldData< BoundaryConditionData > &bcData )
 {
@@ -284,8 +284,8 @@ void UpdateFaceFluxesWithMWI( EnumVector< Axis, array3D > &faceFluxes,
 }
 
 
-EnumVector<Axis, array3D> InitialiseFaceFluxes( const Mesh &mesh, 
-                                                const EnumVector<Axis, array3D> &cellVelocities, 
+EnumVector<Axis, Tensor3D> InitialiseFaceFluxes( const Mesh &mesh, 
+                                                const EnumVector<Axis, Tensor3D> &cellVelocities, 
                                                 const FieldData< BoundaryConditionData > &bcData)
 {
     // Faces are staggered in the negative direction:
@@ -293,7 +293,7 @@ EnumVector<Axis, array3D> InitialiseFaceFluxes( const Mesh &mesh,
     //   cellFaceFlux[Y](i, j, k) -> u(i    , j-1/2, k    )
     //   cellFaceFlux[Z](i, j, k) -> u(i    , j    , k-1/2)
     // Subscript indicates the normal direction of the face.
-    EnumVector<Axis, array3D> faceFluxes( {{Axis::X, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
+    EnumVector<Axis, Tensor3D> faceFluxes( {{Axis::X, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
                                            {Axis::Y, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},
                                            {Axis::Z, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} );
                                                      
@@ -301,6 +301,28 @@ EnumVector<Axis, array3D> InitialiseFaceFluxes( const Mesh &mesh,
 
     return faceFluxes;
 }
+
+
+
+
+
+// ------------------------------------ Immersed Boundary Face Fluxes ------------------------------------
+
+void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &faceFluxes,
+                      const IBData &ibData ) 
+{
+    for ( auto &ibCell : ibData.ibCells ) { 
+        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
+
+            Axis::ENUMDATA axis = sourceTermData.direction;
+            TensorIndex3D faceIndex = ibCell.cellIndex;    
+            faceIndex[axis] += sourceTermData.faceDirectionIndex;
+
+            faceFluxes[axis](faceIndex) = sourceTermData.faceValues.U[axis];
+        }
+    }
+}
+
 
 
 } // end namespace CFD

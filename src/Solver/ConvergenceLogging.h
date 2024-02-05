@@ -6,7 +6,7 @@
 #include "../Tools/FVTools.h"
 
 #include "Solver.h"
-#include "FieldProbe.h"
+#include "../Tools/FieldProbe.h"
 #include "../IO/VTKWriter.h"
 #include "../Macros.h"
 
@@ -211,7 +211,7 @@ class ConsoleLog
 class FieldWriter
 {
     public:
-        FieldWriter( const FieldData<array3D> &fields, 
+        FieldWriter( const FieldData<Tensor3D> &fields, 
                      const Mesh &mesh,
                      const FieldData< BoundaryConditionData > &bcData,
                      const AxisTransformationMap &axisTransformation,
@@ -237,10 +237,10 @@ class FieldWriter
 
 
     private:
-        const FieldData<array3D> &m_fields;
+        const FieldData<Tensor3D> &m_fields;
         const AxisTransformationMap &m_axisTransformation;
-        FieldData<array3D> m_transformedFields;
-        FieldData<array3D> m_transformedVertexFields;
+        FieldData<Tensor3D> m_transformedFields;
+        FieldData<Tensor3D> m_transformedVertexFields;
         Mesh m_transformedMesh;
         FieldData< BoundaryConditionData > m_transformedBcData;
         std::unique_ptr< VTK::VTKWriter<floatType> > m_vtkWriter;
@@ -296,6 +296,88 @@ class FieldWriter
             });
             TransformFieldToUserCoordinates( m_transformedFields, m_axisTransformation );
             m_transformedVertexFields = GetVertexFields(m_transformedFields, m_transformedMesh, m_transformedBcData);
+        }
+
+};
+
+
+// Postprocesses the fields and writes to file
+class ResidualFieldWriter
+{
+    public:
+        ResidualFieldWriter( const FieldData<Tensor3D> &fields, 
+                             const Mesh &mesh,
+                             const AxisTransformationMap &axisTransformation,
+                             const std::string &baseFilename ) :
+            m_fields( fields ),
+            m_axisTransformation( axisTransformation ),
+            m_transformedMesh( mesh ),
+            m_baseFilename( RemoveVTKFileExtension( baseFilename ) )
+            {
+                // Only needs to be transformed once
+                TransformMeshToUserCoordinates( m_transformedMesh, m_axisTransformation );
+            };
+
+            void WriteData( intType iterationNumber )
+            { 
+                TransformData();
+                SetWriter();
+                std::string message = "CFD residuals at iteration " + std::to_string( iterationNumber );
+                m_vtkWriter->WriteData( AppendFilename( iterationNumber ), message ); 
+            }
+
+
+    private:
+        const FieldData<Tensor3D> &m_fields;
+        const AxisTransformationMap &m_axisTransformation;
+        FieldData<Tensor3D> m_transformedFields;
+        Mesh m_transformedMesh;
+        std::unique_ptr< VTK::VTKWriter<floatType> > m_vtkWriter;
+        const std::string m_baseFilename;
+
+        std::string AppendFilename( intType iterationNumber )
+        { return m_baseFilename  + "_iter" + std::to_string(iterationNumber) + ".vtk"; }
+
+        std::string RemoveVTKFileExtension( const std::string &filename )
+        {
+            // Check if there is a .vtk extension and remove it
+            size_t lastPointPosition = filename.find_last_of(".");
+            if ( lastPointPosition == std::string::npos ) {
+                return filename;
+            }
+            if ( filename.substr( lastPointPosition ) == ".vtk" ) {
+                return filename.substr( 0, lastPointPosition );
+            }
+            return filename;
+        }
+
+
+        void SetWriter()
+        {
+            using enum Axis::ENUMDATA;
+            VTK::VTKWriterConfig config( m_transformedMesh.cellFaces[X].size(), 
+                                         m_transformedMesh.cellFaces[Y].size(), 
+                                         m_transformedMesh.cellFaces[Z].size() );
+                config.SetWriteMode(VTK::WriteModes::BINARY);
+                
+            VTK::gridVectorType<CFD::floatType> gridVector = { m_transformedMesh.cellFaces[X].data(), 
+                                                               m_transformedMesh.cellFaces[Y].data(), 
+                                                               m_transformedMesh.cellFaces[Z].data() };
+
+            VTK::scalarCollectionType<floatType> scalarMap = { {"Pressure", VTK::GridTypes::CELL_DATA, m_transformedFields.P.data()} };
+
+            VTK::vectorCollectionType<floatType> vectorMap = { {"Velocity", VTK::GridTypes::CELL_DATA, { m_transformedFields.U[X].data(), 
+                                                                                                         m_transformedFields.U[Y].data(), 
+                                                                                                         m_transformedFields.U[Z].data()}} };
+        
+            m_vtkWriter = std::make_unique<VTK::VTKWriter<floatType>>(gridVector, scalarMap, vectorMap, config);
+        }
+
+
+        void TransformData()
+        {
+            m_transformedFields = m_fields;
+            TransformFieldToUserCoordinates( m_transformedFields, m_axisTransformation );
         }
 
 };

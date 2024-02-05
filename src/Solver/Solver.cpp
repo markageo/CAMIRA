@@ -1,12 +1,16 @@
 #include "Solver.h"
 #include "ConvergenceLogging.h"
-#include "FieldProbe.h"
 
 #include "../Types.h"
 #include "../Macros.h"
 #include "../IO/InputProcessing.h"
 #include "../Tools/SweepTransformations.h"
+#include "../Tools/FieldProbe.h"
 #include "../FiniteVolume/FiniteVolume.h"
+#include "../ImmersedBoundary/ImmersedBoundary.h"
+
+#include "../IO/ArrayIO.h"
+#include "../IO/VTKWriter.h"
 
 #include "TriadSolver.h"
 #include "LineSolver.h"
@@ -19,8 +23,36 @@
 namespace CFD
 {
 
+namespace
+{
+
+// Update face fluxes, immersed boundary data, and finite volume equation coefficients
+template< bool isNewtonLinearisation >
+void UpdateFVEquations( FVCoefficients &fvCoeffs,
+                        IBData &ibData,
+                        EnumVector<Axis, Tensor3D> &faceFluxes,
+                        EnumVector< Axis, EnumVector< Axis, Tensor3D> > &faceAdvectedVelocities,
+                        const FieldData<Tensor3D> &fields,
+                        const Mesh &mesh,
+                        const FieldData< BoundaryConditionData > &bcData )
+{
+    UpdateIBData( ibData, fields );
+    UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
+    if constexpr ( isNewtonLinearisation ) {
+        UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
+    }
+    SetIBFaceFluxes( faceFluxes, ibData );
+    UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData);
+}
+
+
+
+}   // end anonymous namespace
+
+
+
 template< MomentumInterpolation MI, Linearisation LI >
-void SweepSolve( FieldData<array3D> &fields,
+void SweepSolve( FieldData<Tensor3D> &fields,
                  const Mesh &mesh,
                  const FieldData< BoundaryConditionData > &bcData,
                  const InputData &inputData,
@@ -35,14 +67,20 @@ void SweepSolve( FieldData<array3D> &fields,
     const intType maxOuterIterations = inputData.schemes.maxOuterIterations;
     const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
 
-    // Initialise
-    EnumVector<Axis, array3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
-    EnumVector< Axis, EnumVector< Axis, array3D> > faceAdvectedVelocities;
+    // Immersed boundary
+    IBData ibData = CreateImmersedBoundaryData( inputData, mesh );
+
+    // Finite Volume
+    MaskFields(fields, ibData.mask);
+    EnumVector<Axis, Tensor3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
+    EnumVector< Axis, EnumVector< Axis, Tensor3D> > faceAdvectedVelocities;
     if constexpr ( isNewtonLinearisation ) 
         faceAdvectedVelocities = InitialiseAdvectedFaceVelocities( mesh, fields.U, faceFluxes, bcData );
 
-    FieldData<array3D> fieldsOld = fields;
-    FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceAdvectedVelocities, faceFluxes, bcData, inputData);
+    FieldData<Tensor3D> fieldsOld = fields;
+    FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData, inputData);
+    UpdateFVEquations<isNewtonLinearisation>( fvCoeffs, ibData, faceFluxes, faceAdvectedVelocities, fields, mesh, bcData );
+
 
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
@@ -62,7 +100,7 @@ void SweepSolve( FieldData<array3D> &fields,
     ConsoleLog consoleLog( axisTransformation );
 
     // Instantiate linear solver, this holds references to the fields
-    LinearSolver<MI, LI> linearSolver(fields, fieldsOld, fvCoeffs, linearSolverSettings);
+    LinearSolver<MI, LI> linearSolver(fields, fieldsOld, ibData.mask, fvCoeffs, linearSolverSettings);
 
 
     // Outer iterations
@@ -74,27 +112,12 @@ void SweepSolve( FieldData<array3D> &fields,
     TIC("Solver Loop")
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
-        TIC("Solver Update State")
         linearSolver.UpdateState();
-        TOC()
-
-        TIC("Linear Solver")
         linearSolver.Solve();
-        TOC()
 
-        TIC("Update face values")
-        UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
-        if constexpr ( isNewtonLinearisation ) {
-            UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
-        }
-        TOC()
+        UpdateFVEquations<isNewtonLinearisation>( fvCoeffs, ibData, faceFluxes, faceAdvectedVelocities, fields, mesh, bcData );
 
-        TIC("Update Coefficients")
-        UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, bcData);
-        TOC()
-
-        TIC("Residuals and logging")
-        residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs); 
+        residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs, ibData.mask); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
 
         massFluxResidual = BoundaryMassFluxResidual(faceFluxes, mesh);
@@ -109,7 +132,6 @@ void SweepSolve( FieldData<array3D> &fields,
             probeLogFiles[p].WriteData( probeValues[p], nOuterIterations );
         }
 
-        TOC()
         
         if ( ResidualsDiverged(residualsOuter) ) {
             fieldWriter.WriteData( nOuterIterations );
@@ -129,22 +151,19 @@ void SweepSolve( FieldData<array3D> &fields,
             break;
         }
 
-        TIC("Writing Fields")
         if ( writeFields && (nOuterIterations % inputData.fieldWriteInterval) == 0 ) {
             fieldWriter.WriteData( nOuterIterations );
-        }
-        TOC()
-
+        }   
+        
     }
-
     TOC()
 
 
 }
-template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Picard>( FieldData<array3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Picard>( FieldData<array3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Newton>( FieldData<array3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Newton>( FieldData<array3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Picard>( FieldData<Tensor3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Picard>( FieldData<Tensor3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Newton>( FieldData<Tensor3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Newton>( FieldData<Tensor3D> &, const Mesh &, const FieldData< BoundaryConditionData > &, const InputData &, const AxisTransformationMap &);
 
 
 } // end namespace CFD
