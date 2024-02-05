@@ -1,6 +1,7 @@
 #include "ImmersedBoundary.h"
 #include "../Tools/FVLookups.h"
 
+#include "../Macros.h"
 #include "../IO/ArrayIO.h"
 
 #include <vector>
@@ -136,6 +137,23 @@ bool CellIsFluid( const TensorIndex3D &cellIndex_a,
 
 
 
+// Check if a cell is a fluid cell within the domain boundary
+bool CellHasSolidNeighbour( const TensorIndex3D &cellIndex,
+                            const Axis::ENUMDATA &direction,
+                            const intType &directionIndex,
+                            const Tensor3D &mask )
+{
+    TensorIndex3D neighbourCellIndex = cellIndex;
+    neighbourCellIndex[direction] += directionIndex;
+    if ( static_cast<intType>( mask( neighbourCellIndex ) ) == CellType::Fluid ) {
+        return false;
+    }
+
+    return true;
+}
+
+
+
 // Sets data for a particular source term in a particular direciton for a particular cell
 void AddIBDataForDirection( IBCell &ibCell, 
                             const Axis::ENUMDATA axis,
@@ -167,7 +185,12 @@ void AddIBDataForDirection( IBCell &ibCell,
 
     // Ensure that there is enough space between the IB and other IBs and the domain boundary
     if ( !CellIsFluid( interiorCellIndex, mask, mesh ) ) {
-        throw std::runtime_error( "Invalid immersed boundary geometry and mesh specification. Not enough fluid cells between solid and domain boundaries!" );
+        throw std::runtime_error( "Invalid immersed boundary geometry and mesh specification: Not enough fluid cells between solid and domain boundaries!" );
+    }
+
+    // Ensure there is a second solid cell on the other side of the ghost cell so that all stencil terms can be zeroed
+    if ( !CellHasSolidNeighbour( ghostCellIndex, axis, directionIndex, mask ) ) {
+        throw std::runtime_error( "Invalid immersed boundary geometry and mesh specification: Solid geometries must be at least 2 cells thick!" );
     }
 
     // Distance from cell center to immersed boundary along this coordinate direction
@@ -311,7 +334,7 @@ IBData ConstructIBData( const Polyhedron &geometry,
     using enum Axis::ENUMDATA;
 
     IBData ibData;
-    
+
     ibData.mask = CreateCellMask( geometry, mesh );
     auto &mask = ibData.mask;
 

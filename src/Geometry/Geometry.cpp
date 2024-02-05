@@ -217,9 +217,9 @@ Polyhedron MakeSpherePolyhedron( const InputData::SolidSphereData &solidSphereDa
                        Sphere_3(centerPosition, 2.0f * radius2) ); // bounding sphere
 
     // Meshing criteria
-    CGAL::Surface_mesh_default_criteria_3<Tr> criteria( 30.0f,  // angular bound
-                                                        0.1f,   // radius bound
-                                                        0.1f);  // distance bound
+    CGAL::Surface_mesh_default_criteria_3<Tr> criteria( 5.0f,                       // lower bound on minimum angle of facets (degrees)
+                                                        0.25f * sqrt( radius2 ),    // upper bound on radius of Delaunay balls
+                                                        0.2f  * sqrt( radius2 ) );  // upper bound on center-center facet distances
 
     // meshing surface
     CGAL::make_surface_mesh(c2t3, surface, criteria, CGAL::Non_manifold_tag());
