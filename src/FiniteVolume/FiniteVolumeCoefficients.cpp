@@ -1559,16 +1559,48 @@ void AddContinuityBoundaryConstants( ContinuityEquation &contCoeffs )
 \*---------------------------------------------------------------------------------------------------------------*/
 
 
-floatType MomentumIBSource( const Axis::ENUMDATA momentumAxis,
-                            const IBCell::SourceTermData &sourceTermData, 
-                            const TensorIndex3D &cellIndex,
-                            const FVCoefficients &fvCoeffs )
+floatType MomentumIBSourcePicard( const Axis::ENUMDATA momentumAxis,
+                                  const IBCell::SourceTermData &sourceTermData, 
+                                  const TensorIndex3D &cellIndex,
+                                  const FVCoefficients &fvCoeffs )
 {
     Axis::ENUMDATA faceNormal = sourceTermData.direction;
     TransportCoefficients::ENUMDATA coeff = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiCoeff[faceNormal] : LUT::LoCoeff[faceNormal];
 
     // Velocity term
     floatType ibSource = - fvCoeffs.Mom[momentumAxis].AU[momentumAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[momentumAxis];
+
+    // Pressure term
+    if ( momentumAxis == faceNormal ) {
+        ibSource += - fvCoeffs.Mom[momentumAxis].AP[coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.P;
+    }
+
+    return ibSource;
+}
+
+
+
+floatType MomentumIBSourceNewton( const Axis::ENUMDATA momentumAxis,
+                                  const IBCell::SourceTermData &sourceTermData, 
+                                  const TensorIndex3D &cellIndex,
+                                  const FVCoefficients &fvCoeffs )
+{
+    Axis::ENUMDATA faceNormal = sourceTermData.direction;
+    TransportCoefficients::ENUMDATA coeff = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiCoeff[faceNormal] : LUT::LoCoeff[faceNormal];
+
+    // Velocity term
+    floatType ibSource = - fvCoeffs.Mom[momentumAxis].AU[momentumAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[momentumAxis];
+
+    Axis::ENUMDATA loAxis = LUT::LoOrthogonalAxis[ momentumAxis ];
+    if ( faceNormal == loAxis ) {
+        ibSource += - fvCoeffs.Mom[momentumAxis].AU[loAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[loAxis];
+    }
+
+    Axis::ENUMDATA hiAxis = LUT::HiOrthogonalAxis[ momentumAxis ];
+    if ( faceNormal == hiAxis ) {
+        ibSource += - fvCoeffs.Mom[momentumAxis].AU[hiAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[hiAxis];
+    }
+
 
     // Pressure term
     if ( momentumAxis == faceNormal ) {
@@ -1711,7 +1743,18 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
 
             // Momentum equations
             EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                fvCoeffs.Mom[axis].B( cellIndex ) += MomentumIBSource( axis, sourceTermData, cellIndex, fvCoeffs );
+
+                switch ( fvCoeffs.Mom[axis].linearisation ) {
+                case Linearisation::Picard:
+                    fvCoeffs.Mom[axis].B( cellIndex ) += MomentumIBSourcePicard( axis, sourceTermData, cellIndex, fvCoeffs );
+                    break;
+
+                case Linearisation::Newton:
+                    fvCoeffs.Mom[axis].B( cellIndex ) += MomentumIBSourceNewton( axis, sourceTermData, cellIndex, fvCoeffs );
+                    break;
+            }
+
+               
             } );
 
 
