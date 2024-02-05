@@ -1,19 +1,13 @@
 main
-test
 
 build
-debug
+batchruns
 output
-tests/mesh/output/*
-tests/face_velocities/output/*
-tests/fv_coefficients/output/*
 
 *.vtk
 *.dbg
 *.csv
 *.dat
-
-lid_batch/results
 
 perf.data
 perf.data.old
