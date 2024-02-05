@@ -1133,7 +1133,7 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation &continuityEquation
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
                 TensorIndex3D HiIndex = { i, j, k },
-                             LoIndex = { i, j, k };
+                              LoIndex = { i, j, k };
                 LoIndex[axis] -= 1;
                  
                 floatType d = MWIWeightingCoeff( LoIndex, HiIndex, momentumDiagCoeffInv, mesh, axis );
@@ -1162,12 +1162,12 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation &continuityEquation
                 // Explicit sparse difference ---------------------------------------------------------------------------
 
                 TensorIndex3D LoWest  = NeighbourIndex( LoIndex, -1, axis ),
-                             LoEast  = NeighbourIndex( LoIndex,  1, axis ),
-                             LoEEast = NeighbourIndex( LoIndex,  2, axis ),
+                              LoEast  = NeighbourIndex( LoIndex,  1, axis ),
+                              LoEEast = NeighbourIndex( LoIndex,  2, axis ),
 
-                             HiWWest = NeighbourIndex( HiIndex, -2, axis ),
-                             HiWest  = NeighbourIndex( HiIndex, -1, axis ),
-                             HiEast  = NeighbourIndex( HiIndex,  1, axis );
+                              HiWWest = NeighbourIndex( HiIndex, -2, axis ),
+                              HiWest  = NeighbourIndex( HiIndex, -1, axis ),
+                              HiEast  = NeighbourIndex( HiIndex,  1, axis );
 
                 floatType coeffSparse0 = d * mwiSparseCoeffs[0](idx),
                           coeffSparse1 = d * mwiSparseCoeffs[1](idx),
@@ -1580,9 +1580,9 @@ floatType MomentumIBSource( const Axis::ENUMDATA momentumAxis,
 
 
 
-floatType ContinuityIBSource( const IBCell::SourceTermData &sourceTermData, 
-                              const TensorIndex3D &cellIndex,
-                              const FVCoefficients &fvCoeffs) 
+floatType ContinuityIBSourceImplicitMWI( const IBCell::SourceTermData &sourceTermData, 
+                                         const TensorIndex3D &cellIndex,
+                                         const FVCoefficients &fvCoeffs) 
 {
     using FVT::G;
 
@@ -1602,9 +1602,8 @@ floatType ContinuityIBSource( const IBCell::SourceTermData &sourceTermData,
 
 
 
-floatType InteriorContinuityIBSource( const IBCell::SourceTermData &sourceTermData, 
-                                      const TensorIndex3D &cellIndex,
-                                      const FVCoefficients &fvCoeffs ) 
+floatType InteriorContinuityIBSourceImplicitMWI( const IBCell::SourceTermData &sourceTermData, 
+                                                 const FVCoefficients &fvCoeffs ) 
 {
     using FVT::G;
 
@@ -1612,7 +1611,85 @@ floatType InteriorContinuityIBSource( const IBCell::SourceTermData &sourceTermDa
     TransportCoefficients::ENUMDATA ccoeff = ( sourceTermData.directionIndex == +1 ) ? LUT::HiHiCoeff[faceNormal] : LUT::LoLoCoeff[faceNormal];
 
     // Far pressure term
-    floatType ibSource = - fvCoeffs.Cont.AP[ccoeff](cellIndex) * sourceTermData.ghostCellValues.P;
+    floatType ibSource = - fvCoeffs.Cont.AP[ccoeff](sourceTermData.cellIndex_a) * sourceTermData.ghostCellValues.P;
+
+    return ibSource;
+}
+
+
+
+floatType ContinuityIBSourceSemiExplicitMWI( const IBCell::SourceTermData &sourceTermData, 
+                                             const TensorIndex3D &cellIndex,
+                                             const FVCoefficients &fvCoeffs, 
+                                             const Mesh &mesh) 
+{
+    using FVT::G;
+
+    bool ghostIsHiSide = ( sourceTermData.directionIndex == +1 );
+
+    Axis::ENUMDATA faceNormal = sourceTermData.direction;
+    TransportCoefficients::ENUMDATA coeff  = ghostIsHiSide ? LUT::HiCoeff[faceNormal]   : LUT::LoCoeff[faceNormal];
+
+    // Divergence term
+    floatType ibSource = - fvCoeffs.Cont.AU[faceNormal][coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.U[faceNormal];
+
+    // Implicit Pressure terms
+    ibSource += - fvCoeffs.Cont.AP[coeff ](cellIndex) * sourceTermData.ghostCellValues.P;
+
+    // Explicit Pressure terms, face closest to IB
+    const Tensor3D &momentumDiagCoeffInv = fvCoeffs.Mom[faceNormal].diagCoeffInv;
+    const std::array<Tensor1D, 4> &mwiSparseCoeffs = fvCoeffs.Cont.mwiSparseCoeffs[faceNormal];
+    TensorIndex3D LoIndex = ghostIsHiSide ? cellIndex : sourceTermData.cellIndex_g;
+    TensorIndex3D HiIndex = ghostIsHiSide ? sourceTermData.cellIndex_g : cellIndex;
+    intType idx = HiIndex[faceNormal];
+    floatType d = MWIWeightingCoeff( LoIndex, HiIndex, momentumDiagCoeffInv, mesh, faceNormal );
+
+    floatType ghostSparseCoeff  = ghostIsHiSide ? d * mwiSparseCoeffs[2](idx) : - d * mwiSparseCoeffs[1](idx);
+    floatType ghostSparseCCoeff = ghostIsHiSide ? d * mwiSparseCoeffs[3](idx) : - d * mwiSparseCoeffs[0](idx);
+
+    floatType explicitIBSource = - ghostSparseCoeff * sourceTermData.ghostCellValues.P
+                                 - ghostSparseCCoeff * sourceTermData.farPressureGhostCellValue;
+
+    // Explicit Pressure terms, face farthest from IB
+    LoIndex = ghostIsHiSide ? sourceTermData.cellIndex_a : cellIndex;
+    HiIndex = ghostIsHiSide ? cellIndex : sourceTermData.cellIndex_a;
+    idx = HiIndex[faceNormal];
+    d = MWIWeightingCoeff( LoIndex, HiIndex, momentumDiagCoeffInv, mesh, faceNormal );
+
+    ghostSparseCoeff  = ghostIsHiSide ? - d * mwiSparseCoeffs[3](idx) : d * mwiSparseCoeffs[0](idx);
+
+    explicitIBSource += - ghostSparseCoeff * sourceTermData.ghostCellValues.P;
+
+
+    // Add to the source term, divide by cell length
+    ibSource += explicitIBSource * mesh.cellLengthsInv[faceNormal]( cellIndex[faceNormal] );
+
+    return ibSource;
+}
+
+
+
+floatType InteriorContinuityIBSourceSemiExplicitMWI( const IBCell::SourceTermData &sourceTermData, 
+                                                     const TensorIndex3D &cellIndex,
+                                                     const FVCoefficients &fvCoeffs,
+                                                     const Mesh &mesh ) 
+{
+    using FVT::G;
+
+    bool ghostIsHiSide = ( sourceTermData.directionIndex == +1 );
+    Axis::ENUMDATA faceNormal = sourceTermData.direction;
+
+    // Far pressure term (explicit)
+    const TensorIndex3D LoIndex = ghostIsHiSide ? sourceTermData.cellIndex_a : cellIndex;
+    const TensorIndex3D HiIndex = ghostIsHiSide ? cellIndex : sourceTermData.cellIndex_a;
+    const intType idx = HiIndex[faceNormal];
+    const Tensor3D &momentumDiagCoeffInv = fvCoeffs.Mom[faceNormal].diagCoeffInv;
+    const std::array<Tensor1D, 4> &mwiSparseCoeffs = fvCoeffs.Cont.mwiSparseCoeffs[faceNormal];
+    floatType d = MWIWeightingCoeff( LoIndex, HiIndex, momentumDiagCoeffInv, mesh, faceNormal );
+
+    const floatType ghostSparseCoeff  = ghostIsHiSide ? d * mwiSparseCoeffs[3](idx) : - d * mwiSparseCoeffs[0](idx);
+
+    floatType ibSource = - ghostSparseCoeff * sourceTermData.ghostCellValues.P * mesh.cellLengthsInv[faceNormal]( cellIndex );
 
     return ibSource;
 }
@@ -1620,7 +1697,8 @@ floatType InteriorContinuityIBSource( const IBCell::SourceTermData &sourceTermDa
 
 
 void AddIBSourceTerms( FVCoefficients &fvCoeffs,
-                       const IBData &ibData )
+                       const IBData &ibData,
+                       const Mesh &mesh )
 {
 
     // Iterate through each forced cell
@@ -1636,11 +1714,20 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
                 fvCoeffs.Mom[axis].B( cellIndex ) += MomentumIBSource( axis, sourceTermData, cellIndex, fvCoeffs );
             } );
 
-            // Continuity equation
-            fvCoeffs.Cont.B( cellIndex ) += ContinuityIBSource( sourceTermData, cellIndex, fvCoeffs );
 
-            // For the adjacent cell wide stencil term
-            fvCoeffs.Cont.B( sourceTermData.cellIndex_a ) += InteriorContinuityIBSource( sourceTermData, sourceTermData.cellIndex_a, fvCoeffs );
+            // Continuity equation
+            switch ( fvCoeffs.Cont.momentumInterpolation ) {
+                case MomentumInterpolation::Implicit:
+                    fvCoeffs.Cont.B( cellIndex ) += ContinuityIBSourceImplicitMWI( sourceTermData, cellIndex, fvCoeffs );
+                    fvCoeffs.Cont.B( sourceTermData.cellIndex_a ) += InteriorContinuityIBSourceImplicitMWI( sourceTermData, fvCoeffs );
+                    break;
+
+                case MomentumInterpolation::SemiExplicit:
+                    fvCoeffs.Cont.B( cellIndex ) += ContinuityIBSourceSemiExplicitMWI( sourceTermData, cellIndex, fvCoeffs, mesh );
+                    fvCoeffs.Cont.B( sourceTermData.cellIndex_a ) += InteriorContinuityIBSourceSemiExplicitMWI( sourceTermData, cellIndex, fvCoeffs, mesh );
+                    break;
+            }
+
 
         }
 
@@ -1903,7 +1990,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation.P;
 
     // Add effect if immersed boundary
-    AddIBSourceTerms( fvCoeffs, ibData );
+    AddIBSourceTerms( fvCoeffs, ibData, mesh );
 
     return fvCoeffs;
 }
@@ -1974,7 +2061,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
 
     // Add effect of immersed boundary
-    AddIBSourceTerms( fvCoeffs, ibData );
+    AddIBSourceTerms( fvCoeffs, ibData, mesh );
 }
 
 

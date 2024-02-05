@@ -25,11 +25,12 @@ struct IBCell {
         Axis::ENUMDATA direction;
         intType        directionIndex,        // Cell index offset, either +1 or -1.
                        faceDirectionIndex;    // Face index offset, either 0 for lo side, or 1 for hi side
-        TensorIndex3D cellIndex_a;            // One from boundary cell index, for extrapolation 
+        TensorIndex3D cellIndex_g,            // Ghost cell
+                      cellIndex_a;            // One from boundary cell index, for extrapolation 
 
         // Coefficients for extrapolating onto face
         floatType faceExtrapCoeff_p,         // Multiplies with immediate cell value
-                  faceExtrapCoeff_a,         // Multiplies with first interior cell
+                  faceExtrapCoeff_a,         // Multiplies with first interiosr cell
                   faceExtrapCoeff_ib;        // Multiplies with IB value
 
         // Coefficients for extrapolating from face to ghost cell
