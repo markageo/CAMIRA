@@ -213,7 +213,7 @@ class FieldWriter
     public:
         FieldWriter( const FieldData<Tensor3D> &fields, 
                      const Mesh &mesh,
-                     const FieldData< BoundaryConditionData > &bcData,
+                     const BoundaryConditionData &bcData,
                      const AxisTransformationMap &axisTransformation,
                      const std::string &baseFilename ) :
             m_fields( fields ),
@@ -242,7 +242,7 @@ class FieldWriter
         FieldData<Tensor3D> m_transformedFields;
         FieldData<Tensor3D> m_transformedVertexFields;
         Mesh m_transformedMesh;
-        FieldData< BoundaryConditionData > m_transformedBcData;
+        BoundaryConditionData m_transformedBcData;
         std::unique_ptr< VTK::VTKWriter<floatType> > m_vtkWriter;
         const std::string m_baseFilename;
 

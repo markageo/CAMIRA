@@ -110,29 +110,38 @@ namespace
 
 
 
-FieldData< BoundaryConditionData > SetBoundaryConditionData( const InputData &inputData,
+BoundaryConditionData SetBoundaryConditionData( const InputData &inputData,
                                                              const Mesh &mesh )
 {
 
-    FieldData< EnumVector< BoundaryPatches, BoundaryConditionConfig > > bcData;
+    BoundaryConditionData bcData;
 
-
+    // Set boundary condition data for use in solver
     ForAllFieldData( [&] (intType f) {
 
         EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
 
             const auto &bcConfig = inputData.boundaryConditions[f][bp];
 
-            bcData[f][bp].type = bcConfig.type;
+            bcData.fields[f][bp].type = bcConfig.type;
 
             if ( bcConfig.hasUniformValue ) 
-                bcData[f][bp].value = SetBoundaryProfileConstant( bcConfig.uniformValue, mesh, bp );
+                bcData.fields[f][bp].value = SetBoundaryProfileConstant( bcConfig.uniformValue, mesh, bp );
 
             if ( bcConfig.hasProfile1D ) 
-                bcData[f][bp].value = SetBoundaryProfile1D( bcConfig.profile1D, mesh, bp );
+                bcData.fields[f][bp].value = SetBoundaryProfile1D( bcConfig.profile1D, mesh, bp );
 
         } );
 
+    } );
+
+
+    // Pressure field will be floating if none of the pathces are fixed
+    bcData.pressureFieldIsFloating = true;
+    EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
+        if ( bcData.fields.P[bp].type == BoundaryConditions::fixed ) {
+            bcData.pressureFieldIsFloating = false;
+        }
     } );
 
     return bcData;
