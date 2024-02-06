@@ -593,14 +593,14 @@ void TransformFieldToUserCoordinates( FieldData<Tensor3D> &fieldData,
 
 
 
-void TransformBCDataToUserCoordinates( FieldData<BoundaryConditionData> &bcData,
+void TransformBCDataToUserCoordinates( BoundaryConditionData &bcData,
                                        const AxisTransformationMap &axisTransformation )
 {
     
     // Transform the EnumVector
-    TransformAxisEnumVectorToUser( bcData.U, axisTransformation );
+    TransformAxisEnumVectorToUser( bcData.fields.U, axisTransformation );
     ForAllFieldData( [&] (intType f) {
-        TransformBoundaryPatchEnumVectorToUser( bcData[f], axisTransformation );
+        TransformBoundaryPatchEnumVectorToUser( bcData.fields[f], axisTransformation );
     } );
 
 
@@ -634,8 +634,8 @@ void TransformBCDataToUserCoordinates( FieldData<BoundaryConditionData> &bcData,
             reverseArray[ 1 ] = true;
 
         ForAllFieldData( [&] (intType f) {
-            bcData[f][ LUT::PositivePatch[userAxis] ].value = Tensor2D( bcData[f][ LUT::PositivePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray) );
-            bcData[f][ LUT::NegativePatch[userAxis] ].value = Tensor2D( bcData[f][ LUT::NegativePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray) );
+            bcData.fields[f][ LUT::PositivePatch[userAxis] ].value = Tensor2D( bcData.fields[f][ LUT::PositivePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray) );
+            bcData.fields[f][ LUT::NegativePatch[userAxis] ].value = Tensor2D( bcData.fields[f][ LUT::NegativePatch[userAxis] ].value.shuffle(shuffleArray).reverse(reverseArray) );
         } );
 
     } );

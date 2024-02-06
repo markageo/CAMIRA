@@ -131,7 +131,7 @@ void UpwindInteriorFaceVelocity( EnumVector<Axis, Tensor3D> &faceVelocities,
 void BoundaryFaceVelocitiy( EnumVector<Axis, Tensor3D> &faceVelocities, 
                             const EnumVector<Axis, Tensor3D> &cellVelocities, 
                             const Mesh &mesh, 
-                            const EnumVector< Axis, BoundaryConditionData >& boundaryConditions,
+                            const EnumVector< Axis, BoundaryConditionData::Patches > &momentumBoundaryPatchData,
                             const BoundaryPatches::ENUMDATA boundaryPatch,
                             const Axis::ENUMDATA velocityComponent )
 {
@@ -151,7 +151,7 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, Tensor3D> &faceVelocities,
         fieldEndIndex = 0;
     }
 
-    switch ( boundaryConditions[velocityComponent][boundaryPatch].type ) 
+    switch ( momentumBoundaryPatchData[velocityComponent][boundaryPatch].type ) 
     {    
         case BC::zeroGradient:
         {
@@ -162,7 +162,7 @@ void BoundaryFaceVelocitiy( EnumVector<Axis, Tensor3D> &faceVelocities,
 
         case BC::fixed:
         {
-            faceVelocities[axis].chip(faceEndIndex, axis) = boundaryConditions[velocityComponent][boundaryPatch].value;
+            faceVelocities[axis].chip(faceEndIndex, axis) = momentumBoundaryPatchData[velocityComponent][boundaryPatch].value;
             break;
         }
             
@@ -196,7 +196,7 @@ void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector< Axis, Tensor3D 
                                    const Mesh &mesh, 
                                    const EnumVector< Axis, Tensor3D > &cellVelocities, 
                                    const EnumVector< Axis, Tensor3D > &faceFluxes,
-                                   const FieldData< BoundaryConditionData > &bcData )
+                                   const BoundaryConditionData &bcData )
 {
     // Internal faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
@@ -208,7 +208,7 @@ void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector< Axis, Tensor3D 
     // Boundary faces
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {
         EnumFor<Axis>( [&] (Axis::ENUMDATA velocityComponent) {
-            BoundaryFaceVelocitiy( faceAdvectedVelocities[velocityComponent], cellVelocities, mesh, bcData.U, boundaryPatch, velocityComponent );
+            BoundaryFaceVelocitiy( faceAdvectedVelocities[velocityComponent], cellVelocities, mesh, bcData.fields.U, boundaryPatch, velocityComponent );
         } );
     } );
 }
@@ -218,7 +218,7 @@ void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector< Axis, Tensor3D 
 EnumVector< Axis, EnumVector<Axis, Tensor3D> > InitialiseAdvectedFaceVelocities( const Mesh &mesh, 
                                                                                 const EnumVector<Axis, Tensor3D> &cellVelocities, 
                                                                                 const EnumVector<Axis, Tensor3D> &faceFluxes,
-                                                                                const FieldData< BoundaryConditionData > &bcData)
+                                                                                const BoundaryConditionData &bcData)
 {
     // First index is the velocity component. Second index is the face normal.
     // Faces are staggered in the negative direction:
@@ -245,7 +245,7 @@ EnumVector< Axis, EnumVector<Axis, Tensor3D> > InitialiseAdvectedFaceVelocities(
 void UpdateFaceFluxes( EnumVector< Axis, Tensor3D > &faceFluxes, 
                        const Mesh &mesh, 
                        const EnumVector< Axis, Tensor3D > &cellVelocities, 
-                       const FieldData< BoundaryConditionData > &bcData )
+                       const BoundaryConditionData &bcData )
 {
     // Internal faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
@@ -256,7 +256,7 @@ void UpdateFaceFluxes( EnumVector< Axis, Tensor3D > &faceFluxes,
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {
 
         Axis::ENUMDATA velocityComponent = LUT::BoundaryPatchAxis[ boundaryPatch ];
-        BoundaryFaceVelocitiy( faceFluxes, cellVelocities, mesh, bcData.U, boundaryPatch, velocityComponent );
+        BoundaryFaceVelocitiy( faceFluxes, cellVelocities, mesh, bcData.fields.U, boundaryPatch, velocityComponent );
 
     } );
 }
@@ -267,7 +267,7 @@ void UpdateFaceFluxesWithMWI( EnumVector< Axis, Tensor3D > &faceFluxes,
                               const Mesh &mesh, 
                               const FieldData<Tensor3D> &cellFields,
                               const FVCoefficients &fvCoeffs, 
-                              const FieldData< BoundaryConditionData > &bcData )
+                              const BoundaryConditionData &bcData )
 {
     // Internal faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
@@ -278,7 +278,7 @@ void UpdateFaceFluxesWithMWI( EnumVector< Axis, Tensor3D > &faceFluxes,
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {
 
         Axis::ENUMDATA velocityComponent = LUT::BoundaryPatchAxis[ boundaryPatch ];
-        BoundaryFaceVelocitiy( faceFluxes, cellFields.U, mesh, bcData.U, boundaryPatch, velocityComponent );
+        BoundaryFaceVelocitiy( faceFluxes, cellFields.U, mesh, bcData.fields.U, boundaryPatch, velocityComponent );
 
     } );
 }
@@ -286,7 +286,7 @@ void UpdateFaceFluxesWithMWI( EnumVector< Axis, Tensor3D > &faceFluxes,
 
 EnumVector<Axis, Tensor3D> InitialiseFaceFluxes( const Mesh &mesh, 
                                                 const EnumVector<Axis, Tensor3D> &cellVelocities, 
-                                                const FieldData< BoundaryConditionData > &bcData)
+                                                const BoundaryConditionData &bcData)
 {
     // Faces are staggered in the negative direction:
     //   cellFaceFlux[X](i, j, k) -> u(i-1/2, j    , k    )

@@ -52,7 +52,7 @@ int main(int argc, char const *argv[])
     TOC();
 
     TIC("Boundary Condition Processing")
-    CFD::FieldData<CFD::BoundaryConditionData> bcData = SetBoundaryConditionData(inputData, mesh);
+    CFD::BoundaryConditionData bcData = SetBoundaryConditionData(inputData, mesh);
     TOC()
 
     // TIC("Geometry Creation")

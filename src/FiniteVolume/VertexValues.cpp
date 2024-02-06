@@ -93,7 +93,7 @@ namespace
     void SetBoundaryFaces( Tensor3D &vertexField,
                            const Tensor3D &field,
                            const Mesh &mesh,
-                           const BoundaryConditionData &boundaryConditions )
+                           const BoundaryConditionData::Patches &boundaryConditions )
     {
         using BC = BoundaryConditions::ENUMDATA;
 
@@ -267,8 +267,8 @@ namespace
 
 // Assumes ghost cells have been removed
 Tensor3D InterpolateToVertex( const Tensor3D &field,
-                             const Mesh &mesh, 
-                             const BoundaryConditionData &boundaryConditions )
+                              const Mesh &mesh, 
+                              const BoundaryConditionData::Patches &boundaryConditions )
 {
     Tensor3D vertexField( field.dimension(0)+1, field.dimension(1)+1, field.dimension(2)+1 );
     vertexField.setZero();
@@ -288,11 +288,11 @@ Tensor3D InterpolateToVertex( const Tensor3D &field,
 
 FieldData<Tensor3D> GetVertexFields( const FieldData<Tensor3D> &fields, 
                                     const Mesh &mesh,
-                                    const FieldData< BoundaryConditionData > &bcData )
+                                    const BoundaryConditionData &bcData )
 {
     FieldData<Tensor3D> vertexFields;
     ForAllFieldData( [&] (intType f) {
-        vertexFields[f] = InterpolateToVertex( fields[f], mesh, bcData[f] );
+        vertexFields[f] = InterpolateToVertex( fields[f], mesh, bcData.fields[f] );
     } );
     return vertexFields;
 }

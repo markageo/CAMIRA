@@ -41,12 +41,16 @@ struct ContinuityEquation {
 };
 
 
-struct BoundaryConditionConfig {
-    BoundaryConditions::ENUMDATA type;
-    Tensor2D value;
+// Structure to store all domain boundary condition information
+struct BoundaryConditionData {
+    struct Patch {
+        BoundaryConditions::ENUMDATA type;
+        Tensor2D value;
+    };
+    using Patches = EnumVector< BoundaryPatches, Patch >;
+    FieldData< Patches > fields; 
+    bool pressureFieldIsFloating;
 };
-using BoundaryConditionData = EnumVector< BoundaryPatches, BoundaryConditionConfig >;
-
 
 
 // Structure to store finite volume discrete equation coefficients
@@ -64,7 +68,7 @@ struct FVCoefficients
 FieldData<Tensor3D> InitialiseFields(const Mesh &, const InputData &);
 
 // Calculate and set boundary condition data for all fields
-FieldData< BoundaryConditionData > SetBoundaryConditionData( const InputData &, const Mesh & );
+BoundaryConditionData SetBoundaryConditionData( const InputData &, const Mesh & );
 
 
 
@@ -72,31 +76,31 @@ FieldData< BoundaryConditionData > SetBoundaryConditionData( const InputData &, 
 
 // Allocate and initialise face velocities
 EnumVector<Axis, Tensor3D> InitialiseFaceFluxes( const Mesh &, 
-                                                const EnumVector<Axis, Tensor3D> &, 
-                                                const FieldData< BoundaryConditionData > &);
+                                                 const EnumVector<Axis, Tensor3D> &, 
+                                                 const BoundaryConditionData &);
 
 EnumVector< Axis, EnumVector<Axis, Tensor3D> > InitialiseAdvectedFaceVelocities( const Mesh &, 
-                                                                                const EnumVector<Axis, Tensor3D> &, 
-                                                                                const EnumVector<Axis, Tensor3D> &, 
-                                                                                const FieldData< BoundaryConditionData > &);
+                                                                                 const EnumVector<Axis, Tensor3D> &, 
+                                                                                 const EnumVector<Axis, Tensor3D> &, 
+                                                                                 const BoundaryConditionData &);
 
 // Update face velocities
 void UpdateFaceFluxes( EnumVector<Axis, Tensor3D> &, 
                        const Mesh &, 
                        const EnumVector<Axis, Tensor3D> &, 
-                       const FieldData< BoundaryConditionData > &);
+                       const BoundaryConditionData &);
 
 void UpdateFaceFluxesWithMWI( EnumVector<Axis, Tensor3D> &, 
                               const Mesh &, 
                               const FieldData<Tensor3D> &,
                               const FVCoefficients &, 
-                              const FieldData< BoundaryConditionData > &);
+                              const BoundaryConditionData &);
 
 void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> > &, 
                                    const Mesh &, 
                                    const EnumVector<Axis, Tensor3D> &, 
                                    const EnumVector<Axis, Tensor3D> &, 
-                                   const FieldData< BoundaryConditionData > &);
+                                   const BoundaryConditionData &);
 
 void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &, 
                       const IBData & );
@@ -112,7 +116,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &,
                                          const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &,
                                          const EnumVector< Axis, Tensor3D > &,
                                          const IBData &, 
-                                         const FieldData< BoundaryConditionData > &, 
+                                         const BoundaryConditionData &, 
                                          const InputData &);
 
 // Update finite volume coefficients 
@@ -122,13 +126,13 @@ void UpdateFVCoefficients( FVCoefficients &,
                            const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &,
                            const EnumVector< Axis, Tensor3D > &,
                            const IBData &,
-                           const FieldData< BoundaryConditionData > &);
+                           const BoundaryConditionData &);
 
 
 // ---------------------------------------- Definition in VertexValues.cpp -------------------------------------- //
 
 
-FieldData<Tensor3D> GetVertexFields( const FieldData<Tensor3D> &, const Mesh &, const FieldData< BoundaryConditionData > & );
+FieldData<Tensor3D> GetVertexFields( const FieldData<Tensor3D> &, const Mesh &, const BoundaryConditionData & );
 
 
 
