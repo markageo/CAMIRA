@@ -1953,8 +1953,6 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
                                             Set and Update Functions
 \*---------------------------------------------------------------------------------------------------------------*/
 
-
-// Allocate and initialise finite volume coefficients for momentum and continuity equations
 FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
                                          const FieldData<Tensor3D> &fields,
                                          const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &faceAdvectedVelocities,
@@ -1963,82 +1961,37 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
                                          const FieldData< BoundaryConditionData > &bcData,
                                          const InputData &inputData)
 {
-    using TC = TransportCoefficients::ENUMDATA;
-
     // Default construct the coefficients class
     FVCoefficients fvCoeffs(mesh.nCells, inputData.schemes.linearisation, inputData.schemes.momentumInterpolation);
+
 
     // Allocate boundary constant arrays for fixed boundary conditions
     AllocateBoundaryConstants( fvCoeffs, bcData );
 
-    // Momentum equations
+
+    // Parts of momentum equation that don't change with linearisation
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-
-        // Diffusion coefficients
         SetDiffusionCoeffients(fvCoeffs.Mom[axis], bcData, inputData.nu, mesh);
-
-        // Advection terms
-        SetInteriorAdvectionPicardCoefficients(fvCoeffs.Mom[axis], faceFluxes, mesh);
-        SetBoundaryAdvectionPicardCoefficients(fvCoeffs.Mom[axis], faceFluxes, bcData.U[axis], mesh);
-
-        // Add diffusion to velocity terms
-        AddDiffusion(fvCoeffs.Mom[axis], bcData.U[axis], mesh);
-
-        // Inverse of AP coefficient (Picard)
-        fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
-
-        // Momentum pressure terms
         SetFaceInterpolatedCoefficients(fvCoeffs.Mom[axis].AP, fvCoeffs.Mom[axis].BPBoundary, mesh, bcData.P, axis);
         DivideMomentumPressureByDensity(fvCoeffs.Mom[axis], inputData.rho);
-
-        // Relaxation factor
         fvCoeffs.Mom[axis].relaxation = inputData.schemes.implicitRelaxation.U[axis];
-
     } );
 
-    // Use central differencing at immersed boundary
-    // ChangeStencilToCentralAtIB( fvCoeffs, faceFluxes, mesh, ibData );
 
-
-    // Continuity equation
+    // Parts of continuity equation that don't change with linearisation
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-
-        // Velocity terms
         SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AU[axis], fvCoeffs.Cont.BUBoundary, mesh, bcData.U[axis], axis);
-
-        // Momentum weighted interpolation constants in the coefficients
         SetMomentumInterpolationSparseConstants(fvCoeffs.Cont.mwiSparseCoeffs[axis], fvCoeffs.Mom[axis].AP, mesh, axis);
         SetMomentumInterpolationCompactConstants(fvCoeffs.Cont.mwiCompactCoeffs[axis], inputData.rho, mesh, axis);
-
     } );
-
-
-    // Momentum Weighted interpolation
-    SetMomentumInterpolationCoefficients(fvCoeffs, mesh, bcData, fields.P);
-    
-    // Add Newton Linearisation terms if selected
-    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        if ( fvCoeffs.Mom[axis].linearisation == Linearisation::Newton ) {
-            AddAdvectionNewtonCoefficients(fvCoeffs.Mom[axis], faceAdvectedVelocities, faceFluxes, bcData.U, mesh);
-            fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
-        }
-            
-        // Add boundary constants to source terms
-        AddMomentumBoundaryConstants(fvCoeffs.Mom[axis]);
-    } );
-
-    AddContinuityBoundaryConstants(fvCoeffs.Cont);
-
-    // Relaxation factor
     fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation.P;
 
-    // Add effect if immersed boundary
-    AddIBSourceTerms( fvCoeffs, ibData, mesh );
+
+    // Set the coefficients that depend on linearisation
+    UpdateFVCoefficients( fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData );
 
     return fvCoeffs;
 }
-
-
 
 
 
@@ -2084,6 +2037,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
         fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
 
     } );
+
 
     // Set the momentum interpolation coefficients
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, bcData, fields.P);
