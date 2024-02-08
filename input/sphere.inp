@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.01
+    nu   = 0.05
 }
 
 Mesh {
@@ -11,16 +11,28 @@ Mesh {
 
     Grid x {
         Segment {
-            bounds     = (0, 7.5)
-            nCells     = 150
+            bounds     = (0, 1.5)
+            nCells     = 20
+            biasFactor = 2
+        }
+
+        Segment {
+            bounds     = (1.5, 2.5)
+            nCells     = 20
             biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (2.5, 7.5)
+            nCells     = 50
+            biasFactor = -3
         }
     }
 
     Grid y {
         Segment {
             bounds     = (0, 3)
-            nCells     = 60
+            nCells     = 75
             biasFactor = 1
         }
     }
@@ -28,7 +40,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 3)
-            nCells     = 60
+            nCells     = 75
             biasFactor = 1
         }
     }
@@ -62,11 +74,11 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Wall
+    // Symmetry
     +y {
-        u = uniform, 0
+        u = zeroGradient
         v = uniform, 0
-        w = uniform, 0
+        w = zeroGradient
         p = zeroGradient
     }
 
@@ -116,8 +128,8 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 250
-        maxOuterResiduals = 1e-5
+        maxOuterIterations = 1000
+        maxOuterResiduals = 1e-6
 
     }
     
@@ -128,7 +140,7 @@ Solver {
         maxResiduals = 1e-2
 
         planeSweepDirection = +x
-        lineSweepDirection = +y
+        lineSweepDirection = +z
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
@@ -141,8 +153,9 @@ Solver {
 Output {
 
     residualHistoryFilename = "output/residual_history.csv"
-    fieldOutputFilename = "output/fields.vtk"
-    fieldWriteInterval = 1
+    profilingFilename       = "output/profiling.dat"
+    fieldOutputFilename     = "output/fields.vtk"
+    fieldWriteInterval      = 0
 
     Monitors {
         Probe {
