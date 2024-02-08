@@ -688,13 +688,12 @@ void AddDiffusion( MomentumEquation &momentumEquation,
         }
     }
 
-
     // Constant terms
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA patch) {
-
-        boundaryVel[patch] += boundaryVel[patch].constant( diffCoeffsBoundary[patch] )
-                            * bcDataPatches[patch].value;
-        
+        if ( bcDataPatches[patch].type == BoundaryConditions::fixed ) {
+            boundaryVel[patch] += boundaryVel[patch].constant( diffCoeffsBoundary[patch] )
+                                * bcDataPatches[patch].value;
+        }
     } );
 
 }
@@ -1559,10 +1558,10 @@ void AddContinuityBoundaryConstants( ContinuityEquation &contCoeffs )
 \*---------------------------------------------------------------------------------------------------------------*/
 
 
-floatType MomentumIBSourcePicard( const Axis::ENUMDATA momentumAxis,
-                                  const IBCell::SourceTermData &sourceTermData, 
-                                  const TensorIndex3D &cellIndex,
-                                  const FVCoefficients &fvCoeffs )
+void MomentumIBSourcePicard( FVCoefficients &fvCoeffs,
+                             const Axis::ENUMDATA momentumAxis,
+                             const IBCell::SourceTermData &sourceTermData, 
+                             const TensorIndex3D &cellIndex )
 {
     Axis::ENUMDATA faceNormal = sourceTermData.direction;
     TransportCoefficients::ENUMDATA coeff = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiCoeff[faceNormal] : LUT::LoCoeff[faceNormal];
@@ -1575,15 +1574,16 @@ floatType MomentumIBSourcePicard( const Axis::ENUMDATA momentumAxis,
         ibSource += - fvCoeffs.Mom[momentumAxis].AP[coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.P;
     }
 
-    return ibSource;
+    fvCoeffs.Mom[momentumAxis].B( cellIndex ) += ibSource;
+
 }
 
 
 
-floatType MomentumIBSourceNewton( const Axis::ENUMDATA momentumAxis,
-                                  const IBCell::SourceTermData &sourceTermData, 
-                                  const TensorIndex3D &cellIndex,
-                                  const FVCoefficients &fvCoeffs )
+void MomentumIBSourceNewton( FVCoefficients &fvCoeffs,
+                             const Axis::ENUMDATA momentumAxis,
+                             const IBCell::SourceTermData &sourceTermData, 
+                             const TensorIndex3D &cellIndex )
 {
     Axis::ENUMDATA faceNormal = sourceTermData.direction;
     TransportCoefficients::ENUMDATA coeff = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiCoeff[faceNormal] : LUT::LoCoeff[faceNormal];
@@ -1607,14 +1607,14 @@ floatType MomentumIBSourceNewton( const Axis::ENUMDATA momentumAxis,
         ibSource += - fvCoeffs.Mom[momentumAxis].AP[coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.P;
     }
 
-    return ibSource;
+    fvCoeffs.Mom[momentumAxis].B( cellIndex ) += ibSource;
 }
 
 
 
-floatType ContinuityIBSourceImplicitMWI( const IBCell::SourceTermData &sourceTermData, 
-                                         const TensorIndex3D &cellIndex,
-                                         const FVCoefficients &fvCoeffs) 
+void ContinuityIBSourceImplicitMWI( FVCoefficients &fvCoeffs,
+                                    const IBCell::SourceTermData &sourceTermData, 
+                                    const TensorIndex3D &cellIndex ) 
 {
     using FVT::G;
 
@@ -1629,13 +1629,13 @@ floatType ContinuityIBSourceImplicitMWI( const IBCell::SourceTermData &sourceTer
     ibSource += - fvCoeffs.Cont.AP[coeff ](cellIndex) * sourceTermData.ghostCellValues.P
                 - fvCoeffs.Cont.AP[ccoeff](cellIndex) * sourceTermData.farPressureGhostCellValue;
 
-    return ibSource;
+    fvCoeffs.Cont.B( cellIndex ) += ibSource;
 }
 
 
 
-floatType InteriorContinuityIBSourceImplicitMWI( const IBCell::SourceTermData &sourceTermData, 
-                                                 const FVCoefficients &fvCoeffs ) 
+void InteriorContinuityIBSourceImplicitMWI( FVCoefficients &fvCoeffs,
+                                            const IBCell::SourceTermData &sourceTermData ) 
 {
     using FVT::G;
 
@@ -1645,15 +1645,15 @@ floatType InteriorContinuityIBSourceImplicitMWI( const IBCell::SourceTermData &s
     // Far pressure term
     floatType ibSource = - fvCoeffs.Cont.AP[ccoeff](sourceTermData.cellIndex_a) * sourceTermData.ghostCellValues.P;
 
-    return ibSource;
+    fvCoeffs.Cont.B( sourceTermData.cellIndex_a ) += ibSource;
 }
 
 
 
-floatType ContinuityIBSourceSemiExplicitMWI( const IBCell::SourceTermData &sourceTermData, 
-                                             const TensorIndex3D &cellIndex,
-                                             const FVCoefficients &fvCoeffs, 
-                                             const Mesh &mesh) 
+void ContinuityIBSourceSemiExplicitMWI( FVCoefficients &fvCoeffs,
+                                        const IBCell::SourceTermData &sourceTermData, 
+                                        const TensorIndex3D &cellIndex,
+                                        const Mesh &mesh ) 
 {
     using FVT::G;
 
@@ -1696,15 +1696,15 @@ floatType ContinuityIBSourceSemiExplicitMWI( const IBCell::SourceTermData &sourc
     // Add to the source term, divide by cell length
     ibSource += explicitIBSource * mesh.cellLengthsInv[faceNormal]( cellIndex[faceNormal] );
 
-    return ibSource;
+    fvCoeffs.Cont.B( cellIndex ) += ibSource;
 }
 
 
 
-floatType InteriorContinuityIBSourceSemiExplicitMWI( const IBCell::SourceTermData &sourceTermData, 
-                                                     const TensorIndex3D &cellIndex,
-                                                     const FVCoefficients &fvCoeffs,
-                                                     const Mesh &mesh ) 
+void InteriorContinuityIBSourceSemiExplicitMWI( FVCoefficients &fvCoeffs,
+                                                const IBCell::SourceTermData &sourceTermData, 
+                                                const TensorIndex3D &cellIndex,
+                                                const Mesh &mesh ) 
 {
     using FVT::G;
 
@@ -1723,7 +1723,7 @@ floatType InteriorContinuityIBSourceSemiExplicitMWI( const IBCell::SourceTermDat
 
     floatType ibSource = - ghostSparseCoeff * sourceTermData.ghostCellValues.P * mesh.cellLengthsInv[faceNormal]( cellIndex );
 
-    return ibSource;
+    fvCoeffs.Cont.B( sourceTermData.cellIndex_a ) += ibSource;
 }
 
 
@@ -1746,11 +1746,11 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
 
                 switch ( fvCoeffs.Mom[axis].linearisation ) {
                 case Linearisation::Picard:
-                    fvCoeffs.Mom[axis].B( cellIndex ) += MomentumIBSourcePicard( axis, sourceTermData, cellIndex, fvCoeffs );
+                    MomentumIBSourcePicard( fvCoeffs, axis, sourceTermData, cellIndex );
                     break;
 
                 case Linearisation::Newton:
-                    fvCoeffs.Mom[axis].B( cellIndex ) += MomentumIBSourceNewton( axis, sourceTermData, cellIndex, fvCoeffs );
+                    MomentumIBSourceNewton( fvCoeffs, axis, sourceTermData, cellIndex );
                     break;
             }
 
@@ -1761,13 +1761,14 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
             // Continuity equation
             switch ( fvCoeffs.Cont.momentumInterpolation ) {
                 case MomentumInterpolation::Implicit:
-                    fvCoeffs.Cont.B( cellIndex ) += ContinuityIBSourceImplicitMWI( sourceTermData, cellIndex, fvCoeffs );
-                    fvCoeffs.Cont.B( sourceTermData.cellIndex_a ) += InteriorContinuityIBSourceImplicitMWI( sourceTermData, fvCoeffs );
+                    ContinuityIBSourceImplicitMWI( fvCoeffs, sourceTermData, cellIndex );
+                    InteriorContinuityIBSourceImplicitMWI( fvCoeffs, sourceTermData );
                     break;
 
                 case MomentumInterpolation::SemiExplicit:
-                    fvCoeffs.Cont.B( cellIndex ) += ContinuityIBSourceSemiExplicitMWI( sourceTermData, cellIndex, fvCoeffs, mesh );
-                    fvCoeffs.Cont.B( sourceTermData.cellIndex_a ) += InteriorContinuityIBSourceSemiExplicitMWI( sourceTermData, cellIndex, fvCoeffs, mesh );
+                    ContinuityIBSourceSemiExplicitMWI( fvCoeffs, sourceTermData, cellIndex, mesh );
+                    InteriorContinuityIBSourceSemiExplicitMWI( fvCoeffs, sourceTermData, cellIndex, mesh );
+    
                     break;
             }
 
@@ -2006,7 +2007,6 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
 {
     using TC = TransportCoefficients::ENUMDATA;
 
-
     ZeroNonlinearCoeffs( fvCoeffs );
 
     // The Picard coefficients for all momentum equations are the same, so just use the ones from the U momentum equation after 
@@ -2041,7 +2041,6 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
 
     // Set the momentum interpolation coefficients
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, bcData, fields.P);
-
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
         // Add Newton Linearisation terms if selected
