@@ -7,12 +7,12 @@ Model {
 
 Mesh {
 
-    domain = (7.5, 3, 3)
+    domain = (12, 3, 3)
 
     Grid x {
         Segment {
-            bounds     = (0, 7.5)
-            nCells     = 75
+            bounds     = (0, 12)
+            nCells     = 240
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 3)
-            nCells     = 30
+            nCells     = 60
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 3)
-            nCells     = 30
+            nCells     = 60
             biasFactor = 1
         }
     }
@@ -102,6 +102,18 @@ SolidGeometry {
         dimensions     = (1, 1, 1)
         rotation       = (0, 45, 0)
     }
+
+    Block {
+        centerPosition = (4, 0.25, 1.5)
+        dimensions     = (0.5, 0.5, 0.5)
+        rotation       = (0, 0, 0)
+    }
+
+    Block {
+        centerPosition = (6, 0.75, 1.5)
+        dimensions     = (0.5, 1.5, 0.5)
+        rotation       = (0, 0, 0)
+    }
 }
 
 
@@ -144,7 +156,6 @@ Output {
     residualHistoryFilename = "output/residual_history.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
-    geometryOutputFilename  = "output/geometry.stl"
     fieldWriteInterval      = 0
 
     Monitors {

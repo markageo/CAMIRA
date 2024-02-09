@@ -3,11 +3,14 @@
 
 #include "../Macros.h"
 #include "../IO/ArrayIO.h"
+#include "../IO/IOTools.h"
 
 #include <vector>
 #include <utility>
 #include <algorithm>
 #include <stdexcept>
+#include <fstream>
+#include <cmath>
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>
@@ -18,10 +21,8 @@
 #include <CGAL/algorithm.h>
 #include <CGAL/Side_of_triangle_mesh.h>
 #include <CGAL/squared_distance_3.h> 
+#include <CGAL/boost/graph/IO/STL.h>
 
-#include <cmath>
-
-#include <iostream>
 
 namespace CFD
 {
@@ -409,6 +410,9 @@ IBData CreateImmersedBoundaryData( const InputData &inputData,
 
     Polyhedron P = MakeGeometry( inputData );
     ibData = ConstructIBData( P, mesh );
+
+    std::ofstream out(  IOTOOLS::RemoveFileExtension( inputData.geometryOutputFilename, ".stl" ) + ".stl" );
+    CGAL::IO::write_STL( out, P );
 
     return ibData;
 }

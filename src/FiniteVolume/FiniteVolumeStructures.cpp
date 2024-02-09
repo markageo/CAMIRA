@@ -111,7 +111,7 @@ namespace
 
 
 BoundaryConditionData SetBoundaryConditionData( const InputData &inputData,
-                                                             const Mesh &mesh )
+                                                const Mesh &mesh )
 {
 
     BoundaryConditionData bcData;

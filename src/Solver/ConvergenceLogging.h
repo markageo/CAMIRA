@@ -4,6 +4,7 @@
 #include "../Types.h"
 #include "../Tools/SweepTransformations.h"
 #include "../Tools/FVTools.h"
+#include "../IO/IOTools.h"
 
 #include "Solver.h"
 #include "../Tools/FieldProbe.h"
@@ -220,7 +221,7 @@ class FieldWriter
             m_axisTransformation( axisTransformation ),
             m_transformedMesh( mesh ),
             m_transformedBcData( bcData ),
-            m_baseFilename( RemoveVTKFileExtension( baseFilename ) )
+            m_baseFilename( IOTOOLS::RemoveFileExtension( baseFilename, ".vtk" ) )
             {
                 // Only needs to be transformed once
                 TransformMeshToUserCoordinates( m_transformedMesh, m_axisTransformation );
@@ -248,20 +249,6 @@ class FieldWriter
 
         std::string AppendFilename( intType iterationNumber )
         { return m_baseFilename  + "_iter" + std::to_string(iterationNumber) + ".vtk"; }
-
-        std::string RemoveVTKFileExtension( const std::string &filename )
-        {
-            // Check if there is a .vtk extension and remove it
-            size_t lastPointPosition = filename.find_last_of(".");
-            if ( lastPointPosition == std::string::npos ) {
-                return filename;
-            }
-            if ( filename.substr( lastPointPosition ) == ".vtk" ) {
-                return filename.substr( 0, lastPointPosition );
-            }
-            return filename;
-        }
-
 
         void SetWriter()
         {
@@ -312,7 +299,7 @@ class ResidualFieldWriter
             m_fields( fields ),
             m_axisTransformation( axisTransformation ),
             m_transformedMesh( mesh ),
-            m_baseFilename( RemoveVTKFileExtension( baseFilename ) )
+            m_baseFilename(  IOTOOLS::RemoveFileExtension( baseFilename, ".vtk" ) )
             {
                 // Only needs to be transformed once
                 TransformMeshToUserCoordinates( m_transformedMesh, m_axisTransformation );
@@ -337,20 +324,6 @@ class ResidualFieldWriter
 
         std::string AppendFilename( intType iterationNumber )
         { return m_baseFilename  + "_iter" + std::to_string(iterationNumber) + ".vtk"; }
-
-        std::string RemoveVTKFileExtension( const std::string &filename )
-        {
-            // Check if there is a .vtk extension and remove it
-            size_t lastPointPosition = filename.find_last_of(".");
-            if ( lastPointPosition == std::string::npos ) {
-                return filename;
-            }
-            if ( filename.substr( lastPointPosition ) == ".vtk" ) {
-                return filename.substr( 0, lastPointPosition );
-            }
-            return filename;
-        }
-
 
         void SetWriter()
         {

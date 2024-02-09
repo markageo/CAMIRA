@@ -59,7 +59,7 @@ void SweepSolve( FieldData<Tensor3D> &fields,
                  const AxisTransformationMap &axisTransformation)
 {
     using enum Axis::ENUMDATA;
-
+    
     constexpr bool isNewtonLinearisation = ( LI == Linearisation::Newton );
 
     // Extract from input data
@@ -69,7 +69,7 @@ void SweepSolve( FieldData<Tensor3D> &fields,
 
     // Immersed boundary
     IBData ibData = CreateImmersedBoundaryData( inputData, mesh );
-
+    
     // Finite Volume
     MaskFields(fields, ibData.mask);
     EnumVector<Axis, Tensor3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
@@ -80,7 +80,6 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     FieldData<Tensor3D> fieldsOld = fields;
     FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData, inputData);
     UpdateFVEquations<isNewtonLinearisation>( fvCoeffs, ibData, faceFluxes, faceAdvectedVelocities, fields, mesh, bcData );
-
 
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
@@ -108,7 +107,7 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     if ( writeFields ) {
         fieldWriter.WriteData( 0 );
     }
-        
+
     TIC("Solver Loop")
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
