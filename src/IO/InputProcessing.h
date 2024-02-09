@@ -104,6 +104,7 @@ struct InputData
     std::string residualHistoryFilename;
     std::string fieldOutputFilename;
     std::string profilingFilename;
+    std::string geometryOutputFilename;
     intType fieldWriteInterval;
 
     struct ProbeData {
