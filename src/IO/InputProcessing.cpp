@@ -776,7 +776,9 @@ namespace
         inputData.fieldOutputFilename = outputTree.get<std::string>( "fieldOutputFilename" );
 
         // Geometry out filename
-        inputData.geometryOutputFilename = outputTree.get<std::string>( "geometryOutputFilename" );
+        if ( inputData.hasIBGeometry ) {
+            inputData.geometryOutputFilename = outputTree.get<std::string>( "geometryOutputFilename" );
+        }
 
         // Write interval for fields
         inputData.fieldWriteInterval = outputTree.get<intType>( "fieldWriteInterval" );
