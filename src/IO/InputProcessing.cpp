@@ -57,16 +57,15 @@ CFD::InputData CFD::InputDataFromCommandLine(int argc, char const *argv[])
     {
         try
         {
-            std::cout << "Reading input file: '" + inputFilename + "' ..."
-                      << "\n\n";
+            std::cout << "Reading input file '" + inputFilename + "' ... ";
             inputData = CFD::ReadInputData(inputFilename);
-            std::cout << "Success!"
+            std::cout << "Success."
                       << "\n\n";
             break;
         } 
         catch (std::runtime_error &e) 
         {
-            std::cout << "Failure reading input file! \n"
+            std::cout << "Failed. \n"
                       << e.what()
                       << "\n\n";
 
@@ -84,10 +83,7 @@ CFD::InputData CFD::InputDataFromCommandLine(int argc, char const *argv[])
             std::cin.ignore();
         }
     }
-    std::cout << "Press enter to begin.";
-    std::cin.ignore();
-    std::cout << std::endl;
-
+    
     return inputData;
 }
 

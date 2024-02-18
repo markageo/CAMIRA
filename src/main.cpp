@@ -44,7 +44,7 @@ int main(int argc, char const *argv[])
     \*-------------------------------------------------------------------------------------*/
 
     TIC("Meshing");
-    CFD::Mesh mesh(inputData);
+    CFD::Mesh mesh = CFD::CreateMesh( inputData );
     TOC();
 
     TIC("Field Allocation");
@@ -65,6 +65,10 @@ int main(int argc, char const *argv[])
     // CGAL::draw( P );
     
     // TOC()
+
+    std::cout << "Press enter to begin solve.";
+    std::cin.ignore();
+    std::cout << std::endl;
 
     TIC("Solver");
     switch ( inputData.schemes.momentumInterpolation ) {

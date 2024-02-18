@@ -3,6 +3,8 @@
 #include "../Tools/FVLookups.h"
 
 #include <cmath>
+#include <utility>
+#include <limits>
 
 namespace CFD
 {
@@ -199,6 +201,66 @@ iArray3 NumberOfFaces( const iArray3 &nCells,
     return nFaces;
 }
 
+
+std::pair<floatType, floatType> MinMaxCellGrowthRatios( const Mesh &mesh,
+                                                        const Axis::ENUMDATA axis )
+{
+    floatType minCellGrowthRatio = std::numeric_limits<floatType>::infinity(),
+              maxCellGrowthRatio = 0.0f;
+
+    for ( intType i = 1; i != mesh.nCells[axis]; i++ ) {
+
+        floatType growthRatio = mesh.cellLengths[axis](i) / mesh.cellLengths[axis](i-1);
+        if ( growthRatio < 1.0f ) {
+            growthRatio = 1.0f / growthRatio;
+        }
+
+        if ( growthRatio <= minCellGrowthRatio ) {
+            minCellGrowthRatio = growthRatio;
+        }
+
+        if ( growthRatio >= maxCellGrowthRatio ) {
+            maxCellGrowthRatio = growthRatio;
+        }
+    }
+
+    return {minCellGrowthRatio, maxCellGrowthRatio};
+}
+
+
+
+std::pair<floatType, floatType> MinMaxCellAspectRatio( const Mesh &mesh )
+{
+    using enum Axis::ENUMDATA;
+
+    floatType minAspectRatio = std::numeric_limits<floatType>::infinity(),
+              maxAspectRatio = 0.0f;
+
+    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
+        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
+            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
+
+                floatType maxCellLength = std::max( {mesh.cellLengths[X](i), mesh.cellLengths[Y](j), mesh.cellLengths[Z](k)} );
+                floatType minCellLength = std::min( {mesh.cellLengths[X](i), mesh.cellLengths[Y](j), mesh.cellLengths[Z](k)} );
+
+                floatType aspectRatio = maxCellLength / minCellLength;
+
+                if ( aspectRatio <= minAspectRatio ) {
+                    minAspectRatio = aspectRatio;
+                }
+
+                if ( aspectRatio >= maxAspectRatio ) {
+                    maxAspectRatio = aspectRatio;
+                }
+
+            }
+        }
+    }
+
+    return {minAspectRatio, maxAspectRatio};
+}
+
+
 }   // end anonymous namespace
 
 
@@ -282,6 +344,48 @@ Mesh::Mesh(const InputData &inputData) :
 
     };
 
+
+
+
+Mesh CreateMesh( const InputData &inputData )
+{
+    using enum Axis::ENUMDATA;
+
+    std::cout << "Generating mesh ... ";
+    Mesh mesh(inputData);
+    std::cout << "Success."
+              << "\n";
+
+    // Calculate the total number of cells
+    intType nCells = mesh.nCells[X] * mesh.nCells[Y] * mesh.nCells [Z];
+
+    // Maximum and minimum cell growth ratio in each coordinate direction
+    EnumVector<Axis, std::pair<floatType, floatType>> minMaxCellGrowthRatios;
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        minMaxCellGrowthRatios = MinMaxCellGrowthRatios( mesh, axis );
+    } );
+
+    // Maximum and minimum cell aspect ratio 
+    auto [minAspectRatio, maxAspectRatio] = MinMaxCellAspectRatio( mesh );
+
+    // Output this information to console
+    std::cout << "Number of cells        : " << nCells << "\n"
+
+              << "Min. cell growth ratios: " << "(" << minMaxCellGrowthRatios[X].first << ", " 
+                                                       << minMaxCellGrowthRatios[Y].first << ", "
+                                                       << minMaxCellGrowthRatios[Z].first << ")" << "\n" 
+
+              << "Max. cell growth ratios: " << "(" << minMaxCellGrowthRatios[X].second << ", " 
+                                                       << minMaxCellGrowthRatios[Y].second << ", "
+                                                       << minMaxCellGrowthRatios[Z].second << ")" << "\n"
+                
+              << "Min. cell aspect ratio : " << minAspectRatio << "\n"
+              
+              << "Max. cell aspect ratio : " << maxAspectRatio << "\n\n";
+
+
+    return mesh;
+}
 
 
 }   // end namespace CFD
