@@ -30,6 +30,10 @@ struct Mesh
 };
 
 
+// Create mesh and output mesh information to console
+Mesh CreateMesh( const InputData & );
+
+
 } // end namespace CFD
 
 #endif // CFD_MESH

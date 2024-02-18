@@ -40,7 +40,7 @@ namespace IOTOOLS
 
     // Remove file extension
     inline std::string RemoveFileExtension( const std::string &filename,
-                                     const std::string &fileExtension )
+                                            const std::string &fileExtension )
     {
         // Check if there is a .vtk extension and remove it
         size_t lastPointPosition = filename.find_last_of(".");
