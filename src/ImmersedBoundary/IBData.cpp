@@ -190,9 +190,9 @@ void AddIBDataForDirection( IBCell &ibCell,
     }
 
     // Ensure there is a second solid cell on the other side of the ghost cell so that all stencil terms can be zeroed
-    if ( !CellHasSolidNeighbour( ghostCellIndex, axis, directionIndex, mask ) ) {
-        throw std::runtime_error( "Invalid immersed boundary geometry and mesh specification: Solid geometries must be at least 2 cells thick!" );
-    }
+    // if ( !CellHasSolidNeighbour( ghostCellIndex, axis, directionIndex, mask ) ) {
+    //     throw std::runtime_error( "Invalid immersed boundary geometry and mesh specification: Solid geometries must be at least 2 cells thick!" );
+    // }
 
     // Distance from cell center to immersed boundary along this coordinate direction
     fVector3 queryPointCoords( mesh.cellCenters[X](cellIndex[X]),
@@ -304,7 +304,7 @@ void SetVelocityFluxCorrectionCoefficient( IBData &ibData,
     for ( auto &ibCell : ibData.ibCells ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
-            floatType ibCellFaceDistance = abs( sourceTermData.ibDistance - mesh.cellLengths[sourceTermData.direction](ibCell.cellIndex) );
+            floatType ibCellFaceDistance = abs( sourceTermData.ibDistance - mesh.cellLengths[sourceTermData.direction](ibCell.cellIndex[sourceTermData.direction]) );
 
             denominator += std::pow( abs( sourceTermData.faceAreaComponent * ibCellFaceDistance) , 2.0f );
 
@@ -315,7 +315,7 @@ void SetVelocityFluxCorrectionCoefficient( IBData &ibData,
     for ( auto &ibCell : ibData.ibCells ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
-            floatType ibCellFaceDistance = abs( sourceTermData.ibDistance - mesh.cellLengths[sourceTermData.direction](ibCell.cellIndex) );
+            floatType ibCellFaceDistance = abs( sourceTermData.ibDistance - mesh.cellLengths[sourceTermData.direction](ibCell.cellIndex[sourceTermData.direction]) );
 
             sourceTermData.velocityFluxCorrectionCoeff = ( std::pow( ibCellFaceDistance, 2.0f ) 
                                                         * sourceTermData.faceAreaComponent 
