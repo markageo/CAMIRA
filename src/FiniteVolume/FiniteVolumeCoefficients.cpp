@@ -1614,9 +1614,7 @@ void MomentumIBSourceNewton( FVCoefficients &fvCoeffs,
 
 void ContinuityIBSourceImplicitMWI( FVCoefficients &fvCoeffs,
                                     const IBCell::SourceTermData &sourceTermData, 
-                                    const TensorIndex3D &cellIndex,
-                                    const FieldData<Tensor3D> &fields,
-                                    const Tensor3D &mask ) 
+                                    const TensorIndex3D &cellIndex ) 
 {
     Axis::ENUMDATA faceNormal = sourceTermData.direction;
     TransportCoefficients::ENUMDATA coeff  = ( sourceTermData.directionIndex == +1 ) ? LUT::HiCoeff[faceNormal]   : LUT::LoCoeff[faceNormal];
@@ -1630,36 +1628,25 @@ void ContinuityIBSourceImplicitMWI( FVCoefficients &fvCoeffs,
                 - fvCoeffs.Cont.AP[ccoeff](cellIndex) * sourceTermData.farPressureGhostCellValue;
 
     fvCoeffs.Cont.B( cellIndex ) += ibSource;
-
-    // Zero the stencil
-    fvCoeffs.Cont.AP[coeff](cellIndex) = 1000000.0f;
-    fvCoeffs.Cont.AP[ccoeff](cellIndex) = 0.0f;
-
-    // using FVT::G;
-    // std::cout << "Central cell : " << fields.P( G(cellIndex) ) << "\n"
-    //           << "Interior cell: " << fields.P( G(sourceTermData.cellIndex_g) ) << "\n\n";
-
-    // std::cout << "Cell index      : " << "(" << cellIndex[0] << ", " << cellIndex[1] << ", " << cellIndex[2] << ")" << "\n"
-    //           << "Ghost cell index: " << "(" << sourceTermData.cellIndex_g[0] << ", " << sourceTermData.cellIndex_g[1] << ", " << sourceTermData.cellIndex_g[2] << ")" << "\n"
-    //           << "Face normal     : " << faceNormal << "\n"
-    //           << "Direction index : " << sourceTermData.directionIndex << "\n"
-    //           << "coeff           : " << coeff << "\n\n";
-
-    // std::cout << "Cell mask value : " << mask( cellIndex ) << "\n"
-    //           << "Ghost mask value: " << mask( sourceTermData.cellIndex_g ) << "\n\n";
-
-
-    // if ( mask( sourceTermData.cellIndex_g ) != 0.0f ) {
-    //     std::cout << "something is wrong here\n";    
-    // }
-
-    // TensorIndex3D gsi = cellIndex;
-    // gsi[faceNormal] += 2 * LUT::CoeffIndex[coeff];
-    // if ( mask( gsi ) != 0.0f ) {
-    //     std::cout << "not good" << "\n";
-    // }
 }
 
+
+void ZeroInSolidStencilCoeffs( FVCoefficients &fvCoeffs,
+                               const IBCell::SourceTermData &sourceTermData, 
+                               const TensorIndex3D &cellIndex ) 
+{
+    Axis::ENUMDATA faceNormal = sourceTermData.direction;
+    // TransportCoefficients::ENUMDATA coeff  = ( sourceTermData.directionIndex == +1 ) ? LUT::HiCoeff[faceNormal]   : LUT::LoCoeff[faceNormal];
+    TransportCoefficients::ENUMDATA ccoeff = ( sourceTermData.directionIndex == +1 ) ? LUT::HiHiCoeff[faceNormal] : LUT::LoLoCoeff[faceNormal];
+
+    // The immediate cell
+    // fvCoeffs.Cont.AP[coeff ](cellIndex) = 0.0f;
+    fvCoeffs.Cont.AP[ccoeff](cellIndex) = 0.0f;
+
+    // The interior cell
+    // fvCoeffs.Cont.AP[ccoeff](sourceTermData.cellIndex_a) = 0.0f;
+
+}
 
 
 void InteriorContinuityIBSourceImplicitMWI( FVCoefficients &fvCoeffs,
@@ -1672,8 +1659,6 @@ void InteriorContinuityIBSourceImplicitMWI( FVCoefficients &fvCoeffs,
     floatType ibSource = - fvCoeffs.Cont.AP[ccoeff](sourceTermData.cellIndex_a) * sourceTermData.ghostCellValues.P;
 
     fvCoeffs.Cont.B( sourceTermData.cellIndex_a ) += ibSource;
-
-    // fvCoeffs.Cont.AP[ccoeff](sourceTermData.cellIndex_a) = 0.0f;
 }
 
 
@@ -1767,7 +1752,7 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
                        const Mesh &mesh )
 {
 
-    // Iterate through each forced cell
+   // Set source terms
     for ( auto &ibCell : ibData.ibCells ) { 
 
         TensorIndex3D cellIndex = ibCell.cellIndex;
@@ -1795,7 +1780,7 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
             // Continuity equation
             switch ( fvCoeffs.Cont.momentumInterpolation ) {
                 case MomentumInterpolation::Implicit:
-                    ContinuityIBSourceImplicitMWI( fvCoeffs, sourceTermData, cellIndex, fields, ibData.mask );
+                    ContinuityIBSourceImplicitMWI( fvCoeffs, sourceTermData, cellIndex );
                     InteriorContinuityIBSourceImplicitMWI( fvCoeffs, sourceTermData );
                     break;
 
@@ -1805,6 +1790,18 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
                     break;
             }
 
+        }
+
+    }
+
+
+    // Set in boundary coefficients for the continity equation to zero
+    for ( auto &ibCell : ibData.ibCells ) { 
+
+        TensorIndex3D cellIndex = ibCell.cellIndex;
+        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
+
+            ZeroInSolidStencilCoeffs( fvCoeffs, sourceTermData, cellIndex );
 
         }
 
