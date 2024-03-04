@@ -1575,7 +1575,6 @@ void MomentumIBSourcePicard( FVCoefficients &fvCoeffs,
     }
 
     fvCoeffs.Mom[momentumAxis].B( cellIndex ) += ibSource;
-
 }
 
 
@@ -1647,6 +1646,7 @@ void ZeroInSolidStencilCoeffs( FVCoefficients &fvCoeffs,
     // fvCoeffs.Cont.AP[ccoeff](sourceTermData.cellIndex_a) = 0.0f;
 
 }
+
 
 
 void InteriorContinuityIBSourceImplicitMWI( FVCoefficients &fvCoeffs,
@@ -1735,7 +1735,7 @@ void InteriorContinuityIBSourceSemiExplicitMWI( FVCoefficients &fvCoeffs,
     const intType idx = HiIndex[faceNormal];
     const Tensor3D &momentumDiagCoeffInv = fvCoeffs.Mom[faceNormal].diagCoeffInv;
     const std::array<Tensor1D, 4> &mwiSparseCoeffs = fvCoeffs.Cont.mwiSparseCoeffs[faceNormal];
-    floatType d = MWIWeightingCoeff( LoIndex, HiIndex, momentumDiagCoeffInv, mesh, faceNormal );
+    const floatType d = MWIWeightingCoeff( LoIndex, HiIndex, momentumDiagCoeffInv, mesh, faceNormal );
 
     const floatType ghostSparseCoeff  = ghostIsHiSide ? d * mwiSparseCoeffs[3](idx) : - d * mwiSparseCoeffs[0](idx);
 

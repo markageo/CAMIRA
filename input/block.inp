@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 7.5)
-            nCells     = 75
+            nCells     = 150
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 3)
-            nCells     = 30
+            nCells     = 60
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 3)
-            nCells     = 30
+            nCells     = 60
             biasFactor = 1
         }
     }
@@ -100,7 +100,7 @@ SolidGeometry {
     Block {
         centerPosition = (1.5, 0.5, 1.5)
         dimensions     = (1, 1, 1)
-        rotation       = (0, 45, 0)
+        rotation       = (0, 35, 0)
     }
 }
 
