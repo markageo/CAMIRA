@@ -93,6 +93,7 @@ Tensor3D CreateCellMask( const Polyhedron &geometry,
 
     Tensor3D mask = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setConstant( CellType::Fluid );
 
+    // Identify cells with cell centeres inside the solid
     for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
         for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
             for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
@@ -101,9 +102,56 @@ Tensor3D CreateCellMask( const Polyhedron &geometry,
                           yq = mesh.cellCenters[Y](j),
                           zq = mesh.cellCenters[Z](k);
 
-                if ( PointInside( geometry, xq, yq, zq ) ) {
+                if ( PointInside( geometry, xq, yq, zq ) )
                     mask(i, j, k) = CellType::Solid;
-                } 
+
+            }
+        }
+    }
+
+
+    // Add in the cells which have any face centers within the solid
+    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
+        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
+            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
+
+                if ( static_cast<intType>( mask(i, j, k) ) == CellType::Solid )
+                    continue;
+
+                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+                    // Positive side face
+                    TensorIndex3D hiCellIndex = {i, j, k};
+                                  hiCellIndex[axis] += 1;
+                    if ( static_cast<intType>( mask( hiCellIndex ) ) == CellType::Solid ) {
+
+                        floatType xq = ( axis == X ) ? mesh.cellFaces[X](i + 1) : mesh.cellCenters[X](i),
+                                  yq = ( axis == Y ) ? mesh.cellFaces[Y](j + 1) : mesh.cellCenters[Y](j),
+                                  zq = ( axis == Z ) ? mesh.cellFaces[Z](k + 1) : mesh.cellCenters[Z](k);
+
+                        if ( PointInside( geometry, xq, yq, zq ) ) 
+                            mask(i, j, k) = CellType::Solid;
+
+                    }
+
+                    
+                    // Negative side face
+                    TensorIndex3D loCellIndex = {i, j, k};
+                                  loCellIndex[axis] -= 1;
+                    if ( static_cast<intType>( mask( loCellIndex ) ) == CellType::Solid ) {
+
+                        floatType xq = ( axis == X ) ? mesh.cellFaces[X](i) : mesh.cellCenters[X](i),
+                                  yq = ( axis == Y ) ? mesh.cellFaces[Y](j) : mesh.cellCenters[Y](j),
+                                  zq = ( axis == Z ) ? mesh.cellFaces[Z](k) : mesh.cellCenters[Z](k);
+                                  
+                        if ( PointInside( geometry, xq, yq, zq ) ) 
+                            mask(i, j, k) = CellType::Solid;
+
+                    }
+
+                } );                
+
+
 
             }
         }
@@ -153,22 +201,22 @@ void AddIBDataForDirection( IBCell &ibCell,
 
     TensorIndex3D &cellIndex = ibCell.cellIndex;
 
-    TensorIndex3D ghostCellIndex    = cellIndex;
-    ghostCellIndex[axis] += directionIndex;
+    TensorIndex3D cellIndex_g    = cellIndex;
+    cellIndex_g[axis] += directionIndex;
 
-    TensorIndex3D interiorCellIndex = cellIndex;
-    interiorCellIndex[axis] -= directionIndex;
+    TensorIndex3D cellIndex_a = cellIndex;
+    cellIndex_a[axis] -= directionIndex;
 
     sourceTermData.direction          = axis;
     sourceTermData.directionIndex     = directionIndex;
     sourceTermData.faceDirectionIndex = ( directionIndex == 1 ) ? 1 : 0 ;
-    sourceTermData.cellIndex_g        = ghostCellIndex;
-    sourceTermData.cellIndex_a        = interiorCellIndex;
+    sourceTermData.cellIndex_g        = cellIndex_g;
+    sourceTermData.cellIndex_a        = cellIndex_a;
 
     intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
 
     // Ensure that there is enough space between the IB and other IBs and the domain boundary
-    if ( !CellIsFluid( interiorCellIndex, mask, mesh ) ) {
+    if ( !CellIsFluid( cellIndex_a, mask, mesh ) ) {
         throw std::runtime_error( "Invalid immersed boundary geometry and mesh specification: Not enough fluid cells between solid and domain boundaries!" );
     }
 
@@ -187,25 +235,13 @@ void AddIBDataForDirection( IBCell &ibCell,
                                      * mesh.cellFaceAreas[axis]( fidx );    
 
 
-    // Extrapolation coefficients onto face between ghost cell and fluid cell. May use further points due to stability condition
-    bool meetsGhostStabilityCondition =  ibDistance >= ( mesh.cellLengths[axis](cellIndex[axis]) / 2.0f );
-    if ( meetsGhostStabilityCondition ) {
-
-        floatType dxpOn2 = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f ;
-        sourceTermData.faceExtrapCoeff_p  = ( ibDistance - dxpOn2 ) / ( ibDistance );
-        sourceTermData.faceExtrapCoeff_a  = 0.0f;
-        sourceTermData.faceExtrapCoeff_ib = dxpOn2 / ibDistance;
-
-    } else {
-
-        floatType dxp = mesh.cellLengths[axis](cellIndex[axis]);
-        floatType dxa = mesh.cellLengths[axis](interiorCellIndex[axis]);
-        floatType denominator =  dxp / 2.0f   +  dxa / 2.0f  +  ibDistance;
-        sourceTermData.faceExtrapCoeff_p  = 0.0f;
-        sourceTermData.faceExtrapCoeff_a  = ( dxp / 2.0f - ibDistance ) / denominator;
-        sourceTermData.faceExtrapCoeff_ib = ( dxa / 2.0f + dxp ) / denominator;
-
-    }
+    floatType xp  = mesh.cellCenters[axis]( cellIndex[axis] ),
+              xa  = mesh.cellCenters[axis]( cellIndex_a[axis] ),
+              xf  = mesh.cellFaces[axis]( fidx ),
+              xib = xp + static_cast<floatType>( directionIndex ) * ibDistance;
+    sourceTermData.faceExtrapCoeff_p  = ( xf - xa ) * ( xf - xib ) / ( xp - xa  ) / ( xp - xib );
+    sourceTermData.faceExtrapCoeff_a  = ( xf - xp ) * ( xf - xib ) / ( xa - xp  ) / ( xa - xib );
+    sourceTermData.faceExtrapCoeff_ib = ( xf - xa ) * ( xf - xp  ) / ( xib - xa ) / ( xib - xp );
 
 
     // Extrapolation coefficients from face to ghost cell
@@ -223,7 +259,7 @@ void AddIBDataForDirection( IBCell &ibCell,
 
 
     // Extrapolation coefficients
-    floatType cellInteriorDistance = abs( mesh.cellCenters[axis](interiorCellIndex[axis]) - mesh.cellCenters[axis](cellIndex[axis]) ); 
+    floatType cellInteriorDistance = abs( mesh.cellCenters[axis](cellIndex_a[axis]) - mesh.cellCenters[axis](cellIndex[axis]) ); 
     sourceTermData.ibExtrapFactor_p = ( cellInteriorDistance + ibDistance ) / cellInteriorDistance;
     sourceTermData.ibExtrapFactor_a = - ibDistance / cellInteriorDistance;
 
@@ -232,8 +268,8 @@ void AddIBDataForDirection( IBCell &ibCell,
     if        ( directionIndex == +1 ) {    // Ghost cell on Hi side
 
         floatType dxp      = mesh.cellLengths[axis](cellIndex[axis]),
-                  dxe      = mesh.cellLengths[axis](ghostCellIndex[axis]),
-                  lambdaw  = mesh.interpFactors[axis](interiorCellIndex[axis]),
+                  dxe      = mesh.cellLengths[axis](cellIndex_g[axis]),
+                  lambdaw  = mesh.interpFactors[axis](cellIndex_a[axis]),
                   lambdae  = mesh.interpFactors[axis](cellIndex[axis] + 1),
                   lambdaee = mesh.interpFactors[axis](cellIndex[axis] + 2),
                   le       = 1.0f /  mesh.cellCenterDiffInv[axis](cellIndex[axis] + 1);
@@ -251,8 +287,8 @@ void AddIBDataForDirection( IBCell &ibCell,
     } else if ( directionIndex == -1) {     // Ghost cell on Lo side
 
         floatType dxp      = mesh.cellLengths[axis](cellIndex[axis]),
-                  dxw      = mesh.cellLengths[axis](ghostCellIndex[axis]),
-                  lambdae  = mesh.interpFactors[axis](interiorCellIndex[axis] + 1),
+                  dxw      = mesh.cellLengths[axis](cellIndex_g[axis]),
+                  lambdae  = mesh.interpFactors[axis](cellIndex_a[axis] + 1),
                   lambdaw  = mesh.interpFactors[axis](cellIndex[axis]),
                   lambdaww = mesh.interpFactors[axis](cellIndex[axis] - 1),
                   lw       = 1.0f / mesh.cellCenterDiffInv[axis](cellIndex[axis]);

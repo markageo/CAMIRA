@@ -30,7 +30,7 @@ struct IBCell {
 
         // Coefficients for extrapolating onto face
         floatType faceExtrapCoeff_p,         // Multiplies with immediate cell value
-                  faceExtrapCoeff_a,         // Multiplies with first interiosr cell
+                  faceExtrapCoeff_a,         // Multiplies with first interior cell
                   faceExtrapCoeff_ib;        // Multiplies with IB value
 
         // Coefficients for extrapolating from face to ghost cell
