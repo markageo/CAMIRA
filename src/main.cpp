@@ -55,17 +55,6 @@ int main(int argc, char const *argv[])
     CFD::BoundaryConditionData bcData = SetBoundaryConditionData(inputData, mesh);
     TOC()
 
-    // TIC("Geometry Creation")
-
-    // typedef CGAL::Exact_predicates_inexact_constructions_kernel  Kernel;
-    // typedef CGAL::Polyhedron_3<Kernel>                       Polyhedron;
-    
-    // CFD::Polyhedron P = CFD::MakeGeometry( inputData );
-
-    // CGAL::draw( P );
-    
-    // TOC()
-
     std::cout << "Press enter to begin solve.";
     std::cin.ignore();
     std::cout << std::endl;

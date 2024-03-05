@@ -143,7 +143,7 @@ enum class MomentumInterpolation {
 };
 
 enum class AdvectionSchemes {
-    Upwind
+    Upwind, Central, SOU, QUICK
 };
 
 enum class FaceInterpolationSchemes {
