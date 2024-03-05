@@ -25,6 +25,8 @@ struct MomentumEquation {
     floatType relaxation;
     Axis::ENUMDATA component;                                                 // The momentum component
     Linearisation linearisation;
+    AdvectionSchemes advectionScheme;
+    floatType advectionBlendingFactor;
 };
 
 

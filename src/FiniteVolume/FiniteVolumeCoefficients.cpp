@@ -401,6 +401,163 @@ void AdvectionNegativeBoundary( EnumVector<TransportCoefficients, Tensor3D> &coe
 
 
 
+void RemoveExplicitUpwind( MomentumEquation &momentumEquation,
+                           const FieldData<Tensor3D> &fields )
+{
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+    using FVT::G;
+
+    auto &AU = momentumEquation.AU[momentumEquation.component];
+    auto &U  = fields.U[momentumEquation.component];
+
+    for (intType k = 0; k != momentumEquation.B.dimension(Z); k++) {
+        for (intType j = 0; j != momentumEquation.B.dimension(Y); j++) {
+            for (intType i = 0; i != momentumEquation.B.dimension(X); i++) {
+                
+                momentumEquation.B(i, j, k) += momentumEquation.advectionBlendingFactor * (
+                                               AU[p](i, j, k) * U( G(i  , j  , k  ) )
+                                             + AU[n](i, j, k) * U( G(i  , j+1, k  ) )
+                                             + AU[s](i, j, k) * U( G(i  , j-1, k  ) )
+                                             + AU[e](i, j, k) * U( G(i+1, j  , k  ) )
+                                             + AU[w](i, j, k) * U( G(i-1, j  , k  ) )
+                                             + AU[t](i, j, k) * U( G(i  , j  , k+1) )
+                                             + AU[b](i, j, k) * U( G(i  , j  , k-1) )
+                                            );
+
+            }
+        }
+    }
+
+}
+
+
+template< AdvectionSchemes advectionScheme >
+void AddExplicitHighOrderAdvection( MomentumEquation &momentumEquation,
+                                    const FieldData<Tensor3D> &fields,
+                                    const EnumVector<Axis, Tensor3D> &faceFluxes,
+                                    const Mesh &mesh )
+{
+    using enum Axis::ENUMDATA;
+    using FVT::G;
+
+    auto &B = momentumEquation.B;
+    auto &U  = fields.U[momentumEquation.component];
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+        auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+
+        for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+            for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+                for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+                    
+                    TensorIndex3D hiIndex = { i, j, k },
+                                  loIndex = { i, j, k };
+                    loIndex[axis] -= 1;
+                    intType fidx = hiIndex[axis];
+                    floatType advectedVelocity = 0.0f;
+
+                    // Central
+                    if        constexpr ( advectionScheme == AdvectionSchemes::Central ) {
+
+                        advectedVelocity = ( 1.0f - mesh.interpFactors[axis](fidx) ) * U( G(loIndex) )
+                                         + mesh.interpFactors[axis](fidx)            * U( G(hiIndex) );
+
+                    // Second Order Upwind
+                    } else if constexpr ( advectionScheme == AdvectionSchemes::SOU ) {
+
+                        if ( faceFluxes[axis](i, j, k) >= 0 ) {
+
+                            TensorIndex3D loloIndex = loIndex;
+                            loloIndex[axis] -= 1;
+
+                            floatType xU  = mesh.cellCenters[axis](loIndex[axis]),
+                                      xUU = mesh.cellCenters[axis](loloIndex[axis]),
+                                      xf  = mesh.cellFaces[axis](fidx);
+
+                            floatType gU  = ( xf - xUU ) / ( xU - xUU ),
+                                      gUU = ( xf - xU  ) / ( xUU - xU );
+
+                            advectedVelocity = gU  * U( G(loIndex) ) 
+                                             + gUU * U( G(loloIndex) );
+
+                        } else {
+
+                            TensorIndex3D hihiIndex = hiIndex;
+                            hihiIndex[axis] += 1;
+
+                            floatType xU  = mesh.cellCenters[axis](hiIndex[axis]),
+                                      xUU = mesh.cellCenters[axis](hihiIndex[axis]),
+                                      xf  = mesh.cellFaces[axis](fidx);
+
+                            floatType gU  = ( xf - xUU ) / ( xU - xUU ),
+                                      gUU = ( xf - xU  ) / ( xUU - xU );
+
+                            advectedVelocity = gU  * U( G(hiIndex) ) 
+                                             + gUU * U( G(hihiIndex) );
+
+                        }
+
+                    // QUICK
+                    } else if constexpr ( advectionScheme == AdvectionSchemes::QUICK ) {
+
+                        if ( faceFluxes[axis](i, j, k) >= 0 ) {
+
+                            TensorIndex3D loloIndex = loIndex;
+                            loloIndex[axis] -= 1;
+
+                            floatType xU  = mesh.cellCenters[axis](loIndex[axis]),
+                                      xD  = mesh.cellCenters[axis](hiIndex[axis]),
+                                      xUU = mesh.cellCenters[axis](loloIndex[axis]),
+                                      xf  = mesh.cellFaces[axis](fidx);
+
+                            floatType g1  = ( xf - xU ) * ( xf - xUU ) / ( xD - xU  ) / ( xD - xUU ),
+                                      g2  = ( xf - xU ) * ( xD - xf  ) / ( xU - xUU ) / ( xD - xUU );
+
+                            advectedVelocity = U( G(loIndex) )
+                                             + g1 * ( U( G(hiIndex) ) - U( G(loIndex) ) )
+                                             + g2 * ( U( G(loIndex) ) - U( G(loloIndex) ) );
+
+                        } else {
+                            
+                            TensorIndex3D hihiIndex = hiIndex;
+                            hihiIndex[axis] += 1;
+
+                            floatType xU  = mesh.cellCenters[axis](hiIndex[axis]),
+                                      xD  = mesh.cellCenters[axis](loIndex[axis]),
+                                      xUU = mesh.cellCenters[axis](hihiIndex[axis]),
+                                      xf  = mesh.cellFaces[axis](fidx);
+
+                            floatType g1  = ( xf - xU ) * ( xf - xUU ) / ( xD - xU  ) / ( xD - xUU ),
+                                      g2  = ( xf - xU ) * ( xD - xf  ) / ( xU - xUU ) / ( xD - xUU );
+
+                            advectedVelocity = U( G(hiIndex) )
+                                             + g1 * ( U( G(loIndex) ) - U( G(hiIndex) ) )
+                                             + g2 * ( U( G(hiIndex) ) - U( G(hihiIndex) ) );
+
+                        }
+
+                    }
+
+                    B(loIndex) -=  momentumEquation.advectionBlendingFactor 
+                                *  faceFluxes[ axis ](i, j, k)
+                                *  advectedVelocity 
+                                *  mesh.cellLengthsInv[axis]( loIndex[axis] );
+                                
+                    B(hiIndex) -= -momentumEquation.advectionBlendingFactor 
+                                *  faceFluxes[ axis ](i, j, k)
+                                *  advectedVelocity 
+                                *  mesh.cellLengthsInv[axis]( hiIndex[axis] );
+                }
+            }
+        }
+
+    } );
+}
+
+
+
 void SetInteriorAdvectionPicardCoefficients( MomentumEquation &momentumEquation,
                                              const EnumVector<Axis, Tensor3D> &faceFluxes,
                                              const Mesh &mesh )
@@ -420,6 +577,29 @@ void SetInteriorAdvectionPicardCoefficients( MomentumEquation &momentumEquation,
         } );
     #endif
 
+}
+
+
+
+void AddAdvectionDefferedCorrection( MomentumEquation &momentumEquation,
+                                     const FieldData<Tensor3D> &fields,
+                                     const EnumVector<Axis, Tensor3D> &faceFluxes,
+                                     const Mesh &mesh ) 
+{ 
+    if ( momentumEquation.advectionScheme == AdvectionSchemes::Upwind ) 
+        return;
+
+    // Subtract out the upwind part
+    RemoveExplicitUpwind( momentumEquation, fields );
+
+    // Add in the higher order scheme
+    if        ( momentumEquation.advectionScheme == AdvectionSchemes::Central ) {
+        AddExplicitHighOrderAdvection<AdvectionSchemes::Central>(momentumEquation, fields, faceFluxes, mesh);
+    } else if ( momentumEquation.advectionScheme == AdvectionSchemes::SOU ) {
+        AddExplicitHighOrderAdvection<AdvectionSchemes::SOU>(momentumEquation, fields, faceFluxes, mesh);
+    } else if ( momentumEquation.advectionScheme == AdvectionSchemes::QUICK ) {
+        AddExplicitHighOrderAdvection<AdvectionSchemes::QUICK>(momentumEquation, fields, faceFluxes, mesh);
+    }
 }
 
 
@@ -2005,7 +2185,10 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
         SetDiffusionCoeffients(fvCoeffs.Mom[axis], bcData, inputData.nu, mesh);
         SetFaceInterpolatedCoefficients(fvCoeffs.Mom[axis].AP, fvCoeffs.Mom[axis].BPBoundary, mesh, bcData.fields.P, axis);
         DivideMomentumPressureByDensity(fvCoeffs.Mom[axis], inputData.rho);
-        fvCoeffs.Mom[axis].relaxation = inputData.schemes.implicitRelaxation.U[axis];
+
+        fvCoeffs.Mom[axis].relaxation              = inputData.schemes.implicitRelaxation.U[axis];
+        fvCoeffs.Mom[axis].advectionScheme         = inputData.schemes.advectionScheme;
+        fvCoeffs.Mom[axis].advectionBlendingFactor = inputData.schemes.advectionBlendingFactor;
     } );
 
 
@@ -2042,21 +2225,21 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     // The Picard coefficients for all momentum equations are the same, so just use the ones from the U momentum equation after 
     // its been set
     SetInteriorAdvectionPicardCoefficients(fvCoeffs.Mom[Axis::X], faceFluxes, mesh);
+    AddAdvectionDefferedCorrection(fvCoeffs.Mom[Axis::X], fields, faceFluxes, mesh);
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         if ( axis != Axis::X ) {
             EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
                 fvCoeffs.Mom[axis].AU[axis][tc] = fvCoeffs.Mom[Axis::X].AU[Axis::X][tc];
             } );
+            fvCoeffs.Mom[axis].B = fvCoeffs.Mom[Axis::X].B;
         }
     } );
+
 
     // Boundaries need to be done after since they can affect the internal coefficients
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         SetBoundaryAdvectionPicardCoefficients(fvCoeffs.Mom[axis], faceFluxes, bcData.fields.U[axis], mesh);
     } );
-
-    // Use central differencing at immersed boundary
-    // ChangeStencilToCentralAtIB( fvCoeffs, faceFluxes, mesh, ibData );
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 

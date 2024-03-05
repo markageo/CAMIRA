@@ -592,9 +592,25 @@ namespace
         valueString = schemesTree.get<std::string>( "advectionScheme" );
         if        ( valueString == "upwind" ) {
             inputData.schemes.advectionScheme = AdvectionSchemes::Upwind;
-        } else {
+        } else if ( valueString == "central" ) {
+            inputData.schemes.advectionScheme = AdvectionSchemes::Central;
+        } else if ( valueString == "SOU" ) {
+            inputData.schemes.advectionScheme = AdvectionSchemes::SOU;
+        } else if ( valueString == "QUICK" ) {
+            inputData.schemes.advectionScheme = AdvectionSchemes::QUICK;
+        } else  {
             throw std::runtime_error( "'" + valueString + "' is not a valid advection scheme." );
         }
+
+
+        // Advection blending factor. Default this to 1
+        boost::optional<floatType> advectionBlendingFactorOptional = schemesTree.get_optional<floatType>( "advectionBlendingFactor" );
+        if ( !advectionBlendingFactorOptional ) {
+            inputData.schemes.advectionBlendingFactor = 1.0f;
+        } else {
+            inputData.schemes.advectionBlendingFactor = advectionBlendingFactorOptional.get();
+        }
+        
 
         // Face interpolation scheme
         valueString = schemesTree.get<std::string>( "faceInterpolationScheme" );
