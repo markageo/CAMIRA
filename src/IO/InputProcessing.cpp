@@ -322,6 +322,7 @@ namespace
         // It's ok if no geometry is specified
         boost::optional<const pt::ptree &> solidGeometryTreeOptional = tree.get_child_optional( "SolidGeometry" );
         if ( !solidGeometryTreeOptional ) {
+            inputData.hasIBGeometry = false;
             return;
         }
             
