@@ -113,7 +113,10 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     {
         linearSolver.UpdateState();
         linearSolver.Solve();
+        TIC("Update FV Equations")
+        SetGhostCells( fields, mesh, bcData );
         UpdateFVEquations<isNewtonLinearisation>( fvCoeffs, ibData, faceFluxes, faceAdvectedVelocities, fields, mesh, bcData );
+        TOC()
 
         residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs, ibData.mask); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
