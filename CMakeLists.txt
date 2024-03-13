@@ -32,7 +32,7 @@ endif()
 
 
 # Ankith's profiler
-option ( CFD_PROFILING "Enable CFD Profiling Tickers" off )
+option ( CFD_PROFILING "Enable CFD Profiling Tickers" on )
 if ( CFD_PROFILING )
 	message( STATUS "CFD profiling tickers are on!" )
 	add_compile_definitions( CFD_PROFILING )
@@ -52,7 +52,7 @@ endif()
 
 
 # Use of functions which were written for the compiler to autovectorise
-option ( CFD_USE_AUTOVEC_FUNCTIONS "Use functions written for the compiler to auto vectorize." on )
+option ( CFD_USE_AUTOVEC_FUNCTIONS "Use functions written for the compiler to auto vectorize." off )
 if ( CFD_USE_AUTOVEC_FUNCTIONS )
 	message( STATUS "Using Auto Vectorization functions." )
 	add_compile_definitions( CFD_USE_AUTOVEC_FUNCTIONS )

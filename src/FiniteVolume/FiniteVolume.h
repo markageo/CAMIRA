@@ -22,6 +22,12 @@ struct MomentumEquation {
     EnumVector< Axis, EnumVector<TransportCoefficients, Tensor1D> > diff;     // Diffusion coefficients (LHS)
     EnumVector< BoundaryPatches, floatType > diffBoundary;                    // Diffusion coefficients for constant boundary conditions (LHS)
     EnumVector< BoundaryPatches, Tensor2D   > BUBoundary, BPBoundary;         // Constant terms that come from fixed BC (LHS)
+    struct HiOrderAdvectionCoeffs {                                           // Precomputed high
+        // SOU     : phi_f = g1 * phi_U  +  g2 * phi_UU
+        // QUICK   : phi_f = phi_U  +  g1 * ( phi_D - phi_U )  +  g2 * ( phi_U - phi_UU )
+        EnumVector< Axis, Tensor1D > g1, g2;                        
+    };
+    HiOrderAdvectionCoeffs positiveFluxHiOrderAdvectionCoeffs, negativeFluxHiOrderAdvectionCoeffs;
     floatType relaxation;
     Axis::ENUMDATA component;                                                 // The momentum component
     Linearisation linearisation;
@@ -129,6 +135,13 @@ void UpdateFVCoefficients( FVCoefficients &,
                            const EnumVector< Axis, Tensor3D > &,
                            const IBData &,
                            const BoundaryConditionData &);
+
+
+// ----------------------------------------- Definition in GhostCells.cpp --------------------------------------- //
+
+void SetGhostCells( FieldData<Tensor3D> &,
+                    const Mesh &,
+                    const BoundaryConditionData & );
 
 
 // ---------------------------------------- Definition in VertexValues.cpp -------------------------------------- //

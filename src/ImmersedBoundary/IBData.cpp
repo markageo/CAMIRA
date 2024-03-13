@@ -124,7 +124,8 @@ bool CellIsFluid( const TensorIndex3D &cellIndex_a,
     if ( static_cast<intType>( mask( cellIndex_a ) ) == CellType::Solid ) 
         return false;
 
-    for ( intType axis = 0; axis != Axis::count; axis++ ) {
+    for ( intType a = 0; a != Axis::count; a++ ) {
+        Axis::ENUMDATA axis = static_cast<Axis::ENUMDATA>( a );
 
          if ( cellIndex_a[axis] < 0 )
             return false;
