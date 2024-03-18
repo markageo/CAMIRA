@@ -245,11 +245,12 @@ void SetHighOrderAdvectionCoefficients( MomentumEquation &momentumEquation,
                 positiveFluxHiOrderAdvectionCoeffs.g1[axis] = Tensor1D( mesh.nFacesNormal[axis][axis] );
                 positiveFluxHiOrderAdvectionCoeffs.g2[axis] = Tensor1D( mesh.nFacesNormal[axis][axis] );
 
-                for ( intType i = 1; i != mesh.nFacesNormal[axis][axis] - 2; i++ ) {
+                for ( intType i = 1; i != mesh.nFacesNormal[axis][axis] - 1; i++ ) {
 
                     floatType xf = mesh.cellFaces[axis]( i ),
-                                xU = 0.0f, xUU = 0.0f;
+                              xU = 0.0f, xUU = 0.0f;
 
+                    // Flux in positive direction across the face
                     xU = mesh.cellCenters[axis]( i-1 );
                     if ( i == 1 ) {
                         xUU = xU - mesh.cellLengths[axis]( i-1 );
@@ -259,6 +260,7 @@ void SetHighOrderAdvectionCoefficients( MomentumEquation &momentumEquation,
                     positiveFluxHiOrderAdvectionCoeffs.g1[axis](i) = ( xf - xUU ) / ( xU - xUU );
                     positiveFluxHiOrderAdvectionCoeffs.g2[axis](i) = ( xf - xU  ) / ( xUU - xU );
 
+                    // Flux in negative direction across the face
                     xU  = mesh.cellCenters[axis]( i );
                     if ( i == mesh.nFacesNormal[axis][axis] - 2 ) {
                         xUU = xU + mesh.cellLengths[axis]( i );
@@ -282,11 +284,12 @@ void SetHighOrderAdvectionCoefficients( MomentumEquation &momentumEquation,
                 positiveFluxHiOrderAdvectionCoeffs.g1[axis] = Tensor1D( mesh.nFacesNormal[axis][axis] );
                 positiveFluxHiOrderAdvectionCoeffs.g2[axis] = Tensor1D( mesh.nFacesNormal[axis][axis] );
 
-                for ( intType i = 1; i != mesh.nFacesNormal[axis][axis] - 2; i++ ) {
+                for ( intType i = 1; i != mesh.nFacesNormal[axis][axis] - 1; i++ ) {
 
                     floatType xf = mesh.cellFaces[axis]( i ),
                             xU = 0.0f, xD = 0.0f, xUU = 0.0f;
 
+                    // Flux in positive direction across the face
                     xU = mesh.cellCenters[axis]( i-1 ),
                     xD = mesh.cellCenters[axis]( i );
                     if ( i == 1 ) {
@@ -297,6 +300,7 @@ void SetHighOrderAdvectionCoefficients( MomentumEquation &momentumEquation,
                     positiveFluxHiOrderAdvectionCoeffs.g1[axis](i) = ( xf - xU ) * ( xf - xUU ) / ( xD - xU  ) / ( xD - xUU );
                     positiveFluxHiOrderAdvectionCoeffs.g2[axis](i) = ( xf - xU ) * ( xD - xf  ) / ( xU - xUU ) / ( xD - xUU );
 
+                    // Flux in negative direction across the face
                     xU = mesh.cellCenters[axis]( i ),
                     xD = mesh.cellCenters[axis]( i-1 );
                     if ( i == mesh.nFacesNormal[axis][axis] - 2 ) {
@@ -360,6 +364,7 @@ floatType HighOrderAdvectedVelocity( const Tensor3D &U,
 
             advectedVelocity = momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * U( G(hiIndex) ) 
                              + momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * U( G(hihiIndex) );
+
         }
 
         
