@@ -87,7 +87,8 @@ EnumVector<Axis, Tensor3D> InitialiseFaceFluxes( const Mesh &,
                                                  const EnumVector<Axis, Tensor3D> &, 
                                                  const BoundaryConditionData &);
 
-EnumVector< Axis, EnumVector<Axis, Tensor3D> > InitialiseAdvectedFaceVelocities( const Mesh &, 
+EnumVector< Axis, EnumVector<Axis, Tensor3D> > InitialiseFaceAdvectedVelocities( const Mesh &, 
+                                                                                 const FVCoefficients &,
                                                                                  const EnumVector<Axis, Tensor3D> &, 
                                                                                  const EnumVector<Axis, Tensor3D> &, 
                                                                                  const BoundaryConditionData &);
@@ -106,6 +107,7 @@ void UpdateFaceFluxesWithMWI( EnumVector<Axis, Tensor3D> &,
 
 void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> > &, 
                                    const Mesh &, 
+                                   const FVCoefficients &,
                                    const EnumVector<Axis, Tensor3D> &, 
                                    const EnumVector<Axis, Tensor3D> &, 
                                    const BoundaryConditionData &);
@@ -120,10 +122,6 @@ void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &,
 
 // Allocate and initialise finite volume coefficients
 FVCoefficients InitialiseFVCoefficients( const Mesh &, 
-                                         const FieldData< Tensor3D > &, 
-                                         const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &,
-                                         const EnumVector< Axis, Tensor3D > &,
-                                         const IBData &, 
                                          const BoundaryConditionData &, 
                                          const InputData &);
 

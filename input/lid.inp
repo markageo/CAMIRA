@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.001
+    nu   = 0.01
 }
 
 Mesh {
@@ -118,9 +118,9 @@ Solver {
 
     Schemes {
 
-        linearisation           = Picard
+        linearisation           = Newton
         momentumInterpolation   = implicit
-        advectionScheme         = central
+        advectionScheme         = upwind
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
@@ -155,12 +155,5 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     fieldWriteInterval      = 0
-
-    Monitors {
-        Probe {
-            filename = "output/probe1.csv"
-            location = (0.5, 0.6, 0.5)
-        }
-    }
 
 }
