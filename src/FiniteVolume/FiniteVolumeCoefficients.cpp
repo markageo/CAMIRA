@@ -2,6 +2,7 @@
 #include "../Macros.h"
 #include "../Tools/FVTools.h"
 #include "../Tools/FVLookups.h"
+#include "FaceInterpolatedVelocity.h"
 
 #include <algorithm>
 #include <iostream>
@@ -323,82 +324,6 @@ void SetHighOrderAdvectionCoefficients( MomentumEquation &momentumEquation,
 
 
 
-template< AdvectionSchemes advectionScheme,
-          intType          advectionDirection >
-floatType HighOrderAdvectedVelocity( const Tensor3D &U,
-                                     const MomentumEquation &momentumEquation,
-                                     const Mesh &mesh,
-                                     const Axis::ENUMDATA axis,
-                                     const TensorIndex3D &hiIndex,
-                                     const TensorIndex3D &loIndex )
-{
-    static_assert( (advectionDirection == +1) || (advectionDirection == -1) );
-
-    using FVT::G;
-
-    floatType advectedVelocity = 0.0f;
-    intType fidx = hiIndex[axis]; 
-    
-    // Central
-    if        constexpr ( advectionScheme == AdvectionSchemes::Central ) {
-
-        
-        advectedVelocity = ( 1.0f - mesh.interpFactors[axis](fidx) ) * U( G(loIndex) )
-                         + mesh.interpFactors[axis](fidx)            * U( G(hiIndex) );
-
-    // Second Order Upwind
-    } else if constexpr ( advectionScheme == AdvectionSchemes::SOU ) {
-
-        if constexpr ( advectionDirection == +1 ) {
-
-            TensorIndex3D loloIndex = loIndex;
-            loloIndex[axis] -= 1;
-
-            advectedVelocity = momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * U( G(loIndex) ) 
-                             + momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * U( G(loloIndex) );
-
-        } else {
-
-            TensorIndex3D hihiIndex = hiIndex;
-            hihiIndex[axis] += 1;
-
-            advectedVelocity = momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * U( G(hiIndex) ) 
-                             + momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * U( G(hihiIndex) );
-
-        }
-
-        
-    // QUICK
-    } else if constexpr ( advectionScheme == AdvectionSchemes::QUICK ) {
-
-
-        if constexpr ( advectionDirection == +1 ) {
-
-            TensorIndex3D loloIndex = loIndex;
-            loloIndex[axis] -= 1;
-
-            advectedVelocity = U( G(loIndex) )
-                             + momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * ( U( G(hiIndex) ) - U( G(loIndex) ) )
-                             + momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * ( U( G(loIndex) ) - U( G(loloIndex) ) );
-
-        } else {
-
-            TensorIndex3D hihiIndex = hiIndex;
-            hihiIndex[axis] += 1;
-
-            advectedVelocity = U( G(hiIndex) )
-                             + momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * ( U( G(loIndex) ) - U( G(hiIndex) ) )
-                             + momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * ( U( G(hiIndex) ) - U( G(hihiIndex) ) );
-        }
-        
-
-    }
-
-    return advectedVelocity;
-}
-
-
-
 // Upwind implicit coefficients with deffered correction for higher order schemes
 // Assumes that the 'p' coefficient has been set to zero
 template< AdvectionSchemes advectionScheme > 
@@ -411,6 +336,8 @@ void InteriorAdvectionTerms( MomentumEquation &momentumEquation,
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
     using FVT::G;
+
+    constexpr bool hasDeferredCorrection = ( advectionScheme != AdvectionSchemes::Upwind );
 
     auto &coeffs     = momentumEquation.AU[momentumEquation.component];
     auto &sourceTerm = momentumEquation.B;
@@ -442,14 +369,17 @@ void InteriorAdvectionTerms( MomentumEquation &momentumEquation,
                     hiCellAp =   0.0f;
                     hiCellAw = - uf * mesh.cellLengthsInv[axis]( hiIndex[axis] );
 
-                    highOrderAdvectedVelocity = HighOrderAdvectedVelocity<advectionScheme, +1>(U, momentumEquation, mesh, axis, hiIndex, loIndex);
+                    if constexpr ( hasDeferredCorrection )
+                        highOrderAdvectedVelocity = FaceInterpolatedVelocity<advectionScheme, +1>(U, momentumEquation, mesh, axis, hiIndex, loIndex);
+
                 } else {
                     loCellAp =   0.0f;
                     loCellAe =   uf * mesh.cellLengthsInv[axis]( loIndex[axis] );
                     hiCellAp = - uf * mesh.cellLengthsInv[axis]( hiIndex[axis] );
                     hiCellAw =   0.0f;
 
-                    highOrderAdvectedVelocity = HighOrderAdvectedVelocity<advectionScheme, -1>(U, momentumEquation, mesh, axis, hiIndex, loIndex);
+                    if constexpr ( hasDeferredCorrection )
+                        highOrderAdvectedVelocity = FaceInterpolatedVelocity<advectionScheme, -1>(U, momentumEquation, mesh, axis, hiIndex, loIndex);
                 }
 
 
@@ -461,7 +391,7 @@ void InteriorAdvectionTerms( MomentumEquation &momentumEquation,
                 coeffs[west](hiIndex)  = hiCellAw;
 
 
-                if constexpr ( advectionScheme == AdvectionSchemes::Upwind )
+                if constexpr ( !hasDeferredCorrection )
                     continue;
 
 
@@ -2242,10 +2172,6 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
 \*---------------------------------------------------------------------------------------------------------------*/
 
 FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
-                                         const FieldData<Tensor3D> &fields,
-                                         const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &faceAdvectedVelocities,
-                                         const EnumVector<Axis, Tensor3D> &faceFluxes, 
-                                         const IBData &ibData,
                                          const BoundaryConditionData &bcData,
                                          const InputData &inputData)
 {
@@ -2276,10 +2202,6 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
         SetMomentumInterpolationCompactConstants(fvCoeffs.Cont.mwiCompactCoeffs[axis], inputData.rho, mesh, axis);
     } );
     fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation.P;
-
-
-    // Set the coefficients that depend on linearisation
-    UpdateFVCoefficients( fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData );
 
     return fvCoeffs;
 }

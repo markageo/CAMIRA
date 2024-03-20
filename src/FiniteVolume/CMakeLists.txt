@@ -8,4 +8,5 @@ target_sources( libs
         Mesh.cpp 
     PRIVATE 
         FiniteVolume.h
-        Mesh.h )
+        Mesh.h
+        FaceInterpolatedVelocity.h )
