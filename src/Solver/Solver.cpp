@@ -38,10 +38,29 @@ void UpdateFVEquations( FVCoefficients &fvCoeffs,
 {
     UpdateIBData( ibData, fields );
     UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
+    SetIBFaceFluxes( faceFluxes, ibData );
+
     if constexpr ( isNewtonLinearisation ) {
         UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fvCoeffs, fields.U, faceFluxes, bcData);
+        switch ( fvCoeffs.Mom[Axis::X].advectionScheme ) {
+            case AdvectionSchemes::Upwind:
+                SetIBFaceAdvectedVelocities<AdvectionSchemes::Upwind>( faceAdvectedVelocities, faceFluxes, fields, fvCoeffs, mesh, ibData );
+                break;
+
+            case AdvectionSchemes::Central:
+                SetIBFaceAdvectedVelocities<AdvectionSchemes::Central>( faceAdvectedVelocities, faceFluxes, fields, fvCoeffs, mesh, ibData );
+                break;
+
+            case AdvectionSchemes::SOU:
+                SetIBFaceAdvectedVelocities<AdvectionSchemes::SOU>( faceAdvectedVelocities, faceFluxes, fields, fvCoeffs, mesh, ibData );
+                break;
+
+            case AdvectionSchemes::QUICK:
+                SetIBFaceAdvectedVelocities<AdvectionSchemes::QUICK>( faceAdvectedVelocities, faceFluxes, fields, fvCoeffs, mesh, ibData );
+                break;
+        }
     }
-    SetIBFaceFluxes( faceFluxes, ibData );
+
     UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData);
 }
 

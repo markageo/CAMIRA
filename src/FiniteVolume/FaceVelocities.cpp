@@ -361,4 +361,62 @@ void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &faceFluxes,
 
 
 
+template< AdvectionSchemes advectionScheme >
+void SetIBFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> > &faceAdvectedVelocities,
+                                  const EnumVector< Axis, Tensor3D > &faceFluxes,
+                                  const FieldData<Tensor3D> &fields,
+                                  const FVCoefficients &fvCoeffs,
+                                  const Mesh &mesh,
+                                  const IBData &ibData ) 
+{
+    for ( auto &ibCell : ibData.ibCells ) { 
+        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
+
+            Axis::ENUMDATA faceNormal = sourceTermData.direction;
+            TensorIndex3D faceIndex = ibCell.cellIndex;    
+            faceIndex[faceNormal] += sourceTermData.faceDirectionIndex;
+
+            // Immediate boundary face
+            EnumFor<Axis>( [&] (Axis::ENUMDATA velocityComponent) {
+                faceAdvectedVelocities[velocityComponent][faceNormal]( faceIndex ) = sourceTermData.faceValues.U[velocityComponent];
+            } );
+
+            // If using a wide stencil advection scheme, the next interior face needs to be corrected
+            constexpr bool hasWideAdvectionStencil = ( advectionScheme == AdvectionSchemes::SOU ) || ( advectionScheme == AdvectionSchemes::QUICK );
+            if constexpr ( hasWideAdvectionStencil ) {
+
+                TensorIndex3D faceIndex_a = faceIndex;
+                faceIndex_a[faceNormal] -= sourceTermData.directionIndex;
+
+                TensorIndex3D loIndex_a = faceIndex_a,
+                                hiIndex_a = loIndex_a;
+                hiIndex_a[faceNormal] += 1;
+
+                EnumFor<Axis>( [&] (Axis::ENUMDATA velocityComponent) {
+
+                    auto &U = fields.U[velocityComponent];
+                    auto &momentumEquation = fvCoeffs.Mom[velocityComponent];
+                    floatType ghostCellValue = sourceTermData.ghostCellValues.U[velocityComponent];
+
+                    if ( faceFluxes[faceNormal](faceIndex_a) >= 0.0f ) {
+                        faceAdvectedVelocities[velocityComponent][faceNormal](faceIndex_a) = ( sourceTermData.directionIndex == +1 ) ? FaceInterpolatedVelocity<advectionScheme, +1, +1>(U, momentumEquation, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue):
+                                                                                                                                       FaceInterpolatedVelocity<advectionScheme, +1, -1>(U, momentumEquation, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue);
+                    } else {
+                        faceAdvectedVelocities[velocityComponent][faceNormal](faceIndex_a) = ( sourceTermData.directionIndex == +1 ) ? FaceInterpolatedVelocity<advectionScheme, -1, +1>(U, momentumEquation, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue):
+                                                                                                                                       FaceInterpolatedVelocity<advectionScheme, -1, -1>(U, momentumEquation, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue);
+                    }
+
+                } );
+            }
+
+        }
+    }
+}
+template void SetIBFaceAdvectedVelocities<AdvectionSchemes::Upwind >( EnumVector< Axis, EnumVector<Axis, Tensor3D> > &, const EnumVector< Axis, Tensor3D > &, const FieldData<Tensor3D> &, const FVCoefficients &, const Mesh &, const IBData & ); 
+template void SetIBFaceAdvectedVelocities<AdvectionSchemes::Central>( EnumVector< Axis, EnumVector<Axis, Tensor3D> > &, const EnumVector< Axis, Tensor3D > &, const FieldData<Tensor3D> &, const FVCoefficients &, const Mesh &, const IBData & ); 
+template void SetIBFaceAdvectedVelocities<AdvectionSchemes::SOU    >( EnumVector< Axis, EnumVector<Axis, Tensor3D> > &, const EnumVector< Axis, Tensor3D > &, const FieldData<Tensor3D> &, const FVCoefficients &, const Mesh &, const IBData & ); 
+template void SetIBFaceAdvectedVelocities<AdvectionSchemes::QUICK  >( EnumVector< Axis, EnumVector<Axis, Tensor3D> > &, const EnumVector< Axis, Tensor3D > &, const FieldData<Tensor3D> &, const FVCoefficients &, const Mesh &, const IBData & ); 
+
+
+
 } // end namespace CFD

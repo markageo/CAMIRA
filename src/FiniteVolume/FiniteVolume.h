@@ -115,6 +115,14 @@ void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> 
 void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &, 
                       const IBData & );
 
+template<AdvectionSchemes>
+void SetIBFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> > &,
+                                  const EnumVector< Axis, Tensor3D > &,
+                                  const FieldData<Tensor3D> &,
+                                  const FVCoefficients &,
+                                  const Mesh &,
+                                  const IBData & ); 
+
 
 
 
