@@ -8,23 +8,31 @@ namespace CFD {
 
 
 template< AdvectionSchemes advectionScheme,
-          intType          advectionDirection >
+          intType          advectionDirection,
+          intType          ghostDirection = 0 >
 floatType FaceInterpolatedVelocity( const Tensor3D &U,
                                     const MomentumEquation &momentumEquation,
                                     const Mesh &mesh,
                                     const Axis::ENUMDATA axis,
                                     const TensorIndex3D &hiIndex,
-                                    const TensorIndex3D &loIndex )
+                                    const TensorIndex3D &loIndex,
+                                    const floatType ghostCellValue = 0.0f )
 {
-    static_assert( (advectionDirection == +1) || (advectionDirection == -1) );
+    using enum AdvectionSchemes;
 
+    static_assert( (ghostDirection == +1    ) || (ghostDirection == -1    ) || (ghostDirection == 0));
+    static_assert( (advectionDirection == +1) || (advectionDirection == -1) );
+    if constexpr ( ghostDirection != 0 ) {
+        static_assert( (advectionScheme == SOU  ) || (advectionScheme == QUICK) );
+    } 
+       
     using FVT::G;
 
     floatType advectedVelocity = 0.0f;
     intType fidx = hiIndex[axis]; 
     
     // First order upwind
-    if        constexpr ( advectionScheme == AdvectionSchemes::Upwind ) {
+    if        constexpr ( advectionScheme == Upwind ) {
 
         if constexpr ( advectionDirection == +1 ) {
             advectedVelocity = U( G(loIndex) );
@@ -33,57 +41,79 @@ floatType FaceInterpolatedVelocity( const Tensor3D &U,
         }
 
     // Central
-    } else if constexpr ( advectionScheme == AdvectionSchemes::Central ) {
+    } else if constexpr ( advectionScheme == Central ) {
 
         advectedVelocity = ( 1.0f - mesh.interpFactors[axis](fidx) ) * U( G(loIndex) )
                          + mesh.interpFactors[axis](fidx)            * U( G(hiIndex) );
 
     // Second Order Upwind
-    } else if constexpr ( advectionScheme == AdvectionSchemes::SOU ) {
+    } else if constexpr ( advectionScheme == SOU ) {
 
         if constexpr ( advectionDirection == +1 ) {
 
-            TensorIndex3D loloIndex = loIndex;
-            loloIndex[axis] -= 1;
+            floatType farVelocityValue;
+            if constexpr ( ghostDirection == -1 ) {
+                farVelocityValue = ghostCellValue;
+            } else {
+                TensorIndex3D loloIndex = loIndex;
+                loloIndex[axis] -= 1;
+                farVelocityValue = U( G(loloIndex) );
+            }
 
             advectedVelocity = momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * U( G(loIndex) ) 
-                             + momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * U( G(loloIndex) );
+                             + momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * farVelocityValue;
 
         } else {
 
-            TensorIndex3D hihiIndex = hiIndex;
-            hihiIndex[axis] += 1;
-
+            floatType farVelocityValue;
+            if constexpr ( ghostDirection == +1 ) {
+                farVelocityValue = ghostCellValue;
+            } else {
+                TensorIndex3D hihiIndex = hiIndex;
+                hihiIndex[axis] += 1;
+                farVelocityValue = U( G(hihiIndex) );
+            }
+        
             advectedVelocity = momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * U( G(hiIndex) ) 
-                             + momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * U( G(hihiIndex) );
+                             + momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * farVelocityValue;
 
         }
 
         
     // QUICK
-    } else if constexpr ( advectionScheme == AdvectionSchemes::QUICK ) {
-
+    } else if constexpr ( advectionScheme == QUICK ) {
 
         if constexpr ( advectionDirection == +1 ) {
 
-            TensorIndex3D loloIndex = loIndex;
-            loloIndex[axis] -= 1;
+            floatType farVelocityValue;
+            if constexpr ( ghostDirection == -1 ) {
+                farVelocityValue = ghostCellValue;
+            } else {
+                TensorIndex3D loloIndex = loIndex;
+                loloIndex[axis] -= 1;
+                farVelocityValue = U( G(loloIndex) );
+            }
 
             advectedVelocity = U( G(loIndex) )
                              + momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * ( U( G(hiIndex) ) - U( G(loIndex) ) )
-                             + momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * ( U( G(loIndex) ) - U( G(loloIndex) ) );
+                             + momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * ( U( G(loIndex) ) - farVelocityValue );
 
         } else {
 
-            TensorIndex3D hihiIndex = hiIndex;
-            hihiIndex[axis] += 1;
+            floatType farVelocityValue;
+            if constexpr ( ghostDirection == +1 ) {
+                farVelocityValue = ghostCellValue;
+            } else {
+                TensorIndex3D hihiIndex = hiIndex;
+                hihiIndex[axis] += 1;
+                farVelocityValue = U( G(hihiIndex) );
+            }
 
             advectedVelocity = U( G(hiIndex) )
                              + momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * ( U( G(loIndex) ) - U( G(hiIndex) ) )
-                             + momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * ( U( G(hiIndex) ) - U( G(hihiIndex) ) );
+                             + momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * ( U( G(hiIndex) ) - farVelocityValue);
         }
         
-
     }
 
     return advectedVelocity;
