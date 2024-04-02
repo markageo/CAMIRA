@@ -111,7 +111,7 @@ Solver {
 
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = central
+        advectionScheme         = QUICK
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 

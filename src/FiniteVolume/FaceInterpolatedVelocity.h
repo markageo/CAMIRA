@@ -8,8 +8,8 @@ namespace CFD {
 
 
 template< AdvectionSchemes advectionScheme,
-          intType          advectionDirection,
-          intType          ghostDirection = 0 >
+          intType          advectionDirection,  // +1 for flux in positive direciton, -1 for flux in negative direciton
+          intType          ghostDirection = 0 > // +1 for ghost cell on positive side, -1 for ghost cell on negative side, 0 for no ghost cell
 floatType FaceInterpolatedVelocity( const Tensor3D &U,
                                     const MomentumEquation &momentumEquation,
                                     const Mesh &mesh,
@@ -22,7 +22,7 @@ floatType FaceInterpolatedVelocity( const Tensor3D &U,
 
     static_assert( (ghostDirection == +1    ) || (ghostDirection == -1    ) || (ghostDirection == 0));
     static_assert( (advectionDirection == +1) || (advectionDirection == -1) );
-    if constexpr ( ghostDirection != 0 ) {
+    if constexpr ( ghostDirection != 0 ) {  // Only schemes with wide stencils will need ghost cells
         static_assert( (advectionScheme == SOU  ) || (advectionScheme == QUICK) );
     } 
        

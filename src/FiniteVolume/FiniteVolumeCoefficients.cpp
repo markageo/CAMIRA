@@ -1853,11 +1853,11 @@ void MomentumIBSourceDeferredCorrection( MomentumEquation &momentumEquation,
                   *   mesh.cellLengthsInv[faceNormal]( cellIndex[faceNormal] );
 
         // Interior cell
-        floatType ibSource_a = static_cast<floatType>( sourceTermData.directionIndex )
-                             * momentumEquation.advectionBlendingFactor 
-                             * faceFluxes[faceNormal]( faceIndex_a )
-                             * ( correctedHighOrderAdvectedVelocity - oldHighOrderAdvectedVelocity )
-                             * mesh.cellLengthsInv[faceNormal]( cellIndex_a[faceNormal] );
+        floatType ibSource_a = - static_cast<floatType>( sourceTermData.directionIndex )
+                             *   momentumEquation.advectionBlendingFactor 
+                             *   faceFluxes[faceNormal]( faceIndex_a )
+                             *   ( correctedHighOrderAdvectedVelocity - oldHighOrderAdvectedVelocity )
+                             *   mesh.cellLengthsInv[faceNormal]( cellIndex_a[faceNormal] );
 
         momentumEquation.B( cellIndex_a ) += ibSource_a;
 
@@ -2098,7 +2098,7 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
 
                 switch( fvCoeffs.Mom[axis].advectionScheme ) {
                     case AdvectionSchemes::Upwind:
-                        MomentumIBSourceDeferredCorrection<AdvectionSchemes::Upwind>( fvCoeffs.Mom[axis], fields, faceFluxes, mesh, sourceTermData, cellIndex );
+                        /* NULL */
                         break;
                     case AdvectionSchemes::Central:
                         MomentumIBSourceDeferredCorrection<AdvectionSchemes::Central>( fvCoeffs.Mom[axis], fields, faceFluxes, mesh, sourceTermData, cellIndex );
