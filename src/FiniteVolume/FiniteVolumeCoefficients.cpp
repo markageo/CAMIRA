@@ -390,15 +390,15 @@ void InteriorAdvectionTerms( MomentumEquation &momentumEquation,
                     continue;
 
                 // Deferred correction term
-                sourceTerm(loIndex) -=  momentumEquation.advectionBlendingFactor 
-                                     *  faceFlux
-                                     *  ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
-                                     *  mesh.cellLengthsInv[axis]( loIndex[axis] );
+                sourceTerm(loIndex) -=   momentumEquation.advectionBlendingFactor 
+                                     *   faceFlux
+                                     *   ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
+                                     *   mesh.cellLengthsInv[axis]( loIndex[axis] );
                     
-                sourceTerm(hiIndex) -= -momentumEquation.advectionBlendingFactor 
-                                     *  faceFlux
-                                     *  ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
-                                     *  mesh.cellLengthsInv[axis]( hiIndex[axis] );
+                sourceTerm(hiIndex) -= - momentumEquation.advectionBlendingFactor 
+                                     *   faceFlux
+                                     *   ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
+                                     *   mesh.cellLengthsInv[axis]( hiIndex[axis] );
             }
         }
     }
@@ -2314,20 +2314,25 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
 
     ZeroNonlinearCoeffs( fvCoeffs );
 
-    // The Picard coefficients for all momentum equations are the same, so just use the ones from the U momentum equation after 
-    // its been set
-    SetInteriorAdvectionPicardCoefficients(fvCoeffs.Mom[Axis::X], fields, faceFluxes, mesh);
-    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        if ( axis != Axis::X ) {
-            EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
-                fvCoeffs.Mom[axis].AU[axis][tc] = fvCoeffs.Mom[Axis::X].AU[Axis::X][tc];
-            } );
-            fvCoeffs.Mom[axis].B = fvCoeffs.Mom[Axis::X].B;
-        }
-    } );
-
-
+    // The implicit Picard coefficients for all momentum equations are the same, so just use the ones from the U momentum 
+    // equation after its been set
+    if ( fvCoeffs.Mom[Axis::X].advectionScheme == AdvectionSchemes::Upwind ) {
+        SetInteriorAdvectionPicardCoefficients(fvCoeffs.Mom[Axis::X], fields, faceFluxes, mesh);
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            if ( axis != Axis::X ) {
+                EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
+                    fvCoeffs.Mom[axis].AU[axis][tc] = fvCoeffs.Mom[Axis::X].AU[Axis::X][tc];
+                } );
+            }
+        } );
+    } else {    // Source terms are different due to deferred correction
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            SetInteriorAdvectionPicardCoefficients(fvCoeffs.Mom[axis], fields, faceFluxes, mesh);
+        } );
+    }
     
+
+
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         // Boundaries need to be done after since they can affect the internal coefficients
         SetBoundaryAdvectionPicardCoefficients(fvCoeffs.Mom[axis], faceFluxes, bcData.fields.U[axis], mesh);
