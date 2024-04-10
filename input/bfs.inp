@@ -109,7 +109,8 @@ Solver {
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 500
-        maxOuterResiduals = 1e-10
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 
     }
     

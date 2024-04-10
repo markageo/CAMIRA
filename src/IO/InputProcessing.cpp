@@ -636,9 +636,14 @@ namespace
         inputData.schemes.maxOuterIterations = schemesTree.get<intType>( "maxOuterIterations" );
 
         // Max outer residuals
-        floatType maxOuterResiduals = schemesTree.get<floatType>( "maxOuterResiduals" );
-        inputData.schemes.maxOuterResiduals.U = maxOuterResiduals;
-        inputData.schemes.maxOuterResiduals.P = maxOuterResiduals;
+        floatType maxContinuityOuterResidual = schemesTree.get<floatType>( "maxContinuityOuterResidual" );
+        inputData.schemes.maxOuterResiduals.P = maxContinuityOuterResidual;
+
+        std::vector<floatType> maxMomentumOuterResiduals = schemesTree.get< std::vector<floatType> >( "maxMomentumOuterResiduals" );
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            inputData.schemes.maxOuterResiduals.U[axis] = maxMomentumOuterResiduals[axis];
+        } );
+        
     }
 
 
