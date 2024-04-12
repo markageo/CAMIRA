@@ -2,17 +2,17 @@
 
 Model {
     rho  = 1
-    nu   = 0.05
+    nu   = 0.1
 }
 
 Mesh {
 
-    domain = (7.5, 3, 3)
+    domain = (9, 3, 3)
 
     Grid x {
         Segment {
-            bounds     = (0, 7.5)
-            nCells     = 150
+            bounds     = (0, 9)
+            nCells     = 90
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 3)
-            nCells     = 60
+            nCells     = 30
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 3)
-            nCells     = 60
+            nCells     = 30
             biasFactor = 1
         }
     }
@@ -98,9 +98,9 @@ BoundaryConditions
 
 SolidGeometry {
     Block {
-        centerPosition = (1.5, 0.5, 1.5)
+        centerPosition = (2.5, 0.5, 1.5)
         dimensions     = (1, 1, 1)
-        rotation       = (0, 35, 0)
+        rotation       = (0, 0, 0)
     }
 }
 
@@ -112,6 +112,7 @@ Solver {
         linearisation           = Picard
         momentumInterpolation   = implicit
         advectionScheme         = upwind
+        advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (1, 1, 1)

@@ -110,53 +110,6 @@ Tensor3D CreateCellMask( const Polyhedron &geometry,
     }
 
 
-    // Add in the cells which have any face centers within the solid
-    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
-        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
-            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
-
-                if ( static_cast<intType>( mask(i, j, k) ) == CellType::Solid )
-                    continue;
-
-                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-
-                    // Positive side face
-                    TensorIndex3D hiCellIndex = {i, j, k};
-                                  hiCellIndex[axis] += 1;
-                    if ( static_cast<intType>( mask( hiCellIndex ) ) == CellType::Solid ) {
-
-                        floatType xq = ( axis == X ) ? mesh.cellFaces[X](i + 1) : mesh.cellCenters[X](i),
-                                  yq = ( axis == Y ) ? mesh.cellFaces[Y](j + 1) : mesh.cellCenters[Y](j),
-                                  zq = ( axis == Z ) ? mesh.cellFaces[Z](k + 1) : mesh.cellCenters[Z](k);
-
-                        if ( PointInside( geometry, xq, yq, zq ) ) 
-                            mask(i, j, k) = CellType::Solid;
-
-                    }
-
-                    
-                    // Negative side face
-                    TensorIndex3D loCellIndex = {i, j, k};
-                                  loCellIndex[axis] -= 1;
-                    if ( static_cast<intType>( mask( loCellIndex ) ) == CellType::Solid ) {
-
-                        floatType xq = ( axis == X ) ? mesh.cellFaces[X](i) : mesh.cellCenters[X](i),
-                                  yq = ( axis == Y ) ? mesh.cellFaces[Y](j) : mesh.cellCenters[Y](j),
-                                  zq = ( axis == Z ) ? mesh.cellFaces[Z](k) : mesh.cellCenters[Z](k);
-                                  
-                        if ( PointInside( geometry, xq, yq, zq ) ) 
-                            mask(i, j, k) = CellType::Solid;
-
-                    }
-
-                } );                
-
-
-
-            }
-        }
-    }
-
     return mask;
 }
 
@@ -235,13 +188,26 @@ void AddIBDataForDirection( IBCell &ibCell,
                                      * mesh.cellFaceAreas[axis]( fidx );    
 
 
-    floatType xp  = mesh.cellCenters[axis]( cellIndex[axis] ),
-              xa  = mesh.cellCenters[axis]( cellIndex_a[axis] ),
-              xf  = mesh.cellFaces[axis]( fidx ),
-              xib = xp + static_cast<floatType>( directionIndex ) * ibDistance;
-    sourceTermData.faceExtrapCoeff_p  = ( xf - xa ) * ( xf - xib ) / ( xp - xa  ) / ( xp - xib );
-    sourceTermData.faceExtrapCoeff_a  = ( xf - xp ) * ( xf - xib ) / ( xa - xp  ) / ( xa - xib );
-    sourceTermData.faceExtrapCoeff_ib = ( xf - xa ) * ( xf - xp  ) / ( xib - xa ) / ( xib - xp );
+
+    // Extrapolation coefficients onto face between ghost cell and fluid cell. May use further points due to stability condition
+    bool meetsGhostStabilityCondition =  ibDistance >= ( mesh.cellLengths[axis](cellIndex[axis]) / 2.0f );
+    if ( meetsGhostStabilityCondition ) {
+
+        floatType dxpOn2 = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f ;
+        sourceTermData.faceExtrapCoeff_p  = ( ibDistance - dxpOn2 ) / ( ibDistance );
+        sourceTermData.faceExtrapCoeff_a  = 0.0f;
+        sourceTermData.faceExtrapCoeff_ib = dxpOn2 / ibDistance;
+
+    } else {
+
+        floatType dxp = mesh.cellLengths[axis](cellIndex[axis]);
+        floatType dxa = mesh.cellLengths[axis](cellIndex_a[axis]);
+        floatType denominator =  dxp / 2.0f   +  dxa / 2.0f  +  ibDistance;
+        sourceTermData.faceExtrapCoeff_p  = 0.0f;
+        sourceTermData.faceExtrapCoeff_a  = ( dxp / 2.0f - ibDistance ) / denominator;
+        sourceTermData.faceExtrapCoeff_ib = ( dxa / 2.0f + dxp ) / denominator;
+
+    }
 
 
     // Extrapolation coefficients from face to ghost cell
