@@ -17,7 +17,8 @@ struct MomentumEquation {
     MomentumEquation(const Axis::ENUMDATA, const iArray3 &, Linearisation);
     EnumVector< Axis, EnumVector< TransportCoefficients, Tensor3D > > AU;     // Velocity coefficients (LHS)
     EnumVector<TransportCoefficients, Tensor1D> AP;                           // Pressure coefficients (LHS)
-    Tensor3D B;                                                               // Source Term (RHS)
+    Tensor3D B;                                                               // Constants that come from boundary conditions and linearisation (LHS)
+    Tensor3D F;                                                               // Source terms (RHS)
     Tensor3D diagCoeffInv;                                                    // Inverse of diagonal coefficient
     EnumVector< Axis, EnumVector<TransportCoefficients, Tensor1D> > diff;     // Diffusion coefficients (LHS)
     EnumVector< BoundaryPatches, floatType > diffBoundary;                    // Diffusion coefficients for constant boundary conditions (LHS)
@@ -32,7 +33,8 @@ struct ContinuityEquation {
     ContinuityEquation(const iArray3 &, MomentumInterpolation);
     EnumVector< Axis, EnumVector< TransportCoefficients, Tensor1D > > AU;    // Velocity coefficients (LHS)
     EnumVector<TransportCoefficients, Tensor3D> AP;                          // Pressure coefficients (LHS)
-    Tensor3D B;                                                              // Source term (RHS)
+    Tensor3D B;                                                              // Constants that come from boundary conditions and linearisation (LHS)
+    Tensor3D F;                                                              // Source terms (RHS)
     EnumVector< Axis, std::array< Tensor1D, 4 > > mwiSparseCoeffs;           // Unweighted MWI coefficients from the sparse pressure gradient (LHS)
     EnumVector< Axis, std::array< Tensor1D, 2 > > mwiCompactCoeffs;          // Unweighted MWI coefficients from the compact pressure gradient (LHS)
     EnumVector< BoundaryPatches, Tensor2D   > BUBoundary, BPBoundary;        // Constant terms that come from fixed BC (LHS)

@@ -33,8 +33,8 @@ struct InputData
 
     // Mesh
     struct MeshSegment {
-        floatType lowerBound;
-        floatType upperBound;
+        floatType startCoordinate;
+        floatType endCoordinate;
         intType nCells;
         floatType biasFactor;
     };
@@ -98,6 +98,15 @@ struct InputData
         BoundaryPatches::ENUMDATA planeSweepDirection;
     }; 
     LinearSolverSettings linearSolverSettings;
+
+    struct MultigridSettings {
+        intType maxCoarseLevels,
+                preSmoothingIterations,
+                postSmoothingIterations,
+                maxCoarseGridIterations;
+        floatType maxCoarseGridResidual;
+    };
+    MultigridSettings multigridSettings;
 
 
     // Ouput

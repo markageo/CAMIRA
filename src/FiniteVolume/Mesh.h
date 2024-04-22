@@ -11,6 +11,7 @@ namespace CFD
 // Recitlinear mesh structure and mesher (on construction)
 struct Mesh
 {
+    Mesh(const iArray3 &);
     Mesh(const InputData &);
     iArray3 nCells;
     EnumVector<Axis, iArray3> nFacesNormal;
@@ -32,6 +33,12 @@ struct Mesh
 
 // Create mesh and output mesh information to console
 Mesh CreateMesh( const InputData & );
+
+// Determines if mesh can be coarsened
+bool MeshCanBeCoarsened( const Mesh& );
+
+// Coarsens mesh by agglomorating cells
+Mesh CoarsenMesh( const Mesh& ); 
 
 
 } // end namespace CFD

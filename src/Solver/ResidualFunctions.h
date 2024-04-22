@@ -82,7 +82,8 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
 
                                         + newtonStencilX
 
-                                        - fvCoeffs.Mom[X].B(i, j, k)  );
+                                        + fvCoeffs.Mom[X].B(i, j, k) 
+                                        - fvCoeffs.Mom[X].F(i, j, k)  );
 
                 scalingFactorU += mask(i, j, k) * abs( fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) );
 
@@ -114,7 +115,8 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
 
                                         + newtonStencilY
 
-                                        - fvCoeffs.Mom[Y].B(i, j, k)  );
+                                        + fvCoeffs.Mom[Y].B(i, j, k)
+                                        - fvCoeffs.Mom[Y].F(i, j, k)  );
 
                 scalingFactorV += mask(i, j, k) * abs( fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) );
 
@@ -146,7 +148,9 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
 
                                         + newtonStencilZ
 
-                                        - fvCoeffs.Mom[Z].B(i, j, k)  );
+                                        + fvCoeffs.Mom[Z].B(i, j, k)
+                                        - fvCoeffs.Mom[Z].F(i, j, k)  );
+                                        
 
                 scalingFactorW +=  mask(i, j, k) * abs( fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) );
 
@@ -185,7 +189,8 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
 
                                   + pressureWideStencil
                                 
-                                  - fvCoeffs.Cont.B(i, j, k) );
+                                  + fvCoeffs.Cont.B(i, j, k)
+                                  - fvCoeffs.Cont.F(i, j, k) );
 
             }
         }
@@ -272,7 +277,8 @@ inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fie
 
                                                     + newtonStencilX
 
-                                                    - fvCoeffs.Mom[X].B(i, j, k)  );
+                                                    + fvCoeffs.Mom[X].B(i, j, k) 
+                                                    - fvCoeffs.Mom[X].F(i, j, k)  );
 
 
 
@@ -303,7 +309,8 @@ inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fie
 
                                                     + newtonStencilY
 
-                                                    - fvCoeffs.Mom[Y].B(i, j, k)  );
+                                                    + fvCoeffs.Mom[Y].B(i, j, k) 
+                                                    - fvCoeffs.Mom[Y].F(i, j, k)  );
 
 
                 // W momentm
@@ -333,7 +340,8 @@ inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fie
 
                                                     + newtonStencilZ
 
-                                                    - fvCoeffs.Mom[Z].B(i, j, k)  );
+                                                    + fvCoeffs.Mom[Z].B(i, j, k) 
+                                                    - fvCoeffs.Mom[Z].F(i, j, k)  );
 
 
                 // Continuity 
@@ -370,7 +378,8 @@ inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fie
 
                                          + pressureWideStencil
                                         
-                                         - fvCoeffs.Cont.B(i, j, k) );
+                                         + fvCoeffs.Cont.B(i, j, k)
+                                         - fvCoeffs.Cont.F(i, j, k) );
 
             }
         }
