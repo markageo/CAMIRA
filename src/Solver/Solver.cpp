@@ -47,6 +47,57 @@ void UpdateFVEquations( FVCoefficients &fvCoeffs,
 
 
 
+void MultigridCycle()
+{
+
+    // Perform a V Cycle
+    VCycle();
+
+}
+
+
+
+void VCycle()
+{
+
+    if ( /* onCoarsestGrid */ ) {
+
+        SmoothNonlinear();
+
+    } else {
+
+        // Presmoothing 
+        SmoothNonlinear();
+
+        // Restrict residual
+
+        // Restrict solution
+
+        // VCycle recursive call
+        VCycle();
+
+        // Compute coarse grid approximation to the error
+
+        // Interpolate error to the fine grid
+
+        // Correct fine grid approximation
+
+        // Postsmoothing
+        SmoothNonlinear();
+
+    }
+
+}
+
+
+void SmoothNonlinear()
+{
+
+
+
+}
+
+
 }   // end anonymous namespace
 
 
@@ -111,6 +162,11 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     TIC("Solver Loop")
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
+
+        
+        // Perform multigrid cycle
+        MultigridCycle();
+
         linearSolver.UpdateState();
         linearSolver.Solve();
         UpdateFVEquations<isNewtonLinearisation>( fvCoeffs, ibData, faceFluxes, faceAdvectedVelocities, fields, mesh, bcData );

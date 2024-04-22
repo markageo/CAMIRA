@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.001
+    nu   = 0.01
 }
 
 Mesh {
@@ -143,6 +143,14 @@ Solver {
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
+    }
+
+    Multigrid {
+        maxCoarseLevels = 10
+        preSmoothingIterations = 5
+        postSmoothingIterations = 5
+        maxCoarseGridResidual = 1e-3
+        maxCoarseGridIterations = 100
     }
 
 }
