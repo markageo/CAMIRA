@@ -8,6 +8,7 @@
 #include "../Tools/FieldProbe.h"
 #include "../FiniteVolume/FiniteVolume.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
+#include "../Multigrid/Multigrid.h"
 
 #include "../IO/ArrayIO.h"
 #include "../IO/VTKWriter.h"
@@ -47,27 +48,19 @@ void UpdateFVEquations( FVCoefficients &fvCoeffs,
 
 
 
-void MultigridCycle()
+
+template< MomentumInterpolation MI, Linearisation LI >
+void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
+             intType level )
 {
 
-    // Perform a V Cycle
-    VCycle();
+    if ( mgLevels[level].isCoarsestGrid ) {
 
-}
-
-
-
-void VCycle()
-{
-
-    if ( /* onCoarsestGrid */ ) {
-
-        SmoothNonlinear();
+        // Solve coarsest grid
 
     } else {
 
         // Presmoothing 
-        SmoothNonlinear();
 
         // Restrict residual
 
@@ -83,17 +76,17 @@ void VCycle()
         // Correct fine grid approximation
 
         // Postsmoothing
-        SmoothNonlinear();
 
     }
 
 }
 
-
-void SmoothNonlinear()
+template< MomentumInterpolation MI, Linearisation LI >
+void MultigridCycle()
 {
 
-
+    // Perform a V Cycle
+    VCycle<MI, LI>();
 
 }
 
@@ -103,7 +96,7 @@ void SmoothNonlinear()
 
 
 template< MomentumInterpolation MI, Linearisation LI >
-void SweepSolve( FieldData<Tensor3D> &fields,
+void SweepSolve( FieldData<Tensor3D> &fields,               // TODO: Some of these arguments can be removed since they are now created with MG data. Maybe pass MG data into function?
                  const Mesh &mesh,
                  const BoundaryConditionData &bcData,
                  const InputData &inputData,
@@ -111,26 +104,12 @@ void SweepSolve( FieldData<Tensor3D> &fields,
 {
     using enum Axis::ENUMDATA;
     
-    constexpr bool isNewtonLinearisation = ( LI == Linearisation::Newton );
-
     // Extract from input data
-    const InputData::LinearSolverSettings linearSolverSettings = inputData.linearSolverSettings;
     const intType maxOuterIterations = inputData.schemes.maxOuterIterations;
     const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
 
-    // Immersed boundary
-    IBData ibData = CreateImmersedBoundaryData( inputData, mesh );
-    
-    // Finite Volume
-    MaskFields(fields, ibData.mask);
-    EnumVector<Axis, Tensor3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
-    EnumVector< Axis, EnumVector< Axis, Tensor3D> > faceAdvectedVelocities;
-    if constexpr ( isNewtonLinearisation ) 
-        faceAdvectedVelocities = InitialiseAdvectedFaceVelocities( mesh, fields.U, faceFluxes, bcData );
-
-    FieldData<Tensor3D> fieldsOld = fields;
-    FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData, inputData);
-    UpdateFVEquations<isNewtonLinearisation>( fvCoeffs, ibData, faceFluxes, faceAdvectedVelocities, fields, mesh, bcData );
+    // Multigrid level data
+    std::vector< GridLevelData<MI, LI> > mgLevels = CreateMGLevels( inputData );
 
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
@@ -149,9 +128,6 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 
-    // Instantiate linear solver, this holds references to the fields
-    LinearSolver<MI, LI> linearSolver(fields, fieldsOld, ibData.mask, fvCoeffs, linearSolverSettings);
-
 
     // Outer iterations
     bool writeFields = ( inputData.fieldWriteInterval > 0 );
@@ -162,14 +138,7 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     TIC("Solver Loop")
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
-
-        
-        // Perform multigrid cycle
         MultigridCycle();
-
-        linearSolver.UpdateState();
-        linearSolver.Solve();
-        UpdateFVEquations<isNewtonLinearisation>( fvCoeffs, ibData, faceFluxes, faceAdvectedVelocities, fields, mesh, bcData );
 
         residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs, ibData.mask); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
