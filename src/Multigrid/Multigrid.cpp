@@ -96,6 +96,7 @@ Tensor3D RestrictField( const Tensor3D &fineField,
                           coarseMesh.nCells(2) + 2*CFD::nGhost );
 
 
+    // Iterate coarse grid
     for ( intType kC = 0, kF = 0, kFIncrement = 1; kC != coarseMesh.nCells(Z); kC++, kF += kFIncrement ) {
 
         intType lambdaZ, kFp1;
@@ -145,7 +146,7 @@ Tensor3D RestrictField( const Tensor3D &fineField,
                           c110 = fineField( G(iFp1, jFp1, kF  ) ),
                           c111 = fineField( G(iFp1, jFp1, kFp1) );
 
-                // // Linear interpolation in z direction
+                // Linear interpolation in z direction
                 floatType c00 = ( 1-lambdaZ ) * c000  +  lambdaZ * c001,
                           c10 = ( 1-lambdaZ ) * c100  +  lambdaZ * c101,
                           c01 = ( 1-lambdaZ ) * c010  +  lambdaZ * c011,
@@ -176,7 +177,44 @@ Tensor3D ProlongateField( const Tensor3D &coarseField,
                           const Mesh &fineMesh )
 {
 
+    using enum Axis::ENUMDATA;
+    using FVT::G;
 
+    Tensor3D fineField( fineMesh.nCells(0) + 2*CFD::nGhost, 
+                        fineMesh.nCells(1) + 2*CFD::nGhost, 
+                        fineMesh.nCells(2) + 2*CFD::nGhost );
+
+    EnumVector<Axis, bool> firstCellNotAgglomerated;
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        firstCellNotAgglomerated[axis] = coarseMesh.cellLengths[Z](0) == fineMesh.cellLengths[Z](0);
+    } );
+
+    // Iterate fine grid
+    for ( intType kF = 0; kF != fineMesh.nCells(Z); kF++ ) {
+        
+        intType kC = firstCellNotAgglomerated[Z] ? ceil( static_cast<floatType>(kF) / 2.0f )
+                                                 : floor( kF / 2 );
+
+        for ( intType jF = 0; jF != fineMesh.nCells(Y); jF++ ) {
+            
+            intType jC = firstCellNotAgglomerated[Y] ? ceil( static_cast<floatType>(jF) / 2.0f )
+                                                     : floor( jF / 2 );
+
+
+            for ( intType iF = 0; iF != fineMesh.nCells(X); iF++ ) {
+
+                intType iC = firstCellNotAgglomerated[X] ? ceil( static_cast<floatType>(iF) / 2.0f )
+                                                 : floor( iF / 2 );
+
+                // Injection
+                fineField( G(iF, jF, kF) ) = coarseField( G(iC, jC, kC) );
+
+            }
+        }
+    }
+
+
+    return fineField;
 
 }
 
