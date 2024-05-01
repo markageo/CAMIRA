@@ -28,7 +28,7 @@ namespace
 {
 
 // Update face fluxes, immersed boundary data, and finite volume equation coefficients
-template< bool isNewtonLinearisation >
+template< Linearisation LI >
 void UpdateFVEquations( FVCoefficients &fvCoeffs,
                         IBData &ibData,
                         EnumVector<Axis, Tensor3D> &faceFluxes,
@@ -39,7 +39,7 @@ void UpdateFVEquations( FVCoefficients &fvCoeffs,
 {
     UpdateIBData( ibData, fields );
     UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
-    if constexpr ( isNewtonLinearisation ) {
+    if constexpr ( LI == Linearisation::Newton ) {
         UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
     }
     SetIBFaceFluxes( faceFluxes, ibData );
@@ -48,46 +48,113 @@ void UpdateFVEquations( FVCoefficients &fvCoeffs,
 
 
 
+template< MomentumInterpolation MI, Linearisation LI >
+void Smooth( GridLevelData<MI, LI> &gridLevelData,
+             const FieldData<floatType> &maxResiduals,
+             const intType maxIterations )
+{
+    FieldData<floatType> residualsScaleFactor;
+
+    for ( intType nIterations = 1; nIterations <= maxIterations; nIterations++ ) {
+
+        gridLevelData.linearSolver->UpdateState();
+        gridLevelData.linearSolver->Solve();
+        // SetGhostCells( gridLevelData.fields, gridLevelData.mesh, gridLevelData.bcData );
+        UpdateFVEquations<LI>( gridLevelData.fvCoeffs, 
+                               gridLevelData.ibData, 
+                               gridLevelData.faceFluxes, 
+                               gridLevelData.faceAdvectedVelocities, 
+                               gridLevelData.fields, 
+                               gridLevelData.mesh, 
+                               gridLevelData.bcData );
+
+        FieldData<floatType> residuals = StencilResiduals<MI, LI>( gridLevelData.fields,
+                                                                   gridLevelData.fvCoeffs,
+                                                                   gridLevelData.ibData.mask );
+        NormaliseResiduals( residuals, residualsScaleFactor, nIterations );
+
+        gridLevelData.fieldsOld = gridLevelData.fields;
+
+        if ( ResidualsDiverged(residuals) ) {
+            // Write field
+            std::cout << "*** SOLUTION DIVERGED ***" << "\n\n";
+            break;
+        }
+
+        if ( nIterations + 1 > maxIterations ) {
+            // Write field
+            std::cout << "*** REACHED ITERATION LIMIT ***" << "\n\n";
+            break;
+        }
+
+        if ( MetResidualTolerence(residuals, maxResiduals) ) {
+            // Write field
+            std::cout << "*** SOLUTION CONVERGED ***" << "\n\n";
+            break;
+        }
+
+    }
+
+}
+
+
 
 template< MomentumInterpolation MI, Linearisation LI >
 void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
-             intType level )
+             const intType level,
+             const InputData::MultigridSettings &mgSettings )
 {
 
-    if ( mgLevels[level].isCoarsestGrid ) {
+    if ( mgLevels[level].isCoarsestLevel ) {
 
         // Solve coarsest grid
+        Smooth<MI, LI>( mgLevels[level], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations );
 
     } else {
 
         // Presmoothing 
+        Smooth<MI, LI>( mgLevels[level-1], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations );
 
         // Restrict residual
+        ForAllFieldData( [&] (intType f) {
+            mgLevels[level-1].residuals[f] = RestrictField( mgLevels[level].residuals[f], 
+                                                            mgLevels[level].mesh, 
+                                                            mgLevels[level-1].mesh );
+        } );
 
         // Restrict solution
+        ForAllFieldData( [&] (intType f) {
+            mgLevels[level-1].fieldsRestricted[f] = RestrictField( mgLevels[level].fieldsRestricted[f], 
+                                                                   mgLevels[level].mesh, 
+                                                                   mgLevels[level-1].mesh );
+        } );
 
         // VCycle recursive call
-        VCycle();
+        VCycle<MI, LI>(mgLevels, level-1, mgSettings);
 
-        // Compute coarse grid approximation to the error
-
-        // Interpolate error to the fine grid
+        // Compute fine grid correction 
+        FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level-1].fields, 
+                                                                            mgLevels[level-1].fieldsRestricted, 
+                                                                            mgLevels[level-1].mesh, 
+                                                                            mgLevels[level].mesh );
 
         // Correct fine grid approximation
+        ForAllFieldData( [&] (intType f) {
+            mgLevels[level].fields[f] += fineGridCorrection[f];
+        } );
 
         // Postsmoothing
+        Smooth<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingResiduals, mgSettings.maxPostSmoothingIterations );
 
     }
 
 }
 
 template< MomentumInterpolation MI, Linearisation LI >
-void MultigridCycle()
+void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
+                     const InputData::MultigridSettings &mgSettings )
 {
-
-    // Perform a V Cycle
-    VCycle<MI, LI>();
-
+    VCycle<MI, LI>( mgLevels, 0, mgSettings );
 }
 
 
@@ -109,7 +176,7 @@ void SweepSolve( FieldData<Tensor3D> &fields,               // TODO: Some of the
     const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
 
     // Multigrid level data
-    std::vector< GridLevelData<MI, LI> > mgLevels = CreateMGLevels( inputData );
+    std::vector< GridLevelData<MI, LI> > mgLevels = CreateMGLevels<MI, LI>( inputData );
 
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
@@ -138,16 +205,16 @@ void SweepSolve( FieldData<Tensor3D> &fields,               // TODO: Some of the
     TIC("Solver Loop")
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
-        MultigridCycle();
+        MultigridCycle( mgLevels, inputData.multigridSettings );
 
-        residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs, ibData.mask); 
-        NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
+        // residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs, ibData.mask); 
+        // NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
 
-        massFluxResidual = BoundaryMassFluxResidual(faceFluxes, mesh);
+        // massFluxResidual = BoundaryMassFluxResidual(faceFluxes, mesh);
 
-        probeValues      = SetFieldProbeValues(fields, fieldProbes); 
+        // probeValues      = SetFieldProbeValues(fields, fieldProbes); 
         
-        fieldsOld = fields;
+        // fieldsOld = fields; 
 
         consoleLog.WriteResiduals( residualsOuter, massFluxResidual, nOuterIterations );
         residualsLogFile.WriteData( residualsOuter, massFluxResidual, nOuterIterations );

@@ -41,9 +41,16 @@ Tensor3D RestrictField( const Tensor3D &,
                         const Mesh &,
                         const Mesh & );
 
+
 Tensor3D ProlongateField( const Tensor3D &,
                           const Mesh &,
                           const Mesh & );
+
+
+FieldData<Tensor3D> ComputeFineGridCorrection( const FieldData<Tensor3D> &,
+                                               const FieldData<Tensor3D> &,
+                                               const Mesh &,
+                                               const Mesh & );
 
 }
 
