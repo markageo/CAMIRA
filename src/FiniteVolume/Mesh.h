@@ -11,6 +11,7 @@ namespace CFD
 // Recitlinear mesh structure and mesher (on construction)
 struct Mesh
 {
+    Mesh() {};
     Mesh(const iArray3 &);
     Mesh(const InputData &);
     iArray3 nCells;
@@ -38,7 +39,8 @@ Mesh CreateMesh( const InputData & );
 bool MeshCanBeCoarsened( const Mesh& );
 
 // Coarsens mesh by agglomorating cells
-Mesh CoarsenMesh( const Mesh& ); 
+Mesh CoarsenMesh( const Mesh&, 
+                  const FaceInterpolationSchemes ); 
 
 
 } // end namespace CFD

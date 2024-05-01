@@ -20,7 +20,7 @@ std::vector< GridLevelData<MI, LI> > CreateMGLevels( const InputData &inputData 
 
     const InputData::MultigridSettings &mgSettings = inputData.multigridSettings;
 
-    std::vector<GridLevelData> mgLevels;
+    std::vector<GridLevelData<MI, LI>> mgLevels;
 
     mgLevels.emplace_back();
 
@@ -32,15 +32,15 @@ std::vector< GridLevelData<MI, LI> > CreateMGLevels( const InputData &inputData 
         mgLevels.emplace_back();
         auto &mgl = mgLevels[level];
 
-        mgl.isFinestGrid = false;
-        mgl.isFinestGrid = false;
+        mgl.isFinestLevel = false;
+        mgl.isFinestLevel = false;
 
         // Mesh
         if ( level == 0 ) {
             mgl.mesh = CreateMesh( inputData );
-            mgl.isFinestGrid = true;
+            mgl.isFinestLevel = true;
         } else {
-            mgl.mesh = CoarsenMesh( mgLevels[level-1].mesh );
+            mgl.mesh = CoarsenMesh( mgLevels[level-1].mesh, inputData.schemes.faceInterpolationScheme );
         }
         
 
@@ -74,13 +74,18 @@ std::vector< GridLevelData<MI, LI> > CreateMGLevels( const InputData &inputData 
         mgl.fvCoeffs = InitialiseFVCoefficients(mgl.mesh, mgl.fields, mgl.faceAdvectedVelocities, mgl.faceFluxes, mgl.ibData, mgl.bcData, inputData);
 
         // Linear Solver
-        mgl.linearSolver = &LinearSolver<MI, LI> (mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);
+        mgl.linearSolver = std::make_unique< LinearSolver<MI, LI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);
 
     }
     mgLevels.back().isCoarsestLevel = true;
 
     return mgLevels;
 }
+template std::vector< GridLevelData<MomentumInterpolation::Implicit    , Linearisation::Picard> > CreateMGLevels( const InputData & );
+template std::vector< GridLevelData<MomentumInterpolation::SemiExplicit, Linearisation::Picard> > CreateMGLevels( const InputData & );
+template std::vector< GridLevelData<MomentumInterpolation::Implicit    , Linearisation::Newton> > CreateMGLevels( const InputData & );
+template std::vector< GridLevelData<MomentumInterpolation::SemiExplicit, Linearisation::Newton> > CreateMGLevels( const InputData & );
+
 
 
 
@@ -99,7 +104,8 @@ Tensor3D RestrictField( const Tensor3D &fineField,
     // Iterate coarse grid
     for ( intType kC = 0, kF = 0, kFIncrement = 1; kC != coarseMesh.nCells(Z); kC++, kF += kFIncrement ) {
 
-        intType lambdaZ, kFp1;
+        intType kFp1;
+        floatType lambdaZ;
         if ( coarseMesh.cellLengths[Z](kC) == fineMesh.cellLengths[Z](kF) ) { // cell not agglomerated
             kFp1 = kF;
             kFIncrement = 1;
@@ -112,7 +118,8 @@ Tensor3D RestrictField( const Tensor3D &fineField,
 
         for ( intType jC = 0, jF = 0, jFIncrement = 1; jC != coarseMesh.nCells(Y); jC++, jF += jFIncrement ) {
 
-            intType lambdaY, jFp1;
+            intType jFp1;
+            floatType lambdaY;
             if ( coarseMesh.cellLengths[Y](jC) == fineMesh.cellLengths[Y](jF) ) {
                 jFp1 = jF;
                 jFIncrement = 1;
@@ -125,7 +132,8 @@ Tensor3D RestrictField( const Tensor3D &fineField,
 
             for ( intType iC = 0, iF = 0, iFIncrement = 1; iC != coarseMesh.nCells(X); iC++, iF += iFIncrement ) {
 
-                intType lambdaX, iFp1;
+                intType iFp1;
+                floatType lambdaX;
                 if ( coarseMesh.cellLengths[X](iC) == fineMesh.cellLengths[X](iF) ) { 
                     iFp1 = iF;
                     iFIncrement = 1;
@@ -192,19 +200,19 @@ Tensor3D ProlongateField( const Tensor3D &coarseField,
     // Iterate fine grid
     for ( intType kF = 0; kF != fineMesh.nCells(Z); kF++ ) {
         
-        intType kC = firstCellNotAgglomerated[Z] ? ceil( static_cast<floatType>(kF) / 2.0f )
-                                                 : floor( kF / 2 );
+        intType kC = firstCellNotAgglomerated[Z] ? static_cast<intType>( ceil( static_cast<floatType>(kF) / 2.0f ) )
+                                                 : static_cast<intType>( floor( kF / 2 ) );
 
         for ( intType jF = 0; jF != fineMesh.nCells(Y); jF++ ) {
             
-            intType jC = firstCellNotAgglomerated[Y] ? ceil( static_cast<floatType>(jF) / 2.0f )
-                                                     : floor( jF / 2 );
+            intType jC = firstCellNotAgglomerated[Y] ? static_cast<intType>( ceil( static_cast<floatType>(jF) / 2.0f ) )
+                                                     : static_cast<intType>( floor( jF / 2 ) );
 
 
             for ( intType iF = 0; iF != fineMesh.nCells(X); iF++ ) {
 
-                intType iC = firstCellNotAgglomerated[X] ? ceil( static_cast<floatType>(iF) / 2.0f )
-                                                 : floor( iF / 2 );
+                intType iC = firstCellNotAgglomerated[X] ? static_cast<intType>( ceil( static_cast<floatType>(iF) / 2.0f ) )
+                                                         : static_cast<intType>( floor( iF / 2 ) );
 
                 // Injection
                 fineField( G(iF, jF, kF) ) = coarseField( G(iC, jC, kC) );
@@ -237,6 +245,17 @@ FieldData<Tensor3D> ComputeFineGridCorrection( const FieldData<Tensor3D> &coarse
     } );
 
     return fineGridCorrection;
+
+}
+
+
+
+void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs, 
+                                    const FieldData<Tensor3D> &fieldsRestricted,
+                                    const FieldData<Tensor3D> &residuals )
+{
+
+
 
 }
 

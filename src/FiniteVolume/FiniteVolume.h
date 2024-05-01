@@ -14,6 +14,7 @@ namespace CFD
 
 
 struct MomentumEquation {
+    MomentumEquation() {};
     MomentumEquation(const Axis::ENUMDATA, const iArray3 &, Linearisation);
     EnumVector< Axis, EnumVector< TransportCoefficients, Tensor3D > > AU;     // Velocity coefficients (LHS)
     EnumVector<TransportCoefficients, Tensor1D> AP;                           // Pressure coefficients (LHS)
@@ -30,6 +31,7 @@ struct MomentumEquation {
 
 
 struct ContinuityEquation {
+    ContinuityEquation() {};
     ContinuityEquation(const iArray3 &, MomentumInterpolation);
     EnumVector< Axis, EnumVector< TransportCoefficients, Tensor1D > > AU;    // Velocity coefficients (LHS)
     EnumVector<TransportCoefficients, Tensor3D> AP;                          // Pressure coefficients (LHS)
@@ -58,6 +60,7 @@ struct BoundaryConditionData {
 // Structure to store finite volume discrete equation coefficients
 struct FVCoefficients
 {
+    FVCoefficients() {};
     FVCoefficients(const iArray3 &, Linearisation, MomentumInterpolation);
     
     EnumVector<Axis, MomentumEquation > Mom;
