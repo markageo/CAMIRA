@@ -289,6 +289,14 @@ struct FieldData {
 
     static constexpr intType nData = Axis::count + 1;   // This doesn't depend on datatype 
 
+    // For assigning all data to the same value
+    FieldData &operator=( dataType &data )
+    {
+        this->U = data;
+        this->P = data;
+        return *this;
+    }
+
     dataType &operator[]( const intType idx )
     { return *m_dataPointers[ static_cast<size_t>( idx ) ]; }
 

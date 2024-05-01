@@ -645,9 +645,7 @@ namespace
         inputData.linearSolverSettings.maxIterations = linearSolverTree.get<intType>( "maxIterations" );
 
         // Max residuals
-        floatType maxResiduals = linearSolverTree.get<floatType>( "maxResiduals" );
-        inputData.linearSolverSettings.maxResiduals.U = maxResiduals;
-        inputData.linearSolverSettings.maxResiduals.P = maxResiduals;
+        inputData.linearSolverSettings.maxResiduals = linearSolverTree.get<floatType>( "maxResiduals" );
 
         // Momentum relaxation
         std::vector<floatType> momentumRelaxation = linearSolverTree.get< std::vector<floatType> >( "momentumRelaxation" );
@@ -670,6 +668,29 @@ namespace
 
 
 
+    void ReadMultigridSettings( InputData &inputData, 
+                                const pt::ptree & solverTree) 
+    {
+        const pt::ptree &multigridTree = solverTree.get_child( "Multigrid" );
+        std::string valueString;
+
+        // Max coarse levels
+        inputData.multigridSettings.maxCoarseLevels = multigridTree.get<intType>( "maxCoarseLevels" );
+
+        // Max iterations
+        inputData.multigridSettings.maxPreSmoothingIterations  = multigridTree.get<intType>( "maxPreSmoothingIterations" );
+        inputData.multigridSettings.maxPostSmoothingIterations = multigridTree.get<intType>( "maxPostSmoothingIterations" );
+        inputData.multigridSettings.maxCoarseGridIterations    = multigridTree.get<intType>( "maxCoarseGridIterations" );
+
+        // Max residuals
+        inputData.multigridSettings.maxPreSmoothingResiduals  = multigridTree.get<floatType>( "maxPreSmoothingResiduals" );
+        inputData.multigridSettings.maxPostSmoothingResiduals = multigridTree.get<floatType>( "maxPostSmoothingResiduals" );
+        inputData.multigridSettings.maxCoarseGridResiduals    = multigridTree.get<floatType>( "maxCoarseGridResiduals" );
+
+    }
+
+
+
     void ReadSolver(InputData &inputData, 
                     const pt::ptree &tree)
     {
@@ -678,8 +699,11 @@ namespace
         // Read discretisation schemes
         ReadSchemes(inputData, solverTree);
 
-        // Plane sweep settings
+        // Read linear solver (plane sweeping) settings
         ReadLinearSolverSettings(inputData, solverTree);
+
+        // Read multigrid settings
+        ReadMultigridSettings(inputData, solverTree);
 
     }
 
