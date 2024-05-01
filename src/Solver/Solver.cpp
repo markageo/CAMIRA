@@ -59,7 +59,7 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
 
         gridLevelData.linearSolver->UpdateState();
         gridLevelData.linearSolver->Solve();
-        // SetGhostCells( gridLevelData.fields, gridLevelData.mesh, gridLevelData.bcData );
+        // SetGhostCells( gridLevelData.fields, gridLevelData.mesh, gridLevelData.bcData ); // Deferred correction needs this
         UpdateFVEquations<LI>( gridLevelData.fvCoeffs, 
                                gridLevelData.ibData, 
                                gridLevelData.faceFluxes, 
@@ -68,28 +68,26 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
                                gridLevelData.mesh, 
                                gridLevelData.bcData );
 
+        if ( !gridLevelData.isFinestLevel ) {
+            TransformToCoarseGridEquations( gridLevelData.fvCoeffs, 
+                                            gridLevelData.fieldsRestricted,
+                                            gridLevelData.residuals );
+        }
+
         FieldData<floatType> residuals = StencilResiduals<MI, LI>( gridLevelData.fields,
                                                                    gridLevelData.fvCoeffs,
                                                                    gridLevelData.ibData.mask );
         NormaliseResiduals( residuals, residualsScaleFactor, nIterations );
 
-        gridLevelData.fieldsOld = gridLevelData.fields;
-
         if ( ResidualsDiverged(residuals) ) {
-            // Write field
-            std::cout << "*** SOLUTION DIVERGED ***" << "\n\n";
             break;
         }
 
         if ( nIterations + 1 > maxIterations ) {
-            // Write field
-            std::cout << "*** REACHED ITERATION LIMIT ***" << "\n\n";
             break;
         }
 
         if ( MetResidualTolerence(residuals, maxResiduals) ) {
-            // Write field
-            std::cout << "*** SOLUTION CONVERGED ***" << "\n\n";
             break;
         }
 
@@ -207,14 +205,20 @@ void SweepSolve( FieldData<Tensor3D> &fields,               // TODO: Some of the
     {
         MultigridCycle( mgLevels, inputData.multigridSettings );
 
-        // residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs, ibData.mask); 
-        // NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
+        residualsOuter   = StencilResiduals<MI, LI>( mgLevels[0].fields, 
+                                                     mgLevels[0].fvCoeffs, mgLevels[0].
+                                                     ibData.mask); 
 
-        // massFluxResidual = BoundaryMassFluxResidual(faceFluxes, mesh);
+        NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
 
-        // probeValues      = SetFieldProbeValues(fields, fieldProbes); 
+        massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
+                                                     mgLevels[0].mesh);
+
+        probeValues      = SetFieldProbeValues( mgLevels[0].fields, fieldProbes); 
         
-        // fieldsOld = fields; 
+        for ( auto &mgLevel : mgLevels ) {
+            mgLevel.fieldsOld = mgLevel.fields;
+        }
 
         consoleLog.WriteResiduals( residualsOuter, massFluxResidual, nOuterIterations );
         residualsLogFile.WriteData( residualsOuter, massFluxResidual, nOuterIterations );

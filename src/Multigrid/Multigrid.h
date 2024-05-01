@@ -8,6 +8,8 @@
 #include "../IO/InputProcessing.h"
 #include "../Solver/LinearSolver.h"
 
+#include<memory>
+
 
 namespace CFD
 {
@@ -27,7 +29,8 @@ struct GridLevelData
     EnumVector< Axis, EnumVector< Axis, Tensor3D> > faceAdvectedVelocities;
     IBData ibData;
     FVCoefficients fvCoeffs;
-    LinearSolver<MI, LI> *linearSolver;
+    std::unique_ptr< LinearSolver<MI, LI> > linearSolver;
+
 };
 
 
@@ -51,6 +54,11 @@ FieldData<Tensor3D> ComputeFineGridCorrection( const FieldData<Tensor3D> &,
                                                const FieldData<Tensor3D> &,
                                                const Mesh &,
                                                const Mesh & );
+
+
+void TransformToCoarseGridEquations( FVCoefficients &,
+                                     const FieldData<Tensor3D> &,
+                                     const FieldData<Tensor3D> & );
 
 }
 
