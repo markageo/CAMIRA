@@ -239,7 +239,9 @@ inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fie
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    FieldData<Tensor3D> residuals( Tensor3D( fvCoeffs.nCells[X], fvCoeffs.nCells[Y], fvCoeffs.nCells[Z] ) );
+    FieldData<Tensor3D> residuals( Tensor3D( fvCoeffs.nCells[X] + 2*nGhost, 
+                                             fvCoeffs.nCells[Y] + 2*nGhost, 
+                                             fvCoeffs.nCells[Z] + 2*nGhost ) );
     ForAllFieldData( [&] (intType f) {
         residuals[f].setZero();
     } );
@@ -261,24 +263,24 @@ inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fie
                                    + fvCoeffs.Mom[X].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[X].AU[Z][b](i, j, k) * fields.U[Z]( ig  , jg  , kg-1);
                 }
-                residuals.U[X](i, j, k) += mask(i, j, k)
-                                        * abs( 
-                                                      fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) 
-                                                    + fvCoeffs.Mom[X].AU[X][n](i, j, k) * fields.U[X]( ig  , jg+1, kg  ) 
-                                                    + fvCoeffs.Mom[X].AU[X][e](i, j, k) * fields.U[X]( ig+1, jg  , kg  ) 
-                                                    + fvCoeffs.Mom[X].AU[X][s](i, j, k) * fields.U[X]( ig  , jg-1, kg  ) 
-                                                    + fvCoeffs.Mom[X].AU[X][w](i, j, k) * fields.U[X]( ig-1, jg  , kg  ) 
-                                                    + fvCoeffs.Mom[X].AU[X][t](i, j, k) * fields.U[X]( ig  , jg  , kg+1) 
-                                                    + fvCoeffs.Mom[X].AU[X][b](i, j, k) * fields.U[X]( ig  , jg  , kg-1) 
+                residuals.U[X]( G( i, j, k) ) = mask(i, j, k)
+                                              * (  fvCoeffs.Mom[X].F(i, j, k)
 
-                                                    + fvCoeffs.Mom[X].AP[e](i) * fields.P( ig+1, jg  , kg  )
-                                                    + fvCoeffs.Mom[X].AP[p](i) * fields.P( ig  , jg  , kg  )
-                                                    + fvCoeffs.Mom[X].AP[w](i) * fields.P( ig-1, jg  , kg  )
+                                                 - fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) 
+                                                 - fvCoeffs.Mom[X].AU[X][n](i, j, k) * fields.U[X]( ig  , jg+1, kg  ) 
+                                                 - fvCoeffs.Mom[X].AU[X][e](i, j, k) * fields.U[X]( ig+1, jg  , kg  ) 
+                                                 - fvCoeffs.Mom[X].AU[X][s](i, j, k) * fields.U[X]( ig  , jg-1, kg  ) 
+                                                 - fvCoeffs.Mom[X].AU[X][w](i, j, k) * fields.U[X]( ig-1, jg  , kg  ) 
+                                                 - fvCoeffs.Mom[X].AU[X][t](i, j, k) * fields.U[X]( ig  , jg  , kg+1) 
+                                                 - fvCoeffs.Mom[X].AU[X][b](i, j, k) * fields.U[X]( ig  , jg  , kg-1) 
 
-                                                    + newtonStencilX
+                                                 - fvCoeffs.Mom[X].AP[e](i) * fields.P( ig+1, jg  , kg  )
+                                                 - fvCoeffs.Mom[X].AP[p](i) * fields.P( ig  , jg  , kg  )
+                                                 - fvCoeffs.Mom[X].AP[w](i) * fields.P( ig-1, jg  , kg  )
 
-                                                    + fvCoeffs.Mom[X].B(i, j, k) 
-                                                    - fvCoeffs.Mom[X].F(i, j, k)  );
+                                                 - newtonStencilX
+
+                                                 - fvCoeffs.Mom[X].B(i, j, k) );
 
 
 
@@ -293,24 +295,24 @@ inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fie
                                    + fvCoeffs.Mom[Y].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[Y].AU[Z][b](i, j, k) * fields.U[Z]( ig  , jg  , kg-1);      
                 }
-                residuals.U[Y](i, j, k) += mask(i, j, k) 
-                                        * abs( 
-                                                      fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) 
-                                                    + fvCoeffs.Mom[Y].AU[Y][n](i, j, k) * fields.U[Y]( ig  , jg+1, kg  ) 
-                                                    + fvCoeffs.Mom[Y].AU[Y][e](i, j, k) * fields.U[Y]( ig+1, jg  , kg  ) 
-                                                    + fvCoeffs.Mom[Y].AU[Y][s](i, j, k) * fields.U[Y]( ig  , jg-1, kg  ) 
-                                                    + fvCoeffs.Mom[Y].AU[Y][w](i, j, k) * fields.U[Y]( ig-1, jg  , kg  ) 
-                                                    + fvCoeffs.Mom[Y].AU[Y][t](i, j, k) * fields.U[Y]( ig  , jg  , kg+1) 
-                                                    + fvCoeffs.Mom[Y].AU[Y][b](i, j, k) * fields.U[Y]( ig  , jg  , kg-1) 
+                residuals.U[Y]( G(i, j, k) ) += mask(i, j, k) 
+                                              * (   fvCoeffs.Mom[Y].F(i, j, k)
 
-                                                    + fvCoeffs.Mom[Y].AP[n](j) * fields.P( ig  , jg+1, kg  )
-                                                    + fvCoeffs.Mom[Y].AP[p](j) * fields.P( ig  , jg  , kg  )
-                                                    + fvCoeffs.Mom[Y].AP[s](j) * fields.P( ig  , jg-1, kg  )
+                                                  - fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) 
+                                                  - fvCoeffs.Mom[Y].AU[Y][n](i, j, k) * fields.U[Y]( ig  , jg+1, kg  ) 
+                                                  - fvCoeffs.Mom[Y].AU[Y][e](i, j, k) * fields.U[Y]( ig+1, jg  , kg  ) 
+                                                  - fvCoeffs.Mom[Y].AU[Y][s](i, j, k) * fields.U[Y]( ig  , jg-1, kg  ) 
+                                                  - fvCoeffs.Mom[Y].AU[Y][w](i, j, k) * fields.U[Y]( ig-1, jg  , kg  ) 
+                                                  - fvCoeffs.Mom[Y].AU[Y][t](i, j, k) * fields.U[Y]( ig  , jg  , kg+1) 
+                                                  - fvCoeffs.Mom[Y].AU[Y][b](i, j, k) * fields.U[Y]( ig  , jg  , kg-1) 
 
-                                                    + newtonStencilY
+                                                  - fvCoeffs.Mom[Y].AP[n](j) * fields.P( ig  , jg+1, kg  )
+                                                  - fvCoeffs.Mom[Y].AP[p](j) * fields.P( ig  , jg  , kg  )
+                                                  - fvCoeffs.Mom[Y].AP[s](j) * fields.P( ig  , jg-1, kg  )
 
-                                                    + fvCoeffs.Mom[Y].B(i, j, k) 
-                                                    - fvCoeffs.Mom[Y].F(i, j, k)  );
+                                                  - newtonStencilY
+
+                                                  - fvCoeffs.Mom[Y].B(i, j, k) );
 
 
                 // W momentm
@@ -324,24 +326,24 @@ inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fie
                                    + fvCoeffs.Mom[Z].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[Z].AU[Y][s](i, j, k) * fields.U[Y]( ig  , jg-1, kg  );    
                 }
-                residuals.U[Z](i, j, k) += mask(i, j, k)
-                                        * abs( 
-                                                      fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) 
-                                                    + fvCoeffs.Mom[Z].AU[Z][n](i, j, k) * fields.U[Z]( ig  , jg+1, kg  ) 
-                                                    + fvCoeffs.Mom[Z].AU[Z][e](i, j, k) * fields.U[Z]( ig+1, jg  , kg  ) 
-                                                    + fvCoeffs.Mom[Z].AU[Z][s](i, j, k) * fields.U[Z]( ig  , jg-1, kg  ) 
-                                                    + fvCoeffs.Mom[Z].AU[Z][w](i, j, k) * fields.U[Z]( ig-1, jg  , kg  ) 
-                                                    + fvCoeffs.Mom[Z].AU[Z][t](i, j, k) * fields.U[Z]( ig  , jg  , kg+1) 
-                                                    + fvCoeffs.Mom[Z].AU[Z][b](i, j, k) * fields.U[Z]( ig  , jg  , kg-1) 
+                residuals.U[Z]( G(i, j, k) ) += mask(i, j, k)
+                                              * (   fvCoeffs.Mom[Z].F(i, j, k) 
 
-                                                    + fvCoeffs.Mom[Z].AP[t](k) * fields.P( ig  , jg  , kg+1)
-                                                    + fvCoeffs.Mom[Z].AP[p](k) * fields.P( ig  , jg  , kg  )
-                                                    + fvCoeffs.Mom[Z].AP[b](k) * fields.P( ig  , jg  , kg-1)
+                                                  - fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) 
+                                                  - fvCoeffs.Mom[Z].AU[Z][n](i, j, k) * fields.U[Z]( ig  , jg+1, kg  ) 
+                                                  - fvCoeffs.Mom[Z].AU[Z][e](i, j, k) * fields.U[Z]( ig+1, jg  , kg  ) 
+                                                  - fvCoeffs.Mom[Z].AU[Z][s](i, j, k) * fields.U[Z]( ig  , jg-1, kg  ) 
+                                                  - fvCoeffs.Mom[Z].AU[Z][w](i, j, k) * fields.U[Z]( ig-1, jg  , kg  ) 
+                                                  - fvCoeffs.Mom[Z].AU[Z][t](i, j, k) * fields.U[Z]( ig  , jg  , kg+1) 
+                                                  - fvCoeffs.Mom[Z].AU[Z][b](i, j, k) * fields.U[Z]( ig  , jg  , kg-1) 
 
-                                                    + newtonStencilZ
+                                                  - fvCoeffs.Mom[Z].AP[t](k) * fields.P( ig  , jg  , kg+1)
+                                                  - fvCoeffs.Mom[Z].AP[p](k) * fields.P( ig  , jg  , kg  )
+                                                  - fvCoeffs.Mom[Z].AP[b](k) * fields.P( ig  , jg  , kg-1)
 
-                                                    + fvCoeffs.Mom[Z].B(i, j, k) 
-                                                    - fvCoeffs.Mom[Z].F(i, j, k)  );
+                                                  - newtonStencilZ
+
+                                                  - fvCoeffs.Mom[Z].B(i, j, k) );
 
 
                 // Continuity 
@@ -354,32 +356,32 @@ inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fie
                                         + fvCoeffs.Cont.AP[tt](i, j, k) * fields.P( ig  , jg  , kg+2) 
                                         + fvCoeffs.Cont.AP[bb](i, j, k) * fields.P( ig  , jg  , kg-2);
                 }
-                residuals.P(i, j, k) += mask(i, j, k) 
-                                     * abs( 
-                                           fvCoeffs.Cont.AU[X][e](i) * fields.U[X]( ig+1, jg  , kg  )
-                                         + fvCoeffs.Cont.AU[X][p](i) * fields.U[X]( ig  , jg  , kg  )
-                                         + fvCoeffs.Cont.AU[X][w](i) * fields.U[X]( ig-1, jg  , kg  )
+                residuals.P( G(i, j, k) ) += mask(i, j, k) 
+                                          * (   fvCoeffs.Cont.F(i, j, k)
 
-                                         + fvCoeffs.Cont.AU[Y][n](j) * fields.U[Y]( ig  , jg+1, kg  )
-                                         + fvCoeffs.Cont.AU[Y][p](j) * fields.U[Y]( ig  , jg  , kg  )
-                                         + fvCoeffs.Cont.AU[Y][s](j) * fields.U[Y]( ig  , jg-1, kg  )
+                                              - fvCoeffs.Cont.AU[X][e](i) * fields.U[X]( ig+1, jg  , kg  )
+                                              - fvCoeffs.Cont.AU[X][p](i) * fields.U[X]( ig  , jg  , kg  )
+                                              - fvCoeffs.Cont.AU[X][w](i) * fields.U[X]( ig-1, jg  , kg  )
 
-                                         + fvCoeffs.Cont.AU[Z][t](k) * fields.U[Z]( ig  , jg  , kg+1)
-                                         + fvCoeffs.Cont.AU[Z][p](k) * fields.U[Z]( ig  , jg  , kg  )
-                                         + fvCoeffs.Cont.AU[Z][b](k) * fields.U[Z]( ig  , jg  , kg-1)
+                                              - fvCoeffs.Cont.AU[Y][n](j) * fields.U[Y]( ig  , jg+1, kg  )
+                                              - fvCoeffs.Cont.AU[Y][p](j) * fields.U[Y]( ig  , jg  , kg  )
+                                              - fvCoeffs.Cont.AU[Y][s](j) * fields.U[Y]( ig  , jg-1, kg  )
 
-                                         + fvCoeffs.Cont.AP[p](i, j, k) * fields.P( ig  , jg  , kg  )
-                                         + fvCoeffs.Cont.AP[n](i, j, k) * fields.P( ig  , jg+1, kg  ) 
-                                         + fvCoeffs.Cont.AP[e](i, j, k) * fields.P( ig+1, jg  , kg  ) 
-                                         + fvCoeffs.Cont.AP[s](i, j, k) * fields.P( ig  , jg-1, kg  ) 
-                                         + fvCoeffs.Cont.AP[w](i, j, k) * fields.P( ig-1, jg  , kg  ) 
-                                         + fvCoeffs.Cont.AP[t](i, j, k) * fields.P( ig  , jg  , kg+1) 
-                                         + fvCoeffs.Cont.AP[b](i, j, k) * fields.P( ig  , jg  , kg-1)
+                                              - fvCoeffs.Cont.AU[Z][t](k) * fields.U[Z]( ig  , jg  , kg+1)
+                                              - fvCoeffs.Cont.AU[Z][p](k) * fields.U[Z]( ig  , jg  , kg  )
+                                              - fvCoeffs.Cont.AU[Z][b](k) * fields.U[Z]( ig  , jg  , kg-1)
 
-                                         + pressureWideStencil
+                                              - fvCoeffs.Cont.AP[p](i, j, k) * fields.P( ig  , jg  , kg  )
+                                              - fvCoeffs.Cont.AP[n](i, j, k) * fields.P( ig  , jg+1, kg  ) 
+                                              - fvCoeffs.Cont.AP[e](i, j, k) * fields.P( ig+1, jg  , kg  ) 
+                                              - fvCoeffs.Cont.AP[s](i, j, k) * fields.P( ig  , jg-1, kg  ) 
+                                              - fvCoeffs.Cont.AP[w](i, j, k) * fields.P( ig-1, jg  , kg  ) 
+                                              - fvCoeffs.Cont.AP[t](i, j, k) * fields.P( ig  , jg  , kg+1) 
+                                              - fvCoeffs.Cont.AP[b](i, j, k) * fields.P( ig  , jg  , kg-1)
+
+                                              - pressureWideStencil
                                         
-                                         + fvCoeffs.Cont.B(i, j, k)
-                                         - fvCoeffs.Cont.F(i, j, k) );
+                                              - fvCoeffs.Cont.B(i, j, k) );
 
             }
         }
