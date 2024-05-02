@@ -43,18 +43,6 @@ int main(int argc, char const *argv[])
                                               Solve
     \*-------------------------------------------------------------------------------------*/
 
-    TIC("Meshing");
-    CFD::Mesh mesh = CFD::CreateMesh( inputData );
-    TOC();
-
-    TIC("Field Allocation");
-    CFD::FieldData<CFD::Tensor3D> fields = CFD::InitialiseFields(mesh, inputData);
-    TOC();
-
-    TIC("Boundary Condition Processing")
-    CFD::BoundaryConditionData bcData = SetBoundaryConditionData(inputData, mesh);
-    TOC()
-
     std::cout << "Press enter to begin solve.";
     std::cin.ignore();
     std::cout << std::endl;
@@ -68,11 +56,11 @@ int main(int argc, char const *argv[])
         case ( MI::Implicit ):
            switch ( inputData.schemes.linearisation ) {
                 case ( LI::Picard ):
-                    CFD::SweepSolve< MI::Implicit, LI::Picard >(fields, mesh, bcData, inputData, axisTransformation);
+                    CFD::SweepSolve< MI::Implicit, LI::Picard >(inputData, axisTransformation);
                     break;
 
                 case ( LI::Newton ):
-                    CFD::SweepSolve< MI::Implicit, LI::Newton >(fields, mesh, bcData, inputData, axisTransformation);
+                    CFD::SweepSolve< MI::Implicit, LI::Newton >(inputData, axisTransformation);
                     break;
             }
             break;
@@ -80,11 +68,11 @@ int main(int argc, char const *argv[])
         case ( MI::SemiExplicit ):
             switch ( inputData.schemes.linearisation ) {
                 case ( LI::Picard ):
-                    CFD::SweepSolve< MI::SemiExplicit, LI::Picard >(fields, mesh, bcData, inputData, axisTransformation);
+                    CFD::SweepSolve< MI::SemiExplicit, LI::Picard >(inputData, axisTransformation);
                     break;
 
                 case ( LI::Newton ):
-                    CFD::SweepSolve< MI::SemiExplicit, LI::Newton >(fields, mesh, bcData, inputData, axisTransformation);
+                    CFD::SweepSolve< MI::SemiExplicit, LI::Newton >(inputData, axisTransformation);
                     break;
             }
             break;

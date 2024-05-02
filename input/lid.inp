@@ -146,7 +146,7 @@ Solver {
     }
 
     Multigrid {
-        maxCoarseLevels = 10
+        maxCoarseLevels = 1
 
         maxPreSmoothingIterations = 5
         maxPreSmoothingResiduals = 1e-1
