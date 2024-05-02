@@ -69,9 +69,10 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
                                gridLevelData.bcData );
 
         if ( !gridLevelData.isFinestLevel ) {
-            TransformToCoarseGridEquations( gridLevelData.fvCoeffs, 
-                                            gridLevelData.fieldsRestricted,
-                                            gridLevelData.residuals );
+            TransformToCoarseGridEquations<MI, LI>( gridLevelData.fvCoeffs, 
+                                                    gridLevelData.fieldsRestricted,
+                                                    gridLevelData.residuals,
+                                                    gridLevelData.ibData.mask );
         }
 
         FieldData<floatType> residuals = StencilResiduals<MI, LI>( gridLevelData.fields,

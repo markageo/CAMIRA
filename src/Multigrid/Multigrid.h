@@ -56,9 +56,11 @@ FieldData<Tensor3D> ComputeFineGridCorrection( const FieldData<Tensor3D> &,
                                                const Mesh & );
 
 
+template< MomentumInterpolation MI, Linearisation LI >
 void TransformToCoarseGridEquations( FVCoefficients &,
                                      const FieldData<Tensor3D> &,
-                                     const FieldData<Tensor3D> & );
+                                     const FieldData<Tensor3D> &,
+                                     const Tensor3D & );
 
 }
 
