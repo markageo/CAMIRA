@@ -112,29 +112,29 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
     } else {
 
         // Presmoothing 
-        Smooth<MI, LI>( mgLevels[level-1], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations );
+        Smooth<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations );
 
         // Restrict residual
         ForAllFieldData( [&] (intType f) {
-            mgLevels[level-1].residuals[f] = RestrictField( mgLevels[level].residuals[f], 
+            mgLevels[level+1].residuals[f] = RestrictField( mgLevels[level].residuals[f], 
                                                             mgLevels[level].mesh, 
-                                                            mgLevels[level-1].mesh );
+                                                            mgLevels[level+1].mesh );
         } );
 
         // Restrict solution
         ForAllFieldData( [&] (intType f) {
-            mgLevels[level-1].fieldsRestricted[f] = RestrictField( mgLevels[level].fieldsRestricted[f], 
+            mgLevels[level+1].fieldsRestricted[f] = RestrictField( mgLevels[level].fieldsRestricted[f], 
                                                                    mgLevels[level].mesh, 
-                                                                   mgLevels[level-1].mesh );
+                                                                   mgLevels[level+1].mesh );
         } );
 
         // VCycle recursive call
-        VCycle<MI, LI>(mgLevels, level-1, mgSettings);
+        VCycle<MI, LI>(mgLevels, level+1, mgSettings);
 
         // Compute fine grid correction 
-        FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level-1].fields, 
-                                                                            mgLevels[level-1].fieldsRestricted, 
-                                                                            mgLevels[level-1].mesh, 
+        FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
+                                                                            mgLevels[level+1].fieldsRestricted, 
+                                                                            mgLevels[level+1].mesh, 
                                                                             mgLevels[level].mesh );
 
         // Correct fine grid approximation
