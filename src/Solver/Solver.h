@@ -10,7 +10,7 @@ namespace CFD
 {
 
     template< MomentumInterpolation, Linearisation >
-    void SweepSolve(FieldData<Tensor3D> &, const Mesh &, const BoundaryConditionData &, const InputData &, const AxisTransformationMap &);
+    void SweepSolve( const InputData &, const AxisTransformationMap &);
 
 }   // end namespace CFD    
 

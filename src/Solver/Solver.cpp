@@ -162,11 +162,8 @@ void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
 
 template< MomentumInterpolation MI, Linearisation LI >
-void SweepSolve( FieldData<Tensor3D> &fields,               // TODO: Some of these arguments can be removed since they are now created with MG data. Maybe pass MG data into function?
-                 const Mesh &mesh,
-                 const BoundaryConditionData &bcData,
-                 const InputData &inputData,
-                 const AxisTransformationMap &axisTransformation)
+void SweepSolve( const InputData &inputData,
+                 const AxisTransformationMap &axisTransformation )
 {
     using enum Axis::ENUMDATA;
     
@@ -176,6 +173,11 @@ void SweepSolve( FieldData<Tensor3D> &fields,               // TODO: Some of the
 
     // Multigrid level data
     std::vector< GridLevelData<MI, LI> > mgLevels = CreateMGLevels<MI, LI>( inputData );
+
+    // References to finest grid
+    auto& fields = mgLevels[0].fields;
+    auto& mesh   = mgLevels[0].mesh;
+    auto& bcData = mgLevels[0].bcData;
 
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
@@ -255,10 +257,10 @@ void SweepSolve( FieldData<Tensor3D> &fields,               // TODO: Some of the
 
 
 }
-template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Picard>( FieldData<Tensor3D> &, const Mesh &, const BoundaryConditionData &, const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Picard>( FieldData<Tensor3D> &, const Mesh &, const BoundaryConditionData &, const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Newton>( FieldData<Tensor3D> &, const Mesh &, const BoundaryConditionData &, const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Newton>( FieldData<Tensor3D> &, const Mesh &, const BoundaryConditionData &, const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Picard>( const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Picard>( const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Newton>( const InputData &, const AxisTransformationMap &);
+template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Newton>( const InputData &, const AxisTransformationMap &);
 
 
 } // end namespace CFD
