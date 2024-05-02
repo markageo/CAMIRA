@@ -22,27 +22,24 @@ std::vector< GridLevelData<MI, LI> > CreateMGLevels( const InputData &inputData 
 
     std::vector<GridLevelData<MI, LI>> mgLevels;
 
-    mgLevels.emplace_back();
+    for ( intType level = 0; level != mgSettings.maxCoarseLevels + 1; level++ ) {
 
-    for ( intType level = 0; level != mgSettings.maxCoarseLevels; level++ ) {
-
-        if ( !MeshCanBeCoarsened( mgLevels[level-1].mesh ) ) {
+        if ( level == 0 ) {
+            mgLevels.emplace_back();
+            mgLevels[level].mesh = CreateMesh( inputData );
+            mgLevels[level].isFinestLevel   = true;
+            mgLevels[level].isCoarsestLevel = false;
+        } else if ( MeshCanBeCoarsened( mgLevels[level-1].mesh ) ) {
+            mgLevels.emplace_back();
+            mgLevels[level].mesh = CoarsenMesh( mgLevels[level-1].mesh, inputData.schemes.faceInterpolationScheme );
+            mgLevels[level].isCoarsestLevel = false;
+            mgLevels[level].isFinestLevel   = false;
+        } else {
+            mgLevels[level-1].isCoarsestLevel = true;
             break;
         }
-        mgLevels.emplace_back();
         auto &mgl = mgLevels[level];
 
-        mgl.isFinestLevel = false;
-        mgl.isFinestLevel = false;
-
-        // Mesh
-        if ( level == 0 ) {
-            mgl.mesh = CreateMesh( inputData );
-            mgl.isFinestLevel = true;
-        } else {
-            mgl.mesh = CoarsenMesh( mgLevels[level-1].mesh, inputData.schemes.faceInterpolationScheme );
-        }
-        
 
         // Boundary condition data
         mgl.bcData = SetBoundaryConditionData(inputData, mgl.mesh);
@@ -220,7 +217,6 @@ Tensor3D ProlongateField( const Tensor3D &coarseField,
             }
         }
     }
-
 
     return fineField;
 }
