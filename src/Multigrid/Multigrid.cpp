@@ -35,10 +35,10 @@ std::vector< GridLevelData<MI, LI> > CreateMGLevels( const InputData &inputData 
             mgLevels[level].isCoarsestLevel = false;
             mgLevels[level].isFinestLevel   = false;
         } else {
-            mgLevels[level-1].isCoarsestLevel = true;
             break;
         }
         auto &mgl = mgLevels[level];
+        mgl.level = level;
 
 
         // Boundary condition data
