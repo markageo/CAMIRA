@@ -10,6 +10,21 @@ namespace
 {
 
 
+Tensor3D MomentumEquationOperator( const MomentumEquation &momEqn,
+                                   const FieldData<Tensor3D> &fields )
+{
+
+}
+
+
+
+Tensor3D ContinuityEquationOperator( const ContinuityEquation &conEqn,
+                                     const FieldData<Tensor3D> &fields )
+{
+
+
+}
+
 
 } // end anonymous namespace
 
@@ -58,9 +73,9 @@ std::vector< GridLevelData<MI, LI> > CreateMGLevels( const InputData &inputData 
             mgl.faceAdvectedVelocities = InitialiseAdvectedFaceVelocities( mgl.mesh, mgl.fields.U, mgl.faceFluxes, mgl.bcData );
 
         // Allocate and initialise residuals
-        mgl.residuals = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0) + 2*CFD::nGhost, 
-                                                       mgl.mesh.nCells(1) + 2*CFD::nGhost, 
-                                                       mgl.mesh.nCells(2) + 2*CFD::nGhost ).setZero() );
+        mgl.residuals = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0), 
+                                                       mgl.mesh.nCells(1), 
+                                                       mgl.mesh.nCells(2) ).setZero() );
 
         // Immersed boundary data
         mgl.ibData = CreateImmersedBoundaryData(inputData, mgl.mesh);
@@ -251,9 +266,18 @@ FieldData<Tensor3D> ComputeFineGridCorrection( const FieldData<Tensor3D> &coarse
 
 
 void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs, 
-                                    const FieldData<Tensor3D> &fieldsRestricted,
-                                    const FieldData<Tensor3D> &residuals )
+                                     const FieldData<Tensor3D> &fieldsRestricted,
+                                     const FieldData<Tensor3D> &residuals )
 {
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        fvCoeffs.Mom[axis].F += residuals.U[axis]
+                              + MomentumEquationOperator( fvCoeffs.Mom[axis], fieldsRestricted );
+
+    } );
+
+    fvCoeffs.Cont.F += residuals.P
+                     + ContinuityEquationOperator( fvCoeffs.Cont, fieldsRestricted );
 
 
 
