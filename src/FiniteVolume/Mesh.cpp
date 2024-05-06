@@ -456,7 +456,7 @@ bool MeshCanBeCoarsened( const Mesh& mesh )
 
 
 
-Mesh CoarsenMesh( const Mesh& fineMesh,
+Mesh CoarsenMesh( const Mesh &fineMesh,
                   const FaceInterpolationSchemes faceInterpolationScheme ) 
 {
 

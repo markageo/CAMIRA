@@ -106,10 +106,13 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
     if ( mgLevels[level].isCoarsestLevel ) {
 
+        std::cout << "coarsest level" << std::endl;
         // Solve coarsest grid
         Smooth<MI, LI>( mgLevels[level], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations );
 
     } else {
+
+        std::cout << "finer levels" << std::endl;
 
         // Presmoothing 
         Smooth<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations );
@@ -172,7 +175,8 @@ void SweepSolve( const InputData &inputData,
     const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
 
     // Multigrid level data
-    std::vector< GridLevelData<MI, LI> > mgLevels = CreateMGLevels<MI, LI>( inputData );
+    std::vector< GridLevelData<MI, LI> > mgLevels;  // FIND A BETTER WAY TO DO THIS
+    SetMGLevels( mgLevels, inputData );
 
     // References to finest grid
     auto& fields = mgLevels[0].fields;
@@ -209,8 +213,8 @@ void SweepSolve( const InputData &inputData,
         MultigridCycle( mgLevels, inputData.multigridSettings );
 
         residualsOuter   = StencilResiduals<MI, LI>( mgLevels[0].fields, 
-                                                     mgLevels[0].fvCoeffs, mgLevels[0].
-                                                     ibData.mask); 
+                                                     mgLevels[0].fvCoeffs, 
+                                                     mgLevels[0].ibData.mask); 
 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
 

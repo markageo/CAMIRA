@@ -398,7 +398,7 @@ FVCoefficients::FVCoefficients( const iArray3 &dims,
 
 
 FieldData<Tensor3D> InitialiseFields( const Mesh &mesh, 
-                                     const InputData &inputData )
+                                      const InputData &inputData )
 {
 
     FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero() );

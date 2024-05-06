@@ -17,6 +17,7 @@ namespace CFD
 template< MomentumInterpolation MI, Linearisation LI >
 struct GridLevelData
 {
+    
     intType level;
     bool isCoarsestLevel, isFinestLevel;
     Mesh mesh;
@@ -30,14 +31,14 @@ struct GridLevelData
     IBData ibData;
     FVCoefficients fvCoeffs;
     std::unique_ptr< LinearSolver<MI, LI> > linearSolver;
-
 };
 
 
 
 // Create initial heirachy of grids
 template< MomentumInterpolation MI, Linearisation LI >
-std::vector< GridLevelData<MI, LI> > CreateMGLevels( const InputData & );
+void SetMGLevels( std::vector< GridLevelData<MI, LI> > &, 
+                  const InputData & );
 
 
 Tensor3D RestrictField( const Tensor3D &, 
