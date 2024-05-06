@@ -126,7 +126,7 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 10000
+        maxOuterIterations = 100
         maxOuterResiduals = 1e-5
 
     }
@@ -155,7 +155,7 @@ Solver {
         maxPostSmoothingResiduals = 1e-1
 
         maxCoarseGridResiduals  = 1e-3
-        maxCoarseGridIterations = 100
+        maxCoarseGridIterations = 4
     }
 
 }

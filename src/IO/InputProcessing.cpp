@@ -669,7 +669,7 @@ namespace
 
 
     void ReadMultigridSettings( InputData &inputData, 
-                                const pt::ptree & solverTree) 
+                                const pt::ptree &solverTree) 
     {
         const pt::ptree &multigridTree = solverTree.get_child( "Multigrid" );
         std::string valueString;

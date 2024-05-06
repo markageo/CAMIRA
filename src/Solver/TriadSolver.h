@@ -11,6 +11,8 @@
 #include "../Tools/FVLookups.h"
 #include "../FiniteVolume/FiniteVolume.h"
 
+#include <iostream>
+
 namespace CFD
 {
 

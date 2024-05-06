@@ -13,14 +13,15 @@ namespace
 
 } // end anonymous namespace
 
-
 template< MomentumInterpolation MI, Linearisation LI >
-std::vector< GridLevelData<MI, LI> > CreateMGLevels( const InputData &inputData )
+void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels, 
+                  const InputData &inputData )
 {
 
     const InputData::MultigridSettings &mgSettings = inputData.multigridSettings;
 
-    std::vector<GridLevelData<MI, LI>> mgLevels;
+    // Reserve data. The linear solver holds references to the fields which can break if the vector is resized
+    mgLevels.reserve( mgSettings.maxCoarseLevels + 1 );
 
     for ( intType level = 0; level != mgSettings.maxCoarseLevels + 1; level++ ) {
 
@@ -37,7 +38,7 @@ std::vector< GridLevelData<MI, LI> > CreateMGLevels( const InputData &inputData 
         } else {
             break;
         }
-        auto &mgl = mgLevels[level];
+        GridLevelData<MI, LI> &mgl = mgLevels[level];
         mgl.level = level;
 
 
@@ -75,13 +76,13 @@ std::vector< GridLevelData<MI, LI> > CreateMGLevels( const InputData &inputData 
 
     }
     mgLevels.back().isCoarsestLevel = true;
-
-    return mgLevels;
+    mgLevels.shrink_to_fit();
 }
-template std::vector< GridLevelData<MomentumInterpolation::Implicit    , Linearisation::Picard> > CreateMGLevels( const InputData & );
-template std::vector< GridLevelData<MomentumInterpolation::SemiExplicit, Linearisation::Picard> > CreateMGLevels( const InputData & );
-template std::vector< GridLevelData<MomentumInterpolation::Implicit    , Linearisation::Newton> > CreateMGLevels( const InputData & );
-template std::vector< GridLevelData<MomentumInterpolation::SemiExplicit, Linearisation::Newton> > CreateMGLevels( const InputData & );
+template void SetMGLevels( std::vector< GridLevelData<MomentumInterpolation::Implicit    , Linearisation::Picard> > &, const InputData & );
+template void SetMGLevels( std::vector< GridLevelData<MomentumInterpolation::SemiExplicit, Linearisation::Picard> > &, const InputData & );
+template void SetMGLevels( std::vector< GridLevelData<MomentumInterpolation::Implicit    , Linearisation::Newton> > &, const InputData & );
+template void SetMGLevels( std::vector< GridLevelData<MomentumInterpolation::SemiExplicit, Linearisation::Newton> > &, const InputData & );
+
 
 
 
