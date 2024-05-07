@@ -681,11 +681,13 @@ namespace
         inputData.multigridSettings.maxPreSmoothingIterations  = multigridTree.get<intType>( "maxPreSmoothingIterations" );
         inputData.multigridSettings.maxPostSmoothingIterations = multigridTree.get<intType>( "maxPostSmoothingIterations" );
         inputData.multigridSettings.maxCoarseGridIterations    = multigridTree.get<intType>( "maxCoarseGridIterations" );
+        inputData.multigridSettings.maxFineGridIterations      = multigridTree.get<intType>( "maxFineGridIterations" );
 
         // Max residuals
         inputData.multigridSettings.maxPreSmoothingResiduals  = multigridTree.get<floatType>( "maxPreSmoothingResiduals" );
         inputData.multigridSettings.maxPostSmoothingResiduals = multigridTree.get<floatType>( "maxPostSmoothingResiduals" );
         inputData.multigridSettings.maxCoarseGridResiduals    = multigridTree.get<floatType>( "maxCoarseGridResiduals" );
+        inputData.multigridSettings.maxFineGridResiduals      = multigridTree.get<floatType>( "maxFineGridResiduals" );
 
     }
 

@@ -138,6 +138,9 @@ Solver {
 
         maxCoarseGridResiduals  = 1e-5
         maxCoarseGridIterations = 10000
+
+        maxFineGridResiduals    = 1e-1
+        maxFineGridIterations   = 3
     }
 
 }
