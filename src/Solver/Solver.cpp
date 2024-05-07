@@ -150,7 +150,11 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
         } );
 
         // Postsmoothing
-        Smooth<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingResiduals, mgSettings.maxPostSmoothingIterations );
+        if ( mgLevels[level].isFinestLevel ) {
+            Smooth<MI, LI>( mgLevels[level], mgSettings.maxFineGridResiduals, mgSettings.maxFineGridIterations );
+        } else {
+            Smooth<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingResiduals, mgSettings.maxPostSmoothingIterations );
+        }
 
     }
 

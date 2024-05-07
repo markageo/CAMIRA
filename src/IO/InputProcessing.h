@@ -103,10 +103,12 @@ struct InputData
         intType maxCoarseLevels,
                 maxPreSmoothingIterations,
                 maxPostSmoothingIterations,
-                maxCoarseGridIterations;
+                maxCoarseGridIterations,
+                maxFineGridIterations;
         FieldData<floatType> maxPreSmoothingResiduals,
                              maxPostSmoothingResiduals,
-                             maxCoarseGridResiduals;
+                             maxCoarseGridResiduals,
+                             maxFineGridResiduals;
     };
     MultigridSettings multigridSettings;
 
