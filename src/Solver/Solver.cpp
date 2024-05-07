@@ -75,9 +75,9 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
                                                     gridLevelData.ibData.mask );
         }
 
-        FieldData<floatType> residuals = StencilResiduals<MI, LI>( gridLevelData.fields,
-                                                                   gridLevelData.fvCoeffs,
-                                                                   gridLevelData.ibData.mask );
+        FieldData<floatType> residuals = ScaledL1NormResiduals<MI, LI>( gridLevelData.fields,
+                                                                        gridLevelData.fvCoeffs,
+                                                                        gridLevelData.ibData.mask );
         NormaliseResiduals( residuals, residualsScaleFactor, nIterations );
 
         if ( ResidualsDiverged(residuals) ) {
@@ -106,17 +106,21 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
     if ( mgLevels[level].isCoarsestLevel ) {
 
-        std::cout << "coarsest level" << std::endl;
         // Solve coarsest grid
         Smooth<MI, LI>( mgLevels[level], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations );
 
     } else {
 
-        std::cout << "finer levels" << std::endl;
-
         // Presmoothing 
         Smooth<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations );
 
+        // Calculate residual on finest grid
+        if ( mgLevels[level].isFinestLevel ) {
+            mgLevels[level+1].residuals= ResidualsField<MI, LI>( mgLevels[level].fields, 
+                                                                 mgLevels[level].fvCoeffs, 
+                                                                 mgLevels[level].ibData.mask );
+        }
+        
         // Restrict residual
         ForAllFieldData( [&] (intType f) {
             mgLevels[level+1].residuals[f] = RestrictField( mgLevels[level].residuals[f], 
@@ -212,7 +216,7 @@ void SweepSolve( const InputData &inputData,
     {
         MultigridCycle( mgLevels, inputData.multigridSettings );
 
-        residualsOuter   = StencilResiduals<MI, LI>( mgLevels[0].fields, 
+        residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
                                                      mgLevels[0].fvCoeffs, 
                                                      mgLevels[0].ibData.mask); 
 

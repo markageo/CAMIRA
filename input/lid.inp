@@ -11,43 +11,25 @@ Mesh {
 
     Grid x {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 11
-            biasFactor = 2.5
-        }
-
-        Segment {
-            bounds     = (0.5, 1)
-            nCells     = 11
-            biasFactor = -2.5
+            bounds     = (0, 1)
+            nCells     = 88
+            biasFactor = 1
         }
     }
 
     Grid y {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 11
-            biasFactor = 2.5
-        }
-
-        Segment {
-            bounds     = (0.5, 1)
-            nCells     = 11
-            biasFactor = -2.5
+            bounds     = (0, 1)
+            nCells     = 88
+            biasFactor = 1
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 11
-            biasFactor = 2.5
-        }
-
-        Segment {
-            bounds     = (0.5, 1)
-            nCells     = 11
-            biasFactor = -2.5
+            bounds     = (0, 1)
+            nCells     = 88
+            biasFactor = 1
         }
     }
 }
@@ -126,7 +108,7 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 100
+        maxOuterIterations = 10000
         maxOuterResiduals = 1e-5
 
     }
@@ -146,7 +128,7 @@ Solver {
     }
 
     Multigrid {
-        maxCoarseLevels = 1
+        maxCoarseLevels = 2
 
         maxPreSmoothingIterations = 5
         maxPreSmoothingResiduals = 1e-1
@@ -154,8 +136,8 @@ Solver {
         maxPostSmoothingIterations = 5
         maxPostSmoothingResiduals = 1e-1
 
-        maxCoarseGridResiduals  = 1e-3
-        maxCoarseGridIterations = 4
+        maxCoarseGridResiduals  = 1e-5
+        maxCoarseGridIterations = 10000
     }
 
 }

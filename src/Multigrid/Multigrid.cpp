@@ -56,9 +56,9 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
             mgl.faceAdvectedVelocities = InitialiseAdvectedFaceVelocities( mgl.mesh, mgl.fields.U, mgl.faceFluxes, mgl.bcData );
 
         // Allocate and initialise residuals
-        mgl.residuals = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0), 
-                                                       mgl.mesh.nCells(1), 
-                                                       mgl.mesh.nCells(2) ).setZero() );
+        mgl.residuals = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0) + 2*nGhost, 
+                                                       mgl.mesh.nCells(1) + 2*nGhost, 
+                                                       mgl.mesh.nCells(2) + 2*nGhost).setZero() );
 
         // Immersed boundary data
         mgl.ibData = CreateImmersedBoundaryData(inputData, mgl.mesh);
@@ -111,7 +111,7 @@ Tensor3D RestrictField( const Tensor3D &fineField,
         } else {
             kFp1 = kF + 1;
             kFIncrement = 2;
-            lambdaZ = ( coarseMesh.cellCenters[Z](kC) - fineMesh.cellCenters[Z](kF) ) / ( fineMesh.cellCenters[Z](kFp1) - fineMesh.cellCenters[Z](kFp1) );
+            lambdaZ = ( coarseMesh.cellCenters[Z](kC) - fineMesh.cellCenters[Z](kF) ) / ( fineMesh.cellCenters[Z](kFp1) - fineMesh.cellCenters[Z](kF) );
         }
 
         for ( intType jC = 0, jF = 0, jFIncrement = 1; jC != coarseMesh.nCells(Y); jC++, jF += jFIncrement ) {
@@ -123,9 +123,9 @@ Tensor3D RestrictField( const Tensor3D &fineField,
                 jFIncrement = 1;
                 lambdaY = 0.0f;
             } else {
-                jFp1 = kF + 1;
+                jFp1 = jF + 1;
                 jFIncrement = 2;
-                lambdaY = ( coarseMesh.cellCenters[Y](jC) - fineMesh.cellCenters[Y](jF) ) / ( fineMesh.cellCenters[Y](jFp1) - fineMesh.cellCenters[Y](jFp1) );
+                lambdaY = ( coarseMesh.cellCenters[Y](jC) - fineMesh.cellCenters[Y](jF) ) / ( fineMesh.cellCenters[Y](jFp1) - fineMesh.cellCenters[Y](jF) );
             }
 
             for ( intType iC = 0, iF = 0, iFIncrement = 1; iC != coarseMesh.nCells(X); iC++, iF += iFIncrement ) {
@@ -139,7 +139,7 @@ Tensor3D RestrictField( const Tensor3D &fineField,
                 } else {
                     iFp1 = iF + 1;
                     iFIncrement = 2;
-                    lambdaX = ( coarseMesh.cellCenters[X](iC) - fineMesh.cellCenters[X](iF) ) / ( fineMesh.cellCenters[X](iFp1) - fineMesh.cellCenters[X](iFp1) );
+                    lambdaX = ( coarseMesh.cellCenters[X](iC) - fineMesh.cellCenters[X](iF) ) / ( fineMesh.cellCenters[X](iFp1) - fineMesh.cellCenters[X](iF) );
                 }
 
                 // Points to interpolation from
@@ -273,7 +273,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[X].AU[Z][b](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);
                 }
                 fvCoeffs.Mom[X].F(i, j, k) += mask(i, j, k)
-                                              * (  residuals.U[X](i, j, k)
+                                              * (  residuals.U[X](ig, jg, kg)
 
                                                  + fvCoeffs.Mom[X].AU[X][p](i, j, k) * fieldsRestricted.U[X]( ig  , jg  , kg  ) 
                                                  + fvCoeffs.Mom[X].AU[X][n](i, j, k) * fieldsRestricted.U[X]( ig  , jg+1, kg  ) 
@@ -305,7 +305,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[Y].AU[Z][b](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);      
                 }
                 fvCoeffs.Mom[Y].F(i, j, k) += mask(i, j, k) 
-                                              * (   residuals.U[Y](i, j, k)
+                                              * (   residuals.U[Y](ig, jg, kg)
 
                                                   + fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fieldsRestricted.U[Y]( ig  , jg  , kg  ) 
                                                   + fvCoeffs.Mom[Y].AU[Y][n](i, j, k) * fieldsRestricted.U[Y]( ig  , jg+1, kg  ) 
@@ -337,7 +337,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[Z].AU[Y][s](i, j, k) * fieldsRestricted.U[Y]( ig  , jg-1, kg  );    
                 }
                 fvCoeffs.Mom[Z].F(i, j, k) += mask(i, j, k)
-                                              * (   residuals.U[Z](i, j, k)
+                                              * (   residuals.U[Z](ig, jg, kg)
 
                                                   + fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg  ) 
                                                   + fvCoeffs.Mom[Z].AU[Z][n](i, j, k) * fieldsRestricted.U[Z]( ig  , jg+1, kg  ) 
@@ -368,7 +368,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                                         + fvCoeffs.Cont.AP[bb](i, j, k) * fieldsRestricted.P( ig  , jg  , kg-2);
                 }
                 fvCoeffs.Cont.F(i, j, k) += mask(i, j, k) 
-                                          * (   residuals.P(i, j, k)
+                                          * (   residuals.P(ig, jg, kg)
 
                                               + fvCoeffs.Cont.AU[X][e](i) * fieldsRestricted.U[X]( ig+1, jg  , kg  )
                                               + fvCoeffs.Cont.AU[X][p](i) * fieldsRestricted.U[X]( ig  , jg  , kg  )
