@@ -35,9 +35,9 @@ inline FieldData<floatType> L1DiffResiduals( const FieldData<Tensor3D> &fields1,
 // Calculate the absolute residual of each equation from the finite volume stencil
 template< MomentumInterpolation MI,
           Linearisation LI > [[ maybe_unused ]]
-inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
-                                              const FVCoefficients &fvCoeffs,
-                                              const Tensor3D &mask )
+inline FieldData<floatType> ScaledL1NormResiduals( const FieldData<Tensor3D> &fields,
+                                                   const FVCoefficients &fvCoeffs,
+                                                   const Tensor3D &mask )
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
@@ -231,15 +231,18 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
 
 // Calculate the local discrete equation residual field
 template< MomentumInterpolation MI,
-          Linearisation LI > [[ maybe_unused ]]
-inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fields,
-                                                  const FVCoefficients &fvCoeffs,
-                                                  const Tensor3D &mask )
+          Linearisation LI >
+inline FieldData<Tensor3D> ResidualsField( const FieldData<Tensor3D> &fields,
+                                           const FVCoefficients &fvCoeffs,
+                                           const Tensor3D &mask )
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    FieldData<Tensor3D> residuals( Tensor3D( fvCoeffs.nCells[X], fvCoeffs.nCells[Y], fvCoeffs.nCells[Z] ) );
+    FieldData<Tensor3D> residuals( Tensor3D( fvCoeffs.nCells[X] + 2*CFD::nGhost, 
+                                             fvCoeffs.nCells[Y] + 2*CFD::nGhost, 
+                                             fvCoeffs.nCells[Z] + 2*CFD::nGhost ).setZero() );
+
 
     for ( intType k = 0; k != fvCoeffs.nCells[Z]; k++ ) {
         for ( intType j = 0; j != fvCoeffs.nCells[Y]; j++ ) {
@@ -258,7 +261,7 @@ inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fie
                                    + fvCoeffs.Mom[X].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[X].AU[Z][b](i, j, k) * fields.U[Z]( ig  , jg  , kg-1);
                 }
-                residuals.U[X](i, j, k) = mask(i, j, k)
+                residuals.U[X](ig, jg, kg) = mask(i, j, k)
                                               * (  fvCoeffs.Mom[X].F(i, j, k)
 
                                                  - fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) 
@@ -290,7 +293,7 @@ inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fie
                                    + fvCoeffs.Mom[Y].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[Y].AU[Z][b](i, j, k) * fields.U[Z]( ig  , jg  , kg-1);      
                 }
-                residuals.U[Y](i, j, k) += mask(i, j, k) 
+                residuals.U[Y](ig, jg, kg) += mask(i, j, k) 
                                               * (   fvCoeffs.Mom[Y].F(i, j, k)
 
                                                   - fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) 
@@ -321,7 +324,7 @@ inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fie
                                    + fvCoeffs.Mom[Z].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[Z].AU[Y][s](i, j, k) * fields.U[Y]( ig  , jg-1, kg  );    
                 }
-                residuals.U[Z](i, j, k) += mask(i, j, k)
+                residuals.U[Z](ig, jg, kg) += mask(i, j, k)
                                               * (   fvCoeffs.Mom[Z].F(i, j, k) 
 
                                                   - fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) 
@@ -351,7 +354,7 @@ inline FieldData<Tensor3D> StencilResidualsField( const FieldData<Tensor3D> &fie
                                         + fvCoeffs.Cont.AP[tt](i, j, k) * fields.P( ig  , jg  , kg+2) 
                                         + fvCoeffs.Cont.AP[bb](i, j, k) * fields.P( ig  , jg  , kg-2);
                 }
-                residuals.P(i, j, k) += mask(i, j, k) 
+                residuals.P(ig, jg, kg) += mask(i, j, k) 
                                           * (   fvCoeffs.Cont.F(i, j, k)
 
                                               - fvCoeffs.Cont.AU[X][e](i) * fields.U[X]( ig+1, jg  , kg  )
