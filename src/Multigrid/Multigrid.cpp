@@ -192,7 +192,7 @@ Tensor3D ProlongateField( const Tensor3D &coarseField,
 
     EnumVector<Axis, bool> firstCellNotAgglomerated;
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        firstCellNotAgglomerated[axis] = coarseMesh.cellLengths[Z](0) == fineMesh.cellLengths[Z](0);
+        firstCellNotAgglomerated[axis] = coarseMesh.cellLengths[axis](0) == fineMesh.cellLengths[axis](0);
     } );
 
     // Iterate fine grid
