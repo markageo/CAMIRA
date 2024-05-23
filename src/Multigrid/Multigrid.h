@@ -63,6 +63,13 @@ void TransformToCoarseGridEquations( FVCoefficients &,
                                      const FieldData<Tensor3D> &,
                                      const Tensor3D & );
 
+
+template< MomentumInterpolation MI, Linearisation LI >
+FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &,
+                                                      const FieldData<Tensor3D> &,
+                                                      const FieldData<Tensor3D> &,
+                                                      const Tensor3D & );
+
 }
 
 #endif  // CFD_MULTIGRID

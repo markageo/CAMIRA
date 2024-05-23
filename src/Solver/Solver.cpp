@@ -27,23 +27,58 @@ namespace CFD
 namespace
 {
 
-// Update face fluxes, immersed boundary data, and finite volume equation coefficients
-template< Linearisation LI >
-void UpdateFVEquations( FVCoefficients &fvCoeffs,
-                        IBData &ibData,
-                        EnumVector<Axis, Tensor3D> &faceFluxes,
-                        EnumVector< Axis, EnumVector< Axis, Tensor3D> > &faceAdvectedVelocities,
-                        const FieldData<Tensor3D> &fields,
-                        const Mesh &mesh,
-                        const BoundaryConditionData &bcData )
+template< MomentumInterpolation MI, Linearisation LI >
+void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
 {
-    UpdateIBData( ibData, fields );
-    UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
+    auto &gld = gridLevelData; 
+
+    UpdateIBData( gld.ibData, gld.fields );
+    UpdateFaceFluxes( gld.faceFluxes, gld.mesh, gld.fields.U, gld.bcData);
     if constexpr ( LI == Linearisation::Newton ) {
-        UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
+        UpdateFaceAdvectedVelocities( gld.faceAdvectedVelocities, gld.mesh, gld.fields.U, gld.faceFluxes, gld.bcData);
     }
-    SetIBFaceFluxes( faceFluxes, ibData );
-    UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData);
+    SetIBFaceFluxes( gld.faceFluxes, gld.ibData );
+    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fields, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
+}
+
+
+template< MomentumInterpolation MI, Linearisation LI >
+void SetCoarseGridEquations( GridLevelData<MI, LI> &gridLevelData )
+{
+    auto &gld = gridLevelData;
+
+    // First set fvCoeffs based on the restricted fine grid approximation for the RHS
+    UpdateIBData( gld.ibData, gld.fields );
+    UpdateFaceFluxes( gld.faceFluxes, gld.mesh, gld.fieldsRestricted.U, gld.bcData);
+    if constexpr ( LI == Linearisation::Newton ) {
+        UpdateFaceAdvectedVelocities( gld.faceAdvectedVelocities, gld.mesh, gld.fieldsRestricted.U, gld.faceFluxes, gld.bcData);
+    }
+    SetIBFaceFluxes( gld.faceFluxes, gld.ibData );
+    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fieldsRestricted, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
+
+
+    // Calculate the extra terms that appear on the RHS of the coarse grid equation
+    FieldData<Tensor3D> coarseGridRightHandSide = CalculateCoarseGridRightHandSide<MI, LI>( gld.fvCoeffs,
+                                                                                            gld.fieldsRestricted,
+                                                                                            gld.residuals,
+                                                                                            gld.ibData.mask );
+
+
+    // Now set fvCoeffs based on the latest solution to the coarse grid problem
+    UpdateIBData( gld.ibData, gld.fields );
+    UpdateFaceFluxes( gld.faceFluxes, gld.mesh, gld.fields.U, gld.bcData);
+    if constexpr ( LI == Linearisation::Newton ) {
+        UpdateFaceAdvectedVelocities( gld.faceAdvectedVelocities, gld.mesh, gld.fields.U, gld.faceFluxes, gld.bcData);
+    }
+    SetIBFaceFluxes( gld.faceFluxes, gld.ibData );
+    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fields, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
+
+
+    // Add the terms that appear on the RHS of the coarse grid equation
+    EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
+        gld.fvCoeffs.Mom[axis].F += coarseGridRightHandSide.U[axis];
+    } );
+    gld.fvCoeffs.Cont.F += coarseGridRightHandSide.P;
 }
 
 
@@ -55,24 +90,22 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
 {
     FieldData<floatType> residualsScaleFactor;
 
+    if ( gridLevelData.isFinestLevel ) {
+        SetFineGridEquations<MI, LI>( gridLevelData );
+    } else {
+        SetCoarseGridEquations<MI, LI>( gridLevelData );
+    }
+
     for ( intType nIterations = 1; nIterations <= maxIterations; nIterations++ ) {
 
         gridLevelData.linearSolver->UpdateState();
         gridLevelData.linearSolver->Solve();
         // SetGhostCells( gridLevelData.fields, gridLevelData.mesh, gridLevelData.bcData ); // Deferred correction needs this
-        UpdateFVEquations<LI>( gridLevelData.fvCoeffs, 
-                               gridLevelData.ibData, 
-                               gridLevelData.faceFluxes, 
-                               gridLevelData.faceAdvectedVelocities, 
-                               gridLevelData.fields, 
-                               gridLevelData.mesh, 
-                               gridLevelData.bcData );
 
-        if ( !gridLevelData.isFinestLevel ) {
-            TransformToCoarseGridEquations<MI, LI>( gridLevelData.fvCoeffs, 
-                                                    gridLevelData.fieldsRestricted,
-                                                    gridLevelData.residuals,
-                                                    gridLevelData.ibData.mask );
+        if ( gridLevelData.isFinestLevel ) {
+            SetFineGridEquations<MI, LI>( gridLevelData );
+        } else {
+            SetCoarseGridEquations<MI, LI>( gridLevelData );
         }
 
         FieldData<floatType> residuals = ScaledL1NormResiduals<MI, LI>( gridLevelData.fields,
@@ -107,54 +140,70 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
     if ( mgLevels[level].isCoarsestLevel ) {
 
         // Solve coarsest grid
+        TIC("Coarse grid smoothing")
         Smooth<MI, LI>( mgLevels[level], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations );
+        TOC()
 
     } else {
 
         // Presmoothing 
+        TIC("Presmoothing")
         Smooth<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations );
+        TOC()
 
         // Calculate residual on finest grid
+        TIC("Fine grid residual calculation")
         if ( mgLevels[level].isFinestLevel ) {
             mgLevels[level+1].residuals= ResidualsField<MI, LI>( mgLevels[level].fields, 
                                                                  mgLevels[level].fvCoeffs, 
                                                                  mgLevels[level].ibData.mask );
         }
+        TOC()
         
         // Restrict residual
+        TIC("Residual restriction")
         ForAllFieldData( [&] (intType f) {
             mgLevels[level+1].residuals[f] = RestrictField( mgLevels[level].residuals[f], 
                                                             mgLevels[level].mesh, 
                                                             mgLevels[level+1].mesh );
         } );
+        TOC()
 
         // Restrict solution
+        TIC("Solution restriction")
         ForAllFieldData( [&] (intType f) {
             mgLevels[level+1].fieldsRestricted[f] = RestrictField( mgLevels[level].fieldsRestricted[f], 
                                                                    mgLevels[level].mesh, 
                                                                    mgLevels[level+1].mesh );
         } );
+        TOC()
 
         // VCycle recursive call
         VCycle<MI, LI>(mgLevels, level+1, mgSettings);
 
         // Compute fine grid correction 
+        TIC("Fine grid correction computation")
         FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
                                                                             mgLevels[level+1].fieldsRestricted, 
                                                                             mgLevels[level+1].mesh, 
                                                                             mgLevels[level].mesh );
+        TOC()
 
         // Correct fine grid approximation
+        TIC("Fine grid correction application")
         ForAllFieldData( [&] (intType f) {
             mgLevels[level].fields[f] += fineGridCorrection[f];
         } );
+        TOC()
 
         // Postsmoothing
+        TIC("Post smoothing")
         if ( mgLevels[level].isFinestLevel ) {
             Smooth<MI, LI>( mgLevels[level], mgSettings.maxFineGridResiduals, mgSettings.maxFineGridIterations );
         } else {
             Smooth<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingResiduals, mgSettings.maxPostSmoothingIterations );
         }
+        TOC()
 
     }
 
@@ -177,7 +226,7 @@ void SweepSolve( const InputData &inputData,
                  const AxisTransformationMap &axisTransformation )
 {
     using enum Axis::ENUMDATA;
-    
+    TIC("Pre processing")
     // Extract from input data
     const intType maxOuterIterations = inputData.schemes.maxOuterIterations;
     const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
@@ -214,6 +263,7 @@ void SweepSolve( const InputData &inputData,
     if ( writeFields ) {
         fieldWriter.WriteData( 0 );
     }
+    TOC()
 
     TIC("Solver Loop")
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
