@@ -113,6 +113,10 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
                                                                         gridLevelData.ibData.mask );
         NormaliseResiduals( residuals, residualsScaleFactor, nIterations );
 
+        if ( gridLevelData.isCoarsestLevel ) {
+            std::cout << "level: " << gridLevelData.level << ", residual: " << residuals.P << "\n\n";
+        }
+
         if ( ResidualsDiverged(residuals) ) {
             break;
         }
@@ -154,7 +158,7 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
         // Calculate residual on finest grid
         TIC("Fine grid residual calculation")
         if ( mgLevels[level].isFinestLevel ) {
-            mgLevels[level+1].residuals= ResidualsField<MI, LI>( mgLevels[level].fields, 
+            mgLevels[level].residuals= ResidualsField<MI, LI>( mgLevels[level].fields, 
                                                                  mgLevels[level].fvCoeffs, 
                                                                  mgLevels[level].ibData.mask );
         }
