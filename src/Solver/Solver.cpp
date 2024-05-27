@@ -113,9 +113,9 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
                                                                         gridLevelData.ibData.mask );
         NormaliseResiduals( residuals, residualsScaleFactor, nIterations );
 
-        if ( gridLevelData.isCoarsestLevel ) {
-            std::cout << "level: " << gridLevelData.level << ", residual: " << residuals.P << "\n\n";
-        }
+        // if ( gridLevelData.isCoarsestLevel ) {
+        //     std::cout << "level: " << gridLevelData.level << ", residual: " << residuals.P << "\n\n";
+        // }
 
         if ( ResidualsDiverged(residuals) ) {
             break;
@@ -159,8 +159,9 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
         TIC("Fine grid residual calculation")
         if ( mgLevels[level].isFinestLevel ) {
             mgLevels[level].residuals= ResidualsField<MI, LI>( mgLevels[level].fields, 
-                                                                 mgLevels[level].fvCoeffs, 
-                                                                 mgLevels[level].ibData.mask );
+                                                               mgLevels[level].fvCoeffs, 
+                                                               mgLevels[level].ibData.mask );
+            mgLevels[level].fieldsRestricted = mgLevels[level].fields[level];
         }
         TOC()
         
@@ -275,8 +276,8 @@ void SweepSolve( const InputData &inputData,
         MultigridCycle( mgLevels, inputData.multigridSettings );
 
         residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
-                                                     mgLevels[0].fvCoeffs, 
-                                                     mgLevels[0].ibData.mask); 
+                                                          mgLevels[0].fvCoeffs, 
+                                                          mgLevels[0].ibData.mask); 
 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
 
