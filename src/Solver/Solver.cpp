@@ -60,7 +60,7 @@ void SetCoarseGridEquations( GridLevelData<MI, LI> &gridLevelData )
     // Calculate the extra terms that appear on the RHS of the coarse grid equation
     FieldData<Tensor3D> coarseGridRightHandSide = CalculateCoarseGridRightHandSide<MI, LI>( gld.fvCoeffs,
                                                                                             gld.fieldsRestricted,
-                                                                                            gld.residuals,
+                                                                                            gld.residualsRestricted,
                                                                                             gld.ibData.mask );
 
 
@@ -140,77 +140,70 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
              const intType level,
              const InputData::MultigridSettings &mgSettings )
 {
+    // Presmoothing 
+    TIC("Presmoothing")
+    Smooth<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations );
+    TOC()
 
-    if ( mgLevels[level].isCoarsestLevel ) {
+    // Calculate residual
+    TIC("Residual calculation")
+    FieldData<Tensor3D> residuals = ResidualsField<MI, LI>( mgLevels[level].fields, 
+                                                            mgLevels[level].fvCoeffs, 
+                                                            mgLevels[level].ibData.mask );
+    TOC()
 
-        // Solve coarsest grid
+    // Restrict residual
+    TIC("Residual restriction")
+    ForAllFieldData( [&] (intType f) {
+        mgLevels[level+1].residualsRestricted[f] = RestrictField( residuals[f],
+                                                                  mgLevels[level].mesh, 
+                                                                  mgLevels[level+1].mesh );
+    } );
+    TOC()
+
+    // Restrict solution
+    TIC("Solution restriction")
+    ForAllFieldData( [&] (intType f) {
+        mgLevels[level+1].fieldsRestricted[f] = RestrictField( mgLevels[level].fields[f], 
+                                                               mgLevels[level].mesh, 
+                                                               mgLevels[level+1].mesh );
+        mgLevels[level+1].fields[f] = mgLevels[level+1].fieldsRestricted[f];
+    } );
+    TOC()
+
+    // Solve coarse grid problem
+    if ( mgLevels[level+1].isCoarsestLevel ) {
         TIC("Coarse grid smoothing")
-        Smooth<MI, LI>( mgLevels[level], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations );
+        Smooth<MI, LI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations );
         TOC()
-
     } else {
-
-        // Presmoothing 
-        TIC("Presmoothing")
-        Smooth<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations );
-        TOC()
-
-        // Calculate residual on finest grid
-        TIC("Fine grid residual calculation")
-        if ( mgLevels[level].isFinestLevel ) {
-            mgLevels[level].residuals= ResidualsField<MI, LI>( mgLevels[level].fields, 
-                                                               mgLevels[level].fvCoeffs, 
-                                                               mgLevels[level].ibData.mask );
-            mgLevels[level].fieldsRestricted = mgLevels[level].fields[level];
-        }
-        TOC()
-        
-        // Restrict residual
-        TIC("Residual restriction")
-        ForAllFieldData( [&] (intType f) {
-            mgLevels[level+1].residuals[f] = RestrictField( mgLevels[level].residuals[f], 
-                                                            mgLevels[level].mesh, 
-                                                            mgLevels[level+1].mesh );
-        } );
-        TOC()
-
-        // Restrict solution
-        TIC("Solution restriction")
-        ForAllFieldData( [&] (intType f) {
-            mgLevels[level+1].fieldsRestricted[f] = RestrictField( mgLevels[level].fieldsRestricted[f], 
-                                                                   mgLevels[level].mesh, 
-                                                                   mgLevels[level+1].mesh );
-        } );
-        TOC()
-
-        // VCycle recursive call
-        VCycle<MI, LI>(mgLevels, level+1, mgSettings);
-
-        // Compute fine grid correction 
-        TIC("Fine grid correction computation")
-        FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
-                                                                            mgLevels[level+1].fieldsRestricted, 
-                                                                            mgLevels[level+1].mesh, 
-                                                                            mgLevels[level].mesh );
-        TOC()
-
-        // Correct fine grid approximation
-        TIC("Fine grid correction application")
-        ForAllFieldData( [&] (intType f) {
-            mgLevels[level].fields[f] += fineGridCorrection[f];
-        } );
-        TOC()
-
-        // Postsmoothing
-        TIC("Post smoothing")
-        if ( mgLevels[level].isFinestLevel ) {
-            Smooth<MI, LI>( mgLevels[level], mgSettings.maxFineGridResiduals, mgSettings.maxFineGridIterations );
-        } else {
-            Smooth<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingResiduals, mgSettings.maxPostSmoothingIterations );
-        }
-        TOC()
-
+        VCycle<MI, LI>( mgLevels, level+1, mgSettings );
     }
+
+    // Compute fine grid correction 
+    TIC("Fine grid correction computation")
+    FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
+                                                                        mgLevels[level+1].fieldsRestricted, 
+                                                                        mgLevels[level+1].mesh, 
+                                                                        mgLevels[level].mesh );
+    TOC()
+
+    // Correct fine grid approximation
+    TIC("Fine grid correction application")
+    ForAllFieldData( [&] (intType f) {
+        mgLevels[level].fields[f] += fineGridCorrection[f];
+    } );
+    TOC()
+
+    // Postsmoothing
+    TIC("Post smoothing")
+    if ( mgLevels[level].isFinestLevel ) {
+        Smooth<MI, LI>( mgLevels[level], mgSettings.maxFineGridResiduals, mgSettings.maxFineGridIterations );
+    } else {
+        Smooth<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingResiduals, mgSettings.maxPostSmoothingIterations );
+    }
+    TOC()
+
 
 }
 
