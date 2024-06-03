@@ -350,6 +350,9 @@ class ResidualFieldWriter
         void TransformData()
         {
             m_transformedFields = m_fields;
+            ForAllFieldData([&](intType f) { 
+                m_transformedFields[f] = FVT::RemoveGhostCells(m_fields[f], nGhost); 
+            });
             TransformFieldToUserCoordinates( m_transformedFields, m_axisTransformation );
         }
 

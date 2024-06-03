@@ -24,7 +24,7 @@ struct GridLevelData
     FieldData<Tensor3D> fields,
                         fieldsOld,
                         fieldsRestricted,
-                        residuals;
+                        residualsRestricted;
     BoundaryConditionData bcData;
     EnumVector<Axis, Tensor3D> faceFluxes;
     EnumVector< Axis, EnumVector< Axis, Tensor3D> > faceAdvectedVelocities;

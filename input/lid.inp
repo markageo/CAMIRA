@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 80
+            nCells     = 104
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 80
+            nCells     = 104
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 80
+            nCells     = 104
             biasFactor = 1
         }
     }
@@ -108,19 +108,19 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 10000
-        maxOuterResiduals = 1e-5
+        maxOuterIterations = 100
+        maxOuterResiduals = 1e-6
 
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 10
+        maxIterations = 5
         maxResiduals = 1e-2
 
         planeSweepDirection = +x
-        lineSweepDirection = +z
+        lineSweepDirection = +y
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
@@ -128,19 +128,20 @@ Solver {
     }
 
     Multigrid {
-        maxCoarseLevels = 2
+        maxCoarseLevels = 3
 
-        maxPreSmoothingIterations = 0
-        maxPreSmoothingResiduals = 1e-1
+        maxPreSmoothingIterations = 3
+        maxPreSmoothingResiduals = 0
 
-        maxPostSmoothingIterations = 0
-        maxPostSmoothingResiduals = 1e-1
+        maxPostSmoothingIterations = 3
+        maxPostSmoothingResiduals = 0
 
-        maxCoarseGridResiduals  = 1e-8
-        maxCoarseGridIterations = 10000
-
-        maxFineGridResiduals    = 1e-1
+        maxCoarseGridIterations = 50
+        maxCoarseGridResiduals  = 0
+        
         maxFineGridIterations   = 5
+        maxFineGridResiduals    = 0
+        
     }
 
 }
@@ -151,7 +152,7 @@ Output {
     residualHistoryFilename = "output/residual_history.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
-    fieldWriteInterval      = 0
+    fieldWriteInterval      = 1
 
     Monitors {
         Probe {
