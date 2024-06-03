@@ -255,12 +255,29 @@ void SweepSolve( const InputData &inputData,
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 
+    // DEBUGGING
+    // FieldData<Tensor3D> residualFields( Tensor3D( mesh.nCells(0) + 2*nGhost, 
+    //                                               mesh.nCells(1) + 2*nGhost,
+    //                                               mesh.nCells(2) + 2*nGhost ) );
+    // ResidualFieldWriter residualFieldWriter( residualFields, mesh, axisTransformation, "residual_field" );
 
     // Outer iterations
     bool writeFields = ( inputData.fieldWriteInterval > 0 );
     if ( writeFields ) {
         fieldWriter.WriteData( 0 );
     }
+
+    // Calculate initial residual
+    residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
+                                                      mgLevels[0].fvCoeffs, 
+                                                      mgLevels[0].ibData.mask);
+    // Put this in a function
+    ForAllFieldData( [&] (intType f) {
+        residualsScaleFactor[f] = 1.0f;
+    } );
+    if ( residualsOuter.P != 0 ) { // Division by zero
+        residualsScaleFactor.P = 1.0f / residualsOuter.P;
+    } 
     TOC()
 
     TIC("Solver Loop")
@@ -272,7 +289,8 @@ void SweepSolve( const InputData &inputData,
                                                           mgLevels[0].fvCoeffs, 
                                                           mgLevels[0].ibData.mask); 
 
-        NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
+        // NormaliseResiduals( residualsOuter, residualsScaleFactor );
+        ForAllFieldData( [&] (intType i) { residualsOuter[i] *= residualsScaleFactor[i]; } );
 
         massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
                                                      mgLevels[0].mesh);
@@ -289,6 +307,9 @@ void SweepSolve( const InputData &inputData,
             probeLogFiles[p].WriteData( probeValues[p], nOuterIterations );
         }
 
+        // DEBUGGING
+        // residualFields = ResidualsField<MI, LI>( fields, mgLevels[0].fvCoeffs, mgLevels[0].ibData.mask ); 
+        // residualFieldWriter.WriteData( nOuterIterations );
         
         if ( ResidualsDiverged(residualsOuter) ) {
             fieldWriter.WriteData( nOuterIterations );

@@ -2,25 +2,25 @@
 
 Model {
     rho  = 1
-    nu   = 0.01
+    nu   = 0.005
 }
 
 Mesh {
 
-    domain = (7, 2, 1)
+    domain = (6, 3, 1)
 
     Grid x {
         Segment {
-            bounds     = (0, 7)
-            nCells     = 63
+            bounds     = (0, 6)
+            nCells     = 108
             biasFactor = 1
         }
     }
 
     Grid y {
         Segment {
-            bounds     = (0, 2)
-            nCells     = 18
+            bounds     = (0, 3)
+            nCells     = 54
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 9
+            nCells     = 18
             biasFactor = 1
         }
     }
@@ -108,23 +108,40 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 500
-        maxOuterResiduals = 1e-10
+        maxOuterIterations = 10000
+        maxOuterResiduals = 1e-5
 
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 5
-        maxResiduals = 1e-1
+        maxIterations = 3
+        maxResiduals = 0
 
-        planeSweepDirection = +z
+        planeSweepDirection = +x
         lineSweepDirection = +y
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
+    }
+
+    Multigrid {
+        maxCoarseLevels = 3
+
+        maxPreSmoothingIterations = 3
+        maxPreSmoothingResiduals = 0
+
+        maxPostSmoothingIterations = 3
+        maxPostSmoothingResiduals = 0
+
+        maxCoarseGridIterations = 50
+        maxCoarseGridResiduals  = 0
+        
+        maxFineGridIterations   = 5
+        maxFineGridResiduals    = 0
+        
     }
 
 }

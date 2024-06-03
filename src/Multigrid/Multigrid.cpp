@@ -55,8 +55,8 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
         if ( inputData.schemes.linearisation == Linearisation::Newton ) 
             mgl.faceAdvectedVelocities = InitialiseAdvectedFaceVelocities( mgl.mesh, mgl.fields.U, mgl.faceFluxes, mgl.bcData );
 
-        // Allocate and initialise residuals
-        mgl.residuals = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0) + 2*nGhost, 
+        // Allocate and initialise residualsRestricted
+        mgl.residualsRestricted = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0) + 2*nGhost, 
                                                        mgl.mesh.nCells(1) + 2*nGhost, 
                                                        mgl.mesh.nCells(2) + 2*nGhost).setZero() );
 
@@ -178,6 +178,51 @@ Tensor3D RestrictField( const Tensor3D &fineField,
 
 
 
+// Tensor3D ProlongateField( const Tensor3D &coarseField,
+//                           const Mesh &coarseMesh,
+//                           const Mesh &fineMesh )
+// {
+
+//     using enum Axis::ENUMDATA;
+//     using FVT::G;
+
+//     Tensor3D fineField( fineMesh.nCells(0) + 2*CFD::nGhost, 
+//                         fineMesh.nCells(1) + 2*CFD::nGhost, 
+//                         fineMesh.nCells(2) + 2*CFD::nGhost );
+
+//     EnumVector<Axis, bool> firstCellNotAgglomerated;
+//     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+//         firstCellNotAgglomerated[axis] = coarseMesh.cellLengths[axis](0) == fineMesh.cellLengths[axis](0);
+//     } );
+
+//     // Iterate fine grid
+//     for ( intType kF = 0; kF != fineMesh.nCells(Z); kF++ ) {
+        
+//         intType kC = firstCellNotAgglomerated[Z] ? static_cast<intType>( ceil( static_cast<floatType>(kF) / 2.0f ) )
+//                                                  : static_cast<intType>( floor( kF / 2 ) );
+
+//         for ( intType jF = 0; jF != fineMesh.nCells(Y); jF++ ) {
+            
+//             intType jC = firstCellNotAgglomerated[Y] ? static_cast<intType>( ceil( static_cast<floatType>(jF) / 2.0f ) )
+//                                                      : static_cast<intType>( floor( jF / 2 ) );
+
+//             for ( intType iF = 0; iF != fineMesh.nCells(X); iF++ ) {
+
+//                 intType iC = firstCellNotAgglomerated[X] ? static_cast<intType>( ceil( static_cast<floatType>(iF) / 2.0f ) )
+//                                                          : static_cast<intType>( floor( iF / 2 ) );
+
+//                 // Injection
+//                 fineField( G(iF, jF, kF) ) = coarseField( G(iC, jC, kC) );
+
+//             }
+//         }
+//     }
+
+//     return fineField;
+// }
+
+
+
 Tensor3D ProlongateField( const Tensor3D &coarseField,
                           const Mesh &coarseMesh,
                           const Mesh &fineMesh )
@@ -195,25 +240,75 @@ Tensor3D ProlongateField( const Tensor3D &coarseField,
         firstCellNotAgglomerated[axis] = coarseMesh.cellLengths[axis](0) == fineMesh.cellLengths[axis](0);
     } );
 
+    auto SetCoarseIdices = [&] ( intType &iC, intType &iCp1, const intType iF, const Axis::ENUMDATA axis ) {
+        if ( iF == 0 ) {    // Edge nodes get direction injection
+            iC = 0;
+            iCp1 = iC;
+        } else if ( iF == fineMesh.nCells(axis) - 1 ) {
+            iC = coarseMesh.nCells(axis) - 1;
+            iCp1 = iC;
+        } else {
+            iC = firstCellNotAgglomerated[axis] ? static_cast<intType>( floor( static_cast<floatType>(iF) / 2.0f ) )
+                                                : static_cast<intType>( floor( (static_cast<floatType>(iF) - 1.0f) / 2.0f ) );
+            iCp1 = iC + 1;
+        }
+    };
+
+
+    auto GetInterpolationFactor = [&] ( const intType iF, const intType iC, const intType iCp1, const Axis::ENUMDATA axis ) -> floatType {
+        if ( iC == iCp1 ) {
+            return 0.0f;
+        }
+        return ( fineMesh.cellCenters[axis](iF) - coarseMesh.cellCenters[axis](iC) ) 
+             / ( coarseMesh.cellCenters[axis](iC) - coarseMesh.cellCenters[axis](iCp1) );
+    };
+
+
     // Iterate fine grid
     for ( intType kF = 0; kF != fineMesh.nCells(Z); kF++ ) {
         
-        intType kC = firstCellNotAgglomerated[Z] ? static_cast<intType>( ceil( static_cast<floatType>(kF) / 2.0f ) )
-                                                 : static_cast<intType>( floor( kF / 2 ) );
+        intType kC, kCp1;
+        SetCoarseIdices( kC, kCp1, kF, Z );
+        floatType lambdaZ = GetInterpolationFactor( kF, kC, kCp1, Z );
 
         for ( intType jF = 0; jF != fineMesh.nCells(Y); jF++ ) {
             
-            intType jC = firstCellNotAgglomerated[Y] ? static_cast<intType>( ceil( static_cast<floatType>(jF) / 2.0f ) )
-                                                     : static_cast<intType>( floor( jF / 2 ) );
-
+            intType jC, jCp1;
+            SetCoarseIdices( jC, jCp1, jF, Y );
+            floatType lambdaY = GetInterpolationFactor( jF, jC, jCp1, Y );
 
             for ( intType iF = 0; iF != fineMesh.nCells(X); iF++ ) {
 
-                intType iC = firstCellNotAgglomerated[X] ? static_cast<intType>( ceil( static_cast<floatType>(iF) / 2.0f ) )
-                                                         : static_cast<intType>( floor( iF / 2 ) );
+                intType iC, iCp1;
+                SetCoarseIdices( iC, iCp1, iF, X );
+                floatType lambdaX = GetInterpolationFactor( iF, iC, iCp1, X );
 
-                // Injection
-                fineField( G(iF, jF, kF) ) = coarseField( G(iC, jC, kC) );
+                // Points to interpolation from
+                floatType c000 = coarseField( G(iC  , jC  , kC  ) ),
+                          c100 = coarseField( G(iCp1, jC  , kC  ) ),
+                          c010 = coarseField( G(iC  , jCp1, kC  ) ),
+                          c001 = coarseField( G(iC  , jC  , kCp1) ),
+                          c101 = coarseField( G(iCp1, jC  , kCp1) ),
+                          c011 = coarseField( G(iC  , jCp1, kCp1) ),
+                          c110 = coarseField( G(iCp1, jCp1, kC  ) ),
+                          c111 = coarseField( G(iCp1, jCp1, kCp1) );
+
+                // Linear interpolation in z direction
+                floatType c00 = ( 1-lambdaZ ) * c000  +  lambdaZ * c001,
+                          c10 = ( 1-lambdaZ ) * c100  +  lambdaZ * c101,
+                          c01 = ( 1-lambdaZ ) * c010  +  lambdaZ * c011,
+                          c11 = ( 1-lambdaZ ) * c110  +  lambdaZ * c111;
+
+                
+                // Linear interpolation in y direction
+                floatType c0 = ( 1-lambdaY ) * c00  +  lambdaY * c01,
+                          c1 = ( 1-lambdaY ) * c10  +  lambdaY * c11;
+
+
+                // Linear interpolation in x direction
+                floatType c = ( 1-lambdaX ) * c0  +  lambdaX * c1;
+
+                fineField( G(iF, jF, kF) ) = c;
 
             }
         }
@@ -221,7 +316,6 @@ Tensor3D ProlongateField( const Tensor3D &coarseField,
 
     return fineField;
 }
-
 
 
 
@@ -243,7 +337,7 @@ FieldData<Tensor3D> ComputeFineGridCorrection( const FieldData<Tensor3D> &coarse
 template< MomentumInterpolation MI, Linearisation LI >
 void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs, 
                                      const FieldData<Tensor3D> &fieldsRestricted,
-                                     const FieldData<Tensor3D> &residuals,
+                                     const FieldData<Tensor3D> &residualsRestricted,
                                      const Tensor3D &mask )
 {
     using enum Axis::ENUMDATA;
@@ -267,7 +361,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[X].AU[Z][b](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);
                 }
                 fvCoeffs.Mom[X].F(i, j, k) += mask(i, j, k)
-                                              * (  residuals.U[X](ig, jg, kg)
+                                              * (  residualsRestricted.U[X](ig, jg, kg)
 
                                                  + fvCoeffs.Mom[X].AU[X][p](i, j, k) * fieldsRestricted.U[X]( ig  , jg  , kg  ) 
                                                  + fvCoeffs.Mom[X].AU[X][n](i, j, k) * fieldsRestricted.U[X]( ig  , jg+1, kg  ) 
@@ -299,7 +393,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[Y].AU[Z][b](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);      
                 }
                 fvCoeffs.Mom[Y].F(i, j, k) += mask(i, j, k) 
-                                              * (   residuals.U[Y](ig, jg, kg)
+                                              * (   residualsRestricted.U[Y](ig, jg, kg)
 
                                                   + fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fieldsRestricted.U[Y]( ig  , jg  , kg  ) 
                                                   + fvCoeffs.Mom[Y].AU[Y][n](i, j, k) * fieldsRestricted.U[Y]( ig  , jg+1, kg  ) 
@@ -331,7 +425,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[Z].AU[Y][s](i, j, k) * fieldsRestricted.U[Y]( ig  , jg-1, kg  );    
                 }
                 fvCoeffs.Mom[Z].F(i, j, k) += mask(i, j, k)
-                                              * (   residuals.U[Z](ig, jg, kg)
+                                              * (   residualsRestricted.U[Z](ig, jg, kg)
 
                                                   + fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg  ) 
                                                   + fvCoeffs.Mom[Z].AU[Z][n](i, j, k) * fieldsRestricted.U[Z]( ig  , jg+1, kg  ) 
@@ -362,7 +456,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                                         + fvCoeffs.Cont.AP[bb](i, j, k) * fieldsRestricted.P( ig  , jg  , kg-2);
                 }
                 fvCoeffs.Cont.F(i, j, k) += mask(i, j, k) 
-                                          * (   residuals.P(ig, jg, kg)
+                                          * (   residualsRestricted.P(ig, jg, kg)
 
                                               + fvCoeffs.Cont.AU[X][e](i) * fieldsRestricted.U[X]( ig+1, jg  , kg  )
                                               + fvCoeffs.Cont.AU[X][p](i) * fieldsRestricted.U[X]( ig  , jg  , kg  )
@@ -403,7 +497,7 @@ template void TransformToCoarseGridEquations<MomentumInterpolation::SemiExplicit
 template< MomentumInterpolation MI, Linearisation LI >
 FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs, 
                                                       const FieldData<Tensor3D> &fieldsRestricted,
-                                                      const FieldData<Tensor3D> &residuals,
+                                                      const FieldData<Tensor3D> &residualsRestricted,
                                                       const Tensor3D &mask )
 {
     using enum Axis::ENUMDATA;
@@ -431,7 +525,7 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[X].AU[Z][b](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);
                 }
                 coarseGridRightHandSide.U[X](i, j, k) = mask(i, j, k)
-                                              * (  residuals.U[X](ig, jg, kg)
+                                              * (  residualsRestricted.U[X](ig, jg, kg)
 
                                                  + fvCoeffs.Mom[X].AU[X][p](i, j, k) * fieldsRestricted.U[X]( ig  , jg  , kg  ) 
                                                  + fvCoeffs.Mom[X].AU[X][n](i, j, k) * fieldsRestricted.U[X]( ig  , jg+1, kg  ) 
@@ -463,7 +557,7 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[Y].AU[Z][b](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);      
                 }
                 coarseGridRightHandSide.U[Y](i, j, k) += mask(i, j, k) 
-                                              * (   residuals.U[Y](ig, jg, kg)
+                                              * (   residualsRestricted.U[Y](ig, jg, kg)
 
                                                   + fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fieldsRestricted.U[Y]( ig  , jg  , kg  ) 
                                                   + fvCoeffs.Mom[Y].AU[Y][n](i, j, k) * fieldsRestricted.U[Y]( ig  , jg+1, kg  ) 
@@ -495,7 +589,7 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[Z].AU[Y][s](i, j, k) * fieldsRestricted.U[Y]( ig  , jg-1, kg  );    
                 }
                 coarseGridRightHandSide.U[Z](i, j, k) += mask(i, j, k)
-                                              * (   residuals.U[Z](ig, jg, kg)
+                                              * (   residualsRestricted.U[Z](ig, jg, kg)
 
                                                   + fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg  ) 
                                                   + fvCoeffs.Mom[Z].AU[Z][n](i, j, k) * fieldsRestricted.U[Z]( ig  , jg+1, kg  ) 
@@ -526,7 +620,7 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
                                         + fvCoeffs.Cont.AP[bb](i, j, k) * fieldsRestricted.P( ig  , jg  , kg-2);
                 }
                coarseGridRightHandSide.P(i, j, k) += mask(i, j, k) 
-                                          * (   residuals.P(ig, jg, kg)
+                                          * (   residualsRestricted.P(ig, jg, kg)
 
                                               + fvCoeffs.Cont.AU[X][e](i) * fieldsRestricted.U[X]( ig+1, jg  , kg  )
                                               + fvCoeffs.Cont.AU[X][p](i) * fieldsRestricted.U[X]( ig  , jg  , kg  )
