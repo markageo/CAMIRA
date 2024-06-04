@@ -219,10 +219,7 @@ inline FieldData<floatType> ScaledL1NormResiduals( const FieldData<Tensor3D> &fi
             residuals.U[axis] /= scalingFactor.U[axis];
         }
     } );
-
-    // ForAllFieldData( [&] (intType f) {
-    //     residuals[f] /= static_cast<floatType>( fvCoeffs.nCells[X] * fvCoeffs.nCells[Y] * fvCoeffs.nCells[Z] ); 
-    // } );
+    residuals.P /= static_cast<floatType>( fvCoeffs.nCells(X) * fvCoeffs.nCells(Y) * fvCoeffs.nCells(Z) );
 
     return residuals;
 }
@@ -385,7 +382,6 @@ inline FieldData<Tensor3D> ResidualsField( const FieldData<Tensor3D> &fields,
         }
     }
 
-
     return residuals;
 }
 
@@ -413,33 +409,25 @@ inline floatType BoundaryMassFluxResidual( const EnumVector<Axis, Tensor3D> &fac
     return massFluxResidual;
 }
 
+// Set the normalisation factor for the residuals
+[[ maybe_unused ]]
+inline void SetResidualsNormalisationFactor( FieldData<floatType> &residualsScaleFactor,
+                                             const FieldData<floatType> &residuals ) {
+    ForAllFieldData( [&] (intType f) {
+        residualsScaleFactor[f] = 1.0f;
+    } );
+    if ( residuals.P != 0 ) { // Division by zero
+        residualsScaleFactor.P = 1.0f / residuals.P;
+    } 
+}
 
 
-// Normalise the residual by the first iteration
+
+// Apply normalisation to residuals
 [[ maybe_unused ]]
 inline void NormaliseResiduals( FieldData<floatType> &residuals,
-                                FieldData<floatType> &residualsScaleFactor,
-                                const intType nIterations )
+                                FieldData<floatType> &residualsScaleFactor )
 {
-    if (nIterations == 1) {
-
-        // Momentum equations
-        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-
-            residualsScaleFactor.U[axis] = 1.0f;
-            // if ( residuals.U[axis] != 0 ) { // Division by zero
-            //     residualsScaleFactor.U[axis] = 1.0f / residuals.U[axis];
-            // } 
-
-        } );
-
-        // Continuity equation
-        residualsScaleFactor.P = 1.0f;
-        if ( residuals.P != 0 ) { // Division by zero
-            residualsScaleFactor.P = 1.0f / residuals.P;
-        } 
-    }
-
     ForAllFieldData( [&] (intType i) { residuals[i] *= residualsScaleFactor[i]; } );
 }
 
