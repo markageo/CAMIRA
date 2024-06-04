@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.005
+    nu   = 0.001
 }
 
 Mesh {
@@ -116,8 +116,8 @@ Solver {
     LinearSolver {
 
         type = SUGS
-        maxIterations = 5
-        maxResiduals = 1e-2
+        maxIterations = 3
+        maxResiduals = 1e-5
 
         planeSweepDirection = +x
         lineSweepDirection = +y
@@ -128,7 +128,7 @@ Solver {
     }
 
     Multigrid {
-        maxCoarseLevels = 3
+        maxCoarseLevels = 1
 
         maxPreSmoothingIterations = 3
         maxPreSmoothingResiduals = 0
