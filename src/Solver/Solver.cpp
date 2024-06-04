@@ -96,6 +96,12 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
         SetCoarseGridEquations<MI, LI>( gridLevelData );
     }
 
+    FieldData<floatType > residuals = ScaledL1NormResiduals<MI, LI>( gridLevelData.fields, 
+                                                                     gridLevelData.fvCoeffs, 
+                                                                     gridLevelData.ibData.mask);
+    SetResidualsNormalisationFactor( residualsScaleFactor, residuals );
+    NormaliseResiduals( residuals, residualsScaleFactor );
+
     for ( intType nIterations = 1; nIterations <= maxIterations; nIterations++ ) {
 
         gridLevelData.linearSolver->UpdateState();
@@ -108,14 +114,10 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
             SetCoarseGridEquations<MI, LI>( gridLevelData );
         }
 
-        FieldData<floatType> residuals = ScaledL1NormResiduals<MI, LI>( gridLevelData.fields,
-                                                                        gridLevelData.fvCoeffs,
-                                                                        gridLevelData.ibData.mask );
-        NormaliseResiduals( residuals, residualsScaleFactor, nIterations );
-
-        // if ( gridLevelData.isCoarsestLevel ) {
-        //     std::cout << "level: " << gridLevelData.level << ", residual: " << residuals.P << "\n\n";
-        // }
+        residuals = ScaledL1NormResiduals<MI, LI>( gridLevelData.fields,
+                                                   gridLevelData.fvCoeffs,
+                                                   gridLevelData.ibData.mask );
+        NormaliseResiduals( residuals, residualsScaleFactor );
 
         if ( ResidualsDiverged(residuals) ) {
             break;
@@ -271,16 +273,15 @@ void SweepSolve( const InputData &inputData,
     residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
                                                       mgLevels[0].fvCoeffs, 
                                                       mgLevels[0].ibData.mask);
-    // Put this in a function
-    ForAllFieldData( [&] (intType f) {
-        residualsScaleFactor[f] = 1.0f;
-    } );
-    if ( residualsOuter.P != 0 ) { // Division by zero
-        residualsScaleFactor.P = 1.0f / residualsOuter.P;
-    } 
+    SetResidualsNormalisationFactor( residualsScaleFactor, residualsOuter );
+    NormaliseResiduals( residualsOuter, residualsScaleFactor );
+    massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
+                                                 mgLevels[0].mesh);
     TOC()
 
     TIC("Solver Loop")
+    consoleLog.WriteHeader();
+    consoleLog.WriteResiduals( residualsOuter, massFluxResidual, 0 );
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
         MultigridCycle( mgLevels, inputData.multigridSettings );
@@ -288,10 +289,7 @@ void SweepSolve( const InputData &inputData,
         residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
                                                           mgLevels[0].fvCoeffs, 
                                                           mgLevels[0].ibData.mask); 
-
-        // NormaliseResiduals( residualsOuter, residualsScaleFactor );
-        ForAllFieldData( [&] (intType i) { residualsOuter[i] *= residualsScaleFactor[i]; } );
-
+        NormaliseResiduals( residualsOuter, residualsScaleFactor );
         massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
                                                      mgLevels[0].mesh);
 
