@@ -141,6 +141,9 @@ public:
                      + pressureWideStencil;
 
 
+        // Only update the molecule if none of the cells are within the immersed boundary
+        floatType masterMask = m_mask(iU, jU, kU) * m_mask(iV, jV, kV) * m_mask(iW, jW, kW) * m_mask(i, j, k);
+
         // Update P from continuity
         floatType newP = ( 1 - m_fvCoeffs.Cont.relaxation ) * m_fieldsOld.P( ig, jg, kg )
                                  + m_fvCoeffs.Cont.relaxation * 
@@ -163,14 +166,11 @@ public:
                                        + m_fvCoeffs.Mom[Z].relaxation * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(iW, jW, kW) );
 
 
-
-        // Only update the molecule if none of the cells are within the immersed boundary
-        floatType masterMask = m_mask(iU, jU, kU) * m_mask(iV, jV, kV) * m_mask(iW, jW, kW) * m_mask(i, j, k);
-        m_fields.P( ig, jg, kg )       = (1.0f - masterMask) * m_fields.P( ig, jg, kg )        +  masterMask * newP;
+        // Updating like this means that the old pressure value is used in the momentum update. 
+        m_fields.P( ig, jg, kg ) = (1.0f - masterMask) * m_fields.P( ig, jg, kg ) +  masterMask * newP;
         m_fields.U[X]( igU, jgU, kgU ) = (1.0f - masterMask) * m_fields.U[X]( igU, jgU, kgU )  +  masterMask * newU;
         m_fields.U[Y]( igV, jgV, kgV ) = (1.0f - masterMask) * m_fields.U[Y]( igV, jgV, kgV )  +  masterMask * newV;
         m_fields.U[Z]( igW, jgW, kgW ) = (1.0f - masterMask) * m_fields.U[Z]( igW, jgW, kgW )  +  masterMask * newW;
-
     }
 
 
