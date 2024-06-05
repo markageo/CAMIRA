@@ -106,7 +106,7 @@ Tensor3D RestrictField( const Tensor3D &fineField,
         } else {
             iFp1 = iF + 1;
             iFIncrement = 2;
-            lambda = ( coarseMesh.cellCenters[X](iC) - fineMesh.cellCenters[X](iF) ) / ( fineMesh.cellCenters[X](iFp1) - fineMesh.cellCenters[X](iF) );
+            lambda = ( coarseMesh.cellCenters[axis](iC) - fineMesh.cellCenters[axis](iF) ) / ( fineMesh.cellCenters[axis](iFp1) - fineMesh.cellCenters[axis](iF) );
         }
     };
 
