@@ -14,6 +14,11 @@
 namespace CFD
 {
 
+enum class MultigridEquation {
+    NoTauCorrection,
+    TauCorrection
+};
+
 template< MomentumInterpolation MI, Linearisation LI >
 struct GridLevelData
 {

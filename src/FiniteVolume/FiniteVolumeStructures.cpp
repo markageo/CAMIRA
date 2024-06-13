@@ -401,7 +401,9 @@ FieldData<Tensor3D> InitialiseFields( const Mesh &mesh,
                                       const InputData &inputData )
 {
 
-    FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero() );
+    FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CFD::nGhost, 
+                                          mesh.nCells(1) + 2*CFD::nGhost, 
+                                          mesh.nCells(2) + 2*CFD::nGhost).setZero() );
 
     TensorIndex3D offsets = {nGhost, nGhost, nGhost},
                   extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
