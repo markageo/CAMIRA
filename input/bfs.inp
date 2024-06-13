@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.005
+    nu   = 0.001
 }
 
 Mesh {
@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 6)
-            nCells     = 108
+            nCells     = 228
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 3)
-            nCells     = 54
+            nCells     = 114
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 18
+            nCells     = 28
             biasFactor = 1
         }
     }
@@ -128,7 +128,7 @@ Solver {
     }
 
     Multigrid {
-        maxCoarseLevels = 3
+        maxCoarseLevels = 1
 
         maxPreSmoothingIterations = 3
         maxPreSmoothingResiduals = 0
@@ -136,8 +136,8 @@ Solver {
         maxPostSmoothingIterations = 3
         maxPostSmoothingResiduals = 0
 
-        maxCoarseGridIterations = 50
-        maxCoarseGridResiduals  = 0
+        maxCoarseGridIterations = 1000
+        maxCoarseGridResiduals  = 1e-8
         
         maxFineGridIterations   = 5
         maxFineGridResiduals    = 0

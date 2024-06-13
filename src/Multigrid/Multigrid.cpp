@@ -57,8 +57,8 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
         // Allocate and initialise residualsRestricted
         mgl.residualsRestricted = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0) + 2*nGhost, 
-                                                       mgl.mesh.nCells(1) + 2*nGhost, 
-                                                       mgl.mesh.nCells(2) + 2*nGhost).setZero() );
+                                                                 mgl.mesh.nCells(1) + 2*nGhost, 
+                                                                 mgl.mesh.nCells(2) + 2*nGhost).setZero() );
 
         // Immersed boundary data
         mgl.ibData = CreateImmersedBoundaryData(inputData, mgl.mesh);
@@ -97,6 +97,7 @@ Tensor3D RestrictField( const Tensor3D &fineField,
     Tensor3D coarseField( coarseMesh.nCells(0) + 2*CFD::nGhost, 
                           coarseMesh.nCells(1) + 2*CFD::nGhost, 
                           coarseMesh.nCells(2) + 2*CFD::nGhost );
+    coarseField.setZero();
 
     auto SetFineIdicesAndInterpFactor = [&] ( floatType &lambda, intType &iFp1, intType &iFIncrement, const intType &iF, const intType iC, const Axis::ENUMDATA axis ) {
         if ( coarseMesh.cellLengths[axis](iC) == fineMesh.cellLengths[axis](iF) ) { 
@@ -112,19 +113,19 @@ Tensor3D RestrictField( const Tensor3D &fineField,
 
 
     // Iterate coarse grid
-    for ( intType kC = 0, kF = 0, kFIncrement = 1; kC != coarseMesh.nCells(Z); kC++, kF += kFIncrement ) {
+    for ( intType kC = 0, kF = 0, kFIncrement = 2; kC != coarseMesh.nCells(Z); kC++, kF += kFIncrement ) {
 
         intType kFp1;
         floatType lambdaZ;
         SetFineIdicesAndInterpFactor(lambdaZ, kFp1, kFIncrement, kF, kC, Z);
 
-        for ( intType jC = 0, jF = 0, jFIncrement = 1; jC != coarseMesh.nCells(Y); jC++, jF += jFIncrement ) {
+        for ( intType jC = 0, jF = 0, jFIncrement = 2; jC != coarseMesh.nCells(Y); jC++, jF += jFIncrement ) {
 
             intType jFp1;
             floatType lambdaY;
             SetFineIdicesAndInterpFactor(lambdaY, jFp1, jFIncrement, jF, jC, Y);
 
-            for ( intType iC = 0, iF = 0, iFIncrement = 1; iC != coarseMesh.nCells(X); iC++, iF += iFIncrement ) {
+            for ( intType iC = 0, iF = 0, iFIncrement = 2; iC != coarseMesh.nCells(X); iC++, iF += iFIncrement ) {
 
                 intType iFp1;
                 floatType lambdaX;
@@ -166,53 +167,6 @@ Tensor3D RestrictField( const Tensor3D &fineField,
 
 
 
-// Tensor3D ProlongateField( const Tensor3D &coarseField,
-//                           const Mesh &coarseMesh,
-//                           const Mesh &fineMesh )
-// {
-
-//     using enum Axis::ENUMDATA;
-//     using FVT::G;
-
-//     Tensor3D fineField( fineMesh.nCells(0) + 2*CFD::nGhost, 
-//                         fineMesh.nCells(1) + 2*CFD::nGhost, 
-//                         fineMesh.nCells(2) + 2*CFD::nGhost );
-
-//     EnumVector<Axis, bool> firstCellNotAgglomerated;
-//     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-//         firstCellNotAgglomerated[axis] = coarseMesh.cellLengths[axis](0) == fineMesh.cellLengths[axis](0);
-//     } );
-
-//     auto GetCoarseIndex = [&] ( const intType iF, const Axis::ENUMDATA axis ) -> intType {
-//         return firstCellNotAgglomerated[axis] ? static_cast<intType>( ceil( static_cast<floatType>(iF) / 2.0f ) )
-//                                               : static_cast<intType>( floor( iF / 2 ) );
-//     };
-
-//     // Iterate fine grid
-//     for ( intType kF = 0; kF != fineMesh.nCells(Z); kF++ ) {
-        
-//         intType kC = GetCoarseIndex(kF, Z);
-
-//         for ( intType jF = 0; jF != fineMesh.nCells(Y); jF++ ) {
-            
-//             intType jC = GetCoarseIndex(jF, Y);
-
-//             for ( intType iF = 0; iF != fineMesh.nCells(X); iF++ ) {
-
-//                 intType iC = GetCoarseIndex(iF, X);
-
-//                 // Injection
-//                 fineField( G(iF, jF, kF) ) = coarseField( G(iC, jC, kC) );
-
-//             }
-//         }
-//     }
-
-//     return fineField;
-// }
-
-
-
 Tensor3D ProlongateField( const Tensor3D &coarseField,
                           const Mesh &coarseMesh,
                           const Mesh &fineMesh )
@@ -224,75 +178,33 @@ Tensor3D ProlongateField( const Tensor3D &coarseField,
     Tensor3D fineField( fineMesh.nCells(0) + 2*CFD::nGhost, 
                         fineMesh.nCells(1) + 2*CFD::nGhost, 
                         fineMesh.nCells(2) + 2*CFD::nGhost );
+    fineField.setZero();
 
     EnumVector<Axis, bool> firstCellNotAgglomerated;
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         firstCellNotAgglomerated[axis] = coarseMesh.cellLengths[axis](0) == fineMesh.cellLengths[axis](0);
     } );
 
-    auto SetCoarseIdicesAndInterpFactor = [&] ( floatType &lambda, intType &iC, intType &iCp1, const intType iF, const Axis::ENUMDATA axis ) {
-        if ( iF == 0 ) {    // Edge nodes get direction injection
-            iC = 0;
-            iCp1 = iC;
-            lambda = 0.0f;
-        } else if ( iF == fineMesh.nCells(axis) - 1 ) {
-            iC = coarseMesh.nCells(axis) - 1;
-            iCp1 = iC;
-            lambda = 0.0f;
-        } else {
-            iC = firstCellNotAgglomerated[axis] ? static_cast<intType>( floor( static_cast<floatType>(iF) / 2.0f ) )
-                                                : static_cast<intType>( floor( (static_cast<floatType>(iF) - 1.0f) / 2.0f ) );
-            iCp1 = iC + 1;
-            lambda = ( fineMesh.cellCenters[axis](iF) - coarseMesh.cellCenters[axis](iC) ) 
-                   / ( coarseMesh.cellCenters[axis](iC) - coarseMesh.cellCenters[axis](iCp1) );
-        }
+    auto GetCoarseIndex = [&] ( const intType iF, const Axis::ENUMDATA axis ) -> intType {
+        return firstCellNotAgglomerated[axis] ? static_cast<intType>( ceil( static_cast<floatType>(iF) / 2.0f ) )
+                                              : static_cast<intType>( floor( iF / 2 ) );
     };
 
     // Iterate fine grid
     for ( intType kF = 0; kF != fineMesh.nCells(Z); kF++ ) {
         
-        intType kC, kCp1;
-        floatType lambdaZ;
-        SetCoarseIdicesAndInterpFactor( lambdaZ, kC, kCp1, kF, Z );
+        intType kC = GetCoarseIndex(kF, Z);
 
         for ( intType jF = 0; jF != fineMesh.nCells(Y); jF++ ) {
             
-            intType jC, jCp1;
-            floatType lambdaY;
-            SetCoarseIdicesAndInterpFactor( lambdaY, jC, jCp1, jF, Y );
+            intType jC = GetCoarseIndex(jF, Y);
 
             for ( intType iF = 0; iF != fineMesh.nCells(X); iF++ ) {
 
-                intType iC, iCp1;
-                floatType lambdaX;
-                SetCoarseIdicesAndInterpFactor( lambdaX, iC, iCp1, iF, X );
+                intType iC = GetCoarseIndex(iF, X);
 
-                // Points to interpolation from
-                floatType c000 = coarseField( G(iC  , jC  , kC  ) ),
-                          c100 = coarseField( G(iCp1, jC  , kC  ) ),
-                          c010 = coarseField( G(iC  , jCp1, kC  ) ),
-                          c001 = coarseField( G(iC  , jC  , kCp1) ),
-                          c101 = coarseField( G(iCp1, jC  , kCp1) ),
-                          c011 = coarseField( G(iC  , jCp1, kCp1) ),
-                          c110 = coarseField( G(iCp1, jCp1, kC  ) ),
-                          c111 = coarseField( G(iCp1, jCp1, kCp1) );
-
-                // Linear interpolation in z direction
-                floatType c00 = ( 1-lambdaZ ) * c000  +  lambdaZ * c001,
-                          c10 = ( 1-lambdaZ ) * c100  +  lambdaZ * c101,
-                          c01 = ( 1-lambdaZ ) * c010  +  lambdaZ * c011,
-                          c11 = ( 1-lambdaZ ) * c110  +  lambdaZ * c111;
-
-                
-                // Linear interpolation in y direction
-                floatType c0 = ( 1-lambdaY ) * c00  +  lambdaY * c01,
-                          c1 = ( 1-lambdaY ) * c10  +  lambdaY * c11;
-
-
-                // Linear interpolation in x direction
-                floatType c = ( 1-lambdaX ) * c0  +  lambdaX * c1;
-
-                fineField( G(iF, jF, kF) ) = c;
+                // Injection
+                fineField( G(iF, jF, kF) ) = coarseField( G(iC, jC, kC) );
 
             }
         }
@@ -300,6 +212,97 @@ Tensor3D ProlongateField( const Tensor3D &coarseField,
 
     return fineField;
 }
+
+
+
+// Tensor3D ProlongateField( const Tensor3D &coarseField,
+//                           const Mesh &coarseMesh,
+//                           const Mesh &fineMesh )
+// {
+
+//     using enum Axis::ENUMDATA;
+//     using FVT::G;
+
+//     Tensor3D fineField( fineMesh.nCells(0) + 2*CFD::nGhost, 
+//                         fineMesh.nCells(1) + 2*CFD::nGhost, 
+//                         fineMesh.nCells(2) + 2*CFD::nGhost );
+//     fineField.setZero();
+
+//     EnumVector<Axis, bool> firstCellNotAgglomerated;
+//     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+//         firstCellNotAgglomerated[axis] = coarseMesh.cellLengths[axis](0) == fineMesh.cellLengths[axis](0);
+//     } );
+
+//     auto SetCoarseIdicesAndInterpFactor = [&] ( floatType &lambda, intType &iC, intType &iCp1, const intType iF, const Axis::ENUMDATA axis ) {
+//         if ( iF == 0 ) {    // Edge nodes get direction injection
+//             iC = 0;
+//             iCp1 = iC;
+//             lambda = 0.0f;
+//         } else if ( iF == fineMesh.nCells(axis) - 1 ) {
+//             iC = coarseMesh.nCells(axis) - 1;
+//             iCp1 = iC;
+//             lambda = 0.0f;
+//         } else {
+//             iC = firstCellNotAgglomerated[axis] ? static_cast<intType>( floor( static_cast<floatType>(iF) / 2.0f ) )
+//                                                 : static_cast<intType>( floor( (static_cast<floatType>(iF) - 1.0f) / 2.0f ) );
+//             iCp1 = iC + 1;
+//             lambda = ( fineMesh.cellCenters[axis](iF) - coarseMesh.cellCenters[axis](iC) ) 
+//                    / ( coarseMesh.cellCenters[axis](iC) - coarseMesh.cellCenters[axis](iCp1) );
+//         }
+//     };
+
+//     // Iterate fine grid
+//     for ( intType kF = 0; kF != fineMesh.nCells(Z); kF++ ) {
+        
+//         intType kC, kCp1;
+//         floatType lambdaZ;
+//         SetCoarseIdicesAndInterpFactor( lambdaZ, kC, kCp1, kF, Z );
+
+//         for ( intType jF = 0; jF != fineMesh.nCells(Y); jF++ ) {
+            
+//             intType jC, jCp1;
+//             floatType lambdaY;
+//             SetCoarseIdicesAndInterpFactor( lambdaY, jC, jCp1, jF, Y );
+
+//             for ( intType iF = 0; iF != fineMesh.nCells(X); iF++ ) {
+
+//                 intType iC, iCp1;
+//                 floatType lambdaX;
+//                 SetCoarseIdicesAndInterpFactor( lambdaX, iC, iCp1, iF, X );
+
+//                 // Points to interpolation from
+//                 floatType c000 = coarseField( G(iC  , jC  , kC  ) ),
+//                           c100 = coarseField( G(iCp1, jC  , kC  ) ),
+//                           c010 = coarseField( G(iC  , jCp1, kC  ) ),
+//                           c001 = coarseField( G(iC  , jC  , kCp1) ),
+//                           c101 = coarseField( G(iCp1, jC  , kCp1) ),
+//                           c011 = coarseField( G(iC  , jCp1, kCp1) ),
+//                           c110 = coarseField( G(iCp1, jCp1, kC  ) ),
+//                           c111 = coarseField( G(iCp1, jCp1, kCp1) );
+
+//                 // Linear interpolation in z direction
+//                 floatType c00 = ( 1-lambdaZ ) * c000  +  lambdaZ * c001,
+//                           c10 = ( 1-lambdaZ ) * c100  +  lambdaZ * c101,
+//                           c01 = ( 1-lambdaZ ) * c010  +  lambdaZ * c011,
+//                           c11 = ( 1-lambdaZ ) * c110  +  lambdaZ * c111;
+
+                
+//                 // Linear interpolation in y direction
+//                 floatType c0 = ( 1-lambdaY ) * c00  +  lambdaY * c01,
+//                           c1 = ( 1-lambdaY ) * c10  +  lambdaY * c11;
+
+
+//                 // Linear interpolation in x direction
+//                 floatType c = ( 1-lambdaX ) * c0  +  lambdaX * c1;
+
+//                 fineField( G(iF, jF, kF) ) = c;
+
+//             }
+//         }
+//     }
+
+//     return fineField;
+// }
 
 
 
@@ -558,7 +561,6 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
                                                   + newtonStencilY
 
                                                   + fvCoeffs.Mom[Y].B(i, j, k) );
-
 
 
                 // W momentm
