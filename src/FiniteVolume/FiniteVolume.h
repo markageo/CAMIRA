@@ -22,9 +22,17 @@ struct MomentumEquation {
     EnumVector< Axis, EnumVector<TransportCoefficients, Tensor1D> > diff;     // Diffusion coefficients (LHS)
     EnumVector< BoundaryPatches, floatType > diffBoundary;                    // Diffusion coefficients for constant boundary conditions (LHS)
     EnumVector< BoundaryPatches, Tensor2D   > BUBoundary, BPBoundary;         // Constant terms that come from fixed BC (LHS)
+    struct HiOrderAdvectionCoeffs {                                           // Precomputed high
+        // SOU     : phi_f = g1 * phi_U  +  g2 * phi_UU
+        // QUICK   : phi_f = phi_U  +  g1 * ( phi_D - phi_U )  +  g2 * ( phi_U - phi_UU )
+        EnumVector< Axis, Tensor1D > g1, g2;                        
+    };
+    HiOrderAdvectionCoeffs positiveFluxHiOrderAdvectionCoeffs, negativeFluxHiOrderAdvectionCoeffs;
     floatType relaxation;
     Axis::ENUMDATA component;                                                 // The momentum component
     Linearisation linearisation;
+    AdvectionSchemes advectionScheme;
+    floatType advectionBlendingFactor;
 };
 
 
@@ -79,7 +87,8 @@ EnumVector<Axis, Tensor3D> InitialiseFaceFluxes( const Mesh &,
                                                  const EnumVector<Axis, Tensor3D> &, 
                                                  const BoundaryConditionData &);
 
-EnumVector< Axis, EnumVector<Axis, Tensor3D> > InitialiseAdvectedFaceVelocities( const Mesh &, 
+EnumVector< Axis, EnumVector<Axis, Tensor3D> > InitialiseFaceAdvectedVelocities( const Mesh &, 
+                                                                                 const FVCoefficients &,
                                                                                  const EnumVector<Axis, Tensor3D> &, 
                                                                                  const EnumVector<Axis, Tensor3D> &, 
                                                                                  const BoundaryConditionData &);
@@ -98,12 +107,21 @@ void UpdateFaceFluxesWithMWI( EnumVector<Axis, Tensor3D> &,
 
 void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> > &, 
                                    const Mesh &, 
+                                   const FVCoefficients &,
                                    const EnumVector<Axis, Tensor3D> &, 
                                    const EnumVector<Axis, Tensor3D> &, 
                                    const BoundaryConditionData &);
 
 void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &, 
                       const IBData & );
+
+template<AdvectionSchemes>
+void SetIBFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> > &,
+                                  const EnumVector< Axis, Tensor3D > &,
+                                  const FieldData<Tensor3D> &,
+                                  const FVCoefficients &,
+                                  const Mesh &,
+                                  const IBData & ); 
 
 
 
@@ -112,10 +130,6 @@ void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &,
 
 // Allocate and initialise finite volume coefficients
 FVCoefficients InitialiseFVCoefficients( const Mesh &, 
-                                         const FieldData< Tensor3D > &, 
-                                         const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &,
-                                         const EnumVector< Axis, Tensor3D > &,
-                                         const IBData &, 
                                          const BoundaryConditionData &, 
                                          const InputData &);
 
@@ -127,6 +141,13 @@ void UpdateFVCoefficients( FVCoefficients &,
                            const EnumVector< Axis, Tensor3D > &,
                            const IBData &,
                            const BoundaryConditionData &);
+
+
+// ----------------------------------------- Definition in GhostCells.cpp --------------------------------------- //
+
+void SetGhostCells( FieldData<Tensor3D> &,
+                    const Mesh &,
+                    const BoundaryConditionData & );
 
 
 // ---------------------------------------- Definition in VertexValues.cpp -------------------------------------- //

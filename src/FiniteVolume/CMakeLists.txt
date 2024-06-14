@@ -3,8 +3,10 @@ target_sources( libs
         FaceVelocities.cpp 
         FiniteVolumeCoefficients.cpp 
         FiniteVolumeStructures.cpp 
+        GhostCells.cpp
         VertexValues.cpp
         Mesh.cpp 
     PRIVATE 
         FiniteVolume.h
-        Mesh.h )
+        Mesh.h
+        FaceInterpolatedVelocity.h )

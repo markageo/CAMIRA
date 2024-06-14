@@ -592,9 +592,25 @@ namespace
         valueString = schemesTree.get<std::string>( "advectionScheme" );
         if        ( valueString == "upwind" ) {
             inputData.schemes.advectionScheme = AdvectionSchemes::Upwind;
-        } else {
+        } else if ( valueString == "central" ) {
+            inputData.schemes.advectionScheme = AdvectionSchemes::Central;
+        } else if ( valueString == "SOU" ) {
+            inputData.schemes.advectionScheme = AdvectionSchemes::SOU;
+        } else if ( valueString == "QUICK" ) {
+            inputData.schemes.advectionScheme = AdvectionSchemes::QUICK;
+        } else  {
             throw std::runtime_error( "'" + valueString + "' is not a valid advection scheme." );
         }
+
+
+        // Advection blending factor. Default this to 1
+        boost::optional<floatType> advectionBlendingFactorOptional = schemesTree.get_optional<floatType>( "advectionBlendingFactor" );
+        if ( !advectionBlendingFactorOptional ) {
+            inputData.schemes.advectionBlendingFactor = 1.0f;
+        } else {
+            inputData.schemes.advectionBlendingFactor = advectionBlendingFactorOptional.get();
+        }
+        
 
         // Face interpolation scheme
         valueString = schemesTree.get<std::string>( "faceInterpolationScheme" );
@@ -620,9 +636,14 @@ namespace
         inputData.schemes.maxOuterIterations = schemesTree.get<intType>( "maxOuterIterations" );
 
         // Max outer residuals
-        floatType maxOuterResiduals = schemesTree.get<floatType>( "maxOuterResiduals" );
-        inputData.schemes.maxOuterResiduals.U = maxOuterResiduals;
-        inputData.schemes.maxOuterResiduals.P = maxOuterResiduals;
+        floatType maxContinuityOuterResidual = schemesTree.get<floatType>( "maxContinuityOuterResidual" );
+        inputData.schemes.maxOuterResiduals.P = maxContinuityOuterResidual;
+
+        std::vector<floatType> maxMomentumOuterResiduals = schemesTree.get< std::vector<floatType> >( "maxMomentumOuterResiduals" );
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            inputData.schemes.maxOuterResiduals.U[axis] = maxMomentumOuterResiduals[axis];
+        } );
+        
     }
 
 

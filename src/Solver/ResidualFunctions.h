@@ -199,7 +199,6 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
     residuals.U[Y] = residualV;
     scalingFactor.U[Y] = scalingFactorV;
 
-
     // W momentm
     residuals.U[Z] = residualW;
     scalingFactor.U[Z] = scalingFactorW;
@@ -208,16 +207,12 @@ inline FieldData<floatType> StencilResiduals( const FieldData<Tensor3D> &fields,
     residuals.P = residualP;
 
 
-
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         if ( scalingFactor.U[axis] != 0.0f ) { // Division by zero
             residuals.U[axis] /= scalingFactor.U[axis];
         }
     } );
 
-    // ForAllFieldData( [&] (intType f) {
-    //     residuals[f] /= static_cast<floatType>( fvCoeffs.nCells[X] * fvCoeffs.nCells[Y] * fvCoeffs.nCells[Z] ); 
-    // } );
 
     return residuals;
 }
