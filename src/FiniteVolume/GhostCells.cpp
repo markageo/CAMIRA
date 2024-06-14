@@ -1,0 +1,67 @@
+#include "FiniteVolume.h"
+#include "../Macros.h"
+#include "../Tools/FVTools.h"
+#include "../Tools/FVLookups.h"
+
+#include <utility>
+
+namespace CFD
+{
+ 
+using namespace FVT;
+
+// Set the ghost cells for all fields to give correct boundary condition
+void SetGhostCells( FieldData<Tensor3D> &fields,
+                    const Mesh &mesh,
+                    const BoundaryConditionData &bcData )
+{
+    using BC = BoundaryConditions;
+
+    static constexpr Eigen::array< std::pair< Eigen::Index, Eigen::Index >, 2 > ghostPaddings = { std::make_pair( nGhost, nGhost ), 
+                                                                                std::make_pair( nGhost, nGhost ) };
+
+    EnumFor<BoundaryPatches>( [&] ( BoundaryPatches::ENUMDATA boundaryPatch ) {
+        Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
+
+        intType iCell_p = ( boundaryPatch = LUT::NegativePatch[axis] ) ? 0  : mesh.nCells[axis] - 1,
+                iCell_g = ( boundaryPatch = LUT::NegativePatch[axis] ) ? -1 : mesh.nCells[axis];
+
+        ForAllFieldData( [&] ( intType f ) {
+
+            switch ( bcData.fields[f][boundaryPatch].type ) {
+                case BC::zeroGradient: 
+                {
+                    fields[f].chip( G(iCell_g), axis ) = fields[f].chip( G(iCell_p) , axis );
+                    break;
+                }
+
+                case BC::fixed: 
+                {
+                    fields[f].chip( G(iCell_g), axis ) = - fields[f].chip( G(iCell_p), axis )
+                                                       +   fields[f].chip( G(iCell_p), axis ).constant( 2.0f ) * bcData.fields[f][boundaryPatch].value.pad( ghostPaddings );
+                    break;
+                }
+                    
+                case BC::extrapolated: 
+                {
+                    intType iCell_a = ( boundaryPatch = LUT::NegativePatch[axis] ) ? 1 : mesh.nCells[axis] - 2;
+                    
+                    auto extrapolatedFaceValues = fields[f].chip( G(iCell_p), axis ) * fields[f].constant( mesh.extrapFactors[boundaryPatch].p )
+                                                + fields[f].chip( G(iCell_a), axis ) * fields[f].constant( mesh.extrapFactors[boundaryPatch].a );
+                    
+                    fields[f].chip( G(iCell_g), axis ) = - fields[f].chip( G(iCell_p), axis )
+                                                       +   fields[f].chip( G(iCell_p), axis ).constant( 2.0f ) * extrapolatedFaceValues;
+                    break;
+                }
+                    
+            }
+
+        } );
+
+    } );
+
+}
+
+
+
+}   // end namespace CFD

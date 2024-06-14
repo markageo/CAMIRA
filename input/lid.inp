@@ -2,52 +2,34 @@
 
 Model {
     rho  = 1
-    nu   = 0.001
+    nu   = 0.02
 }
 
 Mesh {
 
-    domain = (1, 1, 1)
+    domain = (1, 1, 0.1)
 
     Grid x {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 11
-            biasFactor = 2.5
-        }
-
-        Segment {
-            bounds     = (0.5, 1)
-            nCells     = 11
-            biasFactor = -2.5
+            bounds     = (0, 1)
+            nCells     = 20
+            biasFactor = 1
         }
     }
 
     Grid y {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 11
-            biasFactor = 2.5
-        }
-
-        Segment {
-            bounds     = (0.5, 1)
-            nCells     = 11
-            biasFactor = -2.5
+            bounds     = (0, 1)
+            nCells     = 20
+            biasFactor = 1
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 11
-            biasFactor = 2.5
-        }
-
-        Segment {
-            bounds     = (0.5, 1)
-            nCells     = 11
-            biasFactor = -2.5
+            bounds     = (0, 0.1)
+            nCells     = 2
+            biasFactor = 1
         }
     }
 }
@@ -96,18 +78,18 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Wall
+    // Symmetry
     +z {
-        u = uniform, 0
-        v = uniform, 0
+        u = zeroGradient
+        v = zeroGradient
         w = uniform, 0
         p = zeroGradient
     }
 
-    // Wall
+    // Symmetry
     -z {
-        u = uniform, 0
-        v = uniform, 0
+        u = zeroGradient
+        v = zeroGradient
         w = uniform, 0
         p = zeroGradient
     }
@@ -121,13 +103,15 @@ Solver {
         linearisation           = Picard
         momentumInterpolation   = implicit
         advectionScheme         = upwind
+        advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 10000
-        maxOuterResiduals = 1e-5
+        maxOuterIterations = 1000
+        maxContinuityOuterResidual = 1e-8
+        maxMomentumOuterResiduals  = (1e-8, 1e-8, 1)
 
     }
     
@@ -137,8 +121,8 @@ Solver {
         maxIterations = 1
         maxResiduals = 1e-1
 
-        planeSweepDirection = +x
-        lineSweepDirection = +z
+        planeSweepDirection = +z
+        lineSweepDirection = +x
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
@@ -154,12 +138,5 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     fieldWriteInterval      = 0
-
-    Monitors {
-        Probe {
-            filename = "output/probe1.csv"
-            location = (0.5, 0.6, 0.5)
-        }
-    }
 
 }

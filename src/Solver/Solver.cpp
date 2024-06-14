@@ -38,10 +38,29 @@ void UpdateFVEquations( FVCoefficients &fvCoeffs,
 {
     UpdateIBData( ibData, fields );
     UpdateFaceFluxes(faceFluxes, mesh, fields.U, bcData);
-    if constexpr ( isNewtonLinearisation ) {
-        UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fields.U, faceFluxes, bcData);
-    }
     SetIBFaceFluxes( faceFluxes, ibData );
+
+    if constexpr ( isNewtonLinearisation ) {
+        UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fvCoeffs, fields.U, faceFluxes, bcData);
+        switch ( fvCoeffs.Mom[Axis::X].advectionScheme ) {
+            case AdvectionSchemes::Upwind:
+                SetIBFaceAdvectedVelocities<AdvectionSchemes::Upwind>( faceAdvectedVelocities, faceFluxes, fields, fvCoeffs, mesh, ibData );
+                break;
+
+            case AdvectionSchemes::Central:
+                SetIBFaceAdvectedVelocities<AdvectionSchemes::Central>( faceAdvectedVelocities, faceFluxes, fields, fvCoeffs, mesh, ibData );
+                break;
+
+            case AdvectionSchemes::SOU:
+                SetIBFaceAdvectedVelocities<AdvectionSchemes::SOU>( faceAdvectedVelocities, faceFluxes, fields, fvCoeffs, mesh, ibData );
+                break;
+
+            case AdvectionSchemes::QUICK:
+                SetIBFaceAdvectedVelocities<AdvectionSchemes::QUICK>( faceAdvectedVelocities, faceFluxes, fields, fvCoeffs, mesh, ibData );
+                break;
+        }
+    }
+
     UpdateFVCoefficients(fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData);
 }
 
@@ -72,13 +91,13 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     
     // Finite Volume
     MaskFields(fields, ibData.mask);
+    FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, bcData, inputData);
     EnumVector<Axis, Tensor3D> faceFluxes = InitialiseFaceFluxes(mesh, fields.U, bcData);
     EnumVector< Axis, EnumVector< Axis, Tensor3D> > faceAdvectedVelocities;
     if constexpr ( isNewtonLinearisation ) 
-        faceAdvectedVelocities = InitialiseAdvectedFaceVelocities( mesh, fields.U, faceFluxes, bcData );
+        faceAdvectedVelocities = InitialiseFaceAdvectedVelocities( mesh, fvCoeffs, fields.U, faceFluxes, bcData );
 
     FieldData<Tensor3D> fieldsOld = fields;
-    FVCoefficients fvCoeffs = InitialiseFVCoefficients(mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData, inputData);
     UpdateFVEquations<isNewtonLinearisation>( fvCoeffs, ibData, faceFluxes, faceAdvectedVelocities, fields, mesh, bcData );
 
     // Initialise residuals
@@ -113,7 +132,10 @@ void SweepSolve( FieldData<Tensor3D> &fields,
     {
         linearSolver.UpdateState();
         linearSolver.Solve();
+        TIC("Update FV Equations")
+        SetGhostCells( fields, mesh, bcData );
         UpdateFVEquations<isNewtonLinearisation>( fvCoeffs, ibData, faceFluxes, faceAdvectedVelocities, fields, mesh, bcData );
+        TOC()
 
         residualsOuter   = StencilResiduals<MI, LI>(fields, fvCoeffs, ibData.mask); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor, nOuterIterations );
@@ -155,7 +177,6 @@ void SweepSolve( FieldData<Tensor3D> &fields,
         
     }
     TOC()
-
 
 }
 template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Picard>( FieldData<Tensor3D> &, const Mesh &, const BoundaryConditionData &, const InputData &, const AxisTransformationMap &);

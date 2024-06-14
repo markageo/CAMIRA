@@ -79,6 +79,7 @@ struct InputData
         Linearisation linearisation;
         MomentumInterpolation momentumInterpolation;
         AdvectionSchemes advectionScheme;
+        floatType advectionBlendingFactor;
         FaceInterpolationSchemes faceInterpolationScheme;
 
         FieldData<floatType> implicitRelaxation;

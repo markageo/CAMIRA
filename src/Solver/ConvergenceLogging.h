@@ -22,12 +22,19 @@
 namespace CFD
 {
 
+// Set the output precision based on code precision
+#ifdef CFD_DOUBLE_PRECISION
+    #define CFD_FILE_WRITE_PRECISION 15
+#else
+    #define CFD_FILE_WRITE_PRECISION 7;
+#endif
+
 class ConvergenceFile
 {
 
     public:
         ConvergenceFile( const std::string &filename, 
-                         const int precision = 6, 
+                         const int precision = CFD_FILE_WRITE_PRECISION, 
                          const int columnWidth = 14 ) :
             m_fileStream( filename ),
             m_precision( precision ),
@@ -83,7 +90,7 @@ class ResidualLogFile
     public:
         ResidualLogFile( const std::string &filename, 
                          const AxisTransformationMap &axisTransformation,
-                         const int precision = 6 ) :
+                         const int precision = CFD_FILE_WRITE_PRECISION ) :
             m_AT( axisTransformation ),
             m_convergenceFile( filename, precision )
         {            
@@ -131,7 +138,7 @@ class ProbeLogFile
         ProbeLogFile( const std::string &filename, 
                       const AxisTransformationMap &axisTransformation,
                       const FieldProbe &fieldProbe,
-                      const int precision = 6 ) :
+                      const int precision = CFD_FILE_WRITE_PRECISION ) :
             m_AT( axisTransformation ),
             m_convergenceFile( filename, precision )
         {            
