@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 2048
+            nCells     = 64
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 2048
+            nCells     = 64
             biasFactor = 1
         }
     }
@@ -128,7 +128,7 @@ Solver {
     }
 
     Multigrid {
-        maxCoarseLevels = 5
+        maxCoarseLevels = 0
 
         maxPreSmoothingIterations = 2
         maxPreSmoothingResiduals = 0

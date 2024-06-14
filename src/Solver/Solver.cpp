@@ -332,7 +332,12 @@ void SweepSolve( const InputData &inputData,
     consoleLog.WriteResiduals( residualsOuter, massFluxResidual, 0 );
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
-        MultigridCycle( mgLevels, inputData.multigridSettings, nOuterIterations, axisTransformation );
+        if ( mgLevels.size() == 1 ) {
+            Smooth<MI, LI>( mgLevels[0], 0, 1, MultigridEquation::NoTauCorrection );
+        } else {
+            MultigridCycle( mgLevels, inputData.multigridSettings, nOuterIterations, axisTransformation );
+        }
+        
 
         residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
                                                           mgLevels[0].fvCoeffs, 
