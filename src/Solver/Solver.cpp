@@ -135,6 +135,10 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
         }
 
     }
+    std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", relative residuals: " << residuals.U[0] << ", " 
+                                                                                                                       << residuals.U[1] << ", " 
+                                                                                                                       << residuals.U[2] << ", " 
+                                                                                                                       << residuals.P << "\n";
 
 }
 
@@ -232,7 +236,8 @@ void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 // template< MomentumInterpolation MI, Linearisation LI >
 // void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 //                      const InputData::MultigridSettings &mgSettings,
-//                      const intType iteration )
+//                      const intType iteration,
+//                      const AxisTransformationMap &axisTransformation )
 // {
 //     if ( iteration == 1 ) {
         
@@ -249,7 +254,7 @@ void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 //         for ( intType level = coarsestLevel-1; level != 0; level-- ) {
 
 //             // VCycle
-//             VCycle<MI, LI>( mgLevels, level, level, mgSettings );
+//             VCycle<MI, LI>( mgLevels, level, level, mgSettings, iteration, axisTransformation );
 
 //             // Prolongate
 //             ForAllFieldData( [&] (intType f) {
@@ -260,7 +265,7 @@ void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
 //     } else  {
      
-//         VCycle<MI, LI>( mgLevels, 0, 0, mgSettings );
+//         VCycle<MI, LI>( mgLevels, 0, 0, mgSettings, iteration, axisTransformation );
 
 //     }
 // }
@@ -306,12 +311,6 @@ void SweepSolve( const InputData &inputData,
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 
-    // DEBUGGING
-    // FieldData<Tensor3D> residualFields( Tensor3D( mesh.nCells(0) + 2*nGhost, 
-    //                                               mesh.nCells(1) + 2*nGhost,
-    //                                               mesh.nCells(2) + 2*nGhost ) );
-    // ResidualFieldWriter residualFieldWriter( residualFields, mesh, axisTransformation, "residual_field" );
-
     // Outer iterations
     bool writeFields = ( inputData.fieldWriteInterval > 0 );
     if ( writeFields ) {
@@ -349,10 +348,6 @@ void SweepSolve( const InputData &inputData,
         for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
             probeLogFiles[p].WriteData( probeValues[p], nOuterIterations );
         }
-
-        // DEBUGGING
-        // residualFields = ResidualsField<MI, LI>( fields, mgLevels[0].fvCoeffs, mgLevels[0].ibData.mask ); 
-        // residualFieldWriter.WriteData( nOuterIterations );
         
         if ( ResidualsDiverged(residualsOuter) ) {
             fieldWriter.WriteData( nOuterIterations );

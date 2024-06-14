@@ -448,10 +448,10 @@ bool MeshCanBeCoarsened( const Mesh& mesh )
 {
     for ( intType a = 0; a != Axis::count; a++ ) {
         Axis::ENUMDATA axis = static_cast<Axis::ENUMDATA>( a );
-        if ( mesh.nCells(axis) <= 2 ) 
-            return false;
+        if ( mesh.nCells(axis) > 2 )        // Need at least just one dimension to be coarsenable 
+            return true;
     }
-    return true;
+    return false;
 }
 
 
