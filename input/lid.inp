@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.005
+    nu   = 0.001
 }
 
 Mesh {
@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 128
+            nCells     = 2048
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 128
+            nCells     = 2048
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 128
+            nCells     = 1
             biasFactor = 1
         }
     }
@@ -65,8 +65,8 @@ BoundaryConditions
     // Driven
     +y {
         u = uniform, 1
-        v = uniform, 1
-        w = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
         p = zeroGradient
     }
 
@@ -105,11 +105,11 @@ Solver {
         advectionScheme         = upwind
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (1, 1, 1)
+        implicitMomentumRelaxation = (0.5, 0.5, 0.5)
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 100
-        maxOuterResiduals = 1e-6
+        maxOuterResiduals = 1e-5
 
     }
     
@@ -117,7 +117,7 @@ Solver {
 
         type = SUGS
         maxIterations = 2
-        maxResiduals = 1e-5
+        maxResiduals = 1e-3
 
         planeSweepDirection = +z
         lineSweepDirection = +y
@@ -128,7 +128,7 @@ Solver {
     }
 
     Multigrid {
-        maxCoarseLevels = 2
+        maxCoarseLevels = 5
 
         maxPreSmoothingIterations = 2
         maxPreSmoothingResiduals = 0
@@ -136,8 +136,8 @@ Solver {
         maxPostSmoothingIterations = 2
         maxPostSmoothingResiduals = 0
 
-        maxCoarseGridIterations = 10000
-        maxCoarseGridResiduals  = 1e-8
+        maxCoarseGridIterations = 1000
+        maxCoarseGridResiduals  = 1e-6
         
         maxFineGridIterations   = 3
         maxFineGridResiduals    = 0
@@ -152,7 +152,7 @@ Output {
     residualHistoryFilename = "output/residual_history.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
-    fieldWriteInterval      = 1
+    fieldWriteInterval      = 0
 
     Monitors {
         Probe {

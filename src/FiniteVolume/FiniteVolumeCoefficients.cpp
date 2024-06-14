@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 namespace CFD
 {
@@ -2069,7 +2070,6 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
         fvCoeffs.Mom[axis].diagCoeffInv = fvCoeffs.Mom[axis].AU[axis][TC::p].inverse();
 
     } );
-
 
     // Set the momentum interpolation coefficients
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, bcData, fields.P);
