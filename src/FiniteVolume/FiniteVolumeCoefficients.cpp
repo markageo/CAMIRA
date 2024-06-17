@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <iostream>
 #include <vector>
+#include <cmath>
 
 namespace CFD
 {
@@ -390,12 +391,12 @@ void InteriorAdvectionTerms( MomentumEquation &momentumEquation,
                     continue;
 
                 // Deferred correction term
-                sourceTerm(loIndex) -=   momentumEquation.advectionBlendingFactor 
+                sourceTerm(loIndex) +=   momentumEquation.advectionBlendingFactor 
                                      *   faceFlux
                                      *   ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
                                      *   mesh.cellLengthsInv[axis]( loIndex[axis] );
                     
-                sourceTerm(hiIndex) -= - momentumEquation.advectionBlendingFactor 
+                sourceTerm(hiIndex) += - momentumEquation.advectionBlendingFactor 
                                      *   faceFlux
                                      *   ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
                                      *   mesh.cellLengthsInv[axis]( hiIndex[axis] );
@@ -752,17 +753,17 @@ void NewtonConstants( Tensor3D &B,
             CFD_PRAGMA_VECTORIZE
             for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
 
-                floatType xFluxDiff = mesh.cellLengthsInv[X](i) 
-                                    * ( faceFluxes[X](i+1, j, k) * faceAdvectedVelocities[X](i+1, j, k) 
-                                      - faceFluxes[X](i  , j, k) * faceAdvectedVelocities[X](i  , j, k) );
+                floatType xFluxDiff = - mesh.cellLengthsInv[X](i) 
+                                      * ( faceFluxes[X](i+1, j, k) * faceAdvectedVelocities[X](i+1, j, k) 
+                                        - faceFluxes[X](i  , j, k) * faceAdvectedVelocities[X](i  , j, k) );
 
-                floatType yFluxDiff = mesh.cellLengthsInv[Y](j) 
-                                    * ( faceFluxes[Y](i, j+1, k) * faceAdvectedVelocities[Y](i, j+1, k) 
-                                      - faceFluxes[Y](i, j  , k) * faceAdvectedVelocities[Y](i, j  , k) );
+                floatType yFluxDiff = - mesh.cellLengthsInv[Y](j) 
+                                      * ( faceFluxes[Y](i, j+1, k) * faceAdvectedVelocities[Y](i, j+1, k) 
+                                        - faceFluxes[Y](i, j  , k) * faceAdvectedVelocities[Y](i, j  , k) );
 
-                floatType zFluxDiff = mesh.cellLengthsInv[Z](k) 
-                                    * ( faceFluxes[Z](i, j, k+1) * faceAdvectedVelocities[Z](i, j, k+1) 
-                                      - faceFluxes[Z](i, j, k  ) * faceAdvectedVelocities[Z](i, j, k  ) );
+                floatType zFluxDiff = - mesh.cellLengthsInv[Z](k) 
+                                      * ( faceFluxes[Z](i, j, k+1) * faceAdvectedVelocities[Z](i, j, k+1) 
+                                        - faceFluxes[Z](i, j, k  ) * faceAdvectedVelocities[Z](i, j, k  ) );
 
                 B( i, j, k ) += xFluxDiff + yFluxDiff + zFluxDiff;
 
@@ -1329,13 +1330,13 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation &continuityEquation
 
                 // Explicit sparse difference ---------------------------------------------------------------------------
 
-                TensorIndex3D LoWest  = NeighbourIndex( loIndex, -1, axis ),
-                              LoEast  = NeighbourIndex( loIndex,  1, axis ),
-                              LoEEast = NeighbourIndex( loIndex,  2, axis ),
+                TensorIndex3D loWest  = NeighbourIndex( loIndex, -1, axis ),
+                              loEast  = NeighbourIndex( loIndex,  1, axis ),
+                              loEEast = NeighbourIndex( loIndex,  2, axis ),
 
-                              HiWWest = NeighbourIndex( hiIndex, -2, axis ),
-                              HiWest  = NeighbourIndex( hiIndex, -1, axis ),
-                              HiEast  = NeighbourIndex( hiIndex,  1, axis );
+                              hiWWest = NeighbourIndex( hiIndex, -2, axis ),
+                              hiWest  = NeighbourIndex( hiIndex, -1, axis ),
+                              hiEast  = NeighbourIndex( hiIndex,  1, axis );
 
                 floatType coeffSparse0 = d * mwiSparseCoeffs[0](idx),
                           coeffSparse1 = d * mwiSparseCoeffs[1](idx),
@@ -1343,17 +1344,17 @@ void MWInterpolationInteriorSemiExplicit( ContinuityEquation &continuityEquation
                           coeffSparse3 = d * mwiSparseCoeffs[3](idx);
 
                 // Cell on west side 
-                continuitySourceTerm(loIndex) -= ( coeffSparse0 * P( G(LoWest)  )
+                continuitySourceTerm(loIndex) += ( coeffSparse0 * P( G(loWest)  )
                                                  + coeffSparse1 * P( G(loIndex) )
-                                                 + coeffSparse2 * P( G(LoEast)  )
-                                                 + coeffSparse3 * P( G(LoEEast) )
+                                                 + coeffSparse2 * P( G(loEast)  )
+                                                 + coeffSparse3 * P( G(loEEast) )
                                                  ) * LoCellLengthInv;
 
                 // Cell on east side
-                continuitySourceTerm(hiIndex) += ( coeffSparse0 * P( G(HiWWest) )
-                                                 + coeffSparse1 * P( G(HiWest)  )
+                continuitySourceTerm(hiIndex) -= ( coeffSparse0 * P( G(hiWWest) )
+                                                 + coeffSparse1 * P( G(hiWest)  )
                                                  + coeffSparse2 * P( G(hiIndex) )
-                                                 + coeffSparse3 * P( G(HiEast)  )
+                                                 + coeffSparse3 * P( G(hiEast)  )
                                                  ) * HiCellLengthInv;
 
 
@@ -1486,15 +1487,15 @@ void MWInterpolationInteriorSemiExplicit_autoVec( ContinuityEquation &continuity
                 TensorIndex3D hiIndex = { i, j, k };
                 size_t iv = static_cast< size_t >( i );
 
-                TensorIndex3D HiWWest = NeighbourIndex( hiIndex, -2, axis ),
-                             HiWest  = NeighbourIndex( hiIndex, -1, axis ),
-                             HiEast  = NeighbourIndex( hiIndex,  1, axis );
+                TensorIndex3D hiWWest = NeighbourIndex( hiIndex, -2, axis ),
+                              hiWest  = NeighbourIndex( hiIndex, -1, axis ),
+                              hiEast  = NeighbourIndex( hiIndex,  1, axis );
 
                 // Cell on east side
-                continuitySourceTerm(hiIndex) += ( mwiLineSparseCoeffs[iv][0] * P( G(HiWWest) )
-                                                 + mwiLineSparseCoeffs[iv][1] * P( G(HiWest)  )
+                continuitySourceTerm(hiIndex) -= ( mwiLineSparseCoeffs[iv][0] * P( G(hiWWest) )
+                                                 + mwiLineSparseCoeffs[iv][1] * P( G(hiWest)  )
                                                  + mwiLineSparseCoeffs[iv][2] * P( G(hiIndex) )
-                                                 + mwiLineSparseCoeffs[iv][3] * P( G(HiEast)  )
+                                                 + mwiLineSparseCoeffs[iv][3] * P( G(hiEast)  )
                                                  ) * HiCellLengthInv;
             }
 
@@ -1510,15 +1511,15 @@ void MWInterpolationInteriorSemiExplicit_autoVec( ContinuityEquation &continuity
                 loIndex[axis] -= 1;
                 size_t iv = static_cast< size_t >( i );
 
-                TensorIndex3D LoWest  = NeighbourIndex( loIndex, -1, axis ),
-                             LoEast  = NeighbourIndex( loIndex,  1, axis ),
-                             LoEEast = NeighbourIndex( loIndex,  2, axis );
+                TensorIndex3D loWest  = NeighbourIndex( loIndex, -1, axis ),
+                              loEast  = NeighbourIndex( loIndex,  1, axis ),
+                              loEEast = NeighbourIndex( loIndex,  2, axis );
 
                 // Cell on west side 
-                continuitySourceTerm(loIndex) -= ( mwiLineSparseCoeffs[iv][0] * P( G(LoWest)  )
+                continuitySourceTerm(loIndex) += ( mwiLineSparseCoeffs[iv][0] * P( G(loWest)  )
                                                  + mwiLineSparseCoeffs[iv][1] * P( G(loIndex) )
-                                                 + mwiLineSparseCoeffs[iv][2] * P( G(LoEast)  )
-                                                 + mwiLineSparseCoeffs[iv][3] * P( G(LoEEast) )
+                                                 + mwiLineSparseCoeffs[iv][2] * P( G(loEast)  )
+                                                 + mwiLineSparseCoeffs[iv][3] * P( G(loEEast) )
                                                  ) * LoCellLengthInv;
             }
         }
@@ -1673,18 +1674,18 @@ void AddMomentumBoundaryConstants( MomentumEquation &momCoeffs )
 
         // Negative side boundary
         if ( momCoeffs.BUBoundary[negativePatch].size() != 0 )
-            momCoeffs.B.chip( 0   , axis ) -= momCoeffs.BUBoundary[negativePatch];
+            momCoeffs.B.chip( 0   , axis ) += momCoeffs.BUBoundary[negativePatch];
 
         if ( momCoeffs.BPBoundary[negativePatch].size() != 0 )
-            momCoeffs.B.chip( 0   , axis ) -= momCoeffs.BPBoundary[negativePatch];
+            momCoeffs.B.chip( 0   , axis ) += momCoeffs.BPBoundary[negativePatch];
 
 
         // Positive side boundary
         if ( momCoeffs.BUBoundary[positivePatch].size() != 0 )
-            momCoeffs.B.chip( iEnd, axis ) -= momCoeffs.BUBoundary[positivePatch];
+            momCoeffs.B.chip( iEnd, axis ) += momCoeffs.BUBoundary[positivePatch];
 
         if ( momCoeffs.BPBoundary[positivePatch].size() != 0 )
-            momCoeffs.B.chip( iEnd, axis ) -= momCoeffs.BPBoundary[positivePatch];
+            momCoeffs.B.chip( iEnd, axis ) += momCoeffs.BPBoundary[positivePatch];
 
     }
 }
@@ -1704,18 +1705,18 @@ void AddContinuityBoundaryConstants( ContinuityEquation &contCoeffs )
 
         // Negative side boundary
         if ( contCoeffs.BUBoundary[negativePatch].size() != 0 )
-            contCoeffs.B.chip( 0   , axis ) -= contCoeffs.BUBoundary[negativePatch];
+            contCoeffs.B.chip( 0   , axis ) += contCoeffs.BUBoundary[negativePatch];
 
         if ( contCoeffs.BPBoundary[negativePatch].size() != 0 )
-            contCoeffs.B.chip( 0   , axis ) -= contCoeffs.BPBoundary[negativePatch];
+            contCoeffs.B.chip( 0   , axis ) += contCoeffs.BPBoundary[negativePatch];
 
 
         // Positive side boundary
         if ( contCoeffs.BUBoundary[positivePatch].size() != 0 )
-            contCoeffs.B.chip( iEnd, axis ) -= contCoeffs.BUBoundary[positivePatch];
+            contCoeffs.B.chip( iEnd, axis ) += contCoeffs.BUBoundary[positivePatch];
 
         if ( contCoeffs.BPBoundary[positivePatch].size() != 0 )
-            contCoeffs.B.chip( iEnd, axis ) -= contCoeffs.BPBoundary[positivePatch];
+            contCoeffs.B.chip( iEnd, axis ) += contCoeffs.BPBoundary[positivePatch];
 
     }
 }
@@ -1736,12 +1737,12 @@ void MomentumIBSourceStencilPicard( MomentumEquation &momentumEquation,
     Axis::ENUMDATA momentumAxis = momentumEquation.component;
     TransportCoefficients::ENUMDATA coeff = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiCoeff[faceNormal] : LUT::LoCoeff[faceNormal];
 
-    // Velocity stencil
-    floatType ibSource = - momentumEquation.AU[momentumAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[momentumAxis];
+    // Velocity term
+    floatType ibSource = momentumEquation.AU[momentumAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[momentumAxis];
 
     // Pressure stencil
     if ( momentumAxis == faceNormal ) {
-        ibSource += - momentumEquation.AP[coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.P;
+        ibSource += momentumEquation.AP[coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.P;
     }
 
     momentumEquation.B( cellIndex ) += ibSource;
@@ -1758,22 +1759,22 @@ void MomentumIBSourceStencilNewton( MomentumEquation &momentumEquation,
     TransportCoefficients::ENUMDATA coeff = ( sourceTermData.directionIndex == +1 ) ?  LUT::HiCoeff[faceNormal] : LUT::LoCoeff[faceNormal];
     
     // Velocity term
-    floatType ibSource = - momentumEquation.AU[momentumAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[momentumAxis];
+    floatType ibSource = momentumEquation.AU[momentumAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[momentumAxis];
 
     Axis::ENUMDATA loAxis = LUT::LoOrthogonalAxis[ momentumAxis ];
     if ( faceNormal == loAxis ) {
-        ibSource += - momentumEquation.AU[loAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[loAxis];
+        ibSource += momentumEquation.AU[loAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[loAxis];
     }
 
     Axis::ENUMDATA hiAxis = LUT::HiOrthogonalAxis[ momentumAxis ];
     if ( faceNormal == hiAxis ) {
-        ibSource += - momentumEquation.AU[hiAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[hiAxis];
+        ibSource += momentumEquation.AU[hiAxis][coeff](cellIndex) * sourceTermData.ghostCellValues.U[hiAxis];
     }
 
 
     // Pressure term
     if ( momentumAxis == faceNormal ) {
-        ibSource += - momentumEquation.AP[coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.P;
+        ibSource += momentumEquation.AP[coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.P;
     }
 
     momentumEquation.B( cellIndex ) += ibSource;
@@ -1877,11 +1878,11 @@ void ContinuityIBSourceImplicitMWI( FVCoefficients &fvCoeffs,
     TransportCoefficients::ENUMDATA ccoeff = ( sourceTermData.directionIndex == +1 ) ? LUT::HiHiCoeff[faceNormal] : LUT::LoLoCoeff[faceNormal];
 
     // Divergence term
-    floatType ibSource = - fvCoeffs.Cont.AU[faceNormal][coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.U[faceNormal];
+    floatType ibSource = fvCoeffs.Cont.AU[faceNormal][coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.U[faceNormal];
 
     // Pressure terms
-    ibSource += - fvCoeffs.Cont.AP[coeff ](cellIndex) * sourceTermData.ghostCellValues.P
-                - fvCoeffs.Cont.AP[ccoeff](cellIndex) * sourceTermData.farPressureGhostCellValue;
+    ibSource += fvCoeffs.Cont.AP[coeff ](cellIndex) * sourceTermData.ghostCellValues.P
+              + fvCoeffs.Cont.AP[ccoeff](cellIndex) * sourceTermData.farPressureGhostCellValue;
 
     fvCoeffs.Cont.B( cellIndex ) += ibSource;
 }
@@ -1913,7 +1914,7 @@ void InteriorContinuityIBSourceImplicitMWI( FVCoefficients &fvCoeffs,
     TransportCoefficients::ENUMDATA ccoeff = ( sourceTermData.directionIndex == +1 ) ? LUT::HiHiCoeff[faceNormal] : LUT::LoLoCoeff[faceNormal];
 
     // Far pressure term
-    floatType ibSource = - fvCoeffs.Cont.AP[ccoeff](sourceTermData.cellIndex_a) * sourceTermData.ghostCellValues.P;
+    floatType ibSource = fvCoeffs.Cont.AP[ccoeff](sourceTermData.cellIndex_a) * sourceTermData.ghostCellValues.P;
 
     fvCoeffs.Cont.B( sourceTermData.cellIndex_a ) += ibSource;
 }
@@ -1934,10 +1935,10 @@ void ContinuityIBSourceSemiExplicitMWI( FVCoefficients &fvCoeffs,
     TransportCoefficients::ENUMDATA coeff  = ghostIsHiSide ? LUT::HiCoeff[faceNormal]   : LUT::LoCoeff[faceNormal];
 
     // Divergence term
-    floatType ibSource = - fvCoeffs.Cont.AU[faceNormal][coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.U[faceNormal];
+    floatType ibSource = fvCoeffs.Cont.AU[faceNormal][coeff](cellIndex[faceNormal]) * sourceTermData.ghostCellValues.U[faceNormal];
 
     // Implicit Pressure terms
-    ibSource += - fvCoeffs.Cont.AP[coeff ](cellIndex) * sourceTermData.ghostCellValues.P;
+    ibSource += fvCoeffs.Cont.AP[coeff ](cellIndex) * sourceTermData.ghostCellValues.P;
 
     // Explicit Pressure terms, face closest to IB
     const Tensor3D &momentumDiagCoeffInv = fvCoeffs.Mom[faceNormal].diagCoeffInv;
@@ -1950,13 +1951,13 @@ void ContinuityIBSourceSemiExplicitMWI( FVCoefficients &fvCoeffs,
     floatType ghostSparseCoeff  = ghostIsHiSide ? d * mwiSparseCoeffs[2](idx) : - d * mwiSparseCoeffs[1](idx);
     floatType ghostSparseCCoeff = ghostIsHiSide ? d * mwiSparseCoeffs[3](idx) : - d * mwiSparseCoeffs[0](idx);
 
-    floatType explicitIBSource = - ghostSparseCoeff * sourceTermData.ghostCellValues.P
-                                 - ghostSparseCCoeff * sourceTermData.farPressureGhostCellValue;
+    floatType explicitIBSource = ghostSparseCoeff * sourceTermData.ghostCellValues.P
+                               + ghostSparseCCoeff * sourceTermData.farPressureGhostCellValue;
 
     // Remove the effect of the wide stencil term incase there is no ghost cell
     TensorIndex3D farGhostCellIndex = sourceTermData.cellIndex_g;
     farGhostCellIndex[ sourceTermData.direction ] += sourceTermData.directionIndex;
-    explicitIBSource += ghostSparseCCoeff * fields.P( G( farGhostCellIndex ) );
+    explicitIBSource -= ghostSparseCCoeff * fields.P( G( farGhostCellIndex ) );
 
     // Explicit Pressure terms, face farthest from IB
     loIndex = ghostIsHiSide ? sourceTermData.cellIndex_a : cellIndex;
@@ -1966,7 +1967,7 @@ void ContinuityIBSourceSemiExplicitMWI( FVCoefficients &fvCoeffs,
 
     ghostSparseCoeff  = ghostIsHiSide ? - d * mwiSparseCoeffs[3](idx) : d * mwiSparseCoeffs[0](idx);
 
-    explicitIBSource += - ghostSparseCoeff * sourceTermData.ghostCellValues.P;
+    explicitIBSource += ghostSparseCoeff * sourceTermData.ghostCellValues.P;
 
 
     // Add to the source term, divide by cell length
@@ -1996,7 +1997,7 @@ void InteriorContinuityIBSourceSemiExplicitMWI( FVCoefficients &fvCoeffs,
 
     const floatType ghostSparseCoeff  = ghostIsHiSide ? d * mwiSparseCoeffs[3](idx) : - d * mwiSparseCoeffs[0](idx);
 
-    floatType ibSource = - ghostSparseCoeff * sourceTermData.ghostCellValues.P * mesh.cellLengthsInv[faceNormal]( cellIndex[faceNormal] );
+    floatType ibSource = ghostSparseCoeff * sourceTermData.ghostCellValues.P * mesh.cellLengthsInv[faceNormal]( cellIndex[faceNormal] );
 
     fvCoeffs.Cont.B( sourceTermData.cellIndex_a ) += ibSource;
 }
@@ -2239,6 +2240,7 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
         } );
 
         fvCoeffs.Mom[axis].B.setZero();
+        fvCoeffs.Mom[axis].F.setZero();
 
     } );
 
@@ -2251,6 +2253,7 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
     } );
 
     fvCoeffs.Cont.B.setZero();
+    fvCoeffs.Cont.F.setZero();
 }
 
 
@@ -2265,6 +2268,10 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
 \*---------------------------------------------------------------------------------------------------------------*/
 
 FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
+                                         const FieldData<Tensor3D> &fields,
+                                         const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &faceAdvectedVelocities,
+                                         const EnumVector<Axis, Tensor3D> &faceFluxes, 
+                                         const IBData &ibData,
                                          const BoundaryConditionData &bcData,
                                          const InputData &inputData)
 {
@@ -2295,6 +2302,9 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
         SetMomentumInterpolationCompactConstants(fvCoeffs.Cont.mwiCompactCoeffs[axis], inputData.rho, mesh, axis);
     } );
     fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation.P;
+
+    // Set the coefficients that depend on linearisation
+    UpdateFVCoefficients( fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData );
 
     return fvCoeffs;
 }

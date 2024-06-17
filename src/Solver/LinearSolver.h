@@ -71,7 +71,10 @@ public:
 
             // Normalise residuals
             ForAllFieldData( [&] (intType f) { m_residuals[f] /= static_cast<floatType>(m_ni * m_nj * m_nk); });
-            NormaliseResiduals(m_residuals, m_residualsInitialInv, nIterations);
+            if ( nIterations == 1 ) {
+                ForAllFieldData( [&] (intType f) { m_residualsInitialInv[f] = 1.0f / m_residuals[f]; });
+            }
+            NormaliseResiduals(m_residuals, m_residualsInitialInv);
 
             // Check residual tolerence
             if ( MetResidualTolerence(m_residuals, m_maxResiduals) ) {
@@ -157,7 +160,7 @@ private:
             auto fieldPlane = m_fields[f].chip( G(m_kS[f]), Z );
             m_delta[f] = m_delta[f].constant( m_relaxation[f] ) * (fieldPlane - m_oldPlane[f]); // Relaxed change in plane
             fieldPlane = m_oldPlane[f] + m_delta[f];                                            // Relax
-            m_residuals[f] += static_cast<Tensor0D>( m_delta[f].abs().sum() )(0);                // Add to residual count
+            m_residuals[f] += static_cast<Tensor0D>( m_delta[f].abs().sum() )(0);               // Add to residual count
         } );
     }
 };

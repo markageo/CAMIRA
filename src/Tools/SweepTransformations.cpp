@@ -273,9 +273,9 @@ namespace
 
         // Now flip each segment
         for (auto &segment : meshSegments) {
-            std::swap(segment.upperBound, segment.lowerBound);
-            segment.upperBound = - segment.upperBound;
-            segment.lowerBound = - segment.lowerBound;
+            std::swap(segment.endCoordinate, segment.startCoordinate);
+            segment.endCoordinate = - segment.endCoordinate;
+            segment.startCoordinate = - segment.startCoordinate;
             segment.biasFactor = - segment.biasFactor;
         }
     }

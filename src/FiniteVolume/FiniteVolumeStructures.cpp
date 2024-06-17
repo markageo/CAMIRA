@@ -345,6 +345,7 @@ MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis,
           EnumVector<TransportCoefficients, Tensor3D>( MomentumVelocityEnums(axis, Z, li), dims) }  ),
     AP( MomentumPressureEnums( axis ), dims( axis ) ),
     B( CFD::Tensor3D( dims(X), dims(Y), dims(Z) ).setZero() ),
+    F( CFD::Tensor3D( dims(X), dims(Y), dims(Z) ).setZero() ),
     diagCoeffInv( CFD::Tensor3D( dims(X), dims(Y), dims(Z) ).setZero() ),
     diff({ EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::e, C::w}, dims(X) ),
            EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::n, C::s}, dims(Y) ),
@@ -366,6 +367,7 @@ ContinuityEquation::ContinuityEquation( const iArray3 &dims,
           EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::t, C::b}, dims( Z )) } ),
     AP( ContinuityPressureEnums( mi ), dims ),
     B( Tensor3D( dims(X), dims(Y), dims(Z) ).setZero() ),
+    F( Tensor3D( dims(X), dims(Y), dims(Z) ).setZero() ),
     mwiSparseCoeffs( { std::array<Tensor1D, 4>{ Tensor1D(dims(X)+1).setZero(), Tensor1D(dims(X)+1).setZero(), Tensor1D(dims(X)+1).setZero(), Tensor1D(dims(X)+1).setZero() } ,
                        std::array<Tensor1D, 4>{ Tensor1D(dims(Y)+1).setZero(), Tensor1D(dims(Y)+1).setZero(), Tensor1D(dims(Y)+1).setZero(), Tensor1D(dims(Y)+1).setZero() } ,
                        std::array<Tensor1D, 4>{ Tensor1D(dims(Z)+1).setZero(), Tensor1D(dims(Z)+1).setZero(), Tensor1D(dims(Z)+1).setZero(), Tensor1D(dims(Z)+1).setZero() } } ),
@@ -396,10 +398,12 @@ FVCoefficients::FVCoefficients( const iArray3 &dims,
 
 
 FieldData<Tensor3D> InitialiseFields( const Mesh &mesh, 
-                                     const InputData &inputData )
+                                      const InputData &inputData )
 {
 
-    FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CFD::nGhost, mesh.nCells(1) + 2*CFD::nGhost, mesh.nCells(2) + 2*CFD::nGhost).setZero() );
+    FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CFD::nGhost, 
+                                          mesh.nCells(1) + 2*CFD::nGhost, 
+                                          mesh.nCells(2) + 2*CFD::nGhost).setZero() );
 
     TensorIndex3D offsets = {nGhost, nGhost, nGhost},
                   extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};

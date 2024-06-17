@@ -29,6 +29,7 @@ std::vector<floatType> CalculateGrowthRates(const std::vector<InputData::MeshSeg
 }
 
 
+
 void CalculateCellLengths(Tensor1D &cellLengths, 
                           const std::vector<InputData::MeshSegment> &meshSegments, 
                           const std::vector<floatType> &growthRates)
@@ -44,7 +45,7 @@ void CalculateCellLengths(Tensor1D &cellLengths,
         } else {
             geometricFactor = static_cast<floatType>( meshSegments[s].nCells );
         }
-        segmentLength = meshSegments[s].upperBound - meshSegments[s].lowerBound;
+        segmentLength = meshSegments[s].endCoordinate - meshSegments[s].startCoordinate;
         firstCellLength = segmentLength / geometricFactor; 
 
         for (int i = 0; i != meshSegments[s].nCells; i++) {        // Cells within segment
@@ -56,13 +57,15 @@ void CalculateCellLengths(Tensor1D &cellLengths,
 }
 
 
+
 void CalculateCellCenters(Tensor1D &cellCenters, 
                           const Tensor1D &cellLengths,
                           const floatType startPosition)
 {
     intType nCellsTotal = cellLengths.size();
 
-    floatType previousCellPosition = startPosition, previousCellLength = 0.0f;
+    floatType previousCellPosition = startPosition, // just for the first iteration, this is actually cell face position
+              previousCellLength = 0.0f;            // Needs to be zero so the above is true in the below formula
     for (intType i = 0; i != nCellsTotal; i++) {
         cellCenters(i) = previousCellPosition + previousCellLength/2.0f + cellLengths(i)/2.0f;
         previousCellPosition = cellCenters(i);
@@ -70,6 +73,7 @@ void CalculateCellCenters(Tensor1D &cellCenters,
     }
 
 }
+
 
 
 void CalculateCellCenterDiffInv(Tensor1D &cellCenterDiffInv, 
@@ -82,6 +86,7 @@ void CalculateCellCenterDiffInv(Tensor1D &cellCenterDiffInv,
         cellCenterDiffInv(i) = 1.0f/( cellCenters(i) - cellCenters(i-1) );
     }
 }
+
 
 
 void CalculateCellFaces(Tensor1D &cellFaces, 
@@ -97,6 +102,7 @@ void CalculateCellFaces(Tensor1D &cellFaces,
 }
 
 
+
 void CalculateCellFaceAreas(Tensor2D &cellFaceAreas, 
                             const Tensor1D &cellLengths_x, 
                             const Tensor1D &cellLengths_y)
@@ -107,6 +113,7 @@ void CalculateCellFaceAreas(Tensor2D &cellFaceAreas,
         }
     }
 }
+
 
 
 void CalculateInterpolationFactors_WeightedLinear( Tensor1D &interpFactors, 
@@ -120,12 +127,14 @@ void CalculateInterpolationFactors_WeightedLinear( Tensor1D &interpFactors,
 }
 
 
+
 void CalculateInterpolationFactors_Average( Tensor1D &interpFactors ) 
 {
     for (int i = 1; i != interpFactors.size()-1; i++) {
         interpFactors(i) = 0.5f;
     }
 }
+
 
 
 Mesh::ExtrapFactorsStruct GetExtrapolationFactors(const Tensor1D &cellLengths, 
@@ -140,6 +149,7 @@ Mesh::ExtrapFactorsStruct GetExtrapolationFactors(const Tensor1D &cellLengths,
     
     return Mesh::ExtrapFactorsStruct{ extrapFactor_p, extrapFactor_a };
 }
+
 
 
 void CalculateExtrapolationFactors(EnumVector<BoundaryPatches, Mesh::ExtrapFactorsStruct > &extrapFactors, 
@@ -179,6 +189,7 @@ void CalculateExtrapolationFactors(EnumVector<BoundaryPatches, Mesh::ExtrapFacto
 }
 
 
+
 intType TotalCells(const std::vector<InputData::MeshSegment> &meshSegments)
 {
     intType totalCells = 0;
@@ -200,6 +211,7 @@ iArray3 NumberOfFaces( const iArray3 &nCells,
     nFaces(axis) += 1;  // There is one more faces than cells in the normal direction
     return nFaces;
 }
+
 
 
 std::pair<floatType, floatType> MinMaxCellGrowthRatios( const Mesh &mesh,
@@ -261,14 +273,48 @@ std::pair<floatType, floatType> MinMaxCellAspectRatio( const Mesh &mesh )
 }
 
 
+
+void SetCoarsenedCellLengths( Tensor1D &coarseCellLengths, 
+                              const Tensor1D &fineCellLengths )
+{
+
+    intType startIndex, endIndexFine;
+    if ( fineCellLengths.size() % 2 == 0 ) {    // Even number of cells
+
+        startIndex = 0;
+        endIndexFine = fineCellLengths.size();
+
+    } else {                                    // Odd number of cells
+
+        // Dont agglomorate the cell on the end that is the largest
+        if ( fineCellLengths(0) >= fineCellLengths( fineCellLengths.size()-1 ) ) {
+            startIndex = 1;
+            endIndexFine = fineCellLengths.size();
+            coarseCellLengths(0) = fineCellLengths(0);
+        } else {
+            startIndex = 0;
+            endIndexFine = fineCellLengths.size() - 1;
+            coarseCellLengths( coarseCellLengths.size()-1 ) = fineCellLengths( fineCellLengths.size()-1 );
+        }
+
+    }
+
+    for ( intType iCoarse = startIndex, iFine = startIndex;  iFine != endIndexFine;  iCoarse++, iFine += 2 ) {
+        coarseCellLengths(iCoarse) = fineCellLengths(iFine) + fineCellLengths(iFine + 1);
+    }
+
+}
+
+
+
 }   // end anonymous namespace
 
 
 
 
-// Constructor, creates the mesh from user inputdata
-Mesh::Mesh(const InputData &inputData) :
-    nCells( { TotalCells(inputData.meshSegments[Axis::X]),  TotalCells(inputData.meshSegments[Axis::Y]), TotalCells(inputData.meshSegments[Axis::Z])} ),
+// Constructor, allocates mesh given dimensions
+Mesh::Mesh( const iArray3 &nCellsArg ) :
+    nCells( nCellsArg ),
 
     nFacesNormal( { NumberOfFaces( nCells, Axis::X ), NumberOfFaces( nCells, Axis::Y ), NumberOfFaces( nCells, Axis::Z ) } ),
 
@@ -302,6 +348,15 @@ Mesh::Mesh(const InputData &inputData) :
 
     extrapFactors()
 
+    {};
+
+
+
+
+// Constructor, creates the mesh from user inputdata
+Mesh::Mesh(const InputData &inputData) :
+    Mesh( { TotalCells(inputData.meshSegments[Axis::X]),  TotalCells(inputData.meshSegments[Axis::Y]), TotalCells(inputData.meshSegments[Axis::Z])} )
+
     { 
         std::vector< std::vector<floatType> > growthRates(Axis::count);
 
@@ -312,10 +367,10 @@ Mesh::Mesh(const InputData &inputData) :
             CalculateCellLengths(cellLengths[axis], inputData.meshSegments[axis], growthRates[axis]);
             cellLengthsInv[axis] = cellLengths[axis].inverse();
 
-            CalculateCellCenters(cellCenters[axis], cellLengths[axis], inputData.meshSegments[axis].front().lowerBound);
+            CalculateCellCenters(cellCenters[axis], cellLengths[axis], inputData.meshSegments[axis].front().startCoordinate);
             CalculateCellCenterDiffInv(cellCenterDiffInv[axis], cellCenters[axis]);
 
-            CalculateCellFaces(cellFaces[axis], cellLengths[axis], inputData.meshSegments[axis].front().lowerBound);
+            CalculateCellFaces(cellFaces[axis], cellLengths[axis], inputData.meshSegments[axis].front().startCoordinate);
 
             switch ( inputData.schemes.faceInterpolationScheme ) {
                 case FaceInterpolationSchemes::Average:
@@ -385,6 +440,74 @@ Mesh CreateMesh( const InputData &inputData )
 
 
     return mesh;
+}
+
+
+
+bool MeshCanBeCoarsened( const Mesh& mesh ) 
+{
+    for ( intType a = 0; a != Axis::count; a++ ) {
+        Axis::ENUMDATA axis = static_cast<Axis::ENUMDATA>( a );
+        if ( mesh.nCells(axis) > 2 )        // Need at least just one dimension to be coarsenable 
+            return true;
+    }
+    return false;
+}
+
+
+
+Mesh CoarsenMesh( const Mesh &fineMesh,
+                  const FaceInterpolationSchemes faceInterpolationScheme ) 
+{
+
+    // Determine dimensions of coarse mesh
+    iArray3 coarseMeshDims;
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        if ( fineMesh.nCells(axis) % 2 == 0 ) {
+            coarseMeshDims(axis) = fineMesh.nCells(axis) / 2;
+        } else {
+            coarseMeshDims(axis) = 1  +  ( fineMesh.nCells(axis) - 1 ) / 2;
+        }
+    } );
+
+    Mesh coarseMesh( coarseMeshDims );
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+        SetCoarsenedCellLengths( coarseMesh.cellLengths[axis], fineMesh.cellLengths[axis] );
+        coarseMesh.cellLengthsInv[axis] = coarseMesh.cellLengths[axis].inverse();
+
+        CalculateCellCenters(coarseMesh.cellCenters[axis], coarseMesh.cellLengths[axis], fineMesh.cellFaces[axis](0));
+        CalculateCellCenterDiffInv(coarseMesh.cellCenterDiffInv[axis], coarseMesh.cellCenters[axis]);
+
+        CalculateCellFaces(coarseMesh.cellFaces[axis], coarseMesh.cellLengths[axis], fineMesh.cellFaces[axis](0));
+
+        switch ( faceInterpolationScheme ) {
+            case FaceInterpolationSchemes::Average:
+                CalculateInterpolationFactors_Average(coarseMesh.interpFactors[axis]);
+                break;
+
+            case FaceInterpolationSchemes::WeightedLinear:
+                CalculateInterpolationFactors_WeightedLinear(coarseMesh.interpFactors[axis], coarseMesh.cellCenters[axis], coarseMesh.cellFaces[axis]);
+                break;
+        }
+                    
+        CalculateExtrapolationFactors(coarseMesh.extrapFactors, coarseMesh.cellLengths, axis);
+
+    } );
+
+    // Cell face areas should be calculated on their own since they depend on other axis
+    EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
+
+        // Axis are ordered by numbering
+        Axis::ENUMDATA axis1 = LUT::LoOrthogonalAxis[ axis ];
+        Axis::ENUMDATA axis2 = LUT::HiOrthogonalAxis[ axis ];
+        CalculateCellFaceAreas(coarseMesh.cellFaceAreas[axis], coarseMesh.cellLengths[axis1], coarseMesh.cellLengths[axis2]);
+
+    } );
+    
+
+    return coarseMesh;
 }
 
 

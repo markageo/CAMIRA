@@ -194,17 +194,22 @@ class ConsoleLog
             std::cout << std::setprecision( m_precision ) << std::scientific;
         }
 
+        void WriteHeader()
+        {
+            std::cout << "Convergence Residuals:" << "\n";
+        }
+
         void WriteResiduals( const FieldData<floatType> &residuals, 
                              const floatType massFluxResidual,
                              const intType nIterations )
         {
             using enum Axis::ENUMDATA;
             std::cout << "iteration: " << std::left << std::setw(5) << nIterations << ", "
-                      << "U residual: " << residuals.U[ m_AT.CodeAxis(X) ] << ",   "
-                      << "V residual: " << residuals.U[ m_AT.CodeAxis(Y) ] << ",   "
-                      << "W residual: " << residuals.U[ m_AT.CodeAxis(Z) ] << ",   "
-                      << "Coninuity residual: " << residuals.P             << ",   "
-                      << "Global Mass residual: " << massFluxResidual << "\n";
+                      << "U: " << residuals.U[ m_AT.CodeAxis(X) ] << ",   "
+                      << "V: " << residuals.U[ m_AT.CodeAxis(Y) ] << ",   "
+                      << "W: " << residuals.U[ m_AT.CodeAxis(Z) ] << ",   "
+                      << "Local Coninuity: " << residuals.P             << ",   "
+                      << "Global Mass Flux: " << massFluxResidual << "\n";
         }
 
 
@@ -357,6 +362,9 @@ class ResidualFieldWriter
         void TransformData()
         {
             m_transformedFields = m_fields;
+            ForAllFieldData([&](intType f) { 
+                m_transformedFields[f] = FVT::RemoveGhostCells(m_fields[f], nGhost); 
+            });
             TransformFieldToUserCoordinates( m_transformedFields, m_axisTransformation );
         }
 
