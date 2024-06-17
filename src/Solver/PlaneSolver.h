@@ -136,7 +136,8 @@ private:
                     newtonStencilX = - m_fvCoeffs.Mom[X].AU[Z][sCW::cLeft ](i, j, k) * m_fields.U[Z]( ig, jg, kg+sCW::iLeft  )
                                      - m_fvCoeffs.Mom[X].AU[Z][sCW::cRight](i, j, k) * m_fields.U[Z]( ig, jg, kg+sCW::iRight );
                 }
-                m_planeConstants.U[X](i, j) = m_fvCoeffs.Mom[X].B(i, j, k)
+                m_planeConstants.U[X](i, j) = m_fvCoeffs.Mom[X].F(i, j, k)
+                                            - m_fvCoeffs.Mom[X].B(i, j, k)
 
                                             - m_fvCoeffs.Mom[X].AU[X][t](i, j, k) * m_fields.U[X]( ig  , jg  , kg+1) 
                                             - m_fvCoeffs.Mom[X].AU[X][b](i, j, k) * m_fields.U[X]( ig  , jg  , kg-1)
@@ -150,7 +151,8 @@ private:
                     newtonStencilY = - m_fvCoeffs.Mom[Y].AU[Z][sCW::cLeft ](i, j, k) * m_fields.U[Z]( ig, jg, kg+sCW::iLeft  )
                                      - m_fvCoeffs.Mom[Y].AU[Z][sCW::cRight](i, j, k) * m_fields.U[Z]( ig, jg, kg+sCW::iRight );
                 }
-                m_planeConstants.U[Y](i, j) = m_fvCoeffs.Mom[Y].B(i, j, k)
+                m_planeConstants.U[Y](i, j) = m_fvCoeffs.Mom[Y].F(i, j, k)
+                                            - m_fvCoeffs.Mom[Y].B(i, j, k)
 
                                             - m_fvCoeffs.Mom[Y].AU[Y][t](i, j, k) * m_fields.U[Y]( ig  , jg  , kg+1) 
                                             - m_fvCoeffs.Mom[Y].AU[Y][b](i, j, k) * m_fields.U[Y]( ig  , jg  , kg-1)
@@ -169,7 +171,8 @@ private:
                                      - m_fvCoeffs.Mom[Z].AU[Y][p](i, j, kW) * m_fields.U[Y]( ig  , jg  , kgW  )
                                      - m_fvCoeffs.Mom[Z].AU[Y][s](i, j, kW) * m_fields.U[Y]( ig  , jg-1, kgW  );
                 }
-                m_planeConstants.U[Z](i, j) = m_fvCoeffs.Mom[Z].B(i, j, kW)
+                m_planeConstants.U[Z](i, j) = m_fvCoeffs.Mom[Z].F(i, j, kW)
+                                            - m_fvCoeffs.Mom[Z].B(i, j, kW)
                                 
                                             - m_fvCoeffs.Mom[Z].AU[Z][t](i, j, kW) * m_fields.U[Z]( ig  , jg  , kgW+1) 
                                             - m_fvCoeffs.Mom[Z].AU[Z][b](i, j, kW) * m_fields.U[Z]( ig  , jg  , kgW-1)
@@ -186,7 +189,8 @@ private:
                     pressureWideStencil = - m_fvCoeffs.Cont.AP[tt](i, j, k) * m_fields.P( ig  , jg  , kg+2) 
                                           - m_fvCoeffs.Cont.AP[bb](i, j, k) * m_fields.P( ig  , jg  , kg-2);
                 }
-                m_planeConstants.P(i, j) = m_fvCoeffs.Cont.B(i, j, k)
+                m_planeConstants.P(i, j) = m_fvCoeffs.Cont.F(i, j, k)
+                                         - m_fvCoeffs.Cont.B(i, j, k)
 
                                          - m_fvCoeffs.Cont.AU[Z][sCW::cLeft ](k) * m_fields.U[Z]( ig, jg, kg + sCW::iLeft )
                                          - m_fvCoeffs.Cont.AU[Z][sCW::cRight](k) * m_fields.U[Z]( ig, jg, kg + sCW::iRight)

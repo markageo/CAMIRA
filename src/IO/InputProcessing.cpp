@@ -197,19 +197,19 @@ namespace
     {
 
         // The first one must start at zero
-        if (meshSegment.front().lowerBound != 0.0) {
+        if (meshSegment.front().startCoordinate != 0.0) {
             throw std::runtime_error( "Mesh segments must start at coordinate 0." );
         }
 
         // Must end at the given domain size
-        if (meshSegment.back().upperBound != domainSize ) {
+        if (meshSegment.back().endCoordinate != domainSize ) {
             throw std::runtime_error( "Mesh segments to not match given domain bounds." );
         }
 
 
         // Must be no gaps or overlaps in the segments
         for (size_t i = 1; i != meshSegment.size(); i++) {
-            if ( meshSegment[i].lowerBound != meshSegment[i-1].upperBound ) {
+            if ( meshSegment[i].startCoordinate != meshSegment[i-1].endCoordinate ) {
                 throw std::runtime_error( "Mesh segments must not overlap or have gaps." );
             }
         }
@@ -233,8 +233,8 @@ namespace
             tempMeshSegment.nCells     = segment.second.get<intType>( "nCells" );
             tempMeshSegment.biasFactor = segment.second.get<floatType>( "biasFactor" );
             tempBoundsVector           = segment.second.get< std::vector<floatType> >( "bounds" );
-            tempMeshSegment.lowerBound = tempBoundsVector[0];
-            tempMeshSegment.upperBound = tempBoundsVector[1];
+            tempMeshSegment.startCoordinate = tempBoundsVector[0];
+            tempMeshSegment.endCoordinate   = tempBoundsVector[1];
 
             meshSegments.push_back(tempMeshSegment);
         }
@@ -260,7 +260,7 @@ namespace
         ReadGrid(inputData.meshSegments[Z], meshTree, "Gridz");
 
         // Sort in increasing order of lower bound
-        auto sortComparison = [](const auto& i, const auto& j) { return i.lowerBound < j.lowerBound; };
+        auto sortComparison = [](const auto& i, const auto& j) { return i.startCoordinate < j.startCoordinate; };
         std::sort( inputData.meshSegments[X].begin(), inputData.meshSegments[X].end(), sortComparison);
         std::sort( inputData.meshSegments[Y].begin(), inputData.meshSegments[Y].end(), sortComparison );
         std::sort( inputData.meshSegments[Z].begin(), inputData.meshSegments[Z].end(), sortComparison );
@@ -666,9 +666,7 @@ namespace
         inputData.linearSolverSettings.maxIterations = linearSolverTree.get<intType>( "maxIterations" );
 
         // Max residuals
-        floatType maxResiduals = linearSolverTree.get<floatType>( "maxResiduals" );
-        inputData.linearSolverSettings.maxResiduals.U = maxResiduals;
-        inputData.linearSolverSettings.maxResiduals.P = maxResiduals;
+        inputData.linearSolverSettings.maxResiduals = linearSolverTree.get<floatType>( "maxResiduals" );
 
         // Momentum relaxation
         std::vector<floatType> momentumRelaxation = linearSolverTree.get< std::vector<floatType> >( "momentumRelaxation" );
@@ -691,6 +689,31 @@ namespace
 
 
 
+    void ReadMultigridSettings( InputData &inputData, 
+                                const pt::ptree &solverTree) 
+    {
+        const pt::ptree &multigridTree = solverTree.get_child( "Multigrid" );
+        std::string valueString;
+
+        // Max coarse levels
+        inputData.multigridSettings.maxCoarseLevels = multigridTree.get<intType>( "maxCoarseLevels" );
+
+        // Max iterations
+        inputData.multigridSettings.maxPreSmoothingIterations  = multigridTree.get<intType>( "maxPreSmoothingIterations" );
+        inputData.multigridSettings.maxPostSmoothingIterations = multigridTree.get<intType>( "maxPostSmoothingIterations" );
+        inputData.multigridSettings.maxCoarseGridIterations    = multigridTree.get<intType>( "maxCoarseGridIterations" );
+        inputData.multigridSettings.maxFineGridIterations      = multigridTree.get<intType>( "maxFineGridIterations" );
+
+        // Max residuals
+        inputData.multigridSettings.maxPreSmoothingResiduals  = multigridTree.get<floatType>( "maxPreSmoothingResiduals" );
+        inputData.multigridSettings.maxPostSmoothingResiduals = multigridTree.get<floatType>( "maxPostSmoothingResiduals" );
+        inputData.multigridSettings.maxCoarseGridResiduals    = multigridTree.get<floatType>( "maxCoarseGridResiduals" );
+        inputData.multigridSettings.maxFineGridResiduals      = multigridTree.get<floatType>( "maxFineGridResiduals" );
+
+    }
+
+
+
     void ReadSolver(InputData &inputData, 
                     const pt::ptree &tree)
     {
@@ -699,8 +722,11 @@ namespace
         // Read discretisation schemes
         ReadSchemes(inputData, solverTree);
 
-        // Plane sweep settings
+        // Read linear solver (plane sweeping) settings
         ReadLinearSolverSettings(inputData, solverTree);
+
+        // Read multigrid settings
+        ReadMultigridSettings(inputData, solverTree);
 
     }
 

@@ -2,37 +2,50 @@
 
 Model {
     rho  = 1
-    nu   = 0.01
+    nu   = 0.001
 }
 
 Mesh {
 
-    domain = (7, 2, 1)
+    domain = (6, 3, 1)
 
     Grid x {
         Segment {
-            bounds     = (0, 7)
-            nCells     = 63
-            biasFactor = 1
+            bounds     = (0, 6)
+            nCells     = 228
+            biasFactor = 4.5
         }
     }
 
     Grid y {
         Segment {
-            bounds     = (0, 2)
-            nCells     = 18
-            biasFactor = 1
+            bounds     = (0, 0.5)
+            nCells     = 38
+            biasFactor = 1.25
+        }
+
+        Segment {
+            bounds     = (0.5, 3)
+            nCells     = 76
+            biasFactor = 3
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 9
-            biasFactor = 1
+            bounds     = (0, 0.5)
+            nCells     = 19
+            biasFactor = 2
+        }
+
+        Segment {
+            bounds     = (0.5, 1)
+            nCells     = 19
+            biasFactor = -2
         }
     }
 }
+
 
 
 InitialConditions
@@ -105,7 +118,7 @@ Solver {
         advectionScheme         = upwind
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (1, 1, 1)
+        implicitMomentumRelaxation = (0.8, 0.8, 0.8)
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 500
@@ -117,15 +130,32 @@ Solver {
     LinearSolver {
 
         type = SUGS
-        maxIterations = 5
-        maxResiduals = 1e-1
+        maxIterations = 3
+        maxResiduals = 0
 
-        planeSweepDirection = +z
+        planeSweepDirection = +x
         lineSweepDirection = +y
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
+    }
+
+    Multigrid {
+        maxCoarseLevels = 3
+
+        maxPreSmoothingIterations = 3
+        maxPreSmoothingResiduals = 0
+
+        maxPostSmoothingIterations = 3
+        maxPostSmoothingResiduals = 0
+
+        maxCoarseGridIterations = 1000
+        maxCoarseGridResiduals  = 1e-6
+        
+        maxFineGridIterations   = 5
+        maxFineGridResiduals    = 0
+        
     }
 
 }

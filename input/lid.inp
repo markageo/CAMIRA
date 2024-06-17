@@ -2,17 +2,17 @@
 
 Model {
     rho  = 1
-    nu   = 0.02
+    nu   = 0.001
 }
 
 Mesh {
 
-    domain = (1, 1, 0.1)
+    domain = (1, 1, 1)
 
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 20
+            nCells     = 64
             biasFactor = 1
         }
     }
@@ -20,15 +20,15 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 20
+            nCells     = 64
             biasFactor = 1
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 0.1)
-            nCells     = 2
+            bounds     = (0, 1)
+            nCells     = 64
             biasFactor = 1
         }
     }
@@ -78,18 +78,18 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Symmetry
+    // Wall
     +z {
-        u = zeroGradient
-        v = zeroGradient
+        u = uniform, 0
+        v = uniform, 0
         w = uniform, 0
         p = zeroGradient
     }
 
-    // Symmetry
+    // Wall
     -z {
-        u = zeroGradient
-        v = zeroGradient
+        u = uniform, 0
+        v = uniform, 0
         w = uniform, 0
         p = zeroGradient
     }
@@ -103,30 +103,46 @@ Solver {
         linearisation           = Picard
         momentumInterpolation   = implicit
         advectionScheme         = upwind
-        advectionBlendingFactor = 1.0
+        advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (1, 1, 1)
+        implicitMomentumRelaxation = (0.7, 0.7, 0.7)
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 1000
-        maxContinuityOuterResidual = 1e-8
-        maxMomentumOuterResiduals  = (1e-8, 1e-8, 1)
-
+        maxContinuityOuterResidual = 0
+        maxMomentumOuterResiduals  = (0, 0, 0)
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 1
-        maxResiduals = 1e-1
+        maxIterations = 2
+        maxResiduals = 0
 
-        planeSweepDirection = +z
-        lineSweepDirection = +x
+        planeSweepDirection = +x
+        lineSweepDirection = +y
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
+    }
+
+    Multigrid {
+        maxCoarseLevels = 2
+
+        maxPreSmoothingIterations = 3
+        maxPreSmoothingResiduals = 0
+
+        maxPostSmoothingIterations = 3
+        maxPostSmoothingResiduals = 0
+
+        maxCoarseGridIterations = 1000
+        maxCoarseGridResiduals  = 1e-6
+        
+        maxFineGridIterations   = 4
+        maxFineGridResiduals    = 0
+        
     }
 
 }
@@ -138,5 +154,12 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     fieldWriteInterval      = 0
+
+    Monitors {
+        Probe {
+            filename = "output/probe1.csv"
+            location = (0.5, 0.6, 0.5)
+        }
+    }
 
 }
