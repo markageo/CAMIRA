@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.005
+    nu   = 0.001
 }
 
 Mesh {
@@ -12,27 +12,40 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 6)
-            nCells     = 48
-            biasFactor = 1
+            nCells     = 228
+            biasFactor = 4.5
         }
     }
 
     Grid y {
         Segment {
-            bounds     = (0, 3)
-            nCells     = 24
-            biasFactor = 1
+            bounds     = (0, 0.5)
+            nCells     = 38
+            biasFactor = 1.25
+        }
+
+        Segment {
+            bounds     = (0.5, 3)
+            nCells     = 76
+            biasFactor = 3
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 8
-            biasFactor = 1
+            bounds     = (0, 0.5)
+            nCells     = 19
+            biasFactor = 2
+        }
+
+        Segment {
+            bounds     = (0.5, 1)
+            nCells     = 19
+            biasFactor = -2
         }
     }
 }
+
 
 
 InitialConditions
@@ -105,7 +118,7 @@ Solver {
         advectionScheme         = upwind
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (1, 1, 1)
+        implicitMomentumRelaxation = (0.8, 0.8, 0.8)
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 10000
@@ -128,7 +141,7 @@ Solver {
     }
 
     Multigrid {
-        maxCoarseLevels = 1nan
+        maxCoarseLevels = 3
 
         maxPreSmoothingIterations = 3
         maxPreSmoothingResiduals = 0
