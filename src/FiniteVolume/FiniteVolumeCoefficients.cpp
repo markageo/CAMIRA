@@ -407,56 +407,6 @@ void InteriorAdvectionTerms( MomentumEquation &momentumEquation,
 
 
 
-// Upwind coefficients
-// Assumes that the 'p' coefficient has been set to zero
-// Helps the compiler autovectorise
-template< Axis::ENUMDATA axis> [[maybe_unused]]
-void UpwindInteriorPicard_autoVec( EnumVector<CFD::TransportCoefficients, CFD::Tensor3D> &coeffs, 
-                                   const EnumVector<Axis, Tensor3D> &faceFluxes, 
-                                   const Mesh &mesh )
-{
-    using enum Axis::ENUMDATA;
-    using enum TransportCoefficients::ENUMDATA;
-
-    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
-
-    TransportCoefficients::ENUMDATA east = LUT::HiCoeff[axis], 
-                                    west = LUT::LoCoeff[axis];
-
-    for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
-        for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
-
-            // Left side cells
-            // CFD_PRAGMA_VECTORIZE
-            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
-                
-                TensorIndex3D  loIndex = { i, j, k };
-                loIndex[axis] -= 1;
-
-                floatType uf = faceFluxes[ axis ](i, j, k);
-                coeffs[p   ](loIndex) += std::max(   uf * mesh.cellLengthsInv[axis]( loIndex[axis] ), static_cast<floatType>(0.0f) );
-                coeffs[east](loIndex)  = std::min(   uf * mesh.cellLengthsInv[axis]( loIndex[axis] ), static_cast<floatType>(0.0f) );
-
-            }
-
-
-            // Right side cells
-            // CFD_PRAGMA_VECTORIZE
-            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
-                
-                TensorIndex3D hiIndex = { i, j, k };
-
-                floatType uf = faceFluxes[ axis ](i, j, k);
-                coeffs[p   ](hiIndex) += std::max( - uf * mesh.cellLengthsInv[axis]( hiIndex[axis] ), static_cast<floatType>(0.0f) );
-                coeffs[west](hiIndex)  = std::min( - uf * mesh.cellLengthsInv[axis]( hiIndex[axis] ), static_cast<floatType>(0.0f) );
-
-            }
-        }
-    }
-}
-
-
-
 void AdvectionPositiveBoundary( EnumVector<TransportCoefficients, Tensor3D> &coeffs, 
                                 EnumVector<BoundaryPatches, Tensor2D> &boundaryConstants,
                                 const EnumVector<Axis, Tensor3D> &laggedVelocity, 
@@ -549,20 +499,6 @@ void SetInteriorAdvectionPicardCoefficients( MomentumEquation &momentumEquation,
 {
     using enum TransportCoefficients::ENUMDATA;
     
-    // auto &coeffs            = momentumEquation.AU[ momentumEquation.component ];
-
-    // #if defined( CFD_USE_AUTOVEC_FUNCTIONS )
-    //     using enum Axis::ENUMDATA;
-    //     UpwindInteriorPicard_autoVec<Axis::X>(coeffs, faceFluxes, mesh);
-    //     UpwindInteriorPicard_autoVec<Axis::Y>(coeffs, faceFluxes, mesh);
-    //     UpwindInteriorPicard_autoVec<Axis::Z>(coeffs, faceFluxes, mesh);
-    // #else
-    //     EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
-    //         InteriorAdvectionTerms<AdvectionSchemes::Upwind>(momentumEquation, fields, faceFluxes, mesh, axis);
-    //     } );
-    // #endif
-
-
     switch ( momentumEquation.advectionScheme ) {
 
         case AdvectionSchemes::Upwind:
