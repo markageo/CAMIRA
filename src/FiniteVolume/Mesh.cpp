@@ -417,7 +417,7 @@ Mesh CreateMesh( const InputData &inputData )
     // Maximum and minimum cell growth ratio in each coordinate direction
     EnumVector<Axis, std::pair<floatType, floatType>> minMaxCellGrowthRatios;
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        minMaxCellGrowthRatios = MinMaxCellGrowthRatios( mesh, axis );
+        minMaxCellGrowthRatios[axis] = MinMaxCellGrowthRatios( mesh, axis );
     } );
 
     // Maximum and minimum cell aspect ratio 
@@ -427,12 +427,12 @@ Mesh CreateMesh( const InputData &inputData )
     std::cout << "Number of cells        : " << nCells << "\n"
 
               << "Min. cell growth ratios: " << "(" << minMaxCellGrowthRatios[X].first << ", " 
-                                                       << minMaxCellGrowthRatios[Y].first << ", "
-                                                       << minMaxCellGrowthRatios[Z].first << ")" << "\n" 
+                                                    << minMaxCellGrowthRatios[Y].first << ", "
+                                                    << minMaxCellGrowthRatios[Z].first << ")" << "\n" 
 
               << "Max. cell growth ratios: " << "(" << minMaxCellGrowthRatios[X].second << ", " 
-                                                       << minMaxCellGrowthRatios[Y].second << ", "
-                                                       << minMaxCellGrowthRatios[Z].second << ")" << "\n"
+                                                    << minMaxCellGrowthRatios[Y].second << ", "
+                                                    << minMaxCellGrowthRatios[Z].second << ")" << "\n"
                 
               << "Min. cell aspect ratio : " << minAspectRatio << "\n"
               
