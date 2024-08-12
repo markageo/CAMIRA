@@ -220,6 +220,11 @@ std::pair<floatType, floatType> MinMaxCellGrowthRatios( const Mesh &mesh,
     floatType minCellGrowthRatio = std::numeric_limits<floatType>::infinity(),
               maxCellGrowthRatio = 0.0f;
 
+    // 2D case
+    if ( mesh.nCells[axis] == 1 ) {
+        return {1, 1};
+    }
+
     for ( intType i = 1; i != mesh.nCells[axis]; i++ ) {
 
         floatType growthRatio = mesh.cellLengths[axis](i) / mesh.cellLengths[axis](i-1);
