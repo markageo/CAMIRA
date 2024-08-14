@@ -56,8 +56,8 @@ namespace
 
 
     Tensor2D CellPlaneToVertexPlane( const Tensor2D &cellPlane, 
-                                    const Tensor1D &interpFactors0,
-                                    const Tensor1D &interpFactors1 )
+                                     const Tensor1D &interpFactors0,
+                                     const Tensor1D &interpFactors1 )
     {
         Tensor2D vertexPlane( cellPlane.dimension(0)+1, cellPlane.dimension(1)+1 );
 

@@ -2,25 +2,25 @@
 
 Model {
     rho  = 1
-    nu   = 0.1
+    nu   = 0.02
 }
 
 Mesh {
 
-    domain = (9, 3, 3)
+    domain = (10, 4, 3)
 
     Grid x {
         Segment {
-            bounds     = (0, 9)
-            nCells     = 90
+            bounds     = (0, 10)
+            nCells     = 300
             biasFactor = 1
         }
     }
 
     Grid y {
         Segment {
-            bounds     = (0, 3)
-            nCells     = 30
+            bounds     = (0, 4)
+            nCells     = 120
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 3)
-            nCells     = 30
+            nCells     = 90
             biasFactor = 1
         }
     }
@@ -100,7 +100,7 @@ SolidGeometry {
     Block {
         centerPosition = (2.5, 0.5, 1.5)
         dimensions     = (1, 1, 1)
-        rotation       = (0, 0, 0)
+        rotation       = (0, 45, 0)
     }
 }
 
@@ -111,7 +111,7 @@ Solver {
 
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = QUICK
+        advectionScheme         = upwind
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
@@ -127,8 +127,8 @@ Solver {
     LinearSolver {
 
         type = SUGS
-        maxIterations = 2
-        maxResiduals = 1e-2
+        maxIterations = 3
+        maxResiduals = 1e-3
 
         planeSweepDirection = +z
         lineSweepDirection = +y
@@ -136,6 +136,23 @@ Solver {
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
+    }
+
+    Multigrid {
+        maxCoarseLevels = 2
+
+        maxPreSmoothingIterations = 2
+        maxPreSmoothingResiduals = 0
+
+        maxPostSmoothingIterations = 2
+        maxPostSmoothingResiduals = 0
+
+        maxCoarseGridIterations = 100
+        maxCoarseGridResiduals  = 1e-4
+        
+        maxFineGridIterations   = 2
+        maxFineGridResiduals    = 0
+        
     }
 
 }

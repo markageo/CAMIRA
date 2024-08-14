@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.001
+    nu   = 0.005
 }
 
 Mesh {
@@ -12,36 +12,36 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 6)
-            nCells     = 228
-            biasFactor = 4.5
+            nCells     = 48
+            biasFactor = 1
         }
     }
 
     Grid y {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 38
-            biasFactor = 1.25
+            nCells     = 4
+            biasFactor = 1
         }
 
         Segment {
             bounds     = (0.5, 3)
-            nCells     = 76
-            biasFactor = 3
+            nCells     = 20
+            biasFactor = 1
         }
     }
 
     Grid z {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 19
-            biasFactor = 2
+            nCells     = 4
+            biasFactor = 1
         }
 
         Segment {
             bounds     = (0.5, 1)
-            nCells     = 19
-            biasFactor = -2
+            nCells     = 4
+            biasFactor = 1
         }
     }
 }
@@ -116,14 +116,15 @@ Solver {
         linearisation           = Picard
         momentumInterpolation   = implicit
         advectionScheme         = upwind
+        advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (0.8, 0.8, 0.8)
+        implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 500
-        maxContinuityOuterResidual = 1e-6
-        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+        maxOuterIterations = 10000
+        maxContinuityOuterResidual = 1e-5
+        maxMomentumOuterResiduals   = (1e-5, 1e-5, 1e-5)
 
     }
     
@@ -142,18 +143,18 @@ Solver {
     }
 
     Multigrid {
-        maxCoarseLevels = 3
+        maxCoarseLevels = 0
 
-        maxPreSmoothingIterations = 3
+        maxPreSmoothingIterations = 2
         maxPreSmoothingResiduals = 0
 
-        maxPostSmoothingIterations = 3
+        maxPostSmoothingIterations = 2
         maxPostSmoothingResiduals = 0
 
         maxCoarseGridIterations = 1000
         maxCoarseGridResiduals  = 1e-6
         
-        maxFineGridIterations   = 5
+        maxFineGridIterations   = 3
         maxFineGridResiduals    = 0
         
     }

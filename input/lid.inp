@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 64
+            nCells     = 1
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 64
+            nCells     = 40
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 64
+            nCells     = 40
             biasFactor = 1
         }
     }
@@ -78,7 +78,7 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Wall
+    // Symmetry
     +z {
         u = uniform, 0
         v = uniform, 0
@@ -86,7 +86,7 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Wall
+    // Symmetry
     -z {
         u = uniform, 0
         v = uniform, 0
@@ -106,12 +106,12 @@ Solver {
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (0.7, 0.7, 0.7)
+        implicitMomentumRelaxation = (0.5, 0.5, 0.5)
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 1000
-        maxContinuityOuterResidual = 0
-        maxMomentumOuterResiduals  = (0, 0, 0)
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
     }
     
     LinearSolver {
@@ -131,16 +131,16 @@ Solver {
     Multigrid {
         maxCoarseLevels = 2
 
-        maxPreSmoothingIterations = 3
+        maxPreSmoothingIterations = 2
         maxPreSmoothingResiduals = 0
 
-        maxPostSmoothingIterations = 3
+        maxPostSmoothingIterations = 2
         maxPostSmoothingResiduals = 0
 
-        maxCoarseGridIterations = 1000
+        maxCoarseGridIterations = 500
         maxCoarseGridResiduals  = 1e-6
         
-        maxFineGridIterations   = 4
+        maxFineGridIterations   = 2
         maxFineGridResiduals    = 0
         
     }
@@ -154,12 +154,4 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     fieldWriteInterval      = 0
-
-    Monitors {
-        Probe {
-            filename = "output/probe1.csv"
-            location = (0.5, 0.6, 0.5)
-        }
-    }
-
 }
