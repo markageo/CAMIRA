@@ -316,7 +316,7 @@ FieldData<Tensor3D> ComputeFineGridCorrection( const FieldData<Tensor3D> &coarse
         coarseGridError[f]    = coarseGridSolution[f] - restrictedFineGridApproximation[f];
         fineGridCorrection[f] = ProlongateField( coarseGridError[f], coarseMesh, fineMesh );
     } );
-
+    
     return fineGridCorrection;
 }
 

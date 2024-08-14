@@ -258,14 +258,16 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
                                                                   mgLevels[level].mesh, 
                                                                   mgLevels[level+1].mesh );
     } );
+    MaskFields( mgLevels[level+1].residualsRestricted, mgLevels[level+1].ibData.mask );
 
     // Restrict solution
     ForAllFieldData( [&] (intType f) {
         mgLevels[level+1].fieldsRestricted[f] = RestrictField( mgLevels[level].fields[f], 
                                                                mgLevels[level].mesh, 
                                                                mgLevels[level+1].mesh );
-        mgLevels[level+1].fields[f] = mgLevels[level+1].fieldsRestricted[f];
     } );
+    MaskFields( mgLevels[level+1].fieldsRestricted, mgLevels[level+1].ibData.mask );
+    mgLevels[level+1].fields = mgLevels[level+1].fieldsRestricted;
 
     // Solve coarse grid problem
     if ( mgLevels[level+1].isCoarsestLevel ) {  // This is bad if there is 0 coarse levels
@@ -281,6 +283,7 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
                                                                         mgLevels[level+1].fieldsRestricted, 
                                                                         mgLevels[level+1].mesh, 
                                                                         mgLevels[level].mesh );
+    MaskFields( fineGridCorrection, mgLevels[level].ibData.mask );
 
     // Correct fine grid approximation
     ForAllFieldData( [&] (intType f) {
@@ -326,14 +329,16 @@ void FCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
                                                                       mgLevels[level].mesh, 
                                                                       mgLevels[level+1].mesh );
         } );
+        MaskFields( mgLevels[level+1].residualsRestricted, mgLevels[level+1].ibData.mask );
 
         // Restrict solution
         ForAllFieldData( [&] (intType f) {
             mgLevels[level+1].fieldsRestricted[f] = RestrictField( mgLevels[level].fields[f], 
                                                                    mgLevels[level].mesh, 
                                                                    mgLevels[level+1].mesh );
-            mgLevels[level+1].fields[f] = mgLevels[level+1].fieldsRestricted[f];
         } );
+        MaskFields( mgLevels[level+1].fieldsRestricted, mgLevels[level+1].ibData.mask );
+        mgLevels[level+1].fields = mgLevels[level+1].fieldsRestricted;
 
     }
 
@@ -355,6 +360,7 @@ void FCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
                                                                             mgLevels[level+1].fieldsRestricted, 
                                                                             mgLevels[level+1].mesh, 
                                                                             mgLevels[level].mesh );
+         MaskFields( fineGridCorrection, mgLevels[level].ibData.mask );
 
         // Correct fine grid approximation
         ForAllFieldData( [&] (intType f) {
@@ -393,6 +399,7 @@ void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
         ForAllFieldData( [&] (intType f) {
             mgLevels[coarsestLevel-1].fields[f] = ProlongateField( mgLevels[coarsestLevel].fields[f], mgLevels[coarsestLevel].mesh, mgLevels[coarsestLevel-1].mesh );
         } );
+        MaskFields( mgLevels[coarsestLevel-1].fields, mgLevels[coarsestLevel-1].ibData.mask );
 
         for ( intType level = coarsestLevel-1; level != 0; level-- ) {
 
@@ -403,6 +410,7 @@ void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
             ForAllFieldData( [&] (intType f) {
                 mgLevels[level-1].fields[f] = ProlongateField( mgLevels[level].fields[f], mgLevels[level].mesh, mgLevels[level-1].mesh );
             } );
+            MaskFields( mgLevels[level-1].fields, mgLevels[level-1].ibData.mask );
 
         }
 
@@ -430,7 +438,7 @@ void SweepSolve( const InputData &inputData,
     const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
 
     // Multigrid level data
-    std::vector< GridLevelData<MI, LI> > mgLevels;  // FIND A BETTER WAY TO DO THIS
+    std::vector< GridLevelData<MI, LI> > mgLevels; 
     SetMGLevels( mgLevels, inputData );
 
     // References to finest grid
