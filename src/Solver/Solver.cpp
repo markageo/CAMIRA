@@ -32,7 +32,6 @@ void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
 {
     auto &gld = gridLevelData; 
 
-    TIC("Setting fine grid equations")
     UpdateIBData( gld.ibData, gld.fields );
     UpdateFaceFluxes( gld.faceFluxes, gld.mesh, gld.fields.U, gld.bcData);
     SetIBFaceFluxes( gld.faceFluxes, gld.ibData );
@@ -58,7 +57,6 @@ void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
     }
     SetGhostCells( gridLevelData.fields, gridLevelData.mesh, gridLevelData.bcData );
     UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fields, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
-    TOC()
 }
 
 
@@ -104,22 +102,14 @@ void SetCoarseGridEquations( GridLevelData<MI, LI> &gridLevelData,
 {
     auto &gld = gridLevelData;
 
-    TIC("Setting coarse grid equations")
-
     // Set fvCoeffs based on the latest solution to the coarse grid problem
-    TIC("Setting LHS")
     SetFineGridEquations<MI, LI>( gld );
-    TOC()
 
     // Add the terms that appear on the RHS of the coarse grid equation
-    TIC("Adding RHS")
     EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
         gld.fvCoeffs.Mom[axis].F += coarseGridRightHandSide.U[axis];
     } );
     gld.fvCoeffs.Cont.F += coarseGridRightHandSide.P;
-    TOC()
-
-    TOC()
 }
 
 
@@ -133,7 +123,6 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
     FieldData<floatType> residualsScaleFactor;
     FieldData<Tensor3D> coarseGridRightHandSide;
 
-    TIC("Initialisation")
     if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
         SetFineGridEquations<MI, LI>( gridLevelData );
     } else {
@@ -150,15 +139,11 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
                                                                      gridLevelData.ibData.mask);
     SetResidualsNormalisationFactor( residualsScaleFactor, residuals );
     NormaliseResiduals( residuals, residualsScaleFactor );
-    TOC()
 
-    TIC("Smoother loop")
     for ( intType nIterations = 1; nIterations <= maxIterations; nIterations++ ) {
 
-        TIC("Solving operations")
         gridLevelData.linearSolver->UpdateState();
         gridLevelData.linearSolver->Solve();
-        TOC()
 
         if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
             SetFineGridEquations<MI, LI>( gridLevelData );
@@ -166,12 +151,10 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
             SetCoarseGridEquations<MI, LI>( gridLevelData, coarseGridRightHandSide );
         }
 
-        TIC("Residual operations")
         residuals = ScaledL1NormResiduals<MI, LI>( gridLevelData.fields,
                                                    gridLevelData.fvCoeffs,
                                                    gridLevelData.ibData.mask );
         NormaliseResiduals( residuals, residualsScaleFactor );
-        TOC()
 
         gridLevelData.fieldsOld = gridLevelData.fields;
 
@@ -188,7 +171,6 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
         }
 
     }
-    TOC()
     std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", relative residuals: " << residuals.U[0] << ", " 
                                                                                                                        << residuals.U[1] << ", " 
                                                                                                                        << residuals.U[2] << ", " 
@@ -227,10 +209,9 @@ void SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
             SetCoarseGridEquations<MI, LI>( gridLevelData, coarseGridRightHandSide );
         }
 
-
         gridLevelData.fieldsOld = gridLevelData.fields;
-
     }
+    std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", performed " << maxIterations << " iterations" << "\n";
 
 }
 
@@ -243,9 +224,8 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
              const InputData::MultigridSettings &mgSettings)
 {
     // Presmoothing 
-    TIC("Smoothing")
-    Smooth<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations, mgEquationType );
-    TOC()
+    // Smooth<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations, mgEquationType );
+    SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingIterations, mgEquationType );
 
     // Calculate residual
     FieldData<Tensor3D> residuals = ResidualsField<MI, LI>( mgLevels[level].fields, 
@@ -271,9 +251,7 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
     // Solve coarse grid problem
     if ( mgLevels[level+1].isCoarsestLevel ) {  // This is bad if there is 0 coarse levels
-        TIC("Smoothing")
         Smooth<MI, LI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::TauCorrection );
-        TOC()
     } else {
         VCycle<MI, LI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
     }
@@ -291,13 +269,13 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
     } );
 
     // Postsmoothing
-    TIC("Smoothing")
     if ( mgLevels[level].isFinestLevel ) {
-        Smooth<MI, LI>( mgLevels[level], mgSettings.maxFineGridResiduals, mgSettings.maxFineGridIterations, mgEquationType );
+        // Smooth<MI, LI>( mgLevels[level], mgSettings.maxFineGridResiduals, mgSettings.maxFineGridIterations, mgEquationType );
+        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxFineGridIterations, mgEquationType );
     } else {
-        Smooth<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingResiduals, mgSettings.maxPostSmoothingIterations, mgEquationType );
+        // Smooth<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingResiduals, mgSettings.maxPostSmoothingIterations, mgEquationType );
+        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingIterations, mgEquationType );
     }
-    TOC()
 }
 
 
@@ -314,9 +292,8 @@ void FCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
         MultigridEquation mgEquationType = ( level == 0 ) ? MultigridEquation::NoTauCorrection : MultigridEquation::TauCorrection;
 
         // Smooth 
-        TIC("Smoothing")
-        Smooth<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations, mgEquationType );
-        TOC()
+        // Smooth<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations, mgEquationType );
+        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingIterations, mgEquationType );
 
         // Calculate residual
         FieldData<Tensor3D> residuals = ResidualsField<MI, LI>( mgLevels[level].fields, 
@@ -349,18 +326,16 @@ void FCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
         MultigridEquation mgEquationType = ( level == 0 ) ? MultigridEquation::NoTauCorrection : MultigridEquation::TauCorrection;  // Don't need this check
 
         // Smooth only for coarsest grid
-        TIC("Smoothing")
         if ( level+1 == coarsestLevel ) {
             Smooth<MI, LI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, mgEquationType );
         }
-        TOC()
 
         // Compute fine grid correction 
         FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
                                                                             mgLevels[level+1].fieldsRestricted, 
                                                                             mgLevels[level+1].mesh, 
                                                                             mgLevels[level].mesh );
-         MaskFields( fineGridCorrection, mgLevels[level].ibData.mask );
+        MaskFields( fineGridCorrection, mgLevels[level].ibData.mask );
 
         // Correct fine grid approximation
         ForAllFieldData( [&] (intType f) {
@@ -375,9 +350,8 @@ void FCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
     }
 
     // Fine grid smoothing
-    TIC("Smoothing")
-    Smooth<MI, LI>( mgLevels[0], mgSettings.maxFineGridResiduals, mgSettings.maxFineGridIterations, MultigridEquation::NoTauCorrection );
-    TOC()
+    // Smooth<MI, LI>( mgLevels[0], mgSettings.maxFineGridResiduals, mgSettings.maxFineGridIterations, MultigridEquation::NoTauCorrection );
+    SmoothWithFixedIterations<MI, LI>( mgLevels[0], mgSettings.maxFineGridIterations, MultigridEquation::NoTauCorrection );
 }
 
 

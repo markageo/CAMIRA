@@ -2278,11 +2278,9 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     }
     
 
-
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         // Boundaries need to be done after since they can affect the internal coefficients
         SetBoundaryAdvectionPicardCoefficients(fvCoeffs.Mom[axis], faceFluxes, bcData.fields.U[axis], mesh);
-        
         AddDiffusion(fvCoeffs.Mom[axis], bcData.fields.U[axis], mesh);
     } );
 
@@ -2311,7 +2309,6 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     } );
 
     AddContinuityBoundaryConstants(fvCoeffs.Cont);
-
 
     // Add effect of immersed boundary
     AddIBSourceTerms( fvCoeffs, faceFluxes, ibData, fields, mesh );
