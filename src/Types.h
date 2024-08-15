@@ -150,7 +150,9 @@ enum class FaceInterpolationSchemes {
     WeightedLinear, Average
 };
 
-
+enum class MultigridCycleType {
+    V, F, W
+};
 
 
 

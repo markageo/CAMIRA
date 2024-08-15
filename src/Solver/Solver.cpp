@@ -390,8 +390,17 @@ void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
     } else  {
      
-        // VCycle<MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
-        FCycle<MI, LI>( mgLevels, mgSettings );
+        switch ( mgSettings.cycle ) {
+            case MultigridCycleType::V:
+                VCycle<MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
+                break;
+            case MultigridCycleType::F:
+                FCycle<MI, LI>( mgLevels, mgSettings );
+                break;
+            case MultigridCycleType::W:
+                // TODO
+                break;
+        }
 
     }
 }
