@@ -101,6 +101,7 @@ struct InputData
     LinearSolverSettings linearSolverSettings;
 
     struct MultigridSettings {
+        MultigridCycleType cycle;
         intType maxCoarseLevels,
                 maxPreSmoothingIterations,
                 maxPostSmoothingIterations,

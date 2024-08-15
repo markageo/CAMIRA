@@ -695,6 +695,18 @@ namespace
         const pt::ptree &multigridTree = solverTree.get_child( "Multigrid" );
         std::string valueString;
 
+        // Multigrid cycle type
+        valueString = multigridTree.get<std::string>( "cycle" );
+        if        ( valueString == "V" ) {
+            inputData.multigridSettings.cycle = MultigridCycleType::V;
+        } else if ( valueString == "F" ) {
+            inputData.multigridSettings.cycle = MultigridCycleType::F;
+        } else if ( valueString == "W" ) {
+            inputData.multigridSettings.cycle = MultigridCycleType::W;
+        } else {
+            throw std::runtime_error( "'" + valueString + "' is not a linear solver type." );
+        }
+
         // Max coarse levels
         inputData.multigridSettings.maxCoarseLevels = multigridTree.get<intType>( "maxCoarseLevels" );
 
