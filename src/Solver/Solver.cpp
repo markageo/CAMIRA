@@ -217,14 +217,13 @@ void SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
 
 
 
-template< MomentumInterpolation MI, Linearisation LI >
-void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
-             const intType level, 
-             const MultigridEquation mgEquationType,
-             const InputData::MultigridSettings &mgSettings)
+template< MultigridCycleType MGCycle, MomentumInterpolation MI, Linearisation LI >
+void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
+            const intType level,
+            const MultigridEquation mgEquationType,
+            const InputData::MultigridSettings &mgSettings )
 {
     // Presmoothing 
-    // Smooth<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations, mgEquationType );
     SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingIterations, mgEquationType );
 
     // Calculate residual
@@ -253,105 +252,86 @@ void VCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
     if ( mgLevels[level+1].isCoarsestLevel ) {  // This is bad if there is 0 coarse levels
         Smooth<MI, LI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::TauCorrection );
     } else {
-        VCycle<MI, LI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
+        Cycle<MGCycle, MI, LI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
     }
 
     // Compute fine grid correction 
     FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
                                                                         mgLevels[level+1].fieldsRestricted, 
                                                                         mgLevels[level+1].mesh, 
-                                                                        mgLevels[level].mesh );
-    MaskFields( fineGridCorrection, mgLevels[level].ibData.mask );
+                                                                        mgLevels[level].mesh,
+                                                                        mgLevels[level].ibData.mask );
 
     // Correct fine grid approximation
     ForAllFieldData( [&] (intType f) {
         mgLevels[level].fields[f] += fineGridCorrection[f];
     } );
 
-    // Postsmoothing
-    if ( mgLevels[level].isFinestLevel ) {
-        // Smooth<MI, LI>( mgLevels[level], mgSettings.maxFineGridResiduals, mgSettings.maxFineGridIterations, mgEquationType );
-        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxFineGridIterations, mgEquationType );
-    } else {
-        // Smooth<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingResiduals, mgSettings.maxPostSmoothingIterations, mgEquationType );
-        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingIterations, mgEquationType );
-    }
-}
+    if constexpr ( MGCycle == MultigridCycleType::F ||
+                   MGCycle == MultigridCycleType::W  )
+    {
 
-
-
-template< MomentumInterpolation MI, Linearisation LI >
-void FCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
-             const InputData::MultigridSettings &mgSettings )
-{
-    intType coarsestLevel = mgLevels.size() - 1;
-
-    // Initial descent
-    for ( intType level = 0; level != coarsestLevel; level++ ) {
-
-        MultigridEquation mgEquationType = ( level == 0 ) ? MultigridEquation::NoTauCorrection : MultigridEquation::TauCorrection;
-
-        // Smooth 
-        // Smooth<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingResiduals, mgSettings.maxPreSmoothingIterations, mgEquationType );
-        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingIterations, mgEquationType );
+        // Re-smoothing
+        if ( mgLevels[level].isFinestLevel ) {
+            SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxFineGridIterations, mgEquationType );
+        } else {
+            SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingIterations, mgEquationType );
+        }
 
         // Calculate residual
-        FieldData<Tensor3D> residuals = ResidualsField<MI, LI>( mgLevels[level].fields, 
-                                                                mgLevels[level].fvCoeffs, 
-                                                                mgLevels[level].ibData.mask );
+        residuals = ResidualsField<MI, LI>( mgLevels[level].fields, 
+                                            mgLevels[level].fvCoeffs, 
+                                            mgLevels[level].ibData.mask );
 
         // Restrict residual
         ForAllFieldData( [&] (intType f) {
             mgLevels[level+1].residualsRestricted[f] = RestrictField( residuals[f],
-                                                                      mgLevels[level].mesh, 
-                                                                      mgLevels[level+1].mesh );
+                                                                    mgLevels[level].mesh, 
+                                                                    mgLevels[level+1].mesh );
         } );
         MaskFields( mgLevels[level+1].residualsRestricted, mgLevels[level+1].ibData.mask );
 
         // Restrict solution
         ForAllFieldData( [&] (intType f) {
             mgLevels[level+1].fieldsRestricted[f] = RestrictField( mgLevels[level].fields[f], 
-                                                                   mgLevels[level].mesh, 
-                                                                   mgLevels[level+1].mesh );
+                                                                mgLevels[level].mesh, 
+                                                                mgLevels[level+1].mesh );
         } );
         MaskFields( mgLevels[level+1].fieldsRestricted, mgLevels[level+1].ibData.mask );
         mgLevels[level+1].fields = mgLevels[level+1].fieldsRestricted;
 
-    }
-
-
-    // Ascend
-    for ( intType level = coarsestLevel-1; level != -1; level-- ) {
-        
-        MultigridEquation mgEquationType = ( level == 0 ) ? MultigridEquation::NoTauCorrection : MultigridEquation::TauCorrection;  // Don't need this check
-
-        // Smooth only for coarsest grid
-        if ( level+1 == coarsestLevel ) {
-            Smooth<MI, LI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, mgEquationType );
+        // Solve coarse grid problem
+        if ( mgLevels[level+1].isCoarsestLevel ) {  // This is bad if there is 0 coarse levels
+            Smooth<MI, LI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::TauCorrection );
+        } else {
+            if        constexpr ( MGCycle == MultigridCycleType::F ) {
+                Cycle<MultigridCycleType::V, MI, LI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
+            } else if constexpr ( MGCycle == MultigridCycleType::W ) {
+                Cycle<MultigridCycleType::W, MI, LI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
+            }
         }
 
         // Compute fine grid correction 
-        FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
-                                                                            mgLevels[level+1].fieldsRestricted, 
-                                                                            mgLevels[level+1].mesh, 
-                                                                            mgLevels[level].mesh );
-        MaskFields( fineGridCorrection, mgLevels[level].ibData.mask );
+        fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
+                                                        mgLevels[level+1].fieldsRestricted, 
+                                                        mgLevels[level+1].mesh, 
+                                                        mgLevels[level].mesh,
+                                                        mgLevels[level].ibData.mask );
 
         // Correct fine grid approximation
         ForAllFieldData( [&] (intType f) {
             mgLevels[level].fields[f] += fineGridCorrection[f];
         } );
 
-        // VCycle
-        if ( level != 0 ) {
-            VCycle<MI, LI>( mgLevels, level, MultigridEquation::TauCorrection, mgSettings );
-        }
-
     }
 
-    // Fine grid smoothing
-    // Smooth<MI, LI>( mgLevels[0], mgSettings.maxFineGridResiduals, mgSettings.maxFineGridIterations, MultigridEquation::NoTauCorrection );
-    SmoothWithFixedIterations<MI, LI>( mgLevels[0], mgSettings.maxFineGridIterations, MultigridEquation::NoTauCorrection );
+    // Post-smoothing
+    if ( mgLevels[level].isFinestLevel ) {
+        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxFineGridIterations, mgEquationType );
+    } else {
+        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingIterations, mgEquationType );
+    }
+
 }
 
 
@@ -392,13 +372,13 @@ void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
      
         switch ( mgSettings.cycle ) {
             case MultigridCycleType::V:
-                VCycle<MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
+                Cycle<MultigridCycleType::V, MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
                 break;
             case MultigridCycleType::F:
-                FCycle<MI, LI>( mgLevels, mgSettings );
+                Cycle<MultigridCycleType::F, MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
                 break;
             case MultigridCycleType::W:
-                // TODO
+                Cycle<MultigridCycleType::W, MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
                 break;
         }
 

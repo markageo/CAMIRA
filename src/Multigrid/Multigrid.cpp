@@ -309,13 +309,15 @@ Tensor3D ProlongateField( const Tensor3D &coarseField,
 FieldData<Tensor3D> ComputeFineGridCorrection( const FieldData<Tensor3D> &coarseGridSolution,
                                                const FieldData<Tensor3D> &restrictedFineGridApproximation,
                                                const Mesh &coarseMesh,
-                                               const Mesh &fineMesh )
+                                               const Mesh &fineMesh,
+                                               const Tensor3D &mask )
 {
     FieldData<Tensor3D> coarseGridError, fineGridCorrection;
     ForAllFieldData( [&] (intType f) {
         coarseGridError[f]    = coarseGridSolution[f] - restrictedFineGridApproximation[f];
         fineGridCorrection[f] = ProlongateField( coarseGridError[f], coarseMesh, fineMesh );
     } );
+    MaskFields( fineGridCorrection, mask );
     
     return fineGridCorrection;
 }
