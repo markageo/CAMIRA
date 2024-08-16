@@ -59,7 +59,8 @@ Tensor3D ProlongateField( const Tensor3D &,
 FieldData<Tensor3D> ComputeFineGridCorrection( const FieldData<Tensor3D> &,
                                                const FieldData<Tensor3D> &,
                                                const Mesh &,
-                                               const Mesh & );
+                                               const Mesh &,
+                                               const Tensor3D & );
 
 
 template< MomentumInterpolation MI, Linearisation LI >
