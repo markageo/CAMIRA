@@ -30,6 +30,11 @@ if ( CMAKE_BUILD_TYPE STREQUAL "DEBUG" )
 	message ( WARNING "THE BUILD TYPE IS DEBUG. ADDRESS SANITIZER WILL BE USED" )
 endif()
 
+# Make release the default build type
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE "Release" )
+  set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Type of build (Debug, Release etc." FORCE)
+endif()
 
 # Ankith's profiler
 option ( CFD_PROFILING "Enable CFD Profiling Tickers" on )
@@ -82,4 +87,5 @@ if( supported )
 else()
     message(STATUS "IPO / LTO not supported: <${error}>")
 endif()
+
 

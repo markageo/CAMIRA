@@ -1,4 +1,5 @@
 // Backwards facing step with no inflow region
+// Re = 200, nonuniform grid
 
 Model {
     rho  = 1
@@ -12,36 +13,36 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 6)
-            nCells     = 48
-            biasFactor = 1
+            nCells     = 192
+            biasFactor = 3
         }
     }
 
     Grid y {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 4
+            nCells     = 26
             biasFactor = 1
         }
 
         Segment {
             bounds     = (0.5, 3)
-            nCells     = 20
-            biasFactor = 1
+            nCells     = 70
+            biasFactor = 2.5
         }
     }
 
     Grid z {
         Segment {
             bounds     = (0, 0.5)
-            nCells     = 4
-            biasFactor = 1
+            nCells     = 16
+            biasFactor = 2
         }
 
         Segment {
             bounds     = (0.5, 1)
-            nCells     = 4
-            biasFactor = 1
+            nCells     = 16
+            biasFactor = -2
         }
     }
 }
@@ -119,10 +120,10 @@ Solver {
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (1, 1, 1)
+        implicitMomentumRelaxation = (0.8, 0.8, 0.8)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 10000
+        maxOuterIterations = 100
         maxContinuityOuterResidual = 1e-5
         maxMomentumOuterResiduals   = (1e-5, 1e-5, 1e-5)
 
@@ -131,7 +132,7 @@ Solver {
     LinearSolver {
 
         type = SUGS
-        maxIterations = 3
+        maxIterations = 2
         maxResiduals = 0
 
         planeSweepDirection = +x
@@ -143,7 +144,8 @@ Solver {
     }
 
     Multigrid {
-        maxCoarseLevels = 0
+        cycle = F
+        maxCoarseLevels = 2
 
         maxPreSmoothingIterations = 2
         maxPreSmoothingResiduals = 0
@@ -151,8 +153,8 @@ Solver {
         maxPostSmoothingIterations = 2
         maxPostSmoothingResiduals = 0
 
-        maxCoarseGridIterations = 1000
-        maxCoarseGridResiduals  = 1e-6
+        maxCoarseGridIterations = 500
+        maxCoarseGridResiduals  = 1e-4
         
         maxFineGridIterations   = 3
         maxFineGridResiduals    = 0
