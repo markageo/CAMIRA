@@ -358,7 +358,7 @@ void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
         for ( intType level = coarsestLevel-1; level != 0; level-- ) {
 
             // VCycle
-            VCycle<MI, LI>( mgLevels, level, MultigridEquation::NoTauCorrection, mgSettings );
+            Cycle<MultigridCycleType::V, MI, LI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
 
             // Prolongate
             ForAllFieldData( [&] (intType f) {
