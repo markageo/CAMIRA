@@ -23,8 +23,8 @@ void SetGhostCells( FieldData<Tensor3D> &fields,
     EnumFor<BoundaryPatches>( [&] ( BoundaryPatches::ENUMDATA boundaryPatch ) {
         Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
 
-        intType iCell_p = ( boundaryPatch = LUT::NegativePatch[axis] ) ? 0  : mesh.nCells[axis] - 1,
-                iCell_g = ( boundaryPatch = LUT::NegativePatch[axis] ) ? -1 : mesh.nCells[axis];
+        intType iCell_p = ( boundaryPatch == LUT::NegativePatch[axis] ) ? 0  : mesh.nCells[axis] - 1,
+                iCell_g = ( boundaryPatch == LUT::NegativePatch[axis] ) ? -1 : mesh.nCells[axis];
 
         ForAllFieldData( [&] ( intType f ) {
 
