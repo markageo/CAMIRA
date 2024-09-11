@@ -31,63 +31,8 @@ namespace CFD
 namespace 
 {
 
-// Determines if query point is inside given polyhedron geometry
-bool PointInside( const Polyhedron &polyhedron, 
-                  const floatType xq, 
-                  const floatType yq, 
-                  const floatType zq ) 
-{
-    using Point        = Polyhedron::Point_3;
-    using Primitive    = CGAL::AABB_face_graph_triangle_primitive<Polyhedron>;
-    using Traits       = CGAL::AABB_traits<CGAL_Kernel, Primitive>;
-    using Tree         = CGAL::AABB_tree<Traits>;
-    using Point_inside = CGAL::Side_of_triangle_mesh<Polyhedron, CGAL_Kernel>;
-
-    // Construct AABB tree with a KdTree
-    Tree tree(faces(polyhedron).first, faces(polyhedron).second, polyhedron);
-    tree.accelerate_distance_queries();
-
-    // Initialize the point-in-polyhedron tester
-    Point_inside inside_tester(tree);
-    
-    // Determine the side and return true if inside!
-    return inside_tester( Point( xq, yq, zq ) ) == CGAL::ON_BOUNDED_SIDE;
-}
-
-
-
-// Returns the distance squared to the nearest intersection from the given point in the direction of the given ray.
-// https://stackoverflow.com/questions/69953358/to-calculate-intersections-between-a-ray-and-a-mesh
-floatType GetBoundaryDistance2( const Polyhedron &polyhedron,
-                                const fVector3 &queryPointCoords,
-                                const fVector3 &rayDirection ) 
-{
-    using Point            = Polyhedron::Point_3;
-    using Vector           = CGAL_Kernel::Vector_3;
-    using Primitive        = CGAL::AABB_face_graph_triangle_primitive<Polyhedron>;
-    using Traits           = CGAL::AABB_traits<CGAL_Kernel, Primitive>;
-    using Tree             = CGAL::AABB_tree<Traits>;
-    using Ray              = CGAL_Kernel::Ray_3;    
-    using Ray_intersection = boost::optional<Tree::Intersection_and_primitive_id<Ray>::Type>;
-
-    Tree tree(faces(polyhedron).first, faces(polyhedron).second, polyhedron);
-    tree.accelerate_distance_queries();
-
-    const Vector rayOrientation( rayDirection(0), rayDirection(1), rayDirection(2) );
-    const Point  rayOrigin( queryPointCoords(0), queryPointCoords(1), queryPointCoords(2) );
-    const Ray    ray( rayOrigin, rayOrientation );
-    Ray_intersection intersection = tree.first_intersection( ray );
-
-    Point* intersectionPoint = boost::get<Point>( &(intersection->first) ); 
-    floatType distance2 = static_cast<floatType>( CGAL::squared_distance( *intersectionPoint, rayOrigin ) );
-
-    return distance2;
-}
-
-
-
 // Create a mask array for cell centers
-Tensor3D CreateCellMask( const Polyhedron &geometry, 
+Tensor3D CreateCellMask( const Tree &tree, 
                          const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;
@@ -104,7 +49,7 @@ Tensor3D CreateCellMask( const Polyhedron &geometry,
                           yq = mesh.cellCenters[Y](j),
                           zq = mesh.cellCenters[Z](k);
 
-                if ( PointInside( geometry, xq, yq, zq ) )
+                if ( PointInside( tree, xq, yq, zq ) )
                     mask(G(i, j, k)) = CellType::Solid;
 
             }
@@ -149,7 +94,7 @@ void AddIBDataForDirection( IBCell &ibCell,
                             const intType directionIndex,
                             const Tensor3D &mask,
                             const Mesh &mesh,
-                            const Polyhedron &geometry)
+                            const Tree &tree)
 {
     using enum Axis::ENUMDATA;
 
@@ -183,7 +128,7 @@ void AddIBDataForDirection( IBCell &ibCell,
                                mesh.cellCenters[Z](cellIndex[Z]) );
     fVector3 rayDirection( 0, 0, 0 );
     rayDirection[ axis ] = static_cast<floatType>( directionIndex );
-    sourceTermData.ibDistance = sqrt( GetBoundaryDistance2(geometry, queryPointCoords, rayDirection) );
+    sourceTermData.ibDistance = NearestRayIntersection(tree, queryPointCoords, rayDirection);
     floatType ibDistance = sourceTermData.ibDistance;
 
 
@@ -323,7 +268,10 @@ IBData ConstructIBData( const Polyhedron &geometry,
 
     IBData ibData;
 
-    ibData.mask = CreateCellMask( geometry, mesh );
+    // Create AABB tree for geometry
+    Tree tree = MakeAABBTree( geometry );
+
+    ibData.mask = CreateCellMask( tree, mesh );
     auto &mask = ibData.mask;
 
     // Iterate through all cells 
@@ -353,7 +301,7 @@ IBData ConstructIBData( const Polyhedron &geometry,
                     bool atHiBoundary = ( cellIndex[axis] == mesh.nCells[axis]-1  );
                     if ( !atHiBoundary && static_cast<intType>( mask(G(hiSideCellIndex)) ) == CellType::Solid ) {
                         CheckIBCellPtr();
-                        AddIBDataForDirection( *ibCellPtr, axis, +1, mask, mesh, geometry );
+                        AddIBDataForDirection( *ibCellPtr, axis, +1, mask, mesh, tree );
                     }
 
                     // Solid on lo side
@@ -362,7 +310,7 @@ IBData ConstructIBData( const Polyhedron &geometry,
                     bool atLoBoundary = ( cellIndex[axis] == 0  );
                     if ( !atLoBoundary && static_cast<intType>( mask(G(loSideCellIndex)) ) == CellType::Solid ) {
                         CheckIBCellPtr();
-                        AddIBDataForDirection( *ibCellPtr, axis, -1, mask, mesh, geometry );
+                        AddIBDataForDirection( *ibCellPtr, axis, -1, mask, mesh, tree );
                     }
 
                 } );
