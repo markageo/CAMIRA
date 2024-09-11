@@ -266,4 +266,80 @@ Polyhedron MakeGeometry( const InputData &inputData )
 }
 
 
+
+/*-------------------------------------------------------------------------------------*\
+                               General Geometry Functions
+\*-------------------------------------------------------------------------------------*/
+
+
+Tree MakeAABBTree( const Polyhedron &polyhedron )
+{
+    // Construct AABB tree with a KdTree
+    Tree tree(faces(polyhedron).first, faces(polyhedron).second, polyhedron);
+    tree.accelerate_distance_queries();
+    return tree;
+}
+
+
+
+// Determines if query point is inside given geometry tree
+bool PointInside( const Tree &tree, 
+                  const floatType xq, 
+                  const floatType yq, 
+                  const floatType zq )
+{
+    using Point        = Polyhedron::Point_3;
+    using Point_inside = CGAL::Side_of_triangle_mesh<Polyhedron, CGAL_Kernel>;
+
+    if ( tree.empty() )
+        return false;
+
+    // Initialize the point-in-polyhedron tester
+    Point_inside inside_tester(tree);
+    
+    // Determine the side and return true if inside!
+    return inside_tester( Point( xq, yq, zq ) ) == CGAL::ON_BOUNDED_SIDE;
+}
+
+
+
+// Returns the distance to the nearest intersection from the given point in the direction of the given ray.
+floatType NearestRayIntersection( const Tree &tree,
+                                  const fVector3 &queryPointCoords,
+                                  const fVector3 &rayDirection )
+{
+    using Point            = Polyhedron::Point_3;
+    using Vector           = CGAL_Kernel::Vector_3;
+    using Ray              = CGAL_Kernel::Ray_3;    
+    using Ray_intersection = boost::optional<Tree::Intersection_and_primitive_id<Ray>::Type>;
+
+    const Vector rayOrientation( rayDirection(0), rayDirection(1), rayDirection(2) );
+    const Point  rayOrigin( queryPointCoords(0), queryPointCoords(1), queryPointCoords(2) );
+    const Ray    ray( rayOrigin, rayOrientation );
+    Ray_intersection intersection = tree.first_intersection( ray );
+
+    Point* intersectionPoint = boost::get<Point>( &(intersection->first) ); 
+    floatType distance2 = static_cast<floatType>( CGAL::squared_distance( *intersectionPoint, rayOrigin ) );
+
+    return sqrt( distance2 );
+}
+
+
+
+// Gets the nearest distance of point to geometry tree
+floatType NearestDistance( const Tree &tree, 
+                           const floatType xq, 
+                           const floatType yq, 
+                           const floatType zq  )
+{
+    using Point        = Polyhedron::Point_3;
+
+    Point pointq(xq, yq, zq);
+    CGAL_Kernel::FT distance2 = tree.squared_distance( pointq );
+
+    return sqrt( static_cast<floatType>( distance2 ) );
+}
+
+
+
 }
