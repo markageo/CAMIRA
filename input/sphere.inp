@@ -1,0 +1,206 @@
+// Sphere flow
+
+Model {
+    rho  = 1
+    nu   = 0.05
+}
+
+Mesh {
+
+    domain = (10, 5, 5)
+
+    Grid x {
+        Segment {
+            bounds     = (0, 2)
+            nCells     = 40
+            biasFactor = -2
+        }
+
+        Segment {
+            bounds     = (2, 3)
+            nCells     = 40
+            biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (3, 10)
+            nCells     = 120
+            biasFactor = 3.5
+        }
+    }
+
+
+    Grid y {
+        Segment {
+            bounds     = (0, 2)
+            nCells     = 30
+            biasFactor = -3
+        }
+
+        Segment {
+            bounds     = (2, 3)
+            nCells     = 40
+            biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (3, 5)
+            nCells     = 30
+            biasFactor = 3
+        }
+    }
+
+    Grid z {
+        Segment {
+            bounds     = (0, 2)
+            nCells     = 30
+            biasFactor = -3
+        }
+
+        Segment {
+            bounds     = (2, 3)
+            nCells     = 40
+            biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (3, 5)
+            nCells     = 30
+            biasFactor = 3
+        }
+    }
+}
+
+
+InitialConditions
+{
+    u = 1
+    v = 0
+    w = 0
+    p = 0
+}
+
+
+BoundaryConditions
+{
+    // Outflow
+    +x {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform, 0
+    }
+
+    // Inflow
+    -x {
+        u = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Symmetry
+    +y {
+        u = zeroGradient
+        v = uniform, 0
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    // Symmetry
+    -y {
+        u = zeroGradient
+        v = uniform, 0
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    // Symmetry
+    +z {
+        u = zeroGradient
+        v = zeroGradient
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Symmetry
+    -z {
+        u = zeroGradient
+        v = zeroGradient
+        w = uniform, 0
+        p = zeroGradient
+    }
+}
+
+
+SolidGeometry {
+    Sphere {
+        centerPosition = (2.5, 2.5, 2.5)
+        diameter       = 1
+    }
+}
+
+
+Solver {
+
+    Schemes {
+
+        linearisation           = Picard
+        momentumInterpolation   = implicit
+        advectionScheme         = central
+        advectionBlendingFactor = 1
+        faceInterpolationScheme = average
+
+        implicitMomentumRelaxation = (0.6, 0.6, 0.6)
+        implicitPressureRelaxation = 1
+
+        maxOuterIterations = 1000
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+
+    }
+    
+    LinearSolver {
+
+        type = SUGS
+        maxIterations = 2
+        maxResiduals = 1e-3
+
+        planeSweepDirection = +z
+        lineSweepDirection = +y
+
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
+
+    }
+
+    Multigrid {
+        cycle = F
+        maxCoarseLevels = 4
+
+        maxPreSmoothingIterations = 2
+        maxPreSmoothingResiduals = 0
+
+        maxPostSmoothingIterations = 2
+        maxPostSmoothingResiduals = 0
+
+        maxCoarseGridIterations = 100
+        maxCoarseGridResiduals  = 1e-4
+        
+        maxFineGridIterations   = 2
+        maxFineGridResiduals    = 0
+        
+    }
+
+}
+
+
+Output {
+
+    residualHistoryFilename = "output/residual_history.csv"
+    profilingFilename       = "output/profiling.dat"
+    fieldOutputFilename     = "output/fields.vtk"
+    geometryOutputFilename  = "output/geometry.stl"
+    fieldWriteInterval      = 0
+
+}
