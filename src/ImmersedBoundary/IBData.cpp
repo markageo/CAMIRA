@@ -186,7 +186,7 @@ void AddIBDataForDirection( IBCell &ibCell,
 
     // Face area vector
     sourceTermData.faceAreaComponent = static_cast<floatType>( directionIndex )   // Gives the correct sign
-                                     * mesh.cellFaceAreas[axis]( fidx );    
+                                     * mesh.cellFaceAreas[axis]( cellIndex[ LUT::LoOrthogonalAxis[axis] ], cellIndex[ LUT::HiOrthogonalAxis[axis] ] );    
 
 
 
