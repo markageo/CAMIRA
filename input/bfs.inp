@@ -115,7 +115,7 @@ Solver {
     Schemes {
 
         linearisation           = Picard
-        momentumInterpolation   = implicit
+        momentumInterpolation   = semiExplicit
         advectionScheme         = upwind
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
@@ -124,15 +124,15 @@ Solver {
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 100
-        maxContinuityOuterResidual = 1e-5
-        maxMomentumOuterResiduals   = (1e-5, 1e-5, 1e-5)
+        maxContinuityOuterResidual = 1e-16
+        maxMomentumOuterResiduals   = (1e-16, 1e-16, 1e-16)
 
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 2
+        maxIterations = 1
         maxResiduals = 0
 
         planeSweepDirection = +x
