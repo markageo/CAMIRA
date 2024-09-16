@@ -10,12 +10,6 @@
 #include "Geometry/Geometry.h"
 #include "ImmersedBoundary/ImmersedBoundary.h"
 #include "IO/ArrayIO.h"
-
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Polyhedron_3.h>
-#include <CGAL/IO/Polyhedron_iostream.h>
-#include <CGAL/draw_polyhedron.h>
-
 #include "IO/InputProcessing.h"
 #include "IO/VTKWriter.h"
 #include "Tools/SweepTransformations.h"

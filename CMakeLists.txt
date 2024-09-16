@@ -12,6 +12,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 # specify the C++ standard
 set (CMAKE_CXX_STANDARD 20)
 
+# For clangd
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 # Add compiler flags
 add_library(compiler_flags INTERFACE)
 target_compile_features(compiler_flags INTERFACE cxx_std_20)
@@ -77,7 +80,8 @@ target_include_directories(eigen SYSTEM INTERFACE libraries/eigen-3.4.0)
 find_package(CGAL REQUIRED 
 			 COMPONENTS Qt5
 			 PATHS libraries/CGAL-5.6 NO_DEFAULT_PATH )
-
+set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
+			 
 add_subdirectory(src)
 
 # Link time optimisation

@@ -446,6 +446,7 @@ void SweepSolve( const InputData &inputData,
     consoleLog.WriteHeader();
     consoleLog.WriteResiduals( residualsOuter, massFluxResidual, 0 );
     residualsLogFile.WriteData( residualsOuter, massFluxResidual, 0 );
+    fieldWriter.WriteData( 0 );
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
         TIC("Multigrid Cycling")
