@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.001
+    nu   = 0.01
 
     turbulenceModel = none
 }
@@ -119,7 +119,7 @@ Solver {
     LinearSolver {
 
         type = SUGS
-        maxIterations = 2
+        maxIterations = 5
         maxResiduals = 0
 
         planeSweepDirection = +z
@@ -132,7 +132,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 3
+        maxCoarseLevels = 2
 
         maxPreSmoothingIterations = 3
         maxPreSmoothingResiduals = 0
@@ -156,5 +156,5 @@ Output {
     residualHistoryFilename = "output/residual_history.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
-    fieldWriteInterval      = 0
+    fieldWriteInterval      = 1
 }

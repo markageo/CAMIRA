@@ -145,7 +145,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 0
 
         maxPreSmoothingIterations = 2
         maxPreSmoothingResiduals = 0
