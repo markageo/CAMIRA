@@ -140,7 +140,8 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
     SetResidualsNormalisationFactor( residualsScaleFactor, residuals );
     NormaliseResiduals( residuals, residualsScaleFactor );
 
-    for ( intType nIterations = 1; nIterations <= maxIterations; nIterations++ ) {
+    intType nIterations = 1;
+    for ( /* NULL */; nIterations <= maxIterations; nIterations++ ) {
 
         gridLevelData.linearSolver->UpdateState();
         gridLevelData.linearSolver->Solve();
@@ -174,7 +175,8 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
     std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", relative residuals: " << residuals.U[0] << ", " 
                                                                                                                        << residuals.U[1] << ", " 
                                                                                                                        << residuals.U[2] << ", " 
-                                                                                                                       << residuals.P << "\n";
+                                                                                                                       << residuals.P    << ", "
+                                                                                                                       << " after " << nIterations << " iterations.\n";
 }
 
 

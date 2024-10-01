@@ -83,11 +83,13 @@ private:
         UpdateLineConstants(j, k, planeConstants);
 
         for (intType i = 0; i != m_ni - 1; i++) { // Forward sweep
-            m_triadSolverEast->UpdateTriad(i, j, k, m_lineConstants);
+            // m_triadSolverEast->UpdateTriad(i, j, k, m_lineConstants);
+            m_triadSolverEast->UpdateTriad(i, j, k);
         }
 
         for (intType i = m_ni - 1; i != 0; i--) { // Backward sweep
-            m_triadSolverWest->UpdateTriad(i, j, k, m_lineConstants);
+            // m_triadSolverWest->UpdateTriad(i, j, k, m_lineConstants);
+            m_triadSolverWest->UpdateTriad(i, j, k);
         }
     }
 
