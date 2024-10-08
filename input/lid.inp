@@ -14,7 +14,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -22,7 +22,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -30,7 +30,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -132,7 +132,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 0
 
         maxPreSmoothingIterations = 3
         maxPreSmoothingResiduals = 0

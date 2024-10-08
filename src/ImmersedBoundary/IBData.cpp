@@ -1,5 +1,6 @@
 #include "ImmersedBoundary.h"
 #include "../Tools/FVLookups.h"
+#include "../Tools/FVTools.h"
 
 #include "../Macros.h"
 #include "../IO/ArrayIO.h"
@@ -90,8 +91,9 @@ Tensor3D CreateCellMask( const Polyhedron &geometry,
                          const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;
+    using FVT::G;
 
-    Tensor3D mask = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setConstant( CellType::Fluid );
+    Tensor3D mask = Tensor3D( mesh.nCells[X] + 2*CFD::nGhost, mesh.nCells[Y] + 2*CFD::nGhost, mesh.nCells[Z] + 2*CFD::nGhost ).setConstant( CellType::Fluid );
 
     // Identify cells with cell centeres inside the solid
     for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
@@ -103,7 +105,7 @@ Tensor3D CreateCellMask( const Polyhedron &geometry,
                           zq = mesh.cellCenters[Z](k);
 
                 if ( PointInside( geometry, xq, yq, zq ) )
-                    mask(i, j, k) = CellType::Solid;
+                    mask(G(i, j, k)) = CellType::Solid;
 
             }
         }
@@ -120,8 +122,9 @@ bool CellIsFluid( const TensorIndex3D &cellIndex_a,
                   const Tensor3D &mask,
                   const Mesh &mesh )
 {
+    using FVT::G;
 
-    if ( static_cast<intType>( mask( cellIndex_a ) ) == CellType::Solid ) 
+    if ( static_cast<intType>( mask( G(cellIndex_a) ) ) == CellType::Solid ) 
         return false;
 
     for ( intType a = 0; a != Axis::count; a++ ) {
@@ -316,6 +319,7 @@ IBData ConstructIBData( const Polyhedron &geometry,
 {
 
     using enum Axis::ENUMDATA;
+    using FVT::G;
 
     IBData ibData;
 
@@ -327,7 +331,7 @@ IBData ConstructIBData( const Polyhedron &geometry,
         for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
             for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
 
-                if ( static_cast<intType>( mask(i, j, k) ) == CellType::Solid )
+                if ( static_cast<intType>( mask(G(i, j, k)) ) == CellType::Solid )
                     continue;
 
                 TensorIndex3D cellIndex{i, j, k};
@@ -347,7 +351,7 @@ IBData ConstructIBData( const Polyhedron &geometry,
                     TensorIndex3D hiSideCellIndex = cellIndex;
                     hiSideCellIndex[axis] += 1;
                     bool atHiBoundary = ( cellIndex[axis] == mesh.nCells[axis]-1  );
-                    if ( !atHiBoundary && static_cast<intType>( mask(hiSideCellIndex) ) == CellType::Solid ) {
+                    if ( !atHiBoundary && static_cast<intType>( mask(G(hiSideCellIndex)) ) == CellType::Solid ) {
                         CheckIBCellPtr();
                         AddIBDataForDirection( *ibCellPtr, axis, +1, mask, mesh, geometry );
                     }
@@ -356,7 +360,7 @@ IBData ConstructIBData( const Polyhedron &geometry,
                     TensorIndex3D loSideCellIndex = cellIndex;
                     loSideCellIndex[axis] -= 1;
                     bool atLoBoundary = ( cellIndex[axis] == 0  );
-                    if ( !atLoBoundary && static_cast<intType>( mask(loSideCellIndex) ) == CellType::Solid ) {
+                    if ( !atLoBoundary && static_cast<intType>( mask(G(loSideCellIndex)) ) == CellType::Solid ) {
                         CheckIBCellPtr();
                         AddIBDataForDirection( *ibCellPtr, axis, -1, mask, mesh, geometry );
                     }
@@ -387,7 +391,7 @@ IBData CreateImmersedBoundaryData( const InputData &inputData,
     IBData ibData;
 
     if ( !inputData.hasIBGeometry ) {
-        ibData.mask = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setConstant( CellType::Fluid );
+        ibData.mask = Tensor3D( mesh.nCells[X] + 2*CFD::nGhost, mesh.nCells[Y] + 2*CFD::nGhost, mesh.nCells[Z] + 2*CFD::nGhost ).setConstant( CellType::Fluid );
         return ibData;
     }
 

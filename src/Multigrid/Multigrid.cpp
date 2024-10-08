@@ -72,7 +72,7 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
         mgl.fvCoeffs = InitialiseFVCoefficients(mgl.mesh, mgl.fields, mgl.faceAdvectedVelocities, mgl.faceFluxes, mgl.ibData, mgl.bcData, inputData);
 
         // Linear Solver
-        mgl.linearSolver = std::make_unique< LinearSolver<MI, LI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);
+        mgl.linearSolver = std::make_unique< LinearSolver2<MI, LI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);
 
     }
     mgLevels.back().isCoarsestLevel = true;
@@ -349,7 +349,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[X].AU[Z][p](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[X].AU[Z][b](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);
                 }
-                fvCoeffs.Mom[X].F(i, j, k) += mask(i, j, k)
+                fvCoeffs.Mom[X].F(i, j, k) += mask(ig, jg, kg)
                                               * (  residualsRestricted.U[X](ig, jg, kg)
 
                                                  + fvCoeffs.Mom[X].AU[X][p](i, j, k) * fieldsRestricted.U[X]( ig  , jg  , kg  ) 
@@ -381,7 +381,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[Y].AU[Z][p](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[Y].AU[Z][b](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);      
                 }
-                fvCoeffs.Mom[Y].F(i, j, k) += mask(i, j, k) 
+                fvCoeffs.Mom[Y].F(i, j, k) += mask(ig, jg, kg) 
                                               * (   residualsRestricted.U[Y](ig, jg, kg)
 
                                                   + fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fieldsRestricted.U[Y]( ig  , jg  , kg  ) 
@@ -413,7 +413,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[Z].AU[Y][p](i, j, k) * fieldsRestricted.U[Y]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[Z].AU[Y][s](i, j, k) * fieldsRestricted.U[Y]( ig  , jg-1, kg  );    
                 }
-                fvCoeffs.Mom[Z].F(i, j, k) += mask(i, j, k)
+                fvCoeffs.Mom[Z].F(i, j, k) += mask(ig, jg, kg)
                                               * (   residualsRestricted.U[Z](ig, jg, kg)
 
                                                   + fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg  ) 
@@ -444,7 +444,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                                         + fvCoeffs.Cont.AP[tt](i, j, k) * fieldsRestricted.P( ig  , jg  , kg+2) 
                                         + fvCoeffs.Cont.AP[bb](i, j, k) * fieldsRestricted.P( ig  , jg  , kg-2);
                 }
-                fvCoeffs.Cont.F(i, j, k) += mask(i, j, k) 
+                fvCoeffs.Cont.F(i, j, k) += mask(ig, jg, kg) 
                                           * (   residualsRestricted.P(ig, jg, kg)
 
                                               + fvCoeffs.Cont.AU[X][e](i) * fieldsRestricted.U[X]( ig+1, jg  , kg  )
@@ -513,7 +513,7 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[X].AU[Z][p](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[X].AU[Z][b](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);
                 }
-                coarseGridRightHandSide.U[X](i, j, k) = mask(i, j, k)
+                coarseGridRightHandSide.U[X](i, j, k) = mask(ig, jg, kg)
                                               * (  residualsRestricted.U[X](ig, jg, kg)
 
                                                  + fvCoeffs.Mom[X].AU[X][p](i, j, k) * fieldsRestricted.U[X]( ig  , jg  , kg  ) 
@@ -545,7 +545,7 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[Y].AU[Z][p](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[Y].AU[Z][b](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);      
                 }
-                coarseGridRightHandSide.U[Y](i, j, k) += mask(i, j, k) 
+                coarseGridRightHandSide.U[Y](i, j, k) += mask(ig, jg, kg) 
                                               * (   residualsRestricted.U[Y](ig, jg, kg)
 
                                                   + fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fieldsRestricted.U[Y]( ig  , jg  , kg  ) 
@@ -576,7 +576,7 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
                                    + fvCoeffs.Mom[Z].AU[Y][p](i, j, k) * fieldsRestricted.U[Y]( ig  , jg  , kg  )
                                    + fvCoeffs.Mom[Z].AU[Y][s](i, j, k) * fieldsRestricted.U[Y]( ig  , jg-1, kg  );    
                 }
-                coarseGridRightHandSide.U[Z](i, j, k) += mask(i, j, k)
+                coarseGridRightHandSide.U[Z](i, j, k) += mask(ig, jg, kg)
                                               * (   residualsRestricted.U[Z](ig, jg, kg)
 
                                                   + fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fieldsRestricted.U[Z]( ig  , jg  , kg  ) 
@@ -607,7 +607,7 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
                                         + fvCoeffs.Cont.AP[tt](i, j, k) * fieldsRestricted.P( ig  , jg  , kg+2) 
                                         + fvCoeffs.Cont.AP[bb](i, j, k) * fieldsRestricted.P( ig  , jg  , kg-2);
                 }
-               coarseGridRightHandSide.P(i, j, k) += mask(i, j, k) 
+               coarseGridRightHandSide.P(i, j, k) += mask(ig, jg, kg) 
                                           * (   residualsRestricted.P(ig, jg, kg)
 
                                               + fvCoeffs.Cont.AU[X][e](i) * fieldsRestricted.U[X]( ig+1, jg  , kg  )
