@@ -16,11 +16,11 @@ namespace CFD
 struct MomentumEquation {
     MomentumEquation() {};
     MomentumEquation(const Axis::ENUMDATA, const iArray3 &, Linearisation);
-    EnumVector< Axis, EnumVector< TransportCoefficients, Tensor3D > > AU;     // Velocity coefficients (LHS)
-    EnumVector<TransportCoefficients, Tensor1D> AP;                           // Pressure coefficients (LHS)
-    Tensor3D B;                                                               // Constants that come from boundary conditions and linearisation (LHS)
-    Tensor3D F;                                                               // Source terms (RHS)
-    Tensor3D diagCoeffInv;                                                    // Inverse of diagonal coefficient
+    EnumVector< Axis, EnumVector< TransportCoefficients, Tensor3D > > AU;     // Velocity coefficients (LHS), has dummy cells
+    EnumVector<TransportCoefficients, Tensor1D> AP;                           // Pressure coefficients (LHS), has dummy cells
+    Tensor3D B;                                                               // Constants that come from boundary conditions and linearisation (LHS), has dummy cells
+    Tensor3D F;                                                               // Source terms (RHS), has dummy cells
+    Tensor3D diagCoeffInv;                                                    // Inverse of diagonal coefficient, has dummy cells
     EnumVector< Axis, EnumVector<TransportCoefficients, Tensor1D> > diff;     // Diffusion coefficients (LHS)
     EnumVector< BoundaryPatches, floatType > diffBoundary;                    // Diffusion coefficients for constant boundary conditions (LHS)
     EnumVector< BoundaryPatches, Tensor2D   > BUBoundary, BPBoundary;         // Constant terms that come from fixed BC (LHS)
@@ -41,10 +41,10 @@ struct MomentumEquation {
 struct ContinuityEquation {
     ContinuityEquation() {};
     ContinuityEquation(const iArray3 &, MomentumInterpolation);
-    EnumVector< Axis, EnumVector< TransportCoefficients, Tensor1D > > AU;    // Velocity coefficients (LHS)
-    EnumVector<TransportCoefficients, Tensor3D> AP;                          // Pressure coefficients (LHS)
-    Tensor3D B;                                                              // Constants that come from boundary conditions and linearisation (LHS)
-    Tensor3D F;                                                              // Source terms (RHS)
+    EnumVector< Axis, EnumVector< TransportCoefficients, Tensor1D > > AU;    // Velocity coefficients (LHS), has dummy cells
+    EnumVector<TransportCoefficients, Tensor3D> AP;                          // Pressure coefficients (LHS), has dummy cells
+    Tensor3D B;                                                              // Constants that come from boundary conditions and linearisation (LHS), has dummy cells
+    Tensor3D F;                                                              // Source terms (RHS), has dummy cells
     EnumVector< Axis, std::array< Tensor1D, 4 > > mwiSparseCoeffs;           // Unweighted MWI coefficients from the sparse pressure gradient (LHS)
     EnumVector< Axis, std::array< Tensor1D, 2 > > mwiCompactCoeffs;          // Unweighted MWI coefficients from the compact pressure gradient (LHS)
     EnumVector< BoundaryPatches, Tensor2D   > BUBoundary, BPBoundary;        // Constant terms that come from fixed BC (LHS)

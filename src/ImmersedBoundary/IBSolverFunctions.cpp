@@ -157,18 +157,9 @@ void UpdateIBData( IBData &ibData,
 void MaskFields( FieldData<Tensor3D> &fields, 
                  const Tensor3D &mask )
 {
-    Eigen::array<Eigen::Index, 3> offsets = { nGhost, nGhost, nGhost };
-
     ForAllFieldData( [&] (intType f) {
-
-        Eigen::array<Eigen::Index, 3> extents = { fields[f].dimension(0) - 2*nGhost,
-                                                  fields[f].dimension(1) - 2*nGhost,
-                                                  fields[f].dimension(2) - 2*nGhost };
-
-        fields[f].slice( offsets, extents ) *= mask;
-
+        fields[f] *= mask;
     } );
-    
 }
 
 
