@@ -233,17 +233,17 @@ inline FieldData<floatType> ScaledL1NormResiduals( const FieldData<Tensor3D> &fi
 
                 // U momentum
                 residualU      += mask(ig, jg, kg) * abs( CellMomentumResidual_x<LI>(fields, fvCoeffs, ig, jg, kg) );
-                scalingFactorU += mask(ig, jg, kg) * abs( fvCoeffs.Mom[X].AU[X][p](i, j, k) * fields.U[X]( ig  , jg  , kg  ) );
+                scalingFactorU += mask(ig, jg, kg) * abs( fvCoeffs.Mom[X].AU[X][p](ig, jg, kg) * fields.U[X]( ig  , jg  , kg  ) );
 
 
                 // V momentum
                 residualV      += mask(ig, jg, kg) * abs( CellMomentumResidual_y<LI>(fields, fvCoeffs, ig, jg, kg) );
-                scalingFactorV += mask(ig, jg, kg) * abs( fvCoeffs.Mom[Y].AU[Y][p](i, j, k) * fields.U[Y]( ig  , jg  , kg  ) );
+                scalingFactorV += mask(ig, jg, kg) * abs( fvCoeffs.Mom[Y].AU[Y][p](ig, jg, kg) * fields.U[Y]( ig  , jg  , kg  ) );
 
 
                 // W momentm
-                residualW      += mask(ig, jg, kg) * abs( CellMomentumResidual_x<LI>(fields, fvCoeffs, ig, jg, kg) );             
-                scalingFactorW += mask(ig, jg, kg) * abs( fvCoeffs.Mom[Z].AU[Z][p](i, j, k) * fields.U[Z]( ig  , jg  , kg  ) );
+                residualW      += mask(ig, jg, kg) * abs( CellMomentumResidual_z<LI>(fields, fvCoeffs, ig, jg, kg) );             
+                scalingFactorW += mask(ig, jg, kg) * abs( fvCoeffs.Mom[Z].AU[Z][p](ig, jg, kg) * fields.U[Z]( ig  , jg  , kg  ) );
 
 
                 // Continuity 
