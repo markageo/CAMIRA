@@ -16,6 +16,12 @@
 namespace CFD 
 {
 
+// DEBUGGING/TESTING GLOBALS
+
+extern unsigned long triadSolverCallCount;
+
+// END DUBUGGING/TESTING GLOBALS
+
 // ----------------------------------------------------- Type Aliases ----------------------------------------------------- //
 
 #ifdef CFD_DOUBLE_PRECISION

@@ -391,6 +391,8 @@ void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 }   // end anonymous namespace
 
 
+// DEBUGGING
+unsigned long triadSolverCallCount;
 
 template< MomentumInterpolation MI, Linearisation LI >
 void SweepSolve( const InputData &inputData,
@@ -401,6 +403,9 @@ void SweepSolve( const InputData &inputData,
     // Extract from input data
     const intType maxOuterIterations = inputData.schemes.maxOuterIterations;
     const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
+
+    // DEBUGGING
+    triadSolverCallCount = 0;
 
     // Multigrid level data
     std::vector< GridLevelData<MI, LI> > mgLevels; 
@@ -500,6 +505,9 @@ void SweepSolve( const InputData &inputData,
 
     }
     TOC()
+
+    // DEBUGGING
+    std::cout << "Triad solver call count: " << triadSolverCallCount << "\n\n";
 
 }
 template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Picard>( const InputData &, const AxisTransformationMap &);

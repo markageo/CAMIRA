@@ -7,6 +7,7 @@ target_sources( libs
         PlaneSolver.h 
         LineSolver.h 
         TriadSolver.h 
+        StencilConstants.h
         ResidualFunctions.h 
         StaggerIndexing.h 
         ConvergenceLogging.h )
