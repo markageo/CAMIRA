@@ -2,17 +2,17 @@
 
 Model {
     rho  = 1
-    nu   = 0.02
+    nu   = 0.001
 }
 
 Mesh {
 
-    domain = (10, 1, 1)
+    domain = (3, 1, 1)
 
     Grid x {
         Segment {
-            bounds     = (0, 10)
-            nCells     = 200
+            bounds     = (0, 3)
+            nCells     = 1000
             biasFactor = 1
         }
     }
@@ -119,7 +119,7 @@ Solver {
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (0.6, 0.6, 0.6)
+        implicitMomentumRelaxation = (0.5, 0.5, 0.5)
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 100
