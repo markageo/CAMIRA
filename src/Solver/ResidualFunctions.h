@@ -33,7 +33,7 @@ inline FieldData<floatType> L1DiffResiduals( const FieldData<Tensor3D> &fields1,
 
 
 // Cell residual from stencil for momentum equation
-template< Linearisation LI >
+template< Linearisation LI > __attribute__((always_inline)) 
 inline floatType CellMomentumResidual_x( const FieldData<Tensor3D> &fields,
                                          const FVCoefficients &fvCoeffs,
                                          const intType ig,
@@ -75,7 +75,7 @@ inline floatType CellMomentumResidual_x( const FieldData<Tensor3D> &fields,
 
 
 
-template< Linearisation LI >
+template< Linearisation LI > __attribute__((always_inline)) 
 inline floatType CellMomentumResidual_y( const FieldData<Tensor3D> &fields,
                                          const FVCoefficients &fvCoeffs,
                                          const intType ig,
@@ -117,7 +117,7 @@ inline floatType CellMomentumResidual_y( const FieldData<Tensor3D> &fields,
 
 
 
-template< Linearisation LI >
+template< Linearisation LI > __attribute__((always_inline)) 
 inline floatType CellMomentumResidual_z( const FieldData<Tensor3D> &fields,
                                          const FVCoefficients &fvCoeffs,
                                          const intType ig,
@@ -159,7 +159,7 @@ inline floatType CellMomentumResidual_z( const FieldData<Tensor3D> &fields,
 
 
 
-template< MomentumInterpolation MI >
+template< MomentumInterpolation MI > __attribute__((always_inline)) 
 inline floatType CellContinuityResidual( const FieldData<Tensor3D> &fields,
                                          const FVCoefficients &fvCoeffs,
                                          const intType ig,

@@ -111,7 +111,7 @@ Solver {
         implicitMomentumRelaxation = (0.6, 0.6, 0.6)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 1000
+        maxOuterIterations = 300
         maxContinuityOuterResidual = 1e-6
         maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
     }
@@ -132,7 +132,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 0
 
         maxPreSmoothingIterations = 3
         maxPreSmoothingResiduals = 0
