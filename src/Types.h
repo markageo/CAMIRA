@@ -16,11 +16,6 @@
 namespace CFD 
 {
 
-// DEBUGGING/TESTING GLOBALS
-
-extern unsigned long triadSolverCallCount;
-
-// END DUBUGGING/TESTING GLOBALS
 
 // ----------------------------------------------------- Type Aliases ----------------------------------------------------- //
 
