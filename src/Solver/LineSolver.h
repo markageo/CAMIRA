@@ -32,7 +32,6 @@ class LineSolver
 
 public:
     LineSolver( FieldData<Tensor3D> &fields,
-                const FieldData<Tensor3D> &fieldsOld,
                 const Tensor3D &mask,
                 const FVCoefficients &fvCoeffs) : 
                     m_fields( fields ),
@@ -41,12 +40,12 @@ public:
                     m_ni( fvCoeffs.nCells(Axis::X) )
     {
         if (m_ni == 1) {
-            m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
+            m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag, MI, LI>>(fields, mask, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep2D;
             StateUpdater = &LineSolver::UpdateState2D;
         } else {
-            m_triadSolverEast = std::make_unique<TriadSolver<TC::e, Vstag, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
-            m_triadSolverWest = std::make_unique<TriadSolver<TC::w, Vstag, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
+            m_triadSolverEast = std::make_unique<TriadSolver<TC::e, Vstag, Wstag, MI, LI>>(fields, mask, fvCoeffs);
+            m_triadSolverWest = std::make_unique<TriadSolver<TC::w, Vstag, Wstag, MI, LI>>(fields, mask, fvCoeffs);
             SolutionUpdater = &LineSolver::Sweep3D;
             StateUpdater = &LineSolver::UpdateState3D;
         }

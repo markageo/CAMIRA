@@ -42,11 +42,9 @@ class TriadSolver
 
 public:
     TriadSolver( FieldData<Tensor3D> &fields,
-                 const FieldData<Tensor3D> &fieldsOld,
                  const Tensor3D &mask,
                  const FVCoefficients &fvCoeffs ) : 
                     m_fields( fields ),
-                    m_fieldsOld( fieldsOld ),
                     m_mask( mask ),
                     m_fvCoeffs( fvCoeffs ),
                     m_ni( fvCoeffs.nCells(0) ),
@@ -413,7 +411,6 @@ public:
 
 private:
     FieldData<Tensor3D> &m_fields;
-    const FieldData<Tensor3D> &m_fieldsOld;
     const Tensor3D &m_mask;
     const FVCoefficients &m_fvCoeffs;
     const intType m_ni, m_nj, m_nk;
