@@ -1622,6 +1622,32 @@ void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
 
 }
 
+
+/*---------------------------------------------------------------------------------------------------------------*\
+                                                Unsteady Terms
+\*---------------------------------------------------------------------------------------------------------------*/
+
+
+// Add unsteady term
+void AddUnsteadyTerm( MomentumEquation &momentumEquation, 
+                      const Mesh &mesh,
+                      const FieldData<Tensor3D> &fieldsOld )
+{
+    using enum TransportCoefficients::ENUMDATA;
+    const TensorIndex3D offsets = {nGhost, nGhost, nGhost},
+                        extents = {mesh.nCells[0], mesh.nCells[1], mesh.nCells[2]};
+    const Axis::ENUMDATA axis = momentumEquation.component;
+    const floatType dtInv = 1.0f / momentumEquation.timeStep;
+
+    momentumEquation.AU[axis][p].slice(offsets, extents) +=  momentumEquation.AU[axis][p].slice(offsets, extents).constant( dtInv );
+
+    momentumEquation.B.slice(offsets, extents) += - fieldsOld.U[axis].slice(offsets, extents)
+                                                  * fieldsOld.U[axis].slice(offsets, extents).constant( dtInv );
+}
+
+
+
+
 /*---------------------------------------------------------------------------------------------------------------*\
                                         Boundary Constants to Source Term
 \*---------------------------------------------------------------------------------------------------------------*/
@@ -2263,6 +2289,7 @@ void SetDiagCoeffInverse( MomentumEquation &momentumEquation,
 
 FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
                                          const FieldData<Tensor3D> &fields,
+                                         const FieldData<Tensor3D> &fieldsOld,
                                          const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &faceAdvectedVelocities,
                                          const EnumVector<Axis, Tensor3D> &faceFluxes, 
                                          const IBData &ibData,
@@ -2280,6 +2307,8 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         fvCoeffs.Mom[axis].relaxation              = inputData.schemes.implicitRelaxation.U[axis];
         fvCoeffs.Mom[axis].advectionScheme         = inputData.schemes.advectionScheme;
+        fvCoeffs.Mom[axis].timeScheme              = inputData.schemes.timeScheme;
+        fvCoeffs.Mom[axis].timeStep                = inputData.schemes.timeStep;
         fvCoeffs.Mom[axis].advectionBlendingFactor = inputData.schemes.advectionBlendingFactor;
 
         SetDiffusionCoeffients(fvCoeffs.Mom[axis], bcData, inputData.nu, mesh);
@@ -2298,7 +2327,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation.P;
 
     // Set the coefficients that depend on linearisation
-    UpdateFVCoefficients( fvCoeffs, mesh, fields, faceAdvectedVelocities, faceFluxes, ibData, bcData );
+    UpdateFVCoefficients( fvCoeffs, mesh, fields, fieldsOld, faceAdvectedVelocities, faceFluxes, ibData, bcData );
 
     return fvCoeffs;
 }
@@ -2309,6 +2338,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
 void UpdateFVCoefficients( FVCoefficients &fvCoeffs, 
                            const Mesh &mesh,
                            const FieldData<Tensor3D> &fields,
+                           const FieldData<Tensor3D> &fieldsOld,
                            const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &faceAdvectedVelocities,
                            const EnumVector<Axis, Tensor3D> &faceFluxes,
                            const IBData &ibData,
@@ -2341,6 +2371,13 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
 
     // Change stencil in momentum equations to have central differencing at the boundaries
     ChangeStencilToCentralAtIB( fvCoeffs, faceFluxes, mesh, ibData );
+
+    // Add unsteady term
+    if ( fvCoeffs.Mom[Axis::X].timeScheme != TimeSchemes::Steady ) {
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            AddUnsteadyTerm(fvCoeffs.Mom[axis], mesh, fieldsOld);
+        } );
+    }
 
     // Inverse of AP coefficient (Picard)
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {     

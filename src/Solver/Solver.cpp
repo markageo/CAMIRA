@@ -13,10 +13,6 @@
 #include "../IO/ArrayIO.h"
 #include "../IO/VTKWriter.h"
 
-#include "TriadSolver.h"
-#include "LineSolver.h"
-#include "PlaneSolver.h"
-#include "LinearSolver.h"
 #include "ResidualFunctions.h"
 
 #include <iostream>
@@ -55,7 +51,7 @@ void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
         }
     }
     SetGhostCells( gridLevelData.fields, gridLevelData.mesh, gridLevelData.bcData );
-    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fields, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
+    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fields, gld.fieldsOld, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
 }
 
 
@@ -90,7 +86,7 @@ void SetCoarseGridRightHandSideInStencil( GridLevelData<MI, LI> &gridLevelData )
     }
     SetIBFaceFluxes( gld.faceFluxes, gld.ibData );
     SetGhostCells( gridLevelData.fieldsRestricted, gridLevelData.mesh, gridLevelData.bcData );
-    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fieldsRestricted, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
+    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fieldsRestricted, gld.fieldsOld, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
 }
 
 
@@ -156,8 +152,6 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
                                                    gridLevelData.ibData.mask );
         NormaliseResiduals( residuals, residualsScaleFactor );
 
-        gridLevelData.fieldsOld = gridLevelData.fields;
-
         if ( ResidualsDiverged(residuals) ) {
             break;
         }
@@ -209,8 +203,6 @@ void SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
         } else {
             SetCoarseGridEquations<MI, LI>( gridLevelData, coarseGridRightHandSide );
         }
-
-        gridLevelData.fieldsOld = gridLevelData.fields;
     }
     std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", performed " << maxIterations << " iterations" << "\n";
 
@@ -392,8 +384,8 @@ void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
 
 template< MomentumInterpolation MI, Linearisation LI >
-void SweepSolve( const InputData &inputData,
-                 const AxisTransformationMap &axisTransformation )
+void SolveSteady( const InputData &inputData,
+                  const AxisTransformationMap &axisTransformation )
 {
     using enum Axis::ENUMDATA;
     TIC("Pre processing")
@@ -427,11 +419,7 @@ void SweepSolve( const InputData &inputData,
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 
-    // Outer iterations
     bool writeFields = ( inputData.fieldWriteInterval > 0 );
-    if ( writeFields ) {
-        fieldWriter.WriteData( 0 );
-    }
 
     // Calculate initial residual
     residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
@@ -447,7 +435,7 @@ void SweepSolve( const InputData &inputData,
     consoleLog.WriteHeader();
     consoleLog.WriteResiduals( residualsOuter, massFluxResidual, 0 );
     residualsLogFile.WriteData( residualsOuter, massFluxResidual, 0 );
-    fieldWriter.WriteData( 0 );
+    fieldWriter.WriteDataIteration( 0 );
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
         TIC("Multigrid Cycling")
@@ -476,35 +464,167 @@ void SweepSolve( const InputData &inputData,
         TOC() 
         
         if ( ResidualsDiverged(residualsOuter) ) {
-            fieldWriter.WriteData( nOuterIterations );
+            fieldWriter.WriteDataIteration( nOuterIterations );
             std::cout << "*** SOLUTION DIVERGED ***" << "\n\n";
             break;
         }
 
         if ( nOuterIterations + 1 > maxOuterIterations ) {
-            fieldWriter.WriteData( nOuterIterations );
+            fieldWriter.WriteDataIteration( nOuterIterations );
             std::cout << "*** REACHED ITERATION LIMIT ***" << "\n\n";
             break;
         }
 
         if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
-            fieldWriter.WriteData( nOuterIterations );
+            fieldWriter.WriteDataIteration( nOuterIterations );
             std::cout << "*** SOLUTION CONVERGED ***" << "\n\n";
             break;
         }
 
         if ( writeFields && (nOuterIterations % inputData.fieldWriteInterval) == 0 ) {
-            fieldWriter.WriteData( nOuterIterations );
+            fieldWriter.WriteDataIteration( nOuterIterations );
         }  
 
     }
     TOC()
 
 }
-template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Picard>( const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Picard>( const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::Implicit    , Linearisation::Newton>( const InputData &, const AxisTransformationMap &);
-template void SweepSolve<MomentumInterpolation::SemiExplicit, Linearisation::Newton>( const InputData &, const AxisTransformationMap &);
+template void SolveSteady<MomentumInterpolation::Implicit    , Linearisation::Picard>( const InputData &, const AxisTransformationMap &);
+template void SolveSteady<MomentumInterpolation::SemiExplicit, Linearisation::Picard>( const InputData &, const AxisTransformationMap &);
+template void SolveSteady<MomentumInterpolation::Implicit    , Linearisation::Newton>( const InputData &, const AxisTransformationMap &);
+template void SolveSteady<MomentumInterpolation::SemiExplicit, Linearisation::Newton>( const InputData &, const AxisTransformationMap &);
+
+
+
+template< MomentumInterpolation MI, Linearisation LI >
+void SolveTransient( const InputData &inputData,
+                     const AxisTransformationMap &axisTransformation )
+{
+    using enum Axis::ENUMDATA;
+    TIC("Pre processing")
+    // Extract from input data
+    const intType maxOuterIterations = inputData.schemes.maxOuterIterations;
+    const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
+
+    // Multigrid level data
+    std::vector< GridLevelData<MI, LI> > mgLevels; 
+    SetMGLevels( mgLevels, inputData );
+
+    // References to finest grid
+    auto& fields = mgLevels[0].fields;
+    auto& mesh   = mgLevels[0].mesh;
+    auto& bcData = mgLevels[0].bcData;
+
+    // Initialise residuals
+    FieldData<floatType> residualsOuter, residualsScaleFactor;
+    floatType massFluxResidual;
+
+    // Logging objects
+    std::vector< FieldProbe > fieldProbes;
+    std::vector< ProbeLogFile > probeLogFiles;
+    for ( const auto &probeData : inputData.probes ) {
+        fieldProbes.emplace_back( mesh, probeData.location );
+        probeLogFiles.emplace_back( probeData.filename, axisTransformation, fieldProbes.back() );
+    }
+    std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
+    
+    FieldWriter fieldWriter( fields, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
+    ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
+    ConsoleLog consoleLog( axisTransformation );
+
+    bool writeFields = ( inputData.fieldWriteInterval > 0 );
+
+    // Calculate initial residual
+    residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
+                                                      mgLevels[0].fvCoeffs, 
+                                                      mgLevels[0].ibData.mask);
+    SetResidualsNormalisationFactor( residualsScaleFactor, residualsOuter );
+    NormaliseResiduals( residualsOuter, residualsScaleFactor );
+    massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
+                                                 mgLevels[0].mesh);
+    TOC()
+
+    TIC("Solver Loop")
+    consoleLog.WriteHeader();
+    residualsLogFile.WriteData( residualsOuter, massFluxResidual, 0 );
+    // fieldWriter.WriteDataTime( 0.0f );
+    fieldWriter.WriteDataIteration( 0 );
+    bool abortTimestepping = false;
+
+    for ( intType timeStepNumber = 1; timeStepNumber < inputData.schemes.numberOfTimesteps; timeStepNumber++ ) {
+        
+        floatType currentTime = static_cast<floatType>(timeStepNumber) * inputData.schemes.timeStep;
+        std::cout << "\n" << "Time = " << currentTime << "\n";
+
+        for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
+        {
+            TIC("Multigrid Cycling")
+            if ( mgLevels.size() == 1 ) {
+                SmoothWithFixedIterations<MI, LI>( mgLevels[0], 1, MultigridEquation::NoTauCorrection );
+            } else {
+                MultigridCycle( mgLevels, inputData.multigridSettings, nOuterIterations );
+            }
+            TOC()
+            
+            TIC("Residuals and Logging")
+            residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
+                                                              mgLevels[0].fvCoeffs, 
+                                                              mgLevels[0].ibData.mask); 
+            NormaliseResiduals( residualsOuter, residualsScaleFactor );
+            massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
+                                                        mgLevels[0].mesh);
+            consoleLog.WriteResiduals( residualsOuter, massFluxResidual, nOuterIterations );
+            TOC() 
+            
+            if ( ResidualsDiverged(residualsOuter) ) {
+                abortTimestepping = true;
+                std::cout << "Solution Diverged for timestep" << "\n";
+                break;
+            }
+
+            if ( nOuterIterations + 1 > maxOuterIterations ) {
+                std::cout << "Reached iteration limit for timestep." << "\n";
+                break;
+            }
+
+            if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
+                std::cout << "Residuals converged for timestep." << "\n";
+                break;
+            }
+
+        }
+
+        probeValues = SetFieldProbeValues( mgLevels[0].fields, fieldProbes); 
+        for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
+            probeLogFiles[p].WriteData( probeValues[p], timeStepNumber );
+        }
+        residualsLogFile.WriteData( residualsOuter, massFluxResidual, timeStepNumber );
+
+        if ( writeFields && (timeStepNumber % inputData.fieldWriteInterval) == 0 ) {
+            // fieldWriter.WriteDataTime( currentTime );
+            fieldWriter.WriteDataIteration( timeStepNumber );
+        }  
+
+        if ( abortTimestepping ) {
+            std::cout << "*** TIMESTEPPING ABORTED ***" << "\n\n";
+            break;
+        }
+
+        for ( auto &gld : mgLevels ) {
+            gld.fieldsOld = gld.fields;
+        }
+
+    }
+
+
+    TOC()
+
+}
+template void SolveTransient<MomentumInterpolation::Implicit    , Linearisation::Picard>( const InputData &, const AxisTransformationMap &);
+template void SolveTransient<MomentumInterpolation::SemiExplicit, Linearisation::Picard>( const InputData &, const AxisTransformationMap &);
+template void SolveTransient<MomentumInterpolation::Implicit    , Linearisation::Newton>( const InputData &, const AxisTransformationMap &);
+template void SolveTransient<MomentumInterpolation::SemiExplicit, Linearisation::Newton>( const InputData &, const AxisTransformationMap &);
+
 
 
 } // end namespace CFD

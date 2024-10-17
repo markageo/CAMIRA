@@ -69,10 +69,10 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
         MaskFields(mgl.fieldsOld       , mgl.ibData.mask);
 
         // Finite volume coefficients
-        mgl.fvCoeffs = InitialiseFVCoefficients(mgl.mesh, mgl.fields, mgl.faceAdvectedVelocities, mgl.faceFluxes, mgl.ibData, mgl.bcData, inputData);
+        mgl.fvCoeffs = InitialiseFVCoefficients(mgl.mesh, mgl.fields, mgl.fieldsOld, mgl.faceAdvectedVelocities, mgl.faceFluxes, mgl.ibData, mgl.bcData, inputData);
 
         // Linear Solver
-        mgl.linearSolver = std::make_unique< LinearSolver<MI, LI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);
+        mgl.linearSolver = std::make_unique< LinearSolver<MI, LI> >(mgl.fields, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);
 
     }
     mgLevels.back().isCoarsestLevel = true;

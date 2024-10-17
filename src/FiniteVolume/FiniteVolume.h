@@ -34,6 +34,8 @@ struct MomentumEquation {
     Axis::ENUMDATA component;                                                 // The momentum component
     Linearisation linearisation;
     AdvectionSchemes advectionScheme;
+    TimeSchemes timeScheme;
+    floatType timeStep;
     floatType advectionBlendingFactor;
 };
 
@@ -136,6 +138,7 @@ void SetIBFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> >
 // Allocate and initialise finite volume coefficients
 FVCoefficients InitialiseFVCoefficients( const Mesh &, 
                                          const FieldData< Tensor3D > &, 
+                                         const FieldData< Tensor3D > &, 
                                          const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &,
                                          const EnumVector< Axis, Tensor3D > &,
                                          const IBData &, 
@@ -145,6 +148,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &,
 // Update finite volume coefficients 
 void UpdateFVCoefficients( FVCoefficients &, 
                            const Mesh &, 
+                           const FieldData< Tensor3D > &, 
                            const FieldData< Tensor3D > &, 
                            const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &,
                            const EnumVector< Axis, Tensor3D > &,

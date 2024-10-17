@@ -38,7 +38,6 @@ class LinearSolver2 : public LinearSolverInterface< MI, LI >
 
 public:
     LinearSolver2( FieldData<Tensor3D> &fields,
-                  const FieldData<Tensor3D> &fieldsOld,
                   const Tensor3D &mask,
                   const FVCoefficients &fvCoeffs, 
                   const InputData::LinearSolverSettings &linearSolverSettings) : 
@@ -53,8 +52,8 @@ public:
                     m_nk( fvCoeffs.nCells(A::Z) )
     {
         // TODO: account for 2D case (when mesh is one cell thick in a direction)
-        m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
-        m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
+        m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI, LI>>(fields, mask, fvCoeffs);
+        m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI, LI>>(fields, mask, fvCoeffs);
         SolutionUpdater = &LinearSolver2::Sweep3D;
         StateUpdater = &LinearSolver2::UpdateState3D;
     }
@@ -206,7 +205,6 @@ class LinearSolver : public LinearSolverInterface< MI, LI >
 
 public:
     LinearSolver( FieldData<Tensor3D> &fields,
-                  const FieldData<Tensor3D> &fieldsOld,
                   const Tensor3D &mask,
                   const FVCoefficients &fvCoeffs, 
                   const InputData::LinearSolverSettings &linearSolverSettings) : 
@@ -223,12 +221,12 @@ public:
                     m_nk( fvCoeffs.nCells(A::Z) )
     {
         if (m_nk == 1) {
-            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
+            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI, LI>>(fields, mask, fvCoeffs);
             SolutionUpdater = &LinearSolver::Sweep2D;
             StateUpdater = &LinearSolver::UpdateState2D;
         } else {
-            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
-            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
+            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t, MI, LI>>(fields, mask, fvCoeffs);
+            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI, LI>>(fields, mask, fvCoeffs);
             SolutionUpdater = &LinearSolver::Sweep3D;
             StateUpdater = &LinearSolver::UpdateState3D;
         }

@@ -25,6 +25,7 @@ struct InputData
 
     // Model
     floatType rho, nu;
+    bool transient;
 
 
     // Domain size
@@ -76,6 +77,9 @@ struct InputData
 
     // Solver
     struct Schemes {
+        TimeSchemes timeScheme;
+        floatType timeStep;
+        intType numberOfTimesteps;
         Linearisation linearisation;
         MomentumInterpolation momentumInterpolation;
         AdvectionSchemes advectionScheme;

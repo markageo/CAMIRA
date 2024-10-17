@@ -183,7 +183,16 @@ namespace
         const pt::ptree &modelTree = tree.get_child("Model");
 
         inputData.rho = modelTree.get<floatType>("rho");
-        inputData.nu  = modelTree.get<floatType>("nu");        
+        inputData.nu  = modelTree.get<floatType>("nu");
+
+        std::string valueString = modelTree.get<std::string>("transient");
+        if ( valueString == "yes" ) {
+            inputData.transient = true;
+        } else if ( valueString == "no" ) {
+            inputData.transient = false;
+        } else {
+            throw std::runtime_error(  "'" + valueString + "' is not a transient option. Must be either 'yes' or 'no'." );
+        }  
     }
 
 
@@ -567,6 +576,20 @@ namespace
     {
         const pt::ptree &schemesTree = solverTree.get_child( "Schemes" );
         std::string valueString;
+
+        // Time scheme
+        if ( !inputData.transient ) {
+            inputData.schemes.timeScheme = TimeSchemes::Steady;
+        } else {
+            valueString = schemesTree.get<std::string>( "timeScheme" );
+            if        ( valueString == "backwardsEuler" ) {
+                inputData.schemes.timeScheme = TimeSchemes::BackwardsEuler;
+            } else {
+                throw std::runtime_error( "'" + valueString + "' is not a valid time discretisation scheme." );
+            }
+            inputData.schemes.timeStep = schemesTree.get<floatType>("timeStepSize");
+            inputData.schemes.numberOfTimesteps = schemesTree.get<intType>("numberOfTimesteps");
+        }
 
         // Linearisation
         valueString = schemesTree.get<std::string>( "linearisation" );
