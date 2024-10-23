@@ -103,7 +103,7 @@ Solver {
     Schemes {
 
         timeScheme              = backwardsEuler
-        timeStepSize            = 0.01
+        timeStepSize            = 0.001
         numberOfTimesteps       = 100
 
         linearisation           = Picard
