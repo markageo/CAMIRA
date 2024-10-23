@@ -29,6 +29,7 @@ void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
     auto &gld = gridLevelData; 
     UpdateIBData( gld.ibData, gld.fields );
     UpdateFaceFluxes( gld.faceFluxes, gld.mesh, gld.fields.U, gld.bcData);
+    // UpdateFaceFluxesWithMWI( gld.faceFluxes, gld.mesh, gld.fields, gld.fvCoeffs, gld.bcData);
     SetIBFaceFluxes( gld.faceFluxes, gld.ibData );
     if constexpr ( LI == Linearisation::Newton ) {
         UpdateFaceAdvectedVelocities( gld.faceAdvectedVelocities, gld.mesh, gld.fvCoeffs, gld.fields.U, gld.faceFluxes, gld.bcData);
@@ -64,6 +65,7 @@ void SetCoarseGridRightHandSideInStencil( GridLevelData<MI, LI> &gridLevelData )
     // Set fvCoeffs based on the restricted fine grid approximation for the RHS
     UpdateIBData( gld.ibData, gld.fieldsRestricted );
     UpdateFaceFluxes( gld.faceFluxes, gld.mesh, gld.fieldsRestricted.U, gld.bcData);
+    // UpdateFaceFluxesWithMWI( gld.faceFluxes, gld.mesh, gld.fields, gld.fvCoeffs, gld.bcData);
     if constexpr ( LI == Linearisation::Newton ) {
         UpdateFaceAdvectedVelocities( gld.faceAdvectedVelocities, gld.mesh, gld.fvCoeffs, gld.fieldsRestricted.U, gld.faceFluxes, gld.bcData);
         switch ( gld.fvCoeffs.Mom[Axis::X].advectionScheme ) {
@@ -224,22 +226,12 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
                                                             mgLevels[level].fvCoeffs, 
                                                             mgLevels[level].ibData.mask );
 
-    // Restrict residual
-    ForAllFieldData( [&] (intType f) {
-        mgLevels[level+1].residualsRestricted[f] = RestrictField( residuals[f],
-                                                                  mgLevels[level].mesh, 
-                                                                  mgLevels[level+1].mesh );
-    } );
-    MaskFields( mgLevels[level+1].residualsRestricted, mgLevels[level+1].ibData.mask );
-
-    // Restrict solution
-    ForAllFieldData( [&] (intType f) {
-        mgLevels[level+1].fieldsRestricted[f] = RestrictField( mgLevels[level].fields[f], 
-                                                               mgLevels[level].mesh, 
-                                                               mgLevels[level+1].mesh );
-    } );
-    MaskFields( mgLevels[level+1].fieldsRestricted, mgLevels[level+1].ibData.mask );
+    // Restrict residuals and solutions
+    mgLevels[level+1].residualsRestricted = RestrictFields( residuals                , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+    mgLevels[level+1].fieldsRestricted    = RestrictFields( mgLevels[level].fields   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+    mgLevels[level+1].fieldsOld           = RestrictFields( mgLevels[level].fieldsOld, mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
     mgLevels[level+1].fields = mgLevels[level+1].fieldsRestricted;
+
 
     // Solve coarse grid problem
     if ( mgLevels[level+1].isCoarsestLevel ) {  // This is bad if there is 0 coarse levels
@@ -276,21 +268,10 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
                                             mgLevels[level].fvCoeffs, 
                                             mgLevels[level].ibData.mask );
 
-        // Restrict residual
-        ForAllFieldData( [&] (intType f) {
-            mgLevels[level+1].residualsRestricted[f] = RestrictField( residuals[f],
-                                                                    mgLevels[level].mesh, 
-                                                                    mgLevels[level+1].mesh );
-        } );
-        MaskFields( mgLevels[level+1].residualsRestricted, mgLevels[level+1].ibData.mask );
-
-        // Restrict solution
-        ForAllFieldData( [&] (intType f) {
-            mgLevels[level+1].fieldsRestricted[f] = RestrictField( mgLevels[level].fields[f], 
-                                                                mgLevels[level].mesh, 
-                                                                mgLevels[level+1].mesh );
-        } );
-        MaskFields( mgLevels[level+1].fieldsRestricted, mgLevels[level+1].ibData.mask );
+        // Restrict residuals and solution
+        mgLevels[level+1].residualsRestricted = RestrictFields( residuals                , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+        mgLevels[level+1].fieldsRestricted    = RestrictFields( mgLevels[level].fields   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+        mgLevels[level+1].fieldsOld           = RestrictFields( mgLevels[level].fieldsOld, mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
         mgLevels[level+1].fields = mgLevels[level+1].fieldsRestricted;
 
         // Solve coarse grid problem
@@ -547,6 +528,7 @@ void SolveTransient( const InputData &inputData,
     TIC("Solver Loop")
     consoleLog.WriteHeader();
     residualsLogFile.WriteData( residualsOuter, massFluxResidual, 0 );
+    consoleLog.WriteResiduals( residualsOuter, massFluxResidual, 0 );
     // fieldWriter.WriteDataTime( 0.0f );
     fieldWriter.WriteDataIteration( 0 );
     bool abortTimestepping = false;
@@ -574,6 +556,7 @@ void SolveTransient( const InputData &inputData,
             massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
                                                         mgLevels[0].mesh);
             consoleLog.WriteResiduals( residualsOuter, massFluxResidual, nOuterIterations );
+            residualsLogFile.WriteData( residualsOuter, massFluxResidual, 0 );
             TOC() 
             
             if ( ResidualsDiverged(residualsOuter) ) {
@@ -610,9 +593,10 @@ void SolveTransient( const InputData &inputData,
             break;
         }
 
-        for ( auto &gld : mgLevels ) {
-            gld.fieldsOld = gld.fields;
-        }
+        // for ( auto &gld : mgLevels ) {
+        //     gld.fieldsOld = gld.fields;
+        // }
+        mgLevels[0].fieldsOld = mgLevels[0].fields;
 
     }
 

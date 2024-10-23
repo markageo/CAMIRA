@@ -3,6 +3,7 @@
 Model {
     rho  = 1
     nu   = 0.02
+    transient = yes
 }
 
 Mesh {
@@ -12,7 +13,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 10)
-            nCells     = 300
+            nCells     = 150
             biasFactor = 1
         }
     }
@@ -20,7 +21,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 4)
-            nCells     = 120
+            nCells     = 60
             biasFactor = 1
         }
     }
@@ -28,7 +29,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 3)
-            nCells     = 90
+            nCells     = 45
             biasFactor = 1
         }
     }
@@ -109,6 +110,10 @@ Solver {
 
     Schemes {
 
+        timeScheme              = backwardsEuler
+        timeStepSize            = 0.1
+        numberOfTimesteps       = 100
+
         linearisation           = Picard
         momentumInterpolation   = implicit
         advectionScheme         = upwind
@@ -119,8 +124,8 @@ Solver {
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 100
-        maxContinuityOuterResidual = 1e-16
-        maxMomentumOuterResiduals  = (1e-16, 1e-16, 1e-16)
+        maxContinuityOuterResidual = 1e-5
+        maxMomentumOuterResiduals  = (1e-5, 1e-5, 1e-5)
 
     }
     
@@ -140,7 +145,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 1
 
         maxPreSmoothingIterations = 2
         maxPreSmoothingResiduals = 0
@@ -148,7 +153,7 @@ Solver {
         maxPostSmoothingIterations = 2
         maxPostSmoothingResiduals = 0
 
-        maxCoarseGridIterations = 100
+        maxCoarseGridIterations = 500
         maxCoarseGridResiduals  = 1e-4
         
         maxFineGridIterations   = 2
@@ -165,7 +170,7 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
-    fieldWriteInterval      = 0
+    fieldWriteInterval      = 1
 
     Monitors {
         Probe {

@@ -2,6 +2,7 @@
 
 #include "../FiniteVolume/Mesh.h"
 #include "../Tools/FVTools.h"
+#include "../ImmersedBoundary/ImmersedBoundary.h"
 
 namespace CFD
 {
@@ -72,7 +73,7 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
         mgl.fvCoeffs = InitialiseFVCoefficients(mgl.mesh, mgl.fields, mgl.fieldsOld, mgl.faceAdvectedVelocities, mgl.faceFluxes, mgl.ibData, mgl.bcData, inputData);
 
         // Linear Solver
-        mgl.linearSolver = std::make_unique< LinearSolver<MI, LI> >(mgl.fields, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);
+        mgl.linearSolver = std::make_unique< LinearSolver2<MI, LI> >(mgl.fields, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);
 
     }
     mgLevels.back().isCoarsestLevel = true;
@@ -303,6 +304,22 @@ Tensor3D ProlongateField( const Tensor3D &coarseField,
 
 //     return fineField;
 // }
+
+
+FieldData<Tensor3D> RestrictFields( const FieldData<Tensor3D> fields,
+                                   const Mesh &fineMesh,
+                                   const Mesh &coarseMesh,
+                                   const Tensor3D &mask )
+{
+    FieldData<Tensor3D> fieldsRestricted;
+    ForAllFieldData( [&] (intType f) {
+        fieldsRestricted[f] = RestrictField( fields[f],
+                                             fineMesh, 
+                                             coarseMesh );
+    } );
+    MaskFields( fieldsRestricted, mask );
+    return fieldsRestricted;
+}
 
 
 

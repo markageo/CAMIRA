@@ -1639,10 +1639,21 @@ void AddUnsteadyTerm( MomentumEquation &momentumEquation,
     const Axis::ENUMDATA axis = momentumEquation.component;
     const floatType dtInv = 1.0f / momentumEquation.timeStep;
 
-    momentumEquation.AU[axis][p].slice(offsets, extents) +=  momentumEquation.AU[axis][p].slice(offsets, extents).constant( dtInv );
+    for (intType k = 0; k != mesh.nCells(2); k++) {
+        for (intType j = 0; j != mesh.nCells(1); j++) {
+            for (intType i = 0; i != mesh.nCells(0); i++) {
 
-    momentumEquation.B.slice(offsets, extents) += - fieldsOld.U[axis].slice(offsets, extents)
-                                                  * fieldsOld.U[axis].slice(offsets, extents).constant( dtInv );
+                momentumEquation.AU[axis][p]( G(i, j, k) ) += dtInv;
+                momentumEquation.B( G(i, j, k) )           += - fieldsOld.U[axis]( G(i, j, k) ) * dtInv;
+
+            }
+        }
+    }
+
+    // momentumEquation.AU[axis][p].slice(offsets, extents) +=  momentumEquation.AU[axis][p].slice(offsets, extents).constant( dtInv );
+
+    // momentumEquation.B.slice(offsets, extents) += - fieldsOld.U[axis].slice(offsets, extents)
+    //                                               * fieldsOld.U[axis].slice(offsets, extents).constant( dtInv );
 }
 
 
