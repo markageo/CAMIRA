@@ -152,7 +152,7 @@ enum class FaceInterpolationSchemes {
 };
 
 enum class TimeSchemes {
-    Steady, BackwardsEuler
+    Steady, BackwardsEuler, BackwardsThreeLevel
 };
 
 enum class MultigridCycleType {

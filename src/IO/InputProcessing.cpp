@@ -584,6 +584,8 @@ namespace
             valueString = schemesTree.get<std::string>( "timeScheme" );
             if        ( valueString == "backwardsEuler" ) {
                 inputData.schemes.timeScheme = TimeSchemes::BackwardsEuler;
+            } else if ( valueString == "backwardsThreeLevel" ) {
+                inputData.schemes.timeScheme = TimeSchemes::BackwardsThreeLevel;
             } else {
                 throw std::runtime_error( "'" + valueString + "' is not a valid time discretisation scheme." );
             }

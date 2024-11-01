@@ -52,7 +52,7 @@ void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
         }
     }
     SetGhostCells( gridLevelData.fields, gridLevelData.mesh, gridLevelData.bcData );
-    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fields, gld.fieldsOld, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
+    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fields, gld.fieldsOld, gld.fieldsOldOld, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
 }
 
 
@@ -88,7 +88,7 @@ void SetCoarseGridRightHandSideInStencil( GridLevelData<MI, LI> &gridLevelData )
     }
     SetIBFaceFluxes( gld.faceFluxes, gld.ibData );
     SetGhostCells( gridLevelData.fieldsRestricted, gridLevelData.mesh, gridLevelData.bcData );
-    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fieldsRestricted, gld.fieldsOld, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
+    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fieldsRestricted, gld.fieldsOld, gld.fieldsOldOld, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
 }
 
 
@@ -207,7 +207,6 @@ void SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
         }
     }
     std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", performed " << maxIterations << " iterations" << "\n";
-
 }
 
 
@@ -227,11 +226,15 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
                                                             mgLevels[level].ibData.mask );
 
     // Restrict residuals and solutions
-    mgLevels[level+1].residualsRestricted = RestrictFields( residuals                , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-    mgLevels[level+1].fieldsRestricted    = RestrictFields( mgLevels[level].fields   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-    mgLevels[level+1].fieldsOld           = RestrictFields( mgLevels[level].fieldsOld, mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+    mgLevels[level+1].residualsRestricted = RestrictFields( residuals                   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+    mgLevels[level+1].fieldsRestricted    = RestrictFields( mgLevels[level].fields      , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+    if ( mgLevels[level+1].fieldsOld.P.size() != 0 ) {
+        mgLevels[level+1].fieldsOld    = RestrictFields( mgLevels[level].fieldsOld   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+    }
+    if ( mgLevels[level+1].fieldsOldOld.P.size() != 0 ) {
+        mgLevels[level+1].fieldsOldOld = RestrictFields( mgLevels[level].fieldsOldOld, mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+    }
     mgLevels[level+1].fields = mgLevels[level+1].fieldsRestricted;
-
 
     // Solve coarse grid problem
     if ( mgLevels[level+1].isCoarsestLevel ) {  // This is bad if there is 0 coarse levels
@@ -269,9 +272,14 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
                                             mgLevels[level].ibData.mask );
 
         // Restrict residuals and solution
-        mgLevels[level+1].residualsRestricted = RestrictFields( residuals                , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-        mgLevels[level+1].fieldsRestricted    = RestrictFields( mgLevels[level].fields   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-        mgLevels[level+1].fieldsOld           = RestrictFields( mgLevels[level].fieldsOld, mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+        mgLevels[level+1].residualsRestricted = RestrictFields( residuals                   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+        mgLevels[level+1].fieldsRestricted    = RestrictFields( mgLevels[level].fields      , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+        if ( mgLevels[level+1].fieldsOld.P.size() != 0 ) {
+            mgLevels[level+1].fieldsOld    = RestrictFields( mgLevels[level].fieldsOld   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+        }
+        if ( mgLevels[level+1].fieldsOldOld.P.size() != 0 ) {
+            mgLevels[level+1].fieldsOldOld = RestrictFields( mgLevels[level].fieldsOldOld, mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+        }
         mgLevels[level+1].fields = mgLevels[level+1].fieldsRestricted;
 
         // Solve coarse grid problem
@@ -593,10 +601,8 @@ void SolveTransient( const InputData &inputData,
             break;
         }
 
-        // for ( auto &gld : mgLevels ) {
-        //     gld.fieldsOld = gld.fields;
-        // }
-        mgLevels[0].fieldsOld = mgLevels[0].fields;
+        mgLevels[0].fieldsOldOld = mgLevels[0].fieldsOld;
+        mgLevels[0].fieldsOld    = mgLevels[0].fields;
 
     }
 

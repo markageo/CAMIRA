@@ -1,9 +1,8 @@
 // Backwards facing step with no inflow region
-// Re = 200, nonuniform grid
 
 Model {
     rho  = 1
-    nu   = 0.005
+    nu   = 0.0001
     transient = yes
 }
 
@@ -59,8 +58,8 @@ BoundaryConditions
 
     // Inflow
     -x {
-        //u = profile1D, "bfs_inflow.prof"
-        u = uniform, 1
+        u = profile1D, "bfs_inflow.prof"
+        //u = uniform, 1
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
@@ -104,29 +103,29 @@ Solver {
 
     Schemes {
 
-        timeScheme              = backwardsEuler
-        timeStepSize            = 0.001
-        numberOfTimesteps       = 10
+        timeScheme              = backwardsThreeLevel
+        timeStepSize            = 0.05
+        numberOfTimesteps       = 1000
 
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = upwind
+        advectionScheme         = QUICK
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 500000
-        maxContinuityOuterResidual = 1e-16
-        maxMomentumOuterResiduals   = (1e-16, 1e-16, 1e-16)
+        maxOuterIterations = 100
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals   = (1e-6, 1e-6, 1e-6)
 
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 1
+        maxIterations = 10
         maxResiduals = 0
 
         planeSweepDirection = +z
@@ -139,7 +138,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 0
+        maxCoarseLevels = 4
 
         maxPreSmoothingIterations = 2
         maxPreSmoothingResiduals = 0
@@ -163,13 +162,5 @@ Output {
     residualHistoryFilename = "output/residual_history.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
-    fieldWriteInterval      = 0
-
-    Monitors {
-        Probe {
-            filename = "output/probe1.csv"
-            location = (1, 0.5, 0.5)
-        }
-    }
-
+    fieldWriteInterval      = 2
 }
