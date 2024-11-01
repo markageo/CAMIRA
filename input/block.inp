@@ -2,7 +2,8 @@
 
 Model {
     rho  = 1
-    nu   = 0.02
+    nu   = 0.05
+    transient = yes
 }
 
 Mesh {
@@ -68,7 +69,7 @@ Mesh {
 
 InitialConditions
 {
-    u = 1
+    u = 0
     v = 0
     w = 0
     p = 0
@@ -131,7 +132,7 @@ SolidGeometry {
     Block {
         centerPosition = (2.5, 0.5, 1.5)
         dimensions     = (1, 1, 1)
-        rotation       = (0, 45, 0)
+        rotation       = (0, 0, 0)
     }
 }
 
@@ -140,25 +141,29 @@ Solver {
 
     Schemes {
 
+        timeScheme              = backwardsEuler
+        timeStepSize            = 0.01
+        numberOfTimesteps       = 100
+
         linearisation           = Picard
         momentumInterpolation   = implicit
         advectionScheme         = upwind
-        advectionBlendingFactor = 1.0
-        faceInterpolationScheme = average
+        advectionBlendingFactor = 1
+        faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 100
-        maxContinuityOuterResidual = 1e-16
-        maxMomentumOuterResiduals  = (1e-16, 1e-16, 1e-16)
+        maxOuterIterations = 2
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals   = (1e-6, 1e-6, 1e-6)
 
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 2
+        maxIterations = 5
         maxResiduals = 1e-3
 
         planeSweepDirection = +z
@@ -171,7 +176,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 3
 
         maxPreSmoothingIterations = 2
         maxPreSmoothingResiduals = 0
@@ -179,7 +184,7 @@ Solver {
         maxPostSmoothingIterations = 2
         maxPostSmoothingResiduals = 0
 
-        maxCoarseGridIterations = 100
+        maxCoarseGridIterations = 500
         maxCoarseGridResiduals  = 1e-4
         
         maxFineGridIterations   = 2

@@ -28,6 +28,7 @@ struct GridLevelData
     Mesh mesh;
     FieldData<Tensor3D> fields,
                         fieldsOld,
+                        fieldsOldOld,
                         fieldsRestricted,
                         residualsRestricted;
     BoundaryConditionData bcData;

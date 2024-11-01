@@ -1628,14 +1628,11 @@ void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
 \*---------------------------------------------------------------------------------------------------------------*/
 
 
-// Add unsteady term
-void AddUnsteadyTerm( MomentumEquation &momentumEquation, 
-                      const Mesh &mesh,
-                      const FieldData<Tensor3D> &fieldsOld )
+void AddBackwardsEuler( MomentumEquation &momentumEquation, 
+                        const Mesh &mesh,
+                        const FieldData<Tensor3D> &fieldsOld )
 {
     using enum TransportCoefficients::ENUMDATA;
-    const TensorIndex3D offsets = {nGhost, nGhost, nGhost},
-                        extents = {mesh.nCells[0], mesh.nCells[1], mesh.nCells[2]};
     const Axis::ENUMDATA axis = momentumEquation.component;
     const floatType dtInv = 1.0f / momentumEquation.timeStep;
 
@@ -1649,11 +1646,32 @@ void AddUnsteadyTerm( MomentumEquation &momentumEquation,
             }
         }
     }
+}
 
-    // momentumEquation.AU[axis][p].slice(offsets, extents) +=  momentumEquation.AU[axis][p].slice(offsets, extents).constant( dtInv );
 
-    // momentumEquation.B.slice(offsets, extents) += - fieldsOld.U[axis].slice(offsets, extents)
-    //                                               * fieldsOld.U[axis].slice(offsets, extents).constant( dtInv );
+
+void AddBackwardsThreeLevel( MomentumEquation &momentumEquation, 
+                             const Mesh &mesh,
+                             const FieldData<Tensor3D> &fieldsOld,
+                             const FieldData<Tensor3D> &fieldsOldOld )
+{
+    using enum TransportCoefficients::ENUMDATA;
+    const Axis::ENUMDATA axis = momentumEquation.component;
+    const floatType dtInv = 1.0f / momentumEquation.timeStep;
+
+    for (intType k = 0; k != mesh.nCells(2); k++) {
+        for (intType j = 0; j != mesh.nCells(1); j++) {
+            for (intType i = 0; i != mesh.nCells(0); i++) {
+
+                momentumEquation.AU[axis][p]( G(i, j, k) ) += 1.5f * dtInv;
+                momentumEquation.B( G(i, j, k) )           += (
+                                                              - 2.0f * fieldsOld.U[axis]( G(i, j, k) )
+                                                              + 0.5f * fieldsOldOld.U[axis]( G(i, j, k) )
+                                                              ) * dtInv;
+
+            }
+        }
+    }
 }
 
 
@@ -2301,6 +2319,7 @@ void SetDiagCoeffInverse( MomentumEquation &momentumEquation,
 FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
                                          const FieldData<Tensor3D> &fields,
                                          const FieldData<Tensor3D> &fieldsOld,
+                                         const FieldData<Tensor3D> &fieldsOldOld,
                                          const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &faceAdvectedVelocities,
                                          const EnumVector<Axis, Tensor3D> &faceFluxes, 
                                          const IBData &ibData,
@@ -2338,7 +2357,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation.P;
 
     // Set the coefficients that depend on linearisation
-    UpdateFVCoefficients( fvCoeffs, mesh, fields, fieldsOld, faceAdvectedVelocities, faceFluxes, ibData, bcData );
+    UpdateFVCoefficients( fvCoeffs, mesh, fields, fieldsOld, fieldsOldOld, faceAdvectedVelocities, faceFluxes, ibData, bcData );
 
     return fvCoeffs;
 }
@@ -2350,6 +2369,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
                            const Mesh &mesh,
                            const FieldData<Tensor3D> &fields,
                            const FieldData<Tensor3D> &fieldsOld,
+                           const FieldData<Tensor3D> &fieldsOldOld,
                            const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &faceAdvectedVelocities,
                            const EnumVector<Axis, Tensor3D> &faceFluxes,
                            const IBData &ibData,
@@ -2384,10 +2404,22 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     ChangeStencilToCentralAtIB( fvCoeffs, faceFluxes, mesh, ibData );
 
     // Add unsteady term
-    if ( fvCoeffs.Mom[Axis::X].timeScheme != TimeSchemes::Steady ) {
-        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-            AddUnsteadyTerm(fvCoeffs.Mom[axis], mesh, fieldsOld);
-        } );
+    switch ( fvCoeffs.Mom[Axis::X].timeScheme ) {
+        case TimeSchemes::BackwardsEuler:
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                AddBackwardsEuler(fvCoeffs.Mom[axis], mesh, fieldsOld);
+            } );
+            break;
+
+        case TimeSchemes::BackwardsThreeLevel:
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                AddBackwardsThreeLevel(fvCoeffs.Mom[axis], mesh, fieldsOld, fieldsOldOld);
+            } );
+            break;
+
+        case TimeSchemes::Steady:
+            /* NULL */
+            break;
     }
 
     // Inverse of AP coefficient (Picard)

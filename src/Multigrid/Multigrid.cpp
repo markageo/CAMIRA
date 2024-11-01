@@ -49,7 +49,13 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
         // Allocate and initialise fields
         mgl.fieldsRestricted = InitialiseFields(mgl.mesh, inputData);
         mgl.fields           = InitialiseFields(mgl.mesh, inputData);
-        mgl.fieldsOld        = mgl.fields;
+        if        ( inputData.schemes.timeScheme == TimeSchemes::BackwardsEuler ) {
+            mgl.fieldsOld        = mgl.fields;
+        } else if ( inputData.schemes.timeScheme == TimeSchemes::BackwardsThreeLevel ) {
+            mgl.fieldsOld        = mgl.fields;
+            mgl.fieldsOldOld     = mgl.fields;
+        }
+        
 
         // Face fluxes and advected velocities
         mgl.faceFluxes = InitialiseFaceFluxes(mgl.mesh, mgl.fields.U, mgl.bcData);
@@ -68,9 +74,10 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
         MaskFields(mgl.fieldsRestricted, mgl.ibData.mask);
         MaskFields(mgl.fields          , mgl.ibData.mask);
         MaskFields(mgl.fieldsOld       , mgl.ibData.mask);
+        MaskFields(mgl.fieldsOldOld    , mgl.ibData.mask);
 
         // Finite volume coefficients
-        mgl.fvCoeffs = InitialiseFVCoefficients(mgl.mesh, mgl.fields, mgl.fieldsOld, mgl.faceAdvectedVelocities, mgl.faceFluxes, mgl.ibData, mgl.bcData, inputData);
+        mgl.fvCoeffs = InitialiseFVCoefficients(mgl.mesh, mgl.fields, mgl.fieldsOld, mgl.fieldsOldOld, mgl.faceAdvectedVelocities, mgl.faceFluxes, mgl.ibData, mgl.bcData, inputData);
 
         // Linear Solver
         mgl.linearSolver = std::make_unique< LinearSolver2<MI, LI> >(mgl.fields, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);
