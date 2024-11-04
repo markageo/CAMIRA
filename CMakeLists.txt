@@ -68,6 +68,35 @@ else()
 	message( STATUS "Not useing Auto Vectorization functions." )
 endif()
 
+
+# Allow the ability to read fields in (for example to read in an initial condition), this requires VTk library
+option ( CFD_HAS_VTK_LIB "Allow extra features which require VTK library to be installed.")
+if ( CFD_HAS_VTK_LIB )
+
+	find_package( VTK COMPONENTS 
+				  CommonCore
+				  CommonExecutionModel
+				  IOXMLParser
+				  CommonDataModel
+				  CommonMisc
+				  CommonSystem
+				  IOCore
+				  vtksys
+				  IOLegacy
+				  )
+
+	if ( ${VTK_FOUND} )
+		message( STATUS "VTK library found successfully." )
+		add_compile_definitions( USE_VTK_LIB )
+	else()
+		message( FATAL_ERROR "Could not locate VTK library installation! This is required for field transformation executable!" )
+	endif()
+
+else()
+	message( STATUS "VTK library will no be used. Some features will be limited." )
+endif()
+
+
 # Add libraries
 include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings
 
