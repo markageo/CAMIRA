@@ -404,6 +404,8 @@ FieldData<Tensor3D> SetInitialConditionFromVTKFile( const std::string &filename,
 {
     VTK::FieldFileData fieldFileData = VTK::ReadVTKFields( filename );
 
+    // NEED TO TRANSFORM COORDINATES FOR READ IN FIELD DATA
+
     TensorIndex3D offsets = {nGhost, nGhost, nGhost},
                   extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
 
@@ -413,9 +415,9 @@ FieldData<Tensor3D> SetInitialConditionFromVTKFile( const std::string &filename,
 
     // Careful! Just checking the mesh is the same size, however it is possible that cell centers are at different locations.
     // Ideally should add the ability to do an interpolation.
-    if ( fieldFileData.cellFaces[0].size() != mesh.cellFaces[0].size() ||
-         fieldFileData.cellFaces[1].size() != mesh.cellFaces[1].size() ||
-         fieldFileData.cellFaces[2].size() != mesh.cellFaces[2].size()  ) {
+    if ( ( fieldFileData.cellFaces[0].size() != mesh.cellFaces[0].size() ) ||
+         ( fieldFileData.cellFaces[1].size() != mesh.cellFaces[1].size() ) ||
+         ( fieldFileData.cellFaces[2].size() != mesh.cellFaces[2].size() )  ) {
             throw std::runtime_error( "Mesh dimensions for initial condition do not match!" );
     }
     
@@ -453,7 +455,7 @@ FieldData<Tensor3D> InitialiseFields( const Mesh &mesh,
 {
     FieldData<Tensor3D> fields;
 
-    #if defined ( CFD_USE_VTK_LIB )
+    #if defined( CFD_HAS_VTK_LIB )
         switch ( inputData.initialConditionType ) {
             case InputData::InitialConditionTypes::uniform:
                 fields = SetInitialConditionUniform( inputData.constantInitialConditions, mesh );

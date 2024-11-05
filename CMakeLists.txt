@@ -87,7 +87,7 @@ if ( CFD_HAS_VTK_LIB )
 
 	if ( ${VTK_FOUND} )
 		message( STATUS "VTK library found successfully." )
-		add_compile_definitions( USE_VTK_LIB )
+		add_compile_definitions( CFD_HAS_VTK_LIB )
 	else()
 		message( FATAL_ERROR "Could not locate VTK library installation! This is required for field transformation executable!" )
 	endif()
