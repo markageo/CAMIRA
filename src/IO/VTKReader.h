@@ -18,7 +18,7 @@ struct FieldFileData {
 };
 
 
-FieldFileData ReadVTKFields(std::string &);
+FieldFileData ReadVTKFields(const std::string &);
 
 
 } // end namespace VTK

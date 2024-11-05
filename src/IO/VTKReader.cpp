@@ -1,3 +1,4 @@
+#ifdef CFD_HAS_VTK_LIB
 #include "VTKReader.h"
 
 #include <vtkType.h>
@@ -144,7 +145,7 @@ inline CFD::FieldData<CFD::Tensor3D> GetVertexFields( vtkRectilinearGrid *vtkGri
 }   // end anonymous namespace
 
 
-FieldFileData ReadVTKFields( std::string &filename )
+FieldFileData ReadVTKFields( const std::string &filename )
 {
     using namespace CFD;
     
@@ -177,3 +178,5 @@ FieldFileData ReadVTKFields( std::string &filename )
 
 
 }   // end namespace VTK;
+
+#endif // CFD_HAS_VTK_LIB

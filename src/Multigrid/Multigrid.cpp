@@ -46,9 +46,19 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
         // Boundary condition data
         mgl.bcData = SetBoundaryConditionData(inputData, mgl.mesh);
 
+
+        // Immersed boundary data
+        mgl.ibData = CreateImmersedBoundaryData(inputData, mgl.mesh);
+
+
         // Allocate and initialise fields
-        mgl.fieldsRestricted = InitialiseFields(mgl.mesh, inputData);
-        mgl.fields           = InitialiseFields(mgl.mesh, inputData);
+        if ( level == 0 ) {
+            mgl.fields = InitialiseFields(mgl.mesh, inputData);
+            MaskFields(mgl.fields, mgl.ibData.mask);
+        } else {
+            mgl.fields = RestrictFields( mgLevels[level-1].fields, mgLevels[level-1].mesh, mgLevels[level].mesh, mgLevels[level].ibData.mask );
+        }
+        mgl.fieldsRestricted = mgl.fields;
         if        ( inputData.schemes.timeScheme == TimeSchemes::BackwardsEuler ) {
             mgl.fieldsOld        = mgl.fields;
         } else if ( inputData.schemes.timeScheme == TimeSchemes::BackwardsThreeLevel ) {
@@ -62,22 +72,16 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
         if ( inputData.schemes.linearisation == Linearisation::Newton ) 
             mgl.faceAdvectedVelocities = InitialiseFaceAdvectedVelocities( mgl.mesh, mgl.fvCoeffs, mgl.fields.U, mgl.faceFluxes, mgl.bcData );
 
+
         // Allocate and initialise residualsRestricted
         mgl.residualsRestricted = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0) + 2*nGhost, 
                                                                  mgl.mesh.nCells(1) + 2*nGhost, 
                                                                  mgl.mesh.nCells(2) + 2*nGhost).setZero() );
 
-        // Immersed boundary data
-        mgl.ibData = CreateImmersedBoundaryData(inputData, mgl.mesh);
-
-        // Mask out solid geometries
-        MaskFields(mgl.fieldsRestricted, mgl.ibData.mask);
-        MaskFields(mgl.fields          , mgl.ibData.mask);
-        MaskFields(mgl.fieldsOld       , mgl.ibData.mask);
-        MaskFields(mgl.fieldsOldOld    , mgl.ibData.mask);
 
         // Finite volume coefficients
         mgl.fvCoeffs = InitialiseFVCoefficients(mgl.mesh, mgl.fields, mgl.fieldsOld, mgl.fieldsOldOld, mgl.faceAdvectedVelocities, mgl.faceFluxes, mgl.ibData, mgl.bcData, inputData);
+
 
         // Linear Solver
         mgl.linearSolver = std::make_unique< LinearSolver2<MI, LI> >(mgl.fields, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);

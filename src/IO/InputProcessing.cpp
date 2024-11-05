@@ -778,11 +778,42 @@ namespace
         using enum Axis::ENUMDATA;
         const pt::ptree &initialConditionsTree = tree.get_child("InitialConditions");
 
-        inputData.initialConditions.U[X] = initialConditionsTree.get<floatType>( "u" );
-        inputData.initialConditions.U[Y] = initialConditionsTree.get<floatType>( "v" );
-        inputData.initialConditions.U[Z] = initialConditionsTree.get<floatType>( "w" );
+        #if defined ( CFD_USE_VTK_LIB )
+            std::string valueString = initialConditionsTree.get<std::string>( "type" );
+            if        ( valueString == "uniform" ) {
+                inputData.initialConditionType = InputData::InitialConditionTypes::uniform;
+            } else if ( valueString == "vtkFile" ) {
+                inputData.initialConditionType = InputData::InitialConditionTypes::vtkFile;
+            } else {
+                throw std::runtime_error( "'" + valueString + "' is not a valid initial condition specification type." );
+            }
 
-        inputData.initialConditions.P    = initialConditionsTree.get<floatType>( "p" );
+            switch ( inputData.initialConditionType ) {
+                case InputData::InitialConditionTypes::uniform:
+                    inputData.constantInitialConditions.U[X] = initialConditionsTree.get<floatType>( "u" );
+                    inputData.constantInitialConditions.U[Y] = initialConditionsTree.get<floatType>( "v" );
+                    inputData.constantInitialConditions.U[Z] = initialConditionsTree.get<floatType>( "w" );
+                    inputData.constantInitialConditions.P    = initialConditionsTree.get<floatType>( "p" );
+                    break;
+
+                case InputData::InitialConditionTypes::vtkFile:
+                    inputData.initialConditionsFieldFilename = initialConditionsTree.get<std::string>( "filename" );
+                    break;
+            }
+        #else
+            std::string valueString = initialConditionsTree.get<std::string>( "type" );
+            if        ( valueString == "uniform" ) {
+                inputData.initialConditionType = InputData::InitialConditionTypes::uniform;
+            } else if ( valueString == "vtkFile" ) {
+                throw std::runtime_error( "Must have and compile with VTK library to use '" + valueString + "' initial condition." );;
+            } else {
+                throw std::runtime_error( "'" + valueString + "' is not a valid initial condition specification type." );
+            }
+            inputData.constantInitialConditions.U[X] = initialConditionsTree.get<floatType>( "u" );
+            inputData.constantInitialConditions.U[Y] = initialConditionsTree.get<floatType>( "v" );
+            inputData.constantInitialConditions.U[Z] = initialConditionsTree.get<floatType>( "w" );
+            inputData.constantInitialConditions.P    = initialConditionsTree.get<floatType>( "p" );
+        #endif
     }
 
 
