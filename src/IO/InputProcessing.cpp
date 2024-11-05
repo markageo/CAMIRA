@@ -778,7 +778,7 @@ namespace
         using enum Axis::ENUMDATA;
         const pt::ptree &initialConditionsTree = tree.get_child("InitialConditions");
 
-        #if defined ( CFD_USE_VTK_LIB )
+        #if defined( CFD_HAS_VTK_LIB )
             std::string valueString = initialConditionsTree.get<std::string>( "type" );
             if        ( valueString == "uniform" ) {
                 inputData.initialConditionType = InputData::InitialConditionTypes::uniform;
