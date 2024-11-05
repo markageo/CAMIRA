@@ -378,7 +378,7 @@ namespace
     void TransformInitialConditions( InputData &inputData,
                                      const AxisTransformationMap &axisTransformation )
     {
-        TransformFieldDataToCode( inputData.initialConditions, axisTransformation );
+        TransformFieldDataToCode( inputData.constantInitialConditions, axisTransformation );
     }
 
 

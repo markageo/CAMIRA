@@ -1,8 +1,10 @@
 #include "FiniteVolume.h"
 #include "../Tools/FVTools.h"
 #include "../Tools/FVLookups.h"
+#include "../IO/VTKReader.h"
 
 #include <cmath>
+#include <stdexcept>
 
 namespace CFD
 {
@@ -393,26 +395,78 @@ FVCoefficients::FVCoefficients( const iArray3 &dims,
 
 
 /*-------------------------------------------------------------------------------------*\
-                                      Free Functions
+                                      InitialConditions
 \*-------------------------------------------------------------------------------------*/
 
-
-FieldData<Tensor3D> InitialiseFields( const Mesh &mesh, 
-                                      const InputData &inputData )
+#ifdef CFD_HAS_VTK_LIB
+FieldData<Tensor3D> SetInitialConditionFromVTKFile( const std::string &filename,
+                                                    const Mesh &mesh )
 {
+    VTK::FieldFileData fieldFileData = VTK::ReadVTKFields( filename );
+
+    TensorIndex3D offsets = {nGhost, nGhost, nGhost},
+                  extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
 
     FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CFD::nGhost, 
                                           mesh.nCells(1) + 2*CFD::nGhost, 
                                           mesh.nCells(2) + 2*CFD::nGhost).setZero() );
 
+    // Careful! Just checking the mesh is the same size, however it is possible that cell centers are at different locations.
+    // Ideally should add the ability to do an interpolation.
+    if ( fieldFileData.cellFaces[0].size() != mesh.cellFaces[0].size() ||
+         fieldFileData.cellFaces[1].size() != mesh.cellFaces[1].size() ||
+         fieldFileData.cellFaces[2].size() != mesh.cellFaces[2].size()  ) {
+            throw std::runtime_error( "Mesh dimensions for initial condition do not match!" );
+    }
+    
+    ForAllFieldData( [&] (intType f) {
+        fields[f].slice( offsets, extents ) = fieldFileData.cellFields[f];
+    } );
+    
+    return fields;
+}
+#endif
+
+
+
+FieldData<Tensor3D> SetInitialConditionUniform( const FieldData<floatType> &constantInitialConditions,
+                                                const Mesh &mesh )
+{
     TensorIndex3D offsets = {nGhost, nGhost, nGhost},
                   extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
 
-    // Set initial values
+    FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CFD::nGhost, 
+                                          mesh.nCells(1) + 2*CFD::nGhost, 
+                                          mesh.nCells(2) + 2*CFD::nGhost).setZero() );
+
     ForAllFieldData( [&] (intType i) { 
-        fields[i].slice( offsets, extents ).setConstant( inputData.initialConditions[i] );  
+        fields[i].slice( offsets, extents ).setConstant( constantInitialConditions[i] );  
     } );
     
+    return fields;
+}
+
+
+
+FieldData<Tensor3D> InitialiseFields( const Mesh &mesh, 
+                                      const InputData &inputData )
+{
+    FieldData<Tensor3D> fields;
+
+    #if defined ( CFD_USE_VTK_LIB )
+        switch ( inputData.initialConditionType ) {
+            case InputData::InitialConditionTypes::uniform:
+                fields = SetInitialConditionUniform( inputData.constantInitialConditions, mesh );
+                break;
+
+            case InputData::InitialConditionTypes::vtkFile:
+                fields = SetInitialConditionFromVTKFile( inputData.initialConditionsFieldFilename, mesh );
+                break;
+        }
+    #else
+        fields = SetInitialConditionUniform( inputData.constantInitialConditions, mesh );
+    #endif
+
     return fields;
 }
 

@@ -73,7 +73,10 @@ struct InputData
 
 
     // Initial conditions
-    FieldData<floatType> initialConditions;
+    enum class InitialConditionTypes { uniform, vtkFile };
+    InitialConditionTypes initialConditionType;
+    std::string initialConditionsFieldFilename;
+    FieldData<floatType> constantInitialConditions;
 
     // Solver
     struct Schemes {
