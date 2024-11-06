@@ -94,14 +94,12 @@ inline CFD::FieldData<CFD::Tensor3D> GetFieldData( vtkDataSetAttributes *vtkData
     for ( int i = 0; i < vtkDataSet->GetNumberOfArrays(); i++ ) {
 
         if ( strcmp(vtkDataSet->GetArrayName(i), "Velocity") ){
-            std::cout << "Velocity found" << "\n";
             fieldData.U = GetVectorFieldFromVTKArray( vtkDataSet->GetArray("Velocity"), nPoints );
             continue;
         }
             
 
         if ( strcmp(vtkDataSet->GetArrayName(i), "Pressure")  ) {
-            std::cout << "Pressure found" << "\n";
             fieldData.P = GetScalarFieldFromVTKArray( vtkDataSet->GetArray("Pressure"), nPoints );
             continue;
         }

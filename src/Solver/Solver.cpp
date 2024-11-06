@@ -384,7 +384,7 @@ void SolveSteady( const InputData &inputData,
 
     // Multigrid level data
     std::vector< GridLevelData<MI, LI> > mgLevels; 
-    SetMGLevels( mgLevels, inputData );
+    SetMGLevels( mgLevels, inputData, axisTransformation );
 
     // References to finest grid
     auto& fields = mgLevels[0].fields;
@@ -497,7 +497,7 @@ void SolveTransient( const InputData &inputData,
 
     // Multigrid level data
     std::vector< GridLevelData<MI, LI> > mgLevels; 
-    SetMGLevels( mgLevels, inputData );
+    SetMGLevels( mgLevels, inputData, axisTransformation );
 
     // References to finest grid
     auto& fields = mgLevels[0].fields;

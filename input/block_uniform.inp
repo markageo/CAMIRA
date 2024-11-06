@@ -133,8 +133,8 @@ Solver {
         maxIterations = 2
         maxResiduals = 1e-3
 
-        planeSweepDirection = +z
-        lineSweepDirection = +y
+        planeSweepDirection = +x
+        lineSweepDirection = +z
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1

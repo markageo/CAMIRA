@@ -3,10 +3,11 @@
 
 #include "../Types.h"
 #include "../FiniteVolume/Mesh.h"
-#include "../FiniteVolume/FiniteVolume.h"
+#include "../FiniteVolume/FiniteVolumeStructures.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 #include "../IO/InputProcessing.h"
 #include "../Solver/LinearSolver.h"
+#include "../Tools/SweepTransformations.h"
 
 #include<memory>
 
@@ -44,7 +45,8 @@ struct GridLevelData
 // Create initial heirachy of grids
 template< MomentumInterpolation MI, Linearisation LI >
 void SetMGLevels( std::vector< GridLevelData<MI, LI> > &, 
-                  const InputData & );
+                  const InputData &,
+                  const AxisTransformationMap & );
 
 
 Tensor3D RestrictField( const Tensor3D &, 

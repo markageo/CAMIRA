@@ -132,7 +132,7 @@ namespace
 
 
 /*-------------------------------------------------------------------------------------*\
-                            User -> Code Axis Transformations
+                            Input Data Transformations
 \*-------------------------------------------------------------------------------------*/
 
 
@@ -469,7 +469,7 @@ AxisTransformationMap TransformUserInputData(InputData &inputData )
 
 
 /*-------------------------------------------------------------------------------------*\
-                            Code -> User Axis Transformations
+                            Solver Structures Transformations
 \*-------------------------------------------------------------------------------------*/
 
 
@@ -510,6 +510,7 @@ namespace
     }
 
 
+
     template< typename T >
     void TransformAxisEnumVectorToUser( EnumVector<Axis, T> &axisVector,
                                         const AxisTransformationMap& axisTransformation )
@@ -520,6 +521,22 @@ namespace
         EnumFor<Axis>([&] (Axis::ENUMDATA userAxis) { 
 
             axisVector[ userAxis ] = codeAxisVector[ axisTransformation.CodeAxis( userAxis ) ];
+
+        } );
+    }
+
+
+
+    template< typename T >
+    void TransformAxisEnumVectorToCode( EnumVector<Axis, T> &axisVector,
+                                        const AxisTransformationMap& axisTransformation )
+    {
+        // Create temporary copy to move data from 
+        EnumVector<Axis, T> userAxisVector = axisVector;
+
+        EnumFor<Axis>([&] (Axis::ENUMDATA codeAxis) { 
+
+            axisVector[ codeAxis ] = userAxisVector[ axisTransformation.UserAxis( codeAxis ) ];
 
         } );
     }
@@ -639,6 +656,56 @@ void TransformBCDataToUserCoordinates( BoundaryConditionData &bcData,
         } );
 
     } );
+
+}
+
+
+void TransformMeshToCodeCoordinates( Mesh &mesh,
+                                     const AxisTransformationMap &axisTransformation )
+{
+
+    // Temporary copy of the mesh to take data from 
+    Mesh userMesh = mesh;
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
+
+        Axis::ENUMDATA userAxis = axisTransformation.UserAxis( codeAxis );
+        bool reverseAxis = axisTransformation.CodeAxisReversed( codeAxis );
+
+        CopyMeshAxis( mesh, userMesh, codeAxis, userAxis );
+
+        if ( reverseAxis ) {
+            ReverseMeshAxis(mesh, codeAxis);
+        }
+
+    } );
+
+}
+
+
+void TransformFieldToCodeCoordinates( FieldData<Tensor3D> &fieldData, 
+                                      const AxisTransformationMap &axisTransformation)
+{
+
+    Eigen::array<intType , Axis::count> shuffleArray;
+    Eigen::array<bool, Axis::count> reverseArray;
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
+
+        Axis::ENUMDATA userAxis = axisTransformation.UserAxis( codeAxis );
+        bool reverseAxis = axisTransformation.CodeAxisReversed( codeAxis );
+
+        // Shuffle and reverse arrays used for 3D arrays
+        shuffleArray[ codeAxis ] = userAxis;
+        reverseArray[ codeAxis ] = reverseAxis;
+
+    } );
+
+    // 3D arrays
+    ForAllFieldData( [&] (intType f) {
+        fieldData[f] = Tensor3D( fieldData[f] ).shuffle(shuffleArray).reverse(reverseArray);   // Have to make a copy
+    } );
+    TransformAxisEnumVectorToCode( fieldData.U, axisTransformation );
 
 }
 

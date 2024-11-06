@@ -58,6 +58,16 @@ void CalculateCellLengths(Tensor1D &cellLengths,
 
 
 
+void CalculateCellLengths(Tensor1D &cellLengths, 
+                          const Tensor1D &cellFaces )
+{
+    for ( intType i = 0; i != cellLengths.size(); i++ ) {
+        cellLengths(i) = abs( cellFaces(i+1) - cellFaces(i) );
+    }
+}
+
+
+
 void CalculateCellCenters(Tensor1D &cellCenters, 
                           const Tensor1D &cellLengths,
                           const floatType startPosition)
@@ -405,6 +415,50 @@ Mesh::Mesh(const InputData &inputData) :
     };
 
 
+
+// Constructor, creates the mesh from cell faces
+Mesh::Mesh(const EnumVector<Axis, Tensor1D> &cellFacesArg,
+           const InputData &inputData ) :
+    Mesh( { cellFacesArg[Axis::X].size()-1, cellFacesArg[Axis::Y].size()-1, cellFacesArg[Axis::Z].size()-1} )
+    { 
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+            cellFaces[axis] = cellFacesArg[axis];
+
+            CalculateCellLengths(cellLengths[axis], cellFaces[axis]);
+            cellLengthsInv[axis] = cellLengths[axis].inverse();
+
+            CalculateCellCenters(cellCenters[axis], cellLengths[axis], cellFaces[axis](0));
+            CalculateCellCenterDiffInv(cellCenterDiffInv[axis], cellCenters[axis]);
+
+
+            switch ( inputData.schemes.faceInterpolationScheme ) {
+                case FaceInterpolationSchemes::Average:
+                    CalculateInterpolationFactors_Average(interpFactors[axis]);
+                    break;
+
+                case FaceInterpolationSchemes::WeightedLinear:
+                    CalculateInterpolationFactors_WeightedLinear(interpFactors[axis], cellCenters[axis], cellFaces[axis]);
+                    break;
+            }
+                        
+            CalculateExtrapolationFactors(extrapFactors, cellLengths, axis);
+
+        } );
+
+
+        // Cell face areas should be calculated on their own since they depend on other axis
+        EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
+
+            // Axis are ordered by numbering
+            Axis::ENUMDATA axis1 = LUT::LoOrthogonalAxis[ axis ];
+            Axis::ENUMDATA axis2 = LUT::HiOrthogonalAxis[ axis ];
+            CalculateCellFaceAreas(cellFaceAreas[axis], cellLengths[axis1], cellLengths[axis2]);
+
+        } );
+
+    };
+    
 
 
 Mesh CreateMesh( const InputData &inputData )
