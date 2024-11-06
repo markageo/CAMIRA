@@ -3,7 +3,6 @@
 
 #include "../Types.h"
 #include "../IO/InputProcessing.h"
-#include <vector>
 
 namespace CFD
 {
@@ -14,6 +13,7 @@ struct Mesh
     Mesh() {};
     Mesh(const iArray3 &);
     Mesh(const InputData &);
+    Mesh(const EnumVector<Axis, Tensor1D> &, const InputData &);
     iArray3 nCells;
     EnumVector<Axis, iArray3> nFacesNormal;
     EnumVector<Axis, Tensor1D> cellCenters, 
