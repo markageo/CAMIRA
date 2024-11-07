@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.0001
+    nu   = 0.001
     transient = yes
 }
 
@@ -39,6 +39,7 @@ Mesh {
 
 InitialConditions
 {
+    type = uniform
     u = 1
     v = 0
     w = 0
@@ -117,16 +118,16 @@ Solver {
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 100
-        maxContinuityOuterResidual = 1e-6
-        maxMomentumOuterResiduals   = (1e-6, 1e-6, 1e-6)
+        maxContinuityOuterResidual = 1e-16
+        maxMomentumOuterResiduals   = (1e-16, 1e-16, 1e-16)
 
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 10
-        maxResiduals = 0
+        maxIterations = 4
+        maxResiduals = 1e-3
 
         planeSweepDirection = +z
         lineSweepDirection = +y
@@ -147,7 +148,7 @@ Solver {
         maxPostSmoothingResiduals = 0
 
         maxCoarseGridIterations = 500
-        maxCoarseGridResiduals  = 1e-4
+        maxCoarseGridResiduals  = 1e-7
         
         maxFineGridIterations   = 3
         maxFineGridResiduals    = 0

@@ -4,7 +4,7 @@ Model {
     rho  = 1
     nu   = 0.05
 
-    transient = yes
+    transient = no
 }
 
 Mesh {
@@ -39,6 +39,7 @@ Mesh {
 
 InitialConditions
 {
+    type = uniform
     u = 0
     v = 0
     w = 0
@@ -108,22 +109,22 @@ Solver {
 
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = upwind
+        advectionScheme         = QUICK
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 100
-        maxContinuityOuterResidual = 1e-4
-        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+        maxOuterIterations = 100000
+        maxContinuityOuterResidual = 1e-12
+        maxMomentumOuterResiduals  = (1e-12, 1e-12, 1e-2)
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 10
+        maxIterations = 2
         maxResiduals = 0
 
         planeSweepDirection = +z
@@ -144,8 +145,8 @@ Solver {
         maxPostSmoothingIterations = 3
         maxPostSmoothingResiduals = 0
 
-        maxCoarseGridIterations = 500
-        maxCoarseGridResiduals  = 1e-5
+        maxCoarseGridIterations = 1000
+        maxCoarseGridResiduals  = 1e-8
         
         maxFineGridIterations   = 2
         maxFineGridResiduals    = 0
