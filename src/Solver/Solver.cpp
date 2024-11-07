@@ -318,52 +318,51 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
 
 
-// FMG
 template< MomentumInterpolation MI, Linearisation LI >
-void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
-                     const InputData::MultigridSettings &mgSettings,
-                     const intType iteration )
+void FMGInitialise( std::vector< GridLevelData<MI, LI> > &mgLevels,
+                    const InputData::MultigridSettings &mgSettings)
 {
-    if ( iteration == 1 ) {
-        
-        intType coarsestLevel = mgLevels.size() - 1;
+    intType coarsestLevel = mgLevels.size() - 1;
 
-        // Solve coarsest level
-        Smooth<MI, LI>( mgLevels[coarsestLevel], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::NoTauCorrection );
+    // Solve coarsest level
+    Smooth<MI, LI>( mgLevels[coarsestLevel], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::NoTauCorrection );
+
+    // Prolongate
+    ForAllFieldData( [&] (intType f) {
+        mgLevels[coarsestLevel-1].fields[f] = ProlongateField( mgLevels[coarsestLevel].fields[f], mgLevels[coarsestLevel].mesh, mgLevels[coarsestLevel-1].mesh );
+    } );
+    MaskFields( mgLevels[coarsestLevel-1].fields, mgLevels[coarsestLevel-1].ibData.mask );
+
+    for ( intType level = coarsestLevel-1; level != 0; level-- ) {
+
+        // VCycle
+        Cycle<MultigridCycleType::V, MI, LI>( mgLevels, level, MultigridEquation::NoTauCorrection, mgSettings );
 
         // Prolongate
         ForAllFieldData( [&] (intType f) {
-            mgLevels[coarsestLevel-1].fields[f] = ProlongateField( mgLevels[coarsestLevel].fields[f], mgLevels[coarsestLevel].mesh, mgLevels[coarsestLevel-1].mesh );
+            mgLevels[level-1].fields[f] = ProlongateField( mgLevels[level].fields[f], mgLevels[level].mesh, mgLevels[level-1].mesh );
         } );
-        MaskFields( mgLevels[coarsestLevel-1].fields, mgLevels[coarsestLevel-1].ibData.mask );
+        MaskFields( mgLevels[level-1].fields, mgLevels[level-1].ibData.mask );
 
-        for ( intType level = coarsestLevel-1; level != 0; level-- ) {
+    }
+}
 
-            // VCycle
-            Cycle<MultigridCycleType::V, MI, LI>( mgLevels, level, MultigridEquation::NoTauCorrection, mgSettings );
 
-            // Prolongate
-            ForAllFieldData( [&] (intType f) {
-                mgLevels[level-1].fields[f] = ProlongateField( mgLevels[level].fields[f], mgLevels[level].mesh, mgLevels[level-1].mesh );
-            } );
-            MaskFields( mgLevels[level-1].fields, mgLevels[level-1].ibData.mask );
 
-        }
-
-    } else  {
-     
-        switch ( mgSettings.cycle ) {
-            case MultigridCycleType::V:
-                Cycle<MultigridCycleType::V, MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
-                break;
-            case MultigridCycleType::F:
-                Cycle<MultigridCycleType::F, MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
-                break;
-            case MultigridCycleType::W:
-                Cycle<MultigridCycleType::W, MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
-                break;
-        }
-
+template< MomentumInterpolation MI, Linearisation LI >
+void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
+                     const InputData::MultigridSettings &mgSettings)
+{
+    switch ( mgSettings.cycle ) {
+        case MultigridCycleType::V:
+            Cycle<MultigridCycleType::V, MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
+            break;
+        case MultigridCycleType::F:
+            Cycle<MultigridCycleType::F, MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
+            break;
+        case MultigridCycleType::W:
+            Cycle<MultigridCycleType::W, MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
+            break;
     }
 }
 
@@ -431,7 +430,9 @@ void SolveSteady( const InputData &inputData,
         if ( mgLevels.size() == 1 ) {
             SmoothWithFixedIterations<MI, LI>( mgLevels[0], 1, MultigridEquation::NoTauCorrection );
         } else {
-            MultigridCycle( mgLevels, inputData.multigridSettings, nOuterIterations );
+            if ( nOuterIterations == 1 )
+                FMGInitialise(mgLevels, inputData.multigridSettings );
+            MultigridCycle( mgLevels, inputData.multigridSettings );
         }
         TOC()
         
@@ -505,8 +506,8 @@ void SolveTransient( const InputData &inputData,
     auto& bcData = mgLevels[0].bcData;
 
     // Initialise residuals
-    FieldData<floatType> residualsOuter, residualsScaleFactor;
-    floatType massFluxResidual;
+    FieldData<floatType> residualsOuter(0.0f), residualsScaleFactor(0.0f);
+    floatType massFluxResidual(0.0f);
 
     // Logging objects
     std::vector< FieldProbe > fieldProbes;
@@ -522,29 +523,17 @@ void SolveTransient( const InputData &inputData,
     ConsoleLog consoleLog( axisTransformation );
 
     bool writeFields = ( inputData.fieldWriteInterval > 0 );
-
-    // Calculate initial residual
-    residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
-                                                      mgLevels[0].fvCoeffs, 
-                                                      mgLevels[0].ibData.mask);
-    SetResidualsNormalisationFactor( residualsScaleFactor, residualsOuter );
-    NormaliseResiduals( residualsOuter, residualsScaleFactor );
-    massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
-                                                 mgLevels[0].mesh);
     TOC()
 
     TIC("Solver Loop")
     consoleLog.WriteHeader();
-    residualsLogFile.WriteData( residualsOuter, massFluxResidual, 0 );
-    consoleLog.WriteResiduals( residualsOuter, massFluxResidual, 0 );
-    // fieldWriter.WriteDataTime( 0.0f );
     fieldWriter.WriteDataIteration( 0 );
     bool abortTimestepping = false;
 
     for ( intType timeStepNumber = 1; timeStepNumber < inputData.schemes.numberOfTimesteps; timeStepNumber++ ) {
         
         floatType currentTime = static_cast<floatType>(timeStepNumber) * inputData.schemes.timeStep;
-        std::cout << "\n" << "Time = " << currentTime << "\n";
+        std::cout << "\n" << "Time = " << currentTime << ", timestep no. " << timeStepNumber << "\n";
 
         for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
         {
@@ -552,7 +541,7 @@ void SolveTransient( const InputData &inputData,
             if ( mgLevels.size() == 1 ) {
                 SmoothWithFixedIterations<MI, LI>( mgLevels[0], 1, MultigridEquation::NoTauCorrection );
             } else {
-                MultigridCycle( mgLevels, inputData.multigridSettings, nOuterIterations );
+                MultigridCycle( mgLevels, inputData.multigridSettings );
             }
             TOC()
             
@@ -560,11 +549,12 @@ void SolveTransient( const InputData &inputData,
             residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
                                                               mgLevels[0].fvCoeffs, 
                                                               mgLevels[0].ibData.mask); 
+            if ( nOuterIterations == 1 )
+                SetResidualsNormalisationFactor( residualsScaleFactor, residualsOuter );
             NormaliseResiduals( residualsOuter, residualsScaleFactor );
             massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
-                                                        mgLevels[0].mesh);
+                                                         mgLevels[0].mesh);
             consoleLog.WriteResiduals( residualsOuter, massFluxResidual, nOuterIterations );
-            residualsLogFile.WriteData( residualsOuter, massFluxResidual, 0 );
             TOC() 
             
             if ( ResidualsDiverged(residualsOuter) ) {
@@ -592,7 +582,6 @@ void SolveTransient( const InputData &inputData,
         residualsLogFile.WriteData( residualsOuter, massFluxResidual, timeStepNumber );
 
         if ( writeFields && (timeStepNumber % inputData.fieldWriteInterval) == 0 ) {
-            // fieldWriter.WriteDataTime( currentTime );
             fieldWriter.WriteDataIteration( timeStepNumber );
         }  
 

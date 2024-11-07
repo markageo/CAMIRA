@@ -39,7 +39,7 @@ Mesh {
 InitialConditions
 {    
     type     = vtkFile
-    filename = "output-block-re400/fields_iter999.vtk"
+    filename = "output/fields_steady_initial.vtk"
 }
 
 
@@ -109,7 +109,7 @@ Solver {
     Schemes {
 
         timeScheme              = backwardsThreeLevel
-        timeStepSize            = 0.1
+        timeStepSize            = 0.05
         numberOfTimesteps       = 100
 
         linearisation           = Picard
@@ -121,20 +121,20 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 5
-        maxContinuityOuterResidual = 1e-5
-        maxMomentumOuterResiduals  = (1e-5, 1e-5, 1e-5)
+        maxOuterIterations = 1000
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 2
+        maxIterations = 3
         maxResiduals = 1e-3
 
-        planeSweepDirection = +x
-        lineSweepDirection = +z
+        planeSweepDirection = +z
+        lineSweepDirection = +y
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
@@ -152,7 +152,7 @@ Solver {
         maxPostSmoothingResiduals = 0
 
         maxCoarseGridIterations = 500
-        maxCoarseGridResiduals  = 1e-4
+        maxCoarseGridResiduals  = 1e-9
         
         maxFineGridIterations   = 2
         maxFineGridResiduals    = 0
@@ -169,12 +169,5 @@ Output {
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
     fieldWriteInterval      = 1
-
-    Monitors {
-        Probe {
-            filename = "output/probe1.csv"
-            location = (1, 0.5, 0.5)
-        }
-    }
 
 }
