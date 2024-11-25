@@ -2,17 +2,18 @@
 
 Model {
     rho  = 1
-    nu   = 0.02
+    nu   = 0.0025
+    transient = yes
 }
 
 Mesh {
 
-    domain = (10, 4, 3)
+    domain = (12, 4, 4)
 
     Grid x {
         Segment {
-            bounds     = (0, 10)
-            nCells     = 300
+            bounds     = (0, 12)
+            nCells     = 240
             biasFactor = 1
         }
     }
@@ -20,15 +21,15 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 4)
-            nCells     = 120
+            nCells     = 80
             biasFactor = 1
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 3)
-            nCells     = 90
+            bounds     = (0, 4)
+            nCells     = 80
             biasFactor = 1
         }
     }
@@ -36,11 +37,9 @@ Mesh {
 
 
 InitialConditions
-{
-    u = 1
-    v = 0
-    w = 0
-    p = 0
+{    
+    type     = vtkFile
+    filename = "output/fields_steady_initial.vtk"
 }
 
 
@@ -98,9 +97,9 @@ BoundaryConditions
 
 SolidGeometry {
     Block {
-        centerPosition = (2.5, 0.5, 1.5)
+        centerPosition = (2.5, 2, 2)
         dimensions     = (1, 1, 1)
-        rotation       = (0, 45, 0)
+        rotation       = (0, 0, 0)
     }
 }
 
@@ -109,25 +108,29 @@ Solver {
 
     Schemes {
 
+        timeScheme              = backwardsThreeLevel
+        timeStepSize            = 0.05
+        numberOfTimesteps       = 100
+
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = upwind
+        advectionScheme         = QUICK
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 100
-        maxContinuityOuterResidual = 1e-16
-        maxMomentumOuterResiduals  = (1e-16, 1e-16, 1e-16)
+        maxOuterIterations = 1000
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 
     }
     
     LinearSolver {
 
         type = SUGS
-        maxIterations = 2
+        maxIterations = 3
         maxResiduals = 1e-3
 
         planeSweepDirection = +z
@@ -148,8 +151,8 @@ Solver {
         maxPostSmoothingIterations = 2
         maxPostSmoothingResiduals = 0
 
-        maxCoarseGridIterations = 100
-        maxCoarseGridResiduals  = 1e-4
+        maxCoarseGridIterations = 500
+        maxCoarseGridResiduals  = 1e-9
         
         maxFineGridIterations   = 2
         maxFineGridResiduals    = 0
@@ -165,13 +168,6 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
-    fieldWriteInterval      = 0
-
-    Monitors {
-        Probe {
-            filename = "output/probe1.csv"
-            location = (1, 0.5, 0.5)
-        }
-    }
+    fieldWriteInterval      = 1
 
 }

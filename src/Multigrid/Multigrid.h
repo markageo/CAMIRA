@@ -3,10 +3,11 @@
 
 #include "../Types.h"
 #include "../FiniteVolume/Mesh.h"
-#include "../FiniteVolume/FiniteVolume.h"
+#include "../FiniteVolume/FiniteVolumeStructures.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 #include "../IO/InputProcessing.h"
 #include "../Solver/LinearSolver.h"
+#include "../Tools/SweepTransformations.h"
 
 #include<memory>
 
@@ -28,6 +29,7 @@ struct GridLevelData
     Mesh mesh;
     FieldData<Tensor3D> fields,
                         fieldsOld,
+                        fieldsOldOld,
                         fieldsRestricted,
                         residualsRestricted;
     BoundaryConditionData bcData;
@@ -43,7 +45,8 @@ struct GridLevelData
 // Create initial heirachy of grids
 template< MomentumInterpolation MI, Linearisation LI >
 void SetMGLevels( std::vector< GridLevelData<MI, LI> > &, 
-                  const InputData & );
+                  const InputData &,
+                  const AxisTransformationMap & );
 
 
 Tensor3D RestrictField( const Tensor3D &, 
@@ -55,6 +58,10 @@ Tensor3D ProlongateField( const Tensor3D &,
                           const Mesh &,
                           const Mesh & );
 
+FieldData<Tensor3D> RestrictFields( const FieldData<Tensor3D>,
+                                   const Mesh &, 
+                                   const Mesh &, 
+                                   const Tensor3D &mask );
 
 FieldData<Tensor3D> ComputeFineGridCorrection( const FieldData<Tensor3D> &,
                                                const FieldData<Tensor3D> &,

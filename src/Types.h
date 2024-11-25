@@ -151,6 +151,10 @@ enum class FaceInterpolationSchemes {
     WeightedLinear, Average
 };
 
+enum class TimeSchemes {
+    Steady, BackwardsEuler, BackwardsThreeLevel
+};
+
 enum class MultigridCycleType {
     V, F, W
 };
