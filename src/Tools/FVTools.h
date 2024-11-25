@@ -18,7 +18,7 @@ namespace FVT
     // -------------------------------------------------- Ghost Cell Indexing ------------------------------------------------- //
 
     // Eigen::Tensor ghost cell indexing - array indexing
-    template<std::size_t dim>
+    template<std::size_t dim> __attribute__((always_inline)) 
     inline Eigen::array<Eigen::Index, dim> G( Eigen::array<Eigen::Index, dim> idx )
     {
         for (auto it = idx.begin(); it != idx.end(); it++) {
@@ -30,7 +30,7 @@ namespace FVT
 
     // Eigen::Tensor ghost cell indexing - list indexing
     template<class ...Args> 
-    requires( sizeof...(Args) > 1 )
+    requires( sizeof...(Args) > 1 ) __attribute__((always_inline)) 
     inline Eigen::array< Eigen::Index, sizeof...(Args) > G( Args... args )
     {  
         Eigen::array< Eigen::Index, sizeof...(Args) > idx( {args...} );
@@ -38,6 +38,7 @@ namespace FVT
     }
 
     // Special case for 1D, should just return a number
+    __attribute__((always_inline)) 
     inline Eigen::Index G( Eigen::Index idx )
     {
         return idx + nGhost;

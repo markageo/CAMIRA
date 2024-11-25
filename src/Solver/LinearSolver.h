@@ -1,14 +1,13 @@
 #ifndef LINEAR_SOLVER
 #define LINEAR_SOLVER
 
-#include "StaggerIndexing.h"
 #include "PlaneSolver.h"
+#include "TriadSolver.h"
+#include "StencilConstants.h"
 #include "ResidualFunctions.h"
 
 #include "../Types.h"
-#include "../Macros.h"
 #include "../IO/InputProcessing.h"
-#include "../Tools/SweepTransformations.h"
 #include "../Tools/FVTools.h"
 #include "../Tools/FVLookups.h"
 #include "../FiniteVolume/FiniteVolume.h"
@@ -18,9 +17,189 @@ namespace CFD
 
 using namespace FVT;
 
+// Linear solver interface class
 template< MomentumInterpolation MI,
           Linearisation LI >
-class LinearSolver
+class LinearSolverInterface
+{
+    public:
+        virtual void Solve() = 0;
+        virtual void UpdateState() = 0;
+};
+
+
+// Two orientation symmetric sweeping
+template< MomentumInterpolation MI,
+          Linearisation LI >
+class LinearSolver2 : public LinearSolverInterface< MI, LI >
+{
+    using TC = TransportCoefficients::ENUMDATA;
+    using A = Axis::ENUMDATA;
+
+public:
+    LinearSolver2( FieldData<Tensor3D> &fields,
+                  const FieldData<Tensor3D> &fieldsOld,
+                  const Tensor3D &mask,
+                  const FVCoefficients &fvCoeffs, 
+                  const InputData::LinearSolverSettings &linearSolverSettings) : 
+                    m_fields( fields ),
+                    m_fvCoeffs( fvCoeffs ),
+                    m_maxIterations( linearSolverSettings.maxIterations ),
+                    m_maxResiduals( linearSolverSettings.maxResiduals ),
+                    m_relaxation( linearSolverSettings.relaxation ),
+
+                    m_ni( fvCoeffs.nCells(A::X) ),
+                    m_nj( fvCoeffs.nCells(A::Y) ),
+                    m_nk( fvCoeffs.nCells(A::Z) )
+    {
+        // TODO: account for 2D case (when mesh is one cell thick in a direction)
+        m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
+        m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI, LI>>(fields, fieldsOld, mask, fvCoeffs);
+        SolutionUpdater = &LinearSolver2::Sweep3D;
+        StateUpdater = &LinearSolver2::UpdateState3D;
+    }
+
+
+    void Solve()
+    {
+        using enum Axis::ENUMDATA;
+        using enum TransportCoefficients::ENUMDATA;
+
+        for ( intType nIterations = 1 ; nIterations <= m_maxIterations; nIterations++ )
+        {
+            // Reset residuals
+            ForAllFieldData( [&] (intType f) { m_residuals[f] = 0.0f; });
+
+            // Update plane
+            (this->*SolutionUpdater)();
+
+            // Normalise residuals
+            ForAllFieldData( [&] (intType f) { m_residuals[f] /= static_cast<floatType>(m_ni * m_nj * m_nk); });
+            if ( nIterations == 1 ) {
+                ForAllFieldData( [&] (intType f) { m_residualsInitialInv[f] = 1.0f / m_residuals[f]; });
+            }
+            NormaliseResiduals(m_residuals, m_residualsInitialInv);
+
+            // Check residual tolerence
+            if ( MetResidualTolerence(m_residuals, m_maxResiduals) ) {
+                break;
+            }
+        }
+
+    }
+
+
+    // Update any precomputed values
+    void UpdateState()
+    {
+        (this->*StateUpdater)();
+    }
+
+
+private:
+
+    FieldData<Tensor3D> &m_fields;
+    const FVCoefficients &m_fvCoeffs;
+    const intType m_maxIterations;
+    const FieldData<floatType> m_maxResiduals;
+    const FieldData<floatType> m_relaxation;
+
+    std::unique_ptr<TriadSolver<TC::e, TC::n, TC::t, MI, LI>> m_triadSolverForward;
+    std::unique_ptr<TriadSolver<TC::w, TC::s, TC::b, MI, LI>> m_triadSolverBackward;
+
+    void (LinearSolver2::*SolutionUpdater)(void);
+    void (LinearSolver2::*StateUpdater)(void);
+
+    FieldData<floatType> m_residuals, m_residualsInitialInv;
+
+    intType m_ni, m_nj, m_nk;
+
+    // For 3D simulations
+    void Sweep3D()
+    {
+        // Triad starting on lo side
+        for ( intType k = 0; k != m_nk; k++ ) {
+
+            FieldData<Tensor2D> planeConstants = CalculatePlaneConstants<TC::t, MI, LI>(k, m_fvCoeffs, m_fields);
+
+            for ( intType j = 0; j != m_nj; j++ ) {
+
+                FieldData<Tensor1D> lineConstants = CalculateLineConstants<TC::n, TC::t, MI, LI>(j, k, planeConstants, m_fvCoeffs, m_fields);
+
+                for ( intType i = 0; i != m_ni; i++ ) {
+
+                    FieldData<floatType> oldValues;
+                    oldValues.P    = m_fields.P( G(i, j, k) );
+                    oldValues.U[0] = m_fields.U[0]( G(i+1, j  , k  ) );
+                    oldValues.U[1] = m_fields.U[1]( G(i  , j+1, k  ) );
+                    oldValues.U[2] = m_fields.U[2]( G(i  , j  , k+1) );
+
+                    m_triadSolverForward->UpdateTriad( i, j, k, lineConstants );
+
+                    m_residuals.P    += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+                    m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i+1, j  , k  ) ) );
+                    m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j+1, k  ) ) );
+                    m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k+1) ) );
+
+                }
+            }
+        }
+
+
+        // Triad starting on hi side
+        for ( intType k = m_nk-1; k != -1; k-- ) {
+
+            FieldData<Tensor2D> planeConstants = CalculatePlaneConstants<TC::b, MI, LI>(k, m_fvCoeffs, m_fields);
+
+            for ( intType j = m_nj-1; j != -1; j-- ) {
+
+                FieldData<Tensor1D> lineConstants = CalculateLineConstants<TC::s, TC::b, MI, LI>(j, k, planeConstants, m_fvCoeffs, m_fields);
+
+                for ( intType i = m_ni-1; i != -1; i-- ) {
+
+                    FieldData<floatType> oldValues;
+                    oldValues.P    = m_fields.P( G(i, j, k) );
+                    oldValues.U[0] = m_fields.U[0]( G(i-1, j  , k  ) );
+                    oldValues.U[1] = m_fields.U[1]( G(i  , j-1, k  ) );
+                    oldValues.U[2] = m_fields.U[2]( G(i  , j  , k-1) );
+
+                    m_triadSolverBackward->UpdateTriad( i, j, k, lineConstants );
+
+                    m_residuals.P    += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+                    m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
+                    m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
+                    m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
+
+                }
+            }
+        }
+    }
+
+    void UpdateState3D()
+    {
+        m_triadSolverForward->UpdateGlobalConstants();
+        m_triadSolverBackward->UpdateGlobalConstants();
+    }
+
+
+    // For 2D simulations
+    void Sweep2D()
+    {
+
+    }
+
+    void UpdateState2D()
+    {
+
+    }
+
+};
+
+
+// Nested symmetric sweeping
+template< MomentumInterpolation MI,
+          Linearisation LI >
+class LinearSolver : public LinearSolverInterface< MI, LI >
 {
     using TC = TransportCoefficients::ENUMDATA;
     using A = Axis::ENUMDATA;
