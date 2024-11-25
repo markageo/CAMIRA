@@ -35,7 +35,7 @@ struct GridLevelData
     EnumVector< Axis, EnumVector< Axis, Tensor3D> > faceAdvectedVelocities;
     IBData ibData;
     FVCoefficients fvCoeffs;
-    std::unique_ptr< LinearSolver<MI, LI> > linearSolver;
+    std::unique_ptr< LinearSolverInterface<MI, LI> > linearSolver;
 };
 
 
