@@ -7,6 +7,7 @@ target_sources( libs
         VertexValues.cpp
         Mesh.cpp 
     PRIVATE 
-        FiniteVolume.h
+        FiniteVolumeStructures.h
+        FiniteVolumeFunctions.h
         Mesh.h
         FaceInterpolatedVelocity.h )

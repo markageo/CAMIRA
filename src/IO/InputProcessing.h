@@ -25,6 +25,7 @@ struct InputData
 
     // Model
     floatType rho, nu;
+    bool transient;
 
 
     // Domain size
@@ -72,10 +73,16 @@ struct InputData
 
 
     // Initial conditions
-    FieldData<floatType> initialConditions;
+    enum class InitialConditionTypes { uniform, vtkFile };
+    InitialConditionTypes initialConditionType;
+    std::string initialConditionsFieldFilename;
+    FieldData<floatType> constantInitialConditions;
 
     // Solver
     struct Schemes {
+        TimeSchemes timeScheme;
+        floatType timeStep;
+        intType numberOfTimesteps;
         Linearisation linearisation;
         MomentumInterpolation momentumInterpolation;
         AdvectionSchemes advectionScheme;

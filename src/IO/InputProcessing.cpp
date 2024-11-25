@@ -183,7 +183,16 @@ namespace
         const pt::ptree &modelTree = tree.get_child("Model");
 
         inputData.rho = modelTree.get<floatType>("rho");
-        inputData.nu  = modelTree.get<floatType>("nu");        
+        inputData.nu  = modelTree.get<floatType>("nu");
+
+        std::string valueString = modelTree.get<std::string>("transient");
+        if ( valueString == "yes" ) {
+            inputData.transient = true;
+        } else if ( valueString == "no" ) {
+            inputData.transient = false;
+        } else {
+            throw std::runtime_error(  "'" + valueString + "' is not a transient option. Must be either 'yes' or 'no'." );
+        }  
     }
 
 
@@ -568,6 +577,22 @@ namespace
         const pt::ptree &schemesTree = solverTree.get_child( "Schemes" );
         std::string valueString;
 
+        // Time scheme
+        if ( !inputData.transient ) {
+            inputData.schemes.timeScheme = TimeSchemes::Steady;
+        } else {
+            valueString = schemesTree.get<std::string>( "timeScheme" );
+            if        ( valueString == "backwardsEuler" ) {
+                inputData.schemes.timeScheme = TimeSchemes::BackwardsEuler;
+            } else if ( valueString == "backwardsThreeLevel" ) {
+                inputData.schemes.timeScheme = TimeSchemes::BackwardsThreeLevel;
+            } else {
+                throw std::runtime_error( "'" + valueString + "' is not a valid time discretisation scheme." );
+            }
+            inputData.schemes.timeStep = schemesTree.get<floatType>("timeStepSize");
+            inputData.schemes.numberOfTimesteps = schemesTree.get<intType>("numberOfTimesteps");
+        }
+
         // Linearisation
         valueString = schemesTree.get<std::string>( "linearisation" );
         if        ( valueString == "Picard" ) {
@@ -753,11 +778,42 @@ namespace
         using enum Axis::ENUMDATA;
         const pt::ptree &initialConditionsTree = tree.get_child("InitialConditions");
 
-        inputData.initialConditions.U[X] = initialConditionsTree.get<floatType>( "u" );
-        inputData.initialConditions.U[Y] = initialConditionsTree.get<floatType>( "v" );
-        inputData.initialConditions.U[Z] = initialConditionsTree.get<floatType>( "w" );
+        #if defined( CFD_HAS_VTK_LIB )
+            std::string valueString = initialConditionsTree.get<std::string>( "type" );
+            if        ( valueString == "uniform" ) {
+                inputData.initialConditionType = InputData::InitialConditionTypes::uniform;
+            } else if ( valueString == "vtkFile" ) {
+                inputData.initialConditionType = InputData::InitialConditionTypes::vtkFile;
+            } else {
+                throw std::runtime_error( "'" + valueString + "' is not a valid initial condition specification type." );
+            }
 
-        inputData.initialConditions.P    = initialConditionsTree.get<floatType>( "p" );
+            switch ( inputData.initialConditionType ) {
+                case InputData::InitialConditionTypes::uniform:
+                    inputData.constantInitialConditions.U[X] = initialConditionsTree.get<floatType>( "u" );
+                    inputData.constantInitialConditions.U[Y] = initialConditionsTree.get<floatType>( "v" );
+                    inputData.constantInitialConditions.U[Z] = initialConditionsTree.get<floatType>( "w" );
+                    inputData.constantInitialConditions.P    = initialConditionsTree.get<floatType>( "p" );
+                    break;
+
+                case InputData::InitialConditionTypes::vtkFile:
+                    inputData.initialConditionsFieldFilename = initialConditionsTree.get<std::string>( "filename" );
+                    break;
+            }
+        #else
+            std::string valueString = initialConditionsTree.get<std::string>( "type" );
+            if        ( valueString == "uniform" ) {
+                inputData.initialConditionType = InputData::InitialConditionTypes::uniform;
+            } else if ( valueString == "vtkFile" ) {
+                throw std::runtime_error( "Must have and compile with VTK library to use '" + valueString + "' initial condition." );;
+            } else {
+                throw std::runtime_error( "'" + valueString + "' is not a valid initial condition specification type." );
+            }
+            inputData.constantInitialConditions.U[X] = initialConditionsTree.get<floatType>( "u" );
+            inputData.constantInitialConditions.U[Y] = initialConditionsTree.get<floatType>( "v" );
+            inputData.constantInitialConditions.U[Z] = initialConditionsTree.get<floatType>( "w" );
+            inputData.constantInitialConditions.P    = initialConditionsTree.get<floatType>( "p" );
+        #endif
     }
 
 

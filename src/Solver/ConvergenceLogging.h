@@ -240,12 +240,27 @@ class FieldWriter
                 TransformBCDataToUserCoordinates( m_transformedBcData, m_axisTransformation );
             };
 
-            void WriteData( intType iterationNumber )
+            void WriteDataIteration( intType iterationNumber )
             { 
                 TransformData();
                 SetWriter();
-                std::string message = "CFD solution at iteration " + std::to_string( iterationNumber );
-                m_vtkWriter->WriteData( AppendFilename( iterationNumber ), message ); 
+                const std::string message  = "CFD solution at iteration " + std::to_string( iterationNumber );
+                const std::string filename = m_baseFilename  + "_iter" + std::to_string( iterationNumber ) + ".vtk";
+                m_vtkWriter->WriteData( filename, message ); 
+            }
+
+            void WriteDataTime( floatType currentTime )
+            { 
+                TransformData();
+                SetWriter();
+
+                std::ostringstream oss;
+                oss << std::fixed << std::setprecision(3) << currentTime;
+                const std::string currentTimeString = oss.str();
+
+                const std::string message  = "CFD solution at time " + currentTimeString;
+                const std::string filename = m_baseFilename  + "_t" + currentTimeString + ".vtk";
+                m_vtkWriter->WriteData( filename, message ); 
             }
 
 
@@ -258,9 +273,6 @@ class FieldWriter
         BoundaryConditionData m_transformedBcData;
         std::unique_ptr< VTK::VTKWriter<floatType> > m_vtkWriter;
         const std::string m_baseFilename;
-
-        std::string AppendFilename( intType iterationNumber )
-        { return m_baseFilename  + "_iter" + std::to_string(iterationNumber) + ".vtk"; }
 
         void SetWriter()
         {

@@ -1,9 +1,9 @@
 // Backwards facing step with no inflow region
-// Re = 200, nonuniform grid
 
 Model {
     rho  = 1
-    nu   = 0.005
+    nu   = 0.001
+    transient = yes
 }
 
 Mesh {
@@ -14,35 +14,23 @@ Mesh {
         Segment {
             bounds     = (0, 6)
             nCells     = 192
-            biasFactor = 3
+            biasFactor = 1
         }
     }
 
     Grid y {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 26
+            bounds     = (0, 3)
+            nCells     = 96
             biasFactor = 1
-        }
-
-        Segment {
-            bounds     = (0.5, 3)
-            nCells     = 70
-            biasFactor = 2.5
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 0.5)
-            nCells     = 16
-            biasFactor = 2
-        }
-
-        Segment {
-            bounds     = (0.5, 1)
-            nCells     = 16
-            biasFactor = -2
+            bounds     = (0, 1)
+            nCells     = 32
+            biasFactor = 1
         }
     }
 }
@@ -51,6 +39,7 @@ Mesh {
 
 InitialConditions
 {
+    type = uniform
     u = 1
     v = 0
     w = 0
@@ -71,6 +60,7 @@ BoundaryConditions
     // Inflow
     -x {
         u = profile1D, "bfs_inflow.prof"
+        //u = uniform, 1
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
@@ -114,13 +104,17 @@ Solver {
 
     Schemes {
 
+        timeScheme              = backwardsThreeLevel
+        timeStepSize            = 0.05
+        numberOfTimesteps       = 1000
+
         linearisation           = Picard
-        momentumInterpolation   = semiExplicit
-        advectionScheme         = upwind
+        momentumInterpolation   = implicit
+        advectionScheme         = QUICK
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (0.8, 0.8, 0.8)
+        implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 100
@@ -132,10 +126,10 @@ Solver {
     LinearSolver {
 
         type = SUGS
-        maxIterations = 1
-        maxResiduals = 0
+        maxIterations = 4
+        maxResiduals = 1e-3
 
-        planeSweepDirection = +x
+        planeSweepDirection = +z
         lineSweepDirection = +y
 
         momentumRelaxation = (1, 1, 1)
@@ -145,7 +139,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 0
+        maxCoarseLevels = 4
 
         maxPreSmoothingIterations = 2
         maxPreSmoothingResiduals = 0
@@ -154,7 +148,7 @@ Solver {
         maxPostSmoothingResiduals = 0
 
         maxCoarseGridIterations = 500
-        maxCoarseGridResiduals  = 1e-4
+        maxCoarseGridResiduals  = 1e-7
         
         maxFineGridIterations   = 3
         maxFineGridResiduals    = 0
@@ -169,13 +163,5 @@ Output {
     residualHistoryFilename = "output/residual_history.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
-    fieldWriteInterval      = 0
-
-    Monitors {
-        Probe {
-            filename = "output/probe1.csv"
-            location = (1, 0.5, 0.5)
-        }
-    }
-
+    fieldWriteInterval      = 2
 }

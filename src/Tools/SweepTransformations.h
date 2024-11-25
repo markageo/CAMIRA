@@ -3,7 +3,8 @@
 
 #include "../Types.h"
 #include "../IO/InputProcessing.h"
-#include "../FiniteVolume/FiniteVolume.h"
+#include "../FiniteVolume/Mesh.h"
+#include "../FiniteVolume/FiniteVolumeStructures.h"
 
 // The problem is remapped so that the plane sweeping direction is always in the z direction and
 // the line sweeping direction is always in the y direction (in the code). This is more memory
@@ -61,6 +62,10 @@ AxisTransformationMap CreateAxisTransformation( BoundaryPatches::ENUMDATA, Bound
 
 // Transform user input data so that sweeping is consistent with solver
 AxisTransformationMap TransformUserInputData( InputData & );
+
+// Transform fields and mesh to code coordinates for when solution data is read into the solver
+void TransformMeshToCodeCoordinates( Mesh &, const AxisTransformationMap &);
+void TransformFieldToCodeCoordinates( FieldData<Tensor3D> &, const AxisTransformationMap &);
 
 // Transform back to the coordinates consistentent with the user input
 void TransformMeshToUserCoordinates( Mesh &, const AxisTransformationMap &);

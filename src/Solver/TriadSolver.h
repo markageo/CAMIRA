@@ -42,11 +42,9 @@ class TriadSolver
 
 public:
     TriadSolver( FieldData<Tensor3D> &fields,
-                 const FieldData<Tensor3D> &fieldsOld,
                  const Tensor3D &mask,
                  const FVCoefficients &fvCoeffs ) : 
                     m_fields( fields ),
-                    m_fieldsOld( fieldsOld ),
                     m_mask( mask ),
                     m_fvCoeffs( fvCoeffs ),
                     m_ni( fvCoeffs.nCells(0) ),
@@ -164,7 +162,6 @@ public:
         // Update W from momentum
         const floatType newW = ( 1 - m_fvCoeffs.Mom[Z].relaxation) * m_fields.U[Z]( igW, jgW, kgW ) 
                                 + m_fvCoeffs.Mom[Z].relaxation * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kgW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW) );
-
 
         // Updating like this means that the old pressure value is used in the momentum update. 
         m_fields.U[X]( igU, jgU, kgU ) = (1.0f - masterMask) * m_fields.U[X]( igU, jgU, kgU )  +  masterMask * newU;
@@ -341,7 +338,6 @@ public:
         const floatType newW = ( 1 - m_fvCoeffs.Mom[Z].relaxation) * m_fields.U[Z]( igW, jgW, kgW ) 
                                 + m_fvCoeffs.Mom[Z].relaxation * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kgW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW) );
 
-
         // Updating like this means that the old pressure value is used in the momentum update. 
         m_fields.U[X]( igU, jgU, kgU ) = (1.0f - masterMask) * m_fields.U[X]( igU, jgU, kgU )  +  masterMask * newU;
         m_fields.U[Y]( igV, jgV, kgV ) = (1.0f - masterMask) * m_fields.U[Y]( igV, jgV, kgV )  +  masterMask * newV;
@@ -413,7 +409,6 @@ public:
 
 private:
     FieldData<Tensor3D> &m_fields;
-    const FieldData<Tensor3D> &m_fieldsOld;
     const Tensor3D &m_mask;
     const FVCoefficients &m_fvCoeffs;
     const intType m_ni, m_nj, m_nk;

@@ -10,7 +10,10 @@ namespace CFD
 {
 
     template< MomentumInterpolation, Linearisation >
-    void SweepSolve( const InputData &, const AxisTransformationMap &);
+    void SolveSteady( const InputData &, const AxisTransformationMap &);
+
+    template< MomentumInterpolation, Linearisation >
+    void SolveTransient( const InputData &, const AxisTransformationMap &);
 
 }   // end namespace CFD    
 

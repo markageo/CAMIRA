@@ -47,7 +47,7 @@ void LinearInterpInteriorFaceVelocitiesWithMWI( EnumVector<Axis, Tensor3D> &face
                 faceVel(idx) = FaceInterpolatedVelocity<AdvectionSchemes::Central, +1>( cellVel, fvCoeffs.Mom[axis], mesh, axis, HiIndex, LoIndex );
 
                 // Add MWI correction
-                floatType d = 0.5f * ( momentumDiagCoeffInv( G(HiIndex) )  +  momentumDiagCoeffInv( G(LoIndex) ) );
+                floatType d = 0.5f * ( momentumDiagCoeffInv( G(HiIndex) )  +  momentumDiagCoeffInv( G(LoIndex) ) ); // SHOULD USE LINEAR INTERPOLATION COEFFICIENTS HERE
                 floatType coeff0 = d *   mwiSparseCoeffs[0]( idx[axis] ),
                           coeff1 = d * ( mwiSparseCoeffs[1]( idx[axis] ) + mwiCompactCoeffs[0]( idx[axis] ) ),
                           coeff2 = d * ( mwiSparseCoeffs[2]( idx[axis] ) + mwiCompactCoeffs[1]( idx[axis] ) ),
