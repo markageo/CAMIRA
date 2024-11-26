@@ -3,6 +3,7 @@
 Model {
     rho  = 1
     nu   = 0.05
+    transient = no
 }
 
 Mesh {
@@ -74,6 +75,7 @@ Mesh {
 
 InitialConditions
 {
+    type = uniform
     u = 1
     v = 0
     w = 0
@@ -163,7 +165,7 @@ Solver {
     LinearSolver {
 
         type = SUGS
-        maxIterations = 2
+        maxIterations = 4
         maxResiduals = 1e-3
 
         planeSweepDirection = +z

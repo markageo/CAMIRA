@@ -3,6 +3,7 @@ main
 build
 batchruns
 output
+.cache
 
 *.vtk
 *.dbg
