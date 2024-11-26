@@ -3,7 +3,7 @@
 Model {
     rho  = 1
     nu   = 0.05
-    transient = yes
+    transient = no
 }
 
 Mesh {
@@ -69,6 +69,7 @@ Mesh {
 
 InitialConditions
 {
+    type = uniform
     u = 0
     v = 0
     w = 0

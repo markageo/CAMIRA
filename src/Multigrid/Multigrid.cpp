@@ -85,7 +85,7 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
 
         // Linear Solver
-        mgl.linearSolver = std::make_unique< LinearSolver2<MI, LI> >(mgl.fields, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);
+        mgl.linearSolver = std::make_unique< LinearSolver<MI, LI> >(mgl.fields, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);
 
     }
     mgLevels.back().isCoarsestLevel = true;

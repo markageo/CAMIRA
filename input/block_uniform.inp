@@ -3,7 +3,7 @@
 Model {
     rho  = 1
     nu   = 0.0025
-    transient = yes
+    transient = no
 }
 
 Mesh {
@@ -38,8 +38,11 @@ Mesh {
 
 InitialConditions
 {    
-    type     = vtkFile
-    filename = "output/fields_steady_initial.vtk"
+    type = uniform
+    u = 0
+    v = 0
+    w = 0
+    p = 0
 }
 
 

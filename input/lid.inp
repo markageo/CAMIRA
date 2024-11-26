@@ -2,8 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.05
-
+    nu   = 0.002
     transient = no
 }
 
@@ -14,7 +13,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 50
+            nCells     = 100
             biasFactor = 1
         }
     }
@@ -22,7 +21,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 50
+            nCells     = 100
             biasFactor = 1
         }
     }
@@ -30,7 +29,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 50
+            nCells     = 100
             biasFactor = 1
         }
     }
@@ -103,22 +102,18 @@ Solver {
 
     Schemes {
 
-        timeScheme              = backwardsEuler
-        timeStepSize            = 0.001
-        numberOfTimesteps       = 100
-
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = QUICK
+        advectionScheme         = upwind
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (1, 1, 1)
+        implicitMomentumRelaxation = (0.6, 0.6, 0.6)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 100000
-        maxContinuityOuterResidual = 1e-12
-        maxMomentumOuterResiduals  = (1e-12, 1e-12, 1e-2)
+        maxOuterIterations = 300
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
     }
     
     LinearSolver {
@@ -137,7 +132,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 3
 
         maxPreSmoothingIterations = 3
         maxPreSmoothingResiduals = 0
@@ -145,8 +140,8 @@ Solver {
         maxPostSmoothingIterations = 3
         maxPostSmoothingResiduals = 0
 
-        maxCoarseGridIterations = 1000
-        maxCoarseGridResiduals  = 1e-8
+        maxCoarseGridIterations = 500
+        maxCoarseGridResiduals  = 1e-6
         
         maxFineGridIterations   = 2
         maxFineGridResiduals    = 0
@@ -161,5 +156,5 @@ Output {
     residualHistoryFilename = "output/residual_history.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
-    fieldWriteInterval      = 1
+    fieldWriteInterval      = 0
 }
