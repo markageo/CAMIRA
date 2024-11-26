@@ -118,7 +118,7 @@ Solver {
     
     LinearSolver {
 
-        type = SUGS
+        type = nestedLineSymmetric
         maxIterations = 2
         maxResiduals = 0
 

@@ -31,13 +31,13 @@ class LinearSolverInterface
 // Two orientation symmetric sweeping
 template< MomentumInterpolation MI,
           Linearisation LI >
-class LinearSolver2 : public LinearSolverInterface< MI, LI >
+class domainSymmetricSolver : public LinearSolverInterface< MI, LI >
 {
     using TC = TransportCoefficients::ENUMDATA;
     using A = Axis::ENUMDATA;
 
 public:
-    LinearSolver2( FieldData<Tensor3D> &fields,
+    domainSymmetricSolver( FieldData<Tensor3D> &fields,
                   const Tensor3D &mask,
                   const FVCoefficients &fvCoeffs, 
                   const InputData::LinearSolverSettings &linearSolverSettings) : 
@@ -51,11 +51,8 @@ public:
                     m_nj( fvCoeffs.nCells(A::Y) ),
                     m_nk( fvCoeffs.nCells(A::Z) )
     {
-        // TODO: account for 2D case (when mesh is one cell thick in a direction)
         m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI, LI>>(fields, mask, fvCoeffs);
         m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI, LI>>(fields, mask, fvCoeffs);
-        SolutionUpdater = &LinearSolver2::Sweep3D;
-        StateUpdater = &LinearSolver2::UpdateState3D;
     }
 
 
@@ -69,8 +66,8 @@ public:
             // Reset residuals
             ForAllFieldData( [&] (intType f) { m_residuals[f] = 0.0f; });
 
-            // Update plane
-            (this->*SolutionUpdater)();
+            // Sweep domain
+            Sweep3D();
 
             // Normalise residuals
             ForAllFieldData( [&] (intType f) { m_residuals[f] /= static_cast<floatType>(m_ni * m_nj * m_nk); });
@@ -91,7 +88,8 @@ public:
     // Update any precomputed values
     void UpdateState()
     {
-        (this->*StateUpdater)();
+        m_triadSolverForward->UpdateGlobalConstants();
+        m_triadSolverBackward->UpdateGlobalConstants();
     }
 
 
@@ -106,14 +104,10 @@ private:
     std::unique_ptr<TriadSolver<TC::e, TC::n, TC::t, MI, LI>> m_triadSolverForward;
     std::unique_ptr<TriadSolver<TC::w, TC::s, TC::b, MI, LI>> m_triadSolverBackward;
 
-    void (LinearSolver2::*SolutionUpdater)(void);
-    void (LinearSolver2::*StateUpdater)(void);
-
     FieldData<floatType> m_residuals, m_residualsInitialInv;
 
     intType m_ni, m_nj, m_nk;
 
-    // For 3D simulations
     void Sweep3D()
     {
         // Triad starting on lo side
@@ -174,23 +168,6 @@ private:
         }
     }
 
-    void UpdateState3D()
-    {
-        m_triadSolverForward->UpdateGlobalConstants();
-        m_triadSolverBackward->UpdateGlobalConstants();
-    }
-
-
-    // For 2D simulations
-    void Sweep2D()
-    {
-
-    }
-
-    void UpdateState2D()
-    {
-
-    }
 
 };
 
@@ -198,13 +175,13 @@ private:
 // Nested symmetric sweeping
 template< MomentumInterpolation MI,
           Linearisation LI >
-class LinearSolver : public LinearSolverInterface< MI, LI >
+class nestedLineSymmetricSolver : public LinearSolverInterface< MI, LI >
 {
     using TC = TransportCoefficients::ENUMDATA;
     using A = Axis::ENUMDATA;
 
 public:
-    LinearSolver( FieldData<Tensor3D> &fields,
+    nestedLineSymmetricSolver( FieldData<Tensor3D> &fields,
                   const Tensor3D &mask,
                   const FVCoefficients &fvCoeffs, 
                   const InputData::LinearSolverSettings &linearSolverSettings) : 
@@ -222,13 +199,13 @@ public:
     {
         if (m_nk == 1) {
             m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI, LI>>(fields, mask, fvCoeffs);
-            SolutionUpdater = &LinearSolver::Sweep2D;
-            StateUpdater = &LinearSolver::UpdateState2D;
+            SolutionUpdater = &nestedLineSymmetricSolver::Sweep2D;
+            StateUpdater = &nestedLineSymmetricSolver::UpdateState2D;
         } else {
             m_planeSolverTop = std::make_unique<PlaneSolver<TC::t, MI, LI>>(fields, mask, fvCoeffs);
             m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI, LI>>(fields, mask, fvCoeffs);
-            SolutionUpdater = &LinearSolver::Sweep3D;
-            StateUpdater = &LinearSolver::UpdateState3D;
+            SolutionUpdater = &nestedLineSymmetricSolver::Sweep3D;
+            StateUpdater = &nestedLineSymmetricSolver::UpdateState3D;
         }
     }
 
@@ -280,8 +257,8 @@ private:
     std::unique_ptr<PlaneSolver<TC::b, MI, LI>> m_planeSolverBottom;
     std::unique_ptr<PlaneSolver<TC::p, MI, LI>> m_planeSolverCenter;
 
-    void (LinearSolver::*SolutionUpdater)(void);
-    void (LinearSolver::*StateUpdater)(void);
+    void (nestedLineSymmetricSolver::*SolutionUpdater)(void);
+    void (nestedLineSymmetricSolver::*StateUpdater)(void);
 
     FieldData<Tensor2D> m_delta, m_oldPlane;
     FieldData<floatType> m_residuals, m_residualsInitialInv;
