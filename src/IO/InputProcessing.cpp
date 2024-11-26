@@ -681,10 +681,12 @@ namespace
 
         // Solver type
         valueString = linearSolverTree.get<std::string>( "type" );
-        if        ( valueString == "SUGS" ) {
-            inputData.linearSolverSettings.type = LinearSolvers::SUGS;
+        if        ( valueString == "nestedLineSymmetric" ) {
+            inputData.linearSolverSettings.type = LinearSolvers::nestedLineSymmetric;
+        } else if ( valueString == "domainSymmetric" ) {
+            inputData.linearSolverSettings.type = LinearSolvers::domainSymmetric;
         } else {
-            throw std::runtime_error( "'" + valueString + "' is not a linear solver type." );
+            throw std::runtime_error( "'" + valueString + "' is not a valid linear solver type." );
         }
 
         // Max iterations

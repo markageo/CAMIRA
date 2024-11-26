@@ -132,7 +132,7 @@ void EnumFor( L&& f )
 
 // Solver settings
 enum class LinearSolvers {
-    SUGS
+    nestedLineSymmetric, domainSymmetric
 };
 
 enum class Linearisation {
