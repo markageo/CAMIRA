@@ -3,6 +3,7 @@
 
 #include "../Types.h"
 #include "../Geometry/Geometry.h"
+#include "../Tools/SweepTransformations.h"
 #include "../FiniteVolume/Mesh.h"
 
 #include <vector>
@@ -71,7 +72,7 @@ struct IBData {
 };
 
 
-IBData CreateImmersedBoundaryData( const InputData &, const Mesh & );
+IBData CreateImmersedBoundaryData( const InputData &, const Mesh &, const AxisTransformationMap & );
 
 
 

@@ -13,19 +13,19 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1.8)
-            nCells     = 44
+            nCells     = 22
             biasFactor = -2
         }
 
         Segment {
             bounds     = (1.8, 3.2)
-            nCells     = 62
+            nCells     = 31
             biasFactor = 1
         }
 
         Segment {
             bounds     = (3.2, 10)
-            nCells     = 194
+            nCells     = 97
             biasFactor = 3
         }
     }
@@ -34,13 +34,13 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 44
+            nCells     = 22
             biasFactor = 1
         }
 
         Segment {
             bounds     = (1, 4)
-            nCells     = 76
+            nCells     = 38
             biasFactor = 2
         }
     }
@@ -48,19 +48,19 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.8)
-            nCells     = 24
+            nCells     = 12
             biasFactor = -2.5
         }
 
         Segment {
             bounds     = (0.8, 2.2)
-            nCells     = 62
+            nCells     = 31
             biasFactor = 1
         }
 
         Segment {
             bounds     = (2.2, 3)
-            nCells     = 24
+            nCells     = 12
             biasFactor = 2.5
         }
     }
@@ -155,7 +155,7 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 2
+        maxOuterIterations = 100
         maxContinuityOuterResidual = 1e-6
         maxMomentumOuterResiduals   = (1e-6, 1e-6, 1e-6)
 

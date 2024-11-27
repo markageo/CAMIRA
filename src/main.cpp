@@ -30,7 +30,10 @@ int main(int argc, char const *argv[])
     TIC("Input Processing")
     CFD::InputData inputData = CFD::InputDataFromCommandLine(argc, argv);
 
-    CFD::AxisTransformationMap axisTransformation = CFD::TransformUserInputData(inputData);
+    CFD::AxisTransformationMap axisTransformation = CreateAxisTransformation( inputData.linearSolverSettings.planeSweepDirection,
+                                                                              inputData.linearSolverSettings.lineSweepDirection );
+
+    CFD::TransformUserInputData(inputData, axisTransformation);
     TOC()
 
     /*-------------------------------------------------------------------------------------*\

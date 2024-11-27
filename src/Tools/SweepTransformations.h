@@ -25,6 +25,7 @@ class AxisTransformationMap
         // Setting values
         void Set(const BP, const BP);
 
+
         // Code patch from user patch
         BP CodePatch(const BP) const;
 
@@ -45,6 +46,10 @@ class AxisTransformationMap
         bool UserAxisReversed( const A ) const;
 
 
+        // Returns an axis transformation map that is the inverse of the current one (i.e. code and user axis swapped around)
+        AxisTransformationMap Inverse() const;
+
+
     private:
 
         // Lookups for patches
@@ -61,7 +66,7 @@ class AxisTransformationMap
 AxisTransformationMap CreateAxisTransformation( BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA ); 
 
 // Transform user input data so that sweeping is consistent with solver
-AxisTransformationMap TransformUserInputData( InputData & );
+void TransformUserInputData( InputData &, const AxisTransformationMap & );
 
 // Transform fields and mesh to code coordinates for when solution data is read into the solver
 void TransformMeshToCodeCoordinates( Mesh &, const AxisTransformationMap &);

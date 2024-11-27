@@ -5,6 +5,7 @@
 #include "../Macros.h"
 #include "../IO/ArrayIO.h"
 #include "../IO/IOTools.h"
+#include "../Tools/SweepTransformations.h"
 
 #include <vector>
 #include <utility>
@@ -332,7 +333,8 @@ IBData ConstructIBData( const Polyhedron &geometry,
 
 
 IBData CreateImmersedBoundaryData( const InputData &inputData, 
-                                   const Mesh &mesh )
+                                   const Mesh &mesh,
+                                   const AxisTransformationMap &axisTransformation )
 {
     using enum Axis::ENUMDATA;
 
@@ -346,8 +348,13 @@ IBData CreateImmersedBoundaryData( const InputData &inputData,
     Polyhedron P = MakeGeometry( inputData );
     ibData = ConstructIBData( P, mesh );
 
+    // Make a new new inputData object in the user coordinates to make another geometry to be output to file
+    InputData inputDataUserCoordinates( inputData );
+    TransformUserInputData( inputDataUserCoordinates, axisTransformation.Inverse() );
+    Polyhedron PUserCoordinates = MakeGeometry( inputDataUserCoordinates );
+
     std::ofstream out(  IOTOOLS::RemoveFileExtension( inputData.geometryOutputFilename, ".stl" ) + ".stl" );
-    CGAL::IO::write_STL( out, P );
+    CGAL::IO::write_STL( out, PUserCoordinates );
 
     return ibData;
 }

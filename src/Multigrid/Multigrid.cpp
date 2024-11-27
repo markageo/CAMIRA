@@ -49,7 +49,7 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
 
         // Immersed boundary data
-        mgl.ibData = CreateImmersedBoundaryData(inputData, mgl.mesh);
+        mgl.ibData = CreateImmersedBoundaryData(inputData, mgl.mesh, axisTransofrmation);
 
 
         // Allocate and initialise fields
