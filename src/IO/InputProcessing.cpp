@@ -889,11 +889,20 @@ namespace
         // Field output filename
         inputData.fieldOutputFilename = outputTree.get<std::string>( "fieldOutputFilename" );
 
-        // Geometry out filename
+        // Geometry out filename, the user does not have to output the geometry to file
+        inputData.outputGeometry = false;
         if ( inputData.hasIBGeometry ) {
-            inputData.geometryOutputFilename = outputTree.get<std::string>( "geometryOutputFilename" );
-        }
 
+            boost::optional<std::string> geometryOutputFilenameOptional = outputTree.get_optional<std::string>( "geometryOutputFilename" );
+            if ( geometryOutputFilenameOptional ) {
+                inputData.outputGeometry = true;
+                inputData.geometryOutputFilename = geometryOutputFilenameOptional.get();
+                return;
+            }
+
+        }
+        
+        
         // Write interval for fields
         inputData.fieldWriteInterval = outputTree.get<intType>( "fieldWriteInterval" );
 
