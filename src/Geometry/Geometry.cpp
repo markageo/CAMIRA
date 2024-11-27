@@ -216,13 +216,13 @@ Polyhedron MakeSpherePolyhedron( const InputData::SolidSphereData &solidSphereDa
     C2t3 c2t3 (tr);   // 2D-complex in 3D-Delaunay triangulation
 
     // defining the surface
-    Surface_3 surface( sphere_function,                     // pointer to function
+    Surface_3 surface( sphere_function,                            // pointer to function
                        Sphere_3(centerPosition, 2.0f * radius2) ); // bounding sphere
 
     // Meshing criteria
     CGAL::Surface_mesh_default_criteria_3<Tr> criteria( 5.0f,                       // lower bound on minimum angle of facets (degrees)
-                                                        0.25f * sqrt( radius2 ),    // upper bound on radius of Delaunay balls
-                                                        0.2f  * sqrt( radius2 ) );  // upper bound on center-center facet distances
+                                                        0.025f * sqrt( radius2 ),    // upper bound on radius of Delaunay balls
+                                                        0.01f * sqrt( radius2 ) );  // upper bound on center-center facet distances
 
     // meshing surface
     CGAL::make_surface_mesh(c2t3, surface, criteria, CGAL::Non_manifold_tag());
