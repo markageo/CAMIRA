@@ -110,6 +110,17 @@ bool AxisTransformationMap::UserAxisReversed( const A userAxis ) const
 }
 
 
+AxisTransformationMap AxisTransformationMap::Inverse() const
+{
+    AxisTransformationMap inverseAxisTrasformation;
+
+    EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
+        inverseAxisTrasformation.Set( bp, this->CodePatch( bp ) );  // This is opposite to the definition of the Set function
+    } );
+
+    return inverseAxisTrasformation;
+}
+
 
 /*-------------------------------------------------------------------------------------*\
                                     Helper Functions
@@ -446,11 +457,9 @@ AxisTransformationMap CreateAxisTransformation( BoundaryPatches::ENUMDATA planeS
 
 
 
-AxisTransformationMap TransformUserInputData(InputData &inputData )
+void TransformUserInputData( InputData &inputData,
+                             const AxisTransformationMap &axisTransformation )
 {
-    
-    AxisTransformationMap axisTransformation = CreateAxisTransformation( inputData.linearSolverSettings.planeSweepDirection,
-                                                                      inputData.linearSolverSettings.lineSweepDirection );
     inputData.linearSolverSettings.planeSweepDirection = BoundaryPatches::zPositive;
     inputData.linearSolverSettings.lineSweepDirection  = BoundaryPatches::yPositive;
 
@@ -460,8 +469,6 @@ AxisTransformationMap TransformUserInputData(InputData &inputData )
     TransformMesh( inputData, axisTransformation );
     TransformSolver( inputData, axisTransformation );
     TransformOutput( inputData, axisTransformation );
-
-    return axisTransformation;
 }
 
 
