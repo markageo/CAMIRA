@@ -136,6 +136,11 @@ BoundaryConditions
 
 
 SolidGeometry {
+    FromFile {
+        type     = STL
+        filename = "geometry.stl"
+    }
+
     Sphere {
         centerPosition = (2.5, 2.5, 2.5)
         diameter       = 1
