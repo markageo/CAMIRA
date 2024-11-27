@@ -458,7 +458,7 @@ FieldData<Tensor3D> SetInitialConditionUniform( const FieldData<floatType> &cons
 
 FieldData<Tensor3D> InitialiseFields( const Mesh &mesh, 
                                       const InputData &inputData,
-                                      const AxisTransformationMap &axisTransformation )
+                     [[maybe_unused]] const AxisTransformationMap &axisTransformation )
 {
     FieldData<Tensor3D> fields;
 
