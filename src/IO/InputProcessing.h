@@ -53,7 +53,10 @@ struct InputData
     };
     std::vector< SolidBlockData > solidBlocks;
     std::vector< SolidSphereData > solidSpheres; 
+    std::vector< std::string > geometrySTLFiles;
     bool hasIBGeometry;
+
+
 
     // Boundary conditions
     struct Profile1D {

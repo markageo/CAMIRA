@@ -15,8 +15,11 @@
 #include <CGAL/Surface_mesh.h>
 
 #include <CGAL/boost/graph/helpers.h>
+#include <CGAL/boost/graph/IO/STL.h>
 
 #include <cmath>
+#include <stdexcept>
+#include <string>
 
 namespace CFD
 {
@@ -247,6 +250,28 @@ void AddSpheres( std::vector< Polyhedron > &geometryPolyhedra,
 
 
 /*-------------------------------------------------------------------------------------*\
+                                       From file
+\*-------------------------------------------------------------------------------------*/
+
+
+void AddSTLFiles( std::vector< Polyhedron > &geometryPolyhedra,
+                  const InputData &inputData )
+{
+    for ( const std::string &filename : inputData.geometrySTLFiles ) {
+
+        Polyhedron P;
+        bool success = CGAL::IO::read_STL( filename, P );
+        if ( !success ) {
+            throw std::runtime_error( "Failed reading STL geometry file '" + filename + "'." );
+        }
+        geometryPolyhedra.push_back( P );
+
+    }
+}
+
+
+
+/*-------------------------------------------------------------------------------------*\
                                    Complete Geometry
 \*-------------------------------------------------------------------------------------*/
 
@@ -256,6 +281,7 @@ Polyhedron MakeGeometry( const InputData &inputData )
     std::vector< Polyhedron > geometryPolyhedra;
     AddBlocks( geometryPolyhedra, inputData );
     AddSpheres( geometryPolyhedra, inputData );
+    AddSTLFiles( geometryPolyhedra, inputData );
 
     Polyhedron P;
     for ( Polyhedron & polyhedron : geometryPolyhedra ) {

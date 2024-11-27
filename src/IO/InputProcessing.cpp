@@ -325,6 +325,20 @@ namespace
 
 
 
+    void ReadGeometryFromFileData( InputData &inputData,
+                                   const std::pair<const std::string, pt::ptree> &solidObject )
+    {
+        std::string valueString = solidObject.second.get< std::string >( "type" );
+        if ( valueString == "STL" ) {
+            valueString = solidObject.second.get< std::string >( "filename" );
+            inputData.geometrySTLFiles.push_back( valueString );
+        } else {
+            throw std::runtime_error(  "'" + valueString + "' is not a supported geometry file type." );
+        }
+    }
+
+
+
     void ReadSolidGeometry( InputData &inputData, 
                             const pt::ptree &tree)
     {
@@ -348,6 +362,12 @@ namespace
 
             if ( solidObject.first == "Sphere" ) {
                 ReadSphereData( inputData, solidObject );
+                inputData.hasIBGeometry = true;
+                continue;
+            }
+
+            if ( solidObject.first ==  "FromFile") {
+                ReadGeometryFromFileData( inputData, solidObject );
                 inputData.hasIBGeometry = true;
                 continue;
             }
