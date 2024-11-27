@@ -349,12 +349,15 @@ IBData CreateImmersedBoundaryData( const InputData &inputData,
     ibData = ConstructIBData( P, mesh );
 
     // Make a new new inputData object in the user coordinates to make another geometry to be output to file
-    InputData inputDataUserCoordinates( inputData );
-    TransformUserInputData( inputDataUserCoordinates, axisTransformation.Inverse() );
-    Polyhedron PUserCoordinates = MakeGeometry( inputDataUserCoordinates );
+    if ( inputData.outputGeometry ) {
+        InputData inputDataUserCoordinates( inputData );
+        TransformUserInputData( inputDataUserCoordinates, axisTransformation.Inverse() );
+        Polyhedron PUserCoordinates = MakeGeometry( inputDataUserCoordinates );
 
-    std::ofstream out(  IOTOOLS::RemoveFileExtension( inputData.geometryOutputFilename, ".stl" ) + ".stl" );
-    CGAL::IO::write_STL( out, PUserCoordinates );
+        std::ofstream out(  IOTOOLS::RemoveFileExtension( inputData.geometryOutputFilename, ".stl" ) + ".stl" );
+        CGAL::IO::write_STL( out, PUserCoordinates );
+    }
+    
 
     return ibData;
 }

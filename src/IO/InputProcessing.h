@@ -127,6 +127,7 @@ struct InputData
     std::string fieldOutputFilename;
     std::string profilingFilename;
     std::string geometryOutputFilename;
+    bool outputGeometry;
     intType fieldWriteInterval;
 
     struct ProbeData {
