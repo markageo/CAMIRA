@@ -155,17 +155,12 @@ Solver {
         cycle = F
         maxCoarseLevels = 3
 
-        maxPreSmoothingIterations = 2
-        maxPreSmoothingResiduals = 0
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
+        fineGridIterations   = 2
 
-        maxPostSmoothingIterations = 2
-        maxPostSmoothingResiduals = 0
-
-        maxCoarseGridIterations = 100
-        maxCoarseGridResiduals  = 1e-4
-        
-        maxFineGridIterations   = 2
-        maxFineGridResiduals    = 0
+        maxCoarseGridIterations = 500
+        maxCoarseGridResiduals  = 1e-6
         
     }
 

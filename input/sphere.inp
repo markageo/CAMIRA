@@ -136,11 +136,6 @@ BoundaryConditions
 
 
 SolidGeometry {
-    FromFile {
-        type     = STL
-        filename = "geometry.stl"
-    }
-
     Sphere {
         centerPosition = (2.5, 2.5, 2.5)
         diameter       = 1
@@ -154,14 +149,14 @@ Solver {
 
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = central
+        advectionScheme         = QUICK
         advectionBlendingFactor = 1
-        faceInterpolationScheme = average
+        faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (0.6, 0.6, 0.6)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 1000
+        maxOuterIterations = 0
         maxContinuityOuterResidual = 1e-6
         maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 
@@ -169,7 +164,7 @@ Solver {
     
     LinearSolver {
 
-        type = domainSymmetric
+        type = nestedLineSymmetric
         maxIterations = 4
         maxResiduals = 1e-3
 
@@ -183,19 +178,14 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 4
+        maxCoarseLevels = 3
 
-        maxPreSmoothingIterations = 2
-        maxPreSmoothingResiduals = 0
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
+        fineGridIterations   = 2
 
-        maxPostSmoothingIterations = 2
-        maxPostSmoothingResiduals = 0
-
-        maxCoarseGridIterations = 100
-        maxCoarseGridResiduals  = 1e-4
-        
-        maxFineGridIterations   = 2
-        maxFineGridResiduals    = 0
+        maxCoarseGridIterations = 500
+        maxCoarseGridResiduals  = 1e-6
         
     }
 

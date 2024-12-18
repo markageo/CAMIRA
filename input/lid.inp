@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.002
+    nu   = 0.005
     transient = no
 }
 
@@ -13,7 +13,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -21,7 +21,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -29,7 +29,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -80,7 +80,7 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Symmetry
+    // Wall
     +z {
         u = uniform, 0
         v = uniform, 0
@@ -88,7 +88,7 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Symmetry
+    // Wall
     -z {
         u = uniform, 0
         v = uniform, 0
@@ -105,25 +105,26 @@ Solver {
         linearisation           = Picard
         momentumInterpolation   = implicit
         advectionScheme         = upwind
-        advectionBlendingFactor = 1
+        advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (0.6, 0.6, 0.6)
+        implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 300
-        maxContinuityOuterResidual = 1e-6
-        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+        maxOuterIterations = 1000
+        maxContinuityOuterResidual = 1e-8
+        maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
+
     }
     
     LinearSolver {
 
         type = nestedLineSymmetric
-        maxIterations = 2
-        maxResiduals = 0
+        maxIterations = 1
+        maxResiduals = 1e-3
 
         planeSweepDirection = +z
-        lineSweepDirection = +y
+        lineSweepDirection = +x
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
@@ -134,18 +135,13 @@ Solver {
         cycle = F
         maxCoarseLevels = 3
 
-        maxPreSmoothingIterations = 3
-        maxPreSmoothingResiduals = 0
-
-        maxPostSmoothingIterations = 3
-        maxPostSmoothingResiduals = 0
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
+        fineGridIterations   = 2
 
         maxCoarseGridIterations = 500
         maxCoarseGridResiduals  = 1e-6
-        
-        maxFineGridIterations   = 2
-        maxFineGridResiduals    = 0
-        
+
     }
 
 }
@@ -157,4 +153,5 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     fieldWriteInterval      = 0
+
 }

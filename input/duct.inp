@@ -144,19 +144,14 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 3
 
-        maxPreSmoothingIterations = 2
-        maxPreSmoothingResiduals = 0
-
-        maxPostSmoothingIterations = 2
-        maxPostSmoothingResiduals = 0
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
+        fineGridIterations   = 2
 
         maxCoarseGridIterations = 500
-        maxCoarseGridResiduals  = 1e-4
-        
-        maxFineGridIterations   = 3
-        maxFineGridResiduals    = 0
+        maxCoarseGridResiduals  = 1e-6
         
     }
 
