@@ -2,17 +2,18 @@
 
 Model {
     rho  = 1
-    nu   = 0.025
+    nu   = 0.05
+    transient = no
 }
 
 Mesh {
 
-    domain = (40, 40, 1)
+    domain = (10, 5, 5)
 
     Grid x {
         Segment {
-            bounds     = (0, 40)
-            nCells     = 512
+            bounds     = (0, 10)
+            nCells     = 480
             biasFactor = 1
         }
     }
@@ -20,16 +21,16 @@ Mesh {
 
     Grid y {
         Segment {
-            bounds     = (0, 40)
-            nCells     = 512
+            bounds     = (0, 5)
+            nCells     = 240
             biasFactor = 1
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 1
+            bounds     = (0, 5)
+            nCells     = 240
             biasFactor = 1
         }
     }
@@ -38,6 +39,7 @@ Mesh {
 
 InitialConditions
 {
+    type = uniform
     u = 1
     v = 0
     w = 0
@@ -99,7 +101,7 @@ BoundaryConditions
 
 SolidGeometry {
     Sphere {
-        centerPosition = (16, 20, 0.5)
+        centerPosition = (2.5, 2.5, 2.5)
         diameter       = 1
     }
 }
@@ -111,26 +113,26 @@ Solver {
 
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = QUICK
+        advectionScheme         = central
         advectionBlendingFactor = 1
         faceInterpolationScheme = average
 
-        implicitMomentumRelaxation = (0.4, 0.4, 0.4)
+        implicitMomentumRelaxation = (0.6, 0.6, 0.6)
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 1000
-        maxContinuityOuterResidual = 1e-12
-        maxMomentumOuterResiduals  = (1e-12, 1e-12, 1e-12)
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 
     }
     
     LinearSolver {
 
-        type = nestedLineSymmetric
-        maxIterations = 13
+        type = domainSymmetric
+        maxIterations = 4
         maxResiduals = 1e-3
 
-        planeSweepDirection = +x
+        planeSweepDirection = +z
         lineSweepDirection = +y
 
         momentumRelaxation = (1, 1, 1)
@@ -140,19 +142,14 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 3
 
-        maxPreSmoothingIterations = 2
-        maxPreSmoothingResiduals = 0
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
+        fineGridIterations   = 2
 
-        maxPostSmoothingIterations = 2
-        maxPostSmoothingResiduals = 0
-
-        maxCoarseGridIterations = 100
-        maxCoarseGridResiduals  = 1e-4
-        
-        maxFineGridIterations   = 2
-        maxFineGridResiduals    = 0
+        maxCoarseGridIterations = 500
+        maxCoarseGridResiduals  = 1e-6
         
     }
 
