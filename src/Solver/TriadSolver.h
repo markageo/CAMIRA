@@ -149,7 +149,6 @@ public:
                                    ) * m_K(i, j, k);
 
 
-        m_fields.P( ig, jg, kg )       = (1.0f - masterMask) * m_fields.P( ig, jg, kg )        +  masterMask * newP;
 
         // Update U from momentum
         const floatType newU = ( 1 - m_fvCoeffs.Mom[X].relaxation) * m_fields.U[X]( igU, jgU, kgU )
@@ -164,6 +163,7 @@ public:
                                 + m_fvCoeffs.Mom[Z].relaxation * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kgW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW) );
 
         // Updating like this means that the old pressure value is used in the momentum update. 
+        m_fields.P( ig, jg, kg )       = (1.0f - masterMask) * m_fields.P( ig, jg, kg )        +  masterMask * newP;
         m_fields.U[X]( igU, jgU, kgU ) = (1.0f - masterMask) * m_fields.U[X]( igU, jgU, kgU )  +  masterMask * newU;
         m_fields.U[Y]( igV, jgV, kgV ) = (1.0f - masterMask) * m_fields.U[Y]( igV, jgV, kgV )  +  masterMask * newV;
         m_fields.U[Z]( igW, jgW, kgW ) = (1.0f - masterMask) * m_fields.U[Z]( igW, jgW, kgW )  +  masterMask * newW;
@@ -324,7 +324,6 @@ public:
                                    ) * m_K(i, j, k);
 
 
-        m_fields.P( ig, jg, kg )       = (1.0f - masterMask) * m_fields.P( ig, jg, kg )        +  masterMask * newP;
 
         // Update U from momentum
         const floatType newU = ( 1 - m_fvCoeffs.Mom[X].relaxation) * m_fields.U[X]( igU, jgU, kgU )
@@ -339,6 +338,7 @@ public:
                                 + m_fvCoeffs.Mom[Z].relaxation * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kgW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW) );
 
         // Updating like this means that the old pressure value is used in the momentum update. 
+        m_fields.P( ig, jg, kg )       = (1.0f - masterMask) * m_fields.P( ig, jg, kg )        +  masterMask * newP;
         m_fields.U[X]( igU, jgU, kgU ) = (1.0f - masterMask) * m_fields.U[X]( igU, jgU, kgU )  +  masterMask * newU;
         m_fields.U[Y]( igV, jgV, kgV ) = (1.0f - masterMask) * m_fields.U[Y]( igV, jgV, kgV )  +  masterMask * newV;
         m_fields.U[Z]( igW, jgW, kgW ) = (1.0f - masterMask) * m_fields.U[Z]( igW, jgW, kgW )  +  masterMask * newW;
@@ -357,17 +357,7 @@ public:
         intType igU, jgU, kgU,
                 igV, jgV, kgV,
                 igW, jgW, kgW;
-
-        // // Starting and ending indices, since K cannot be calculated on some boundaries due to the staggering
-        // intType iStart = 1 + sCU::iLeft,
-        //         iLength = m_ni - 1 + sCU::iRight,
-
-        //         jStart = 1 + sCV::iLeft,
-        //         jLength = m_nj - 1 + sCV::iRight,
-
-        //         kStart = 1 + sCW::iLeft,
-        //         kLength = m_nk - 1 + sCW::iRight;
-
+                
         intType iStart = 0,
                 iLength = m_ni,
 
