@@ -218,7 +218,7 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
             const InputData::MultigridSettings &mgSettings )
 {
     // Presmoothing 
-    SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxPreSmoothingIterations, mgEquationType );
+    SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.preSmoothingIterations, mgEquationType );
 
     // Calculate residual
     FieldData<Tensor3D> residuals = ResidualsField<MI, LI>( mgLevels[level].fields, 
@@ -261,9 +261,9 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
         // Re-smoothing
         if ( mgLevels[level].isFinestLevel ) {
-            SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxFineGridIterations, mgEquationType );
+            SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.fineGridIterations, mgEquationType );
         } else {
-            SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingIterations, mgEquationType );
+            SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.postSmoothingIterations, mgEquationType );
         }
 
         // Calculate residual
@@ -309,9 +309,9 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
     // Post-smoothing
     if ( mgLevels[level].isFinestLevel ) {
-        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxFineGridIterations, mgEquationType );
+        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.fineGridIterations, mgEquationType );
     } else {
-        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.maxPostSmoothingIterations, mgEquationType );
+        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.postSmoothingIterations, mgEquationType );
     }
 
 }
