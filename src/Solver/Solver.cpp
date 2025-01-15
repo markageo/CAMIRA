@@ -424,6 +424,7 @@ void SolveSteady( const InputData &inputData,
     consoleLog.WriteResiduals( residualsOuter, massFluxResidual, 0 );
     residualsLogFile.WriteData( residualsOuter, massFluxResidual, 0 );
     fieldWriter.WriteDataIteration( 0 );
+
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
         TIC("Multigrid Cycling")
