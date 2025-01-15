@@ -225,11 +225,13 @@ class FieldWriter
 {
     public:
         FieldWriter( const FieldData<Tensor3D> &fields, 
+                     const Tensor3D &mask,
                      const Mesh &mesh,
                      const BoundaryConditionData &bcData,
                      const AxisTransformationMap &axisTransformation,
                      const std::string &baseFilename ) :
             m_fields( fields ),
+            m_mask( mask ),
             m_axisTransformation( axisTransformation ),
             m_transformedMesh( mesh ),
             m_transformedBcData( bcData ),
@@ -266,8 +268,10 @@ class FieldWriter
 
     private:
         const FieldData<Tensor3D> &m_fields;
+        const Tensor3D &m_mask;
         const AxisTransformationMap &m_axisTransformation;
         FieldData<Tensor3D> m_transformedFields;
+        Tensor3D m_transformedMask;
         FieldData<Tensor3D> m_transformedVertexFields;
         Mesh m_transformedMesh;
         BoundaryConditionData m_transformedBcData;
@@ -286,8 +290,9 @@ class FieldWriter
                                                                m_transformedMesh.cellFaces[Y].data(), 
                                                                m_transformedMesh.cellFaces[Z].data() };
 
-            VTK::scalarCollectionType<floatType> scalarMap = { {"Pressure", VTK::GridTypes::CELL_DATA, m_transformedFields.P.data()},
-                                                               {"Pressure", VTK::GridTypes::POINT_DATA, m_transformedVertexFields.P.data()}};
+            VTK::scalarCollectionType<floatType> scalarMap = { {"GeometryMask", VTK::GridTypes::CELL_DATA, m_transformedMask.data()},
+                                                               {"Pressure"    , VTK::GridTypes::CELL_DATA, m_transformedFields.P.data()},
+                                                               {"Pressure"    , VTK::GridTypes::POINT_DATA, m_transformedVertexFields.P.data()}};
 
             VTK::vectorCollectionType<floatType> vectorMap = { {"Velocity", VTK::GridTypes::CELL_DATA, { m_transformedFields.U[X].data(), 
                                                                                                          m_transformedFields.U[Y].data(), 
@@ -302,10 +307,18 @@ class FieldWriter
 
         void TransformData()
         {
+            // Remove ghost cells
             ForAllFieldData([&](intType f) { 
-                m_transformedFields[f] = FVT::RemoveGhostCells(m_fields[f], nGhost); 
+                m_transformedFields[f] = FVT::RemoveGhostCells( m_fields[f], nGhost ); 
             });
-            TransformFieldToUserCoordinates( m_transformedFields, m_axisTransformation );
+            m_transformedMask = FVT::RemoveGhostCells( m_mask, nGhost );
+
+            // Transform to user coordinates
+            TransformVectorFieldToUserCoordinates( m_transformedFields.U, m_axisTransformation );
+            TransformScalarFieldToUserCoordinates( m_transformedFields.P, m_axisTransformation );
+            TransformScalarFieldToUserCoordinates( m_transformedMask, m_axisTransformation );    
+    
+            // Calculate the vertex fields
             m_transformedVertexFields = GetVertexFields(m_transformedFields, m_transformedMesh, m_transformedBcData);
         }
 
@@ -377,7 +390,8 @@ class ResidualFieldWriter
             ForAllFieldData([&](intType f) { 
                 m_transformedFields[f] = FVT::RemoveGhostCells(m_fields[f], nGhost); 
             });
-            TransformFieldToUserCoordinates( m_transformedFields, m_axisTransformation );
+            TransformVectorFieldToUserCoordinates( m_transformedFields.U, m_axisTransformation );
+            TransformScalarFieldToUserCoordinates( m_transformedFields.P, m_axisTransformation );
         }
 
 };

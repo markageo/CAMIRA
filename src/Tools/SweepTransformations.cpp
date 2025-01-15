@@ -590,9 +590,8 @@ void TransformMeshToUserCoordinates( Mesh &mesh,
 
 }
 
-
-void TransformFieldToUserCoordinates( FieldData<Tensor3D> &fieldData,
-                                      const AxisTransformationMap &axisTransformation )
+void TransformScalarFieldToUserCoordinates( Tensor3D &scalarField,
+                                            const AxisTransformationMap &axisTransformation )
 {
     Eigen::array<intType , Axis::count> shuffleArray;
     Eigen::array<bool, Axis::count> reverseArray;
@@ -608,11 +607,17 @@ void TransformFieldToUserCoordinates( FieldData<Tensor3D> &fieldData,
 
     } );
 
-    // 3D arrays
-    ForAllFieldData( [&] (intType f) {
-        fieldData[f] = Tensor3D( fieldData[f] ).shuffle(shuffleArray).reverse(reverseArray);   // Have to make a copy
+    scalarField = Tensor3D( scalarField ).shuffle(shuffleArray).reverse(reverseArray);   // Have to make a copy
+}
+
+
+void TransformVectorFieldToUserCoordinates( EnumVector<Axis, Tensor3D> &vectorField,
+                                            const AxisTransformationMap &axisTransformation )
+{
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        TransformScalarFieldToUserCoordinates( vectorField[axis], axisTransformation );
     } );
-    TransformAxisEnumVectorToUser( fieldData.U, axisTransformation );
+    TransformAxisEnumVectorToUser( vectorField, axisTransformation );
 }
 
 
