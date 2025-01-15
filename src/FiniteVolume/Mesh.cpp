@@ -471,7 +471,7 @@ Mesh CreateMesh( const InputData &inputData )
               << "\n";
 
     // Calculate the total number of cells
-    intType nCells = mesh.nCells[X] * mesh.nCells[Y] * mesh.nCells [Z];
+    intType nCells = mesh.nCells[X] * mesh.nCells[Y] * mesh.nCells[Z];
 
     // Maximum and minimum cell growth ratio in each coordinate direction
     EnumVector<Axis, std::pair<floatType, floatType>> minMaxCellGrowthRatios;

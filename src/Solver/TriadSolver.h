@@ -135,38 +135,7 @@ public:
 
                              + pressureWideStencil;
 
-
-        // Only update the molecule if none of the cells are within the immersed boundary
-        const floatType masterMask = m_mask(igU, jgU, kgU) * m_mask(igV, jgV, kgV) * m_mask(igW, jgW, kgW) * m_mask(ig, jg, kg); 
-
-        // Update P from continuity
-        const floatType newP = ( 1 - m_fvCoeffs.Cont.relaxation ) * m_fields.P( ig, jg, kg )
-                                 + m_fvCoeffs.Cont.relaxation * 
-                                   ( bP 
-                                   - m_fvCoeffs.Cont.AU[X][sCU::cCoupled](ig) * bU 
-                                   - m_fvCoeffs.Cont.AU[Y][sCV::cCoupled](jg) * bV 
-                                   - m_fvCoeffs.Cont.AU[Z][sCW::cCoupled](kg) * bW 
-                                   ) * m_K(i, j, k);
-
-
-
-        // Update U from momentum
-        const floatType newU = ( 1 - m_fvCoeffs.Mom[X].relaxation) * m_fields.U[X]( igU, jgU, kgU )
-                                + m_fvCoeffs.Mom[X].relaxation * ( bU - m_fvCoeffs.Mom[X].AP[sUP::cCoupled](igU) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[X].diagCoeffInv(igU, jgU, kgU) );
-        
-        // Update V from momentum
-        const floatType newV = ( 1 - m_fvCoeffs.Mom[Y].relaxation ) * m_fields.U[Y]( igV, jgV, kgV )
-                                + m_fvCoeffs.Mom[Y].relaxation * ( bV - m_fvCoeffs.Mom[Y].AP[sVP::cCoupled](jgV) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Y].diagCoeffInv(igV, jgV, kgV) );
-        
-        // Update W from momentum
-        const floatType newW = ( 1 - m_fvCoeffs.Mom[Z].relaxation) * m_fields.U[Z]( igW, jgW, kgW ) 
-                                + m_fvCoeffs.Mom[Z].relaxation * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kgW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW) );
-
-        // Updating like this means that the old pressure value is used in the momentum update. 
-        m_fields.P( ig, jg, kg )       = (1.0f - masterMask) * m_fields.P( ig, jg, kg )        +  masterMask * newP;
-        m_fields.U[X]( igU, jgU, kgU ) = (1.0f - masterMask) * m_fields.U[X]( igU, jgU, kgU )  +  masterMask * newU;
-        m_fields.U[Y]( igV, jgV, kgV ) = (1.0f - masterMask) * m_fields.U[Y]( igV, jgV, kgV )  +  masterMask * newV;
-        m_fields.U[Z]( igW, jgW, kgW ) = (1.0f - masterMask) * m_fields.U[Z]( igW, jgW, kgW )  +  masterMask * newW;
+        UpdateMolecule( i, j, k, bU, bV, bW, bP );
     }
 
 
@@ -310,9 +279,39 @@ public:
 
                              + pressureWideStencil;
 
+        UpdateMolecule( i, j, k, bU, bV, bW, bP );
+        
+    }
+
+
+    // Perform molecule update step with masking
+    __attribute__((always_inline)) 
+    inline void UpdateMolecule( const intType i, 
+                                const intType j, 
+                                const intType k,
+                                const floatType bU, 
+                                const floatType bV, 
+                                const floatType bW, 
+                                const floatType bP )
+    {
+        using namespace FVT;
+        using enum Axis::ENUMDATA;
+        using enum TransportCoefficients::ENUMDATA;
+
+        // For indexing the staggered cells (with ghost)
+        const intType igU{ G( i + sCU::iCoupled ) }, jgU{ G( j                 ) }, kgU{ G( k                 ) },
+                      igV{ G( i                 ) }, jgV{ G( j + sCV::iCoupled ) }, kgV{ G( k                 ) },
+                      igW{ G( i                 ) }, jgW{ G( j                 ) }, kgW{ G( k + sCW::iCoupled ) },
+                       ig{ G( i                 ) },  jg{ G( j                 ) },  kg{ G( k                 ) };
 
         // Only update the molecule if none of the cells are within the immersed boundary
         const floatType masterMask = m_mask(igU, jgU, kgU) * m_mask(igV, jgV, kgV) * m_mask(igW, jgW, kgW) * m_mask(ig, jg, kg); 
+
+        // // Mask for each staggered cell
+        // const floatType maskU = m_mask(igU, jgU, kgU),
+        //                 maskV = m_mask(igV, jgV, kgV),
+        //                 maskW = m_mask(igW, jgW, kgW),
+        //                 maskP = m_mask(ig, jg, kg);
 
         // Update P from continuity
         const floatType newP = ( 1 - m_fvCoeffs.Cont.relaxation ) * m_fields.P( ig, jg, kg )
@@ -322,8 +321,6 @@ public:
                                    - m_fvCoeffs.Cont.AU[Y][sCV::cCoupled](jg) * bV 
                                    - m_fvCoeffs.Cont.AU[Z][sCW::cCoupled](kg) * bW 
                                    ) * m_K(i, j, k);
-
-
 
         // Update U from momentum
         const floatType newU = ( 1 - m_fvCoeffs.Mom[X].relaxation) * m_fields.U[X]( igU, jgU, kgU )
@@ -337,11 +334,14 @@ public:
         const floatType newW = ( 1 - m_fvCoeffs.Mom[Z].relaxation) * m_fields.U[Z]( igW, jgW, kgW ) 
                                 + m_fvCoeffs.Mom[Z].relaxation * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kgW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW) );
 
-        // Updating like this means that the old pressure value is used in the momentum update. 
-        m_fields.P( ig, jg, kg )       = (1.0f - masterMask) * m_fields.P( ig, jg, kg )        +  masterMask * newP;
+        // Pressure  update
+        m_fields.P( ig, jg, kg )       = (1.0f - masterMask ) * m_fields.P( ig, jg, kg )        +  masterMask * newP;
+
+        // Momentum update
         m_fields.U[X]( igU, jgU, kgU ) = (1.0f - masterMask) * m_fields.U[X]( igU, jgU, kgU )  +  masterMask * newU;
         m_fields.U[Y]( igV, jgV, kgV ) = (1.0f - masterMask) * m_fields.U[Y]( igV, jgV, kgV )  +  masterMask * newV;
         m_fields.U[Z]( igW, jgW, kgW ) = (1.0f - masterMask) * m_fields.U[Z]( igW, jgW, kgW )  +  masterMask * newW;
+
     }
 
 
@@ -357,7 +357,7 @@ public:
         intType igU, jgU, kgU,
                 igV, jgV, kgV,
                 igW, jgW, kgW;
-                
+
         intType iStart = 0,
                 iLength = m_ni,
 
@@ -386,11 +386,20 @@ public:
                     igV = G(i);
                     igW = G(i);
 
-                    m_K(i, j, k) = m_fvCoeffs.Cont.AP[p](G(i, j, k)) 
-                                 - m_fvCoeffs.Cont.AU[X][sCU::cCoupled](G(i)) * m_fvCoeffs.Mom[X].AP[sUP::cCoupled](igU) * m_fvCoeffs.Mom[X].diagCoeffInv(igU, jgU, kgU) 
-                                 - m_fvCoeffs.Cont.AU[Y][sCV::cCoupled](G(j)) * m_fvCoeffs.Mom[Y].AP[sVP::cCoupled](jgV) * m_fvCoeffs.Mom[Y].diagCoeffInv(igV, jgV, kgV) 
-                                 - m_fvCoeffs.Cont.AU[Z][sCW::cCoupled](G(k)) * m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kgW) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW);
-                    m_K(i, j, k) = 1.0f / m_K(i, j, k);
+                    // const floatType maskU = m_mask(igU, jgU, kgU),
+                    //                 maskV = m_mask(igV, jgV, kgV),
+                    //                 maskW = m_mask(igW, jgW, kgW);
+
+                    m_K(i, j, k) = m_fvCoeffs.Cont.AP[p](G(i, j, k))
+                                 - m_fvCoeffs.Cont.AU[X][sCU::cCoupled](G(i)) * m_fvCoeffs.Mom[X].AP[sUP::cCoupled](igU) * m_fvCoeffs.Mom[X].diagCoeffInv(igU, jgU, kgU) //* maskU
+                                 - m_fvCoeffs.Cont.AU[Y][sCV::cCoupled](G(j)) * m_fvCoeffs.Mom[Y].AP[sVP::cCoupled](jgV) * m_fvCoeffs.Mom[Y].diagCoeffInv(igV, jgV, kgV) //* maskV
+                                 - m_fvCoeffs.Cont.AU[Z][sCW::cCoupled](G(k)) * m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kgW) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW); //* maskW;
+                    if ( m_K(i, j, k) == 0.0f ) {
+                        m_K(i, j, k) = 0.0f;
+                    } else {
+                        m_K(i, j, k) = 1.0f / m_K(i, j, k);
+                    }
+                    
                 }
             }
         }

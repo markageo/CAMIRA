@@ -322,8 +322,8 @@ void UpdateFaceFluxesWithMWI( EnumVector< Axis, Tensor3D > &faceFluxes,
 
 
 EnumVector<Axis, Tensor3D> InitialiseFaceFluxes( const Mesh &mesh, 
-                                                const EnumVector<Axis, Tensor3D> &cellVelocities, 
-                                                const BoundaryConditionData &bcData)
+                                                 const EnumVector<Axis, Tensor3D> &cellVelocities, 
+                                                 const BoundaryConditionData &bcData)
 {
     // Faces are staggered in the negative direction:
     //   cellFaceFlux[X](i, j, k) -> u(i-1/2, j    , k    )
@@ -331,8 +331,8 @@ EnumVector<Axis, Tensor3D> InitialiseFaceFluxes( const Mesh &mesh,
     //   cellFaceFlux[Z](i, j, k) -> u(i    , j    , k-1/2)
     // Subscript indicates the normal direction of the face.
     EnumVector<Axis, Tensor3D> faceFluxes( {{Axis::X, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
-                                           {Axis::Y, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},
-                                           {Axis::Z, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} );
+                                            {Axis::Y, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},
+                                            {Axis::Z, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} );
                                                      
     UpdateFaceFluxes(faceFluxes, mesh, cellVelocities, bcData);
 
