@@ -136,9 +136,14 @@ BoundaryConditions
 
 
 SolidGeometry {
-    Sphere {
-        centerPosition = (2.5, 2.5, 2.5)
-        diameter       = 1
+    // Sphere {
+    //     centerPosition = (2.5, 2.5, 2.5)
+    //     diameter       = 1
+    // }
+
+    FromFile {
+        type = STL
+        filename = "input/sphere_external_geometry.stl"
     }
 }
 
@@ -149,14 +154,14 @@ Solver {
 
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = QUICK
+        advectionScheme         = upwind
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (0.6, 0.6, 0.6)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 0
+        maxOuterIterations = 100
         maxContinuityOuterResidual = 1e-6
         maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 

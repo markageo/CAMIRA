@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.05
+    nu   = 0.005
     transient = no
 }
 
@@ -98,6 +98,18 @@ BoundaryConditions
 }
 
 
+SolidGeometry {
+    Sphere {
+        centerPosition = (0.5, 0.5, 0.5)
+        diameter       = 0.25
+    }
+
+    //FromFile {
+    //    type = STL
+    //    filename = "input/lid_sphere_geometry.stl"
+    //}
+}
+
 Solver {
 
     Schemes {
@@ -108,7 +120,7 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (1, 1, 1)
+        implicitMomentumRelaxation = (0.6, 0.6, 0.6)
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 1000
@@ -152,6 +164,7 @@ Output {
     residualHistoryFilename = "output/residual_history.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
+    geometryOutputFilename  = "output/lid_sphere_geometry.stl"
     fieldWriteInterval      = 0
 
 }
