@@ -389,6 +389,7 @@ void SolveSteady( const InputData &inputData,
     auto& fields = mgLevels[0].fields;
     auto& mesh   = mgLevels[0].mesh;
     auto& bcData = mgLevels[0].bcData;
+    auto& mask   = mgLevels[0].ibData.mask;
 
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
@@ -403,7 +404,7 @@ void SolveSteady( const InputData &inputData,
     }
     std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
     
-    FieldWriter fieldWriter( fields, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
+    FieldWriter fieldWriter( fields, mask, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 
@@ -505,6 +506,7 @@ void SolveTransient( const InputData &inputData,
     auto& fields = mgLevels[0].fields;
     auto& mesh   = mgLevels[0].mesh;
     auto& bcData = mgLevels[0].bcData;
+    auto& mask   = mgLevels[0].ibData.mask;
 
     // Initialise residuals
     FieldData<floatType> residualsOuter(0.0f), residualsScaleFactor(0.0f);
@@ -519,7 +521,7 @@ void SolveTransient( const InputData &inputData,
     }
     std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
     
-    FieldWriter fieldWriter( fields, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
+    FieldWriter fieldWriter( fields, mask, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 

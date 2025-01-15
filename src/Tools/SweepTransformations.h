@@ -74,7 +74,8 @@ void TransformFieldToCodeCoordinates( FieldData<Tensor3D> &, const AxisTransform
 
 // Transform back to the coordinates consistentent with the user input
 void TransformMeshToUserCoordinates( Mesh &, const AxisTransformationMap &);
-void TransformFieldToUserCoordinates( FieldData<Tensor3D> &, const AxisTransformationMap &);
+void TransformScalarFieldToUserCoordinates( Tensor3D &, const AxisTransformationMap &);
+void TransformVectorFieldToUserCoordinates( EnumVector<Axis, Tensor3D> &, const AxisTransformationMap &);
 void TransformBCDataToUserCoordinates( BoundaryConditionData &, const AxisTransformationMap & );
 
 
