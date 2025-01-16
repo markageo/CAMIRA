@@ -1,4 +1,4 @@
-// Block flow
+// Periodic cube channel
 
 Model {
     rho  = 1
@@ -8,30 +8,27 @@ Model {
 
 Mesh {
 
-    domain = (8, 8, 8)
+    domain = (1, 1, 1)
 
     Grid x {
         Segment {
-            bounds     = (0, 8)
+            bounds     = (0, 1)
             nCells     = 100
             biasFactor = 1
         }
-
     }
-
 
     Grid y {
         Segment {
-            bounds     = (0, 8)
+            bounds     = (0, 1)
             nCells     = 100
             biasFactor = 1
         }
-
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 8)
+            bounds     = (0, 1)
             nCells     = 100
             biasFactor = 1
         }
@@ -42,7 +39,7 @@ Mesh {
 InitialConditions
 {
     type = uniform
-    u = 1
+    u = 0
     v = 0
     w = 0
     p = 0
@@ -51,30 +48,25 @@ InitialConditions
 
 BoundaryConditions
 {
-    // Outflow
+    // Periodic
     +x {
-        u = zeroGradient
-        v = zeroGradient
-        w = zeroGradient
-        p = uniform, 0
+        u = periodic
+        v = periodic
+        w = periodic
+        p = periodic
     }
 
-    // Inflow
+    // Periodic
     -x {
-        u = uniform, 1
-        v = uniform, 0
-        w = uniform, 0
-        p = zeroGradient
+        u = periodic
+        v = periodic
+        w = periodic
+        p = periodic
     }
 
-    // Symmetry
+    // Driven
     +y {
-        //u = zeroGradient
-        //v = uniform, 0
-        //w = zeroGradient
-        //p = zeroGradient
-        
-        u = uniform, 0
+        u = uniform, 1
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
@@ -106,51 +98,33 @@ BoundaryConditions
 }
 
 
-SolidGeometry {
-    FromFile {
-        type = STL
-        filename = "input/omar/cube.stl"
-    }
-    
-    //Block {
-    //	centerPosition = (4 4 1)
-    //	dimensions = (2 2 2)
-    //	rotation  = (0 45 0)
-    //}
-}
-
-
 Solver {
 
     Schemes {
 
-        timeScheme              = backwardsEuler
-        timeStepSize            = 0.01
-        numberOfTimesteps       = 100
-
         linearisation           = Picard
         momentumInterpolation   = implicit
         advectionScheme         = upwind
-        advectionBlendingFactor = 1
+        advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 100
-        maxContinuityOuterResidual = 1e-6
-        maxMomentumOuterResiduals   = (1e-6, 1e-6, 1e-6)
+        maxOuterIterations = 1000
+        maxContinuityOuterResidual = 1e-8
+        maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
 
     }
     
     LinearSolver {
 
         type = nestedLineSymmetric
-        maxIterations = 5
+        maxIterations = 1
         maxResiduals = 1e-3
 
         planeSweepDirection = +z
-        lineSweepDirection = +y
+        lineSweepDirection = +x
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
@@ -167,7 +141,7 @@ Solver {
 
         maxCoarseGridIterations = 500
         maxCoarseGridResiduals  = 1e-6
-        
+
     }
 
 }
@@ -178,14 +152,6 @@ Output {
     residualHistoryFilename = "output/residual_history.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
-    geometryOutputFilename  = "output/geometry.stl"
     fieldWriteInterval      = 0
-
-    Monitors {
-        Probe {
-            filename = "output/probe1.csv"
-            location = (1, 0.5, 0.5)
-        }
-    }
 
 }

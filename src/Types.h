@@ -65,9 +65,10 @@ struct BoundaryConditions
     {
         zeroGradient,
         fixed,
-        extrapolated
+        extrapolated,
+        periodic
     };
-    const static int count = 3;
+    const static int count = 4;
 };
 
 
