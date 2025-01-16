@@ -39,13 +39,8 @@
 
 // If compiled with -ffast-math (specifically -ffinite-math-only), compiler assumes nans cannot occur.
 // This may be important in certain functions.
-# if defined(__clang__)
+# if defined(__GNUC__) || defined(__GNUG__) || defined(__clang__)
 #   if !defined(__FAST_MATH__)
-#       define CFD_HONOR_INFINITIES_AND_NANS
-#   endif
-
-# elif defined(__GNUC__) || defined(__GNUG__)
-#   if (HONOR_INFINITIES) && (HONOR_NANS)
 #       define CFD_HONOR_INFINITIES_AND_NANS
 #   endif
 
