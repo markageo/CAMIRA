@@ -1,11 +1,11 @@
 #ifndef RESIDUAL_FUNCTIONS
 #define RESIDUAL_FUNCTIONS
 
+#include "../Macros.h"
 #include "../Types.h"
 #include "../FiniteVolume/FiniteVolume.h"
 #include "../Tools/FieldProbe.h"
 #include "../Tools/FVTools.h"
-#include "../Macros.h"
 
 #include <cmath>
 
@@ -369,7 +369,6 @@ inline void NormaliseResiduals( FieldData<floatType> &residuals,
 
 
 // Check if residual tolerence is met
-[[ maybe_unused ]]
 inline bool MetResidualTolerence( const FieldData<floatType> &residuals,
                                   const FieldData<floatType> &residualsTarget )
 {
@@ -385,22 +384,14 @@ inline bool MetResidualTolerence( const FieldData<floatType> &residuals,
 
 
 // Check if any residuals have diverged
-[[ maybe_unused ]]
 inline bool ResidualsDiverged( const FieldData<floatType> &residuals )
 {
     for ( intType i = 0; i != FieldData<floatType>::nData; i++ ) {
-
-        // Check if the compiler honours nans and infinities
-        #ifdef CFD_HONOR_INFINITIES_AND_NANS
-            if ( !std::isfinite( residuals[i] ) ) 
-                return true;
-        #else
-            #define CFD_MAX_RESIDUAL_BEFORE_DIVERGENCE 1e8f
-            if ( residuals[i] > CFD_MAX_RESIDUAL_BEFORE_DIVERGENCE )
-                return true;
-        #endif
-
+        if ( !std::isfinite( residuals[i] ) ) {
+            return true;
+        }   
     }
+
     return false;
 }
 

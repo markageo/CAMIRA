@@ -65,7 +65,7 @@ struct BoundaryConditions
     {
         zeroGradient,
         fixed,
-        extrapolated,
+        extrapolated
     };
     const static int count = 3;
 };

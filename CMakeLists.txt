@@ -93,7 +93,7 @@ if ( CFD_HAS_VTK_LIB )
 	endif()
 
 else()
-	message( STATUS "VTK library will no be used. Some features will be limited." )
+	message( STATUS "VTK library will not be used. Some features will be limited." )
 endif()
 
 
