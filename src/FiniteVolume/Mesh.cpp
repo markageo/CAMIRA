@@ -134,13 +134,18 @@ void CalculateInterpolationFactors_WeightedLinear( Tensor1D &interpFactors,
         interpFactors(i) = ( cellFaces(i) - cellCenters(i-1) ) 
                          / ( cellCenters(i) - cellCenters(i-1) );
     }
+
+    // Ghost cells are same size as first interior cell
+    interpFactors(0                     ) = 0.5f;
+    interpFactors(interpFactors.size()-1) = 0.5f;
 }
 
 
 
 void CalculateInterpolationFactors_Average( Tensor1D &interpFactors ) 
 {
-    for (int i = 1; i != interpFactors.size()-1; i++) {
+    // Ghost cell included
+    for (int i = 0; i != interpFactors.size(); i++) {
         interpFactors(i) = 0.5f;
     }
 }

@@ -11,6 +11,7 @@ namespace CFD
 using namespace FVT;
 
 // Set the ghost cells for all fields to give correct boundary condition
+// Assumes ghost cells are the same dimension as the last interior cell
 void SetGhostCells( FieldData<Tensor3D> &fields,
                     const Mesh &mesh,
                     const BoundaryConditionData &bcData )
