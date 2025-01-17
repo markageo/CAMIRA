@@ -179,10 +179,11 @@ void BoundaryFaceVelocities( EnumVector<Axis, Tensor3D> &faceVelocities,
         {
             floatType extrapFactor_p = mesh.extrapFactors[boundaryPatch].p;
             floatType extrapFactor_a = mesh.extrapFactors[boundaryPatch].a;
+            intType fieldEndIndex_a  = ( boundaryPatch == LUT::PositivePatch[ axis ] ) ? fieldEndIndex - 1 : fieldEndIndex + 1 ;
             faceVelocities[axis].chip(faceEndIndex, axis) = cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex  , axis) 
                                                                 * cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
-                                                          + cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex+1, axis) 
-                                                                * cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex+1, axis).constant( extrapFactor_a );
+                                                          + cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex_a, axis) 
+                                                                * cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex_a, axis).constant( extrapFactor_a );
             break;
         }
             
