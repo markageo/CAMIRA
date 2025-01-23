@@ -39,7 +39,7 @@ Mesh {
 InitialConditions
 {
     type = uniform
-    u = 0
+    u = 1
     v = 0
     w = 0
     p = 0
@@ -111,7 +111,7 @@ Solver {
         implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
-        maxOuterIterations = 1000
+        maxOuterIterations = 3
         maxContinuityOuterResidual = 1e-8
         maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
 
@@ -124,7 +124,7 @@ Solver {
         maxResiduals = 1e-3
 
         planeSweepDirection = +z
-        lineSweepDirection = +x
+        lineSweepDirection = +y
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1

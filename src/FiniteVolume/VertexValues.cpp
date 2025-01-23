@@ -131,13 +131,28 @@ namespace
                     Tensor2D offBoundary_p = CellPlaneToVertexPlane( field.chip(k_p, axis), mesh.interpFactors[axis1], mesh.interpFactors[axis2] );
 
                     intType k_a = ( boundaryPatch == LUT::PositivePatch[ axis ] ) ? k_p-1 : k_p+1;
-                    Tensor2D offBoundary_a = CellPlaneToVertexPlane( field.chip(k_a, axis), mesh.interpFactors[axis1], mesh.interpFactors[axis2] );;
+                    Tensor2D offBoundary_a = CellPlaneToVertexPlane( field.chip(k_a, axis), mesh.interpFactors[axis1], mesh.interpFactors[axis2] );
 
                     floatType extrapFactor_p = mesh.extrapFactors[boundaryPatch].p;
                     floatType extrapFactor_a = mesh.extrapFactors[boundaryPatch].a;
 
                     vertexField.chip(faceEndIndex, axis) = offBoundary_p * offBoundary_p.constant( extrapFactor_p )
                                                          + offBoundary_a * offBoundary_a.constant( extrapFactor_a );
+                    break;
+                }
+
+                case BC::periodic:
+                {
+                    intType loCellIndex = 0;
+                    Tensor2D loCellVertexPlane = CellPlaneToVertexPlane( field.chip(loCellIndex, axis), mesh.interpFactors[axis1], mesh.interpFactors[axis2] );
+
+                    intType hiCellIndex = mesh.nCells(axis) - 1;
+                    Tensor2D hiCellVertexPlane = CellPlaneToVertexPlane( field.chip(hiCellIndex, axis), mesh.interpFactors[axis1], mesh.interpFactors[axis2] );
+
+                    floatType interpFactor = mesh.cellLengths[axis]( loCellIndex ) / ( mesh.cellLengths[axis]( loCellIndex ) + mesh.cellLengths[axis]( hiCellIndex ) );
+
+                    vertexField.chip(faceEndIndex, axis) = loCellVertexPlane * loCellVertexPlane.constant( 1 - interpFactor )
+                                                         + hiCellVertexPlane * hiCellVertexPlane.constant( interpFactor );
                     break;
                 }
                     

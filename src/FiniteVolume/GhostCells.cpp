@@ -54,6 +54,21 @@ void SetGhostCells( FieldData<Tensor3D> &fields,
                                                        +   fields[f].chip( G(iCell_p), axis ).constant( 2.0f ) * extrapolatedFaceValues;
                     break;
                 }
+
+                case BC::periodic:
+                {
+                    intType loCellIndex = 0,
+                            hiCellIndex = mesh.nCells(axis) - 1;
+                    floatType denominator = mesh.cellLengths[axis](loCellIndex) + mesh.cellLengths[axis](hiCellIndex);
+                    floatType numerator   = ( boundaryPatch == LUT::PositivePatch[axis] ) ? 
+                                            mesh.cellLengths[axis](loCellIndex) - mesh.cellLengths[axis](hiCellIndex) :
+                                            mesh.cellLengths[axis](loCellIndex) + mesh.cellLengths[axis](loCellIndex) ; 
+                    floatType interpFactor =  numerator / denominator;
+                    auto cellFieldHi = fields[f].chip( G(hiCellIndex), axis );
+                    auto cellFieldLo = fields[f].chip( G(loCellIndex), axis );
+                    fields[f].chip( G(iCell_g), axis ) = cellFieldLo * cellFieldLo.constant( 1 - interpFactor )
+                                                       + cellFieldHi * cellFieldHi.constant( interpFactor );
+                }
                     
             }
 

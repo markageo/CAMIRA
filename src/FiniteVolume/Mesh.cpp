@@ -86,15 +86,19 @@ void CalculateCellCenters(Tensor1D &cellCenters,
 
 
 
-void CalculateCellCenterDiffInv(Tensor1D &cellCenterDiffInv, 
+void CalculateCellCenterDiffInv(Tensor1D &cellCenterDiffInv,
+                                const Tensor1D &cellLengths,
                                 const Tensor1D &cellCenters)
 {
-    // First and last element dont correspond to valid values
     intType nFaces = cellCenters.size() + 1;
 
     for (intType i = 1; i != nFaces-1; i++) {
         cellCenterDiffInv(i) = 1.0f/( cellCenters(i) - cellCenters(i-1) );
     }
+
+    // Ghost cells
+    cellCenterDiffInv(0)        = 1.0f / cellLengths( 0 );
+    cellCenterDiffInv(nFaces-1) = 1.0f / cellLengths( cellLengths.size()-1 );
 }
 
 
@@ -388,7 +392,7 @@ Mesh::Mesh(const InputData &inputData) :
             cellLengthsInv[axis] = cellLengths[axis].inverse();
 
             CalculateCellCenters(cellCenters[axis], cellLengths[axis], inputData.meshSegments[axis].front().startCoordinate);
-            CalculateCellCenterDiffInv(cellCenterDiffInv[axis], cellCenters[axis]);
+            CalculateCellCenterDiffInv(cellCenterDiffInv[axis], cellLengths[axis], cellCenters[axis]);
 
             CalculateCellFaces(cellFaces[axis], cellLengths[axis], inputData.meshSegments[axis].front().startCoordinate);
 
@@ -434,7 +438,7 @@ Mesh::Mesh(const EnumVector<Axis, Tensor1D> &cellFacesArg,
             cellLengthsInv[axis] = cellLengths[axis].inverse();
 
             CalculateCellCenters(cellCenters[axis], cellLengths[axis], cellFaces[axis](0));
-            CalculateCellCenterDiffInv(cellCenterDiffInv[axis], cellCenters[axis]);
+            CalculateCellCenterDiffInv(cellCenterDiffInv[axis], cellLengths[axis], cellCenters[axis]);
 
 
             switch ( inputData.schemes.faceInterpolationScheme ) {
@@ -542,7 +546,7 @@ Mesh CoarsenMesh( const Mesh &fineMesh,
         coarseMesh.cellLengthsInv[axis] = coarseMesh.cellLengths[axis].inverse();
 
         CalculateCellCenters(coarseMesh.cellCenters[axis], coarseMesh.cellLengths[axis], fineMesh.cellFaces[axis](0));
-        CalculateCellCenterDiffInv(coarseMesh.cellCenterDiffInv[axis], coarseMesh.cellCenters[axis]);
+        CalculateCellCenterDiffInv(coarseMesh.cellCenterDiffInv[axis], coarseMesh.cellLengths[axis], coarseMesh.cellCenters[axis]);
 
         CalculateCellFaces(coarseMesh.cellFaces[axis], coarseMesh.cellLengths[axis], fineMesh.cellFaces[axis](0));
 
