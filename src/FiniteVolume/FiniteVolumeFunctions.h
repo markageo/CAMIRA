@@ -89,7 +89,7 @@ void UpdateFVCoefficients( FVCoefficients &,
                            const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &,
                            const EnumVector< Axis, Tensor3D > &,
                            const IBData &,
-                           const BoundaryConditionData &);
+                           const BoundaryConditionData & );
 
 
 // ----------------------------------------- Definition in GhostCells.cpp --------------------------------------- //
