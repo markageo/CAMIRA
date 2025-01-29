@@ -120,7 +120,7 @@ void AddIBDataForDirection( IBCell &ibCell,
 
     // Ensure that there is enough space between the IB and other IBs and the domain boundary
     if ( !CellIsFluid( cellIndex_a, mask, mesh ) ) {
-        throw std::runtime_error( "Invalid immersed boundary geometry and mesh specification: Not enough fluid cells between solid and domain boundaries!" );
+        throw std::runtime_error( "Invalid immersed boundary geometry and mesh specification: There must be at least one fluid cell between domain and solid boundaries on all grid levels!" );
     }
 
     // Distance from cell center to immersed boundary along this coordinate direction
