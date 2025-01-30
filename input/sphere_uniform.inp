@@ -13,7 +13,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 10)
-            nCells     = 480
+            nCells     = 400
             biasFactor = 1
         }
     }
@@ -22,7 +22,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 5)
-            nCells     = 240
+            nCells     = 200
             biasFactor = 1
         }
     }
@@ -30,7 +30,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 5)
-            nCells     = 240
+            nCells     = 200
             biasFactor = 1
         }
     }
@@ -100,6 +100,7 @@ BoundaryConditions
 
 
 SolidGeometry {
+    boundaryTreatement = staircase
     Sphere {
         centerPosition = (2.5, 2.5, 2.5)
         diameter       = 1

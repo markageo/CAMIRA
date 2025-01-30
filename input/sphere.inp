@@ -136,6 +136,9 @@ BoundaryConditions
 
 
 SolidGeometry {
+
+    boundaryTreatement = staircase
+
     // Sphere {
     //     centerPosition = (2.5, 2.5, 2.5)
     //     diameter       = 1

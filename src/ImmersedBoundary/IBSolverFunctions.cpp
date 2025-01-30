@@ -98,7 +98,7 @@ FieldData<floatType> ExtrapolateFaceToGhostCells( const TensorIndex3D &cellIndex
 
     ForAllFieldData( [&] (intType f) {
         ghostCellValues[f] = sourceTermData.ghostExtrapCoeff_p  * fields[f]( G(cellIndex) )
-                           + sourceTermData.ghostExtrapCoeff_f  * sourceTermData.faceValues[f];
+                           + sourceTermData.ghostExtrapCoeff_f  * sourceTermData.faceValues[f];         
     } );
 
     return ghostCellValues;

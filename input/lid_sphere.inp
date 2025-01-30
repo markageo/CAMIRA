@@ -99,6 +99,7 @@ BoundaryConditions
 
 
 SolidGeometry {
+    boundaryTreatement = directionalImmersedBoundary
     Sphere {
         centerPosition = (0.5, 0.5, 0.5)
         diameter       = 0.25

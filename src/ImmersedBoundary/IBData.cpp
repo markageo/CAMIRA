@@ -95,7 +95,8 @@ void AddIBDataForDirection( IBCell &ibCell,
                             const intType directionIndex,
                             const Tensor3D &mask,
                             const Mesh &mesh,
-                            const Tree &tree)
+                            const Tree &tree, 
+                            const InputData &inputData )
 {
     using enum Axis::ENUMDATA;
 
@@ -123,14 +124,31 @@ void AddIBDataForDirection( IBCell &ibCell,
         throw std::runtime_error( "Invalid immersed boundary geometry and mesh specification: There must be at least one fluid cell between domain and solid boundaries on all grid levels!" );
     }
 
-    // Distance from cell center to immersed boundary along this coordinate direction
-    fVector3 queryPointCoords( mesh.cellCenters[X](cellIndex[X]),
-                               mesh.cellCenters[Y](cellIndex[Y]),
-                               mesh.cellCenters[Z](cellIndex[Z]) );
-    fVector3 rayDirection( 0, 0, 0 );
-    rayDirection[ axis ] = static_cast<floatType>( directionIndex );
-    sourceTermData.ibDistance = NearestRayIntersection(tree, queryPointCoords, rayDirection);
-    floatType ibDistance = sourceTermData.ibDistance;
+    switch ( inputData.geoemtryBoundaryTreatement ) {
+        case GeometryBoundaryTreatement::DirectionalImmersedBoundary:
+        {
+            // Distance from cell center to immersed boundary along this coordinate direction
+            fVector3 queryPointCoords( mesh.cellCenters[X](cellIndex[X]),
+                                       mesh.cellCenters[Y](cellIndex[Y]),
+                                       mesh.cellCenters[Z](cellIndex[Z]) );
+            fVector3 rayDirection( 0, 0, 0 );
+            rayDirection[ axis ] = static_cast<floatType>( directionIndex );
+            sourceTermData.ibDistance = NearestRayIntersection(tree, queryPointCoords, rayDirection);
+            break;
+        }
+        
+        case CFD::GeometryBoundaryTreatement::Staircase:
+        {   
+            // Distance to the nearest cell face, approximates the immersed boundary to be on the cell face
+            // i.e. staircase approximation
+            sourceTermData.ibDistance = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f;
+            break;
+        }
+
+        default:
+            break;
+    }
+    const floatType &ibDistance = sourceTermData.ibDistance;
 
 
     // Face area vector
@@ -261,7 +279,8 @@ void SetVelocityFluxCorrectionCoefficient( IBData &ibData,
 
 
 IBData ConstructIBData( const Polyhedron &geometry,
-                        const Mesh &mesh )
+                        const Mesh &mesh,
+                        const InputData &inputData )
 {
 
     using enum Axis::ENUMDATA;
@@ -302,7 +321,7 @@ IBData ConstructIBData( const Polyhedron &geometry,
                     bool atHiBoundary = ( cellIndex[axis] == mesh.nCells[axis]-1  );
                     if ( !atHiBoundary && static_cast<intType>( mask(G(hiSideCellIndex)) ) == CellType::Solid ) {
                         CheckIBCellPtr();
-                        AddIBDataForDirection( *ibCellPtr, axis, +1, mask, mesh, tree );
+                        AddIBDataForDirection( *ibCellPtr, axis, +1, mask, mesh, tree, inputData );
                     }
 
                     // Solid on lo side
@@ -311,7 +330,7 @@ IBData ConstructIBData( const Polyhedron &geometry,
                     bool atLoBoundary = ( cellIndex[axis] == 0  );
                     if ( !atLoBoundary && static_cast<intType>( mask(G(loSideCellIndex)) ) == CellType::Solid ) {
                         CheckIBCellPtr();
-                        AddIBDataForDirection( *ibCellPtr, axis, -1, mask, mesh, tree );
+                        AddIBDataForDirection( *ibCellPtr, axis, -1, mask, mesh, tree, inputData );
                     }
 
                 } );
@@ -346,7 +365,7 @@ IBData CreateImmersedBoundaryData( const InputData &inputData,
     }
 
     Polyhedron P = MakeGeometry( inputData );
-    ibData = ConstructIBData( P, mesh );
+    ibData = ConstructIBData( P, mesh, inputData );
 
     // Make a new new inputData object in the user coordinates to make another geometry to be output to file
     if ( inputData.outputGeometry ) {
