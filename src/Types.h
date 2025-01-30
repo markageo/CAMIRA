@@ -139,6 +139,10 @@ enum class Linearisation {
     Picard, Newton
 };
 
+enum class GeometryBoundaryTreatement {
+    Staircase, DirectionalImmersedBoundary
+};
+
 enum class MomentumInterpolation {
     Implicit, SemiExplicit
 };

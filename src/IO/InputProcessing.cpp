@@ -351,6 +351,16 @@ namespace
             
         const pt::ptree &solidGeometryTree = solidGeometryTreeOptional.get();
 
+        // Geometry boundary treatement
+        std::string valueString = solidGeometryTree.get<std::string>( "boundaryTreatement" );
+        if        ( valueString == "directionalImmersedBoundary" ) {
+            inputData.geoemtryBoundaryTreatement = GeometryBoundaryTreatement::DirectionalImmersedBoundary;
+        } else if ( valueString == "staircase" ) {
+            inputData.geoemtryBoundaryTreatement = GeometryBoundaryTreatement::Staircase;
+        } else {
+            throw std::runtime_error(  "'" + valueString + "' is not a valid solid geometry treatement method." );
+        }
+
         // Read blocks
         for (auto solidObject : solidGeometryTree) {
 
@@ -372,7 +382,6 @@ namespace
                 continue;
             }
 
-            throw std::runtime_error(  "'" + solidObject.first + "' is not a valid SolidGeometry object." );
         }        
     }
 
