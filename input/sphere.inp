@@ -159,14 +159,14 @@ Solver {
         momentumInterpolation   = implicit
         advectionScheme         = upwind
         advectionBlendingFactor = 1
-        faceInterpolationScheme = weightedLinear
+        faceInterpolationScheme = average
 
         implicitMomentumRelaxation = (0.6, 0.6, 0.6)
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 100
-        maxContinuityOuterResidual = 1e-6
-        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+        maxContinuityOuterResidual = 1e-12
+        maxMomentumOuterResiduals  = (1e-12, 1e-12, 1e-12)
 
     }
     
