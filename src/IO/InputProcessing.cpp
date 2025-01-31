@@ -526,6 +526,12 @@ namespace
             bcStruct.uniformValue = 0.0;
             return bcStruct;
 
+        } else if (bcTypeString == "periodic") {
+
+            bcStruct.type = BC::periodic;
+            bcStruct.uniformValue = 0.0;
+            return bcStruct;
+
         } else {
 
             throw std::runtime_error( "'" + bcTypeString + "' is not a valid boundary condition type." );
@@ -563,6 +569,24 @@ namespace
             inputData.boundaryConditions.P[patchEnum] = ReadBoundaryValueString( "p", *boundaryPatchTreePointer, patchEnum, inputData.inputFileDirectory );
 
         }
+
+
+        // Verify that periodic boundary conditions are set for both sides
+        EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
+
+            ForAllFieldData( [&] (intType f) {
+                if ( inputData.boundaryConditions[f][bp].type == BoundaryConditions::periodic ) {
+
+                    Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ bp ];
+                    BoundaryPatches::ENUMDATA bpOpposite = ( bp == LUT::PositivePatch[axis] ) ? LUT::NegativePatch[axis] : LUT::PositivePatch[axis];
+                    if ( inputData.boundaryConditions[f][bpOpposite].type != BoundaryConditions::periodic ) {
+                         throw std::runtime_error( "Specification of periodic boundary conditions requires both sides of domain to be specified as periodic." );
+                    }
+
+                }
+            } );
+
+        } );
 
     }
 

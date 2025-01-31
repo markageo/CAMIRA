@@ -71,6 +71,7 @@ struct FVCoefficients
     
     EnumVector<Axis, MomentumEquation > Mom;
     ContinuityEquation Cont;
+    floatType nu, rho;
     iArray3 nCells;
 };
 

@@ -180,11 +180,23 @@ void BoundaryFaceVelocities( EnumVector<Axis, Tensor3D> &faceVelocities,
             floatType extrapFactor_p = mesh.extrapFactors[boundaryPatch].p;
             floatType extrapFactor_a = mesh.extrapFactors[boundaryPatch].a;
             intType fieldEndIndex_a  = ( boundaryPatch == LUT::PositivePatch[ axis ] ) ? fieldEndIndex - 1 : fieldEndIndex + 1 ;
-            faceVelocities[axis].chip(faceEndIndex, axis) = cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex  , axis) 
-                                                                * cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex  , axis).constant( extrapFactor_p )
-                                                          + cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex_a, axis) 
-                                                                * cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex_a, axis).constant( extrapFactor_a );
+            auto cellField_p = cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex  , axis);
+            auto cellField_a = cellVelocities[velocityComponent].slice(offsets, extents).chip(fieldEndIndex_a, axis);
+            faceVelocities[axis].chip(faceEndIndex, axis) = cellField_p * cellField_p.constant( extrapFactor_p )
+                                                          + cellField_a * cellField_a.constant( extrapFactor_a );
             break;
+        }
+
+
+        case BC::periodic:
+        {
+            intType loCellIndex = 0,
+                    hiCellIndex = mesh.nCells(axis)-1;
+            floatType interpFactor = mesh.cellLengths[axis](loCellIndex) / ( mesh.cellLengths[axis](loCellIndex) + mesh.cellLengths[axis](hiCellIndex) );
+            auto cellFieldHi = cellVelocities[velocityComponent].slice(offsets, extents).chip(hiCellIndex, axis);
+            auto cellFieldLo = cellVelocities[velocityComponent].slice(offsets, extents).chip(loCellIndex, axis);
+            faceVelocities[axis].chip(faceEndIndex, axis) = cellFieldLo * cellFieldLo.constant( 1.0f - interpFactor )
+                                                          + cellFieldHi * cellFieldHi.constant( interpFactor );
         }
             
 

@@ -82,7 +82,8 @@ void DiffusionPositiveBoundary( EnumVector< Axis,  EnumVector<TransportCoefficie
     using enum TransportCoefficients::ENUMDATA;
 
     const BoundaryPatches::ENUMDATA boundaryPatch = LUT::PositivePatch[axis];
-    const TransportCoefficients::ENUMDATA west = LUT::LoCoeff[axis];
+    const TransportCoefficients::ENUMDATA west = LUT::LoCoeff[axis],
+                                          east = LUT::HiCoeff[axis];
     const intType iCellBound = mesh.nCells(axis) - 1;
 
     switch ( bcDataPatches[boundaryPatch].type ) {
@@ -100,6 +101,11 @@ void DiffusionPositiveBoundary( EnumVector< Axis,  EnumVector<TransportCoefficie
             diff[axis][p   ](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * (mesh.extrapFactors[boundaryPatch].p - 1);  
             diff[axis][west](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * mesh.extrapFactors[boundaryPatch].a;
             break;
+
+        case BC::periodic:
+            diff[axis][p   ](iCellBound) +=   mesh.cellCenterDiffInv[axis](iCellBound + 1); 
+            diff[axis][east](iCellBound) += - mesh.cellCenterDiffInv[axis](iCellBound + 1);           
+           break;
 
         default:
             break;
@@ -120,7 +126,8 @@ void DiffusionNegativeBoundary( EnumVector< Axis, EnumVector<TransportCoefficien
     using enum TransportCoefficients::ENUMDATA;
 
     const BoundaryPatches::ENUMDATA boundaryPatch = LUT::NegativePatch[axis];
-    const TransportCoefficients::ENUMDATA east = LUT::HiCoeff[axis];
+    const TransportCoefficients::ENUMDATA west = LUT::LoCoeff[axis],
+                                          east = LUT::HiCoeff[axis];
     const intType iCellBound = 0;
 
     switch ( bcDataPatches[boundaryPatch].type ) {
@@ -137,6 +144,11 @@ void DiffusionNegativeBoundary( EnumVector< Axis, EnumVector<TransportCoefficien
         case BC::extrapolated:
             diff[axis][p   ](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * (mesh.extrapFactors[boundaryPatch].p - 1);
             diff[axis][east](iCellBound) += - 2*mesh.cellLengthsInv[axis](iCellBound) * mesh.extrapFactors[boundaryPatch].a;
+            break;
+
+        case BC::periodic:
+            diff[axis][p   ](iCellBound) +=   mesh.cellCenterDiffInv[axis](0); 
+            diff[axis][west](iCellBound) += - mesh.cellCenterDiffInv[axis](0);   
             break;
 
         default:
@@ -421,7 +433,8 @@ void AdvectionPositiveBoundary( EnumVector<TransportCoefficients, Tensor3D> &coe
     using enum TransportCoefficients::ENUMDATA;
 
     const BoundaryPatches::ENUMDATA boundaryPatch = LUT::PositivePatch[axis];
-    const TransportCoefficients::ENUMDATA west = LUT::LoCoeff[axis];
+    const TransportCoefficients::ENUMDATA west = LUT::LoCoeff[axis],
+                                          east = LUT::HiCoeff[axis];
     const intType iCellBound = mesh.nCells(axis) - 1;   // Index of cell at the boundary
     const intType iFaceBound = iCellBound + 1;          // Index of face at the boundary
     const TensorIndex3D offsets = {nGhost, nGhost, nGhost},
@@ -447,6 +460,13 @@ void AdvectionPositiveBoundary( EnumVector<TransportCoefficients, Tensor3D> &coe
                                                                          * laggedVelocity[axis].chip(iFaceBound, axis).constant( mesh.extrapFactors[boundaryPatch].a * mesh.cellLengthsInv[axis](iCellBound) );
             break;
 
+        case BC::periodic:
+            coeffs[p   ].slice(offsets, extents).chip(iCellBound, axis) += laggedVelocity[axis].chip(iFaceBound, axis).constant( ( 1 - mesh.interpFactors[axis](iFaceBound) ) *  mesh.cellLengthsInv[axis](iCellBound) )
+                                                                         * laggedVelocity[axis].chip(iFaceBound, axis);
+            coeffs[east].slice(offsets, extents).chip(iCellBound, axis) += laggedVelocity[axis].chip(iFaceBound, axis).constant( mesh.interpFactors[axis](iFaceBound) * mesh.cellLengthsInv[axis](iCellBound) )
+                                                                         * laggedVelocity[axis].chip(iFaceBound, axis);
+            break;
+
         default:
             break;
     }
@@ -465,7 +485,8 @@ void AdvectionNegativeBoundary( EnumVector<TransportCoefficients, Tensor3D> &coe
     using enum TransportCoefficients::ENUMDATA;
 
     const BoundaryPatches::ENUMDATA boundaryPatch = LUT::NegativePatch[axis];
-    const TransportCoefficients::ENUMDATA east = LUT::HiCoeff[axis];
+    const TransportCoefficients::ENUMDATA west = LUT::LoCoeff[axis],
+                                          east = LUT::HiCoeff[axis];
     const intType iCellBound = 0;   // Index of cell at the boundary 
     const intType iFaceBound = 0;   // Index of face at the boundary
     const TensorIndex3D offsets = {nGhost, nGhost, nGhost},
@@ -489,6 +510,13 @@ void AdvectionNegativeBoundary( EnumVector<TransportCoefficients, Tensor3D> &coe
                                                                          *   laggedVelocity[axis].chip(iFaceBound, axis).constant( mesh.extrapFactors[boundaryPatch].p * mesh.cellLengthsInv[axis](iCellBound) );
             coeffs[east].slice(offsets, extents).chip(iCellBound, axis) += - laggedVelocity[axis].chip(iFaceBound, axis) 
                                                                          *   laggedVelocity[axis].chip(iFaceBound, axis).constant( mesh.extrapFactors[boundaryPatch].a * mesh.cellLengthsInv[axis](iCellBound) );
+            break;
+
+        case BC::periodic:
+            coeffs[p   ].slice(offsets, extents).chip(iCellBound, axis) += - laggedVelocity[axis].chip(iFaceBound, axis).constant( mesh.interpFactors[axis](iFaceBound) *  mesh.cellLengthsInv[axis](iCellBound) )
+                                                                         *   laggedVelocity[axis].chip(iFaceBound, axis);
+            coeffs[west].slice(offsets, extents).chip(iCellBound, axis) += - laggedVelocity[axis].chip(iFaceBound, axis).constant( ( 1 - mesh.interpFactors[axis](iFaceBound) ) * mesh.cellLengthsInv[axis](iCellBound) )
+                                                                         *   laggedVelocity[axis].chip(iFaceBound, axis);
             break;
 
         default:
@@ -830,11 +858,11 @@ void AddDiffusion( MomentumEquation &momentumEquation,
 \*---------------------------------------------------------------------------------------------------------------*/
 
 
-void InterpolationPositiveBoundary( EnumVector< TransportCoefficients, Tensor1D > &coeffs, 
-                                    EnumVector< BoundaryPatches, Tensor2D > &boundaryConstants,
-                                    const Mesh &mesh,  
-                                    const BoundaryConditionData::Patches &bcDataPatches,
-                                    const Axis::ENUMDATA axis)
+void FaceInterpolatedPositiveBoundaryStencil( EnumVector< TransportCoefficients, Tensor1D > &coeffs, 
+                                              EnumVector< BoundaryPatches, Tensor2D > &boundaryConstants,
+                                              const Mesh &mesh,  
+                                              const BoundaryConditionData::Patches &bcDataPatches,
+                                              const Axis::ENUMDATA axis)
 {
 
     using BC = BoundaryConditions::ENUMDATA;
@@ -843,7 +871,8 @@ void InterpolationPositiveBoundary( EnumVector< TransportCoefficients, Tensor1D 
     using FVT::G;
 
     const BoundaryPatches::ENUMDATA boundaryPatch = LUT::PositivePatch[axis];
-    const TransportCoefficients::ENUMDATA west = LUT::LoCoeff[axis];
+    const TransportCoefficients::ENUMDATA east = LUT::HiCoeff[axis],
+                                          west = LUT::LoCoeff[axis];
     const intType iCellBound = mesh.nCells(axis) - 1;
 
     switch ( bcDataPatches[boundaryPatch].type ) {
@@ -856,12 +885,17 @@ void InterpolationPositiveBoundary( EnumVector< TransportCoefficients, Tensor1D 
         case BC::fixed:
             coeffs[p   ]( G(iCellBound) ) += 0;
             coeffs[west]( G(iCellBound) ) += 0;
-            boundaryConstants[boundaryPatch] = bcDataPatches[boundaryPatch].value;
+            boundaryConstants[boundaryPatch] = bcDataPatches[boundaryPatch].value; 
             break;
 
         case BC::extrapolated:
             coeffs[p   ]( G(iCellBound) ) += mesh.extrapFactors[boundaryPatch].p;
             coeffs[west]( G(iCellBound) ) += mesh.extrapFactors[boundaryPatch].a;
+            break;
+
+        case BC::periodic:
+            coeffs[p   ]( G(iCellBound) ) += 1 - mesh.interpFactors[axis](iCellBound + 1);
+            coeffs[east]( G(iCellBound) ) += mesh.interpFactors[axis](iCellBound + 1);
             break;
 
         default:
@@ -871,11 +905,11 @@ void InterpolationPositiveBoundary( EnumVector< TransportCoefficients, Tensor1D 
 }
 
 
-void InterpolationNegativeBoundary( EnumVector< TransportCoefficients, Tensor1D > &coeffs, 
-                                    EnumVector< BoundaryPatches, Tensor2D > &boundaryConstants,
-                                    const Mesh &mesh,  
-                                    const BoundaryConditionData::Patches &bcDataPatches, 
-                                    const Axis::ENUMDATA axis)
+void FaceInterpolatedNegativeBoundaryStencil( EnumVector< TransportCoefficients, Tensor1D > &coeffs, 
+                                              EnumVector< BoundaryPatches, Tensor2D > &boundaryConstants,
+                                              const Mesh &mesh,  
+                                              const BoundaryConditionData::Patches &bcDataPatches, 
+                                              const Axis::ENUMDATA axis)
 {
 
     using BC = BoundaryConditions::ENUMDATA;
@@ -884,7 +918,8 @@ void InterpolationNegativeBoundary( EnumVector< TransportCoefficients, Tensor1D 
     using FVT::G;
 
     const BoundaryPatches::ENUMDATA boundaryPatch = LUT::NegativePatch[axis];
-    const TransportCoefficients::ENUMDATA east = LUT::HiCoeff[axis];
+    const TransportCoefficients::ENUMDATA east = LUT::HiCoeff[axis],
+                                          west = LUT::LoCoeff[axis];
     const intType iCellBound = 0;
 
     switch ( bcDataPatches[boundaryPatch].type ) {
@@ -897,7 +932,7 @@ void InterpolationNegativeBoundary( EnumVector< TransportCoefficients, Tensor1D 
         case BC::fixed:
             coeffs[p   ]( G(iCellBound) ) += 0;
             coeffs[east]( G(iCellBound) ) += 0;
-            boundaryConstants[boundaryPatch] = - bcDataPatches[boundaryPatch].value;
+            boundaryConstants[boundaryPatch] = - bcDataPatches[boundaryPatch].value; 
             break;
 
         case BC::extrapolated:
@@ -905,10 +940,56 @@ void InterpolationNegativeBoundary( EnumVector< TransportCoefficients, Tensor1D 
             coeffs[east]( G(iCellBound) ) += - mesh.extrapFactors[boundaryPatch].a;
             break;
 
+        case BC::periodic:
+            coeffs[p   ]( G(iCellBound) ) += - mesh.interpFactors[axis](0);
+            coeffs[west]( G(iCellBound) ) += - ( 1 - mesh.interpFactors[axis](0) );
+            break;
+
         default:
             break;
     }
 
+}
+
+
+void AddFaceInterpolatedBoundarySources( EnumVector< BoundaryPatches, Tensor2D > &boundaryConstants,
+                                         const Mesh &mesh,  
+                                         const BoundaryConditionData::Patches &bcDataPatches,
+                                         const BoundaryPatches::ENUMDATA boundaryPatch )
+{
+    using BC = BoundaryConditions::ENUMDATA;
+
+    const Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[boundaryPatch];
+    const floatType sign = ( boundaryPatch == LUT::PositivePatch[axis] ) ? +1.0f : -1.0f;
+
+    switch ( bcDataPatches[boundaryPatch].type ) {
+        
+        case BC::zeroGradient:
+            /* NULL */
+            break;
+
+        case BC::fixed:
+            boundaryConstants[boundaryPatch] = boundaryConstants[boundaryPatch].constant(sign) * bcDataPatches[boundaryPatch].value; 
+            break;
+
+        case BC::extrapolated:
+            /* NULL */
+            break;
+
+        case BC::periodic:
+        {
+            /* NULL */
+        }
+            
+        default:
+            break;
+    }
+
+    if ( boundaryPatch == LUT::PositivePatch[axis] ) {
+        boundaryConstants[ boundaryPatch ] *= boundaryConstants[ boundaryPatch ].constant( mesh.cellLengthsInv[axis]( mesh.nCells(axis)-1 ) );
+    } else {
+        boundaryConstants[ boundaryPatch ] *= boundaryConstants[ boundaryPatch ].constant( mesh.cellLengthsInv[axis]( 0 ) );
+    }
 }
 
 
@@ -940,8 +1021,8 @@ void SetFaceInterpolatedCoefficients( EnumVector<TransportCoefficients, Tensor1D
     }
 
     // Boundary faces
-    InterpolationPositiveBoundary(coeffs, boundaryConstants, mesh, bcDataPatches, axis);
-    InterpolationNegativeBoundary(coeffs, boundaryConstants, mesh, bcDataPatches, axis);
+    FaceInterpolatedPositiveBoundaryStencil(coeffs, boundaryConstants, mesh, bcDataPatches, axis);
+    FaceInterpolatedNegativeBoundaryStencil(coeffs, boundaryConstants, mesh, bcDataPatches, axis);
     
     // Multiply by inverse of cell length
     for (intType i = 0; i != mesh.nCells(axis); i++) {
@@ -949,36 +1030,63 @@ void SetFaceInterpolatedCoefficients( EnumVector<TransportCoefficients, Tensor1D
         coeffs[east](G(i)) *= mesh.cellLengthsInv[axis](i);
         coeffs[west](G(i)) *= mesh.cellLengthsInv[axis](i); 
     }
-    boundaryConstants[ LUT::PositivePatch[axis] ] *= boundaryConstants[ LUT::PositivePatch[axis] ].constant( mesh.cellLengthsInv[axis]( mesh.nCells(axis)-1 ) );
-    boundaryConstants[ LUT::NegativePatch[axis] ] *= boundaryConstants[ LUT::NegativePatch[axis] ].constant( mesh.cellLengthsInv[axis]( 0 ) );
+    
 }
 
 
+void SetContinuityVelocityCoefficients( ContinuityEquation &continuityEquation, 
+                                        const Mesh &mesh, 
+                                        const EnumVector< Axis, BoundaryConditionData::Patches > &velBcData)
+{
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        SetFaceInterpolatedCoefficients(continuityEquation.AU[axis], continuityEquation.BUBoundary, mesh, velBcData[axis], axis);
+    } );   
+}
 
-// Divide pressure terms in momentum equaqtions by density
-void DivideMomentumPressureByDensity( MomentumEquation &momentumEquation, 
-                                      const floatType rho)
-{ 
+
+void SetMomentumPressureCoefficients( MomentumEquation &momentumEquation, 
+                                      const floatType rho,
+                                      const Mesh &mesh, 
+                                      const BoundaryConditionData::Patches &bcDataPatches)
+{
     using enum TransportCoefficients::ENUMDATA;
 
-    Axis::ENUMDATA axis = momentumEquation.component;
-
-    auto &coeffs            = momentumEquation.AP;
-    auto &boundaryConstants = momentumEquation.BPBoundary;
-
+    Axis::ENUMDATA axis     = momentumEquation.component;
     const TransportCoefficients::ENUMDATA east = LUT::HiCoeff[axis],    // These are just names, they can be north, south etc.
                                           west = LUT::LoCoeff[axis];  
 
-    coeffs[p   ] /= coeffs[p   ].constant( rho );
-    coeffs[east] /= coeffs[west].constant( rho );
-    coeffs[west] /= coeffs[west].constant( rho );
+    SetFaceInterpolatedCoefficients(momentumEquation.AP, momentumEquation.BPBoundary, mesh, bcDataPatches, axis);
 
-    boundaryConstants[ LUT::PositivePatch[axis] ] /= boundaryConstants[ LUT::PositivePatch[axis] ].constant( rho );
-    boundaryConstants[ LUT::NegativePatch[axis] ] /= boundaryConstants[ LUT::NegativePatch[axis] ].constant( rho );
+    // Divide coefficients by fluid density
+    momentumEquation.AP[p   ] /= momentumEquation.AP[p   ].constant( rho );
+    momentumEquation.AP[east] /= momentumEquation.AP[east].constant( rho );
+    momentumEquation.AP[west] /= momentumEquation.AP[west].constant( rho );
 }
 
 
+void AddMomentumPressureBoundarySources( MomentumEquation &momentumEquation,
+                                         const floatType &rho,
+                                         const Mesh &mesh,  
+                                         const BoundaryConditionData::Patches &bcDataPatches )
+{
+    EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
 
+        AddFaceInterpolatedBoundarySources(momentumEquation.BPBoundary, mesh, bcDataPatches, bp);
+
+        momentumEquation.BPBoundary[ bp ] /= momentumEquation.BPBoundary[ bp ].constant( rho );
+    } );
+}
+
+
+void AddContinuityVelocityBoundarySources( ContinuityEquation &continuityEquation,
+                                           const Mesh &mesh,  
+                                           const EnumVector<Axis, BoundaryConditionData::Patches > &velocityBoundaryConditions )
+{
+    EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
+        const Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[bp];
+        AddFaceInterpolatedBoundarySources( continuityEquation.BUBoundary, mesh, velocityBoundaryConditions[axis], bp);
+    } );
+}
 
 
 /*---------------------------------------------------------------------------------------------------------------*\
@@ -2246,7 +2354,10 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
     // Zero momentum equations
     EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
 
-        fvCoeffs.Mom[axis].AU[axis][p].setZero();
+        EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
+            fvCoeffs.Mom[axis].AU[axis][tc].setZero();
+        } );
+        // fvCoeffs.Mom[axis].AU[axis][p].setZero();
 
         if ( fvCoeffs.Mom[axis].linearisation == Linearisation::Newton ) {
 
@@ -2272,6 +2383,7 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
 
         EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
             fvCoeffs.Mom[axis].BUBoundary[bp].setZero();
+            fvCoeffs.Mom[axis].BPBoundary[bp].setZero();
         } );
 
         fvCoeffs.Mom[axis].B.setZero();
@@ -2281,9 +2393,13 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
 
     
     // Zero continuity equation
-    fvCoeffs.Cont.AP[p].setZero();
+    EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
+            fvCoeffs.Cont.AP[tc].setZero();
+        } );
+    // fvCoeffs.Cont.AP[p].setZero();
 
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
+        fvCoeffs.Cont.BUBoundary[bp].setZero();
         fvCoeffs.Cont.BPBoundary[bp].setZero();
     } );
 
@@ -2329,9 +2445,11 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     // Default construct the coefficients class
     FVCoefficients fvCoeffs(mesh.nCells, inputData.schemes.linearisation, inputData.schemes.momentumInterpolation);
 
+    fvCoeffs.rho = inputData.rho;
+    fvCoeffs.nu  = inputData.nu;
+
     // Allocate boundary constant arrays for fixed boundary conditions
     AllocateBoundaryConstants( fvCoeffs, bcData );
-
 
     // Parts of momentum equation that don't change with linearisation
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
@@ -2342,15 +2460,14 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
         fvCoeffs.Mom[axis].advectionBlendingFactor = inputData.schemes.advectionBlendingFactor;
 
         SetDiffusionCoeffients(fvCoeffs.Mom[axis], bcData, inputData.nu, mesh);
-        SetFaceInterpolatedCoefficients(fvCoeffs.Mom[axis].AP, fvCoeffs.Mom[axis].BPBoundary, mesh, bcData.fields.P, axis);
-        DivideMomentumPressureByDensity(fvCoeffs.Mom[axis], inputData.rho);
+        SetMomentumPressureCoefficients(fvCoeffs.Mom[axis], inputData.rho, mesh, bcData.fields.P);
         SetHighOrderAdvectionCoefficients(fvCoeffs.Mom[axis], mesh);
     } );
 
 
     // Parts of continuity equation that don't change with linearisation
+    SetContinuityVelocityCoefficients(fvCoeffs.Cont, mesh, bcData.fields.U);
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        SetFaceInterpolatedCoefficients(fvCoeffs.Cont.AU[axis], fvCoeffs.Cont.BUBoundary, mesh, bcData.fields.U[axis], axis);
         SetMomentumInterpolationSparseConstants(fvCoeffs.Cont.mwiSparseCoeffs[axis], fvCoeffs.Mom[axis].AP, mesh, axis);
         SetMomentumInterpolationCompactConstants(fvCoeffs.Cont.mwiCompactCoeffs[axis], inputData.rho, mesh, axis);
     } );
@@ -2384,7 +2501,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
         EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
             if ( axis != Axis::X ) {
                 EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
-                    fvCoeffs.Mom[axis].AU[axis][tc] = fvCoeffs.Mom[Axis::X].AU[Axis::X][tc];
+                    fvCoeffs.Mom[axis].AU[axis][tc] = fvCoeffs.Mom[Axis::X].AU[Axis::X][tc];      
                 } );
             }
         } );
@@ -2397,6 +2514,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         // Boundaries need to be done after since they can affect the internal coefficients
         SetBoundaryAdvectionPicardCoefficients(fvCoeffs.Mom[axis], faceFluxes, bcData.fields.U[axis], mesh);
+        AddMomentumPressureBoundarySources(fvCoeffs.Mom[axis], fvCoeffs.rho, mesh, bcData.fields.P);
         AddDiffusion(fvCoeffs.Mom[axis], bcData.fields.U[axis], mesh);
     } );
 
@@ -2427,8 +2545,8 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
         SetDiagCoeffInverse(fvCoeffs.Mom[axis], mesh);   
     } );
 
-    // Set the momentum interpolation coefficients
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, bcData, fields.P);
+    AddContinuityVelocityBoundarySources( fvCoeffs.Cont, mesh, bcData.fields.U );
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
