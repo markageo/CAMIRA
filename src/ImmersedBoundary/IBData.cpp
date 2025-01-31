@@ -205,7 +205,7 @@ void AddIBDataForDirection( IBCell &ibCell,
 
         floatType dxp      = mesh.cellLengths[axis](cellIndex[axis]),
                   dxe      = mesh.cellLengths[axis](cellIndex_g[axis]),
-                  lambdaw  = mesh.interpFactors[axis](cellIndex_a[axis]),
+                  lambdaw  = mesh.interpFactors[axis](cellIndex[axis]    ),
                   lambdae  = mesh.interpFactors[axis](cellIndex[axis] + 1),
                   lambdaee = mesh.interpFactors[axis](cellIndex[axis] + 2),
                   le       = 1.0f /  mesh.cellCenterDiffInv[axis](cellIndex[axis] + 1);
@@ -224,8 +224,8 @@ void AddIBDataForDirection( IBCell &ibCell,
 
         floatType dxp      = mesh.cellLengths[axis](cellIndex[axis]),
                   dxw      = mesh.cellLengths[axis](cellIndex_g[axis]),
-                  lambdae  = mesh.interpFactors[axis](cellIndex_a[axis] + 1),
-                  lambdaw  = mesh.interpFactors[axis](cellIndex[axis]),
+                  lambdae  = mesh.interpFactors[axis](cellIndex[axis] + 1),
+                  lambdaw  = mesh.interpFactors[axis](cellIndex[axis]    ),
                   lambdaww = mesh.interpFactors[axis](cellIndex[axis] - 1),
                   lw       = 1.0f / mesh.cellCenterDiffInv[axis](cellIndex[axis]);
 
