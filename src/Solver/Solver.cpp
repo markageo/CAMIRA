@@ -27,6 +27,7 @@ template< MomentumInterpolation MI, Linearisation LI >
 void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
 {
     auto &gld = gridLevelData; 
+    SetGhostCells( gridLevelData.fields, gridLevelData.mesh, gridLevelData.bcData );
     UpdateIBData( gld.ibData, gld.fields );
     UpdateFaceFluxes( gld.faceFluxes, gld.mesh, gld.fields.U, gld.bcData);
     // UpdateFaceFluxesWithMWI( gld.faceFluxes, gld.mesh, gld.fields, gld.fvCoeffs, gld.bcData);
@@ -51,7 +52,6 @@ void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
                 break;
         }
     }
-    SetGhostCells( gridLevelData.fields, gridLevelData.mesh, gridLevelData.bcData );
     UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fields, gld.fieldsOld, gld.fieldsOldOld, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
 }
 
@@ -63,6 +63,7 @@ void SetCoarseGridRightHandSideInStencil( GridLevelData<MI, LI> &gridLevelData )
     auto &gld = gridLevelData;
 
     // Set fvCoeffs based on the restricted fine grid approximation for the RHS
+    SetGhostCells( gridLevelData.fieldsRestricted, gridLevelData.mesh, gridLevelData.bcData );
     UpdateIBData( gld.ibData, gld.fieldsRestricted );
     UpdateFaceFluxes( gld.faceFluxes, gld.mesh, gld.fieldsRestricted.U, gld.bcData);
     // UpdateFaceFluxesWithMWI( gld.faceFluxes, gld.mesh, gld.fields, gld.fvCoeffs, gld.bcData);
@@ -87,7 +88,6 @@ void SetCoarseGridRightHandSideInStencil( GridLevelData<MI, LI> &gridLevelData )
         }
     }
     SetIBFaceFluxes( gld.faceFluxes, gld.ibData );
-    SetGhostCells( gridLevelData.fieldsRestricted, gridLevelData.mesh, gridLevelData.bcData );
     UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fieldsRestricted, gld.fieldsOld, gld.fieldsOldOld, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
 }
 

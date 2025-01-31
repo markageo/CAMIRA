@@ -66,7 +66,7 @@ void SetGhostCells( FieldData<Tensor3D> &fields,
                     floatType interpFactor =  numerator / denominator;
                     auto cellFieldHi = fields[f].chip( G(hiCellIndex), axis );
                     auto cellFieldLo = fields[f].chip( G(loCellIndex), axis );
-                    fields[f].chip( G(iCell_g), axis ) = cellFieldLo * cellFieldLo.constant( 1 - interpFactor )
+                    fields[f].chip( G(iCell_g), axis ) = cellFieldLo * cellFieldLo.constant( 1.0f - interpFactor )
                                                        + cellFieldHi * cellFieldHi.constant( interpFactor );
                 }
                     

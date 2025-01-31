@@ -195,7 +195,7 @@ void BoundaryFaceVelocities( EnumVector<Axis, Tensor3D> &faceVelocities,
             floatType interpFactor = mesh.cellLengths[axis](loCellIndex) / ( mesh.cellLengths[axis](loCellIndex) + mesh.cellLengths[axis](hiCellIndex) );
             auto cellFieldHi = cellVelocities[velocityComponent].slice(offsets, extents).chip(hiCellIndex, axis);
             auto cellFieldLo = cellVelocities[velocityComponent].slice(offsets, extents).chip(loCellIndex, axis);
-            faceVelocities[axis].chip(faceEndIndex, axis) = cellFieldLo * cellFieldLo.constant( 1 - interpFactor )
+            faceVelocities[axis].chip(faceEndIndex, axis) = cellFieldLo * cellFieldLo.constant( 1.0f - interpFactor )
                                                           + cellFieldHi * cellFieldHi.constant( interpFactor );
         }
             
