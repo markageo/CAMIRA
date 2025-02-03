@@ -3,6 +3,7 @@ add_library(libs "")
 
 # Source subdirectories
 add_subdirectory(ImmersedBoundary)
+add_subdirectory(DerivedQuantities)
 add_subdirectory(FiniteVolume)
 add_subdirectory(Multigrid)
 add_subdirectory(Geometry)

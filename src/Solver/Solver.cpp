@@ -5,7 +5,7 @@
 #include "../Macros.h"
 #include "../IO/InputProcessing.h"
 #include "../Tools/SweepTransformations.h"
-#include "../Tools/FieldProbe.h"
+#include "../DerivedQuantities/DerivedQuantities.h"
 #include "../FiniteVolume/FiniteVolume.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 #include "../Multigrid/Multigrid.h"
@@ -16,6 +16,7 @@
 #include "ResidualFunctions.h"
 
 #include <iostream>
+#include <memory>
 
 namespace CFD
 {
@@ -389,6 +390,7 @@ void SolveSteady( const InputData &inputData,
     auto& fields = mgLevels[0].fields;
     auto& mesh   = mgLevels[0].mesh;
     auto& bcData = mgLevels[0].bcData;
+    auto& ibData = mgLevels[0].ibData;
     auto& mask   = mgLevels[0].ibData.mask;
 
     // Initialise residuals
@@ -404,6 +406,11 @@ void SolveSteady( const InputData &inputData,
     }
     std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
     
+    ForceCalculator forceCalculator( ibData, mesh, fields, inputData.rho, inputData.nu );
+    std::unique_ptr<ForceLogFile> forceLogFilePtr;
+    if ( inputData.calculateForces )
+        forceLogFilePtr = std::make_unique<ForceLogFile>( inputData.forceCalculatorFilename, axisTransformation );
+
     FieldWriter fieldWriter( fields, mask, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
@@ -428,6 +435,7 @@ void SolveSteady( const InputData &inputData,
 
     for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
     {
+        // Solve
         TIC("Multigrid Cycling")
         if ( mgLevels.size() == 1 ) {
             SmoothWithFixedIterations<MI, LI>( mgLevels[0], 1, MultigridEquation::NoTauCorrection );
@@ -439,22 +447,29 @@ void SolveSteady( const InputData &inputData,
         TOC()
         
         TIC("Residuals and Logging")
+        // Residuals
         residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
                                                           mgLevels[0].fvCoeffs, 
                                                           mgLevels[0].ibData.mask); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor );
         massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
                                                      mgLevels[0].mesh);
-
-        probeValues      = SetFieldProbeValues( mgLevels[0].fields, fieldProbes); 
-        
         consoleLog.WriteResiduals( residualsOuter, massFluxResidual, nOuterIterations );
         residualsLogFile.WriteData( residualsOuter, massFluxResidual, nOuterIterations );
+
+        // Probes
+        probeValues      = SetFieldProbeValues( mgLevels[0].fields, fieldProbes); 
         for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
             probeLogFiles[p].WriteData( probeValues[p], nOuterIterations );
         }
+        
+        // Forces
+        if ( forceLogFilePtr ) {
+            forceLogFilePtr->WriteData( forceCalculator.GetForce(), nOuterIterations );
+        }
         TOC() 
         
+        // Stopping criteria
         if ( ResidualsDiverged(residualsOuter) ) {
             fieldWriter.WriteDataIteration( nOuterIterations );
             std::cout << "*** SOLUTION DIVERGED ***" << "\n\n";
@@ -506,6 +521,7 @@ void SolveTransient( const InputData &inputData,
     auto& fields = mgLevels[0].fields;
     auto& mesh   = mgLevels[0].mesh;
     auto& bcData = mgLevels[0].bcData;
+    auto& ibData = mgLevels[0].ibData;
     auto& mask   = mgLevels[0].ibData.mask;
 
     // Initialise residuals
@@ -521,6 +537,12 @@ void SolveTransient( const InputData &inputData,
     }
     std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
     
+    ForceCalculator forceCalculator( ibData, mesh, fields, inputData.rho, inputData.nu );
+    std::unique_ptr<ForceLogFile> forceLogFilePtr;
+    if ( inputData.calculateForces )
+        forceLogFilePtr = std::make_unique<ForceLogFile>( inputData.forceCalculatorFilename, axisTransformation );
+
+
     FieldWriter fieldWriter( fields, mask, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
@@ -582,6 +604,11 @@ void SolveTransient( const InputData &inputData,
         for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
             probeLogFiles[p].WriteData( probeValues[p], timeStepNumber );
         }
+
+        if ( forceLogFilePtr ) {
+            forceLogFilePtr->WriteData( forceCalculator.GetForce(), timeStepNumber );
+        }
+
         residualsLogFile.WriteData( residualsOuter, massFluxResidual, timeStepNumber );
 
         if ( writeFields && (timeStepNumber % inputData.fieldWriteInterval) == 0 ) {

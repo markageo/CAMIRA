@@ -137,6 +137,9 @@ struct InputData
     };
     std::vector< ProbeData > probes;
 
+    bool calculateForces;
+    std::string forceCalculatorFilename;
+
 };
 
 
