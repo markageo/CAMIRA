@@ -883,20 +883,30 @@ namespace
 
         const pt::ptree &monitorsTree = monitorsTreeOptional.get();
 
-        InputData::ProbeData tempProbeData;
-        std::vector<floatType> tempLocation;
-        for (auto probe : monitorsTree) {
-            if (probe.first != "Probe") {
-                throw std::runtime_error(  "'" + probe.first + "' is not a valid Monitors child name" );
+        for (auto monitor : monitorsTree) {
+
+            if        ( monitor.first == "ForceCalculator" ) {
+
+                if ( inputData.calculateForces )
+                    throw std::runtime_error(  "Multiple ForceCalculators specified. Only one can be specified!" );
+
+                inputData.calculateForces = true;
+                inputData.forceCalculatorFilename = monitor.second.get<std::string>( "filename" );
+
+            } else if ( monitor.first == "Probe" ) {
+                InputData::ProbeData tempProbeData;
+                std::vector<floatType> tempLocation = monitor.second.get< std::vector<floatType> >( "location" ); 
+                tempProbeData.filename              = monitor.second.get<std::string>( "filename" );
+                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                    tempProbeData.location(axis) = tempLocation[axis];
+                } );
+
+                inputData.probes.push_back( tempProbeData );
+
+            } else {
+                throw std::runtime_error(  "'" + monitor.first + "' is not a valid Monitors child name" );
             }
-
-            tempProbeData.filename = probe.second.get<std::string>( "filename" );
-            tempLocation           = probe.second.get< std::vector<floatType> >( "location" ); 
-            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                tempProbeData.location(axis) = tempLocation[axis];
-            } );
-
-            inputData.probes.push_back( tempProbeData );
+            
         }
     }
 
@@ -947,16 +957,14 @@ namespace
             if ( geometryOutputFilenameOptional ) {
                 inputData.outputGeometry = true;
                 inputData.geometryOutputFilename = geometryOutputFilenameOptional.get();
-                return;
             }
 
         }
         
-        
         // Write interval for fields
         inputData.fieldWriteInterval = outputTree.get<intType>( "fieldWriteInterval" );
 
-        // Probes
+        // Monitors
         ReadMonitors( inputData, outputTree );
 
         // Verify the output filenames

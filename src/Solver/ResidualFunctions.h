@@ -4,7 +4,7 @@
 #include "../Macros.h"
 #include "../Types.h"
 #include "../FiniteVolume/FiniteVolume.h"
-#include "../Tools/FieldProbe.h"
+#include "../DerivedQuantities/DerivedQuantities.h"
 #include "../Tools/FVTools.h"
 
 #include <cmath>

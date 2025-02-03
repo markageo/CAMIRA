@@ -51,7 +51,7 @@ struct IBCell {
         // Coordinate distance squared to the immersed boundary surface
         floatType ibDistance;
 
-        // Cell face normal area vector component. This has a sign.
+        // Cell face normal area vector component. This has a sign, positive in the positive coordinate direction.
         floatType faceAreaComponent;
 
         // Coefficient that multiplies with total velocity flux error

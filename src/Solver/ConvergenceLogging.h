@@ -5,9 +5,8 @@
 #include "../Tools/SweepTransformations.h"
 #include "../Tools/FVTools.h"
 #include "../IO/IOTools.h"
-
-#include "Solver.h"
-#include "../Tools/FieldProbe.h"
+#include "../FiniteVolume/FiniteVolume.h"
+#include "../DerivedQuantities/DerivedQuantities.h"
 #include "../IO/VTKWriter.h"
 #include "../Macros.h"
 
@@ -178,6 +177,49 @@ class ProbeLogFile
         ConvergenceFile m_convergenceFile;
 };
 
+
+
+
+
+class ForceLogFile
+{
+
+    public:
+        ForceLogFile( const std::string &filename, 
+                      const AxisTransformationMap &axisTransformation,
+                      const int precision = CFD_FILE_WRITE_PRECISION ) :
+            m_AT( axisTransformation ),
+            m_convergenceFile( filename, precision )
+        {            
+            using enum Axis::ENUMDATA;
+
+            // Comment description of file
+            std::string fileDescription = "Force calculator on IB solid geometry.";
+            m_convergenceFile.WriteCommentLine( fileDescription );
+
+            // Write header
+            m_convergenceFile.WriteLine( "Iteration", 
+                                         "X_force", 
+                                         "Y_force",
+                                         "Z_force");
+            
+        }
+
+        void WriteData( const fVector3 &forces,  
+                        const intType nIterations )
+        {
+            using enum Axis::ENUMDATA;
+
+            m_convergenceFile.WriteLine( nIterations,
+                                         forces( m_AT.CodeAxis(X) ), 
+                                         forces( m_AT.CodeAxis(Y) ),
+                                         forces( m_AT.CodeAxis(Z) ) );
+        }
+
+    private:
+        AxisTransformationMap m_AT;
+        ConvergenceFile m_convergenceFile;
+};
 
 
 

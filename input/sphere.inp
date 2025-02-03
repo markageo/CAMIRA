@@ -137,16 +137,11 @@ BoundaryConditions
 
 SolidGeometry {
 
-    boundaryTreatement = staircase
+    boundaryTreatement = directionalImmersedBoundary
 
-    // Sphere {
-    //     centerPosition = (2.5, 2.5, 2.5)
-    //     diameter       = 1
-    // }
-
-    FromFile {
-        type = STL
-        filename = "input/sphere_external_geometry.stl"
+    Sphere {
+        centerPosition = (2.5, 2.5, 2.5)
+        diameter       = 1
     }
 }
 
@@ -159,7 +154,7 @@ Solver {
         momentumInterpolation   = implicit
         advectionScheme         = upwind
         advectionBlendingFactor = 1
-        faceInterpolationScheme = average
+        faceInterpolationScheme = weightedLinear
 
         implicitMomentumRelaxation = (0.6, 0.6, 0.6)
         implicitPressureRelaxation = 1
@@ -207,5 +202,12 @@ Output {
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
     fieldWriteInterval      = 0
+
+    Monitors {
+        ForceCalculator {
+            filename = "output/forces.csv"
+        }
+    }
+    
 
 }
