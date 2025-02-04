@@ -100,9 +100,9 @@ namespace
                   lambdaLo = mesh.interpFactors[gradDirection](idx  ),
                   dx       = mesh.cellLengthsInv[gradDirection](idx);
 
-        floatType gradient = (   lambdaHi * uHi
+        floatType gradient = (   lambdaHi                  * uHi
                                + (1 - lambdaHi - lambdaLo) * up
-                               - (1 - lambdaLo) * uLo
+                               - (1 - lambdaLo)            * uLo
                              ) / dx;
 
         return gradient;
