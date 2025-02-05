@@ -51,8 +51,8 @@ public:
                     m_nj( fvCoeffs.nCells(A::Y) ),
                     m_nk( fvCoeffs.nCells(A::Z) )
     {
-        m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI, LI>>(fields, mask, fvCoeffs);
-        m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI, LI>>(fields, mask, fvCoeffs);
+        m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
+        m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
     }
 
 
@@ -172,6 +172,9 @@ private:
 };
 
 
+
+
+
 // Nested symmetric sweeping
 template< MomentumInterpolation MI,
           Linearisation LI >
@@ -188,22 +191,18 @@ public:
                     m_fields( fields ),
                     m_maxIterations( linearSolverSettings.maxIterations ),
                     m_maxResiduals( linearSolverSettings.maxResiduals ),
-                    m_relaxation( linearSolverSettings.relaxation ),
-
-                    m_delta( Tensor2D( m_fields.P.dimension(A::X), m_fields.P.dimension(A::Y) ) ),
                     m_oldPlane( Tensor2D( m_fields.P.dimension(A::X), m_fields.P.dimension(A::Y) ) ),
-
                     m_ni( fvCoeffs.nCells(A::X) ),
                     m_nj( fvCoeffs.nCells(A::Y) ),
                     m_nk( fvCoeffs.nCells(A::Z) )
     {
         if (m_nk == 1) {
-            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI, LI>>(fields, mask, fvCoeffs);
+            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
             SolutionUpdater = &nestedLineSymmetricSolver::Sweep2D;
             StateUpdater = &nestedLineSymmetricSolver::UpdateState2D;
         } else {
-            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t, MI, LI>>(fields, mask, fvCoeffs);
-            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI, LI>>(fields, mask, fvCoeffs);
+            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
+            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
             SolutionUpdater = &nestedLineSymmetricSolver::Sweep3D;
             StateUpdater = &nestedLineSymmetricSolver::UpdateState3D;
         }
@@ -251,7 +250,6 @@ private:
     FieldData<Tensor3D> &m_fields;
     const intType m_maxIterations;
     const FieldData<floatType> m_maxResiduals;
-    const FieldData<floatType> m_relaxation;
 
     std::unique_ptr<PlaneSolver<TC::t, MI, LI>> m_planeSolverTop;
     std::unique_ptr<PlaneSolver<TC::b, MI, LI>> m_planeSolverBottom;
@@ -260,7 +258,7 @@ private:
     void (nestedLineSymmetricSolver::*SolutionUpdater)(void);
     void (nestedLineSymmetricSolver::*StateUpdater)(void);
 
-    FieldData<Tensor2D> m_delta, m_oldPlane;
+    FieldData<Tensor2D> m_oldPlane;
     FieldData<floatType> m_residuals, m_residualsInitialInv;
     FieldData<intType> m_kS;
 
@@ -270,11 +268,11 @@ private:
     void Sweep3D()
     {
         for (intType k = 0; k != m_nk - 1; k++) { // Forward sweep
-            UpdateAndRelax(m_planeSolverTop, k);
+            Update(m_planeSolverTop, k);
         }
 
         for (intType k = m_nk - 1; k != 0; k--) { // Backward sweep
-            UpdateAndRelax(m_planeSolverBottom, k);
+            Update(m_planeSolverBottom, k);
         }
     }
 
@@ -288,7 +286,7 @@ private:
     // For 2D simulations
     void Sweep2D()
     {
-        UpdateAndRelax(m_planeSolverCenter, 0);
+        Update(m_planeSolverCenter, 0);
     }
 
     void UpdateState2D()
@@ -298,7 +296,7 @@ private:
 
 
     template <TC Wstag>
-    void UpdateAndRelax( std::unique_ptr<PlaneSolver<Wstag, MI, LI>> &planeSolver, intType k )
+    void Update( std::unique_ptr<PlaneSolver<Wstag, MI, LI>> &planeSolver, intType k )
     {
         using enum TransportCoefficients::ENUMDATA;
         using enum Axis::ENUMDATA;
@@ -312,9 +310,8 @@ private:
 
         ForAllFieldData( [&] (intType f) {
             auto fieldPlane = m_fields[f].chip( G(m_kS[f]), Z );
-            m_delta[f] = m_delta[f].constant( m_relaxation[f] ) * (fieldPlane - m_oldPlane[f]); // Relaxed change in plane
-            fieldPlane = m_oldPlane[f] + m_delta[f];                                            // Relax
-            m_residuals[f] += static_cast<Tensor0D>( m_delta[f].abs().sum() )(0);               // Add to residual count
+            auto delta = fieldPlane - m_oldPlane[f];
+            m_residuals[f] += static_cast<Tensor0D>( delta.abs().sum() )(0);
         } );
     }
 };

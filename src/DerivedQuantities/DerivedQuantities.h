@@ -34,7 +34,6 @@ class ForceCalculator
         fVector3 GetForce() const;
 
     private:
-
         floatType GetPressureIntegralForce( const Axis::ENUMDATA, const IBCell::SourceTermData & ) const;
         floatType GetViscousIntegralForce( const Axis::ENUMDATA, const IBCell::SourceTermData &, const TensorIndex3D & ) const;
         floatType GetAdvectiveIntegralForce( const Axis::ENUMDATA, const IBCell::SourceTermData & ) const;

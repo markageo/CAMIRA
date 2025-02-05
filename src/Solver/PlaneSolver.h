@@ -28,7 +28,8 @@ class PlaneSolver
 public:
     PlaneSolver( FieldData<Tensor3D> &fields,
                  const Tensor3D &mask,
-                 const FVCoefficients &fvCoeffs) : 
+                 const FVCoefficients &fvCoeffs,
+                 const InputData::LinearSolverSettings &linearSolverSettings) : 
                     m_fields( fields ),
                     m_fvCoeffs( fvCoeffs ),
                     m_planeConstants( Tensor2D( fvCoeffs.nCells(Axis::X) + 2*nGhost, fvCoeffs.nCells(Axis::Y) + 2*nGhost ).setZero() ),
@@ -36,12 +37,12 @@ public:
                     m_nj( fvCoeffs.nCells(Axis::Y) )
     {
         if (m_nj == 1) {
-            m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag, MI, LI>>(fields, mask, fvCoeffs);
+            m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
             SolutionUpdater = &PlaneSolver::Sweep2D;
             StateUpdater = &PlaneSolver::UpdateState2D;
         } else {
-            m_lineSolverNorth = std::make_unique<LineSolver<TC::n, Wstag, MI, LI>>(fields, mask, fvCoeffs);
-            m_lineSolverSouth = std::make_unique<LineSolver<TC::s, Wstag, MI, LI>>(fields, mask, fvCoeffs);
+            m_lineSolverNorth = std::make_unique<LineSolver<TC::n, Wstag, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
+            m_lineSolverSouth = std::make_unique<LineSolver<TC::s, Wstag, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
             SolutionUpdater = &PlaneSolver::Sweep3D;
             StateUpdater = &PlaneSolver::UpdateState3D;
         }

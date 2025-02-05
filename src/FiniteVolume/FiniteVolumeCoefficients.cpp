@@ -11,6 +11,7 @@
 
 #include <string>
 #include "../IO/ArrayIO.h"
+#include "FiniteVolumeStructures.h"
 
 namespace CFD
 {
@@ -2422,6 +2423,59 @@ void SetDiagCoeffInverse( MomentumEquation &momentumEquation,
 
 
 
+void AddImplicitMomentumUnderRelaxation( MomentumEquation &momentumEquation, 
+                                         const Mesh &mesh, 
+                                         const EnumVector<Axis, Tensor3D> &velocityFieldsOld )
+{
+    using enum TransportCoefficients::ENUMDATA;
+
+    Axis::ENUMDATA axis = momentumEquation.component;
+    floatType omega = momentumEquation.relaxation;
+
+    for (intType k = 0; k != mesh.nCells(2); k++) {
+        for (intType j = 0; j != mesh.nCells(1); j++) {
+            for (intType i = 0; i != mesh.nCells(0); i++) {
+
+                momentumEquation.B( G(i, j, k) )           -= ( (1 - omega) / omega ) 
+                                                            * momentumEquation.AU[axis][p]( G(i, j, k) )
+                                                            * velocityFieldsOld[axis]( G(i, j, k) );
+                momentumEquation.AU[axis][p]( G(i, j, k) ) /= omega;
+                
+
+            }
+        }
+    }
+
+}
+
+
+
+void AddImplicitContinuityUnderRelaxation( ContinuityEquation &continuityEquation, 
+                                           const Mesh &mesh,
+                                           const Tensor3D &pressureOld )
+{
+    using enum TransportCoefficients::ENUMDATA;
+
+    floatType omega = continuityEquation.relaxation;
+
+    for (intType k = 0; k != mesh.nCells(2); k++) {
+        for (intType j = 0; j != mesh.nCells(1); j++) {
+            for (intType i = 0; i != mesh.nCells(0); i++) {
+
+                continuityEquation.B( G(i, j, k) )         -= ( (1 - omega) / omega ) 
+                                                            * continuityEquation.AP[p]( G(i, j, k) )
+                                                            * pressureOld( G(i, j, k) );
+                 continuityEquation.AP[p]( G(i, j, k) ) /= omega;
+                
+
+            }
+        }
+    }
+
+}
+
+
+
 }   // end anonymous namespace
 
 
@@ -2536,7 +2590,9 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
             break;
 
         case TimeSchemes::Steady:
-            /* NULL */
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                AddImplicitMomentumUnderRelaxation( fvCoeffs.Mom[axis], mesh, fieldsOld.U );
+            } );
             break;
     }
 
@@ -2545,7 +2601,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
         SetDiagCoeffInverse(fvCoeffs.Mom[axis], mesh);   
     } );
 
-    SetMomentumInterpolationCoefficients(fvCoeffs, mesh, bcData, fields.P);
+    SetMomentumInterpolationCoefficients( fvCoeffs, mesh, bcData, fields.P );
     AddContinuityVelocityBoundarySources( fvCoeffs.Cont, mesh, bcData.fields.U );
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
@@ -2562,8 +2618,14 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     } );
     AddContinuityBoundaryConstants(fvCoeffs.Cont, mesh);
 
+
     // Add effect of immersed boundary
     AddIBSourceTerms( fvCoeffs, faceFluxes, ibData, fields, mesh );
+
+    if ( fvCoeffs.Mom[Axis::X].timeScheme == TimeSchemes::Steady ) {
+        AddImplicitContinuityUnderRelaxation( fvCoeffs.Cont, mesh, fieldsOld.P );
+    }
+
 }
 
 

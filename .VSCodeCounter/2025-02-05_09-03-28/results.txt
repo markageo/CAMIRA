@@ -1,0 +1,92 @@
+Date : 2025-02-05 09:03:28
+Directory : /home/mark/PhD/Code/coupled-sweep-ns/src
+Total : 58 files,  9547 codes, 1003 comments, 3701 blanks, all 14251 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C++      |         49 |      9,454 |      1,003 |      3,692 |     14,149 |
+| CMake    |          9 |         93 |          0 |          9 |        102 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                               | files      | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                  |         58 |      9,547 |      1,003 |      3,701 |     14,251 |
+| . (Files)                                                                          |          4 |        371 |         46 |        137 |        554 |
+| DerivedQuantities                                                                  |          4 |        268 |         24 |        103 |        395 |
+| FiniteVolume                                                                       |         12 |      3,233 |        329 |      1,299 |      4,861 |
+| Geometry                                                                           |          3 |        256 |         42 |        123 |        421 |
+| IO                                                                                 |         12 |      1,812 |        211 |        663 |      2,686 |
+| ImmersedBoundary                                                                   |          4 |        408 |         42 |        202 |        652 |
+| Multigrid                                                                          |          3 |        528 |         59 |        197 |        784 |
+| Solver                                                                             |         11 |      2,079 |        150 |        673 |      2,902 |
+| Tools                                                                              |          5 |        592 |        100 |        304 |        996 |
++------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                           | language | code       | comment    | blank      | total      |
++------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| /home/mark/PhD/Code/coupled-sweep-ns/src/CMakeLists.txt                            | CMake    |         24 |          0 |          9 |         33 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/DerivedQuantities/CMakeLists.txt          | CMake    |          6 |          0 |          0 |          6 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/DerivedQuantities/DerivedQuantities.h     | C++      |         37 |          2 |         13 |         52 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/DerivedQuantities/FieldProbe.cpp          | C++      |         94 |         16 |         42 |        152 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/DerivedQuantities/ForceCalculator.cpp     | C++      |        131 |          6 |         48 |        185 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolume/CMakeLists.txt               | CMake    |         13 |          0 |          0 |         13 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolume/FaceInterpolatedVelocity.h   | C++      |         89 |          4 |         33 |        126 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolume/FaceVelocities.cpp           | C++      |        301 |         25 |        110 |        436 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolume/FiniteVolume.h               | C++      |          5 |          0 |          3 |          8 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolume/FiniteVolumeCoefficients.cpp | C++      |      1,678 |        209 |        684 |      2,571 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolume/FiniteVolumeFunctions.h      | C++      |         68 |         11 |         32 |        111 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolume/FiniteVolumeStructures.cpp   | C++      |        341 |         24 |        118 |        483 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolume/FiniteVolumeStructures.h     | C++      |         61 |          5 |         15 |         81 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolume/GhostCells.cpp               | C++      |         60 |          2 |         22 |         84 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolume/Mesh.cpp                     | C++      |        376 |         23 |        183 |        582 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolume/Mesh.h                       | C++      |         33 |          4 |         11 |         48 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/FiniteVolume/VertexValues.cpp             | C++      |        208 |         22 |         88 |        318 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Geometry/CMakeLists.txt                   | CMake    |          5 |          0 |          0 |          5 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Geometry/Geometry.cpp                     | C++      |        223 |         42 |        106 |        371 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Geometry/Geometry.h                       | C++      |         28 |          0 |         17 |         45 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/IO/ArrayIO.h                              | C++      |        101 |          8 |         39 |        148 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/IO/CMakeLists.txt                         | CMake    |         13 |          0 |          0 |         13 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/IO/CSVReader.cpp                          | C++      |         96 |          0 |         33 |        129 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/IO/CSVReader.h                            | C++      |          6 |          0 |          3 |          9 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/IO/IOTools.h                              | C++      |         41 |          6 |         19 |         66 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/IO/InputParser.cpp                        | C++      |        348 |         49 |        117 |        514 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/IO/InputParser.h                          | C++      |         10 |          1 |          7 |         18 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/IO/InputProcessing.cpp                    | C++      |        676 |         95 |        241 |      1,012 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/IO/InputProcessing.h                      | C++      |        107 |         11 |         37 |        155 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/IO/VTKReader.cpp                          | C++      |        113 |          8 |         59 |        180 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/IO/VTKReader.h                            | C++      |         15 |          0 |         12 |         27 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/IO/VTKWriter.h                            | C++      |        286 |         33 |         96 |        415 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/ImmersedBoundary/CMakeLists.txt           | CMake    |          6 |          0 |          0 |          6 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/ImmersedBoundary/IBData.cpp               | C++      |        252 |         22 |        111 |        385 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/ImmersedBoundary/IBSolverFunctions.cpp    | C++      |        101 |          8 |         57 |        166 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/ImmersedBoundary/ImmersedBoundary.h       | C++      |         49 |         12 |         34 |         95 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Macros.h                                  | C++      |         34 |          4 |         15 |         53 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Multigrid/CMakeLists.txt                  | CMake    |          6 |          0 |          0 |          6 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Multigrid/Multigrid.cpp                   | C++      |        457 |         58 |        175 |        690 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Multigrid/Multigrid.h                     | C++      |         65 |          1 |         22 |         88 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Solver/CMakeLists.txt                     | CMake    |         13 |          0 |          0 |         13 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Solver/ConvergenceLogging.h               | C++      |        332 |         15 |         98 |        445 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Solver/LineSolver.h                       | C++      |         95 |          6 |         27 |        128 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Solver/LinearSolver.h                     | C++      |        227 |         17 |         84 |        328 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Solver/PlaneSolver.h                      | C++      |         83 |          4 |         30 |        117 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Solver/ResidualFunctions.h                | C++      |        285 |         25 |        108 |        418 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Solver/Solver.cpp                         | C++      |        472 |         38 |        129 |        639 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Solver/Solver.h                           | C++      |         14 |          0 |          7 |         21 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Solver/StaggerIndexing.h                  | C++      |        117 |          2 |         25 |        144 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Solver/StencilConstants.h                 | C++      |        158 |         14 |         59 |        231 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Solver/TriadSolver.h                      | C++      |        283 |         29 |        106 |        418 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Tools/CMakeLists.txt                      | CMake    |          7 |          0 |          0 |          7 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Tools/FVLookups.h                         | C++      |         53 |          7 |         23 |         83 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Tools/FVTools.h                           | C++      |         56 |         11 |         29 |         96 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Tools/SweepTransformations.cpp            | C++      |        438 |         64 |        223 |        725 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Tools/SweepTransformations.h              | C++      |         38 |         18 |         29 |         85 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/Types.h                                   | C++      |        240 |         27 |         89 |        356 |
+| /home/mark/PhD/Code/coupled-sweep-ns/src/main.cpp                                  | C++      |         73 |         15 |         24 |        112 |
+| Total                                                                              |          |      9,547 |      1,003 |      3,701 |     14,251 |
++------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+

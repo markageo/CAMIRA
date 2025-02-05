@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 1
+    nu   = 0.02
     transient = no
 }
 
@@ -157,7 +157,7 @@ Solver {
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (0.6, 0.6, 0.6)
+        implicitMomentumRelaxation = (0.9, 1, 1)
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 100
@@ -169,7 +169,7 @@ Solver {
     LinearSolver {
 
         type = nestedLineSymmetric
-        maxIterations = 4
+        maxIterations = 3
         maxResiduals = 1e-3
 
         planeSweepDirection = +y
@@ -184,11 +184,11 @@ Solver {
         cycle = F
         maxCoarseLevels = 3
 
-        preSmoothingIterations = 3
-        postSmoothingIterations = 3
-        fineGridIterations   = 2
+        preSmoothingIterations = 2
+        postSmoothingIterations = 2
+        fineGridIterations   = 1
 
-        maxCoarseGridIterations = 500
+        maxCoarseGridIterations = 250
         maxCoarseGridResiduals  = 1e-6
         
     }
@@ -198,7 +198,7 @@ Solver {
 
 Output {
 
-    residualHistoryFilename = "output/residual_history.csv"
+    residualHistoryFilename = "output/residualHistory.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
