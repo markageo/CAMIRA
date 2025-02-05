@@ -492,6 +492,8 @@ void SolveSteady( const InputData &inputData,
             fieldWriter.WriteDataIteration( nOuterIterations );
         }  
 
+        mgLevels[0].fieldsOld    = mgLevels[0].fields;
+
     }
     TOC()
 

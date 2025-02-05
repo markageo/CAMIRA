@@ -60,13 +60,21 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
             mgl.fields = RestrictFields( mgLevels[level-1].fields, mgLevels[level-1].mesh, mgLevels[level].mesh, mgLevels[level].ibData.mask );
         }
         mgl.fieldsRestricted = mgl.fields;
-        if        ( inputData.schemes.timeScheme == TimeSchemes::BackwardsEuler ) {
-            mgl.fieldsOld        = mgl.fields;
-        } else if ( inputData.schemes.timeScheme == TimeSchemes::BackwardsThreeLevel ) {
-            mgl.fieldsOld        = mgl.fields;
-            mgl.fieldsOldOld     = mgl.fields;
-        }
         
+        switch ( inputData.schemes.timeScheme) {
+            case TimeSchemes::BackwardsEuler:
+                mgl.fieldsOld        = mgl.fields;
+                break;
+
+            case TimeSchemes::BackwardsThreeLevel:
+                mgl.fieldsOld        = mgl.fields;
+                mgl.fieldsOldOld     = mgl.fields;
+                break;
+
+            case TimeSchemes::Steady:
+                mgl.fieldsOld        = mgl.fields;
+                break;
+        }
 
         // Face fluxes and advected velocities
         mgl.faceFluxes = InitialiseFaceFluxes(mgl.mesh, mgl.fields.U, mgl.bcData);
