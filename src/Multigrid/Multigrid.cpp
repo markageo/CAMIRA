@@ -63,18 +63,19 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
         
         switch ( inputData.schemes.timeScheme) {
             case TimeSchemes::BackwardsEuler:
-                mgl.fieldsOld        = mgl.fields;
+                mgl.fieldsPrevTime        = mgl.fields;
                 break;
 
             case TimeSchemes::BackwardsThreeLevel:
-                mgl.fieldsOld        = mgl.fields;
-                mgl.fieldsOldOld     = mgl.fields;
+                mgl.fieldsPrevTime        = mgl.fields;
+                mgl.fieldsPrevPrevTime    = mgl.fields;
                 break;
 
             case TimeSchemes::Steady:
-                mgl.fieldsOld        = mgl.fields;
+                /* NULL */
                 break;
         }
+        mgl.fieldsOld = mgl.fields;
 
         // Face fluxes and advected velocities
         mgl.faceFluxes = InitialiseFaceFluxes(mgl.mesh, mgl.fields.U, mgl.bcData);
@@ -89,7 +90,7 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
 
         // Finite volume coefficients
-        mgl.fvCoeffs = InitialiseFVCoefficients(mgl.mesh, mgl.fields, mgl.fieldsOld, mgl.fieldsOldOld, mgl.faceAdvectedVelocities, mgl.faceFluxes, mgl.ibData, mgl.bcData, inputData);
+        mgl.fvCoeffs = InitialiseFVCoefficients(mgl.mesh, mgl.fields, mgl.fieldsPrevTime, mgl.fieldsPrevPrevTime, mgl.faceAdvectedVelocities, mgl.faceFluxes, mgl.ibData, mgl.bcData, inputData);
 
 
         // Linear Solver

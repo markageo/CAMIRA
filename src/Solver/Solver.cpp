@@ -60,7 +60,7 @@ void SetStencil( GridLevelData<MI, LI> &gridLevelData,
                 break;
         }
     }
-    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, fields, gld.fieldsOld, gld.fieldsOldOld, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
+    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, fields, gld.fieldsPrevTime, gld.fieldsPrevPrevTime, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
 }
 
 
@@ -70,10 +70,9 @@ void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
 {
     SetStencil<MI, LI>(gridLevelData, gridLevelData.fields);
 
-    if ( gridLevelData.fvCoeffs.Mom[Axis::X].timeScheme == TimeSchemes::Steady )
-        ApplyImplicitRelaxation( gridLevelData.fvCoeffs,
-                                 gridLevelData.fieldsOld, 
-                                 gridLevelData.mesh);    
+    ApplyImplicitRelaxation( gridLevelData.fvCoeffs,
+                             gridLevelData.fieldsOld, 
+                             gridLevelData.mesh);    
 }
 
 
@@ -101,24 +100,24 @@ void SetCoarseGridEquations( GridLevelData<MI, LI> &gridLevelData,
     } );
     gld.fvCoeffs.Cont.F += coarseGridRightHandSide.P;
 
-    if ( gridLevelData.fvCoeffs.Mom[Axis::X].timeScheme == TimeSchemes::Steady )
-        ApplyImplicitRelaxation( gridLevelData.fvCoeffs,
-                                 gridLevelData.fieldsOld, 
-                                 gridLevelData.mesh );    
+    ApplyImplicitRelaxation( gridLevelData.fvCoeffs,
+                             gridLevelData.fieldsOld, 
+                             gridLevelData.mesh );    
 }
 
 
 
 template< MomentumInterpolation MI, Linearisation LI >
 OperationStatus Smooth( GridLevelData<MI, LI> &gridLevelData,
-             const FieldData<floatType> &maxResiduals,
-             const intType maxIterations,
-             const MultigridEquation mgEquationType )
+                        const FieldData<floatType> &maxResiduals,
+                        const intType maxIterations,
+                        const MultigridEquation mgEquationType )
 {
     OperationStatus returnFlag = OperationStatus::Sucess;
     FieldData<floatType> residualsScaleFactor;
     FieldData<Tensor3D> coarseGridRightHandSide;
 
+    gridLevelData.fieldsOld = gridLevelData.fields;
     if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
         SetFineGridEquations<MI, LI>( gridLevelData );              
     } else {
@@ -143,6 +142,7 @@ OperationStatus Smooth( GridLevelData<MI, LI> &gridLevelData,
         gridLevelData.linearSolver->UpdateState();
         gridLevelData.linearSolver->Solve();
 
+        gridLevelData.fieldsOld = gridLevelData.fields;
         if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
             SetFineGridEquations<MI, LI>( gridLevelData );
         } else {
@@ -188,6 +188,7 @@ OperationStatus SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
     FieldData<floatType> residualsScaleFactor;
     FieldData<Tensor3D> coarseGridRightHandSide;
 
+    gridLevelData.fieldsOld = gridLevelData.fields;
     if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
         SetFineGridEquations<MI, LI>( gridLevelData );
     } else {
@@ -204,12 +205,12 @@ OperationStatus SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
         gridLevelData.linearSolver->UpdateState();
         gridLevelData.linearSolver->Solve();
 
+        gridLevelData.fieldsOld = gridLevelData.fields;
         if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
             SetFineGridEquations<MI, LI>( gridLevelData );
         } else {
             SetCoarseGridEquations<MI, LI>( gridLevelData, coarseGridRightHandSide );
         }
-
     }
     std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", performed " << maxIterations << " iterations" << "\n";
 
@@ -237,11 +238,11 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
     // Restrict residuals and solutions
     mgLevels[level+1].residualsRestricted = RestrictFields( residuals                   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
     mgLevels[level+1].fieldsRestricted    = RestrictFields( mgLevels[level].fields      , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-    if ( mgLevels[level+1].fieldsOld.P.size() != 0 ) {
-        mgLevels[level+1].fieldsOld    = RestrictFields( mgLevels[level].fieldsOld   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+    if ( mgLevels[level+1].fieldsPrevTime.P.size() != 0 ) {
+        mgLevels[level+1].fieldsPrevTime    = RestrictFields( mgLevels[level].fieldsPrevTime   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
     }
-    if ( mgLevels[level+1].fieldsOldOld.P.size() != 0 ) {
-        mgLevels[level+1].fieldsOldOld = RestrictFields( mgLevels[level].fieldsOldOld, mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+    if ( mgLevels[level+1].fieldsPrevPrevTime.P.size() != 0 ) {
+        mgLevels[level+1].fieldsPrevPrevTime = RestrictFields( mgLevels[level].fieldsPrevPrevTime, mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
     }
     mgLevels[level+1].fields = mgLevels[level+1].fieldsRestricted;
 
@@ -285,11 +286,11 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
         // Restrict residuals and solution
         mgLevels[level+1].residualsRestricted = RestrictFields( residuals                   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
         mgLevels[level+1].fieldsRestricted    = RestrictFields( mgLevels[level].fields      , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-        if ( mgLevels[level+1].fieldsOld.P.size() != 0 ) {
-            mgLevels[level+1].fieldsOld    = RestrictFields( mgLevels[level].fieldsOld   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+        if ( mgLevels[level+1].fieldsPrevTime.P.size() != 0 ) {
+            mgLevels[level+1].fieldsPrevTime    = RestrictFields( mgLevels[level].fieldsPrevTime   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
         }
-        if ( mgLevels[level+1].fieldsOldOld.P.size() != 0 ) {
-            mgLevels[level+1].fieldsOldOld = RestrictFields( mgLevels[level].fieldsOldOld, mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
+        if ( mgLevels[level+1].fieldsPrevPrevTime.P.size() != 0 ) {
+            mgLevels[level+1].fieldsPrevPrevTime = RestrictFields( mgLevels[level].fieldsPrevPrevTime, mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
         }
         mgLevels[level+1].fields = mgLevels[level+1].fieldsRestricted;
 
@@ -619,6 +620,7 @@ void SolveTransient( const InputData &inputData,
                 break;
             }
 
+            mgLevels[0].fieldsOld    = mgLevels[0].fields;
         }
 
         probeValues = SetFieldProbeValues( mgLevels[0].fields, fieldProbes); 
@@ -641,8 +643,8 @@ void SolveTransient( const InputData &inputData,
             break;
         }
 
-        mgLevels[0].fieldsOldOld = mgLevels[0].fieldsOld;
-        mgLevels[0].fieldsOld    = mgLevels[0].fields;
+        mgLevels[0].fieldsPrevPrevTime = mgLevels[0].fieldsPrevTime;
+        mgLevels[0].fieldsPrevTime    = mgLevels[0].fields;
 
     }
 
