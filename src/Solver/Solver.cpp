@@ -24,6 +24,11 @@ namespace CFD
 namespace
 {
 
+// To be returned from smoother functions
+enum class OperationStatus {
+    Sucess, Failure
+};
+
 
 template< MomentumInterpolation MI, Linearisation LI >
 void SetStencil( GridLevelData<MI, LI> &gridLevelData,
@@ -105,11 +110,12 @@ void SetCoarseGridEquations( GridLevelData<MI, LI> &gridLevelData,
 
 
 template< MomentumInterpolation MI, Linearisation LI >
-void Smooth( GridLevelData<MI, LI> &gridLevelData,
+OperationStatus Smooth( GridLevelData<MI, LI> &gridLevelData,
              const FieldData<floatType> &maxResiduals,
              const intType maxIterations,
              const MultigridEquation mgEquationType )
 {
+    OperationStatus returnFlag = OperationStatus::Sucess;
     FieldData<floatType> residualsScaleFactor;
     FieldData<Tensor3D> coarseGridRightHandSide;
 
@@ -130,8 +136,9 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
     SetResidualsNormalisationFactor( residualsScaleFactor, residuals );
     NormaliseResiduals( residuals, residualsScaleFactor );
 
-    intType nIterations = 1;
-    for ( /* NULL */; nIterations <= maxIterations; nIterations++ ) {
+    intType nIterations = 0;
+    while ( nIterations < maxIterations ) {
+        nIterations++;
 
         gridLevelData.linearSolver->UpdateState();
         gridLevelData.linearSolver->Solve();
@@ -148,14 +155,12 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
         NormaliseResiduals( residuals, residualsScaleFactor );
 
         if ( ResidualsDiverged(residuals) ) {
-            break;
-        }
-
-        if ( nIterations + 1 > maxIterations ) {
+            returnFlag = OperationStatus::Failure;
             break;
         }
 
         if ( MetResidualTolerence(residuals, maxResiduals) ) {
+            returnFlag = OperationStatus::Sucess;
             break;
         }
 
@@ -164,15 +169,21 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
                                                                                                                        << residuals.U[1] << ", " 
                                                                                                                        << residuals.U[2] << ", " 
                                                                                                                        << residuals.P    << ", "
-                                                                                                                       << " after " << nIterations << " iterations.\n";
+                                                                                                                       << " after " << nIterations << " iterations.";
+    if ( returnFlag == OperationStatus::Failure ) {
+        std::cout << "  (Solution discarded)\n";
+    } else {
+        std::cout << "\n";
+    }
+    return returnFlag;
 }
 
 
 
 template< MomentumInterpolation MI, Linearisation LI >
-void SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
-                                const intType maxIterations,
-                                const MultigridEquation mgEquationType )
+OperationStatus SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
+                                           const intType maxIterations,
+                                           const MultigridEquation mgEquationType )
 {
     FieldData<floatType> residualsScaleFactor;
     FieldData<Tensor3D> coarseGridRightHandSide;
@@ -201,6 +212,8 @@ void SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
 
     }
     std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", performed " << maxIterations << " iterations" << "\n";
+
+    return OperationStatus::Sucess;
 }
 
 
@@ -211,6 +224,8 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
             const MultigridEquation mgEquationType,
             const InputData::MultigridSettings &mgSettings )
 {
+    OperationStatus smootherStatus = OperationStatus::Sucess;
+
     // Presmoothing 
     SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.preSmoothingIterations, mgEquationType );
 
@@ -232,22 +247,24 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
     // Solve coarse grid problem
     if ( mgLevels[level+1].isCoarsestLevel ) {  // This is bad if there is 0 coarse levels
-        Smooth<MI, LI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::TauCorrection );
+        smootherStatus = Smooth<MI, LI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::TauCorrection );
     } else {
         Cycle<MGCycle, MI, LI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
     }
 
-    // Compute fine grid correction 
-    FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
-                                                                        mgLevels[level+1].fieldsRestricted, 
-                                                                        mgLevels[level+1].mesh, 
-                                                                        mgLevels[level].mesh,
-                                                                        mgLevels[level].ibData.mask );
 
-    // Correct fine grid approximation
-    ForAllFieldData( [&] (intType f) {
-        mgLevels[level].fields[f] += fineGridCorrection[f];
-    } );
+    if ( smootherStatus == OperationStatus::Sucess) {
+        FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
+                                                                            mgLevels[level+1].fieldsRestricted, 
+                                                                            mgLevels[level+1].mesh, 
+                                                                            mgLevels[level].mesh,
+                                                                            mgLevels[level].ibData.mask );
+
+        // Correct fine grid approximation
+        ForAllFieldData( [&] (intType f) {
+            mgLevels[level].fields[f] += fineGridCorrection[f];
+        } );
+    }
 
     if constexpr ( MGCycle == MultigridCycleType::F ||
                    MGCycle == MultigridCycleType::W  )
@@ -277,8 +294,9 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
         mgLevels[level+1].fields = mgLevels[level+1].fieldsRestricted;
 
         // Solve coarse grid problem
+        smootherStatus = OperationStatus::Sucess;
         if ( mgLevels[level+1].isCoarsestLevel ) {  // This is bad if there is 0 coarse levels
-            Smooth<MI, LI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::TauCorrection );
+            smootherStatus = Smooth<MI, LI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::TauCorrection );
         } else {
             if        constexpr ( MGCycle == MultigridCycleType::F ) {
                 Cycle<MultigridCycleType::V, MI, LI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
@@ -288,16 +306,18 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
         }
 
         // Compute fine grid correction 
-        fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
-                                                        mgLevels[level+1].fieldsRestricted, 
-                                                        mgLevels[level+1].mesh, 
-                                                        mgLevels[level].mesh,
-                                                        mgLevels[level].ibData.mask );
+        if ( smootherStatus == OperationStatus::Sucess) {
+            FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
+                                                                                mgLevels[level+1].fieldsRestricted, 
+                                                                                mgLevels[level+1].mesh, 
+                                                                                mgLevels[level].mesh,
+                                                                                mgLevels[level].ibData.mask );
 
-        // Correct fine grid approximation
-        ForAllFieldData( [&] (intType f) {
-            mgLevels[level].fields[f] += fineGridCorrection[f];
-        } );
+            // Correct fine grid approximation
+            ForAllFieldData( [&] (intType f) {
+                mgLevels[level].fields[f] += fineGridCorrection[f];
+            } );
+        }
 
     }
 
@@ -319,13 +339,16 @@ void FMGInitialise( std::vector< GridLevelData<MI, LI> > &mgLevels,
     intType coarsestLevel = mgLevels.size() - 1;
 
     // Solve coarsest level
-    Smooth<MI, LI>( mgLevels[coarsestLevel], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::NoTauCorrection );
+    OperationStatus smootherStatus = Smooth<MI, LI>( mgLevels[coarsestLevel], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::NoTauCorrection );
 
     // Prolongate
-    ForAllFieldData( [&] (intType f) {
-        mgLevels[coarsestLevel-1].fields[f] = ProlongateField( mgLevels[coarsestLevel].fields[f], mgLevels[coarsestLevel].mesh, mgLevels[coarsestLevel-1].mesh );
-    } );
-    MaskFields( mgLevels[coarsestLevel-1].fields, mgLevels[coarsestLevel-1].ibData.mask );
+    if ( smootherStatus == OperationStatus::Sucess ) {
+        ForAllFieldData( [&] (intType f) {
+            mgLevels[coarsestLevel-1].fields[f] = ProlongateField( mgLevels[coarsestLevel].fields[f], mgLevels[coarsestLevel].mesh, mgLevels[coarsestLevel-1].mesh );
+        } );
+        MaskFields( mgLevels[coarsestLevel-1].fields, mgLevels[coarsestLevel-1].ibData.mask );
+    }
+    
 
     for ( intType level = coarsestLevel-1; level != 0; level-- ) {
 
@@ -426,8 +449,10 @@ void SolveSteady( const InputData &inputData,
     residualsLogFile.WriteData( residualsOuter, massFluxResidual, 0 );
     fieldWriter.WriteDataIteration( 0 );
 
-    for ( intType nOuterIterations = 1; nOuterIterations <= maxOuterIterations; nOuterIterations++ )
-    {
+    intType nOuterIterations = 0;
+    while ( nOuterIterations < maxOuterIterations ) {
+        nOuterIterations++;
+
         // Solve
         TIC("Multigrid Cycling")
         if ( mgLevels.size() == 1 ) {
@@ -468,19 +493,15 @@ void SolveSteady( const InputData &inputData,
         if ( ResidualsDiverged(residualsOuter) ) {
             fieldWriter.WriteDataIteration( nOuterIterations );
             std::cout << "*** SOLUTION DIVERGED ***" << "\n\n";
-            break;
-        }
-
-        if ( nOuterIterations + 1 > maxOuterIterations ) {
-            fieldWriter.WriteDataIteration( nOuterIterations );
-            std::cout << "*** REACHED ITERATION LIMIT ***" << "\n\n";
-            break;
+            TOC()
+            return;
         }
 
         if ( MetResidualTolerence(residualsOuter, maxOuterResiduals) ) {
             fieldWriter.WriteDataIteration( nOuterIterations );
             std::cout << "*** SOLUTION CONVERGED ***" << "\n\n";
-            break;
+            TOC()
+            return;
         }
 
         if ( writeFields && (nOuterIterations % inputData.fieldWriteInterval) == 0 ) {
@@ -490,6 +511,9 @@ void SolveSteady( const InputData &inputData,
         mgLevels[0].fieldsOld    = mgLevels[0].fields;
 
     }
+
+    fieldWriter.WriteDataIteration( nOuterIterations );
+    std::cout << "*** REACHED ITERATION LIMIT ***" << "\n\n";
     TOC()
 
 }
