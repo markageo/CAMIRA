@@ -92,6 +92,12 @@ void UpdateFVCoefficients( FVCoefficients &,
                            const BoundaryConditionData & );
 
 
+
+void ApplyImplicitRelaxation( FVCoefficients &, 
+                              const FieldData<Tensor3D> &,
+                              const Mesh & );
+
+
 // ----------------------------------------- Definition in GhostCells.cpp --------------------------------------- //
 
 void SetGhostCells( FieldData<Tensor3D> &,

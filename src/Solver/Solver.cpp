@@ -24,36 +24,51 @@ namespace CFD
 namespace
 {
 
+
 template< MomentumInterpolation MI, Linearisation LI >
-void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
+void SetStencil( GridLevelData<MI, LI> &gridLevelData,
+                 FieldData<Tensor3D> &fields )
 {
     auto &gld = gridLevelData; 
-    SetGhostCells( gridLevelData.fields, gridLevelData.mesh, gridLevelData.bcData );
-    UpdateIBData( gld.ibData, gld.fields );
-    UpdateFaceFluxes( gld.faceFluxes, gld.mesh, gld.fields.U, gld.bcData);
-    // UpdateFaceFluxesWithMWI( gld.faceFluxes, gld.mesh, gld.fields, gld.fvCoeffs, gld.bcData);
+
+    SetGhostCells( fields, gridLevelData.mesh, gridLevelData.bcData );
+    UpdateIBData( gld.ibData, fields );
+    UpdateFaceFluxes( gld.faceFluxes, gld.mesh, fields.U, gld.bcData);
     SetIBFaceFluxes( gld.faceFluxes, gld.ibData );
     if constexpr ( LI == Linearisation::Newton ) {
-        UpdateFaceAdvectedVelocities( gld.faceAdvectedVelocities, gld.mesh, gld.fvCoeffs, gld.fields.U, gld.faceFluxes, gld.bcData);
+        UpdateFaceAdvectedVelocities( gld.faceAdvectedVelocities, gld.mesh, gld.fvCoeffs, fields.U, gld.faceFluxes, gld.bcData);
         switch ( gld.fvCoeffs.Mom[Axis::X].advectionScheme ) {
             case AdvectionSchemes::Upwind:
-                SetIBFaceAdvectedVelocities<AdvectionSchemes::Upwind >( gld.faceAdvectedVelocities, gld.faceFluxes, gld.fields, gld.fvCoeffs, gld.mesh, gld.ibData );
+                SetIBFaceAdvectedVelocities<AdvectionSchemes::Upwind >( gld.faceAdvectedVelocities, gld.faceFluxes, fields, gld.fvCoeffs, gld.mesh, gld.ibData );
                 break;
 
             case AdvectionSchemes::Central:
-                SetIBFaceAdvectedVelocities<AdvectionSchemes::Central>( gld.faceAdvectedVelocities, gld.faceFluxes, gld.fields, gld.fvCoeffs, gld.mesh, gld.ibData );
+                SetIBFaceAdvectedVelocities<AdvectionSchemes::Central>( gld.faceAdvectedVelocities, gld.faceFluxes, fields, gld.fvCoeffs, gld.mesh, gld.ibData );
                 break;
 
             case AdvectionSchemes::SOU:
-                SetIBFaceAdvectedVelocities<AdvectionSchemes::SOU    >( gld.faceAdvectedVelocities, gld.faceFluxes, gld.fields, gld.fvCoeffs, gld.mesh, gld.ibData );
+                SetIBFaceAdvectedVelocities<AdvectionSchemes::SOU    >( gld.faceAdvectedVelocities, gld.faceFluxes, fields, gld.fvCoeffs, gld.mesh, gld.ibData );
                 break;
 
             case AdvectionSchemes::QUICK:
-                SetIBFaceAdvectedVelocities<AdvectionSchemes::QUICK  >( gld.faceAdvectedVelocities, gld.faceFluxes, gld.fields, gld.fvCoeffs, gld.mesh, gld.ibData );
+                SetIBFaceAdvectedVelocities<AdvectionSchemes::QUICK  >( gld.faceAdvectedVelocities, gld.faceFluxes, fields, gld.fvCoeffs, gld.mesh, gld.ibData );
                 break;
         }
     }
-    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fields, gld.fieldsOld, gld.fieldsOldOld, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
+    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, fields, gld.fieldsOld, gld.fieldsOldOld, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
+}
+
+
+
+template< MomentumInterpolation MI, Linearisation LI >
+void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
+{
+    SetStencil<MI, LI>(gridLevelData, gridLevelData.fields);
+
+    if ( gridLevelData.fvCoeffs.Mom[Axis::X].timeScheme == TimeSchemes::Steady )
+        ApplyImplicitRelaxation( gridLevelData.fvCoeffs,
+                                 gridLevelData.fieldsOld, 
+                                 gridLevelData.mesh);    
 }
 
 
@@ -61,35 +76,7 @@ void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
 template< MomentumInterpolation MI, Linearisation LI >
 void SetCoarseGridRightHandSideInStencil( GridLevelData<MI, LI> &gridLevelData )
 {
-    auto &gld = gridLevelData;
-
-    // Set fvCoeffs based on the restricted fine grid approximation for the RHS
-    SetGhostCells( gridLevelData.fieldsRestricted, gridLevelData.mesh, gridLevelData.bcData );
-    UpdateIBData( gld.ibData, gld.fieldsRestricted );
-    UpdateFaceFluxes( gld.faceFluxes, gld.mesh, gld.fieldsRestricted.U, gld.bcData);
-    // UpdateFaceFluxesWithMWI( gld.faceFluxes, gld.mesh, gld.fields, gld.fvCoeffs, gld.bcData);
-    if constexpr ( LI == Linearisation::Newton ) {
-        UpdateFaceAdvectedVelocities( gld.faceAdvectedVelocities, gld.mesh, gld.fvCoeffs, gld.fieldsRestricted.U, gld.faceFluxes, gld.bcData);
-        switch ( gld.fvCoeffs.Mom[Axis::X].advectionScheme ) {
-            case AdvectionSchemes::Upwind:
-                SetIBFaceAdvectedVelocities<AdvectionSchemes::Upwind >( gld.faceAdvectedVelocities, gld.faceFluxes, gld.fieldsRestricted, gld.fvCoeffs, gld.mesh, gld.ibData );
-                break;
-
-            case AdvectionSchemes::Central:
-                SetIBFaceAdvectedVelocities<AdvectionSchemes::Central>( gld.faceAdvectedVelocities, gld.faceFluxes, gld.fieldsRestricted, gld.fvCoeffs, gld.mesh, gld.ibData );
-                break;
-
-            case AdvectionSchemes::SOU:
-                SetIBFaceAdvectedVelocities<AdvectionSchemes::SOU    >( gld.faceAdvectedVelocities, gld.faceFluxes, gld.fieldsRestricted, gld.fvCoeffs, gld.mesh, gld.ibData );
-                break;
-
-            case AdvectionSchemes::QUICK:
-                SetIBFaceAdvectedVelocities<AdvectionSchemes::QUICK  >( gld.faceAdvectedVelocities, gld.faceFluxes, gld.fieldsRestricted, gld.fvCoeffs, gld.mesh, gld.ibData );
-                break;
-        }
-    }
-    SetIBFaceFluxes( gld.faceFluxes, gld.ibData );
-    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, gld.fieldsRestricted, gld.fieldsOld, gld.fieldsOldOld, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
+    SetStencil<MI, LI>(gridLevelData, gridLevelData.fieldsRestricted);
 }
 
 
@@ -101,13 +88,18 @@ void SetCoarseGridEquations( GridLevelData<MI, LI> &gridLevelData,
     auto &gld = gridLevelData;
 
     // Set fvCoeffs based on the latest solution to the coarse grid problem
-    SetFineGridEquations<MI, LI>( gld );
+    SetStencil<MI, LI>(gridLevelData, gridLevelData.fields);
 
     // Add the terms that appear on the RHS of the coarse grid equation
     EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
         gld.fvCoeffs.Mom[axis].F += coarseGridRightHandSide.U[axis];
     } );
     gld.fvCoeffs.Cont.F += coarseGridRightHandSide.P;
+
+    if ( gridLevelData.fvCoeffs.Mom[Axis::X].timeScheme == TimeSchemes::Steady )
+        ApplyImplicitRelaxation( gridLevelData.fvCoeffs,
+                                 gridLevelData.fieldsOld, 
+                                 gridLevelData.mesh );    
 }
 
 
@@ -122,7 +114,7 @@ void Smooth( GridLevelData<MI, LI> &gridLevelData,
     FieldData<Tensor3D> coarseGridRightHandSide;
 
     if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
-        SetFineGridEquations<MI, LI>( gridLevelData );
+        SetFineGridEquations<MI, LI>( gridLevelData );              
     } else {
         SetCoarseGridRightHandSideInStencil( gridLevelData );
         coarseGridRightHandSide = CalculateCoarseGridRightHandSide<MI, LI>( gridLevelData.fvCoeffs,
@@ -206,6 +198,7 @@ void SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
         } else {
             SetCoarseGridEquations<MI, LI>( gridLevelData, coarseGridRightHandSide );
         }
+
     }
     std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", performed " << maxIterations << " iterations" << "\n";
 }
@@ -448,6 +441,8 @@ void SolveSteady( const InputData &inputData,
         
         TIC("Residuals and Logging")
         // Residuals
+        SetFineGridEquations<MI, LI>( mgLevels[0] );
+
         residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
                                                           mgLevels[0].fvCoeffs, 
                                                           mgLevels[0].ibData.mask); 

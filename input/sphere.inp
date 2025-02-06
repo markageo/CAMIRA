@@ -2,7 +2,7 @@
 
 Model {
     rho  = 1
-    nu   = 0.02
+    nu   = 0.05
     transient = no
 }
 
@@ -157,7 +157,7 @@ Solver {
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (0.9, 1, 1)
+        implicitMomentumRelaxation = (1, 1, 1)
         implicitPressureRelaxation = 1
 
         maxOuterIterations = 100
@@ -184,11 +184,11 @@ Solver {
         cycle = F
         maxCoarseLevels = 3
 
-        preSmoothingIterations = 2
-        postSmoothingIterations = 2
-        fineGridIterations   = 1
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
+        fineGridIterations   = 2
 
-        maxCoarseGridIterations = 250
+        maxCoarseGridIterations = 200
         maxCoarseGridResiduals  = 1e-6
         
     }
