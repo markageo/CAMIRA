@@ -170,13 +170,31 @@ void AddIBDataForDirection( IBCell &ibCell,
 
     } else {
 
+        // Stencil skip
         floatType dxp = mesh.cellLengths[axis](cellIndex[axis]);
         floatType dxa = mesh.cellLengths[axis](cellIndex_a[axis]);
-        floatType denominator =  dxp / 2.0f   +  dxa / 2.0f  +  ibDistance;
+        floatType denominator =  dxp  +  dxa  +  2.0f * ibDistance;
         sourceTermData.faceExtrapCoeff_p  = 0.0f;
-        sourceTermData.faceExtrapCoeff_a  = ( dxp / 2.0f - ibDistance ) / denominator;
-        sourceTermData.faceExtrapCoeff_ib = ( dxa / 2.0f + dxp ) / denominator;
+        sourceTermData.faceExtrapCoeff_a  = ( dxp - 2.0f * ibDistance ) / denominator;
+        sourceTermData.faceExtrapCoeff_ib = ( dxa + 2.0f * dxp ) / denominator;
 
+        // Nearest face
+        // floatType dxp    = mesh.cellLengths[axis](cellIndex[axis]),
+        //           lambda = mesh.interpFactors[axis]( fidx - directionIndex );
+        // floatType denominator =  2.0f * ibDistance  + dxp;
+        // if ( directionIndex == +1 ) {
+        //     sourceTermData.faceExtrapCoeff_p  = lambda          * ( 2.0f * ibDistance - dxp ) / denominator;
+        //     sourceTermData.faceExtrapCoeff_a  = (1.0f - lambda) * ( 2.0f * ibDistance - dxp ) / denominator;
+        // } else {
+        //     sourceTermData.faceExtrapCoeff_p  = (1.0f - lambda) * ( 2.0f * ibDistance - dxp ) / denominator;
+        //     sourceTermData.faceExtrapCoeff_a  = lambda          * ( 2.0f * ibDistance - dxp ) / denominator;
+        // }
+        // sourceTermData.faceExtrapCoeff_ib = 2.0f * dxp / denominator;
+
+        // // Just set to zero
+        // sourceTermData.faceExtrapCoeff_p  = 0.0f;
+        // sourceTermData.faceExtrapCoeff_a  = 0.0f; 
+        // sourceTermData.faceExtrapCoeff_ib = 1.0f;
     }
 
 
