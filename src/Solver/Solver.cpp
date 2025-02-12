@@ -219,6 +219,28 @@ OperationStatus SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
 
 
 
+template< MomentumInterpolation MI, Linearisation LI >
+void RestrictLevel( std::vector< GridLevelData<MI, LI> > &mgLevels,
+                    const FieldData<Tensor3D> &residuals,
+                    const intType fineLevel,
+                    const intType coarseLevel )
+{
+    mgLevels[coarseLevel].residualsRestricted = RestrictFields( residuals                  , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
+    mgLevels[coarseLevel].fieldsRestricted    = RestrictFields( mgLevels[fineLevel].fields , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
+    if ( mgLevels[coarseLevel].fieldsPrevTime.P.size() != 0 ) {
+        mgLevels[coarseLevel].fieldsPrevTime    = RestrictFields( mgLevels[fineLevel].fieldsPrevTime     , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
+    }
+    if ( mgLevels[coarseLevel].fieldsPrevPrevTime.P.size() != 0 ) {
+        mgLevels[coarseLevel].fieldsPrevPrevTime = RestrictFields( mgLevels[fineLevel].fieldsPrevPrevTime, mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
+    }
+    // mgLevels[coarseLevel].fieldsOld = RestrictFields( mgLevels[fineLevel].fieldsOld , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
+    mgLevels[coarseLevel].fields    = mgLevels[coarseLevel].fieldsRestricted;
+    // mgLevels[coarseLevel].fieldsOld = mgLevels[coarseLevel].fields;  
+}
+
+
+
+
 template< MultigridCycleType MGCycle, MomentumInterpolation MI, Linearisation LI >
 void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
             const intType level,
@@ -236,15 +258,8 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
                                                             mgLevels[level].ibData.mask );
 
     // Restrict residuals and solutions
-    mgLevels[level+1].residualsRestricted = RestrictFields( residuals                   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-    mgLevels[level+1].fieldsRestricted    = RestrictFields( mgLevels[level].fields      , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-    if ( mgLevels[level+1].fieldsPrevTime.P.size() != 0 ) {
-        mgLevels[level+1].fieldsPrevTime    = RestrictFields( mgLevels[level].fieldsPrevTime   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-    }
-    if ( mgLevels[level+1].fieldsPrevPrevTime.P.size() != 0 ) {
-        mgLevels[level+1].fieldsPrevPrevTime = RestrictFields( mgLevels[level].fieldsPrevPrevTime, mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-    }
-    mgLevels[level+1].fields = mgLevels[level+1].fieldsRestricted;
+    RestrictLevel(mgLevels, residuals, level, level+1);
+
 
     // Solve coarse grid problem
     if ( mgLevels[level+1].isCoarsestLevel ) {  // This is bad if there is 0 coarse levels
@@ -284,15 +299,7 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
                                             mgLevels[level].ibData.mask );
 
         // Restrict residuals and solution
-        mgLevels[level+1].residualsRestricted = RestrictFields( residuals                   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-        mgLevels[level+1].fieldsRestricted    = RestrictFields( mgLevels[level].fields      , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-        if ( mgLevels[level+1].fieldsPrevTime.P.size() != 0 ) {
-            mgLevels[level+1].fieldsPrevTime    = RestrictFields( mgLevels[level].fieldsPrevTime   , mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-        }
-        if ( mgLevels[level+1].fieldsPrevPrevTime.P.size() != 0 ) {
-            mgLevels[level+1].fieldsPrevPrevTime = RestrictFields( mgLevels[level].fieldsPrevPrevTime, mgLevels[level].mesh, mgLevels[level+1].mesh, mgLevels[level+1].ibData.mask );
-        }
-        mgLevels[level+1].fields = mgLevels[level+1].fieldsRestricted;
+        RestrictLevel(mgLevels, residuals, level, level+1);
 
         // Solve coarse grid problem
         smootherStatus = OperationStatus::Sucess;
@@ -467,8 +474,9 @@ void SolveSteady( const InputData &inputData,
         
         TIC("Residuals and Logging")
         // Residuals
-        SetFineGridEquations<MI, LI>( mgLevels[0] );
-
+        // SetFineGridEquations<MI, LI>( mgLevels[0] );
+        SetStencil<MI, LI>(mgLevels[0], mgLevels[0].fields);
+        
         residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
                                                           mgLevels[0].fvCoeffs, 
                                                           mgLevels[0].ibData.mask); 
@@ -547,7 +555,7 @@ void SolveTransient( const InputData &inputData,
     auto& mask   = mgLevels[0].ibData.mask;
 
     // Initialise residuals
-    FieldData<floatType> residualsOuter(0.0f), residualsScaleFactor(0.0f);
+    FieldData<floatType> residualsOuter(0.0f), residualsScaleFactor(1.0f);
     floatType massFluxResidual(0.0f);
 
     // Logging objects
@@ -596,8 +604,8 @@ void SolveTransient( const InputData &inputData,
             residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
                                                               mgLevels[0].fvCoeffs, 
                                                               mgLevels[0].ibData.mask); 
-            if ( nOuterIterations == 1 )
-                SetResidualsNormalisationFactor( residualsScaleFactor, residualsOuter );
+            // if ( nOuterIterations == 1 )
+            //     SetResidualsNormalisationFactor( residualsScaleFactor, residualsOuter );
             NormaliseResiduals( residualsOuter, residualsScaleFactor );
             massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
                                                          mgLevels[0].mesh);
