@@ -41,17 +41,19 @@ class TriadSolver
 
 public:
     TriadSolver( FieldData<Tensor3D> &fields,
+                 const FieldData<Tensor3D> &fieldsOld,
                  const Tensor3D &mask,
                  const FVCoefficients &fvCoeffs,
-                 const InputData::LinearSolverSettings &linearSolverSettings ) : 
+                 const InputData::SmootherSettings &smootherSettings ) : 
                     m_fields( fields ),
+                    m_fieldsOld( fieldsOld ),
                     m_mask( mask ),
                     m_fvCoeffs( fvCoeffs ),
                     m_ni( fvCoeffs.nCells(0) ),
                     m_nj( fvCoeffs.nCells(1) ),
                     m_nk (fvCoeffs.nCells(2) ),
                     m_K( Tensor3D(m_ni, m_nj, m_nk).setZero() ),
-                    m_relaxation( linearSolverSettings.relaxation )
+                    m_relaxation( smootherSettings.relaxation )
     { UpdateGlobalConstants(); };
 
 
@@ -320,20 +322,20 @@ public:
                                    - m_fvCoeffs.Cont.AU[Z][sCW::cCoupled](kg) * bW * maskW
                                    ) * m_K(i, j, k);
 
+        // Pressure  update
+        m_fields.P( ig, jg, kg )       = (1.0f - maskP ) * m_fields.P( ig, jg, kg )        +  maskP * newP;
+
         // Update U from momentum
-        const floatType newU = ( 1.0f - m_relaxation.U[X]) * m_fields.U[X]( igU, jgU, kgU )
+        const floatType newU = ( 1.0f - m_relaxation.U[X]) * m_fieldsOld.U[X]( igU, jgU, kgU )
                                 + m_relaxation.U[X] * ( bU - m_fvCoeffs.Mom[X].AP[sUP::cCoupled](igU) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[X].diagCoeffInv(igU, jgU, kgU) );
         
         // Update V from momentum
-        const floatType newV = ( 1.0f -m_relaxation.U[Y] ) * m_fields.U[Y]( igV, jgV, kgV )
+        const floatType newV = ( 1.0f -m_relaxation.U[Y] ) * m_fieldsOld.U[Y]( igV, jgV, kgV )
                                 + m_relaxation.U[Y] * ( bV - m_fvCoeffs.Mom[Y].AP[sVP::cCoupled](jgV) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Y].diagCoeffInv(igV, jgV, kgV) );
         
         // Update W from momentum
-        const floatType newW = ( 1.0f - m_relaxation.U[Z]) * m_fields.U[Z]( igW, jgW, kgW ) 
+        const floatType newW = ( 1.0f - m_relaxation.U[Z]) * m_fieldsOld.U[Z]( igW, jgW, kgW ) 
                                 + m_relaxation.U[Z] * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kgW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW) );
-
-        // Pressure  update
-        m_fields.P( ig, jg, kg )       = (1.0f - maskP ) * m_fields.P( ig, jg, kg )        +  maskP * newP;
 
         // Momentum update
         m_fields.U[X]( igU, jgU, kgU ) = (1.0f - maskP * maskU ) * m_fields.U[X]( igU, jgU, kgU )  +  maskP * maskU * newU;
@@ -406,6 +408,7 @@ public:
 
 private:
     FieldData<Tensor3D> &m_fields;
+    const FieldData<Tensor3D> &m_fieldsOld;
     const Tensor3D &m_mask;
     const FVCoefficients &m_fvCoeffs;
     const intType m_ni, m_nj, m_nk;

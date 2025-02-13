@@ -132,7 +132,7 @@ void EnumFor( L&& f )
 // ---------------------------------------------------- Solver Parameters -------------------------------------------------- //
 
 // Solver settings
-enum class LinearSolvers {
+enum class Smoothers {
     nestedLineSymmetric, domainSymmetric
 };
 

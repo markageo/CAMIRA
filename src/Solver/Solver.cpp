@@ -70,9 +70,9 @@ void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
 {
     SetStencil<MI, LI>(gridLevelData, gridLevelData.fields);
 
-    ApplyImplicitRelaxation( gridLevelData.fvCoeffs,
-                             gridLevelData.fieldsOld, 
-                             gridLevelData.mesh);    
+    // ApplyImplicitRelaxation( gridLevelData.fvCoeffs,
+    //                          gridLevelData.fieldsOld, 
+    //                          gridLevelData.mesh);    
 }
 
 
@@ -100,9 +100,9 @@ void SetCoarseGridEquations( GridLevelData<MI, LI> &gridLevelData,
     } );
     gld.fvCoeffs.Cont.F += coarseGridRightHandSide.P;
 
-    ApplyImplicitRelaxation( gridLevelData.fvCoeffs,
-                             gridLevelData.fieldsOld, 
-                             gridLevelData.mesh );    
+    // ApplyImplicitRelaxation( gridLevelData.fvCoeffs,
+    //                          gridLevelData.fieldsOld, 
+    //                          gridLevelData.mesh );    
 }
 
 
@@ -233,9 +233,7 @@ void RestrictLevel( std::vector< GridLevelData<MI, LI> > &mgLevels,
     if ( mgLevels[coarseLevel].fieldsPrevPrevTime.P.size() != 0 ) {
         mgLevels[coarseLevel].fieldsPrevPrevTime = RestrictFields( mgLevels[fineLevel].fieldsPrevPrevTime, mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
     }
-    // mgLevels[coarseLevel].fieldsOld = RestrictFields( mgLevels[fineLevel].fieldsOld , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
     mgLevels[coarseLevel].fields    = mgLevels[coarseLevel].fieldsRestricted;
-    // mgLevels[coarseLevel].fieldsOld = mgLevels[coarseLevel].fields;  
 }
 
 
@@ -517,8 +515,6 @@ void SolveSteady( const InputData &inputData,
             fieldWriter.WriteDataIteration( nOuterIterations );
         }  
 
-        mgLevels[0].fieldsOld    = mgLevels[0].fields;
-
     }
 
     fieldWriter.WriteDataIteration( nOuterIterations );
@@ -627,8 +623,6 @@ void SolveTransient( const InputData &inputData,
                 std::cout << "Residuals converged for timestep." << "\n";
                 break;
             }
-
-            mgLevels[0].fieldsOld    = mgLevels[0].fields;
         }
 
         probeValues = SetFieldProbeValues( mgLevels[0].fields, fieldProbes); 

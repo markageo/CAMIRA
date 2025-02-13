@@ -2454,7 +2454,6 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
 
     // Parts of momentum equation that don't change with linearisation
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        fvCoeffs.Mom[axis].relaxation              = inputData.schemes.implicitRelaxation.U[axis];
         fvCoeffs.Mom[axis].advectionScheme         = inputData.schemes.advectionScheme;
         fvCoeffs.Mom[axis].timeScheme              = inputData.schemes.timeScheme;
         fvCoeffs.Mom[axis].timeStep                = inputData.schemes.timeStep;
@@ -2472,7 +2471,6 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
         SetMomentumInterpolationSparseConstants(fvCoeffs.Cont.mwiSparseCoeffs[axis], fvCoeffs.Mom[axis].AP, mesh, axis);
         SetMomentumInterpolationCompactConstants(fvCoeffs.Cont.mwiCompactCoeffs[axis], inputData.rho, mesh, axis);
     } );
-    fvCoeffs.Cont.relaxation = inputData.schemes.implicitRelaxation.P;
 
     // Set the coefficients that depend on linearisation
     UpdateFVCoefficients( fvCoeffs, mesh, fields, fieldsPrevTime, fieldsPrevPrevTime, faceAdvectedVelocities, faceFluxes, ibData, bcData );
@@ -2566,61 +2564,6 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
 
     // Add effect of immersed boundary
     AddIBSourceTerms( fvCoeffs, faceFluxes, ibData, fields, mesh );
-}
-
-
-
-void ApplyImplicitRelaxation( FVCoefficients &fvCoeffs, 
-                              const FieldData<Tensor3D> &fieldsOld,
-                              const Mesh &mesh )
-{
-    using enum TransportCoefficients::ENUMDATA;
-
-    // Momentum equation
-    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        
-        MomentumEquation &momentumEquation = fvCoeffs.Mom[axis];
-        floatType omega = momentumEquation.relaxation;
-
-        for (intType k = 0; k != mesh.nCells(2); k++) {
-            for (intType j = 0; j != mesh.nCells(1); j++) {
-                for (intType i = 0; i != mesh.nCells(0); i++) {
-
-                    momentumEquation.B( G(i, j, k) )           -= ( (1 - omega) / omega ) 
-                                                                * momentumEquation.AU[axis][p]( G(i, j, k) )
-                                                                * fieldsOld.U[axis]( G(i, j, k) );
-                    momentumEquation.AU[axis][p]( G(i, j, k) ) /= omega;
-                    
-
-                }
-            }
-        }
-
-        // Recalculation inverse of diagonal coefficient
-        SetDiagCoeffInverse(momentumEquation, mesh);
-
-    } );
-    
-
-
-    // Continuity equation
-    ContinuityEquation &continuityEquation = fvCoeffs.Cont;
-    floatType omega = continuityEquation.relaxation;
-
-    for (intType k = 0; k != mesh.nCells(2); k++) {
-        for (intType j = 0; j != mesh.nCells(1); j++) {
-            for (intType i = 0; i != mesh.nCells(0); i++) {
-
-                continuityEquation.B( G(i, j, k) )         -= ( (1 - omega) / omega ) 
-                                                            * continuityEquation.AP[p]( G(i, j, k) )
-                                                            * fieldsOld.P( G(i, j, k) );
-                 continuityEquation.AP[p]( G(i, j, k) ) /= omega;
-                
-
-            }
-        }
-    }
-
 }
 
 

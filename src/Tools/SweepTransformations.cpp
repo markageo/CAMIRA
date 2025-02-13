@@ -397,8 +397,7 @@ namespace
     void TransformSolver( InputData &inputData,
                           const AxisTransformationMap &axisTransformation )
     {
-        TransformFieldDataToCode( inputData.schemes.implicitRelaxation      , axisTransformation );
-        TransformFieldDataToCode( inputData.linearSolverSettings.relaxation , axisTransformation );
+        TransformFieldDataToCode( inputData.smootherSettings.relaxation , axisTransformation );
     }
 
 
@@ -460,8 +459,8 @@ AxisTransformationMap CreateAxisTransformation( BoundaryPatches::ENUMDATA planeS
 void TransformUserInputData( InputData &inputData,
                              const AxisTransformationMap &axisTransformation )
 {
-    inputData.linearSolverSettings.planeSweepDirection = BoundaryPatches::zPositive;
-    inputData.linearSolverSettings.lineSweepDirection  = BoundaryPatches::yPositive;
+    inputData.smootherSettings.planeSweepDirection = BoundaryPatches::zPositive;
+    inputData.smootherSettings.lineSweepDirection  = BoundaryPatches::yPositive;
 
     TransformBoundaryConditions( inputData, axisTransformation );
     TransformInitialConditions( inputData, axisTransformation );

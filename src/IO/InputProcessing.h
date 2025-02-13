@@ -93,15 +93,13 @@ struct InputData
         floatType advectionBlendingFactor;
         FaceInterpolationSchemes faceInterpolationScheme;
 
-        FieldData<floatType> implicitRelaxation;
-
         intType maxOuterIterations;
         FieldData<floatType> maxOuterResiduals;
     };
     Schemes schemes;
 
-    struct LinearSolverSettings {
-        LinearSolvers type;
+    struct SmootherSettings {
+        Smoothers type;
         intType maxIterations;
         FieldData<floatType> maxResiduals;
         FieldData<floatType> relaxation;
@@ -109,7 +107,7 @@ struct InputData
         BoundaryPatches::ENUMDATA lineSweepDirection;
         BoundaryPatches::ENUMDATA planeSweepDirection;
     }; 
-    LinearSolverSettings linearSolverSettings;
+    SmootherSettings smootherSettings;
 
     struct MultigridSettings {
         MultigridCycleType cycle;

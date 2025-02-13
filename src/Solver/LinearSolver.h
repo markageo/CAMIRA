@@ -38,21 +38,23 @@ class domainSymmetricSolver : public LinearSolverInterface< MI, LI >
 
 public:
     domainSymmetricSolver( FieldData<Tensor3D> &fields,
-                  const Tensor3D &mask,
-                  const FVCoefficients &fvCoeffs, 
-                  const InputData::LinearSolverSettings &linearSolverSettings) : 
+                           const FieldData<Tensor3D> &fieldsOld,
+                           const Tensor3D &mask,
+                           const FVCoefficients &fvCoeffs, 
+                           const InputData::SmootherSettings &smootherSettings) : 
                     m_fields( fields ),
+                    m_fieldsOld( fieldsOld ),
                     m_fvCoeffs( fvCoeffs ),
-                    m_maxIterations( linearSolverSettings.maxIterations ),
-                    m_maxResiduals( linearSolverSettings.maxResiduals ),
-                    m_relaxation( linearSolverSettings.relaxation ),
+                    m_maxIterations( smootherSettings.maxIterations ),
+                    m_maxResiduals( smootherSettings.maxResiduals ),
+                    m_relaxation( smootherSettings.relaxation ),
 
                     m_ni( fvCoeffs.nCells(A::X) ),
                     m_nj( fvCoeffs.nCells(A::Y) ),
                     m_nk( fvCoeffs.nCells(A::Z) )
     {
-        m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
-        m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
+        m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+        m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
     }
 
 
@@ -96,6 +98,7 @@ public:
 private:
 
     FieldData<Tensor3D> &m_fields;
+    const FieldData<Tensor3D> &m_fieldsOld;
     const FVCoefficients &m_fvCoeffs;
     const intType m_maxIterations;
     const FieldData<floatType> m_maxResiduals;
@@ -185,26 +188,28 @@ class nestedLineSymmetricSolver : public LinearSolverInterface< MI, LI >
 
 public:
     nestedLineSymmetricSolver( FieldData<Tensor3D> &fields,
-                  const Tensor3D &mask,
-                  const FVCoefficients &fvCoeffs, 
-                  const InputData::LinearSolverSettings &linearSolverSettings) : 
+                               const FieldData<Tensor3D> &fieldsOld,
+                               const Tensor3D &mask,
+                               const FVCoefficients &fvCoeffs, 
+                               const InputData::SmootherSettings &smootherSettings) : 
                     m_fields( fields ),
-                    m_maxIterations( linearSolverSettings.maxIterations ),
-                    m_maxResiduals( linearSolverSettings.maxResiduals ),
+                    m_fieldsOld( fieldsOld ),
+                    m_maxIterations( smootherSettings.maxIterations ),
+                    m_maxResiduals( smootherSettings.maxResiduals ),
                     m_oldPlane( Tensor2D( m_fields.P.dimension(A::X), m_fields.P.dimension(A::Y) ) ),
                     m_ni( fvCoeffs.nCells(A::X) ),
                     m_nj( fvCoeffs.nCells(A::Y) ),
                     m_nk( fvCoeffs.nCells(A::Z) )
     {
         if (m_nk == 1) {
-            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
-            SolutionUpdater = &nestedLineSymmetricSolver::Sweep2D;
-            StateUpdater = &nestedLineSymmetricSolver::UpdateState2D;
+            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            SolutionUpdater     = &nestedLineSymmetricSolver::Sweep2D;
+            StateUpdater        = &nestedLineSymmetricSolver::UpdateState2D;
         } else {
-            m_planeSolverTop = std::make_unique<PlaneSolver<TC::t, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
-            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
-            SolutionUpdater = &nestedLineSymmetricSolver::Sweep3D;
-            StateUpdater = &nestedLineSymmetricSolver::UpdateState3D;
+            m_planeSolverTop    = std::make_unique<PlaneSolver<TC::t, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            SolutionUpdater     = &nestedLineSymmetricSolver::Sweep3D;
+            StateUpdater        = &nestedLineSymmetricSolver::UpdateState3D;
         }
     }
 
@@ -248,12 +253,13 @@ public:
 private:
 
     FieldData<Tensor3D> &m_fields;
+    const FieldData<Tensor3D> &m_fieldsOld;
     const intType m_maxIterations;
     const FieldData<floatType> m_maxResiduals;
 
-    std::unique_ptr<PlaneSolver<TC::t, MI, LI>> m_planeSolverTop;
-    std::unique_ptr<PlaneSolver<TC::b, MI, LI>> m_planeSolverBottom;
-    std::unique_ptr<PlaneSolver<TC::p, MI, LI>> m_planeSolverCenter;
+    std::unique_ptr< PlaneSolver<TC::t, MI, LI> > m_planeSolverTop;
+    std::unique_ptr< PlaneSolver<TC::b, MI, LI> > m_planeSolverBottom;
+    std::unique_ptr< PlaneSolver<TC::p, MI, LI> > m_planeSolverCenter;
 
     void (nestedLineSymmetricSolver::*SolutionUpdater)(void);
     void (nestedLineSymmetricSolver::*StateUpdater)(void);

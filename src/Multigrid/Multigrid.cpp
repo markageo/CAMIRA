@@ -94,13 +94,13 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
 
         // Linear Solver
-        switch ( inputData.linearSolverSettings.type ) {
-            case LinearSolvers::nestedLineSymmetric:
-                mgl.linearSolver = std::make_unique< nestedLineSymmetricSolver<MI, LI> >(mgl.fields, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);
+        switch ( inputData.smootherSettings.type ) {
+            case Smoothers::nestedLineSymmetric:
+                mgl.linearSolver = std::make_unique< nestedLineSymmetricSolver<MI, LI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, inputData.smootherSettings);
                 break;
             
-            case LinearSolvers::domainSymmetric:
-                mgl.linearSolver = std::make_unique< domainSymmetricSolver<MI, LI> >(mgl.fields, mgl.ibData.mask, mgl.fvCoeffs, inputData.linearSolverSettings);
+            case Smoothers::domainSymmetric:
+                mgl.linearSolver = std::make_unique< domainSymmetricSolver<MI, LI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, inputData.smootherSettings);
                 break;
         }
         

@@ -119,16 +119,13 @@ Solver {
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (0.5, 0.5, 0.5)
-        implicitPressureRelaxation = 1
-
         maxOuterIterations = 100
         maxContinuityOuterResidual = 1e-5
         maxMomentumOuterResiduals   = (1e-5, 1e-5, 1e-5)
 
     }
     
-    LinearSolver {
+    Smoother {
 
         type = nestedLineSymmetric
         maxIterations = 5
