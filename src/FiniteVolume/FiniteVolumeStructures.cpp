@@ -357,7 +357,6 @@ MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis,
     diffBoundary( 0.0f ),
     BUBoundary(),
     BPBoundary(),   // These should be dimensioned only if needed
-    relaxation( 1.0f ),
     component( axis ),
     linearisation( li )
 {};
@@ -380,7 +379,6 @@ ContinuityEquation::ContinuityEquation( const iArray3 &dims,
                         std::array<Tensor1D, 2>{ Tensor1D(dims(Z)+1).setZero(), Tensor1D(dims(Z)+1).setZero() } } ),
     BUBoundary(),
     BPBoundary(),   // These should be dimensioned only if needed
-    relaxation( 1.0f ),
     momentumInterpolation( mi )
 {};
 

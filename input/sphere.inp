@@ -2,30 +2,30 @@
 
 Model {
     rho  = 1
-    nu   = 0.05
+    nu   = 0.01
     transient = no
 }
 
 Mesh {
 
-    domain = (24, 12, 12)
+    domain = (26, 12, 12)
 
     Grid x {
         Segment {
-            bounds     = (0, 9.5)
-            nCells     = 85
+            bounds     = (0, 8.5)
+            nCells     = 75
             biasFactor = -5.5
         }
 
         Segment {
-            bounds     = (9.5, 10.5)
-            nCells     = 28
+            bounds     = (8.5, 9.5)
+            nCells     = 24
             biasFactor = 1
         }
 
         Segment {
-            bounds     = (10.5, 24)
-            nCells     = 95
+            bounds     = (9.5, 26)
+            nCells     = 140
             biasFactor = 6
         }
     }
@@ -34,19 +34,19 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 5.5)
-            nCells     = 52
+            nCells     = 58
             biasFactor = -4.5
         }
 
         Segment {
             bounds     = (5.5, 6.5)
-            nCells     = 28
+            nCells     = 24
             biasFactor = 1
         }
 
         Segment {
             bounds     = (6.5, 12)
-            nCells     = 52
+            nCells     = 58
             biasFactor = 4.5
         }
     }
@@ -55,19 +55,19 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 5.5)
-            nCells     = 52
+            nCells     = 58
             biasFactor = -4.5
         }
 
         Segment {
             bounds     = (5.5, 6.5)
-            nCells     = 28
+            nCells     = 24
             biasFactor = 1
         }
 
         Segment {
             bounds     = (6.5, 12)
-            nCells     = 52
+            nCells     = 58
             biasFactor = 4.5
         }
     }
@@ -141,7 +141,7 @@ SolidGeometry {
     boundaryTreatement = directionalImmersedBoundary
 
     Sphere {
-        centerPosition = (10, 6, 6)
+        centerPosition = (9, 6, 6)
         diameter       = 1
     }
 }
@@ -157,38 +157,35 @@ Solver {
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (1, 1, 1)
-        implicitPressureRelaxation = 1
-
         maxOuterIterations = 100
-        maxContinuityOuterResidual = 1e-8
-        maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 
     }
     
-    LinearSolver {
+    Smoother {
 
         type = nestedLineSymmetric
-        maxIterations = 3
+        maxIterations = 1
         maxResiduals = 1e-3
 
-        planeSweepDirection = +y
+        planeSweepDirection = +z
         lineSweepDirection = +x
 
-        momentumRelaxation = (1, 1, 1)
+        momentumRelaxation = (0.5, 0.5, 0.5)
         pressureRelaxation = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 4
+        maxCoarseLevels = 2
 
         preSmoothingIterations = 3
         postSmoothingIterations = 3
         fineGridIterations   = 2
 
-        maxCoarseGridIterations = 200
+        maxCoarseGridIterations = 500
         maxCoarseGridResiduals  = 1e-6
         
     }
@@ -202,7 +199,7 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
-    fieldWriteInterval      = 0
+    fieldWriteInterval      = 1
 
     Monitors {
         ForceCalculator {

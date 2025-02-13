@@ -26,7 +26,6 @@ struct MomentumEquation {
         EnumVector< Axis, Tensor1D > g1, g2;                        
     };
     HiOrderAdvectionCoeffs positiveFluxHiOrderAdvectionCoeffs, negativeFluxHiOrderAdvectionCoeffs;
-    floatType relaxation;
     Axis::ENUMDATA component;                                                 // The momentum component
     Linearisation linearisation;
     AdvectionSchemes advectionScheme;
@@ -46,7 +45,6 @@ struct ContinuityEquation {
     EnumVector< Axis, std::array< Tensor1D, 4 > > mwiSparseCoeffs;           // Unweighted MWI coefficients from the sparse pressure gradient (LHS)
     EnumVector< Axis, std::array< Tensor1D, 2 > > mwiCompactCoeffs;          // Unweighted MWI coefficients from the compact pressure gradient (LHS)
     EnumVector< BoundaryPatches, Tensor2D   > BUBoundary, BPBoundary;        // Constant terms that come from fixed BC (LHS)
-    floatType relaxation; 
     MomentumInterpolation momentumInterpolation;
 };
 

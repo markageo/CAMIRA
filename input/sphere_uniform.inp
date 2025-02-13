@@ -2,18 +2,18 @@
 
 Model {
     rho  = 1
-    nu   = 0.05
+    nu   = 0.00666666
     transient = no
 }
 
 Mesh {
 
-    domain = (10, 5, 5)
+    domain = (24, 12, 12)
 
     Grid x {
         Segment {
-            bounds     = (0, 10)
-            nCells     = 400
+            bounds     = (0, 24)
+            nCells     = 240
             biasFactor = 1
         }
     }
@@ -21,16 +21,17 @@ Mesh {
 
     Grid y {
         Segment {
-            bounds     = (0, 5)
-            nCells     = 200
+            bounds     = (0, 12)
+            nCells     = 120
             biasFactor = 1
         }
     }
 
+
     Grid z {
         Segment {
-            bounds     = (0, 5)
-            nCells     = 200
+            bounds     = (0, 12)
+            nCells     = 120
             biasFactor = 1
         }
     }
@@ -100,9 +101,11 @@ BoundaryConditions
 
 
 SolidGeometry {
-    boundaryTreatement = staircase
+
+    boundaryTreatement = directionalImmersedBoundary
+
     Sphere {
-        centerPosition = (2.5, 2.5, 2.5)
+        centerPosition = (10, 6, 6)
         diameter       = 1
     }
 }
@@ -112,25 +115,26 @@ Solver {
 
     Schemes {
 
+        timeScheme              = backwardsEuler
+        timeStepSize            = 0.5
+        numberOfTimesteps       = 100
+
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = central
+        advectionScheme         = QUICK
         advectionBlendingFactor = 1
-        faceInterpolationScheme = average
+        faceInterpolationScheme = weightedLinear
 
-        implicitMomentumRelaxation = (0.6, 0.6, 0.6)
-        implicitPressureRelaxation = 1
-
-        maxOuterIterations = 1000
-        maxContinuityOuterResidual = 1e-6
-        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+        maxOuterIterations = 100
+        maxContinuityOuterResidual = 1e-3
+        maxMomentumOuterResiduals  = (1e-3, 1e-3, 1e-3)
 
     }
     
-    LinearSolver {
+    Smoother {
 
-        type = domainSymmetric
-        maxIterations = 4
+        type = nestedLineSymmetric
+        maxIterations = 1
         maxResiduals = 1e-3
 
         planeSweepDirection = +z
@@ -143,7 +147,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 3
+        maxCoarseLevels = 2
 
         preSmoothingIterations = 3
         postSmoothingIterations = 3
@@ -159,10 +163,17 @@ Solver {
 
 Output {
 
-    residualHistoryFilename = "output/residual_history.csv"
+    residualHistoryFilename = "output/residualHistory.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
     fieldWriteInterval      = 0
+
+    Monitors {
+        ForceCalculator {
+            filename = "output/forces.csv"
+        }
+    }
+    
 
 }

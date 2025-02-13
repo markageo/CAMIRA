@@ -93,8 +93,8 @@ CFD::InputData::InputData() :
     meshSegments(),
     boundaryConditions()
     {
-        linearSolverSettings.planeSweepDirection = CFD::BoundaryPatches::zPositive;
-        linearSolverSettings.lineSweepDirection = CFD::BoundaryPatches::yPositive;
+        smootherSettings.planeSweepDirection = CFD::BoundaryPatches::zPositive;
+        smootherSettings.lineSweepDirection = CFD::BoundaryPatches::yPositive;
     };
 
 
@@ -701,15 +701,6 @@ namespace
         }
 
 
-        // Momentum implicit relaxation
-        std::vector<floatType> momentumRelaxation = schemesTree.get< std::vector<floatType> >( "implicitMomentumRelaxation" );
-        inputData.schemes.implicitRelaxation.U[Axis::X] = momentumRelaxation[0];
-        inputData.schemes.implicitRelaxation.U[Axis::Y] = momentumRelaxation[1];
-        inputData.schemes.implicitRelaxation.U[Axis::Z] = momentumRelaxation[2];
-
-        // Pressure implicit relaxation
-        inputData.schemes.implicitRelaxation.P = schemesTree.get<floatType>( "implicitPressureRelaxation" );
-
         // Max outer iterations
         inputData.schemes.maxOuterIterations = schemesTree.get<intType>( "maxOuterIterations" );
 
@@ -726,44 +717,44 @@ namespace
 
 
 
-    void ReadLinearSolverSettings( InputData &inputData, 
-                                   const pt::ptree & solverTree) 
+    void ReadSmootherSettings( InputData &inputData, 
+                               const pt::ptree & solverTree) 
     {
-        const pt::ptree &linearSolverTree = solverTree.get_child( "LinearSolver" );
+        const pt::ptree &smootherTree = solverTree.get_child( "Smoother" );
         std::string valueString;
 
         // Solver type
-        valueString = linearSolverTree.get<std::string>( "type" );
+        valueString = smootherTree.get<std::string>( "type" );
         if        ( valueString == "nestedLineSymmetric" ) {
-            inputData.linearSolverSettings.type = LinearSolvers::nestedLineSymmetric;
+            inputData.smootherSettings.type = Smoothers::nestedLineSymmetric;
         } else if ( valueString == "domainSymmetric" ) {
-            inputData.linearSolverSettings.type = LinearSolvers::domainSymmetric;
+            inputData.smootherSettings.type = Smoothers::domainSymmetric;
         } else {
-            throw std::runtime_error( "'" + valueString + "' is not a valid linear solver type." );
+            throw std::runtime_error( "'" + valueString + "' is not a valid smoother type." );
         }
 
         // Max iterations
-        inputData.linearSolverSettings.maxIterations = linearSolverTree.get<intType>( "maxIterations" );
+        inputData.smootherSettings.maxIterations = smootherTree.get<intType>( "maxIterations" );
 
         // Max residuals
-        inputData.linearSolverSettings.maxResiduals = linearSolverTree.get<floatType>( "maxResiduals" );
+        inputData.smootherSettings.maxResiduals = smootherTree.get<floatType>( "maxResiduals" );
 
         // Momentum relaxation
-        std::vector<floatType> momentumRelaxation = linearSolverTree.get< std::vector<floatType> >( "momentumRelaxation" );
-        inputData.linearSolverSettings.relaxation.U[Axis::X] = momentumRelaxation[0];
-        inputData.linearSolverSettings.relaxation.U[Axis::Y] = momentumRelaxation[1];
-        inputData.linearSolverSettings.relaxation.U[Axis::Z] = momentumRelaxation[2];
+        std::vector<floatType> momentumRelaxation = smootherTree.get< std::vector<floatType> >( "momentumRelaxation" );
+        inputData.smootherSettings.relaxation.U[Axis::X] = momentumRelaxation[0];
+        inputData.smootherSettings.relaxation.U[Axis::Y] = momentumRelaxation[1];
+        inputData.smootherSettings.relaxation.U[Axis::Z] = momentumRelaxation[2];
 
         // Pressure relaxation
-        inputData.linearSolverSettings.relaxation.P = linearSolverTree.get<floatType>( "pressureRelaxation" );
+        inputData.smootherSettings.relaxation.P = smootherTree.get<floatType>( "pressureRelaxation" );
 
         // Plane sweep direction
-        valueString = linearSolverTree.get<std::string>( "planeSweepDirection" );
-        inputData.linearSolverSettings.planeSweepDirection = String2BoundaryPatch( valueString );
+        valueString = smootherTree.get<std::string>( "planeSweepDirection" );
+        inputData.smootherSettings.planeSweepDirection = String2BoundaryPatch( valueString );
 
         // Line sweep direction
-        valueString = linearSolverTree.get<std::string>( "lineSweepDirection" );
-        inputData.linearSolverSettings.lineSweepDirection = String2BoundaryPatch( valueString );
+        valueString = smootherTree.get<std::string>( "lineSweepDirection" );
+        inputData.smootherSettings.lineSweepDirection = String2BoundaryPatch( valueString );
 
     }
 
@@ -812,7 +803,7 @@ namespace
         ReadSchemes(inputData, solverTree);
 
         // Read linear solver (plane sweeping) settings
-        ReadLinearSolverSettings(inputData, solverTree);
+        ReadSmootherSettings(inputData, solverTree);
 
         // Read multigrid settings
         ReadMultigridSettings(inputData, solverTree);
@@ -997,14 +988,14 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFilename)
 std::tuple< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > CFD::ReadSweepDirections( const std::string &inputFilename )
 {
     pt::ptree tree = INP::ParseFile(inputFilename);
-    const pt::ptree &linearSolverTree = tree.get_child("Solver").get_child("LinearSolver");
+    const pt::ptree &smootherTree = tree.get_child("Solver").get_child("Smoother");
 
     // Plane sweep direction
-    std::string valueString = linearSolverTree.get<std::string>( "planeSweepDirection" );
+    std::string valueString = smootherTree.get<std::string>( "planeSweepDirection" );
     BoundaryPatches::ENUMDATA planeSweepDirection = String2BoundaryPatch( valueString );
 
     // Line sweep direction
-    valueString = linearSolverTree.get<std::string>( "lineSweepDirection" );
+    valueString = smootherTree.get<std::string>( "lineSweepDirection" );
     BoundaryPatches::ENUMDATA lineSweepDirection = String2BoundaryPatch( valueString );
 
     return { planeSweepDirection, lineSweepDirection };

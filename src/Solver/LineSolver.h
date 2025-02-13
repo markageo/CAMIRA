@@ -32,23 +32,24 @@ class LineSolver
 
 public:
     LineSolver( FieldData<Tensor3D> &fields,
+                const FieldData<Tensor3D> &fieldsOld,
                 const Tensor3D &mask,
                 const FVCoefficients &fvCoeffs, 
-                const InputData::LinearSolverSettings &linearSolverSettings) : 
+                const InputData::SmootherSettings &smootherSettings) : 
                     m_fields( fields ),
                     m_fvCoeffs( fvCoeffs ),
                     m_lineConstants( Tensor1D( fvCoeffs.nCells(Axis::X) + 2*nGhost ).setZero() ),
                     m_ni( fvCoeffs.nCells(Axis::X) )
     {
         if (m_ni == 1) {
-            m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
-            SolutionUpdater = &LineSolver::Sweep2D;
-            StateUpdater = &LineSolver::UpdateState2D;
+            m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            SolutionUpdater     = &LineSolver::Sweep2D;
+            StateUpdater        = &LineSolver::UpdateState2D;
         } else {
-            m_triadSolverEast = std::make_unique<TriadSolver<TC::e, Vstag, Wstag, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
-            m_triadSolverWest = std::make_unique<TriadSolver<TC::w, Vstag, Wstag, MI, LI>>(fields, mask, fvCoeffs, linearSolverSettings);
-            SolutionUpdater = &LineSolver::Sweep3D;
-            StateUpdater = &LineSolver::UpdateState3D;
+            m_triadSolverEast   = std::make_unique<TriadSolver<TC::e, Vstag, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            m_triadSolverWest   = std::make_unique<TriadSolver<TC::w, Vstag, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            SolutionUpdater     = &LineSolver::Sweep3D;
+            StateUpdater        = &LineSolver::UpdateState3D;
         }
     }
 
