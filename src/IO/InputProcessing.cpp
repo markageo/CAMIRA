@@ -874,6 +874,8 @@ namespace
 
         const pt::ptree &monitorsTree = monitorsTreeOptional.get();
 
+        inputData.calculateForces = false;
+
         for (auto monitor : monitorsTree) {
 
             if        ( monitor.first == "ForceCalculator" ) {
