@@ -71,12 +71,6 @@ void SetIBFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> >
 
 // Allocate and initialise finite volume coefficients
 FVCoefficients InitialiseFVCoefficients( const Mesh &, 
-                                         const FieldData< Tensor3D > &, 
-                                         const FieldData< Tensor3D > &, 
-                                         const FieldData< Tensor3D > &, 
-                                         const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &,
-                                         const EnumVector< Axis, Tensor3D > &,
-                                         const IBData &, 
                                          const BoundaryConditionData &, 
                                          const InputData &);
 

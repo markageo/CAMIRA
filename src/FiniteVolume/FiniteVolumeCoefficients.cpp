@@ -2438,12 +2438,6 @@ void SetDiagCoeffInverse( MomentumEquation &momentumEquation,
 \*---------------------------------------------------------------------------------------------------------------*/
 
 FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
-                                         const FieldData<Tensor3D> &fields,
-                                         const FieldData<Tensor3D> &fieldsPrevTime,
-                                         const FieldData<Tensor3D> &fieldsPrevPrevTime,
-                                         const EnumVector< Axis, EnumVector< Axis, Tensor3D> > &faceAdvectedVelocities,
-                                         const EnumVector<Axis, Tensor3D> &faceFluxes, 
-                                         const IBData &ibData,
                                          const BoundaryConditionData &bcData,
                                          const InputData &inputData)
 {
@@ -2475,9 +2469,6 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
         SetMomentumInterpolationSparseConstants(fvCoeffs.Cont.mwiSparseCoeffs[axis], fvCoeffs.Mom[axis].AP, mesh, axis);
         SetMomentumInterpolationCompactConstants(fvCoeffs.Cont.mwiCompactCoeffs[axis], inputData.rho, mesh, axis);
     } );
-
-    // Set the coefficients that depend on linearisation
-    UpdateFVCoefficients( fvCoeffs, mesh, fields, fieldsPrevTime, fieldsPrevPrevTime, faceAdvectedVelocities, faceFluxes, ibData, bcData );
 
     return fvCoeffs;
 }
