@@ -2036,15 +2036,19 @@ void ZeroInSolidStencilCoeffs( FVCoefficients &fvCoeffs,
     using FVT::G;
 
     const Axis::ENUMDATA faceNormal = sourceTermData.direction;
-    // TransportCoefficients::ENUMDATA coeff  = ( sourceTermData.directionIndex == +1 ) ? LUT::HiCoeff[faceNormal]   : LUT::LoCoeff[faceNormal];
-    const TransportCoefficients::ENUMDATA ccoeff = ( sourceTermData.directionIndex == +1 ) ? LUT::HiHiCoeff[faceNormal] : LUT::LoLoCoeff[faceNormal];
-
+    // const TransportCoefficients::ENUMDATA coeff  = ( sourceTermData.directionIndex == +1 ) ? LUT::HiCoeff[faceNormal]   : LUT::LoCoeff[faceNormal];
+    
     // The immediate cell
     // fvCoeffs.Cont.AP[coeff ](G(cellIndex)) = 0.0f;
-    fvCoeffs.Cont.AP[ccoeff](G(cellIndex)) = 0.0f;
+    if ( fvCoeffs.Cont.momentumInterpolation == MomentumInterpolation::Implicit ) {
+        const TransportCoefficients::ENUMDATA ccoeff = ( sourceTermData.directionIndex == +1 ) ? LUT::HiHiCoeff[faceNormal] : LUT::LoLoCoeff[faceNormal];
+        fvCoeffs.Cont.AP[ccoeff](G(cellIndex)) = 0.0f;
 
-    // The interior cell
-    // fvCoeffs.Cont.AP[ccoeff](G(sourceTermData.cellIndex_a)) = 0.0f;
+        // The interior cell
+        // fvCoeffs.Cont.AP[ccoeff](G(sourceTermData.cellIndex_a)) = 0.0f;
+    }
+
+    
 
 }
 
@@ -2546,6 +2550,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
 
     SetMomentumInterpolationCoefficients( fvCoeffs, mesh, bcData, fields.P );
     AddContinuityVelocityBoundarySources( fvCoeffs.Cont, mesh, bcData.fields.U );
+    
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
