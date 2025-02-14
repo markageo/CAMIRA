@@ -77,20 +77,22 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
         }
         mgl.fieldsOld = mgl.fields;
 
+        // Finite volume coefficients
+        mgl.fvCoeffs = InitialiseFVCoefficients(mgl.mesh, mgl.bcData, inputData);
+
         // Face fluxes and advected velocities
         mgl.faceFluxes = InitialiseFaceFluxes(mgl.mesh, mgl.fields.U, mgl.bcData);
         if ( inputData.schemes.linearisation == Linearisation::Newton ) 
             mgl.faceAdvectedVelocities = InitialiseFaceAdvectedVelocities( mgl.mesh, mgl.fvCoeffs, mgl.fields.U, mgl.faceFluxes, mgl.bcData );
+
+        // Set the coefficients that depend on linearisation
+        UpdateFVCoefficients( mgl.fvCoeffs, mgl.mesh, mgl.fields, mgl.fieldsPrevTime, mgl.fieldsPrevPrevTime, mgl.faceAdvectedVelocities, mgl.faceFluxes, mgl.ibData, mgl.bcData );
 
 
         // Allocate and initialise residualsRestricted
         mgl.residualsRestricted = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0) + 2*nGhost, 
                                                                  mgl.mesh.nCells(1) + 2*nGhost, 
                                                                  mgl.mesh.nCells(2) + 2*nGhost).setZero() );
-
-
-        // Finite volume coefficients
-        mgl.fvCoeffs = InitialiseFVCoefficients(mgl.mesh, mgl.fields, mgl.fieldsPrevTime, mgl.fieldsPrevPrevTime, mgl.faceAdvectedVelocities, mgl.faceFluxes, mgl.ibData, mgl.bcData, inputData);
 
 
         // Linear Solver
