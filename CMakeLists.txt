@@ -65,7 +65,7 @@ if ( CFD_USE_AUTOVEC_FUNCTIONS )
 	message( STATUS "Using Auto Vectorization functions." )
 	add_compile_definitions( CFD_USE_AUTOVEC_FUNCTIONS )
 else()
-	message( STATUS "Not useing Auto Vectorization functions." )
+	message( STATUS "Not using Auto Vectorization functions." )
 endif()
 
 
@@ -89,7 +89,7 @@ if ( CFD_HAS_VTK_LIB )
 		message( STATUS "VTK library found successfully." )
 		add_compile_definitions( CFD_HAS_VTK_LIB )
 	else()
-		message( FATAL_ERROR "Could not locate VTK library installation! This is required for field transformation executable!" )
+		message( FATAL_ERROR "Could not locate VTK library installation! This is required for some features, but not essential!" )
 	endif()
 
 else()
