@@ -1,5 +1,5 @@
 #include "Mesh.h"
-#include "../Tools/FVTools.h"
+#include "../Tools/SweepTransformations.h"
 #include "../Tools/FVLookups.h"
 
 #include <cmath>
@@ -470,7 +470,8 @@ Mesh::Mesh(const EnumVector<Axis, Tensor1D> &cellFacesArg,
     
 
 
-Mesh CreateMesh( const InputData &inputData )
+Mesh CreateMesh( const InputData &inputData,
+                 const AxisTransformationMap &atm )
 {
     using enum Axis::ENUMDATA;
 
@@ -494,13 +495,13 @@ Mesh CreateMesh( const InputData &inputData )
     // Output this information to console
     std::cout << "Number of cells        : " << nCells << "\n"
 
-              << "Min. cell growth ratios: " << "(" << minMaxCellGrowthRatios[X].first << ", " 
-                                                    << minMaxCellGrowthRatios[Y].first << ", "
-                                                    << minMaxCellGrowthRatios[Z].first << ")" << "\n" 
+              << "Min. cell growth ratios: " << "(" << minMaxCellGrowthRatios[atm.UserAxis(X)].first << ", " 
+                                                    << minMaxCellGrowthRatios[atm.UserAxis(Y)].first << ", "
+                                                    << minMaxCellGrowthRatios[atm.UserAxis(Z)].first << ")" << "\n" 
 
-              << "Max. cell growth ratios: " << "(" << minMaxCellGrowthRatios[X].second << ", " 
-                                                    << minMaxCellGrowthRatios[Y].second << ", "
-                                                    << minMaxCellGrowthRatios[Z].second << ")" << "\n"
+              << "Max. cell growth ratios: " << "(" << minMaxCellGrowthRatios[atm.UserAxis(X)].second << ", " 
+                                                    << minMaxCellGrowthRatios[atm.UserAxis(Y)].second << ", "
+                                                    << minMaxCellGrowthRatios[atm.UserAxis(Z)].second << ")" << "\n"
                 
               << "Min. cell aspect ratio : " << minAspectRatio << "\n"
               

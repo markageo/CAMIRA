@@ -29,7 +29,7 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
         if ( level == 0 ) {
             mgLevels.emplace_back();
-            mgLevels[level].mesh = CreateMesh( inputData );
+            mgLevels[level].mesh = CreateMesh( inputData, axisTransofrmation );
             mgLevels[level].isFinestLevel   = true;
             mgLevels[level].isCoarsestLevel = false;
         } else if ( MeshCanBeCoarsened( mgLevels[level-1].mesh ) ) {

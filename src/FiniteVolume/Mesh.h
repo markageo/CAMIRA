@@ -2,6 +2,7 @@
 #define CFD_MESH
 
 #include "../Types.h"
+#include "../Tools/AxisTransformationMap.h"
 #include "../IO/InputProcessing.h"
 
 namespace CFD
@@ -33,7 +34,8 @@ struct Mesh
 
 
 // Create mesh and output mesh information to console
-Mesh CreateMesh( const InputData & );
+Mesh CreateMesh( const InputData &,
+                 const AxisTransformationMap & );
 
 // Determines if mesh can be coarsened
 bool MeshCanBeCoarsened( const Mesh& );
