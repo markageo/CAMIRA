@@ -13,20 +13,20 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 8.5)
-            nCells     = 75
-            biasFactor = -5.5
+            nCells     = 85
+            biasFactor = -3
         }
 
         Segment {
             bounds     = (8.5, 9.5)
-            nCells     = 24
+            nCells     = 20
             biasFactor = 1
         }
 
         Segment {
             bounds     = (9.5, 26)
-            nCells     = 140
-            biasFactor = 6
+            nCells     = 170
+            biasFactor = 4
         }
     }
 
@@ -35,19 +35,19 @@ Mesh {
         Segment {
             bounds     = (0, 5.5)
             nCells     = 58
-            biasFactor = -4.5
+            biasFactor = -3
         }
 
         Segment {
             bounds     = (5.5, 6.5)
-            nCells     = 24
+            nCells     = 20
             biasFactor = 1
         }
 
         Segment {
             bounds     = (6.5, 12)
             nCells     = 58
-            biasFactor = 4.5
+            biasFactor = 3
         }
     }
 
@@ -56,19 +56,19 @@ Mesh {
         Segment {
             bounds     = (0, 5.5)
             nCells     = 58
-            biasFactor = -4.5
+            biasFactor = -3
         }
 
         Segment {
             bounds     = (5.5, 6.5)
-            nCells     = 24
+            nCells     = 20
             biasFactor = 1
         }
 
         Segment {
             bounds     = (6.5, 12)
             nCells     = 58
-            biasFactor = 4.5
+            biasFactor = 3
         }
     }
 }
@@ -170,9 +170,9 @@ Solver {
         maxResiduals = 1e-3
 
         planeSweepDirection = +z
-        lineSweepDirection = +x
+        lineSweepDirection = +y
 
-        momentumRelaxation = (0.5, 0.5, 0.5)
+        momentumRelaxation = (0.8, 0.8, 0.8)
         pressureRelaxation = 1
 
     }
@@ -185,7 +185,7 @@ Solver {
         postSmoothingIterations = 3
         fineGridIterations   = 2
 
-        maxCoarseGridIterations = 500
+        maxCoarseGridIterations = 300
         maxCoarseGridResiduals  = 1e-6
         
     }

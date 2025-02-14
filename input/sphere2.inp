@@ -2,37 +2,73 @@
 
 Model {
     rho  = 1
-    nu   = 0.01
+    nu   = 1
     transient = no
 }
 
 Mesh {
 
-    domain = (20, 12, 12)
+    domain = (26, 12, 12)
 
     Grid x {
         Segment {
-            bounds     = (0, 20)
-            nCells     = 200
+            bounds     = (0, 8.5)
+            nCells     = 106
+            biasFactor = -3
+        }
+
+        Segment {
+            bounds     = (8.5, 9.5)
+            nCells     = 25
             biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (9.5, 26)
+            nCells     = 212
+            biasFactor = 4
         }
     }
 
 
     Grid y {
         Segment {
-            bounds     = (0, 12)
-            nCells     = 120
+            bounds     = (0, 5.5)
+            nCells     = 73
+            biasFactor = -3
+        }
+
+        Segment {
+            bounds     = (5.5, 6.5)
+            nCells     = 25
             biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (6.5, 12)
+            nCells     = 73
+            biasFactor = 3
         }
     }
 
 
     Grid z {
         Segment {
-            bounds     = (0, 12)
-            nCells     = 120
+            bounds     = (0, 5.5)
+            nCells     = 73
+            biasFactor = -3
+        }
+
+        Segment {
+            bounds     = (5.5, 6.5)
+            nCells     = 25
             biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (6.5, 12)
+            nCells     = 73
+            biasFactor = 3
         }
     }
 }
@@ -105,7 +141,7 @@ SolidGeometry {
     boundaryTreatement = directionalImmersedBoundary
 
     Sphere {
-        centerPosition = (8, 6, 6)
+        centerPosition = (9, 6, 6)
         diameter       = 1
     }
 }
@@ -117,10 +153,10 @@ Solver {
 
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = SOU
+        advectionScheme         = QUICK
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
-        
+
         maxOuterIterations = 100
         maxContinuityOuterResidual = 1e-6
         maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
@@ -130,26 +166,26 @@ Solver {
     Smoother {
 
         type = nestedLineSymmetric
-        maxIterations = 4
+        maxIterations = 1
         maxResiduals = 1e-3
 
-        planeSweepDirection = +y
-        lineSweepDirection = +x
+        planeSweepDirection = +z
+        lineSweepDirection = +y
 
-        momentumRelaxation = (0.6, 0.6, 0.6)
+        momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 3
 
-        preSmoothingIterations = 2
-        postSmoothingIterations = 2
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
         fineGridIterations   = 2
 
-        maxCoarseGridIterations = 100
+        maxCoarseGridIterations = 300
         maxCoarseGridResiduals  = 1e-6
         
     }
@@ -163,7 +199,7 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
-    fieldWriteInterval      = 0
+    fieldWriteInterval      = 1
 
     Monitors {
         ForceCalculator {
