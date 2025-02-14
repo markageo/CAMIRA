@@ -1,8 +1,8 @@
 #ifndef CFD_MESH  
 #define CFD_MESH
 
-#include "../Types.h"
-#include "../Tools/AxisTransformationMap.h"
+#include "../Core/Types.h"
+#include "../CoordinateTransformations/AxisTransformationMap.h"
 #include "../IO/InputProcessing.h"
 
 namespace CFD

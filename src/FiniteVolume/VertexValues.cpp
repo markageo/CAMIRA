@@ -1,5 +1,5 @@
 #include "FiniteVolume.h"
-#include "../Tools/FVLookups.h"
+#include "../Core/FVLookups.h"
 
 namespace CFD
 {

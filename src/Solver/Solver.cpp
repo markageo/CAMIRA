@@ -1,10 +1,10 @@
 #include "Solver.h"
 #include "ConvergenceLogging.h"
 
-#include "../Types.h"
-#include "../Macros.h"
+#include "../Core/Types.h"
+#include "../Core/Macros.h"
 #include "../IO/InputProcessing.h"
-#include "../Tools/SweepTransformations.h"
+#include "../CoordinateTransformations/AxisTransformationFunctions.h"
 #include "../DerivedQuantities/DerivedQuantities.h"
 #include "../FiniteVolume/FiniteVolume.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"

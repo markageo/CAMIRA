@@ -1,7 +1,7 @@
 #ifndef CFD_AXIS_TRANSFORMATION_MAP
 #define CFD_AXIS_TRANSFORMATION_MAP
 
-#include "../Types.h"
+#include "../Core/Types.h"
 
 namespace CFD
 {

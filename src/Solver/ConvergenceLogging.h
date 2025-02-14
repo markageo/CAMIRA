@@ -1,14 +1,14 @@
 #ifndef SOLVER_LOGGING
 #define SOLVER_LOGGING
 
-#include "../Types.h"
-#include "../Tools/SweepTransformations.h"
-#include "../Tools/FVTools.h"
+#include "../Core/Types.h"
+#include "../Core/FVTools.h"
+#include "../Core/Macros.h"
+#include "../CoordinateTransformations/AxisTransformationFunctions.h"
 #include "../IO/IOTools.h"
 #include "../FiniteVolume/FiniteVolume.h"
 #include "../DerivedQuantities/DerivedQuantities.h"
 #include "../IO/VTKWriter.h"
-#include "../Macros.h"
 
 #include <fstream>
 #include <iomanip>

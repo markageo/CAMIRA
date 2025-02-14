@@ -1,6 +1,6 @@
 #include "DerivedQuantities.h"
-#include "../Tools/FVTools.h"
-#include "../Types.h"
+#include "../Core/FVTools.h"
+#include "../Core/Types.h"
 #include "../FiniteVolume/FiniteVolume.h"
 
 

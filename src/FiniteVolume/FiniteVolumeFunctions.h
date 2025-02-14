@@ -3,10 +3,10 @@
 
 #include "Mesh.h"
 #include "FiniteVolumeStructures.h"
-#include "../Types.h"
+#include "../Core/Types.h"
 #include "../IO/InputProcessing.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
-#include "../Tools/SweepTransformations.h"
+#include "../CoordinateTransformations/AxisTransformationFunctions.h"
 
 namespace CFD
 {

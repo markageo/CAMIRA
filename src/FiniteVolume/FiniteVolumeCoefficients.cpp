@@ -1,7 +1,7 @@
 #include "FiniteVolume.h"
-#include "../Macros.h"
-#include "../Tools/FVTools.h"
-#include "../Tools/FVLookups.h"
+#include "../Core/Macros.h"
+#include "../Core/FVTools.h"
+#include "../Core/FVLookups.h"
 #include "FaceInterpolatedVelocity.h"
 
 #include <algorithm>

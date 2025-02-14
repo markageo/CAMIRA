@@ -1,8 +1,8 @@
-#ifndef SWEEP_TRANSFORMATIONS
-#define SWEEP_TRANSFORMATIONS
+#ifndef AXIS_TRANSFORMATION_FUNCTIONS
+#define AXIS_TRANSFORMATION_FUNCTIONS
 
 #include "AxisTransformationMap.h"
-#include "../Types.h"
+#include "../Core/Types.h"
 #include "../IO/InputProcessing.h"
 #include "../FiniteVolume/Mesh.h"
 #include "../FiniteVolume/FiniteVolumeStructures.h"
@@ -33,4 +33,4 @@ void TransformBCDataToUserCoordinates( BoundaryConditionData &, const AxisTransf
 
 } // end namespace CFD
  
-#endif  // SWEEP_TRANSFORMATIONS
+#endif  // AXIS_TRANSFORMATION_FUNCTIONS

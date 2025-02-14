@@ -1,13 +1,13 @@
 #ifndef CFD_MULTIGRID
 #define CFD_MULTIGRID
 
-#include "../Types.h"
+#include "../Core/Types.h"
 #include "../FiniteVolume/Mesh.h"
 #include "../FiniteVolume/FiniteVolumeStructures.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 #include "../IO/InputProcessing.h"
 #include "../Solver/LinearSolver.h"
-#include "../Tools/SweepTransformations.h"
+#include "../CoordinateTransformations/AxisTransformationFunctions.h"
 
 #include<memory>
 

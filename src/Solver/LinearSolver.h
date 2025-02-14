@@ -6,10 +6,10 @@
 #include "StencilConstants.h"
 #include "ResidualFunctions.h"
 
-#include "../Types.h"
+#include "../Core/Types.h"
+#include "../Core/FVTools.h"
+#include "../Core/FVLookups.h"
 #include "../IO/InputProcessing.h"
-#include "../Tools/FVTools.h"
-#include "../Tools/FVLookups.h"
 #include "../FiniteVolume/FiniteVolume.h"
 
 namespace CFD

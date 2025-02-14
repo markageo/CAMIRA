@@ -4,8 +4,8 @@
 #include "IOTools.h"
 
 #include "../FiniteVolume/FiniteVolume.h"
-#include "../Types.h"
-#include "../Tools/FVLookups.h"
+#include "../Core/Types.h"
+#include "../Core/FVLookups.h"
 
 #include "Boost/boost/property_tree/ptree.hpp"
 #include <Eigen/Geometry>

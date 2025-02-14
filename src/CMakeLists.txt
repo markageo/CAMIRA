@@ -9,7 +9,8 @@ add_subdirectory(Multigrid)
 add_subdirectory(Geometry)
 add_subdirectory(IO)
 add_subdirectory(Solver)
-add_subdirectory(Tools)
+add_subdirectory(Core)
+add_subdirectory(CoordinateTransformations)
 
 # Link libraries
 target_link_libraries(libs PUBLIC eigen)

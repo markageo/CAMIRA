@@ -1,8 +1,8 @@
 #include "FiniteVolume.h"
 #include "../IO/InputProcessing.h"
-#include "../Tools/FVTools.h"
-#include "../Tools/FVLookups.h"
-#include "../Tools/SweepTransformations.h"
+#include "../Core/FVTools.h"
+#include "../Core/FVLookups.h"
+#include "../CoordinateTransformations/AxisTransformationFunctions.h"
 #include "../IO/VTKReader.h"
 
 #include <cmath>
