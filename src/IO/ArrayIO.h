@@ -1,7 +1,7 @@
 #ifndef ARRAY_IO
 #define ARRAY_IO
 
-#include "../Types.h"
+#include "../Core/Types.h"
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include <fstream>

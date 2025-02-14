@@ -1,7 +1,7 @@
 #ifndef VTK_READER
 #define VTK_READER
 
-#include "../Types.h"
+#include "../Core/Types.h"
 
 #include <string>
 

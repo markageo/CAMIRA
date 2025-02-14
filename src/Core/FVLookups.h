@@ -1,7 +1,7 @@
 #ifndef FV_LOOKUPS
 #define FV_LOOKUPS
 
-#include "../Types.h"
+#include "Types.h"
 
 
 namespace CFD 

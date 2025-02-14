@@ -1,9 +1,9 @@
 #ifndef CFD_IMMERSED_BOUNDARY
 #define CFD_IMMERSED_BOUNDARY
 
-#include "../Types.h"
+#include "../Core/Types.h"
 #include "../Geometry/Geometry.h"
-#include "../Tools/SweepTransformations.h"
+#include "../CoordinateTransformations/AxisTransformationFunctions.h"
 #include "../FiniteVolume/Mesh.h"
 
 #include <vector>

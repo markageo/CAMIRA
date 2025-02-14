@@ -1,7 +1,7 @@
 #ifndef CFD_DERIVED_QUANTITIES
 #define CFD_DERIVED_QUANTITIES
 
-#include "../Types.h"
+#include "../Core/Types.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 #include "../FiniteVolume/Mesh.h"
 

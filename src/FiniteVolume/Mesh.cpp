@@ -1,6 +1,6 @@
 #include "Mesh.h"
-#include "../Tools/SweepTransformations.h"
-#include "../Tools/FVLookups.h"
+#include "../CoordinateTransformations/AxisTransformationFunctions.h"
+#include "../Core/FVLookups.h"
 
 #include <cmath>
 #include <utility>

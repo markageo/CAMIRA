@@ -1,11 +1,12 @@
 #ifndef RESIDUAL_FUNCTIONS
 #define RESIDUAL_FUNCTIONS
 
-#include "../Macros.h"
-#include "../Types.h"
+#include "../Core/Macros.h"
+#include "../Core/Types.h"
+#include "../Core/FVTools.h"
 #include "../FiniteVolume/FiniteVolume.h"
 #include "../DerivedQuantities/DerivedQuantities.h"
-#include "../Tools/FVTools.h"
+
 
 #include <cmath>
 

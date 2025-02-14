@@ -1,7 +1,7 @@
 #ifndef CFD_FINITE_VOLUME_STRUCTURES   
 #define CFD_FINITE_VOLUME_STRUCTURES
 
-#include "../Types.h"
+#include "../Core/Types.h"
 
 namespace CFD
 {

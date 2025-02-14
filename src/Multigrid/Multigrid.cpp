@@ -1,7 +1,7 @@
 #include "Multigrid.h"
 
 #include "../FiniteVolume/Mesh.h"
-#include "../Tools/FVTools.h"
+#include "../Core/FVTools.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 
 namespace CFD

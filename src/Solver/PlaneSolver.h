@@ -5,9 +5,9 @@
 #include "StencilConstants.h"
 #include "LineSolver.h"
 
-#include "../Types.h"
-#include "../Macros.h"
-#include "../Tools/FVTools.h"
+#include "../Core/Types.h"
+#include "../Core/Macros.h"
+#include "../Core/FVTools.h"
 #include "../FiniteVolume/FiniteVolume.h"
 
 namespace CFD

@@ -1,5 +1,5 @@
-#include "SweepTransformations.h"
-#include "../Tools/FVLookups.h"
+#include "AxisTransformationFunctions.h"
+#include "../Core/FVLookups.h"
 #include <Eigen/Geometry>
 
 namespace CFD

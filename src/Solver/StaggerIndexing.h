@@ -1,8 +1,8 @@
 #ifndef STAGGER_INDEXING
 #define STAGGER_INDEXING
 
-#include "../Types.h"
-#include "../Tools/FVLookups.h"
+#include "../Core/Types.h"
+#include "../Core/FVLookups.h"
 #include <type_traits>
 
 namespace CFD

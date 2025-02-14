@@ -1,7 +1,7 @@
 #include "ImmersedBoundary.h"
 
-#include "../Tools/FVTools.h"
-#include "../Tools/FVLookups.h"
+#include "../Core/FVTools.h"
+#include "../Core/FVLookups.h"
 
 namespace CFD
 {

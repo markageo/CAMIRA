@@ -1,6 +1,6 @@
 #include "FiniteVolume.h"
-#include "../Tools/FVTools.h"
-#include "../Tools/FVLookups.h"
+#include "../Core/FVTools.h"
+#include "../Core/FVLookups.h"
 #include "FaceInterpolatedVelocity.h"
 
 

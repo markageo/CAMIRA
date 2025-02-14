@@ -2,9 +2,9 @@
 #define SOLVER
 
 #include "../IO/InputProcessing.h"
-#include "../Types.h"
+#include "../Core/Types.h"
 #include "../FiniteVolume/FiniteVolume.h"
-#include "../Tools/SweepTransformations.h"
+#include "../CoordinateTransformations/AxisTransformationFunctions.h"
 
 namespace CFD
 {

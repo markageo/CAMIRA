@@ -2,7 +2,7 @@
 #define CFD_FACE_INTERPOLATED_VELOCITY
 
 #include "FiniteVolume.h"
-#include "../Tools/FVTools.h"
+#include "../Core/FVTools.h"
 
 namespace CFD {
 

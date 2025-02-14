@@ -3,12 +3,12 @@
 
 #include "StaggerIndexing.h"
 
-#include "../Types.h"
-#include "../Macros.h"
+#include "../Core/Types.h"
+#include "../Core/Macros.h"
+#include "../Core/FVTools.h"
+#include "../Core/FVLookups.h"
 #include "../IO/InputProcessing.h"
-#include "../Tools/SweepTransformations.h"
-#include "../Tools/FVTools.h"
-#include "../Tools/FVLookups.h"
+#include "../CoordinateTransformations/AxisTransformationFunctions.h"
 #include "../FiniteVolume/FiniteVolume.h"
 
 
