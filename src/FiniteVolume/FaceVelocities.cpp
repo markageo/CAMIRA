@@ -121,7 +121,7 @@ void AdvectedInteriorFaceVelocities( EnumVector<Axis, Tensor3D> &faceVelocities,
                     faceVel(i, j, k) = FaceInterpolatedVelocity<advectionScheme, +1>( cellVelocities, fvCoeffs.Mom[axis], mesh, axis, hiIndex, loIndex );
                 } else {
 
-                    if ( faceFluxes[axis](i, j, i) >= 0 ) {
+                    if ( faceFluxes[axis](i, j, k) >= 0 ) {
                         faceVel(i, j, k) = FaceInterpolatedVelocity<advectionScheme, +1>( cellVelocities, fvCoeffs.Mom[axis], mesh, axis, hiIndex, loIndex );
                     } else {
                         faceVel(i, j, k) = FaceInterpolatedVelocity<advectionScheme, -1>( cellVelocities, fvCoeffs.Mom[axis], mesh, axis, hiIndex, loIndex );;
