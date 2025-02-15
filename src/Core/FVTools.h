@@ -77,7 +77,7 @@ namespace FVT
         static_assert(std::is_same<arrayType, CFD::Tensor1D   >::value ||
                       std::is_same<arrayType, CFD::Tensor2D   >::value ||
                       std::is_same<arrayType, CFD::Tensor3D   >::value,
-                      "Template parameter must be struct containing ENUMDATA type.");
+                      "Template parameter must be a Tensor.");
 
         Eigen::array< Eigen::Index, arrayType::NumDimensions > offsets, extents;
         for ( size_t i = 0; i != array.NumDimensions; i++ ) {
@@ -85,7 +85,7 @@ namespace FVT
             extents[i] = array.dimension(i) - 2*nGhostCells;
         }
 
-        return Tensor3D( array ).slice(offsets, extents);
+        return arrayType( array ).slice(offsets, extents);
     }
 
 
