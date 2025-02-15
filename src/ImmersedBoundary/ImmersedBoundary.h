@@ -29,19 +29,22 @@ struct IBCell {
         TensorIndex3D cellIndex_g,            // Ghost cell
                       cellIndex_a;            // One from boundary cell index, for extrapolation 
 
-        // Coefficients for extrapolating onto face
-        floatType faceExtrapCoeff_p,         // Multiplies with immediate cell value
-                  faceExtrapCoeff_a,         // Multiplies with first interior cell
-                  faceExtrapCoeff_ib;        // Multiplies with IB value
+        // Coefficients for reconstructing velocity field onto face
+        floatType faceReconstructionCoeff_p,         // Multiplies with immediate cell value
+                  faceReconstructionCoeff_a,         // Multiplies with first interior cell
+                  faceReconstructionCoeff_ib;        // Multiplies with IB value
 
         // Coefficients for extrapolating from face to ghost cell
         floatType ghostExtrapCoeff_p,       // Multiplies with immediate cell value
                   ghostExtrapCoeff_f;       // Multiplies with the face value
 
+        // For extrapolating directly onto AB face from fluid cells (does not account for IB), i.e. not a reconstruction
+        floatType faceExtrapCoeff_p,
+                  faceExtrapCoeff_a;
 
-        // Coefficients for extrapolating onto the immersed boundary surface
-        floatType ibExtrapFactor_p,           // Boundary cell
-                  ibExtrapFactor_a;           // One interior of boundary cell  
+        // Coefficients for extrapolating onto the immersed boundary surface from fluid cells
+        floatType ibExtrapCoeff_p,           // Boundary cell
+                  ibExtrapCoeff_a;           // One interior of boundary cell  
         
         // Coefficients for the far pressure ghost cell to allow for correct MWI at the immersed boundary
         floatType farPressureCoeff_p,        // Boundary cell

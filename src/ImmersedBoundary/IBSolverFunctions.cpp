@@ -17,18 +17,19 @@ FieldData<floatType> GetIBFieldValues( const TensorIndex3D &cellIndex,
     using CFD::FVT::G;
 
     // The value of velocity on the boundary, just hard code this to zero to be a solid wall
+    // The pressure at the immersed boundary surface is not used
     FieldData<floatType> ibValues( 0.0f );
 
     // Extrapolate pressure onto the immersed boundary
-    ibValues.P = sourceTermData.ibExtrapFactor_p * fields.P( G(cellIndex) )
-               + sourceTermData.ibExtrapFactor_a * fields.P( G(sourceTermData.cellIndex_a) );
+    ibValues.P = sourceTermData.ibExtrapCoeff_p * fields.P( G(cellIndex) )
+               + sourceTermData.ibExtrapCoeff_a * fields.P( G(sourceTermData.cellIndex_a) );
 
     return ibValues;
 }
 
 
 
-FieldData<floatType> ExtrapolateFaceValues( const TensorIndex3D &cellIndex,
+FieldData<floatType> ReconstructFaceValues( const TensorIndex3D &cellIndex,
                                             const IBCell::SourceTermData &sourceTermData, 
                                             const FieldData<Tensor3D> &fields )
 {
@@ -36,11 +37,16 @@ FieldData<floatType> ExtrapolateFaceValues( const TensorIndex3D &cellIndex,
 
     FieldData<floatType> faceValues( 0.0f );
 
-    ForAllFieldData( [&] (intType f) {
-        faceValues[f] = sourceTermData.faceExtrapCoeff_p  * fields[f]( G(cellIndex) )
-                      + sourceTermData.faceExtrapCoeff_a  * fields[f]( G(sourceTermData.cellIndex_a) )
-                      + sourceTermData.faceExtrapCoeff_ib * sourceTermData.ibValues[f];
+    // Velocity reconstruction using immersed boundary
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        faceValues.U[axis] = sourceTermData.faceReconstructionCoeff_p  * fields.U[axis]( G(cellIndex) )
+                           + sourceTermData.faceReconstructionCoeff_a  * fields.U[axis]( G(sourceTermData.cellIndex_a) )
+                           + sourceTermData.faceReconstructionCoeff_ib * sourceTermData.ibValues.U[axis];
     } );
+
+    // Pressure extrapolated to face
+    faceValues.P = sourceTermData.faceExtrapCoeff_p  *  fields.P( G(cellIndex) )
+                 + sourceTermData.faceExtrapCoeff_a  *  fields.P( G(sourceTermData.cellIndex_a) );
 
     return faceValues;
 }
@@ -133,7 +139,7 @@ void UpdateIBData( IBData &ibData,
             sourceTermData.ibValues = GetIBFieldValues( ibCell.cellIndex, sourceTermData, fields );
 
             // Use new immersed boundary values to update the face values
-            sourceTermData.faceValues = ExtrapolateFaceValues( ibCell.cellIndex, sourceTermData, fields );
+            sourceTermData.faceValues = ReconstructFaceValues( ibCell.cellIndex, sourceTermData, fields );
 
         }
     }

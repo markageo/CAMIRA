@@ -153,20 +153,20 @@ void AddIBDataForDirection( IBCell &ibCell,
 
     // Face area vector
     sourceTermData.faceAreaComponent = static_cast<floatType>( directionIndex )   // Gives the correct sign
-                                     * mesh.cellLengths[LUT::LoOrthogonalAxis[axis]]( cellIndex[ LUT::LoOrthogonalAxis[axis] ] )
-                                     * mesh.cellLengths[LUT::HiOrthogonalAxis[axis]]( cellIndex[ LUT::HiOrthogonalAxis[axis] ] );
-                                    //  * mesh.cellFaceAreas[axis]( cellIndex[ LUT::LoOrthogonalAxis[axis] ], cellIndex[ LUT::HiOrthogonalAxis[axis] ] );    
+                                    //  * mesh.cellLengths[LUT::LoOrthogonalAxis[axis]]( cellIndex[ LUT::LoOrthogonalAxis[axis] ] )
+                                    //  * mesh.cellLengths[LUT::HiOrthogonalAxis[axis]]( cellIndex[ LUT::HiOrthogonalAxis[axis] ] );
+                                     * mesh.cellFaceAreas[axis]( cellIndex[ LUT::LoOrthogonalAxis[axis] ], cellIndex[ LUT::HiOrthogonalAxis[axis] ] );    
     
 
 
-    // Extrapolation coefficients from fluid onto face. May use further points due to stability condition
+    // Reconstruction coefficients from fluid onto face. May use further points due to stability condition
     bool meetsGhostStabilityCondition =  ibDistance >= ( mesh.cellLengths[axis](cellIndex[axis]) / 2.0f );
     if ( meetsGhostStabilityCondition ) {
 
         floatType dxpOn2 = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f ;
-        sourceTermData.faceExtrapCoeff_p  = ( ibDistance - dxpOn2 ) / ( ibDistance );
-        sourceTermData.faceExtrapCoeff_a  = 0.0f;
-        sourceTermData.faceExtrapCoeff_ib = dxpOn2 / ibDistance;
+        sourceTermData.faceReconstructionCoeff_p  = ( ibDistance - dxpOn2 ) / ( ibDistance );
+        sourceTermData.faceReconstructionCoeff_a  = 0.0f;
+        sourceTermData.faceReconstructionCoeff_ib = dxpOn2 / ibDistance;
 
     } else {
 
@@ -174,27 +174,27 @@ void AddIBDataForDirection( IBCell &ibCell,
         floatType dxp = mesh.cellLengths[axis](cellIndex[axis]);
         floatType dxa = mesh.cellLengths[axis](cellIndex_a[axis]);
         floatType denominator =  dxp  +  dxa  +  2.0f * ibDistance;
-        sourceTermData.faceExtrapCoeff_p  = 0.0f;
-        sourceTermData.faceExtrapCoeff_a  = ( dxp - 2.0f * ibDistance ) / denominator;
-        sourceTermData.faceExtrapCoeff_ib = ( dxa + 2.0f * dxp ) / denominator;
+        sourceTermData.faceReconstructionCoeff_p  = 0.0f;
+        sourceTermData.faceReconstructionCoeff_a  = ( dxp - 2.0f * ibDistance ) / denominator;
+        sourceTermData.faceReconstructionCoeff_ib = ( dxa + 2.0f * dxp ) / denominator;
 
-        // Nearest face
+        // // Nearest face
         // floatType dxp    = mesh.cellLengths[axis](cellIndex[axis]),
         //           lambda = mesh.interpFactors[axis]( fidx - directionIndex );
         // floatType denominator =  2.0f * ibDistance  + dxp;
         // if ( directionIndex == +1 ) {
-        //     sourceTermData.faceExtrapCoeff_p  = lambda          * ( 2.0f * ibDistance - dxp ) / denominator;
-        //     sourceTermData.faceExtrapCoeff_a  = (1.0f - lambda) * ( 2.0f * ibDistance - dxp ) / denominator;
+        //     sourceTermData.faceReconstructionCoeff_p  = lambda          * ( 2.0f * ibDistance - dxp ) / denominator;
+        //     sourceTermData.faceReconstructionCoeff_a  = (1.0f - lambda) * ( 2.0f * ibDistance - dxp ) / denominator;
         // } else {
-        //     sourceTermData.faceExtrapCoeff_p  = (1.0f - lambda) * ( 2.0f * ibDistance - dxp ) / denominator;
-        //     sourceTermData.faceExtrapCoeff_a  = lambda          * ( 2.0f * ibDistance - dxp ) / denominator;
+        //     sourceTermData.faceReconstructionCoeff_p  = (1.0f - lambda) * ( 2.0f * ibDistance - dxp ) / denominator;
+        //     sourceTermData.faceReconstructionCoeff_a  = lambda          * ( 2.0f * ibDistance - dxp ) / denominator;
         // }
-        // sourceTermData.faceExtrapCoeff_ib = 2.0f * dxp / denominator;
+        // sourceTermData.faceReconstructionCoeff_ib = 2.0f * dxp / denominator;
 
         // // Just set to zero
-        // sourceTermData.faceExtrapCoeff_p  = 0.0f;
-        // sourceTermData.faceExtrapCoeff_a  = 0.0f; 
-        // sourceTermData.faceExtrapCoeff_ib = 1.0f;
+        // sourceTermData.faceReconstructionCoeff_p  = 0.0f;
+        // sourceTermData.faceReconstructionCoeff_a  = 0.0f; 
+        // sourceTermData.faceReconstructionCoeff_ib = 1.0f;
     }
 
 
@@ -214,8 +214,13 @@ void AddIBDataForDirection( IBCell &ibCell,
 
     // Extrapolation coefficients from fluid to immersed boundary surface
     floatType cellInteriorDistance = abs( mesh.cellCenters[axis](cellIndex_a[axis]) - mesh.cellCenters[axis](cellIndex[axis]) ); 
-    sourceTermData.ibExtrapFactor_p = ( cellInteriorDistance + ibDistance ) / cellInteriorDistance;
-    sourceTermData.ibExtrapFactor_a = - ibDistance / cellInteriorDistance;
+    sourceTermData.ibExtrapCoeff_p =   ibDistance / cellInteriorDistance  +  1.0f;
+    sourceTermData.ibExtrapCoeff_a = - ibDistance / cellInteriorDistance;
+
+
+    // Extrapolation coefficients from fluid to face (Does not account for presence of IB)
+    sourceTermData.faceExtrapCoeff_p =   0.05f * mesh.cellLengths[axis](cellIndex[axis]) / cellInteriorDistance  +  1.0f;
+    sourceTermData.faceExtrapCoeff_a = - 0.05f * mesh.cellLengths[axis](cellIndex[axis]) / cellInteriorDistance;
 
 
     // Far pressure ghost cell coefficients
