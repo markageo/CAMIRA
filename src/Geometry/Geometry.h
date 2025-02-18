@@ -20,6 +20,8 @@ using Tree = CGAL::AABB_tree< CGAL::AABB_traits<CGAL_Kernel, CGAL::AABB_face_gra
 
 Polyhedron MakeGeometry( const InputData & );
 
+std::vector<Polyhedron> SeparatePolyhedron( const Polyhedron & );
+
 Tree MakeAABBTree( const Polyhedron & );
 
 
