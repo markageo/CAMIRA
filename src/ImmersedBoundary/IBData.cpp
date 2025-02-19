@@ -268,13 +268,13 @@ void AddIBDataForDirection( IBCell &ibCell,
 
 
 
-void SetVelocityFluxCorrectionCoefficient( IBData &ibData,
+void SetVelocityFluxCorrectionCoefficient( std::vector<IBCell> &ibCellsComponent,
                                            const Mesh &mesh )
 {
 
     // The denominator must be calculated seperately first
     floatType denominator = 0.0f;
-    for ( auto &ibCell : ibData.ibCells ) { 
+    for ( auto &ibCell : ibCellsComponent ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
             floatType ibCellFaceDistance = abs( sourceTermData.ibDistance - mesh.cellLengths[sourceTermData.direction](ibCell.cellIndex[sourceTermData.direction]) );
@@ -285,7 +285,7 @@ void SetVelocityFluxCorrectionCoefficient( IBData &ibData,
     }
 
     // Now the coefficient for each cell
-    for ( auto &ibCell : ibData.ibCells ) { 
+    for ( auto &ibCell : ibCellsComponent ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
             floatType ibCellFaceDistance = abs( sourceTermData.ibDistance - mesh.cellLengths[sourceTermData.direction](ibCell.cellIndex[sourceTermData.direction]) );
@@ -301,21 +301,16 @@ void SetVelocityFluxCorrectionCoefficient( IBData &ibData,
 
 
 
-IBData ConstructIBData( const Polyhedron &geometry,
-                        const Mesh &mesh,
-                        const InputData &inputData )
+std::vector<IBCell> CreateIBCellDataForComponent( const Tensor3D &mask,
+                                                  const Tree &tree,
+                                                  const Mesh &mesh,
+                                                  const InputData &inputData )
 {
 
     using enum Axis::ENUMDATA;
     using FVT::G;
 
-    IBData ibData;
-
-    // Create AABB tree for geometry
-    Tree tree = MakeAABBTree( geometry );
-
-    ibData.mask = CreateCellMask( tree, mesh );
-    auto &mask = ibData.mask;
+    std::vector<IBCell> ibCellsComponent;
 
     // Iterate through all cells 
     for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
@@ -332,8 +327,8 @@ IBData ConstructIBData( const Polyhedron &geometry,
 
                     auto CheckIBCellPtr = [&] () {
                         if ( ibCellPtr == nullptr ) {
-                            ibData.ibCells.emplace_back();
-                            ibCellPtr = &ibData.ibCells.back();
+                            ibCellsComponent.emplace_back();
+                            ibCellPtr = &ibCellsComponent.back();
                             ibCellPtr->cellIndex = cellIndex;
                         } 
                     };
@@ -363,11 +358,47 @@ IBData ConstructIBData( const Polyhedron &geometry,
     }
 
     // Calculate the coefficients for the velocity flux correction
-    SetVelocityFluxCorrectionCoefficient( ibData, mesh );
+    SetVelocityFluxCorrectionCoefficient( ibCellsComponent, mesh );
+
+    return ibCellsComponent;
+}
+
+
+
+IBData ConstructIBData( const Polyhedron &geometry,
+                        const Mesh &mesh,
+                        const InputData &inputData )
+{
+
+    using enum Axis::ENUMDATA;
+    using FVT::G;
+
+    IBData ibData;
+
+    // Separate the geometry into connected components
+    std::vector<Polyhedron> polyVector = SeparatePolyhedron( geometry );
+
+    // Initialise the global mask for all geometries
+    ibData.mask = Tensor3D( mesh.nCells[X] + 2*CFD::nGhost, mesh.nCells[Y] + 2*CFD::nGhost, mesh.nCells[Z] + 2*CFD::nGhost ).setConstant( CellType::Fluid );
+
+    // Set the IBcells for each one
+    for ( const Polyhedron &poly : polyVector ) {
+
+        Tree tree = MakeAABBTree( poly );
+
+        // Local mask for just this component
+        Tensor3D localMask = CreateCellMask( tree, mesh );
+
+        // Add the contribution to the global mask
+        ibData.mask *= localMask;
+
+        // Set ibCells for this component
+        ibData.ibCells.emplace_back( CreateIBCellDataForComponent( localMask, tree, mesh, inputData ) );
+
+    }
 
     return ibData;
 }
-
 
 }   // end anonymous namespace
 
