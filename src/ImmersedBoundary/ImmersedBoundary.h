@@ -70,7 +70,7 @@ struct IBCell {
 };
 
 struct IBData {
-    std::vector< IBCell > ibCells;
+    std::vector< std::vector< IBCell > > ibCells;   // Outer vector is for each geometry component, inner vector is the cells
     Tensor3D mask;
 };
 

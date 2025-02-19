@@ -53,13 +53,13 @@ FieldData<floatType> ReconstructFaceValues( const TensorIndex3D &cellIndex,
 
 
 
-floatType CalculateVelocityFluxError( IBData &ibData )
+floatType CalculateVelocityFluxError( std::vector<IBCell> &ibCellsComponent )
 {
     const floatType velocityFluxIB = 0.0f;
     floatType velocityFluxError = 0.0f;
     floatType velocityFlux = 0.0f;
     
-    for ( auto &ibCell : ibData.ibCells ) { 
+    for ( auto &ibCell : ibCellsComponent ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
             Axis::ENUMDATA axis = sourceTermData.direction;
@@ -75,14 +75,13 @@ floatType CalculateVelocityFluxError( IBData &ibData )
 
 
 
-void CorrectIBFaceVelocities( IBData &ibData )
+void CorrectIBFaceVelocities( std::vector<IBCell> &ibCellsComponent )
 {
-
     // Calculate the velocity flux error over the entire immersed boundary
-    floatType velocityFluxError = CalculateVelocityFluxError( ibData );
+    floatType velocityFluxError = CalculateVelocityFluxError( ibCellsComponent );
 
     // Add the corrections to each face velocity
-    for ( auto &ibCell : ibData.ibCells ) { 
+    for ( auto &ibCell : ibCellsComponent ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
             floatType correction = sourceTermData.velocityFluxCorrectionCoeff * velocityFluxError;
@@ -132,29 +131,34 @@ floatType GetFarPressureGhostCellValue( const TensorIndex3D &cellIndex,
 void UpdateIBData( IBData &ibData, 
                    const FieldData<Tensor3D> &fields )
 {
-    for ( auto &ibCell : ibData.ibCells ) { 
-        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
+    // Go through each component, we do this so each one gets its own correction
+    for ( auto &ibCellsComponent : ibData.ibCells ) {
 
-            // Update values on the immersed boundary
-            sourceTermData.ibValues = GetIBFieldValues( ibCell.cellIndex, sourceTermData, fields );
+        for ( auto &ibCell : ibCellsComponent ) { 
+            for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
-            // Use new immersed boundary values to update the face values
-            sourceTermData.faceValues = ReconstructFaceValues( ibCell.cellIndex, sourceTermData, fields );
+                // Update values on the immersed boundary
+                sourceTermData.ibValues = GetIBFieldValues( ibCell.cellIndex, sourceTermData, fields );
 
+                // Use new immersed boundary values to update the face values
+                sourceTermData.faceValues = ReconstructFaceValues( ibCell.cellIndex, sourceTermData, fields );
+
+            }
         }
-    }
 
-    // Correct them to globally conserve mass
-    CorrectIBFaceVelocities( ibData );
+        // Correct them to globally conserve mass
+        CorrectIBFaceVelocities( ibCellsComponent );
 
-    for ( auto &ibCell : ibData.ibCells ) { 
-        for ( auto &sourceTermData : ibCell.sourceTermsData ) {
+        for ( auto &ibCell : ibCellsComponent ) { 
+            for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
-            // Extrapolate them to ghost cells
-            sourceTermData.ghostCellValues           = ExtrapolateFaceToGhostCells( ibCell.cellIndex, sourceTermData, fields );
-            sourceTermData.farPressureGhostCellValue = GetFarPressureGhostCellValue( ibCell.cellIndex, sourceTermData, fields );
+                // Extrapolate them to ghost cells
+                sourceTermData.ghostCellValues           = ExtrapolateFaceToGhostCells( ibCell.cellIndex, sourceTermData, fields );
+                sourceTermData.farPressureGhostCellValue = GetFarPressureGhostCellValue( ibCell.cellIndex, sourceTermData, fields );
 
+            }
         }
+
     }
 }
 

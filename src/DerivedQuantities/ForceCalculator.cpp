@@ -25,15 +25,17 @@ fVector3 ForceCalculator::GetForce() const
              viscousForce{ 0.0f, 0.0f, 0.0f },
              advectiveForce{ 0.0f, 0.0f, 0.0f };
 
-    for ( const auto &ibCell : m_ibData.ibCells ) { 
-        for ( const auto &sourceTermData : ibCell.sourceTermsData ) {
+    for ( const auto &ibCellComponent : m_ibData.ibCells ) {
+        for ( const auto &ibCell : ibCellComponent ) { 
+            for ( const auto &sourceTermData : ibCell.sourceTermsData ) {
 
-            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                pressureForce(axis)  += GetPressureIntegralForce(axis, sourceTermData);
-                viscousForce(axis)   += GetViscousIntegralForce(axis, sourceTermData, ibCell.cellIndex);
-                advectiveForce(axis) += GetAdvectiveIntegralForce(axis, sourceTermData);
-            } );
+                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                    pressureForce(axis)  += GetPressureIntegralForce(axis, sourceTermData);
+                    viscousForce(axis)   += GetViscousIntegralForce(axis, sourceTermData, ibCell.cellIndex);
+                    advectiveForce(axis) += GetAdvectiveIntegralForce(axis, sourceTermData);
+                } );
 
+            }
         }
     }
 
