@@ -14,6 +14,7 @@
 #include "IO/VTKWriter.h"
 #include "CoordinateTransformations/AxisTransformationFunctions.h"
 #include "FiniteVolume/FiniteVolume.h"
+#include "Parallel/Parallel.h"
 #include "Solver/Solver.h"
 
 #include <fstream>
@@ -43,6 +44,7 @@ int main(int argc, char const *argv[])
     std::cin.ignore();
     std::cout << std::endl;
 
+    omp_set_num_threads( inputData.parallelSettings.numberOfThreads );
 
     TIC("Solver");
     switch ( inputData.schemes.momentumInterpolation ) {
@@ -69,6 +71,7 @@ int main(int argc, char const *argv[])
             break;
     }
     TOC();
+
 
     /*-------------------------------------------------------------------------------------*\
                                              Output

@@ -851,6 +851,21 @@ namespace
 
 
     /*-------------------------------------------------------------------------------------*\
+                                               Parallel
+    \*-------------------------------------------------------------------------------------*/
+
+    void ReadParallel( InputData &inputData, 
+                       const pt::ptree &tree)
+    {
+        using enum Axis::ENUMDATA;
+
+        const pt::ptree &parallelTree = tree.get_child("Parallel");
+
+        inputData.parallelSettings.numberOfThreads = parallelTree.get<intType>("numberOfThreads");
+    }
+
+
+    /*-------------------------------------------------------------------------------------*\
                                             Output
     \*-------------------------------------------------------------------------------------*/
 
@@ -971,6 +986,7 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFilename)
     ReadBoundaryConditions(inputData, tree);
     ReadInitialConditions(inputData, tree);
     ReadSolver(inputData, tree);
+    ReadParallel(inputData, tree);
     ReadOutput(inputData, tree);
 
     return inputData;

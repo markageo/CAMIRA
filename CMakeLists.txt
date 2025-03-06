@@ -39,7 +39,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Type of build (Debug, Release etc." FORCE)
 endif()
 
-# Ankith's profiler
+# Profiler
 option ( CFD_PROFILING "Enable CFD Profiling Tickers" on )
 if ( CFD_PROFILING )
 	message( STATUS "CFD profiling tickers are on!" )
@@ -116,7 +116,10 @@ find_package(CGAL REQUIRED
 			 COMPONENTS Qt5
 			 PATHS libraries/CGAL-5.6 NO_DEFAULT_PATH )
 set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
-			 
+
+# RAJA, should be installed
+find_package(RAJA)
+
 add_subdirectory(src)
 
 # Link time optimisation

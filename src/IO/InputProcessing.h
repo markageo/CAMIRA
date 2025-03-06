@@ -119,6 +119,10 @@ struct InputData
     };
     MultigridSettings multigridSettings;
 
+    struct ParallelSettings {
+        intType numberOfThreads;
+    };
+    ParallelSettings parallelSettings;
 
     // Ouput
     std::string residualHistoryFilename;
