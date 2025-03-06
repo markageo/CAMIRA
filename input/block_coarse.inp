@@ -150,7 +150,7 @@ Solver {
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 20
+        maxOuterIterations = 5
         maxContinuityOuterResidual = 1e-14
         maxMomentumOuterResiduals   = (1e-14, 1e-14, 1e-14)
 

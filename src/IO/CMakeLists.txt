@@ -6,6 +6,7 @@ target_sources( libs
         VTKReader.cpp
     PRIVATE 
         CSVReader.h 
+        IOTools.h
         InputParser.h 
         InputProcessing.h 
         VTKWriter.h 
