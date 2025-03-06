@@ -22,7 +22,7 @@ void pow_test() {
   const Scalar sqrt2 = Scalar(std::sqrt(2));
   const Scalar inf = Eigen::NumTraits<Scalar>::infinity();
   const Scalar nan = Eigen::NumTraits<Scalar>::quiet_NaN();
-  const Scalar denorm_min = std::numeric_limits<Scalar>::denorm_min();
+  const Scalar denorm_min = EIGEN_ARCH_ARM ? zero : std::numeric_limits<Scalar>::denorm_min();
   const Scalar min = (std::numeric_limits<Scalar>::min)();
   const Scalar max = (std::numeric_limits<Scalar>::max)();
   const Scalar max_exp = (static_cast<Scalar>(int(Eigen::NumTraits<Scalar>::max_exponent())) * Scalar(EIGEN_LN2)) / eps;
@@ -72,9 +72,19 @@ void pow_test() {
     for (int j = 0; j < num_cases; ++j) {
       Scalar e = static_cast<Scalar>(std::pow(x(i,j), y(i,j)));
       Scalar a = actual(i, j);
-      bool fail = !(a==e) && !internal::isApprox(a, e, tol) && !((numext::isnan)(a) && (numext::isnan)(e));
-      all_pass &= !fail;
-      if (fail) {
+#if EIGEN_ARCH_ARM
+      // Work around NEON flush-to-zero mode
+      // if ref returns a subnormal value and Eigen returns 0, then skip the test
+      if (a == Scalar(0) &&
+          (e > -(std::numeric_limits<Scalar>::min)() && e < (std::numeric_limits<Scalar>::min)() &&
+           e >= -std::numeric_limits<Scalar>::denorm_min() && e <= std::numeric_limits<Scalar>::denorm_min())) {
+        continue;
+      }
+#endif
+      bool success = (a == e) || ((numext::isfinite)(e) && internal::isApprox(a, e, tol)) ||
+                     ((numext::isnan)(a) && (numext::isnan)(e));
+      all_pass &= success;
+      if (!success) {
         std::cout << "pow(" << x(i,j) << "," << y(i,j) << ")   =   " << a << " !=  " << e << std::endl;
       }
     }
@@ -346,7 +356,12 @@ template<typename ArrayType> void array_real(const ArrayType& m)
             m3(rows, cols),
             m4 = m1;
 
-  m4 = (m4.abs()==Scalar(0)).select(Scalar(1),m4);
+  // avoid denormalized values so verification doesn't fail on platforms that don't support them
+  // denormalized behavior is tested elsewhere (unary_op_test, binary_ops_test)
+  const Scalar min = (std::numeric_limits<Scalar>::min)();
+  m1 = (m1.abs()<min).select(Scalar(0),m1);
+  m2 = (m2.abs()<min).select(Scalar(0),m2);
+  m4 = (m4.abs()<min).select(Scalar(1),m4);
 
   Scalar  s1 = internal::random<Scalar>();
 
@@ -386,6 +401,7 @@ template<typename ArrayType> void array_real(const ArrayType& m)
 
   // avoid inf and NaNs so verification doesn't fail
   m3 = m4.abs();
+
   VERIFY_IS_APPROX(m3.sqrt(), sqrt(abs(m3)));
   VERIFY_IS_APPROX(m3.rsqrt(), Scalar(1)/sqrt(abs(m3)));
   VERIFY_IS_APPROX(rsqrt(m3), Scalar(1)/sqrt(abs(m3)));

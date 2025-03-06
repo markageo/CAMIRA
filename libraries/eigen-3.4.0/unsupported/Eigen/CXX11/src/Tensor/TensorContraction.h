@@ -12,13 +12,6 @@
 
 namespace Eigen {
 
-/** \class TensorContraction
-  * \ingroup CXX11_Tensor_Module
-  *
-  * \brief Tensor contraction class.
-  *
-  *
-  */
 namespace internal {
 
 template<typename Dimensions, typename LhsXprType, typename RhsXprType, typename OutputKernelType>
@@ -89,7 +82,6 @@ struct TensorContractionBlockMemAllocator {
     eigen_assert(rhs_block);
     BlockSizes sz = ComputeLhsRhsBlockSizes(bm, bk, bn);
     char* block_mem = static_cast<char*>(d.allocate(sz.lhs_size + sz.rhs_size));
-    eigen_assert(block_mem);
     *lhs_block = reinterpret_cast<LhsScalar*>(block_mem);
     *rhs_block = reinterpret_cast<RhsScalar*>(block_mem + sz.lhs_size);
     return block_mem;
@@ -321,10 +313,14 @@ struct NoOpOutputKernel {
   }
 };
 
-template<typename Indices, typename LhsXprType, typename RhsXprType, typename OutputKernelType = const NoOpOutputKernel>
-class TensorContractionOp : public TensorBase<TensorContractionOp<Indices, LhsXprType, RhsXprType, OutputKernelType>, ReadOnlyAccessors>
-{
-  public:
+/** Tensor contraction class.
+ * \ingroup CXX11_Tensor_Module
+ */
+template <typename Indices, typename LhsXprType, typename RhsXprType,
+          typename OutputKernelType = const NoOpOutputKernel>
+class TensorContractionOp
+    : public TensorBase<TensorContractionOp<Indices, LhsXprType, RhsXprType, OutputKernelType>, ReadOnlyAccessors> {
+ public:
   typedef typename Eigen::internal::traits<TensorContractionOp>::Scalar Scalar;
   typedef typename internal::gebp_traits<typename LhsXprType::CoeffReturnType,
                                          typename RhsXprType::CoeffReturnType>::ResScalar CoeffReturnType;

@@ -8,6 +8,15 @@
 // Public License v. 2.0. If a copy of the MPL was not distributed
 // with this file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// We explicitly disable deprecated declarations for this set of tests
+// because we purposely verify assertions for the deprecated SVD runtime
+// option behavior.
+#if defined(__GNUC__)
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#elif defined(_MSC_VER)
+#pragma warning( disable : 4996 )
+#endif
+
 // discard stack allocation as that too bypasses malloc
 #define EIGEN_STACK_ALLOCATION_LIMIT 0
 #define EIGEN_RUNTIME_NO_MALLOC

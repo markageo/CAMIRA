@@ -13,14 +13,6 @@
 
 namespace Eigen {
 
-/** \class TensorTrace
-  * \ingroup CXX11_Tensor_Module
-  *
-  * \brief Tensor Trace class.
-  *
-  *
-  */
-
 namespace internal {
 template<typename Dims, typename XprType>
 struct traits<TensorTraceOp<Dims, XprType> > : public traits<XprType>
@@ -49,10 +41,13 @@ struct nested<TensorTraceOp<Dims, XprType>, 1, typename eval<TensorTraceOp<Dims,
 
 } // end namespace internal
 
-
-template<typename Dims, typename XprType>
-class TensorTraceOp : public TensorBase<TensorTraceOp<Dims, XprType> >
-{
+/**
+ * \ingroup CXX11_Tensor_Module
+ *
+ * \brief Tensor Trace class.
+ */
+template <typename Dims, typename XprType>
+class TensorTraceOp : public TensorBase<TensorTraceOp<Dims, XprType> > {
   public:
     typedef typename Eigen::internal::traits<TensorTraceOp>::Scalar Scalar;
     typedef typename Eigen::NumTraits<Scalar>::Real RealScalar;
@@ -134,6 +129,7 @@ struct TensorEvaluator<const TensorTraceOp<Dims, ArgType>, Device>
       }
     }
 
+    EIGEN_ONLY_USED_FOR_DEBUG(num_distinct_reduce_dims);
     eigen_assert(num_distinct_reduce_dims == NumReducedDims);
 
     // Compute the dimensions of the result.

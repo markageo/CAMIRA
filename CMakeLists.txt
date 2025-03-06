@@ -100,10 +100,16 @@ endif()
 # Add libraries
 include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings
 
-# Eigen library, need to do it this way to not get warnings from it when compiling with Clang
+# Supress eigen warnings
+add_library(eigen_internal INTERFACE)
+target_include_directories(eigen_internal SYSTEM INTERFACE ${CMAKE_SOURCE_DIR}/libraries/eigen-3.4.0)
+target_compile_options(eigen_internal INTERFACE -Wno-array-bounds)
+
+# Public Eigen target without warnings suppressed
 add_library(eigen INTERFACE)
-target_sources(eigen INTERFACE libraries/eigen-3.4.0)
-target_include_directories(eigen SYSTEM INTERFACE libraries/eigen-3.4.0)
+target_link_libraries(eigen INTERFACE eigen_internal)
+
+
 
 # CGAL library
 find_package(CGAL REQUIRED 
