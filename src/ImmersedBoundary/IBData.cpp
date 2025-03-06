@@ -163,10 +163,22 @@ void AddIBDataForDirection( IBCell &ibCell,
     bool meetsGhostStabilityCondition =  ibDistance >= ( mesh.cellLengths[axis](cellIndex[axis]) / 2.0f );
     if ( meetsGhostStabilityCondition ) {
 
+        // Linear
         floatType dxpOn2 = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f ;
         sourceTermData.faceReconstructionCoeff_p  = ( ibDistance - dxpOn2 ) / ( ibDistance );
         sourceTermData.faceReconstructionCoeff_a  = 0.0f;
         sourceTermData.faceReconstructionCoeff_ib = dxpOn2 / ibDistance;
+
+        // // Quadratic
+        // floatType dxp = mesh.cellLengths[axis](cellIndex[axis]);
+        // floatType la  = abs( mesh.cellCenters[axis](cellIndex[axis]) - mesh.cellCenters[axis](cellIndex_a[axis]) );
+        // sourceTermData.faceReconstructionCoeff_p  = - dxp * dxp / ( 4 * ibDistance * la )
+        //                                           +   dxp * ( ibDistance - la ) / ( 2 * ibDistance * la );
+        // sourceTermData.faceReconstructionCoeff_a  =   dxp * dxp /  ( 4 * la * ( ibDistance * la ) )
+        //                                           -   dxp * ibDistance / ( 2 * la * ( ibDistance + la ) );
+        // sourceTermData.faceReconstructionCoeff_ib =   dxp * dxp / ( 4 * ibDistance * ( ibDistance + la ) )
+        //                                           +   dxp * la / ( 2 * ibDistance * ( ibDistance + la ) );
+
 
     } else {
 

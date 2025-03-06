@@ -9,5 +9,6 @@ target_sources( libs
     PRIVATE 
         FiniteVolumeStructures.h
         FiniteVolumeFunctions.h
+        FiniteVolume.h
         Mesh.h
         FaceInterpolatedVelocity.h )

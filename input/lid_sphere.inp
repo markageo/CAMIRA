@@ -1,8 +1,8 @@
-// Lid driven cavity
+// Lid driven cavity with sphere inside
 
 Model {
     rho  = 1
-    nu   = 0.005
+    nu   = 0.001
     transient = no
 }
 
@@ -13,7 +13,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 40
             biasFactor = 1
         }
     }
@@ -21,7 +21,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 40
             biasFactor = 1
         }
     }
@@ -29,16 +29,15 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 40
             biasFactor = 1
         }
     }
 }
 
-
 InitialConditions
 {
-    type = uniform
+    type  = uniform
     u = 0
     v = 0
     w = 0
@@ -100,15 +99,15 @@ BoundaryConditions
 
 SolidGeometry {
     boundaryTreatement = directionalImmersedBoundary
+    // FromFile {
+    //     type = STL
+    //     filename = "lid_sphere_geometry.stl"
+    // }
+
     Sphere {
         centerPosition = (0.5, 0.5, 0.5)
         diameter       = 0.25
     }
-
-    //FromFile {
-    //    type = STL
-    //    filename = "input/lid_sphere_geometry.stl"
-    //}
 }
 
 Solver {
@@ -117,41 +116,40 @@ Solver {
 
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = upwind
-        advectionBlendingFactor = 1.0
+        advectionScheme         = QUICK
+        advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 1000
-        maxContinuityOuterResidual = 1e-8
-        maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
-
+        maxOuterIterations = 500000
+        maxContinuityOuterResidual = 1e-12
+        maxMomentumOuterResiduals  = (1e-12, 1e-12, 1e-12)
     }
     
     Smoother {
 
         type = nestedLineSymmetric
-        maxIterations = 1
+        maxIterations = 2
         maxResiduals = 1e-3
 
         planeSweepDirection = +z
-        lineSweepDirection = +x
+        lineSweepDirection = +y
 
-        momentumRelaxation = (1, 1, 1)
+        momentumRelaxation = (0.95, 0.95, 0.95)
         pressureRelaxation = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 3
+        maxCoarseLevels = 1
 
-        preSmoothingIterations = 3
-        postSmoothingIterations = 3
+        preSmoothingIterations = 2
+        postSmoothingIterations = 2
         fineGridIterations   = 2
 
-        maxCoarseGridIterations = 500
+        maxCoarseGridIterations = 200
         maxCoarseGridResiduals  = 1e-6
-
+        
     }
 
 }
@@ -159,10 +157,9 @@ Solver {
 
 Output {
 
-    residualHistoryFilename = "output/residual_history.csv"
+    residualHistoryFilename = "output/residualHistory.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
-    geometryOutputFilename  = "output/lid_sphere_geometry.stl"
+    geometryOutputFilename  = "output/geometry.stl"
     fieldWriteInterval      = 0
-
 }

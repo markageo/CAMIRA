@@ -119,7 +119,7 @@ floatType GetFarPressureGhostCellValue( const TensorIndex3D &cellIndex,
 
     return sourceTermData.farPressureCoeff_p * fields.P( G(cellIndex) )
          + sourceTermData.farPressureCoeff_a * fields.P( G(sourceTermData.cellIndex_a) )
-         + sourceTermData.farPressureCoeff_g * sourceTermData.ghostCellValues.P;       
+         + sourceTermData.farPressureCoeff_g * sourceTermData.ghostCellValues.P;    
 }
 
 
