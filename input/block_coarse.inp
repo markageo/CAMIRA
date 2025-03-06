@@ -165,7 +165,7 @@ Solver {
         planeSweepDirection = +z
         lineSweepDirection = +y
 
-        momentumRelaxation = (0.9, 0.9, 0.9)
+        momentumRelaxation = (0.6, 0.6, 0.6)
         pressureRelaxation = 1
 
     }
@@ -185,6 +185,9 @@ Solver {
 
 }
 
+Parallel {
+    numberOfThreads = 1
+}
 
 Output {
 

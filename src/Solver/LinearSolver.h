@@ -11,6 +11,9 @@
 #include "../Core/FVLookups.h"
 #include "../IO/InputProcessing.h"
 #include "../FiniteVolume/FiniteVolume.h"
+#include "../Parallel/Parallel.h"
+#include "ArrayIndexConversions.h"
+
 
 #include "../IO/ArrayIO.h"
 
@@ -30,21 +33,21 @@ class LinearSolverInterface
 };
 
 
-// Two orientation symmetric sweeping
+// Two orientation symmetric sweeping (Serial)
 template< MomentumInterpolation MI >
-class domainSymmetricSolver : public LinearSolverInterface< MI >
+class domainSymmetricSolverSerial : public LinearSolverInterface< MI >
 {
     using TC = TransportCoefficients::ENUMDATA;
     using A = Axis::ENUMDATA;
 
 public:
-    domainSymmetricSolver( FieldData<Tensor3D> &fields,
-                           const FieldData<Tensor3D> &fieldsOld,
-                           const Tensor3D &mask,
-                           const FVCoefficients &fvCoeffs, 
-                           const Mesh &mesh,
-                           const BoundaryConditionData &bcData,
-                           const InputData::SmootherSettings &smootherSettings) : 
+    domainSymmetricSolverSerial( FieldData<Tensor3D> &fields,
+                                 const FieldData<Tensor3D> &fieldsOld,
+                                 const Tensor3D &mask,
+                                 const FVCoefficients &fvCoeffs, 
+                                 const Mesh &mesh,
+                                 const BoundaryConditionData &bcData,
+                                 const InputData::SmootherSettings &smootherSettings) : 
                     m_fields( fields ),
                     m_fieldsOld( fieldsOld ),
                     m_fvCoeffs( fvCoeffs ),
@@ -197,21 +200,21 @@ private:
 
 
 
-// Nested symmetric sweeping
+// Nested symmetric sweeping (Serial)
 template< MomentumInterpolation MI >
-class nestedLineSymmetricSolver : public LinearSolverInterface< MI >
+class nestedLineSymmetricSolverSerial : public LinearSolverInterface< MI >
 {
     using TC = TransportCoefficients::ENUMDATA;
     using A = Axis::ENUMDATA;
 
 public:
-    nestedLineSymmetricSolver( FieldData<Tensor3D> &fields,
-                               const FieldData<Tensor3D> &fieldsOld,
-                               const Tensor3D &mask,
-                               const FVCoefficients &fvCoeffs, 
-                               const Mesh &mesh,
-                               const BoundaryConditionData &bcData,
-                               const InputData::SmootherSettings &smootherSettings) : 
+    nestedLineSymmetricSolverSerial( FieldData<Tensor3D> &fields,
+                                     const FieldData<Tensor3D> &fieldsOld,
+                                     const Tensor3D &mask,
+                                     const FVCoefficients &fvCoeffs, 
+                                     const Mesh &mesh,
+                                     const BoundaryConditionData &bcData,
+                                     const InputData::SmootherSettings &smootherSettings) : 
                     m_fields( fields ),
                     m_fieldsOld( fieldsOld ),
                     m_mesh( mesh ),
@@ -225,13 +228,13 @@ public:
     {
         if (m_nk == 1) {
             m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
-            SolutionUpdater     = &nestedLineSymmetricSolver::Sweep2D;
-            StateUpdater        = &nestedLineSymmetricSolver::UpdateState2D;
+            SolutionUpdater     = &nestedLineSymmetricSolverSerial::Sweep2D;
+            StateUpdater        = &nestedLineSymmetricSolverSerial::UpdateState2D;
         } else {
             m_planeSolverTop    = std::make_unique<PlaneSolver<TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
             m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
-            SolutionUpdater     = &nestedLineSymmetricSolver::Sweep3D;
-            StateUpdater        = &nestedLineSymmetricSolver::UpdateState3D;
+            SolutionUpdater     = &nestedLineSymmetricSolverSerial::Sweep3D;
+            StateUpdater        = &nestedLineSymmetricSolverSerial::UpdateState3D;
         }
     }
 
@@ -285,8 +288,8 @@ private:
     std::unique_ptr< PlaneSolver<TC::b, MI > > m_planeSolverBottom;
     std::unique_ptr< PlaneSolver<TC::p, MI > > m_planeSolverCenter;
 
-    void (nestedLineSymmetricSolver::*SolutionUpdater)(void);
-    void (nestedLineSymmetricSolver::*StateUpdater)(void);
+    void (nestedLineSymmetricSolverSerial::*SolutionUpdater)(void);
+    void (nestedLineSymmetricSolverSerial::*StateUpdater)(void);
 
     FieldData<Tensor2D> m_oldPlane;
     FieldData<floatType> m_residuals, m_residualsInitialInv;
@@ -351,6 +354,195 @@ private:
         } );
     }
 };
+
+
+
+
+// Two orientation symmetric sweeping (Parallel)
+template< MomentumInterpolation MI >
+class domainSymmetricSolverParallel : public LinearSolverInterface< MI >
+{
+    using TC = TransportCoefficients::ENUMDATA;
+    using A = Axis::ENUMDATA;
+
+    // using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_parallel_for_exec>;
+    using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_for_exec>;
+
+    // using colorPolicy = RAJA::KernelPolicy< 
+    //                                         RAJA::statement::For< 0, 
+    //                                                               RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_for_exec>, 
+    //                                                               RAJA::statement::Lambda<0> 
+    //                                                             >  
+    //                                       >;
+
+
+public:
+    domainSymmetricSolverParallel( FieldData<Tensor3D> &fields,
+                                   const FieldData<Tensor3D> &fieldsOld,
+                                   const Tensor3D &mask,
+                                   const FVCoefficients &fvCoeffs, 
+                                   const Mesh &mesh,
+                                   const BoundaryConditionData &bcData,
+                                   const InputData::SmootherSettings &smootherSettings ) : 
+
+                    m_fields( fields ),
+                    m_fieldsOld( fieldsOld ),
+                    m_fvCoeffs( fvCoeffs ),
+                    m_mesh( mesh ),
+                    m_bcData( bcData ),
+                    m_maxIterations( smootherSettings.maxIterations ),
+                    m_maxResiduals( smootherSettings.maxResiduals ),
+                    m_relaxation( smootherSettings.relaxation ),
+
+                    m_resource( camp::resources::Host() ),
+                    m_colorSet( Create3ColorSet( fvCoeffs.nCells, m_resource ) ),
+
+                    m_nCells( fvCoeffs.nCells )
+    {
+        m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+        m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+    }
+
+
+    void Solve()
+    {
+        using enum Axis::ENUMDATA;
+        using enum TransportCoefficients::ENUMDATA;
+
+        for ( intType nIterations = 1 ; nIterations <= m_maxIterations; nIterations++ )
+        {
+            // Reset residuals
+            ForAllFieldData( [&] (intType f) { m_residuals[f] = 0.0f; });
+
+            // Sweep domain
+            Sweep3D();
+
+            // Normalise residuals
+            ForAllFieldData( [&] (intType f) { m_residuals[f] /= static_cast<floatType>(m_nCells[0] * m_nCells[1] * m_nCells[2]); });
+            if ( nIterations == 1 ) {
+                ForAllFieldData( [&] (intType f) { m_residualsInitialInv[f] = 1.0f / m_residuals[f]; });
+            }
+            NormaliseResiduals(m_residuals, m_residualsInitialInv);
+
+            // Check residual tolerence
+            if ( MetResidualTolerence(m_residuals, m_maxResiduals) ) {
+                break;
+            }
+        }
+
+    }
+
+
+    // Update any precomputed values
+    void UpdateState()
+    {
+        m_triadSolverForward->UpdateGlobalConstants();
+        m_triadSolverBackward->UpdateGlobalConstants();
+    }
+
+
+private:
+
+    FieldData<Tensor3D> &m_fields;
+    const FieldData<Tensor3D> &m_fieldsOld;
+    const FVCoefficients &m_fvCoeffs;
+    const Mesh &m_mesh;
+    const BoundaryConditionData &m_bcData;
+    const intType m_maxIterations;
+    const FieldData<floatType> m_maxResiduals;
+    const FieldData<floatType> m_relaxation;
+
+    camp::resources::Resource m_resource;
+    RAJA::TypedIndexSet< RAJA::TypedListSegment<intType> > m_colorSet;
+
+    std::unique_ptr<TriadSolver<TC::e, TC::n, TC::t, MI >> m_triadSolverForward;
+    std::unique_ptr<TriadSolver<TC::w, TC::s, TC::b, MI >> m_triadSolverBackward;
+
+    FieldData<floatType> m_residuals, m_residualsInitialInv;
+
+    intType m_ni, m_nj, m_nk;
+    iArray3 m_nCells;
+
+    void Sweep3D()
+    {
+
+        TIC("Sweeping")
+        // For thread safe reductions
+        RAJA::MultiReduceSum< RAJA::omp_multi_reduce, floatType > residualReductions( FieldData<floatType>::nData, 0.0f );
+
+        // RAJA::region<RAJA::omp_parallel_region>( [&] () {
+
+            SetGhostCells(m_fields, m_mesh, m_bcData);
+
+            RAJA::forall<colorPolicy>( m_colorSet, [&] ( intType idx ) {
+
+            // RAJA::kernel<colorPolicy>( RAJA::make_tuple( m_colorSet ), [&] ( intType idx ) {
+
+                auto subs = Ind2Sub( m_nCells, idx );
+
+                intType i = subs[0],
+                        j = subs[1],
+                        k = subs[2];
+
+                // Triad starting on lo side
+                FieldData<floatType> oldValues;
+                oldValues.P    = m_fields.P( G(i, j, k) );
+                oldValues.U[0] = m_fields.U[0]( G(i+1, j  , k  ) );
+                oldValues.U[1] = m_fields.U[1]( G(i  , j+1, k  ) );
+                oldValues.U[2] = m_fields.U[2]( G(i  , j  , k+1) );
+
+                m_triadSolverForward->UpdateTriad( i, j, k );
+
+                residualReductions[0] += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+                residualReductions[1] += abs( oldValues.U[0] - m_fields.U[0]( G(i+1, j  , k  ) ) );
+                residualReductions[2] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j+1, k  ) ) );
+                residualReductions[3] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k+1) ) );
+
+
+            } );
+
+            SetGhostCells(m_fields, m_mesh, m_bcData);
+
+            // Triad starting on hi side
+            RAJA::forall<colorPolicy>( m_colorSet, [&] ( intType idx ) {
+
+                auto subs = Ind2Sub( m_nCells, idx );
+
+                intType i = subs[0],
+                        j = subs[1],
+                        k = subs[2];
+
+                FieldData<floatType> oldValues;
+                oldValues.P    = m_fields.P( G(i, j, k) );
+                oldValues.U[0] = m_fields.U[0]( G(i-1, j  , k  ) );
+                oldValues.U[1] = m_fields.U[1]( G(i  , j-1, k  ) );
+                oldValues.U[2] = m_fields.U[2]( G(i  , j  , k-1) );
+
+                m_triadSolverBackward->UpdateTriad( i, j, k );
+
+                residualReductions[0] += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+                residualReductions[1] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
+                residualReductions[2] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
+                residualReductions[3] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
+
+            } );
+
+        // } );
+
+        SetGhostCells(m_fields, m_mesh, m_bcData);
+
+        TOC()
+
+        // Copy to residuals
+        m_residuals.P    = residualReductions[0].get();
+        m_residuals.U[0] = residualReductions[1].get();
+        m_residuals.U[1] = residualReductions[2].get();
+        m_residuals.U[2] = residualReductions[3].get();
+
+    }
+
+};
+
 
 }   // end namespace CFD    
 

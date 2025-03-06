@@ -150,6 +150,9 @@ Solver {
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
         
+        maxOuterIterations = 10
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals   = (1e-6, 1e-6, 1e-6)
         maxOuterIterations = 25
         maxContinuityOuterResidual = 1e-6
         maxMomentumOuterResiduals   = (1e-6, 1e-6, 1e-6)
@@ -158,21 +161,21 @@ Solver {
     
     Smoother {
 
-        type = nestedLineSymmetric
+        type = domainSymmetric
         maxIterations = 3
         maxResiduals = 1e-3
 
         planeSweepDirection = +z
         lineSweepDirection = +y
 
-        momentumRelaxation = (1, 1, 1)
+        momentumRelaxation = (0.85, 0.85, 0.85)
         pressureRelaxation = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 4
+        maxCoarseLevels = 0
 
         preSmoothingIterations = 3
         postSmoothingIterations = 3
@@ -183,6 +186,10 @@ Solver {
         
     }
 
+}
+
+Parallel {
+    numberOfThreads = 2
 }
 
 
