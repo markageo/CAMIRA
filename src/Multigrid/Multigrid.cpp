@@ -22,6 +22,11 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
     const InputData::MultigridSettings &mgSettings = inputData.multigridSettings;
 
+    // Write the geometry to file
+    if ( inputData.outputGeometry ) {
+        WriteGeometryToFile(inputData, axisTransofrmation);
+    }
+
     // Reserve data. The linear solver holds references to the fields which can break if the vector is resized
     mgLevels.reserve( mgSettings.maxCoarseLevels + 1 );
 
@@ -49,7 +54,7 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
 
         // Immersed boundary data
-        mgl.ibData = CreateImmersedBoundaryData(inputData, mgl.mesh, axisTransofrmation);
+        mgl.ibData = CreateImmersedBoundaryData(inputData, mgl.mesh);
 
 
         // Allocate and initialise fields

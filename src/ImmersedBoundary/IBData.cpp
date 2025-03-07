@@ -376,16 +376,27 @@ std::vector<IBCell> CreateIBCellDataForComponent( const Tensor3D &mask,
 }
 
 
+}   // end anonymous namespace
 
-IBData ConstructIBData( const Polyhedron &geometry,
-                        const Mesh &mesh,
-                        const InputData &inputData )
+
+
+
+IBData CreateImmersedBoundaryData( const InputData &inputData,
+                                   const Mesh &mesh )
 {
 
     using enum Axis::ENUMDATA;
     using FVT::G;
 
     IBData ibData;
+
+    // Leave ibData empty if there is no geometry
+    if ( !inputData.hasIBGeometry ) {
+        ibData.mask = Tensor3D( mesh.nCells[X] + 2*CFD::nGhost, mesh.nCells[Y] + 2*CFD::nGhost, mesh.nCells[Z] + 2*CFD::nGhost ).setConstant( CellType::Fluid );
+        return ibData;
+    }
+
+    Polyhedron geometry = MakeGeometry( inputData );
 
     // Separate the geometry into connected components
     std::vector<Polyhedron> polyVector = SeparatePolyhedron( geometry );
@@ -412,40 +423,21 @@ IBData ConstructIBData( const Polyhedron &geometry,
     return ibData;
 }
 
-}   // end anonymous namespace
 
 
-
-
-IBData CreateImmersedBoundaryData( const InputData &inputData, 
-                                   const Mesh &mesh,
-                                   const AxisTransformationMap &axisTransformation )
+void WriteGeometryToFile( const InputData &inputData, 
+                          const AxisTransformationMap &axisTransformation )
 {
-    using enum Axis::ENUMDATA;
+    InputData inputDataUserCoordinates( inputData );
+    TransformUserInputData( inputDataUserCoordinates, axisTransformation.Inverse() );
+    Polyhedron PUserCoordinates = MakeGeometry( inputDataUserCoordinates );
 
-    IBData ibData;
-
-    if ( !inputData.hasIBGeometry ) {
-        ibData.mask = Tensor3D( mesh.nCells[X] + 2*CFD::nGhost, mesh.nCells[Y] + 2*CFD::nGhost, mesh.nCells[Z] + 2*CFD::nGhost ).setConstant( CellType::Fluid );
-        return ibData;
-    }
-
-    Polyhedron P = MakeGeometry( inputData );
-    ibData = ConstructIBData( P, mesh, inputData );
-
-    // Make a new new inputData object in the user coordinates to make another geometry to be output to file
-    if ( inputData.outputGeometry ) {
-        InputData inputDataUserCoordinates( inputData );
-        TransformUserInputData( inputDataUserCoordinates, axisTransformation.Inverse() );
-        Polyhedron PUserCoordinates = MakeGeometry( inputDataUserCoordinates );
-
-        std::ofstream out(  IOTOOLS::RemoveFileExtension( inputData.geometryOutputFilename, ".stl" ) + ".stl" );
-        CGAL::IO::write_STL( out, PUserCoordinates );
-    }
-    
-
-    return ibData;
+    std::ofstream out(  IOTOOLS::RemoveFileExtension( inputData.geometryOutputFilename, ".stl" ) + ".stl" );
+    CGAL::IO::write_STL( out, PUserCoordinates );
 }
+
+
+
 
 
 }   // end namespace CFD

@@ -75,8 +75,9 @@ struct IBData {
 };
 
 
-IBData CreateImmersedBoundaryData( const InputData &, const Mesh &, const AxisTransformationMap & );
+IBData CreateImmersedBoundaryData( const InputData &, const Mesh &);
 
+void WriteGeometryToFile( const InputData &, const AxisTransformationMap & );
 
 
 // ------------------------------- Definition in IBSolverFunctions.cpp --------------------------------- //
