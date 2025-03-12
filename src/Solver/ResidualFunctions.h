@@ -396,24 +396,6 @@ inline bool ResidualsDiverged( const FieldData<floatType> &residuals )
     return false;
 }
 
-
-
-// Update a vector of field probes
-inline std::vector< FieldData<floatType> > SetFieldProbeValues( const FieldData<Tensor3D> &fields,
-                                                                const std::vector<FieldProbe> &fieldProbes )
-{
-    std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
-
-    for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
-        ForAllFieldData( [&] (intType f) { 
-            probeValues[p][f] =  fieldProbes[p].GetFieldValue( fields[f] );
-        } );
-    }
-
-    return probeValues;
-}
-
-
 }   // end namespace CFD
 
 #endif // RESIDUAL_FUNCTIONS

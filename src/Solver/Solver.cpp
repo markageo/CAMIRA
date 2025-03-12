@@ -426,7 +426,6 @@ void SolveSteady( const InputData &inputData,
         fieldProbes.emplace_back( mesh, probeData.location );
         probeLogFiles.emplace_back( probeData.filename, axisTransformation, fieldProbes.back() );
     }
-    std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
     
     ForceCalculator forceCalculator( ibData, mesh, fields, inputData.rho, inputData.nu );
     std::unique_ptr<ForceLogFile> forceLogFilePtr;
@@ -485,9 +484,9 @@ void SolveSteady( const InputData &inputData,
         residualsLogFile.WriteData( residualsOuter, massFluxResidual, nOuterIterations );
 
         // Probes
-        probeValues      = SetFieldProbeValues( mgLevels[0].fields, fieldProbes); 
         for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
-            probeLogFiles[p].WriteData( probeValues[p], nOuterIterations );
+            probeLogFiles[p].WriteData( ProbeAllFieldValues( mgLevels[0].fields, fieldProbes[p] ), 
+                                        nOuterIterations );
         }
         
         // Forces
@@ -561,7 +560,6 @@ void SolveTransient( const InputData &inputData,
         fieldProbes.emplace_back( mesh, probeData.location );
         probeLogFiles.emplace_back( probeData.filename, axisTransformation, fieldProbes.back() );
     }
-    std::vector< FieldData<floatType> > probeValues( fieldProbes.size() );
     
     ForceCalculator forceCalculator( ibData, mesh, fields, inputData.rho, inputData.nu );
     std::unique_ptr<ForceLogFile> forceLogFilePtr;
@@ -625,9 +623,9 @@ void SolveTransient( const InputData &inputData,
             }
         }
 
-        probeValues = SetFieldProbeValues( mgLevels[0].fields, fieldProbes); 
         for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
-            probeLogFiles[p].WriteData( probeValues[p], timeStepNumber );
+            probeLogFiles[p].WriteData( ProbeAllFieldValues( mgLevels[0].fields, fieldProbes[p] ), 
+                                        timeStepNumber );
         }
 
         if ( forceLogFilePtr ) {
