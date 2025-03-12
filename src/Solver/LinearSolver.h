@@ -13,6 +13,11 @@
 #include "../FiniteVolume/FiniteVolume.h"
 #include "../Parallel/Parallel.h"
 #include "ArrayIndexConversions.h"
+#include <RAJA/index/RangeSegment.hpp>
+#include <RAJA/pattern/kernel.hpp>
+#include <RAJA/pattern/kernel/Lambda.hpp>
+#include <RAJA/policy/sequential/policy.hpp>
+#include <RAJA/util/camp_aliases.hpp>
 
 
 #include "../IO/ArrayIO.h"
@@ -363,18 +368,7 @@ template< MomentumInterpolation MI >
 class domainSymmetricSolverParallel : public LinearSolverInterface< MI >
 {
     using TC = TransportCoefficients::ENUMDATA;
-    using A = Axis::ENUMDATA;
-
-    // using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_parallel_for_exec>;
-    using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_for_exec>;
-
-    // using colorPolicy = RAJA::KernelPolicy< 
-    //                                         RAJA::statement::For< 0, 
-    //                                                               RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_for_exec>, 
-    //                                                               RAJA::statement::Lambda<0> 
-    //                                                             >  
-    //                                       >;
-
+    using A = Axis::ENUMDATA;    
 
 public:
     domainSymmetricSolverParallel( FieldData<Tensor3D> &fields,
@@ -395,9 +389,11 @@ public:
                     m_relaxation( smootherSettings.relaxation ),
 
                     m_resource( camp::resources::Host() ),
-                    m_colorSet( Create3ColorSet( fvCoeffs.nCells, m_resource ) ),
+                    m_forwardColorSet( CreateForward3ColorSet( {1, fvCoeffs.nCells(1), fvCoeffs.nCells(2)}, m_resource ) ),
+                    m_reverseColorSet( CreateReverse3ColorSet( {1, fvCoeffs.nCells(1), fvCoeffs.nCells(2)}, m_resource ) ),
 
-                    m_nCells( fvCoeffs.nCells )
+                    m_nCells( fvCoeffs.nCells ),
+                    m_nCellsPlane( fvCoeffs.nCells(1), fvCoeffs.nCells(2) )
     {
         m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
         m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
@@ -453,38 +449,41 @@ private:
     const FieldData<floatType> m_relaxation;
 
     camp::resources::Resource m_resource;
-    RAJA::TypedIndexSet< RAJA::TypedListSegment<intType> > m_colorSet;
+    RAJA::TypedIndexSet< RAJA::TypedListSegment<intType> > m_forwardColorSet,
+                                                           m_reverseColorSet;
 
     std::unique_ptr<TriadSolver<TC::e, TC::n, TC::t, MI >> m_triadSolverForward;
     std::unique_ptr<TriadSolver<TC::w, TC::s, TC::b, MI >> m_triadSolverBackward;
 
     FieldData<floatType> m_residuals, m_residualsInitialInv;
 
-    intType m_ni, m_nj, m_nk;
     iArray3 m_nCells;
+    iArray2 m_nCellsPlane;
 
     void Sweep3D()
     {
+        // using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::seq_exec>;
+        using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_parallel_for_exec>;
 
-        TIC("Sweeping")
         // For thread safe reductions
         RAJA::MultiReduceSum< RAJA::omp_multi_reduce, floatType > residualReductions( FieldData<floatType>::nData, 0.0f );
 
+        TIC("Sweeping")
+
         // RAJA::region<RAJA::omp_parallel_region>( [&] () {
 
-            SetGhostCells(m_fields, m_mesh, m_bcData);
+        SetGhostCells(m_fields, m_mesh, m_bcData);
+        
+        // Triad starting on lo side
+        RAJA::forall<colorPolicy>( m_forwardColorSet, [&] ( intType planeIdx ) {
 
-            RAJA::forall<colorPolicy>( m_colorSet, [&] ( intType idx ) {
+            auto subs = Ind2Sub( Eigen::Array<intType, 2, 1>{m_nCells(1), m_nCells(2)}, planeIdx );
 
-            // RAJA::kernel<colorPolicy>( RAJA::make_tuple( m_colorSet ), [&] ( intType idx ) {
+            intType j = subs[0],
+                    k = subs[1];
+       
+            for ( intType i = 0; i != m_nCells(0); i++ ) {
 
-                auto subs = Ind2Sub( m_nCells, idx );
-
-                intType i = subs[0],
-                        j = subs[1],
-                        k = subs[2];
-
-                // Triad starting on lo side
                 FieldData<floatType> oldValues;
                 oldValues.P    = m_fields.P( G(i, j, k) );
                 oldValues.U[0] = m_fields.U[0]( G(i+1, j  , k  ) );
@@ -498,19 +497,16 @@ private:
                 residualReductions[2] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j+1, k  ) ) );
                 residualReductions[3] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k+1) ) );
 
+                // m_residuals.P += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+                // m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i+1, j  , k  ) ) );
+                // m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j+1, k  ) ) );
+                // m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k+1) ) );
 
-            } );
+            }
 
-            SetGhostCells(m_fields, m_mesh, m_bcData);
+            // SetGhostCells(m_fields, m_mesh, m_bcData);
 
-            // Triad starting on hi side
-            RAJA::forall<colorPolicy>( m_colorSet, [&] ( intType idx ) {
-
-                auto subs = Ind2Sub( m_nCells, idx );
-
-                intType i = subs[0],
-                        j = subs[1],
-                        k = subs[2];
+            for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
 
                 FieldData<floatType> oldValues;
                 oldValues.P    = m_fields.P( G(i, j, k) );
@@ -525,19 +521,57 @@ private:
                 residualReductions[2] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
                 residualReductions[3] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
 
-            } );
+                // m_residuals.P += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+                // m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
+                // m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
+                // m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
+                
+            }
 
-        // } );
+        } );
 
         SetGhostCells(m_fields, m_mesh, m_bcData);
 
+
+        // // Triad starting on hi side
+        // RAJA::forall<colorPolicy>( m_reverseColorSet, [&] ( intType planeIdx)  {
+
+        //     auto subs = Ind2Sub( Eigen::Array<intType, 2, 1>{m_nCells(1), m_nCells(2)}, planeIdx );
+
+        //     intType j = subs[0],
+        //             k = subs[1];
+
+        //     for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
+
+        //         FieldData<floatType> oldValues;
+        //         oldValues.P    = m_fields.P( G(i, j, k) );
+        //         oldValues.U[0] = m_fields.U[0]( G(i-1, j  , k  ) );
+        //         oldValues.U[1] = m_fields.U[1]( G(i  , j-1, k  ) );
+        //         oldValues.U[2] = m_fields.U[2]( G(i  , j  , k-1) );
+
+        //         m_triadSolverBackward->UpdateTriad( i, j, k );
+
+        //         // residualReductions[0] += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+        //         // residualReductions[1] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
+        //         // residualReductions[2] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
+        //         // residualReductions[3] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
+
+        //         m_residuals.P += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+        //         m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
+        //         m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
+        //         m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
+                
+        //     }
+
+        // } );
+
         TOC()
 
-        // Copy to residuals
-        m_residuals.P    = residualReductions[0].get();
-        m_residuals.U[0] = residualReductions[1].get();
-        m_residuals.U[1] = residualReductions[2].get();
-        m_residuals.U[2] = residualReductions[3].get();
+        // // Copy to residuals
+        // m_residuals.P    = residualReductions[0].get();
+        // m_residuals.U[0] = residualReductions[1].get();
+        // m_residuals.U[1] = residualReductions[2].get();
+        // m_residuals.U[2] = residualReductions[3].get();
 
     }
 

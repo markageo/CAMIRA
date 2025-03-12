@@ -13,7 +13,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 250
             biasFactor = 1
         }
     }
@@ -21,7 +21,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 250
             biasFactor = 1
         }
     }
@@ -29,7 +29,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 100
+            nCells     = 250
             biasFactor = 1
         }
     }
@@ -134,7 +134,7 @@ Solver {
 
         preSmoothingIterations = 3
         postSmoothingIterations = 3
-        fineGridIterations   = 2
+        fineGridIterations   = 3
 
         maxCoarseGridIterations = 250
         maxCoarseGridResiduals  = 1e-6
@@ -143,6 +143,10 @@ Solver {
 
 }
 
+
+Parallel {
+    numberOfThreads = 4
+}
 
 Output {
 
