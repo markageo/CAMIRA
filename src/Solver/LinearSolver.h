@@ -113,14 +113,16 @@ private:
 
     void Sweep3D()
     {
+
+        TIC("Sweeping")
         // Triad starting on lo side
         for ( intType k = 0; k != m_nk; k++ ) {
 
-            FieldData<Tensor2D> planeConstants = CalculatePlaneConstants<TC::t, MI, LI>(k, m_fvCoeffs, m_fields);
+            // FieldData<Tensor2D> planeConstants = CalculatePlaneConstants<TC::t, MI, LI>(k, m_fvCoeffs, m_fields);
 
             for ( intType j = 0; j != m_nj; j++ ) {
 
-                FieldData<Tensor1D> lineConstants = CalculateLineConstants<TC::n, TC::t, MI, LI>(j, k, planeConstants, m_fvCoeffs, m_fields);
+                // FieldData<Tensor1D> lineConstants = CalculateLineConstants<TC::n, TC::t, MI, LI>(j, k, planeConstants, m_fvCoeffs, m_fields);
 
                 for ( intType i = 0; i != m_ni; i++ ) {
 
@@ -130,7 +132,8 @@ private:
                     oldValues.U[1] = m_fields.U[1]( G(i  , j+1, k  ) );
                     oldValues.U[2] = m_fields.U[2]( G(i  , j  , k+1) );
 
-                    m_triadSolverForward->UpdateTriad( i, j, k, lineConstants );
+                    // m_triadSolverForward->UpdateTriad( i, j, k, lineConstants );
+                    m_triadSolverForward->UpdateTriad( i, j, k );
 
                     m_residuals.P    += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
                     m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i+1, j  , k  ) ) );
@@ -145,11 +148,11 @@ private:
         // Triad starting on hi side
         for ( intType k = m_nk-1; k != -1; k-- ) {
 
-            FieldData<Tensor2D> planeConstants = CalculatePlaneConstants<TC::b, MI, LI>(k, m_fvCoeffs, m_fields);
+            // FieldData<Tensor2D> planeConstants = CalculatePlaneConstants<TC::b, MI, LI>(k, m_fvCoeffs, m_fields);
 
             for ( intType j = m_nj-1; j != -1; j-- ) {
 
-                FieldData<Tensor1D> lineConstants = CalculateLineConstants<TC::s, TC::b, MI, LI>(j, k, planeConstants, m_fvCoeffs, m_fields);
+                // FieldData<Tensor1D> lineConstants = CalculateLineConstants<TC::s, TC::b, MI, LI>(j, k, planeConstants, m_fvCoeffs, m_fields);
 
                 for ( intType i = m_ni-1; i != -1; i-- ) {
 
@@ -159,7 +162,8 @@ private:
                     oldValues.U[1] = m_fields.U[1]( G(i  , j-1, k  ) );
                     oldValues.U[2] = m_fields.U[2]( G(i  , j  , k-1) );
 
-                    m_triadSolverBackward->UpdateTriad( i, j, k, lineConstants );
+                    // m_triadSolverBackward->UpdateTriad( i, j, k, lineConstants );
+                    m_triadSolverBackward->UpdateTriad( i, j, k );
 
                     m_residuals.P    += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
                     m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
@@ -169,6 +173,8 @@ private:
                 }
             }
         }
+
+        TOC()
     }
 
 

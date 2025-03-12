@@ -26,6 +26,20 @@ class FieldProbe
 };
 
 
+// Get probe values for all FieldData
+inline FieldData<floatType> ProbeAllFieldValues( const FieldData<Tensor3D> &fields,
+                                                 const FieldProbe &fieldProbe )
+{
+    FieldData<floatType> probeValues;
+
+    ForAllFieldData( [&] (intType f) { 
+        probeValues[f] =  fieldProbe.GetFieldValue( fields[f] );
+    } );
+
+    return probeValues;
+}
+
+
 // Calculate forces exerted by fluid on immersed boundary geometry
 class ForceCalculator
 {
