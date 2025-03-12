@@ -20,8 +20,7 @@ using namespace FVT;
 
 template < TransportCoefficients::ENUMDATA Vstag,
            TransportCoefficients::ENUMDATA Wstag,
-           MomentumInterpolation MI,
-           Linearisation LI >
+           MomentumInterpolation MI >
 class LineSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -42,12 +41,12 @@ public:
                     m_ni( fvCoeffs.nCells(Axis::X) )
     {
         if (m_ni == 1) {
-            m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            m_triadSolverCenter = std::make_unique<TriadSolver<TC::p, Vstag, Wstag, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
             SolutionUpdater     = &LineSolver::Sweep2D;
             StateUpdater        = &LineSolver::UpdateState2D;
         } else {
-            m_triadSolverEast   = std::make_unique<TriadSolver<TC::e, Vstag, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
-            m_triadSolverWest   = std::make_unique<TriadSolver<TC::w, Vstag, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            m_triadSolverEast   = std::make_unique<TriadSolver<TC::e, Vstag, Wstag, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            m_triadSolverWest   = std::make_unique<TriadSolver<TC::w, Vstag, Wstag, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
             SolutionUpdater     = &LineSolver::Sweep3D;
             StateUpdater        = &LineSolver::UpdateState3D;
         }
@@ -66,9 +65,9 @@ private:
     FieldData<Tensor3D> &m_fields;
     const FVCoefficients &m_fvCoeffs;
 
-    std::unique_ptr<TriadSolver<TC::e, Vstag, Wstag, MI, LI>> m_triadSolverEast;
-    std::unique_ptr<TriadSolver<TC::w, Vstag, Wstag, MI, LI>> m_triadSolverWest;
-    std::unique_ptr<TriadSolver<TC::p, Vstag, Wstag, MI, LI>> m_triadSolverCenter;
+    std::unique_ptr<TriadSolver<TC::e, Vstag, Wstag, MI >> m_triadSolverEast;
+    std::unique_ptr<TriadSolver<TC::w, Vstag, Wstag, MI >> m_triadSolverWest;
+    std::unique_ptr<TriadSolver<TC::p, Vstag, Wstag, MI >> m_triadSolverCenter;
 
     FieldData<Tensor1D> m_lineConstants;
 
@@ -119,7 +118,7 @@ private:
                               const intType k, 
                               const FieldData<Tensor2D> &planeConstants )
     {
-        m_lineConstants = CalculateLineConstants<Vstag, Wstag, MI, LI>(j, k, planeConstants, m_fvCoeffs, m_fields);
+        m_lineConstants = CalculateLineConstants<Vstag, Wstag, MI >(j, k, planeConstants, m_fvCoeffs, m_fields);
     }
 
 };

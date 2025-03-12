@@ -30,8 +30,8 @@ enum class OperationStatus {
 };
 
 
-template< MomentumInterpolation MI, Linearisation LI >
-void SetStencil( GridLevelData<MI, LI> &gridLevelData,
+template< MomentumInterpolation MI>
+void SetStencil( GridLevelData<MI> &gridLevelData,
                  FieldData<Tensor3D> &fields )
 {
     auto &gld = gridLevelData; 
@@ -40,67 +40,47 @@ void SetStencil( GridLevelData<MI, LI> &gridLevelData,
     UpdateIBData( gld.ibData, fields );
     UpdateFaceFluxes( gld.faceFluxes, gld.mesh, fields.U, gld.bcData);
     SetIBFaceFluxes( gld.faceFluxes, gld.ibData );
-    if constexpr ( LI == Linearisation::Newton ) {
-        UpdateFaceAdvectedVelocities( gld.faceAdvectedVelocities, gld.mesh, gld.fvCoeffs, fields.U, gld.faceFluxes, gld.bcData);
-        switch ( gld.fvCoeffs.Mom[Axis::X].advectionScheme ) {
-            case AdvectionSchemes::Upwind:
-                SetIBFaceAdvectedVelocities<AdvectionSchemes::Upwind >( gld.faceAdvectedVelocities, gld.faceFluxes, fields, gld.fvCoeffs, gld.mesh, gld.ibData );
-                break;
-
-            case AdvectionSchemes::Central:
-                SetIBFaceAdvectedVelocities<AdvectionSchemes::Central>( gld.faceAdvectedVelocities, gld.faceFluxes, fields, gld.fvCoeffs, gld.mesh, gld.ibData );
-                break;
-
-            case AdvectionSchemes::SOU:
-                SetIBFaceAdvectedVelocities<AdvectionSchemes::SOU    >( gld.faceAdvectedVelocities, gld.faceFluxes, fields, gld.fvCoeffs, gld.mesh, gld.ibData );
-                break;
-
-            case AdvectionSchemes::QUICK:
-                SetIBFaceAdvectedVelocities<AdvectionSchemes::QUICK  >( gld.faceAdvectedVelocities, gld.faceFluxes, fields, gld.fvCoeffs, gld.mesh, gld.ibData );
-                break;
-        }
-    }
-    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, fields, gld.fieldsPrevTime, gld.fieldsPrevPrevTime, gld.faceAdvectedVelocities, gld.faceFluxes, gld.ibData, gld.bcData);
+    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, fields, gld.fieldsPrevTime, gld.fieldsPrevPrevTime, gld.faceFluxes, gld.ibData, gld.bcData);
 }
 
 
 
-template< MomentumInterpolation MI, Linearisation LI >
-void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
+template< MomentumInterpolation MI >
+void SetFineGridEquations( GridLevelData<MI> &gridLevelData )
 {
-    SetStencil<MI, LI>(gridLevelData, gridLevelData.fields); 
+    SetStencil<MI>(gridLevelData, gridLevelData.fields);
 }
 
 
 
-template< MomentumInterpolation MI, Linearisation LI >
-void SetCoarseGridRightHandSideInStencil( GridLevelData<MI, LI> &gridLevelData )
+template< MomentumInterpolation MI >
+void SetCoarseGridRightHandSideInStencil( GridLevelData<MI> &gridLevelData )
 {
-    SetStencil<MI, LI>(gridLevelData, gridLevelData.fieldsRestricted);
+    SetStencil<MI>(gridLevelData, gridLevelData.fieldsRestricted);
 }
 
 
 
-template< MomentumInterpolation MI, Linearisation LI >
-void SetCoarseGridEquations( GridLevelData<MI, LI> &gridLevelData,
+template< MomentumInterpolation MI >
+void SetCoarseGridEquations( GridLevelData<MI> &gridLevelData,
                              const FieldData<Tensor3D> &coarseGridRightHandSide )
 {
     auto &gld = gridLevelData;
 
     // Set fvCoeffs based on the latest solution to the coarse grid problem
-    SetStencil<MI, LI>(gridLevelData, gridLevelData.fields);
+    SetStencil<MI>(gridLevelData, gridLevelData.fields);
 
     // Add the terms that appear on the RHS of the coarse grid equation
     EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
         gld.fvCoeffs.Mom[axis].F += coarseGridRightHandSide.U[axis];
     } );
-    gld.fvCoeffs.Cont.F += coarseGridRightHandSide.P;
+    gld.fvCoeffs.Cont.F += coarseGridRightHandSide.P; 
 }
 
 
 
-template< MomentumInterpolation MI, Linearisation LI >
-OperationStatus Smooth( GridLevelData<MI, LI> &gridLevelData,
+template< MomentumInterpolation MI >
+OperationStatus Smooth( GridLevelData<MI > &gridLevelData,
                         const FieldData<floatType> &maxResiduals,
                         const intType maxIterations,
                         const MultigridEquation mgEquationType )
@@ -111,17 +91,17 @@ OperationStatus Smooth( GridLevelData<MI, LI> &gridLevelData,
 
     gridLevelData.fieldsOld = gridLevelData.fields;
     if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
-        SetFineGridEquations<MI, LI>( gridLevelData );              
+        SetFineGridEquations<MI >( gridLevelData );              
     } else {
         SetCoarseGridRightHandSideInStencil( gridLevelData );
-        coarseGridRightHandSide = CalculateCoarseGridRightHandSide<MI, LI>( gridLevelData.fvCoeffs,
-                                                                            gridLevelData.fieldsRestricted,
-                                                                            gridLevelData.residualsRestricted,
-                                                                            gridLevelData.ibData.mask );
-        SetCoarseGridEquations<MI, LI>( gridLevelData, coarseGridRightHandSide );
+        coarseGridRightHandSide = CalculateCoarseGridRightHandSide<MI >( gridLevelData.fvCoeffs,
+                                                                         gridLevelData.fieldsRestricted,
+                                                                         gridLevelData.residualsRestricted,
+                                                                         gridLevelData.ibData.mask );
+        SetCoarseGridEquations<MI >( gridLevelData, coarseGridRightHandSide );
     }
 
-    FieldData<floatType > residuals = ScaledL1NormResiduals<MI, LI>( gridLevelData.fields, 
+    FieldData<floatType > residuals = ScaledL1NormResiduals<MI >( gridLevelData.fields, 
                                                                      gridLevelData.fvCoeffs, 
                                                                      gridLevelData.ibData.mask);
     SetResidualsNormalisationFactor( residualsScaleFactor, residuals );
@@ -136,14 +116,14 @@ OperationStatus Smooth( GridLevelData<MI, LI> &gridLevelData,
 
         gridLevelData.fieldsOld = gridLevelData.fields;
         if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
-            SetFineGridEquations<MI, LI>( gridLevelData );
+            SetFineGridEquations<MI>( gridLevelData );
         } else {
-            SetCoarseGridEquations<MI, LI>( gridLevelData, coarseGridRightHandSide );
+            SetCoarseGridEquations<MI>( gridLevelData, coarseGridRightHandSide );
         }
 
-        residuals = ScaledL1NormResiduals<MI, LI>( gridLevelData.fields,
-                                                   gridLevelData.fvCoeffs,
-                                                   gridLevelData.ibData.mask );
+        residuals = ScaledL1NormResiduals<MI>( gridLevelData.fields,
+                                               gridLevelData.fvCoeffs,
+                                               gridLevelData.ibData.mask );
         NormaliseResiduals( residuals, residualsScaleFactor );
 
         if ( ResidualsDiverged(residuals) ) {
@@ -172,8 +152,8 @@ OperationStatus Smooth( GridLevelData<MI, LI> &gridLevelData,
 
 
 
-template< MomentumInterpolation MI, Linearisation LI >
-OperationStatus SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
+template< MomentumInterpolation MI >
+OperationStatus SmoothWithFixedIterations( GridLevelData<MI> &gridLevelData,
                                            const intType maxIterations,
                                            const MultigridEquation mgEquationType )
 {
@@ -182,14 +162,14 @@ OperationStatus SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
 
     gridLevelData.fieldsOld = gridLevelData.fields;
     if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
-        SetFineGridEquations<MI, LI>( gridLevelData );
+        SetFineGridEquations<MI>( gridLevelData );
     } else {
         SetCoarseGridRightHandSideInStencil( gridLevelData );
-        coarseGridRightHandSide = CalculateCoarseGridRightHandSide<MI, LI>( gridLevelData.fvCoeffs,
-                                                                            gridLevelData.fieldsRestricted,
-                                                                            gridLevelData.residualsRestricted,
-                                                                            gridLevelData.ibData.mask );
-        SetCoarseGridEquations<MI, LI>( gridLevelData, coarseGridRightHandSide );
+        coarseGridRightHandSide = CalculateCoarseGridRightHandSide<MI>( gridLevelData.fvCoeffs,
+                                                                        gridLevelData.fieldsRestricted,
+                                                                        gridLevelData.residualsRestricted,
+                                                                        gridLevelData.ibData.mask );
+        SetCoarseGridEquations<MI>( gridLevelData, coarseGridRightHandSide );
     }
 
     for ( intType nIterations = 1; nIterations <= maxIterations; nIterations++ ) {
@@ -199,9 +179,9 @@ OperationStatus SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
 
         gridLevelData.fieldsOld = gridLevelData.fields;
         if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
-            SetFineGridEquations<MI, LI>( gridLevelData );
+            SetFineGridEquations<MI>( gridLevelData );
         } else {
-            SetCoarseGridEquations<MI, LI>( gridLevelData, coarseGridRightHandSide );
+            SetCoarseGridEquations<MI>( gridLevelData, coarseGridRightHandSide );
         }
     }
     std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", performed " << maxIterations << " iterations" << "\n";
@@ -211,8 +191,8 @@ OperationStatus SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
 
 
 
-template< MomentumInterpolation MI, Linearisation LI >
-void RestrictLevel( std::vector< GridLevelData<MI, LI> > &mgLevels,
+template< MomentumInterpolation MI >
+void RestrictLevel( std::vector< GridLevelData<MI> > &mgLevels,
                     const FieldData<Tensor3D> &residuals,
                     const size_t fineLevel,
                     const size_t coarseLevel )
@@ -231,8 +211,8 @@ void RestrictLevel( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
 
 
-template< MultigridCycleType MGCycle, MomentumInterpolation MI, Linearisation LI >
-void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
+template< MultigridCycleType MGCycle, MomentumInterpolation MI >
+void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
             const size_t level,
             const MultigridEquation mgEquationType,
             const InputData::MultigridSettings &mgSettings )
@@ -240,10 +220,10 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
     OperationStatus smootherStatus = OperationStatus::Sucess;
 
     // Presmoothing 
-    SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.preSmoothingIterations, mgEquationType );
+    SmoothWithFixedIterations<MI>( mgLevels[level], mgSettings.preSmoothingIterations, mgEquationType );
 
     // Calculate residual
-    FieldData<Tensor3D> residuals = ResidualsField<MI, LI>( mgLevels[level].fields, 
+    FieldData<Tensor3D> residuals = ResidualsField<MI>( mgLevels[level].fields, 
                                                             mgLevels[level].fvCoeffs, 
                                                             mgLevels[level].ibData.mask );
 
@@ -253,9 +233,9 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
     // Solve coarse grid problem
     if ( mgLevels[level+1].isCoarsestLevel ) {  // This is bad if there is 0 coarse levels
-        smootherStatus = Smooth<MI, LI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::TauCorrection );
+        smootherStatus = Smooth<MI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::TauCorrection );
     } else {
-        Cycle<MGCycle, MI, LI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
+        Cycle<MGCycle, MI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
     }
 
 
@@ -278,13 +258,13 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
         // Re-smoothing
         if ( mgLevels[level].isFinestLevel ) {
-            SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.fineGridIterations, mgEquationType );
+            SmoothWithFixedIterations<MI>( mgLevels[level], mgSettings.fineGridIterations, mgEquationType );
         } else {
-            SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.postSmoothingIterations, mgEquationType );
+            SmoothWithFixedIterations<MI>( mgLevels[level], mgSettings.postSmoothingIterations, mgEquationType );
         }
 
         // Calculate residual
-        residuals = ResidualsField<MI, LI>( mgLevels[level].fields, 
+        residuals = ResidualsField<MI>( mgLevels[level].fields, 
                                             mgLevels[level].fvCoeffs, 
                                             mgLevels[level].ibData.mask );
 
@@ -294,12 +274,12 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
         // Solve coarse grid problem
         smootherStatus = OperationStatus::Sucess;
         if ( mgLevels[level+1].isCoarsestLevel ) {  // This is bad if there is 0 coarse levels
-            smootherStatus = Smooth<MI, LI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::TauCorrection );
+            smootherStatus = Smooth<MI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::TauCorrection );
         } else {
             if        constexpr ( MGCycle == MultigridCycleType::F ) {
-                Cycle<MultigridCycleType::V, MI, LI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
+                Cycle<MultigridCycleType::V, MI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
             } else if constexpr ( MGCycle == MultigridCycleType::W ) {
-                Cycle<MultigridCycleType::W, MI, LI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
+                Cycle<MultigridCycleType::W, MI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
             }
         }
 
@@ -321,23 +301,23 @@ void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
     // Post-smoothing
     if ( mgLevels[level].isFinestLevel ) {
-        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.fineGridIterations, mgEquationType );
+        SmoothWithFixedIterations<MI>( mgLevels[level], mgSettings.fineGridIterations, mgEquationType );
     } else {
-        SmoothWithFixedIterations<MI, LI>( mgLevels[level], mgSettings.postSmoothingIterations, mgEquationType );
+        SmoothWithFixedIterations<MI>( mgLevels[level], mgSettings.postSmoothingIterations, mgEquationType );
     }
 
 }
 
 
 
-template< MomentumInterpolation MI, Linearisation LI >
-void FMGInitialise( std::vector< GridLevelData<MI, LI> > &mgLevels,
+template< MomentumInterpolation MI >
+void FMGInitialise( std::vector< GridLevelData<MI> > &mgLevels,
                     const InputData::MultigridSettings &mgSettings)
 {
     size_t coarsestLevel = mgLevels.size() - 1;
 
     // Solve coarsest level
-    OperationStatus smootherStatus = Smooth<MI, LI>( mgLevels[coarsestLevel], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::NoTauCorrection );
+    OperationStatus smootherStatus = Smooth<MI>( mgLevels[coarsestLevel], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::NoTauCorrection );
 
     // Prolongate
     if ( smootherStatus == OperationStatus::Sucess ) {
@@ -351,7 +331,7 @@ void FMGInitialise( std::vector< GridLevelData<MI, LI> > &mgLevels,
     for ( size_t level = coarsestLevel-1; level != 0; level-- ) {
 
         // VCycle
-        Cycle<MultigridCycleType::V, MI, LI>( mgLevels, level, MultigridEquation::NoTauCorrection, mgSettings );
+        Cycle<MultigridCycleType::V, MI>( mgLevels, level, MultigridEquation::NoTauCorrection, mgSettings );
 
         // Prolongate
         ForAllFieldData( [&] (intType f) {
@@ -364,19 +344,19 @@ void FMGInitialise( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
 
 
-template< MomentumInterpolation MI, Linearisation LI >
-void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
+template< MomentumInterpolation MI >
+void MultigridCycle( std::vector< GridLevelData<MI> > &mgLevels,
                      const InputData::MultigridSettings &mgSettings)
 {
     switch ( mgSettings.cycle ) {
         case MultigridCycleType::V:
-            Cycle<MultigridCycleType::V, MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
+            Cycle<MultigridCycleType::V, MI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
             break;
         case MultigridCycleType::F:
-            Cycle<MultigridCycleType::F, MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
+            Cycle<MultigridCycleType::F, MI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
             break;
         case MultigridCycleType::W:
-            Cycle<MultigridCycleType::W, MI, LI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
+            Cycle<MultigridCycleType::W, MI>( mgLevels, 0, MultigridEquation::NoTauCorrection, mgSettings );
             break;
     }
 }
@@ -386,7 +366,7 @@ void MultigridCycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
 
 
-template< MomentumInterpolation MI, Linearisation LI >
+template< MomentumInterpolation MI >
 void SolveSteady( const InputData &inputData,
                   const AxisTransformationMap &axisTransformation )
 {
@@ -397,7 +377,7 @@ void SolveSteady( const InputData &inputData,
     const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
 
     // Multigrid level data
-    std::vector< GridLevelData<MI, LI> > mgLevels; 
+    std::vector< GridLevelData<MI> > mgLevels; 
     SetMGLevels( mgLevels, inputData, axisTransformation );
 
     // References to finest grid
@@ -431,9 +411,9 @@ void SolveSteady( const InputData &inputData,
     bool writeFields = ( inputData.fieldWriteInterval > 0 );
 
     // Calculate initial residual
-    residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
-                                                      mgLevels[0].fvCoeffs, 
-                                                      mgLevels[0].ibData.mask);
+    residualsOuter   = ScaledL1NormResiduals<MI>( mgLevels[0].fields, 
+                                                  mgLevels[0].fvCoeffs, 
+                                                  mgLevels[0].ibData.mask);
     SetResidualsNormalisationFactor( residualsScaleFactor, residualsOuter );
     NormaliseResiduals( residualsOuter, residualsScaleFactor );
     massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
@@ -453,7 +433,7 @@ void SolveSteady( const InputData &inputData,
         // Solve
         TIC("Multigrid Cycling")
         if ( mgLevels.size() == 1 ) {
-            SmoothWithFixedIterations<MI, LI>( mgLevels[0], 1, MultigridEquation::NoTauCorrection );
+            SmoothWithFixedIterations<MI>( mgLevels[0], 1, MultigridEquation::NoTauCorrection );
         } else {
             if ( nOuterIterations == 1 )
                 FMGInitialise(mgLevels, inputData.multigridSettings );
@@ -464,11 +444,11 @@ void SolveSteady( const InputData &inputData,
         TIC("Residuals and Logging")
         // Residuals
         // SetFineGridEquations<MI, LI>( mgLevels[0] );
-        SetStencil<MI, LI>(mgLevels[0], mgLevels[0].fields);
+        SetStencil<MI>(mgLevels[0], mgLevels[0].fields);
         
-        residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
-                                                          mgLevels[0].fvCoeffs, 
-                                                          mgLevels[0].ibData.mask); 
+        residualsOuter   = ScaledL1NormResiduals<MI>( mgLevels[0].fields, 
+                                                      mgLevels[0].fvCoeffs, 
+                                                      mgLevels[0].ibData.mask); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor );
         massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
                                                      mgLevels[0].mesh);
@@ -513,14 +493,14 @@ void SolveSteady( const InputData &inputData,
     TOC()
 
 }
-template void SolveSteady<MomentumInterpolation::Implicit    , Linearisation::Picard>( const InputData &, const AxisTransformationMap &);
-template void SolveSteady<MomentumInterpolation::SemiExplicit, Linearisation::Picard>( const InputData &, const AxisTransformationMap &);
-template void SolveSteady<MomentumInterpolation::Implicit    , Linearisation::Newton>( const InputData &, const AxisTransformationMap &);
-template void SolveSteady<MomentumInterpolation::SemiExplicit, Linearisation::Newton>( const InputData &, const AxisTransformationMap &);
+template void SolveSteady<MomentumInterpolation::Implicit     >( const InputData &, const AxisTransformationMap &);
+template void SolveSteady<MomentumInterpolation::SemiExplicit >( const InputData &, const AxisTransformationMap &);
 
 
 
-template< MomentumInterpolation MI, Linearisation LI >
+
+
+template< MomentumInterpolation MI >
 void SolveTransient( const InputData &inputData,
                      const AxisTransformationMap &axisTransformation )
 {
@@ -531,7 +511,7 @@ void SolveTransient( const InputData &inputData,
     const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
 
     // Multigrid level data
-    std::vector< GridLevelData<MI, LI> > mgLevels; 
+    std::vector< GridLevelData<MI> > mgLevels; 
     SetMGLevels( mgLevels, inputData, axisTransformation );
 
     // References to finest grid
@@ -580,16 +560,16 @@ void SolveTransient( const InputData &inputData,
         {
             TIC("Multigrid Cycling")
             if ( mgLevels.size() == 1 ) {
-                SmoothWithFixedIterations<MI, LI>( mgLevels[0], 1, MultigridEquation::NoTauCorrection );
+                SmoothWithFixedIterations<MI>( mgLevels[0], 1, MultigridEquation::NoTauCorrection );
             } else {
                 MultigridCycle( mgLevels, inputData.multigridSettings );
             }
             TOC()
             
             TIC("Residuals and Logging")
-            residualsOuter   = ScaledL1NormResiduals<MI, LI>( mgLevels[0].fields, 
-                                                              mgLevels[0].fvCoeffs, 
-                                                              mgLevels[0].ibData.mask); 
+            residualsOuter   = ScaledL1NormResiduals<MI>( mgLevels[0].fields, 
+                                                          mgLevels[0].fvCoeffs, 
+                                                          mgLevels[0].ibData.mask); 
             // if ( nOuterIterations == 1 )
             //     SetResidualsNormalisationFactor( residualsScaleFactor, residualsOuter );
             NormaliseResiduals( residualsOuter, residualsScaleFactor );
@@ -644,10 +624,8 @@ void SolveTransient( const InputData &inputData,
     TOC()
 
 }
-template void SolveTransient<MomentumInterpolation::Implicit    , Linearisation::Picard>( const InputData &, const AxisTransformationMap &);
-template void SolveTransient<MomentumInterpolation::SemiExplicit, Linearisation::Picard>( const InputData &, const AxisTransformationMap &);
-template void SolveTransient<MomentumInterpolation::Implicit    , Linearisation::Newton>( const InputData &, const AxisTransformationMap &);
-template void SolveTransient<MomentumInterpolation::SemiExplicit, Linearisation::Newton>( const InputData &, const AxisTransformationMap &);
+template void SolveTransient<MomentumInterpolation::Implicit    >( const InputData &, const AxisTransformationMap &);
+template void SolveTransient<MomentumInterpolation::SemiExplicit>( const InputData &, const AxisTransformationMap &);
 
 
 

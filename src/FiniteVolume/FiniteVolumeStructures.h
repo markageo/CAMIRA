@@ -11,10 +11,10 @@ namespace CFD
 
 struct MomentumEquation {
     MomentumEquation() {};
-    MomentumEquation(const Axis::ENUMDATA, const iArray3 &, Linearisation);
-    EnumVector< Axis, EnumVector< TransportCoefficients, Tensor3D > > AU;     // Velocity coefficients (LHS), has dummy cells
+    MomentumEquation(const Axis::ENUMDATA, const iArray3 &);
+    EnumVector< TransportCoefficients, Tensor3D > AU;                         // Velocity coefficients (LHS), has dummy cells
     EnumVector<TransportCoefficients, Tensor1D> AP;                           // Pressure coefficients (LHS), has dummy cells
-    Tensor3D B;                                                               // Constants that come from boundary conditions and linearisation (LHS), has dummy cells
+    Tensor3D B;                                                               // Constants that come from boundary conditions, immersed boundary, etc., has dummy cells
     Tensor3D F;                                                               // Source terms (RHS), has dummy cells
     Tensor3D diagCoeffInv;                                                    // Inverse of diagonal coefficient, has dummy cells
     EnumVector< Axis, EnumVector<TransportCoefficients, Tensor1D> > diff;     // Diffusion coefficients (LHS)
@@ -27,7 +27,6 @@ struct MomentumEquation {
     };
     HiOrderAdvectionCoeffs positiveFluxHiOrderAdvectionCoeffs, negativeFluxHiOrderAdvectionCoeffs;
     Axis::ENUMDATA component;                                                 // The momentum component
-    Linearisation linearisation;
     AdvectionSchemes advectionScheme;
     TimeSchemes timeScheme;
     floatType timeStep;
@@ -65,7 +64,7 @@ struct BoundaryConditionData {
 struct FVCoefficients
 {
     FVCoefficients() {};
-    FVCoefficients(const iArray3 &, Linearisation, MomentumInterpolation);
+    FVCoefficients(const iArray3 &, MomentumInterpolation);
     
     EnumVector<Axis, MomentumEquation > Mom;
     ContinuityEquation Cont;

@@ -48,48 +48,24 @@ int main(int argc, char const *argv[])
     switch ( inputData.schemes.momentumInterpolation ) {
 
         using MI = CFD::MomentumInterpolation;
-        using LI = CFD::Linearisation;
 
         case ( MI::Implicit ):
-           switch ( inputData.schemes.linearisation ) {
-                case ( LI::Picard ):
-                    if ( inputData.transient ) {
-                        CFD::SolveTransient< MI::Implicit, LI::Picard >(inputData, axisTransformation);
-                    } else {
-                        CFD::SolveSteady< MI::Implicit, LI::Picard >(inputData, axisTransformation);
-                    }
-                    break;
 
-                case ( LI::Newton ):
-                    if ( inputData.transient ) {
-                        CFD::SolveTransient< MI::Implicit, LI::Newton >(inputData, axisTransformation);
-                    } else {
-                        CFD::SolveSteady< MI::Implicit, LI::Newton >(inputData, axisTransformation);
-                    }
-                    
-                    break;
+            if ( inputData.transient ) {
+                CFD::SolveTransient< MI::Implicit >(inputData, axisTransformation);
+            } else {
+                CFD::SolveSteady< MI::Implicit >(inputData, axisTransformation);
             }
             break;
 
         case ( MI::SemiExplicit ):
-            switch ( inputData.schemes.linearisation ) {
-                case ( LI::Picard ):
-                    if ( inputData.transient ) {
-                        CFD::SolveTransient< MI::SemiExplicit, LI::Picard >(inputData, axisTransformation);
-                    } else {
-                        CFD::SolveSteady< MI::SemiExplicit, LI::Picard >(inputData, axisTransformation);
-                    }
-                    break;
 
-                case ( LI::Newton ):
-                    if ( inputData.transient ) {
-                        CFD::SolveTransient< MI::SemiExplicit, LI::Newton >(inputData, axisTransformation);
-                    } else {
-                        CFD::SolveSteady< MI::SemiExplicit, LI::Newton >(inputData, axisTransformation);
-                    }
-                    
-                    break;
+            if ( inputData.transient ) {
+                CFD::SolveTransient< MI::SemiExplicit >(inputData, axisTransformation);
+            } else {
+                CFD::SolveSteady< MI::SemiExplicit >(inputData, axisTransformation);
             }
+
             break;
     }
     TOC();

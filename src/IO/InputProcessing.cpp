@@ -646,16 +646,6 @@ namespace
             inputData.schemes.numberOfTimesteps = schemesTree.get<intType>("numberOfTimesteps");
         }
 
-        // Linearisation
-        valueString = schemesTree.get<std::string>( "linearisation" );
-        if        ( valueString == "Picard" ) {
-            inputData.schemes.linearisation = Linearisation::Picard;
-        } else if ( valueString == "Newton" ) {
-            inputData.schemes.linearisation = Linearisation::Newton;
-        } else {
-            throw std::runtime_error( "'" + valueString + "' is not a valid linearisation." );
-        }
-
         // Momentum interpolation
         valueString = schemesTree.get<std::string>( "momentumInterpolation" );
         if        ( valueString == "implicit" ) {

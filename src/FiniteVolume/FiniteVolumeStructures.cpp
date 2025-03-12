@@ -162,135 +162,11 @@ BoundaryConditionData SetBoundaryConditionData( const InputData &inputData,
 namespace
 {
 
-std::vector< TransportCoefficients::ENUMDATA > PicardEnums( const Axis::ENUMDATA momentumEquation, 
-                                                                      const Axis::ENUMDATA velocity)
+std::vector< TransportCoefficients::ENUMDATA > MomentumVelocityEnums()
 {
     using enum Axis::ENUMDATA;
     using C = TransportCoefficients::ENUMDATA;
-
-    switch ( momentumEquation ) {
-        case X: 
-
-            switch ( velocity ) {
-                case X: 
-                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
-                    break;
-                case Y:
-                    return {};
-                    break;
-                case Z:
-                    return {};
-                    break;
-            }
-            break;
-
-        case Y: 
-
-            switch ( velocity ) {
-                case X: 
-                    return {};
-                    break;
-                case Y:
-                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
-                    break;
-                case Z:
-                    return {};
-                    break;
-            }
-            break;
-
-        case Z:
-
-            switch ( velocity ) {
-                case X: 
-                    return {};
-                    break;
-
-                case Y:
-                    return {};
-                    break;
-
-                case Z:
-                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
-                    break;
-            }
-            break;
-    }
-    return {};
-}
-
-
-std::vector< TransportCoefficients::ENUMDATA > NewtonEnums( const Axis::ENUMDATA momentumEquation, 
-                                                            const Axis::ENUMDATA velocity)
-{
-    using enum Axis::ENUMDATA;
-    using C = TransportCoefficients::ENUMDATA;
-
-    switch ( momentumEquation ) {
-        case X: 
-
-            switch ( velocity ) {
-                case X: 
-                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
-                    break;
-                case Y:
-                    return {C::p, C::n, C::s};
-                    break;
-                case Z:
-                    return {C::p, C::t, C::b};
-                    break;
-            }
-            break;
-
-        case Y: 
-
-            switch ( velocity ) {
-                case X: 
-                    return {C::p, C::e, C::w};
-                    break;
-                case Y:
-                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
-                    break;
-                case Z:
-                    return {C::p, C::t, C::b};;
-                    break;
-            }
-            break;
-
-        case Z:
-
-            switch ( velocity ) {
-                case X: 
-                    return {C::p, C::e, C::w};
-                    break;
-
-                case Y:
-                    return {C::p, C::n, C::s};
-                    break;
-
-                case Z:
-                    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
-                    break;
-            }
-            break;
-    }
-    return {};
-}
-
-
-
-std::vector< TransportCoefficients::ENUMDATA > MomentumVelocityEnums( const Axis::ENUMDATA momentumEquation, 
-                                                                      const Axis::ENUMDATA velocity,
-                                                                      Linearisation li )
-{
-    switch ( li ) {
-        case Linearisation::Picard:
-            return PicardEnums( momentumEquation, velocity );
-
-        case Linearisation::Newton:
-            return NewtonEnums( momentumEquation, velocity );
-    }
-    return {};
+    return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
 }                                                                      
 
 
@@ -342,14 +218,11 @@ using enum Axis::ENUMDATA;
 
 // Momentum equations constructor
 MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis, 
-                                    const iArray3 &dims,
-                                    Linearisation li ) :
-    AU( { EnumVector<TransportCoefficients, Tensor3D>( MomentumVelocityEnums(axis, X, li), dims + 2*nGhost),
-          EnumVector<TransportCoefficients, Tensor3D>( MomentumVelocityEnums(axis, Y, li), dims + 2*nGhost),
-          EnumVector<TransportCoefficients, Tensor3D>( MomentumVelocityEnums(axis, Z, li), dims + 2*nGhost) }  ),
+                                    const iArray3 &dims ) :
+    AU( MomentumVelocityEnums()      , dims + 2*nGhost ),
     AP( MomentumPressureEnums( axis ), dims( axis ) + 2*nGhost ),
-    B( CFD::Tensor3D( dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost ).setZero() ),
-    F( CFD::Tensor3D( dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost ).setZero() ),
+    B( CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero() ),
+    F( CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero() ),
     diagCoeffInv( CFD::Tensor3D( dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost ).setZero() ),
     diff({ EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::e, C::w}, dims(X) ),
            EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::n, C::s}, dims(Y) ),
@@ -357,8 +230,7 @@ MomentumEquation::MomentumEquation( const Axis::ENUMDATA axis,
     diffBoundary( 0.0f ),
     BUBoundary(),
     BPBoundary(),   // These should be dimensioned only if needed
-    component( axis ),
-    linearisation( li )
+    component( axis )
 {};
 
 
@@ -384,10 +256,9 @@ ContinuityEquation::ContinuityEquation( const iArray3 &dims,
 
 
 // Coefficients class constructor
-FVCoefficients::FVCoefficients( const iArray3 &dims, 
-                                Linearisation li,
+FVCoefficients::FVCoefficients( const iArray3 &dims,
                                 MomentumInterpolation mi ) :
-    Mom( { MomentumEquation(X, dims, li),  MomentumEquation(Y, dims, li),  MomentumEquation(Z, dims, li) } ),
+    Mom( { MomentumEquation(X, dims ),  MomentumEquation(Y, dims ),  MomentumEquation(Z, dims ) } ),
     Cont( dims, mi ),
     nCells( dims )
 {};

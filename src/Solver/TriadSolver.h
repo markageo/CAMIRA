@@ -18,8 +18,7 @@ namespace CFD
 template < TransportCoefficients::ENUMDATA Ustag,
            TransportCoefficients::ENUMDATA Vstag,
            TransportCoefficients::ENUMDATA Wstag, 
-           MomentumInterpolation MI, 
-           Linearisation LI>
+           MomentumInterpolation MI >
 class TriadSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -79,45 +78,31 @@ public:
 
         // Precompute momentum RHS divided by AP coefficients
         // U momentum
-        floatType newtonStencilX = 0.0f;
-        if constexpr ( LI == Linearisation::Newton ) {
-            newtonStencilX = - m_fvCoeffs.Mom[X].AU[Y][sCV::cCoupled]( igU, jgU, kgU ) * m_fields.U[Y]( igU, jgU+sCV::iCoupled, kgU )
-
-                             - m_fvCoeffs.Mom[X].AU[Z][sCW::cCoupled]( igU, jgU, kgU ) * m_fields.U[Z]( igU, jgU, kgU+sCW::iCoupled );
-        }
         const floatType bU = ( lineConstants.U[X](igU)  
 
-                             - m_fvCoeffs.Mom[X].AU[X][e](igU, jgU, kgU) * m_fields.U[X]( igU+1, jgU  , kgU  )
-                             - m_fvCoeffs.Mom[X].AU[X][w](igU, jgU, kgU) * m_fields.U[X]( igU-1, jgU  , kgU  )
+                             - m_fvCoeffs.Mom[X].AU[e](igU, jgU, kgU) * m_fields.U[X]( igU+1, jgU  , kgU  )
+                             - m_fvCoeffs.Mom[X].AU[w](igU, jgU, kgU) * m_fields.U[X]( igU-1, jgU  , kgU  )
 
                              - m_fvCoeffs.Mom[X].AP[sUP::cLeft ](igU) * m_fields.P( igU + sUP::iLeft , jgU, kgU)
                              - m_fvCoeffs.Mom[X].AP[sUP::cRight](igU) * m_fields.P( igU + sUP::iRight, jgU, kgU) 
-
-                             + newtonStencilX
 
                              ) * m_fvCoeffs.Mom[X].diagCoeffInv(igU, jgU, kgU);
 
 
         // V momentum
-        floatType newtonStencilY = 0.0f;
         const floatType bV = ( lineConstants.U[Y](igV)
 
-                             - m_fvCoeffs.Mom[Y].AU[Y][e](igV, jgV, kgV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
-                             - m_fvCoeffs.Mom[Y].AU[Y][w](igV, jgV, kgV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
-
-                             + newtonStencilY
+                             - m_fvCoeffs.Mom[Y].AU[e](igV, jgV, kgV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
+                             - m_fvCoeffs.Mom[Y].AU[w](igV, jgV, kgV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
 
                              ) * m_fvCoeffs.Mom[Y].diagCoeffInv(igV, jgV, kgV);
 
 
         // W momentum
-        floatType newtonStencilZ = 0.0f;
         const floatType bW = ( lineConstants.U[Z](igW)
 
-                             - m_fvCoeffs.Mom[Z].AU[Z][e](igW, jgW, kgW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
-                             - m_fvCoeffs.Mom[Z].AU[Z][w](igW, jgW, kgW) * m_fields.U[Z]( igW-1, jgW  , kgW  ) 
-
-                             + newtonStencilZ
+                             - m_fvCoeffs.Mom[Z].AU[e](igW, jgW, kgW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
+                             - m_fvCoeffs.Mom[Z].AU[w](igW, jgW, kgW) * m_fields.U[Z]( igW-1, jgW  , kgW  ) 
 
                              ) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW);
 
@@ -162,90 +147,54 @@ public:
 
         // Precompute momentum RHS divided by AP coefficients
         // U momentum
-        floatType newtonStencilX = 0.0f;
-        if constexpr ( LI == Linearisation::Newton ) {
-            newtonStencilX = - m_fvCoeffs.Mom[X].AU[Y][n]( igU, jgU, kgU ) * m_fields.U[Y]( igU  , jgU+1, kgU  )
-                             - m_fvCoeffs.Mom[X].AU[Y][p]( igU, jgU, kgU ) * m_fields.U[Y]( igU  , jgU  , kgU  )
-                             - m_fvCoeffs.Mom[X].AU[Y][s]( igU, jgU, kgU ) * m_fields.U[Y]( igU  , jgU-1, kgU  )
-
-                             - m_fvCoeffs.Mom[X].AU[Z][t]( igU, jgU, kgU ) * m_fields.U[Z]( igU  , jgU  , kgU+1)
-                             - m_fvCoeffs.Mom[X].AU[Z][p]( igU, jgU, kgU ) * m_fields.U[Z]( igU  , jgU  , kgU  )
-                             - m_fvCoeffs.Mom[X].AU[Z][b]( igU, jgU, kgU ) * m_fields.U[Z]( igU  , jgU  , kgU-1);
-        }
         const floatType bU = ( m_fvCoeffs.Mom[X].F(igU, jgU, kgU)
                              - m_fvCoeffs.Mom[X].B(igU, jgU, kgU)  
 
-                             - m_fvCoeffs.Mom[X].AU[X][n](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU+1, kgU  )
-                             - m_fvCoeffs.Mom[X].AU[X][e](igU, jgU, kgU) * m_fields.U[X]( igU+1, jgU  , kgU  )
-                             - m_fvCoeffs.Mom[X].AU[X][s](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU-1, kgU  )
-                             - m_fvCoeffs.Mom[X].AU[X][w](igU, jgU, kgU) * m_fields.U[X]( igU-1, jgU  , kgU  )
-                             - m_fvCoeffs.Mom[X].AU[X][t](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU  , kgU+1) 
-                             - m_fvCoeffs.Mom[X].AU[X][b](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU  , kgU-1)
+                             - m_fvCoeffs.Mom[X].AU[n](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU+1, kgU  )
+                             - m_fvCoeffs.Mom[X].AU[e](igU, jgU, kgU) * m_fields.U[X]( igU+1, jgU  , kgU  )
+                             - m_fvCoeffs.Mom[X].AU[s](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU-1, kgU  )
+                             - m_fvCoeffs.Mom[X].AU[w](igU, jgU, kgU) * m_fields.U[X]( igU-1, jgU  , kgU  )
+                             - m_fvCoeffs.Mom[X].AU[t](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU  , kgU+1) 
+                             - m_fvCoeffs.Mom[X].AU[b](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU  , kgU-1)
 
                              - m_fvCoeffs.Mom[X].AP[sUP::cLeft ](igU) * m_fields.P( igU + sUP::iLeft , jgU, kgU)
                              - m_fvCoeffs.Mom[X].AP[sUP::cRight](igU) * m_fields.P( igU + sUP::iRight, jgU, kgU) 
-
-                             + newtonStencilX
 
                              ) * m_fvCoeffs.Mom[X].diagCoeffInv(igU, jgU, kgU);
     
 
 
         // V momentum
-        floatType newtonStencilY = 0.0f;
-        if constexpr ( LI == Linearisation::Newton ) {
-            newtonStencilY = - m_fvCoeffs.Mom[Y].AU[X][e]( igV, jgV, kgV ) * m_fields.U[X]( igV+1, jgV  , kgV  )
-                             - m_fvCoeffs.Mom[Y].AU[X][p]( igV, jgV, kgV ) * m_fields.U[X]( igV  , jgV  , kgV  )
-                             - m_fvCoeffs.Mom[Y].AU[X][w]( igV, jgV, kgV ) * m_fields.U[X]( igV-1, jgV  , kgV )
-
-                             - m_fvCoeffs.Mom[Y].AU[Z][t]( igV, jgV, kgV ) * m_fields.U[Z]( igV  , jgV  , kgV+1)
-                             - m_fvCoeffs.Mom[Y].AU[Z][p]( igV, jgV, kgV ) * m_fields.U[Z]( igV  , jgV  , kgV  )
-                             - m_fvCoeffs.Mom[Y].AU[Z][b]( igV, jgV, kgV ) * m_fields.U[Z]( igV  , jgV  , kgV-1);
-        }
         const floatType bV = ( m_fvCoeffs.Mom[Y].F(igV, jgV, kgV)
                              - m_fvCoeffs.Mom[Y].B(igV, jgV, kgV)
 
-                             - m_fvCoeffs.Mom[Y].AU[Y][n](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV+1, kgV  ) 
-                             - m_fvCoeffs.Mom[Y].AU[Y][e](igV, jgV, kgV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
-                             - m_fvCoeffs.Mom[Y].AU[Y][s](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV-1, kgV  ) 
-                             - m_fvCoeffs.Mom[Y].AU[Y][w](igV, jgV, kgV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
-                             - m_fvCoeffs.Mom[Y].AU[Y][t](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV  , kgV+1) 
-                             - m_fvCoeffs.Mom[Y].AU[Y][b](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV  , kgV-1)
+                             - m_fvCoeffs.Mom[Y].AU[n](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV+1, kgV  ) 
+                             - m_fvCoeffs.Mom[Y].AU[e](igV, jgV, kgV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
+                             - m_fvCoeffs.Mom[Y].AU[s](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV-1, kgV  ) 
+                             - m_fvCoeffs.Mom[Y].AU[w](igV, jgV, kgV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
+                             - m_fvCoeffs.Mom[Y].AU[t](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV  , kgV+1) 
+                             - m_fvCoeffs.Mom[Y].AU[b](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV  , kgV-1)
 
                              - m_fvCoeffs.Mom[Y].AP[sVP::cLeft ](jgV) * m_fields.P( igV, jgV + sVP::iLeft , kgV)
                              - m_fvCoeffs.Mom[Y].AP[sVP::cRight](jgV) * m_fields.P( igV, jgV + sVP::iRight, kgV)
-
-                             + newtonStencilY
 
                              ) * m_fvCoeffs.Mom[Y].diagCoeffInv(igV, jgV, kgV);
         
 
 
         // W momentum
-        floatType newtonStencilZ = 0.0f;
-        if constexpr ( LI == Linearisation::Newton ) {
-            newtonStencilZ =  - m_fvCoeffs.Mom[Z].AU[X][e](igW, jgW, kgW) * m_fields.U[X]( igW+1, jgW  , kgW  )
-                              - m_fvCoeffs.Mom[Z].AU[X][p](igW, jgW, kgW) * m_fields.U[X]( igW  , jgW  , kgW  )
-                              - m_fvCoeffs.Mom[Z].AU[X][w](igW, jgW, kgW) * m_fields.U[X]( igW-1, jgW  , kgW  )
-
-                              - m_fvCoeffs.Mom[Z].AU[Y][n](igW, jgW, kgW) * m_fields.U[Y]( igW  , jgW+1, kgW  )
-                              - m_fvCoeffs.Mom[Z].AU[Y][p](igW, jgW, kgW) * m_fields.U[Y]( igW  , jgW  , kgW  )
-                              - m_fvCoeffs.Mom[Z].AU[Y][s](igW, jgW, kgW) * m_fields.U[Y]( igW  , jgW-1, kgW  );
-        }
         const floatType bW = ( m_fvCoeffs.Mom[Z].F(igW, jgW, kgW)
                              - m_fvCoeffs.Mom[Z].B(igW, jgW, kgW)
                             
-                             - m_fvCoeffs.Mom[Z].AU[Z][n](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW+1, kgW  ) 
-                             - m_fvCoeffs.Mom[Z].AU[Z][e](igW, jgW, kgW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
-                             - m_fvCoeffs.Mom[Z].AU[Z][s](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW-1, kgW  ) 
-                             - m_fvCoeffs.Mom[Z].AU[Z][w](igW, jgW, kgW) * m_fields.U[Z]( igW-1, jgW  , kgW  ) 
-                             - m_fvCoeffs.Mom[Z].AU[Z][t](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW  , kgW+1) 
-                             - m_fvCoeffs.Mom[Z].AU[Z][b](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW  , kgW-1)
+                             - m_fvCoeffs.Mom[Z].AU[n](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW+1, kgW  ) 
+                             - m_fvCoeffs.Mom[Z].AU[e](igW, jgW, kgW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
+                             - m_fvCoeffs.Mom[Z].AU[s](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW-1, kgW  ) 
+                             - m_fvCoeffs.Mom[Z].AU[w](igW, jgW, kgW) * m_fields.U[Z]( igW-1, jgW  , kgW  ) 
+                             - m_fvCoeffs.Mom[Z].AU[t](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW  , kgW+1) 
+                             - m_fvCoeffs.Mom[Z].AU[b](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW  , kgW-1)
 
                              - m_fvCoeffs.Mom[Z].AP[sWP::cLeft ](kgW) * m_fields.P( igW, jgW, kgW + sWP::iLeft ) 
                              - m_fvCoeffs.Mom[Z].AP[sWP::cRight](kgW) * m_fields.P( igW, jgW, kgW + sWP::iRight)
-
-                             + newtonStencilZ
 
                              ) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW);
     

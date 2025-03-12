@@ -136,10 +136,6 @@ enum class Smoothers {
     nestedLineSymmetric, domainSymmetric
 };
 
-enum class Linearisation {
-    Picard, Newton
-};
-
 enum class GeometryBoundaryTreatement {
     Staircase, DirectionalImmersedBoundary
 };

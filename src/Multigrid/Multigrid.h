@@ -20,7 +20,7 @@ enum class MultigridEquation {
     TauCorrection
 };
 
-template< MomentumInterpolation MI, Linearisation LI >
+template< MomentumInterpolation MI >
 struct GridLevelData
 {
     
@@ -35,17 +35,16 @@ struct GridLevelData
                         residualsRestricted;
     BoundaryConditionData bcData;
     EnumVector<Axis, Tensor3D> faceFluxes;
-    EnumVector< Axis, EnumVector< Axis, Tensor3D> > faceAdvectedVelocities;
     IBData ibData;
     FVCoefficients fvCoeffs;
-    std::unique_ptr< LinearSolverInterface<MI, LI> > linearSolver;
+    std::unique_ptr< LinearSolverInterface<MI> > linearSolver;
 };
 
 
 
 // Create initial heirachy of grids
-template< MomentumInterpolation MI, Linearisation LI >
-void SetMGLevels( std::vector< GridLevelData<MI, LI> > &, 
+template< MomentumInterpolation MI >
+void SetMGLevels( std::vector< GridLevelData<MI > > &, 
                   const InputData &,
                   const AxisTransformationMap & );
 
@@ -71,14 +70,14 @@ FieldData<Tensor3D> ComputeFineGridCorrection( const FieldData<Tensor3D> &,
                                                const Tensor3D & );
 
 
-template< MomentumInterpolation MI, Linearisation LI >
+template< MomentumInterpolation MI >
 void TransformToCoarseGridEquations( FVCoefficients &,
                                      const FieldData<Tensor3D> &,
                                      const FieldData<Tensor3D> &,
                                      const Tensor3D & );
 
 
-template< MomentumInterpolation MI, Linearisation LI >
+template< MomentumInterpolation MI >
 FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &,
                                                       const FieldData<Tensor3D> &,
                                                       const FieldData<Tensor3D> &,

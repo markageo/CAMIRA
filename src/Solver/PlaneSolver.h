@@ -16,8 +16,7 @@ namespace CFD
 using namespace FVT;
 
 template <TransportCoefficients::ENUMDATA Wstag, 
-          MomentumInterpolation MI,
-          Linearisation LI>
+          MomentumInterpolation MI >
 class PlaneSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
@@ -38,12 +37,12 @@ public:
                     m_nj( fvCoeffs.nCells(Axis::Y) )
     {
         if (m_nj == 1) {
-            m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            m_lineSolverCenter = std::make_unique<LineSolver<TC::p, Wstag, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
             SolutionUpdater    = &PlaneSolver::Sweep2D;
             StateUpdater       = &PlaneSolver::UpdateState2D;
         } else {
-            m_lineSolverNorth  = std::make_unique<LineSolver<TC::n, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
-            m_lineSolverSouth  = std::make_unique<LineSolver<TC::s, Wstag, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            m_lineSolverNorth  = std::make_unique<LineSolver<TC::n, Wstag, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            m_lineSolverSouth  = std::make_unique<LineSolver<TC::s, Wstag, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
             SolutionUpdater    = &PlaneSolver::Sweep3D;
             StateUpdater       = &PlaneSolver::UpdateState3D;
         }
@@ -63,9 +62,9 @@ private:
     FieldData<Tensor3D> &m_fields;
     const FVCoefficients &m_fvCoeffs;
 
-    std::unique_ptr< LineSolver<TC::n, Wstag, MI, LI> > m_lineSolverNorth;
-    std::unique_ptr< LineSolver<TC::s, Wstag, MI, LI> > m_lineSolverSouth;
-    std::unique_ptr< LineSolver<TC::p, Wstag, MI, LI> > m_lineSolverCenter;
+    std::unique_ptr< LineSolver<TC::n, Wstag, MI > > m_lineSolverNorth;
+    std::unique_ptr< LineSolver<TC::s, Wstag, MI > > m_lineSolverSouth;
+    std::unique_ptr< LineSolver<TC::p, Wstag, MI > > m_lineSolverCenter;
 
     FieldData<Tensor2D> m_planeConstants;
 
@@ -109,7 +108,7 @@ private:
     // Precalculate parts of stencil that are constant along a plane
     void UpdatePlaneConstants(intType k)
     {
-        m_planeConstants = CalculatePlaneConstants<Wstag, MI, LI>(k, m_fvCoeffs, m_fields);
+        m_planeConstants = CalculatePlaneConstants<Wstag, MI >(k, m_fvCoeffs, m_fields);
     }
 };
 
