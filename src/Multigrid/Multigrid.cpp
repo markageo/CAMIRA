@@ -14,8 +14,8 @@ namespace
 
 } // end anonymous namespace
 
-template< MomentumInterpolation MI, Linearisation LI >
-void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels, 
+template< MomentumInterpolation MI >
+void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels, 
                   const InputData &inputData,
                   const AxisTransformationMap &axisTransofrmation )
 {
@@ -45,7 +45,7 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
         } else {
             break;
         }
-        GridLevelData<MI, LI> &mgl = mgLevels[level];
+        GridLevelData<MI> &mgl = mgLevels[level];
         mgl.level = level;
 
 
@@ -87,11 +87,9 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
         // Face fluxes and advected velocities
         mgl.faceFluxes = InitialiseFaceFluxes(mgl.mesh, mgl.fields.U, mgl.bcData);
-        if ( inputData.schemes.linearisation == Linearisation::Newton ) 
-            mgl.faceAdvectedVelocities = InitialiseFaceAdvectedVelocities( mgl.mesh, mgl.fvCoeffs, mgl.fields.U, mgl.faceFluxes, mgl.bcData );
 
         // Set the coefficients that depend on linearisation
-        UpdateFVCoefficients( mgl.fvCoeffs, mgl.mesh, mgl.fields, mgl.fieldsPrevTime, mgl.fieldsPrevPrevTime, mgl.faceAdvectedVelocities, mgl.faceFluxes, mgl.ibData, mgl.bcData );
+        UpdateFVCoefficients( mgl.fvCoeffs, mgl.mesh, mgl.fields, mgl.fieldsPrevTime, mgl.fieldsPrevPrevTime, mgl.faceFluxes, mgl.ibData, mgl.bcData );
 
 
         // Allocate and initialise residualsRestricted
@@ -103,11 +101,11 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
         // Linear Solver
         switch ( inputData.smootherSettings.type ) {
             case Smoothers::nestedLineSymmetric:
-                mgl.linearSolver = std::make_unique< nestedLineSymmetricSolver<MI, LI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, inputData.smootherSettings);
+                mgl.linearSolver = std::make_unique< nestedLineSymmetricSolver<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, inputData.smootherSettings);
                 break;
             
             case Smoothers::domainSymmetric:
-                mgl.linearSolver = std::make_unique< domainSymmetricSolver<MI, LI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, inputData.smootherSettings);
+                mgl.linearSolver = std::make_unique< domainSymmetricSolver<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, inputData.smootherSettings);
                 break;
         }
         
@@ -116,11 +114,8 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
     mgLevels.back().isCoarsestLevel = true;
     mgLevels.shrink_to_fit();
 }
-template void SetMGLevels( std::vector< GridLevelData<MomentumInterpolation::Implicit    , Linearisation::Picard> > &, const InputData &, const AxisTransformationMap & );
-template void SetMGLevels( std::vector< GridLevelData<MomentumInterpolation::SemiExplicit, Linearisation::Picard> > &, const InputData &, const AxisTransformationMap & );
-template void SetMGLevels( std::vector< GridLevelData<MomentumInterpolation::Implicit    , Linearisation::Newton> > &, const InputData &, const AxisTransformationMap & );
-template void SetMGLevels( std::vector< GridLevelData<MomentumInterpolation::SemiExplicit, Linearisation::Newton> > &, const InputData &, const AxisTransformationMap & );
-
+template void SetMGLevels( std::vector< GridLevelData<MomentumInterpolation::Implicit     > > &, const InputData &, const AxisTransformationMap & );
+template void SetMGLevels( std::vector< GridLevelData<MomentumInterpolation::SemiExplicit > > &, const InputData &, const AxisTransformationMap & );
 
 
 
@@ -377,7 +372,7 @@ FieldData<Tensor3D> ComputeFineGridCorrection( const FieldData<Tensor3D> &coarse
 }
 
 
-template< MomentumInterpolation MI, Linearisation LI >
+template< MomentumInterpolation MI >
 void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs, 
                                      const FieldData<Tensor3D> &fieldsRestricted,
                                      const FieldData<Tensor3D> &residualsRestricted,
@@ -393,96 +388,60 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                 intType ig{ G(i) }, jg{ G(j) }, kg{ G(k) };
 
                 // U momentum
-                floatType newtonStencilX = 0.0f;
-                if constexpr ( LI == Linearisation::Newton ) {
-                    newtonStencilX = fvCoeffs.Mom[X].AU[Y][n](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg+1, kg  )
-                                   + fvCoeffs.Mom[X].AU[Y][p](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg  )
-                                   + fvCoeffs.Mom[X].AU[Y][s](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg-1, kg  )
-
-                                   + fvCoeffs.Mom[X].AU[Z][t](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg+1)
-                                   + fvCoeffs.Mom[X].AU[Z][p](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg  )
-                                   + fvCoeffs.Mom[X].AU[Z][b](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);
-                }
                 fvCoeffs.Mom[X].F(ig, jg, kg) += mask(ig, jg, kg)
                                                * (  residualsRestricted.U[X](ig, jg, kg)
 
-                                                 + fvCoeffs.Mom[X].AU[X][p](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg  ) 
-                                                 + fvCoeffs.Mom[X].AU[X][n](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg+1, kg  ) 
-                                                 + fvCoeffs.Mom[X].AU[X][e](ig, jg, kg) * fieldsRestricted.U[X]( ig+1, jg  , kg  ) 
-                                                 + fvCoeffs.Mom[X].AU[X][s](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg-1, kg  ) 
-                                                 + fvCoeffs.Mom[X].AU[X][w](ig, jg, kg) * fieldsRestricted.U[X]( ig-1, jg  , kg  ) 
-                                                 + fvCoeffs.Mom[X].AU[X][t](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg+1) 
-                                                 + fvCoeffs.Mom[X].AU[X][b](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg-1) 
+                                                 + fvCoeffs.Mom[X].AU[p](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg  ) 
+                                                 + fvCoeffs.Mom[X].AU[n](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg+1, kg  ) 
+                                                 + fvCoeffs.Mom[X].AU[e](ig, jg, kg) * fieldsRestricted.U[X]( ig+1, jg  , kg  ) 
+                                                 + fvCoeffs.Mom[X].AU[s](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg-1, kg  ) 
+                                                 + fvCoeffs.Mom[X].AU[w](ig, jg, kg) * fieldsRestricted.U[X]( ig-1, jg  , kg  ) 
+                                                 + fvCoeffs.Mom[X].AU[t](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg+1) 
+                                                 + fvCoeffs.Mom[X].AU[b](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg-1) 
 
                                                  + fvCoeffs.Mom[X].AP[e](ig) * fieldsRestricted.P( ig+1, jg  , kg  )
                                                  + fvCoeffs.Mom[X].AP[p](ig) * fieldsRestricted.P( ig  , jg  , kg  )
                                                  + fvCoeffs.Mom[X].AP[w](ig) * fieldsRestricted.P( ig-1, jg  , kg  )
-
-                                                 + newtonStencilX
 
                                                  + fvCoeffs.Mom[X].B(ig, jg, kg) );
 
 
 
                 // V momentum
-                floatType newtonStencilY = 0.0f;
-                if constexpr ( LI == Linearisation::Newton ) {
-                    newtonStencilY = fvCoeffs.Mom[Y].AU[X][e](ig, jg, kg) * fieldsRestricted.U[X]( ig+1, jg  , kg  )
-                                   + fvCoeffs.Mom[Y].AU[X][p](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg  )
-                                   + fvCoeffs.Mom[Y].AU[X][w](ig, jg, kg) * fieldsRestricted.U[X]( ig-1, jg  , kg  )
-                    
-                                   + fvCoeffs.Mom[Y].AU[Z][t](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg+1)
-                                   + fvCoeffs.Mom[Y].AU[Z][p](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg  )
-                                   + fvCoeffs.Mom[Y].AU[Z][b](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);      
-                }
                 fvCoeffs.Mom[Y].F(ig, jg, kg) += mask(ig, jg, kg) 
                                                * (   residualsRestricted.U[Y](ig, jg, kg)
 
-                                                  + fvCoeffs.Mom[Y].AU[Y][p](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg  ) 
-                                                  + fvCoeffs.Mom[Y].AU[Y][n](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg+1, kg  ) 
-                                                  + fvCoeffs.Mom[Y].AU[Y][e](ig, jg, kg) * fieldsRestricted.U[Y]( ig+1, jg  , kg  ) 
-                                                  + fvCoeffs.Mom[Y].AU[Y][s](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg-1, kg  ) 
-                                                  + fvCoeffs.Mom[Y].AU[Y][w](ig, jg, kg) * fieldsRestricted.U[Y]( ig-1, jg  , kg  ) 
-                                                  + fvCoeffs.Mom[Y].AU[Y][t](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg+1) 
-                                                  + fvCoeffs.Mom[Y].AU[Y][b](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg-1) 
+                                                  + fvCoeffs.Mom[Y].AU[p](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg  ) 
+                                                  + fvCoeffs.Mom[Y].AU[n](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg+1, kg  ) 
+                                                  + fvCoeffs.Mom[Y].AU[e](ig, jg, kg) * fieldsRestricted.U[Y]( ig+1, jg  , kg  ) 
+                                                  + fvCoeffs.Mom[Y].AU[s](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg-1, kg  ) 
+                                                  + fvCoeffs.Mom[Y].AU[w](ig, jg, kg) * fieldsRestricted.U[Y]( ig-1, jg  , kg  ) 
+                                                  + fvCoeffs.Mom[Y].AU[t](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg+1) 
+                                                  + fvCoeffs.Mom[Y].AU[b](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg-1) 
 
                                                   + fvCoeffs.Mom[Y].AP[n](jg) * fieldsRestricted.P( ig  , jg+1, kg  )
                                                   + fvCoeffs.Mom[Y].AP[p](jg) * fieldsRestricted.P( ig  , jg  , kg  )
                                                   + fvCoeffs.Mom[Y].AP[s](jg) * fieldsRestricted.P( ig  , jg-1, kg  )
-
-                                                  + newtonStencilY
 
                                                   + fvCoeffs.Mom[Y].B(ig, jg, kg) );
 
 
 
                 // W momentm
-                floatType newtonStencilZ = 0.0f;
-                if constexpr ( LI == Linearisation::Newton ) {
-                    newtonStencilZ = fvCoeffs.Mom[Z].AU[X][e](ig, jg, kg) * fieldsRestricted.U[X]( ig+1, jg  , kg  )
-                                   + fvCoeffs.Mom[Z].AU[X][p](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg  )
-                                   + fvCoeffs.Mom[Z].AU[X][w](ig, jg, kg) * fieldsRestricted.U[X]( ig-1, jg  , kg  )
-                    
-                                   + fvCoeffs.Mom[Z].AU[Y][n](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg+1, kg  )
-                                   + fvCoeffs.Mom[Z].AU[Y][p](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg  )
-                                   + fvCoeffs.Mom[Z].AU[Y][s](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg-1, kg  );    
-                }
                 fvCoeffs.Mom[Z].F(ig, jg, kg) += mask(ig, jg, kg)
                                                * (   residualsRestricted.U[Z](ig, jg, kg)
 
-                                                  + fvCoeffs.Mom[Z].AU[Z][p](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg  ) 
-                                                  + fvCoeffs.Mom[Z].AU[Z][n](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg+1, kg  ) 
-                                                  + fvCoeffs.Mom[Z].AU[Z][e](ig, jg, kg) * fieldsRestricted.U[Z]( ig+1, jg  , kg  ) 
-                                                  + fvCoeffs.Mom[Z].AU[Z][s](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg-1, kg  ) 
-                                                  + fvCoeffs.Mom[Z].AU[Z][w](ig, jg, kg) * fieldsRestricted.U[Z]( ig-1, jg  , kg  ) 
-                                                  + fvCoeffs.Mom[Z].AU[Z][t](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg+1) 
-                                                  + fvCoeffs.Mom[Z].AU[Z][b](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg-1) 
+                                                  + fvCoeffs.Mom[Z].AU[p](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg  ) 
+                                                  + fvCoeffs.Mom[Z].AU[n](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg+1, kg  ) 
+                                                  + fvCoeffs.Mom[Z].AU[e](ig, jg, kg) * fieldsRestricted.U[Z]( ig+1, jg  , kg  ) 
+                                                  + fvCoeffs.Mom[Z].AU[s](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg-1, kg  ) 
+                                                  + fvCoeffs.Mom[Z].AU[w](ig, jg, kg) * fieldsRestricted.U[Z]( ig-1, jg  , kg  ) 
+                                                  + fvCoeffs.Mom[Z].AU[t](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg+1) 
+                                                  + fvCoeffs.Mom[Z].AU[b](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg-1) 
 
                                                   + fvCoeffs.Mom[Z].AP[t](kg) * fieldsRestricted.P( ig  , jg  , kg+1)
                                                   + fvCoeffs.Mom[Z].AP[p](kg) * fieldsRestricted.P( ig  , jg  , kg  )
                                                   + fvCoeffs.Mom[Z].AP[b](kg) * fieldsRestricted.P( ig  , jg  , kg-1)
-
-                                                  + newtonStencilZ
 
                                                   + fvCoeffs.Mom[Z].B(ig, jg, kg) );
 
@@ -530,14 +489,11 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
     }
     
 }
-template void TransformToCoarseGridEquations<MomentumInterpolation::Implicit    , Linearisation::Picard>( FVCoefficients &, const FieldData<Tensor3D> &, const FieldData<Tensor3D> &, const Tensor3D & );
-template void TransformToCoarseGridEquations<MomentumInterpolation::SemiExplicit, Linearisation::Picard>( FVCoefficients &, const FieldData<Tensor3D> &, const FieldData<Tensor3D> &, const Tensor3D & );
-template void TransformToCoarseGridEquations<MomentumInterpolation::Implicit    , Linearisation::Newton>( FVCoefficients &, const FieldData<Tensor3D> &, const FieldData<Tensor3D> &, const Tensor3D & );
-template void TransformToCoarseGridEquations<MomentumInterpolation::SemiExplicit, Linearisation::Newton>( FVCoefficients &, const FieldData<Tensor3D> &, const FieldData<Tensor3D> &, const Tensor3D & );
+template void TransformToCoarseGridEquations<MomentumInterpolation::Implicit     >( FVCoefficients &, const FieldData<Tensor3D> &, const FieldData<Tensor3D> &, const Tensor3D & );
+template void TransformToCoarseGridEquations<MomentumInterpolation::SemiExplicit >( FVCoefficients &, const FieldData<Tensor3D> &, const FieldData<Tensor3D> &, const Tensor3D & );
 
 
-
-template< MomentumInterpolation MI, Linearisation LI >
+template< MomentumInterpolation MI >
 FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs, 
                                                       const FieldData<Tensor3D> &fieldsRestricted,
                                                       const FieldData<Tensor3D> &residualsRestricted,
@@ -557,95 +513,59 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
                 intType ig{ G(i) }, jg{ G(j) }, kg{ G(k) };
 
                 // U momentum
-                floatType newtonStencilX = 0.0f;
-                if constexpr ( LI == Linearisation::Newton ) {
-                    newtonStencilX = fvCoeffs.Mom[X].AU[Y][n](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg+1, kg  )
-                                   + fvCoeffs.Mom[X].AU[Y][p](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg  )
-                                   + fvCoeffs.Mom[X].AU[Y][s](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg-1, kg  )
-
-                                   + fvCoeffs.Mom[X].AU[Z][t](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg+1)
-                                   + fvCoeffs.Mom[X].AU[Z][p](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg  )
-                                   + fvCoeffs.Mom[X].AU[Z][b](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);
-                }
                 coarseGridRightHandSide.U[X](ig, jg, kg) = mask(ig, jg, kg)
                                               * (  residualsRestricted.U[X](ig, jg, kg)
 
-                                                 + fvCoeffs.Mom[X].AU[X][p](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg  ) 
-                                                 + fvCoeffs.Mom[X].AU[X][n](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg+1, kg  ) 
-                                                 + fvCoeffs.Mom[X].AU[X][e](ig, jg, kg) * fieldsRestricted.U[X]( ig+1, jg  , kg  ) 
-                                                 + fvCoeffs.Mom[X].AU[X][s](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg-1, kg  ) 
-                                                 + fvCoeffs.Mom[X].AU[X][w](ig, jg, kg) * fieldsRestricted.U[X]( ig-1, jg  , kg  ) 
-                                                 + fvCoeffs.Mom[X].AU[X][t](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg+1) 
-                                                 + fvCoeffs.Mom[X].AU[X][b](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg-1) 
+                                                 + fvCoeffs.Mom[X].AU[p](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg  ) 
+                                                 + fvCoeffs.Mom[X].AU[n](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg+1, kg  ) 
+                                                 + fvCoeffs.Mom[X].AU[e](ig, jg, kg) * fieldsRestricted.U[X]( ig+1, jg  , kg  ) 
+                                                 + fvCoeffs.Mom[X].AU[s](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg-1, kg  ) 
+                                                 + fvCoeffs.Mom[X].AU[w](ig, jg, kg) * fieldsRestricted.U[X]( ig-1, jg  , kg  ) 
+                                                 + fvCoeffs.Mom[X].AU[t](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg+1) 
+                                                 + fvCoeffs.Mom[X].AU[b](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg-1) 
 
                                                  + fvCoeffs.Mom[X].AP[e](ig) * fieldsRestricted.P( ig+1, jg  , kg  )
                                                  + fvCoeffs.Mom[X].AP[p](ig) * fieldsRestricted.P( ig  , jg  , kg  )
                                                  + fvCoeffs.Mom[X].AP[w](ig) * fieldsRestricted.P( ig-1, jg  , kg  )
-
-                                                 + newtonStencilX
 
                                                  + fvCoeffs.Mom[X].B(ig, jg, kg) );
 
 
 
                 // V momentum
-                floatType newtonStencilY = 0.0f;
-                if constexpr ( LI == Linearisation::Newton ) {
-                    newtonStencilY = fvCoeffs.Mom[Y].AU[X][e](ig, jg, kg) * fieldsRestricted.U[X]( ig+1, jg  , kg  )
-                                   + fvCoeffs.Mom[Y].AU[X][p](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg  )
-                                   + fvCoeffs.Mom[Y].AU[X][w](ig, jg, kg) * fieldsRestricted.U[X]( ig-1, jg  , kg  )
-                    
-                                   + fvCoeffs.Mom[Y].AU[Z][t](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg+1)
-                                   + fvCoeffs.Mom[Y].AU[Z][p](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg  )
-                                   + fvCoeffs.Mom[Y].AU[Z][b](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg-1);      
-                }
                 coarseGridRightHandSide.U[Y](ig, jg, kg) += mask(ig, jg, kg) 
                                               * (   residualsRestricted.U[Y](ig, jg, kg)
 
-                                                  + fvCoeffs.Mom[Y].AU[Y][p](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg  ) 
-                                                  + fvCoeffs.Mom[Y].AU[Y][n](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg+1, kg  ) 
-                                                  + fvCoeffs.Mom[Y].AU[Y][e](ig, jg, kg) * fieldsRestricted.U[Y]( ig+1, jg  , kg  ) 
-                                                  + fvCoeffs.Mom[Y].AU[Y][s](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg-1, kg  ) 
-                                                  + fvCoeffs.Mom[Y].AU[Y][w](ig, jg, kg) * fieldsRestricted.U[Y]( ig-1, jg  , kg  ) 
-                                                  + fvCoeffs.Mom[Y].AU[Y][t](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg+1) 
-                                                  + fvCoeffs.Mom[Y].AU[Y][b](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg-1) 
+                                                  + fvCoeffs.Mom[Y].AU[p](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg  ) 
+                                                  + fvCoeffs.Mom[Y].AU[n](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg+1, kg  ) 
+                                                  + fvCoeffs.Mom[Y].AU[e](ig, jg, kg) * fieldsRestricted.U[Y]( ig+1, jg  , kg  ) 
+                                                  + fvCoeffs.Mom[Y].AU[s](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg-1, kg  ) 
+                                                  + fvCoeffs.Mom[Y].AU[w](ig, jg, kg) * fieldsRestricted.U[Y]( ig-1, jg  , kg  ) 
+                                                  + fvCoeffs.Mom[Y].AU[t](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg+1) 
+                                                  + fvCoeffs.Mom[Y].AU[b](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg-1) 
 
                                                   + fvCoeffs.Mom[Y].AP[n](jg) * fieldsRestricted.P( ig  , jg+1, kg  )
                                                   + fvCoeffs.Mom[Y].AP[p](jg) * fieldsRestricted.P( ig  , jg  , kg  )
                                                   + fvCoeffs.Mom[Y].AP[s](jg) * fieldsRestricted.P( ig  , jg-1, kg  )
 
-                                                  + newtonStencilY
-
                                                   + fvCoeffs.Mom[Y].B(ig, jg, kg) );
 
 
                 // W momentm
-                floatType newtonStencilZ = 0.0f;
-                if constexpr ( LI == Linearisation::Newton ) {
-                    newtonStencilZ = fvCoeffs.Mom[Z].AU[X][e](ig, jg, kg) * fieldsRestricted.U[X]( ig+1, jg  , kg  )
-                                   + fvCoeffs.Mom[Z].AU[X][p](ig, jg, kg) * fieldsRestricted.U[X]( ig  , jg  , kg  )
-                                   + fvCoeffs.Mom[Z].AU[X][w](ig, jg, kg) * fieldsRestricted.U[X]( ig-1, jg  , kg  )
-                    
-                                   + fvCoeffs.Mom[Z].AU[Y][n](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg+1, kg  )
-                                   + fvCoeffs.Mom[Z].AU[Y][p](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg  , kg  )
-                                   + fvCoeffs.Mom[Z].AU[Y][s](ig, jg, kg) * fieldsRestricted.U[Y]( ig  , jg-1, kg  );    
-                }
                 coarseGridRightHandSide.U[Z](ig, jg, kg) += mask(ig, jg, kg)
                                               * (   residualsRestricted.U[Z](ig, jg, kg)
 
-                                                  + fvCoeffs.Mom[Z].AU[Z][p](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg  ) 
-                                                  + fvCoeffs.Mom[Z].AU[Z][n](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg+1, kg  ) 
-                                                  + fvCoeffs.Mom[Z].AU[Z][e](ig, jg, kg) * fieldsRestricted.U[Z]( ig+1, jg  , kg  ) 
-                                                  + fvCoeffs.Mom[Z].AU[Z][s](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg-1, kg  ) 
-                                                  + fvCoeffs.Mom[Z].AU[Z][w](ig, jg, kg) * fieldsRestricted.U[Z]( ig-1, jg  , kg  ) 
-                                                  + fvCoeffs.Mom[Z].AU[Z][t](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg+1) 
-                                                  + fvCoeffs.Mom[Z].AU[Z][b](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg-1) 
+                                                  + fvCoeffs.Mom[Z].AU[p](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg  ) 
+                                                  + fvCoeffs.Mom[Z].AU[n](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg+1, kg  ) 
+                                                  + fvCoeffs.Mom[Z].AU[e](ig, jg, kg) * fieldsRestricted.U[Z]( ig+1, jg  , kg  ) 
+                                                  + fvCoeffs.Mom[Z].AU[s](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg-1, kg  ) 
+                                                  + fvCoeffs.Mom[Z].AU[w](ig, jg, kg) * fieldsRestricted.U[Z]( ig-1, jg  , kg  ) 
+                                                  + fvCoeffs.Mom[Z].AU[t](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg+1) 
+                                                  + fvCoeffs.Mom[Z].AU[b](ig, jg, kg) * fieldsRestricted.U[Z]( ig  , jg  , kg-1) 
 
                                                   + fvCoeffs.Mom[Z].AP[t](kg) * fieldsRestricted.P( ig  , jg  , kg+1)
                                                   + fvCoeffs.Mom[Z].AP[p](kg) * fieldsRestricted.P( ig  , jg  , kg  )
                                                   + fvCoeffs.Mom[Z].AP[b](kg) * fieldsRestricted.P( ig  , jg  , kg-1)
-
-                                                  + newtonStencilZ
 
                                                   + fvCoeffs.Mom[Z].B(ig, jg, kg) );
 
@@ -694,11 +614,8 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
 
     return coarseGridRightHandSide;
 }
-template FieldData<Tensor3D> CalculateCoarseGridRightHandSide<MomentumInterpolation::Implicit    , Linearisation::Picard>( FVCoefficients &, const FieldData<Tensor3D> &, const FieldData<Tensor3D> &, const Tensor3D & );
-template FieldData<Tensor3D> CalculateCoarseGridRightHandSide<MomentumInterpolation::SemiExplicit, Linearisation::Picard>( FVCoefficients &, const FieldData<Tensor3D> &, const FieldData<Tensor3D> &, const Tensor3D & );
-template FieldData<Tensor3D> CalculateCoarseGridRightHandSide<MomentumInterpolation::Implicit    , Linearisation::Newton>( FVCoefficients &, const FieldData<Tensor3D> &, const FieldData<Tensor3D> &, const Tensor3D & );
-template FieldData<Tensor3D> CalculateCoarseGridRightHandSide<MomentumInterpolation::SemiExplicit, Linearisation::Newton>( FVCoefficients &, const FieldData<Tensor3D> &, const FieldData<Tensor3D> &, const Tensor3D & );
-
+template FieldData<Tensor3D> CalculateCoarseGridRightHandSide<MomentumInterpolation::Implicit     >( FVCoefficients &, const FieldData<Tensor3D> &, const FieldData<Tensor3D> &, const Tensor3D & );
+template FieldData<Tensor3D> CalculateCoarseGridRightHandSide<MomentumInterpolation::SemiExplicit >( FVCoefficients &, const FieldData<Tensor3D> &, const FieldData<Tensor3D> &, const Tensor3D & );
 
 
 

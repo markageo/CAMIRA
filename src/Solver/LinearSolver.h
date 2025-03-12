@@ -18,8 +18,7 @@ namespace CFD
 using namespace FVT;
 
 // Linear solver interface class
-template< MomentumInterpolation MI,
-          Linearisation LI >
+template< MomentumInterpolation MI >
 class LinearSolverInterface
 {
     public:
@@ -30,9 +29,8 @@ class LinearSolverInterface
 
 
 // Two orientation symmetric sweeping
-template< MomentumInterpolation MI,
-          Linearisation LI >
-class domainSymmetricSolver : public LinearSolverInterface< MI, LI >
+template< MomentumInterpolation MI >
+class domainSymmetricSolver : public LinearSolverInterface< MI >
 {
     using TC = TransportCoefficients::ENUMDATA;
     using A = Axis::ENUMDATA;
@@ -54,8 +52,8 @@ public:
                     m_nj( fvCoeffs.nCells(A::Y) ),
                     m_nk( fvCoeffs.nCells(A::Z) )
     {
-        m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
-        m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+        m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+        m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
     }
 
 
@@ -105,8 +103,8 @@ private:
     const FieldData<floatType> m_maxResiduals;
     const FieldData<floatType> m_relaxation;
 
-    std::unique_ptr<TriadSolver<TC::e, TC::n, TC::t, MI, LI>> m_triadSolverForward;
-    std::unique_ptr<TriadSolver<TC::w, TC::s, TC::b, MI, LI>> m_triadSolverBackward;
+    std::unique_ptr<TriadSolver<TC::e, TC::n, TC::t, MI >> m_triadSolverForward;
+    std::unique_ptr<TriadSolver<TC::w, TC::s, TC::b, MI >> m_triadSolverBackward;
 
     FieldData<floatType> m_residuals, m_residualsInitialInv;
 
@@ -149,11 +147,11 @@ private:
         // Triad starting on hi side
         for ( intType k = m_nk-1; k != -1; k-- ) {
 
-            // FieldData<Tensor2D> planeConstants = CalculatePlaneConstants<TC::b, MI, LI>(k, m_fvCoeffs, m_fields);
+            // FieldData<Tensor2D> planeConstants = CalculatePlaneConstants<TC::b, MI >(k, m_fvCoeffs, m_fields);
 
             for ( intType j = m_nj-1; j != -1; j-- ) {
 
-                // FieldData<Tensor1D> lineConstants = CalculateLineConstants<TC::s, TC::b, MI, LI>(j, k, planeConstants, m_fvCoeffs, m_fields);
+                // FieldData<Tensor1D> lineConstants = CalculateLineConstants<TC::s, TC::b, MI >(j, k, planeConstants, m_fvCoeffs, m_fields);
 
                 for ( intType i = m_ni-1; i != -1; i-- ) {
 
@@ -186,9 +184,8 @@ private:
 
 
 // Nested symmetric sweeping
-template< MomentumInterpolation MI,
-          Linearisation LI >
-class nestedLineSymmetricSolver : public LinearSolverInterface< MI, LI >
+template< MomentumInterpolation MI >
+class nestedLineSymmetricSolver : public LinearSolverInterface< MI >
 {
     using TC = TransportCoefficients::ENUMDATA;
     using A = Axis::ENUMDATA;
@@ -209,12 +206,12 @@ public:
                     m_nk( fvCoeffs.nCells(A::Z) )
     {
         if (m_nk == 1) {
-            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            m_planeSolverCenter = std::make_unique<PlaneSolver<TC::p, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
             SolutionUpdater     = &nestedLineSymmetricSolver::Sweep2D;
             StateUpdater        = &nestedLineSymmetricSolver::UpdateState2D;
         } else {
-            m_planeSolverTop    = std::make_unique<PlaneSolver<TC::t, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
-            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI, LI>>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            m_planeSolverTop    = std::make_unique<PlaneSolver<TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+            m_planeSolverBottom = std::make_unique<PlaneSolver<TC::b, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
             SolutionUpdater     = &nestedLineSymmetricSolver::Sweep3D;
             StateUpdater        = &nestedLineSymmetricSolver::UpdateState3D;
         }
@@ -264,9 +261,9 @@ private:
     const intType m_maxIterations;
     const FieldData<floatType> m_maxResiduals;
 
-    std::unique_ptr< PlaneSolver<TC::t, MI, LI> > m_planeSolverTop;
-    std::unique_ptr< PlaneSolver<TC::b, MI, LI> > m_planeSolverBottom;
-    std::unique_ptr< PlaneSolver<TC::p, MI, LI> > m_planeSolverCenter;
+    std::unique_ptr< PlaneSolver<TC::t, MI > > m_planeSolverTop;
+    std::unique_ptr< PlaneSolver<TC::b, MI > > m_planeSolverBottom;
+    std::unique_ptr< PlaneSolver<TC::p, MI > > m_planeSolverCenter;
 
     void (nestedLineSymmetricSolver::*SolutionUpdater)(void);
     void (nestedLineSymmetricSolver::*StateUpdater)(void);
@@ -309,7 +306,7 @@ private:
 
 
     template <TC Wstag>
-    void Update( std::unique_ptr<PlaneSolver<Wstag, MI, LI>> &planeSolver, intType k )
+    void Update( std::unique_ptr<PlaneSolver<Wstag, MI >> &planeSolver, intType k )
     {
         using enum TransportCoefficients::ENUMDATA;
         using enum Axis::ENUMDATA;

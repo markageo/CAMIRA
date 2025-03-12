@@ -87,7 +87,6 @@ struct InputData
         TimeSchemes timeScheme;
         floatType timeStep;
         intType numberOfTimesteps;
-        Linearisation linearisation;
         MomentumInterpolation momentumInterpolation;
         AdvectionSchemes advectionScheme;
         floatType advectionBlendingFactor;
