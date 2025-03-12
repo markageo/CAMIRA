@@ -867,14 +867,14 @@ namespace
     void ReadMonitors( InputData &inputData,
                        const pt::ptree &outputTree )
     {
+        inputData.calculateForces = false;
+
         // It's ok if there is no monitors tree
         boost::optional<const pt::ptree &> monitorsTreeOptional = outputTree.get_child_optional( "Monitors" );
         if ( !monitorsTreeOptional )
             return;
 
         const pt::ptree &monitorsTree = monitorsTreeOptional.get();
-
-        inputData.calculateForces = false;
 
         for (auto monitor : monitorsTree) {
 
