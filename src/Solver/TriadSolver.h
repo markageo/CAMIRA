@@ -22,6 +22,7 @@ template < TransportCoefficients::ENUMDATA Ustag,
 class TriadSolver
 {
     using TC = TransportCoefficients::ENUMDATA;
+    using A  = Axis::ENUMDATA;
 
     // Staggering must be valid
     static_assert( (Ustag == TC::e) || (Ustag == TC::w) || (Ustag == TC::p), "Invalid U momentum staggering" );
@@ -47,7 +48,30 @@ public:
                     m_fields( fields ),
                     m_fieldsOld( fieldsOld ),
                     m_mask( mask ),
-                    m_fvCoeffs( fvCoeffs ),
+                    // m_fvCoeffs( fvCoeffs ),
+
+                    momX_AU( fvCoeffs.Mom[A::X].AU ),
+                    momY_AU( fvCoeffs.Mom[A::Y].AU ),
+                    momZ_AU( fvCoeffs.Mom[A::Z].AU ),
+                    cont_AP( fvCoeffs.Cont.AP ),
+                    momX_AP( fvCoeffs.Mom[A::X].AP ),
+                    momY_AP( fvCoeffs.Mom[A::Y].AP ),
+                    momZ_AP( fvCoeffs.Mom[A::Z].AP ),
+                    cont_AUX( fvCoeffs.Cont.AU[A::X] ),
+                    cont_AUY( fvCoeffs.Cont.AU[A::Y] ),
+                    cont_AUZ( fvCoeffs.Cont.AU[A::Z] ),
+                    momX_B( fvCoeffs.Mom[A::X].B ),
+                    momX_F( fvCoeffs.Mom[A::X].F ),
+                    momX_AUpInv( fvCoeffs.Mom[A::X].diagCoeffInv ),
+                    momY_B( fvCoeffs.Mom[A::Y].B ),
+                    momY_F( fvCoeffs.Mom[A::Y].F ),
+                    momY_AUpInv( fvCoeffs.Mom[A::Y].diagCoeffInv ),
+                    momZ_B( fvCoeffs.Mom[A::Z].B ),
+                    momZ_F( fvCoeffs.Mom[A::Z].F ),
+                    momZ_AUpInv( fvCoeffs.Mom[A::Z].diagCoeffInv ),
+                    cont_B( fvCoeffs.Cont.B ),
+                    cont_F( fvCoeffs.Cont.F ),
+
                     m_ni( fvCoeffs.nCells(0) ),
                     m_nj( fvCoeffs.nCells(1) ),
                     m_nk (fvCoeffs.nCells(2) ),
@@ -80,46 +104,46 @@ public:
         // U momentum
         const floatType bU = ( lineConstants.U[X](igU)  
 
-                             - m_fvCoeffs.Mom[X].AU[e](igU, jgU, kgU) * m_fields.U[X]( igU+1, jgU  , kgU  )
-                             - m_fvCoeffs.Mom[X].AU[w](igU, jgU, kgU) * m_fields.U[X]( igU-1, jgU  , kgU  )
+                             - momX_AU[e](igU, jgU, kgU) * m_fields.U[X]( igU+1, jgU  , kgU  )
+                             - momX_AU[w](igU, jgU, kgU) * m_fields.U[X]( igU-1, jgU  , kgU  )
 
-                             - m_fvCoeffs.Mom[X].AP[sUP::cLeft ](igU) * m_fields.P( igU + sUP::iLeft , jgU, kgU)
-                             - m_fvCoeffs.Mom[X].AP[sUP::cRight](igU) * m_fields.P( igU + sUP::iRight, jgU, kgU) 
+                             - momX_AP[sUP::cLeft ](igU) * m_fields.P( igU + sUP::iLeft , jgU, kgU)
+                             - momX_AP[sUP::cRight](igU) * m_fields.P( igU + sUP::iRight, jgU, kgU) 
 
-                             ) * m_fvCoeffs.Mom[X].diagCoeffInv(igU, jgU, kgU);
+                             ) * momX_AUpInv(igU, jgU, kgU);
 
 
         // V momentum
         const floatType bV = ( lineConstants.U[Y](igV)
 
-                             - m_fvCoeffs.Mom[Y].AU[e](igV, jgV, kgV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
-                             - m_fvCoeffs.Mom[Y].AU[w](igV, jgV, kgV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
+                             - momY_AU[e](igV, jgV, kgV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
+                             - momY_AU[w](igV, jgV, kgV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
 
-                             ) * m_fvCoeffs.Mom[Y].diagCoeffInv(igV, jgV, kgV);
+                             ) * momY_AUpInv(igV, jgV, kgV);
 
 
         // W momentum
         const floatType bW = ( lineConstants.U[Z](igW)
 
-                             - m_fvCoeffs.Mom[Z].AU[e](igW, jgW, kgW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
-                             - m_fvCoeffs.Mom[Z].AU[w](igW, jgW, kgW) * m_fields.U[Z]( igW-1, jgW  , kgW  ) 
+                             - momZ_AU[e](igW, jgW, kgW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
+                             - momZ_AU[w](igW, jgW, kgW) * m_fields.U[Z]( igW-1, jgW  , kgW  ) 
 
-                             ) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW);
+                             ) * momZ_AUpInv(igW, jgW, kgW);
 
 
         // Continuity for pressure
         floatType pressureWideStencil = 0.0f;
         if constexpr ( MI == MomentumInterpolation::Implicit ) {
-            pressureWideStencil = - m_fvCoeffs.Cont.AP[ee](ig, jg, kg) * m_fields.P( ig+2, jg  , kg  ) 
-                                  - m_fvCoeffs.Cont.AP[ww](ig, jg, kg) * m_fields.P( ig-2, jg  , kg  );
+            pressureWideStencil = - cont_AP[ee](ig, jg, kg) * m_fields.P( ig+2, jg  , kg  ) 
+                                  - cont_AP[ww](ig, jg, kg) * m_fields.P( ig-2, jg  , kg  );
         }
         const floatType bP = lineConstants.P(ig)
 
-                             - m_fvCoeffs.Cont.AU[X][sCU::cLeft ](ig) * m_fields.U[X]( ig + sCU::iLeft , jg, kg)
-                             - m_fvCoeffs.Cont.AU[X][sCU::cRight](ig) * m_fields.U[X]( ig + sCU::iRight, jg, kg)
+                             - cont_AUX[sCU::cLeft ](ig) * m_fields.U[X]( ig + sCU::iLeft , jg, kg)
+                             - cont_AUX[sCU::cRight](ig) * m_fields.U[X]( ig + sCU::iRight, jg, kg)
 
-                             - m_fvCoeffs.Cont.AP[e](ig, jg, kg) * m_fields.P( ig+1, jg  , kg  ) 
-                             - m_fvCoeffs.Cont.AP[w](ig, jg, kg) * m_fields.P( ig-1, jg  , kg  ) 
+                             - cont_AP[e](ig, jg, kg) * m_fields.P( ig+1, jg  , kg  ) 
+                             - cont_AP[w](ig, jg, kg) * m_fields.P( ig-1, jg  , kg  ) 
 
                              + pressureWideStencil;
 
@@ -147,87 +171,87 @@ public:
 
         // Precompute momentum RHS divided by AP coefficients
         // U momentum
-        const floatType bU = ( m_fvCoeffs.Mom[X].F(igU, jgU, kgU)
-                             - m_fvCoeffs.Mom[X].B(igU, jgU, kgU)  
+        const floatType bU = ( momX_F(igU, jgU, kgU)
+                             - momX_B(igU, jgU, kgU)  
 
-                             - m_fvCoeffs.Mom[X].AU[n](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU+1, kgU  )
-                             - m_fvCoeffs.Mom[X].AU[e](igU, jgU, kgU) * m_fields.U[X]( igU+1, jgU  , kgU  )
-                             - m_fvCoeffs.Mom[X].AU[s](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU-1, kgU  )
-                             - m_fvCoeffs.Mom[X].AU[w](igU, jgU, kgU) * m_fields.U[X]( igU-1, jgU  , kgU  )
-                             - m_fvCoeffs.Mom[X].AU[t](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU  , kgU+1) 
-                             - m_fvCoeffs.Mom[X].AU[b](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU  , kgU-1)
+                             - momX_AU[n](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU+1, kgU  )
+                             - momX_AU[e](igU, jgU, kgU) * m_fields.U[X]( igU+1, jgU  , kgU  )
+                             - momX_AU[s](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU-1, kgU  )
+                             - momX_AU[w](igU, jgU, kgU) * m_fields.U[X]( igU-1, jgU  , kgU  )
+                             - momX_AU[t](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU  , kgU+1) 
+                             - momX_AU[b](igU, jgU, kgU) * m_fields.U[X]( igU  , jgU  , kgU-1)
 
-                             - m_fvCoeffs.Mom[X].AP[sUP::cLeft ](igU) * m_fields.P( igU + sUP::iLeft , jgU, kgU)
-                             - m_fvCoeffs.Mom[X].AP[sUP::cRight](igU) * m_fields.P( igU + sUP::iRight, jgU, kgU) 
+                             - momX_AP[sUP::cLeft ](igU) * m_fields.P( igU + sUP::iLeft , jgU, kgU)
+                             - momX_AP[sUP::cRight](igU) * m_fields.P( igU + sUP::iRight, jgU, kgU) 
 
-                             ) * m_fvCoeffs.Mom[X].diagCoeffInv(igU, jgU, kgU);
+                             ) * momX_AUpInv(igU, jgU, kgU);
     
 
 
         // V momentum
-        const floatType bV = ( m_fvCoeffs.Mom[Y].F(igV, jgV, kgV)
-                             - m_fvCoeffs.Mom[Y].B(igV, jgV, kgV)
+        const floatType bV = ( momY_F(igV, jgV, kgV)
+                             - momY_B(igV, jgV, kgV)
 
-                             - m_fvCoeffs.Mom[Y].AU[n](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV+1, kgV  ) 
-                             - m_fvCoeffs.Mom[Y].AU[e](igV, jgV, kgV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
-                             - m_fvCoeffs.Mom[Y].AU[s](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV-1, kgV  ) 
-                             - m_fvCoeffs.Mom[Y].AU[w](igV, jgV, kgV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
-                             - m_fvCoeffs.Mom[Y].AU[t](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV  , kgV+1) 
-                             - m_fvCoeffs.Mom[Y].AU[b](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV  , kgV-1)
+                             - momY_AU[n](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV+1, kgV  ) 
+                             - momY_AU[e](igV, jgV, kgV) * m_fields.U[Y]( igV+1, jgV  , kgV  ) 
+                             - momY_AU[s](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV-1, kgV  ) 
+                             - momY_AU[w](igV, jgV, kgV) * m_fields.U[Y]( igV-1, jgV  , kgV  ) 
+                             - momY_AU[t](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV  , kgV+1) 
+                             - momY_AU[b](igV, jgV, kgV) * m_fields.U[Y]( igV  , jgV  , kgV-1)
 
-                             - m_fvCoeffs.Mom[Y].AP[sVP::cLeft ](jgV) * m_fields.P( igV, jgV + sVP::iLeft , kgV)
-                             - m_fvCoeffs.Mom[Y].AP[sVP::cRight](jgV) * m_fields.P( igV, jgV + sVP::iRight, kgV)
+                             - momY_AP[sVP::cLeft ](jgV) * m_fields.P( igV, jgV + sVP::iLeft , kgV)
+                             - momY_AP[sVP::cRight](jgV) * m_fields.P( igV, jgV + sVP::iRight, kgV)
 
-                             ) * m_fvCoeffs.Mom[Y].diagCoeffInv(igV, jgV, kgV);
+                             ) * momY_AUpInv(igV, jgV, kgV);
         
 
 
         // W momentum
-        const floatType bW = ( m_fvCoeffs.Mom[Z].F(igW, jgW, kgW)
-                             - m_fvCoeffs.Mom[Z].B(igW, jgW, kgW)
+        const floatType bW = ( momZ_F(igW, jgW, kgW)
+                             - momZ_B(igW, jgW, kgW)
                             
-                             - m_fvCoeffs.Mom[Z].AU[n](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW+1, kgW  ) 
-                             - m_fvCoeffs.Mom[Z].AU[e](igW, jgW, kgW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
-                             - m_fvCoeffs.Mom[Z].AU[s](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW-1, kgW  ) 
-                             - m_fvCoeffs.Mom[Z].AU[w](igW, jgW, kgW) * m_fields.U[Z]( igW-1, jgW  , kgW  ) 
-                             - m_fvCoeffs.Mom[Z].AU[t](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW  , kgW+1) 
-                             - m_fvCoeffs.Mom[Z].AU[b](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW  , kgW-1)
+                             - momZ_AU[n](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW+1, kgW  ) 
+                             - momZ_AU[e](igW, jgW, kgW) * m_fields.U[Z]( igW+1, jgW  , kgW  ) 
+                             - momZ_AU[s](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW-1, kgW  ) 
+                             - momZ_AU[w](igW, jgW, kgW) * m_fields.U[Z]( igW-1, jgW  , kgW  ) 
+                             - momZ_AU[t](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW  , kgW+1) 
+                             - momZ_AU[b](igW, jgW, kgW) * m_fields.U[Z]( igW  , jgW  , kgW-1)
 
-                             - m_fvCoeffs.Mom[Z].AP[sWP::cLeft ](kgW) * m_fields.P( igW, jgW, kgW + sWP::iLeft ) 
-                             - m_fvCoeffs.Mom[Z].AP[sWP::cRight](kgW) * m_fields.P( igW, jgW, kgW + sWP::iRight)
+                             - momZ_AP[sWP::cLeft ](kgW) * m_fields.P( igW, jgW, kgW + sWP::iLeft ) 
+                             - momZ_AP[sWP::cRight](kgW) * m_fields.P( igW, jgW, kgW + sWP::iRight)
 
-                             ) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW);
+                             ) * momZ_AUpInv(igW, jgW, kgW);
     
 
 
         // Continuity for pressure
         floatType pressureWideStencil = 0.0f;
         if constexpr ( MI == MomentumInterpolation::Implicit ) {
-            pressureWideStencil = - m_fvCoeffs.Cont.AP[nn](ig, jg, kg) * m_fields.P( ig  , jg+2, kg  )
-                                  - m_fvCoeffs.Cont.AP[ee](ig, jg, kg) * m_fields.P( ig+2, jg  , kg  ) 
-                                  - m_fvCoeffs.Cont.AP[ss](ig, jg, kg) * m_fields.P( ig  , jg-2, kg  ) 
-                                  - m_fvCoeffs.Cont.AP[ww](ig, jg, kg) * m_fields.P( ig-2, jg  , kg  ) 
-                                  - m_fvCoeffs.Cont.AP[tt](ig, jg, kg) * m_fields.P( ig  , jg  , kg+2) 
-                                  - m_fvCoeffs.Cont.AP[bb](ig, jg, kg) * m_fields.P( ig  , jg  , kg-2);
+            pressureWideStencil = - cont_AP[nn](ig, jg, kg) * m_fields.P( ig  , jg+2, kg  )
+                                  - cont_AP[ee](ig, jg, kg) * m_fields.P( ig+2, jg  , kg  ) 
+                                  - cont_AP[ss](ig, jg, kg) * m_fields.P( ig  , jg-2, kg  ) 
+                                  - cont_AP[ww](ig, jg, kg) * m_fields.P( ig-2, jg  , kg  ) 
+                                  - cont_AP[tt](ig, jg, kg) * m_fields.P( ig  , jg  , kg+2) 
+                                  - cont_AP[bb](ig, jg, kg) * m_fields.P( ig  , jg  , kg-2);
         }
-        const floatType bP = m_fvCoeffs.Cont.F(ig, jg, kg)
-                             - m_fvCoeffs.Cont.B(ig, jg, kg)
+        const floatType bP = cont_F(ig, jg, kg)
+                             - cont_B(ig, jg, kg)
 
-                             - m_fvCoeffs.Cont.AU[X][sCU::cLeft ](ig) * m_fields.U[X]( ig + sCU::iLeft , jg, kg)
-                             - m_fvCoeffs.Cont.AU[X][sCU::cRight](ig) * m_fields.U[X]( ig + sCU::iRight, jg, kg)
+                             - cont_AUX[sCU::cLeft ](ig) * m_fields.U[X]( ig + sCU::iLeft , jg, kg)
+                             - cont_AUX[sCU::cRight](ig) * m_fields.U[X]( ig + sCU::iRight, jg, kg)
 
-                             - m_fvCoeffs.Cont.AU[Y][sCV::cLeft ](jg) * m_fields.U[Y]( ig, jg + sCV::iLeft , kg)
-                             - m_fvCoeffs.Cont.AU[Y][sCV::cRight](jg) * m_fields.U[Y]( ig, jg + sCV::iRight, kg)
+                             - cont_AUY[sCV::cLeft ](jg) * m_fields.U[Y]( ig, jg + sCV::iLeft , kg)
+                             - cont_AUY[sCV::cRight](jg) * m_fields.U[Y]( ig, jg + sCV::iRight, kg)
 
-                             - m_fvCoeffs.Cont.AU[Z][sCW::cLeft ](kg) * m_fields.U[Z]( ig, jg, kg + sCW::iLeft )
-                             - m_fvCoeffs.Cont.AU[Z][sCW::cRight](kg) * m_fields.U[Z]( ig, jg, kg + sCW::iRight)
+                             - cont_AUZ[sCW::cLeft ](kg) * m_fields.U[Z]( ig, jg, kg + sCW::iLeft )
+                             - cont_AUZ[sCW::cRight](kg) * m_fields.U[Z]( ig, jg, kg + sCW::iRight)
 
-                             - m_fvCoeffs.Cont.AP[n](ig, jg, kg) * m_fields.P( ig  , jg+1, kg  ) 
-                             - m_fvCoeffs.Cont.AP[e](ig, jg, kg) * m_fields.P( ig+1, jg  , kg  ) 
-                             - m_fvCoeffs.Cont.AP[s](ig, jg, kg) * m_fields.P( ig  , jg-1, kg  ) 
-                             - m_fvCoeffs.Cont.AP[w](ig, jg, kg) * m_fields.P( ig-1, jg  , kg  ) 
-                             - m_fvCoeffs.Cont.AP[t](ig, jg, kg) * m_fields.P( ig  , jg  , kg+1) 
-                             - m_fvCoeffs.Cont.AP[b](ig, jg, kg) * m_fields.P( ig  , jg  , kg-1)
+                             - cont_AP[n](ig, jg, kg) * m_fields.P( ig  , jg+1, kg  ) 
+                             - cont_AP[e](ig, jg, kg) * m_fields.P( ig+1, jg  , kg  ) 
+                             - cont_AP[s](ig, jg, kg) * m_fields.P( ig  , jg-1, kg  ) 
+                             - cont_AP[w](ig, jg, kg) * m_fields.P( ig-1, jg  , kg  ) 
+                             - cont_AP[t](ig, jg, kg) * m_fields.P( ig  , jg  , kg+1) 
+                             - cont_AP[b](ig, jg, kg) * m_fields.P( ig  , jg  , kg-1)
 
                              + pressureWideStencil;
 
@@ -266,9 +290,9 @@ public:
         const floatType newP = ( 1 - m_relaxation.P ) * m_fields.P( ig, jg, kg )
                                  + m_relaxation.P * 
                                    ( bP 
-                                   - m_fvCoeffs.Cont.AU[X][sCU::cCoupled](ig) * bU * maskU
-                                   - m_fvCoeffs.Cont.AU[Y][sCV::cCoupled](jg) * bV * maskV
-                                   - m_fvCoeffs.Cont.AU[Z][sCW::cCoupled](kg) * bW * maskW
+                                   - cont_AUX[sCU::cCoupled](ig) * bU * maskU
+                                   - cont_AUY[sCV::cCoupled](jg) * bV * maskV
+                                   - cont_AUZ[sCW::cCoupled](kg) * bW * maskW
                                    ) * m_K(i, j, k);
 
         // Pressure  update
@@ -276,15 +300,15 @@ public:
 
         // Update U from momentum
         const floatType newU = ( 1.0f - m_relaxation.U[X]) * m_fieldsOld.U[X]( igU, jgU, kgU )
-                                + m_relaxation.U[X] * ( bU - m_fvCoeffs.Mom[X].AP[sUP::cCoupled](igU) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[X].diagCoeffInv(igU, jgU, kgU) );
+                                + m_relaxation.U[X] * ( bU - momX_AP[sUP::cCoupled](igU) * m_fields.P( ig, jg, kg ) * momX_AUpInv(igU, jgU, kgU) );
         
         // Update V from momentum
         const floatType newV = ( 1.0f -m_relaxation.U[Y] ) * m_fieldsOld.U[Y]( igV, jgV, kgV )
-                                + m_relaxation.U[Y] * ( bV - m_fvCoeffs.Mom[Y].AP[sVP::cCoupled](jgV) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Y].diagCoeffInv(igV, jgV, kgV) );
+                                + m_relaxation.U[Y] * ( bV - momY_AP[sVP::cCoupled](jgV) * m_fields.P( ig, jg, kg ) * momY_AUpInv(igV, jgV, kgV) );
         
         // Update W from momentum
         const floatType newW = ( 1.0f - m_relaxation.U[Z]) * m_fieldsOld.U[Z]( igW, jgW, kgW ) 
-                                + m_relaxation.U[Z] * ( bW - m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kgW) * m_fields.P( ig, jg, kg ) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW) );
+                                + m_relaxation.U[Z] * ( bW - momZ_AP[sWP::cCoupled](kgW) * m_fields.P( ig, jg, kg ) * momZ_AUpInv(igW, jgW, kgW) );
 
         // Momentum update
         m_fields.U[X]( igU, jgU, kgU ) = (1.0f - maskP * maskU ) * m_fields.U[X]( igU, jgU, kgU )  +  maskP * maskU * newU;
@@ -339,10 +363,10 @@ public:
                                     maskV = m_mask(igV, jgV, kgV),
                                     maskW = m_mask(igW, jgW, kgW);
 
-                    m_K(i, j, k) = m_fvCoeffs.Cont.AP[p](G(i, j, k))
-                                 - m_fvCoeffs.Cont.AU[X][sCU::cCoupled](G(i)) * m_fvCoeffs.Mom[X].AP[sUP::cCoupled](igU) * m_fvCoeffs.Mom[X].diagCoeffInv(igU, jgU, kgU) * maskU
-                                 - m_fvCoeffs.Cont.AU[Y][sCV::cCoupled](G(j)) * m_fvCoeffs.Mom[Y].AP[sVP::cCoupled](jgV) * m_fvCoeffs.Mom[Y].diagCoeffInv(igV, jgV, kgV) * maskV
-                                 - m_fvCoeffs.Cont.AU[Z][sCW::cCoupled](G(k)) * m_fvCoeffs.Mom[Z].AP[sWP::cCoupled](kgW) * m_fvCoeffs.Mom[Z].diagCoeffInv(igW, jgW, kgW) * maskW;
+                    m_K(i, j, k) = cont_AP[p](G(i, j, k))
+                                 - cont_AUX[sCU::cCoupled](G(i)) * momX_AP[sUP::cCoupled](igU) * momX_AUpInv(igU, jgU, kgU) * maskU
+                                 - cont_AUY[sCV::cCoupled](G(j)) * momY_AP[sVP::cCoupled](jgV) * momY_AUpInv(igV, jgV, kgV) * maskV
+                                 - cont_AUZ[sCW::cCoupled](G(k)) * momZ_AP[sWP::cCoupled](kgW) * momZ_AUpInv(igW, jgW, kgW) * maskW;
                     if ( m_K(i, j, k) == 0.0f ) {
                         m_K(i, j, k) = 0.0f;
                     } else {
@@ -359,7 +383,21 @@ private:
     FieldData<Tensor3D> &m_fields;
     const FieldData<Tensor3D> &m_fieldsOld;
     const Tensor3D &m_mask;
-    const FVCoefficients &m_fvCoeffs;
+    // const FVCoefficients &m_fvCoeffs;
+    const EnumVector<TransportCoefficients, Tensor3D> &momX_AU,
+                                                      &momY_AU,
+                                                      &momZ_AU,
+                                                      &cont_AP;
+    const EnumVector<TransportCoefficients, Tensor1D> &momX_AP, 
+                                                      &momY_AP,
+                                                      &momZ_AP,
+                                                      &cont_AUX, 
+                                                      &cont_AUY, 
+                                                      &cont_AUZ;
+    const Tensor3D &momX_B, &momX_F, &momX_AUpInv,
+                   &momY_B, &momY_F, &momY_AUpInv,
+                   &momZ_B, &momZ_F, &momZ_AUpInv,
+                   &cont_B, &cont_F;
     const intType m_ni, m_nj, m_nk;
     Tensor3D m_K;
     const FieldData<floatType> m_relaxation;
