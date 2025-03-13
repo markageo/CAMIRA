@@ -68,11 +68,7 @@ void SetStencil( GridLevelData<MI, LI> &gridLevelData,
 template< MomentumInterpolation MI, Linearisation LI >
 void SetFineGridEquations( GridLevelData<MI, LI> &gridLevelData )
 {
-    SetStencil<MI, LI>(gridLevelData, gridLevelData.fields);
-
-    // ApplyImplicitRelaxation( gridLevelData.fvCoeffs,
-    //                          gridLevelData.fieldsOld, 
-    //                          gridLevelData.mesh);    
+    SetStencil<MI, LI>(gridLevelData, gridLevelData.fields); 
 }
 
 
@@ -99,10 +95,6 @@ void SetCoarseGridEquations( GridLevelData<MI, LI> &gridLevelData,
         gld.fvCoeffs.Mom[axis].F += coarseGridRightHandSide.U[axis];
     } );
     gld.fvCoeffs.Cont.F += coarseGridRightHandSide.P;
-
-    // ApplyImplicitRelaxation( gridLevelData.fvCoeffs,
-    //                          gridLevelData.fieldsOld, 
-    //                          gridLevelData.mesh );    
 }
 
 
@@ -222,8 +214,8 @@ OperationStatus SmoothWithFixedIterations( GridLevelData<MI, LI> &gridLevelData,
 template< MomentumInterpolation MI, Linearisation LI >
 void RestrictLevel( std::vector< GridLevelData<MI, LI> > &mgLevels,
                     const FieldData<Tensor3D> &residuals,
-                    const intType fineLevel,
-                    const intType coarseLevel )
+                    const size_t fineLevel,
+                    const size_t coarseLevel )
 {
     mgLevels[coarseLevel].residualsRestricted = RestrictFields( residuals                  , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
     mgLevels[coarseLevel].fieldsRestricted    = RestrictFields( mgLevels[fineLevel].fields , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
@@ -241,7 +233,7 @@ void RestrictLevel( std::vector< GridLevelData<MI, LI> > &mgLevels,
 
 template< MultigridCycleType MGCycle, MomentumInterpolation MI, Linearisation LI >
 void Cycle( std::vector< GridLevelData<MI, LI> > &mgLevels,
-            const intType level,
+            const size_t level,
             const MultigridEquation mgEquationType,
             const InputData::MultigridSettings &mgSettings )
 {
@@ -342,7 +334,7 @@ template< MomentumInterpolation MI, Linearisation LI >
 void FMGInitialise( std::vector< GridLevelData<MI, LI> > &mgLevels,
                     const InputData::MultigridSettings &mgSettings)
 {
-    intType coarsestLevel = mgLevels.size() - 1;
+    size_t coarsestLevel = mgLevels.size() - 1;
 
     // Solve coarsest level
     OperationStatus smootherStatus = Smooth<MI, LI>( mgLevels[coarsestLevel], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::NoTauCorrection );
@@ -356,7 +348,7 @@ void FMGInitialise( std::vector< GridLevelData<MI, LI> > &mgLevels,
     }
     
 
-    for ( intType level = coarsestLevel-1; level != 0; level-- ) {
+    for ( size_t level = coarsestLevel-1; level != 0; level-- ) {
 
         // VCycle
         Cycle<MultigridCycleType::V, MI, LI>( mgLevels, level, MultigridEquation::NoTauCorrection, mgSettings );

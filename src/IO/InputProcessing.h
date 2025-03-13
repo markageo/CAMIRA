@@ -111,8 +111,8 @@ struct InputData
 
     struct MultigridSettings {
         MultigridCycleType cycle;
-        intType maxCoarseLevels,
-                preSmoothingIterations,
+        size_t maxCoarseLevels; // Make size_t because this is used with std::vector
+        intType preSmoothingIterations,
                 postSmoothingIterations,
                 maxCoarseGridIterations,
                 fineGridIterations;
