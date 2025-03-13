@@ -25,6 +25,7 @@ class LinearSolverInterface
     public:
         virtual void Solve() = 0;
         virtual void UpdateState() = 0;
+        virtual ~LinearSolverInterface() {};
 };
 
 
