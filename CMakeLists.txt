@@ -29,7 +29,7 @@ target_compile_options(warning_flags INTERFACE "-Wall;-Wextra;-Wshadow;-Wunused;
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")
 set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=address")
 
-if ( CMAKE_BUILD_TYPE STREQUAL "DEBUG" )
+if ( CMAKE_BUILD_TYPE STREQUAL "Debug" )
 	message ( WARNING "THE BUILD TYPE IS DEBUG. ADDRESS SANITIZER WILL BE USED" )
 endif()
 

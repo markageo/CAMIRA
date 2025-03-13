@@ -779,7 +779,7 @@ namespace
         }
 
         // Max coarse levels
-        inputData.multigridSettings.maxCoarseLevels = multigridTree.get<intType>( "maxCoarseLevels" );
+        inputData.multigridSettings.maxCoarseLevels = multigridTree.get<size_t>( "maxCoarseLevels" );
 
         // Max iterations
         inputData.multigridSettings.preSmoothingIterations  = multigridTree.get<intType>( "preSmoothingIterations" );

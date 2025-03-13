@@ -30,7 +30,7 @@ void SetMGLevels( std::vector< GridLevelData<MI, LI> > &mgLevels,
     // Reserve data. The linear solver holds references to the fields which can break if the vector is resized
     mgLevels.reserve( mgSettings.maxCoarseLevels + 1 );
 
-    for ( intType level = 0; level != mgSettings.maxCoarseLevels + 1; level++ ) {
+    for ( size_t level = 0; level != mgSettings.maxCoarseLevels + 1; level++ ) {
 
         if ( level == 0 ) {
             mgLevels.emplace_back();
@@ -344,9 +344,9 @@ Tensor3D ProlongateField( const Tensor3D &coarseField,
 
 
 FieldData<Tensor3D> RestrictFields( const FieldData<Tensor3D> fields,
-                                   const Mesh &fineMesh,
-                                   const Mesh &coarseMesh,
-                                   const Tensor3D &mask )
+                                    const Mesh &fineMesh,
+                                    const Mesh &coarseMesh,
+                                    const Tensor3D &mask )
 {
     FieldData<Tensor3D> fieldsRestricted;
     ForAllFieldData( [&] (intType f) {

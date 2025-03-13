@@ -24,7 +24,7 @@ template< MomentumInterpolation MI, Linearisation LI >
 struct GridLevelData
 {
     
-    intType level;
+    size_t level;
     bool isCoarsestLevel, isFinestLevel;
     Mesh mesh;
     FieldData<Tensor3D> fields,                 // Solution at latest iteration (steady) or timestep t (transient)
