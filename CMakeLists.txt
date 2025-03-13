@@ -18,7 +18,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Add compiler flags
 add_library(compiler_flags INTERFACE)
 target_compile_features(compiler_flags INTERFACE cxx_std_20)
-target_compile_options(compiler_flags INTERFACE "-std=c++2a;-march=native")
+target_compile_options(compiler_flags INTERFACE "-std=c++2a;-march=native;-mno-avx512f")
 
 add_library(warning_flags INTERFACE)
 target_compile_features(warning_flags INTERFACE cxx_std_20)
