@@ -25,7 +25,7 @@ void LinearInterpInteriorFaceVelocitiesWithMWI( EnumVector<Axis, Tensor3D> &face
     Tensor3D &faceVel = faceVelocities[ axis ];
     const Tensor3D &cellVel = cellFields.U[ velocityComponent ];
     const Tensor3D &cellPressure = cellFields.P;
-    const Tensor3D &momentumDiagCoeffInv = fvCoeffs.Mom[axis].diagCoeffInv;
+    const Tensor3D &momentumDiagCoeffInv = fvCoeffs.Mom.coeffs[axis].diagCoeffInv;
     const std::array<Tensor1D, 4> &mwiSparseCoeffs  = fvCoeffs.Cont.mwiSparseCoeffs[axis];
     const std::array<Tensor1D, 2> &mwiCompactCoeffs = fvCoeffs.Cont.mwiCompactCoeffs[axis];
 
@@ -44,7 +44,7 @@ void LinearInterpInteriorFaceVelocitiesWithMWI( EnumVector<Axis, Tensor3D> &face
                 LoLoIndex[axis] -= 2;
                 HiHiIndex[axis] += 1;
 
-                faceVel(idx) = FaceInterpolatedVelocity<AdvectionSchemes::Central, +1>( cellVel, fvCoeffs.Mom[axis], mesh, axis, HiIndex, LoIndex );
+                faceVel(idx) = FaceInterpolatedVelocity<AdvectionSchemes::Central, +1>( cellVel, fvCoeffs.Mom, mesh, axis, HiIndex, LoIndex );
 
                 // Add MWI correction
                 floatType d = 0.5f * ( momentumDiagCoeffInv( G(HiIndex) )  +  momentumDiagCoeffInv( G(LoIndex) ) ); // SHOULD USE LINEAR INTERPOLATION COEFFICIENTS HERE
@@ -118,13 +118,13 @@ void AdvectedInteriorFaceVelocities( EnumVector<Axis, Tensor3D> &faceVelocities,
                 loIndex[axis] -= 1;
 
                 if constexpr ( advectionScheme == AdvectionSchemes::Central ) { // Avoid the flux direction check
-                    faceVel(i, j, k) = FaceInterpolatedVelocity<advectionScheme, +1>( cellVelocities, fvCoeffs.Mom[axis], mesh, axis, hiIndex, loIndex );
+                    faceVel(i, j, k) = FaceInterpolatedVelocity<advectionScheme, +1>( cellVelocities, fvCoeffs.Mom, mesh, axis, hiIndex, loIndex );
                 } else {
 
                     if ( faceFluxes[axis](i, j, k) >= 0 ) {
-                        faceVel(i, j, k) = FaceInterpolatedVelocity<advectionScheme, +1>( cellVelocities, fvCoeffs.Mom[axis], mesh, axis, hiIndex, loIndex );
+                        faceVel(i, j, k) = FaceInterpolatedVelocity<advectionScheme, +1>( cellVelocities, fvCoeffs.Mom, mesh, axis, hiIndex, loIndex );
                     } else {
-                        faceVel(i, j, k) = FaceInterpolatedVelocity<advectionScheme, -1>( cellVelocities, fvCoeffs.Mom[axis], mesh, axis, hiIndex, loIndex );;
+                        faceVel(i, j, k) = FaceInterpolatedVelocity<advectionScheme, -1>( cellVelocities, fvCoeffs.Mom, mesh, axis, hiIndex, loIndex );;
                     }
 
                 }
@@ -225,7 +225,7 @@ void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector< Axis, Tensor3D 
     // Internal faces
     EnumFor<Axis>( [&] (Axis::ENUMDATA velocityComponent) {
 
-        switch ( fvCoeffs.Mom[velocityComponent].advectionScheme ) {
+        switch ( fvCoeffs.Mom.advectionScheme ) {
 
             case Upwind:
                 EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
@@ -412,15 +412,14 @@ void SetIBFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> >
                     EnumFor<Axis>( [&] (Axis::ENUMDATA velocityComponent) {
 
                         auto &U = fields.U[velocityComponent];
-                        auto &momentumEquation = fvCoeffs.Mom[velocityComponent];
                         floatType ghostCellValue = sourceTermData.ghostCellValues.U[velocityComponent];
 
                         if ( faceFluxes[faceNormal](faceIndex_a) >= 0.0f ) {
-                            faceAdvectedVelocities[velocityComponent][faceNormal](faceIndex_a) = ( sourceTermData.directionIndex == +1 ) ? FaceInterpolatedVelocity<advectionScheme, +1, +1>(U, momentumEquation, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue):
-                                                                                                                                        FaceInterpolatedVelocity<advectionScheme, +1, -1>(U, momentumEquation, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue);
+                            faceAdvectedVelocities[velocityComponent][faceNormal](faceIndex_a) = ( sourceTermData.directionIndex == +1 ) ? FaceInterpolatedVelocity<advectionScheme, +1, +1>(U, fvCoeffs.Mom, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue):
+                                                                                                                                           FaceInterpolatedVelocity<advectionScheme, +1, -1>(U, fvCoeffs.Mom, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue);
                         } else {
-                            faceAdvectedVelocities[velocityComponent][faceNormal](faceIndex_a) = ( sourceTermData.directionIndex == +1 ) ? FaceInterpolatedVelocity<advectionScheme, -1, +1>(U, momentumEquation, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue):
-                                                                                                                                        FaceInterpolatedVelocity<advectionScheme, -1, -1>(U, momentumEquation, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue);
+                            faceAdvectedVelocities[velocityComponent][faceNormal](faceIndex_a) = ( sourceTermData.directionIndex == +1 ) ? FaceInterpolatedVelocity<advectionScheme, -1, +1>(U, fvCoeffs.Mom, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue):
+                                                                                                                                           FaceInterpolatedVelocity<advectionScheme, -1, -1>(U, fvCoeffs.Mom, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue);
                         }
 
                     } );

@@ -11,7 +11,7 @@ template< AdvectionSchemes advectionScheme,
           intType          advectionDirection,  // +1 for flux in positive direciton, -1 for flux in negative direciton
           intType          ghostDirection = 0 > // +1 for ghost cell on positive side, -1 for ghost cell on negative side, 0 for no ghost cell
 floatType FaceInterpolatedVelocity( const Tensor3D &U,
-                                    const MomentumEquation &momentumEquation,
+                                    const MomentumEquations &momentumEquations,
                                     const Mesh &mesh,
                                     const Axis::ENUMDATA axis,
                                     const TensorIndex3D &hiIndex,
@@ -60,8 +60,8 @@ floatType FaceInterpolatedVelocity( const Tensor3D &U,
                 farVelocityValue = U( G(loloIndex) );
             }
 
-            advectedVelocity = momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * U( G(loIndex) ) 
-                             + momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * farVelocityValue;
+            advectedVelocity = momentumEquations.positiveFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * U( G(loIndex) ) 
+                             + momentumEquations.positiveFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * farVelocityValue;
 
         } else {
 
@@ -74,8 +74,8 @@ floatType FaceInterpolatedVelocity( const Tensor3D &U,
                 farVelocityValue = U( G(hihiIndex) );
             }
         
-            advectedVelocity = momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * U( G(hiIndex) ) 
-                             + momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * farVelocityValue;
+            advectedVelocity = momentumEquations.negativeFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * U( G(hiIndex) ) 
+                             + momentumEquations.negativeFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * farVelocityValue;
 
         }
 
@@ -95,8 +95,8 @@ floatType FaceInterpolatedVelocity( const Tensor3D &U,
             }
 
             advectedVelocity = U( G(loIndex) )
-                             + momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * ( U( G(hiIndex) ) - U( G(loIndex) ) )
-                             + momentumEquation.positiveFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * ( U( G(loIndex) ) - farVelocityValue );
+                             + momentumEquations.positiveFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * ( U( G(hiIndex) ) - U( G(loIndex) ) )
+                             + momentumEquations.positiveFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * ( U( G(loIndex) ) - farVelocityValue );
 
         } else {
 
@@ -110,8 +110,8 @@ floatType FaceInterpolatedVelocity( const Tensor3D &U,
             }
 
             advectedVelocity = U( G(hiIndex) )
-                             + momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * ( U( G(loIndex) ) - U( G(hiIndex) ) )
-                             + momentumEquation.negativeFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * ( U( G(hiIndex) ) - farVelocityValue);
+                             + momentumEquations.negativeFluxHiOrderAdvectionCoeffs.g1[axis]( fidx ) * ( U( G(loIndex) ) - U( G(hiIndex) ) )
+                             + momentumEquations.negativeFluxHiOrderAdvectionCoeffs.g2[axis]( fidx ) * ( U( G(hiIndex) ) - farVelocityValue);
         }
         
     }

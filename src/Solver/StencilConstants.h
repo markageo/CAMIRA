@@ -44,46 +44,46 @@ FieldData<Tensor2D> CalculatePlaneConstants( const intType k,
             intType ig{ G(i) }, jg{ G(j) };
 
             // U momentum
-            planeConstants.U[X](ig, jg) = fvCoeffs.Mom[X].F(ig, jg, kg)
-                                        - fvCoeffs.Mom[X].B(ig, jg, kg)
+            planeConstants.U[X](ig, jg) = fvCoeffs.Mom.coeffs[X].F(ig, jg, kg)
+                                        - fvCoeffs.Mom.coeffs[X].B(ig, jg, kg)
 
-                                        - fvCoeffs.Mom[X].AU[t](ig, jg, kg) * fields.U[X]( ig  , jg  , kg+1) 
-                                        - fvCoeffs.Mom[X].AU[b](ig, jg, kg) * fields.U[X]( ig  , jg  , kg-1);
+                                        - fvCoeffs.Mom.coeffs[X].AU[t](ig, jg, kg) * fields.U[X]( ig  , jg  , kg+1) 
+                                        - fvCoeffs.Mom.coeffs[X].AU[b](ig, jg, kg) * fields.U[X]( ig  , jg  , kg-1);
 
 
             // V momentum
-            planeConstants.U[Y](ig, jg) = fvCoeffs.Mom[Y].F(ig, jg, kg)
-                                        - fvCoeffs.Mom[Y].B(ig, jg, kg)
+            planeConstants.U[Y](ig, jg) = fvCoeffs.Mom.coeffs[Y].F(ig, jg, kg)
+                                        - fvCoeffs.Mom.coeffs[Y].B(ig, jg, kg)
 
-                                        - fvCoeffs.Mom[Y].AU[t](ig, jg, kg) * fields.U[Y]( ig  , jg  , kg+1) 
-                                        - fvCoeffs.Mom[Y].AU[b](ig, jg, kg) * fields.U[Y]( ig  , jg  , kg-1);
+                                        - fvCoeffs.Mom.coeffs[Y].AU[t](ig, jg, kg) * fields.U[Y]( ig  , jg  , kg+1) 
+                                        - fvCoeffs.Mom.coeffs[Y].AU[b](ig, jg, kg) * fields.U[Y]( ig  , jg  , kg-1);
                                         
 
             // W momentum 
-            planeConstants.U[Z](ig, jg) = fvCoeffs.Mom[Z].F(ig, jg, kgW)
-                                        - fvCoeffs.Mom[Z].B(ig, jg, kgW)
+            planeConstants.U[Z](ig, jg) = fvCoeffs.Mom.coeffs[Z].F(ig, jg, kgW)
+                                        - fvCoeffs.Mom.coeffs[Z].B(ig, jg, kgW)
                             
-                                        - fvCoeffs.Mom[Z].AU[t](ig, jg, kgW) * fields.U[Z]( ig  , jg  , kgW+1) 
-                                        - fvCoeffs.Mom[Z].AU[b](ig, jg, kgW) * fields.U[Z]( ig  , jg  , kgW-1)
+                                        - fvCoeffs.Mom.coeffs[Z].AU[t](ig, jg, kgW) * fields.U[Z]( ig  , jg  , kgW+1) 
+                                        - fvCoeffs.Mom.coeffs[Z].AU[b](ig, jg, kgW) * fields.U[Z]( ig  , jg  , kgW-1)
 
-                                        - fvCoeffs.Mom[Z].AP[sWP::cLeft ](kgW) * fields.P( ig, jg, kgW + sWP::iLeft ) 
-                                        - fvCoeffs.Mom[Z].AP[sWP::cRight](kgW) * fields.P( ig, jg, kgW + sWP::iRight);
+                                        - fvCoeffs.Mom.coeffs[Z].AP[sWP::cLeft ](kgW) * fields.P( ig, jg, kgW + sWP::iLeft ) 
+                                        - fvCoeffs.Mom.coeffs[Z].AP[sWP::cRight](kgW) * fields.P( ig, jg, kgW + sWP::iRight);
 
 
             // Continuity equation
             floatType pressureWideStencil = 0.0f;
             if constexpr ( MI == MomentumInterpolation::Implicit ) {
-                pressureWideStencil = - fvCoeffs.Cont.AP[tt](ig, jg, kg) * fields.P( ig  , jg  , kg+2) 
-                                      - fvCoeffs.Cont.AP[bb](ig, jg, kg) * fields.P( ig  , jg  , kg-2);
+                pressureWideStencil = - fvCoeffs.Cont.coeffs.AP[tt](ig, jg, kg) * fields.P( ig  , jg  , kg+2) 
+                                      - fvCoeffs.Cont.coeffs.AP[bb](ig, jg, kg) * fields.P( ig  , jg  , kg-2);
             }
-            planeConstants.P(ig, jg) = fvCoeffs.Cont.F(ig, jg, kg)
-                                     - fvCoeffs.Cont.B(ig, jg, kg)
+            planeConstants.P(ig, jg) = fvCoeffs.Cont.coeffs.F(ig, jg, kg)
+                                     - fvCoeffs.Cont.coeffs.B(ig, jg, kg)
 
-                                     - fvCoeffs.Cont.AU[Z][sCW::cLeft ](kg) * fields.U[Z]( ig, jg, kg + sCW::iLeft )
-                                     - fvCoeffs.Cont.AU[Z][sCW::cRight](kg) * fields.U[Z]( ig, jg, kg + sCW::iRight)
+                                     - fvCoeffs.Cont.coeffs.AU[Z][sCW::cLeft ](kg) * fields.U[Z]( ig, jg, kg + sCW::iLeft )
+                                     - fvCoeffs.Cont.coeffs.AU[Z][sCW::cRight](kg) * fields.U[Z]( ig, jg, kg + sCW::iRight)
 
-                                     - fvCoeffs.Cont.AP[t](ig, jg, kg) * fields.P( ig  , jg  , kg+1) 
-                                     - fvCoeffs.Cont.AP[b](ig, jg, kg) * fields.P( ig  , jg  , kg-1)
+                                     - fvCoeffs.Cont.coeffs.AP[t](ig, jg, kg) * fields.P( ig  , jg  , kg+1) 
+                                     - fvCoeffs.Cont.coeffs.AP[b](ig, jg, kg) * fields.P( ig  , jg  , kg-1)
     
                                      + pressureWideStencil;
             
@@ -133,42 +133,42 @@ FieldData<Tensor1D> CalculateLineConstants( const intType j,
         // U momentum
         lineConstants.U[X](ig) = planeConstants.U[X](ig, jg)
                                 + ( 
-                                   - fvCoeffs.Mom[X].AU[n](ig, jg, kg) * fields.U[X]( ig  , jg+1, kg  )
-                                   - fvCoeffs.Mom[X].AU[s](ig, jg, kg) * fields.U[X]( ig  , jg-1, kg  )
+                                   - fvCoeffs.Mom.coeffs[X].AU[n](ig, jg, kg) * fields.U[X]( ig  , jg+1, kg  )
+                                   - fvCoeffs.Mom.coeffs[X].AU[s](ig, jg, kg) * fields.U[X]( ig  , jg-1, kg  )
                                   );
 
         // V momentum
         lineConstants.U[Y](ig) = planeConstants.U[Y](ig, jgV)
                                + (
-                                  - fvCoeffs.Mom[Y].AU[n](ig, jgV, kgV) * fields.U[Y]( ig  , jgV+1, kgV  )  
-                                  - fvCoeffs.Mom[Y].AU[s](ig, jgV, kgV) * fields.U[Y]( ig  , jgV-1, kgV  ) 
+                                  - fvCoeffs.Mom.coeffs[Y].AU[n](ig, jgV, kgV) * fields.U[Y]( ig  , jgV+1, kgV  )  
+                                  - fvCoeffs.Mom.coeffs[Y].AU[s](ig, jgV, kgV) * fields.U[Y]( ig  , jgV-1, kgV  ) 
 
-                                  - fvCoeffs.Mom[Y].AP[sVP::cLeft ](jgV) * fields.P( ig, jgV + sVP::iLeft , kgV)
-                                  - fvCoeffs.Mom[Y].AP[sVP::cRight](jgV) * fields.P( ig, jgV + sVP::iRight, kgV)
+                                  - fvCoeffs.Mom.coeffs[Y].AP[sVP::cLeft ](jgV) * fields.P( ig, jgV + sVP::iLeft , kgV)
+                                  - fvCoeffs.Mom.coeffs[Y].AP[sVP::cRight](jgV) * fields.P( ig, jgV + sVP::iRight, kgV)
                                   
                                  );
 
         // W momentum
         lineConstants.U[Z](ig) = planeConstants.U[Z](ig, jgW)
                                 + ( 
-                                   - fvCoeffs.Mom[Z].AU[n](ig, jgW, kgW) * fields.U[Z]( ig  , jgW+1, kgW  ) 
-                                   - fvCoeffs.Mom[Z].AU[s](ig, jgW, kgW) * fields.U[Z]( ig  , jgW-1, kgW  ) 
+                                   - fvCoeffs.Mom.coeffs[Z].AU[n](ig, jgW, kgW) * fields.U[Z]( ig  , jgW+1, kgW  ) 
+                                   - fvCoeffs.Mom.coeffs[Z].AU[s](ig, jgW, kgW) * fields.U[Z]( ig  , jgW-1, kgW  ) 
                                   );
 
         // Continuity equation
         floatType pressureWideStencil = 0.0f;
         if constexpr ( MI == MomentumInterpolation::Implicit ) {
-            pressureWideStencil = - fvCoeffs.Cont.AP[nn](ig, jg, kg) * fields.P( ig  , jg+2, kg  )
-                                  - fvCoeffs.Cont.AP[ss](ig, jg, kg) * fields.P( ig  , jg-2, kg  );
+            pressureWideStencil = - fvCoeffs.Cont.coeffs.AP[nn](ig, jg, kg) * fields.P( ig  , jg+2, kg  )
+                                  - fvCoeffs.Cont.coeffs.AP[ss](ig, jg, kg) * fields.P( ig  , jg-2, kg  );
         }
 
         lineConstants.P(ig) = planeConstants.P(ig, jg)
 
-                              - fvCoeffs.Cont.AU[Y][sCV::cLeft ](jg) * fields.U[Y]( ig, jg + sCV::iLeft , kg)
-                              - fvCoeffs.Cont.AU[Y][sCV::cRight](jg) * fields.U[Y]( ig, jg + sCV::iRight, kg)
+                              - fvCoeffs.Cont.coeffs.AU[Y][sCV::cLeft ](jg) * fields.U[Y]( ig, jg + sCV::iLeft , kg)
+                              - fvCoeffs.Cont.coeffs.AU[Y][sCV::cRight](jg) * fields.U[Y]( ig, jg + sCV::iRight, kg)
 
-                              - fvCoeffs.Cont.AP[n](ig, jg, kg) * fields.P( ig  , jg+1, kg  ) 
-                              - fvCoeffs.Cont.AP[s](ig, jg, kg) * fields.P( ig  , jg-1, kg  )
+                              - fvCoeffs.Cont.coeffs.AP[n](ig, jg, kg) * fields.P( ig  , jg+1, kg  ) 
+                              - fvCoeffs.Cont.coeffs.AP[s](ig, jg, kg) * fields.P( ig  , jg-1, kg  )
                                 
                               + pressureWideStencil;
 
