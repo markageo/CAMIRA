@@ -326,11 +326,11 @@ void BoundaryAdvectionCoefficients( MomentumEquations &momentumEquations,
 
                 // Lo side boundary
                 AU[p   ](G(loCellIndex)) -= faceFluxes[normal](loFaceIndex) 
-                                          * ( 1.0f - mesh.interpFactors[normal]( loFaceIndex[normal] ) ) 
+                                          * mesh.interpFactors[normal]( loFaceIndex[normal] ) 
                                           * mesh.cellLengthsInv[normal]( loCellIndex[normal] );
 
                 AU[west](G(loCellIndex)) -= faceFluxes[normal](loFaceIndex) 
-                                          * mesh.interpFactors[normal]( loFaceIndex[normal] ) 
+                                          * ( 1.0f - mesh.interpFactors[normal]( loFaceIndex[normal] ) ) 
                                           * mesh.cellLengthsInv[normal]( loCellIndex[normal] );
 
             }
