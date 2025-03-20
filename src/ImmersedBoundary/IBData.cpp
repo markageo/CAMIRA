@@ -390,19 +390,20 @@ IBData CreateImmersedBoundaryData( const InputData &inputData,
 
     IBData ibData;
 
+    // Create the initial mask. Ghost cells at domain boundaries should be masked out.
+    const TensorIndex3D offsets = {nGhost, nGhost, nGhost},
+                        extents = {mesh.nCells[0], mesh.nCells[1], mesh.nCells[2]};
+    ibData.mask = Tensor3D( mesh.nCells[X] + 2*CFD::nGhost, mesh.nCells[Y] + 2*CFD::nGhost, mesh.nCells[Z] + 2*CFD::nGhost ).setConstant( CellType::Solid );
+    ibData.mask.slice(offsets, extents) = ibData.mask.slice(offsets, extents).constant( CellType::Fluid );
+
     // Leave ibData empty if there is no geometry
-    if ( !inputData.hasIBGeometry ) {
-        ibData.mask = Tensor3D( mesh.nCells[X] + 2*CFD::nGhost, mesh.nCells[Y] + 2*CFD::nGhost, mesh.nCells[Z] + 2*CFD::nGhost ).setConstant( CellType::Fluid );
+    if ( !inputData.hasIBGeometry )
         return ibData;
-    }
 
     Polyhedron geometry = MakeGeometry( inputData );
 
     // Separate the geometry into connected components
     std::vector<Polyhedron> polyVector = SeparatePolyhedron( geometry );
-
-    // Initialise the global mask for all geometries
-    ibData.mask = Tensor3D( mesh.nCells[X] + 2*CFD::nGhost, mesh.nCells[Y] + 2*CFD::nGhost, mesh.nCells[Z] + 2*CFD::nGhost ).setConstant( CellType::Fluid );
 
     // Set the IBcells for each one
     for ( const Polyhedron &poly : polyVector ) {
