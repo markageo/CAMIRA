@@ -104,24 +104,24 @@ Solver {
 
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = QUICK
+        advectionScheme         = upwind
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
         
-        maxOuterIterations = 5
-        maxContinuityOuterResidual = 1e-20
+        maxOuterIterations = 100
+        maxContinuityOuterResidual = 1e-8
         maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
 
     }
     
     Smoother {
 
-        type = nestedLineSymmetric
+        type = domainSymmetric
         maxIterations = 1
-        maxResiduals = 0
+        maxResiduals = 1e-3
 
         planeSweepDirection = +z
-        lineSweepDirection = +x
+        lineSweepDirection = +y
 
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
@@ -137,7 +137,7 @@ Solver {
         fineGridIterations   = 2
 
         maxCoarseGridIterations = 250
-        maxCoarseGridResiduals  = 0
+        maxCoarseGridResiduals  = 1e-6
 
     }
 
