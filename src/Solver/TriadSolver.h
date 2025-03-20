@@ -11,6 +11,8 @@
 #include "../CoordinateTransformations/AxisTransformationFunctions.h"
 #include "../FiniteVolume/FiniteVolume.h"
 
+#include "../IO/ArrayIO.h"
+
 
 namespace CFD
 {
@@ -289,9 +291,9 @@ public:
         const floatType newP = ( 1 - m_relaxation.P ) * m_fields.P( ig, jg, kg )
                                  + m_relaxation.P * 
                                    ( bP 
-                                   - cont_AUX[sCU::cCoupled](ig) * bU * maskU
-                                   - cont_AUY[sCV::cCoupled](jg) * bV * maskV
-                                   - cont_AUZ[sCW::cCoupled](kg) * bW * maskW
+                                   - cont_AUX[sCU::cCoupled](ig) * ( bU * maskU  +  (1.0f - maskU) * m_fields.U[X]( igU, jgU, kgU ) )   // This masking accounts for IB and ghost cells
+                                   - cont_AUY[sCV::cCoupled](jg) * ( bV * maskV  +  (1.0f - maskV) * m_fields.U[Y]( igV, jgV, kgV ) )
+                                   - cont_AUZ[sCW::cCoupled](kg) * ( bW * maskW  +  (1.0f - maskW) * m_fields.U[Z]( igW, jgW, kgW ) )
                                    ) * m_K(i, j, k);
 
         // Pressure  update
