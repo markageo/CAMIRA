@@ -1214,15 +1214,15 @@ void MomentumIBSourceDeferredCorrection( MomentumEquations &momentumEquations,
 
         // Remove the deferred correction term
         floatType ibSource = static_cast<floatType>( sourceTermData.directionIndex ) 
-                        * momentumEquations.advectionBlendingFactor 
-                        * faceFluxes[faceNormal]( faceIndex )
-                        * ( highOrderAdvectedVelocity - upwindAdvectedVelocity )
-                        * mesh.cellLengthsInv[faceNormal]( cellIndex[faceNormal] );
+                           * momentumEquations.advectionBlendingFactor 
+                           * faceFluxes[faceNormal]( faceIndex )
+                           * ( highOrderAdvectedVelocity - upwindAdvectedVelocity )
+                           * mesh.cellLengthsInv[faceNormal]( cellIndex[faceNormal] );
 
 
         // Need to add effect of ghost cell for face one in from boundary
         constexpr bool hasWideAdvectionStencil = ( advectionScheme == AdvectionSchemes::SOU   ) ||
-                                                ( advectionScheme == AdvectionSchemes::QUICK );
+                                                 ( advectionScheme == AdvectionSchemes::QUICK );
         if constexpr ( hasWideAdvectionStencil ) {
 
             TensorIndex3D faceIndex_a = faceIndex;
@@ -1241,12 +1241,12 @@ void MomentumIBSourceDeferredCorrection( MomentumEquations &momentumEquations,
             if ( faceFluxes[faceNormal]( faceIndex ) >= 0.0f ) {
                 oldHighOrderAdvectedVelocity       = FaceInterpolatedVelocity<advectionScheme, +1>(U, momentumEquations, mesh, faceNormal, hiIndex_a, loIndex_a);
                 correctedHighOrderAdvectedVelocity = ( sourceTermData.directionIndex == +1 ) ? FaceInterpolatedVelocity<advectionScheme, +1, +1>(U, momentumEquations, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue):
-                                                                                            FaceInterpolatedVelocity<advectionScheme, +1, -1>(U, momentumEquations, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue);
+                                                                                               FaceInterpolatedVelocity<advectionScheme, +1, -1>(U, momentumEquations, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue);
                 
             } else {
                 oldHighOrderAdvectedVelocity       = FaceInterpolatedVelocity<advectionScheme, -1>(U, momentumEquations, mesh, faceNormal, hiIndex_a, loIndex_a);
                 correctedHighOrderAdvectedVelocity = ( sourceTermData.directionIndex == +1 ) ? FaceInterpolatedVelocity<advectionScheme, -1, +1>(U, momentumEquations, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue):
-                                                                                            FaceInterpolatedVelocity<advectionScheme, -1, -1>(U, momentumEquations, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue);
+                                                                                               FaceInterpolatedVelocity<advectionScheme, -1, -1>(U, momentumEquations, mesh, faceNormal, hiIndex_a, loIndex_a, ghostCellValue);
             }
 
 

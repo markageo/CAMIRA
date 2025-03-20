@@ -117,7 +117,7 @@ Solver {
     Smoother {
 
         type = domainSymmetric
-        maxIterations = 1
+        maxIterations = 3
         maxResiduals = 1e-3
 
         planeSweepDirection = +z

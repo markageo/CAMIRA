@@ -128,11 +128,11 @@ private:
         // Triad starting on lo side
         for ( intType k = 0; k != m_nk; k++ ) {
 
-            // FieldData<Tensor2D> planeConstants = CalculatePlaneConstants<TC::t, MI, LI>(k, m_fvCoeffs, m_fields);
+            // FieldData<Tensor2D> planeConstants = CalculatePlaneConstants<TC::t, MI >(k, m_fvCoeffs, m_fields);
 
             for ( intType j = 0; j != m_nj; j++ ) {
 
-                // FieldData<Tensor1D> lineConstants = CalculateLineConstants<TC::n, TC::t, MI, LI>(j, k, planeConstants, m_fvCoeffs, m_fields);
+                // FieldData<Tensor1D> lineConstants = CalculateLineConstants<TC::n, TC::t, MI >(j, k, planeConstants, m_fvCoeffs, m_fields);
 
                 for ( intType i = 0; i != m_ni; i++ ) {
 
@@ -209,9 +209,13 @@ public:
                                const FieldData<Tensor3D> &fieldsOld,
                                const Tensor3D &mask,
                                const FVCoefficients &fvCoeffs, 
+                               const Mesh &mesh,
+                               const BoundaryConditionData &bcData,
                                const InputData::SmootherSettings &smootherSettings) : 
                     m_fields( fields ),
                     m_fieldsOld( fieldsOld ),
+                    m_mesh( mesh ),
+                    m_bcData( bcData ),
                     m_maxIterations( smootherSettings.maxIterations ),
                     m_maxResiduals( smootherSettings.maxResiduals ),
                     m_oldPlane( Tensor2D( m_fields.P.dimension(A::X), m_fields.P.dimension(A::Y) ) ),
@@ -272,6 +276,8 @@ private:
 
     FieldData<Tensor3D> &m_fields;
     const FieldData<Tensor3D> &m_fieldsOld;
+    const Mesh &m_mesh;
+    const BoundaryConditionData &m_bcData;
     const intType m_maxIterations;
     const FieldData<floatType> m_maxResiduals;
 
@@ -291,13 +297,19 @@ private:
     // For 3D simulations
     void Sweep3D()
     {
+        SetGhostCells(m_fields, m_mesh, m_bcData);
+
         for (intType k = 0; k != m_nk - 1; k++) { // Forward sweep
             Update(m_planeSolverTop, k);
         }
 
+        SetGhostCells(m_fields, m_mesh, m_bcData);
+
         for (intType k = m_nk - 1; k != 0; k--) { // Backward sweep
             Update(m_planeSolverBottom, k);
         }
+
+        SetGhostCells(m_fields, m_mesh, m_bcData);
     }
 
     void UpdateState3D()
