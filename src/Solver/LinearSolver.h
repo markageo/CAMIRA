@@ -12,6 +12,8 @@
 #include "../IO/InputProcessing.h"
 #include "../FiniteVolume/FiniteVolume.h"
 
+#include "../IO/ArrayIO.h"
+
 namespace CFD
 {
 
@@ -40,10 +42,14 @@ public:
                            const FieldData<Tensor3D> &fieldsOld,
                            const Tensor3D &mask,
                            const FVCoefficients &fvCoeffs, 
+                           const Mesh &mesh,
+                           const BoundaryConditionData &bcData,
                            const InputData::SmootherSettings &smootherSettings) : 
                     m_fields( fields ),
                     m_fieldsOld( fieldsOld ),
                     m_fvCoeffs( fvCoeffs ),
+                    m_mesh( mesh ),
+                    m_bcData( bcData ),
                     m_maxIterations( smootherSettings.maxIterations ),
                     m_maxResiduals( smootherSettings.maxResiduals ),
                     m_relaxation( smootherSettings.relaxation ),
@@ -99,6 +105,8 @@ private:
     FieldData<Tensor3D> &m_fields;
     const FieldData<Tensor3D> &m_fieldsOld;
     const FVCoefficients &m_fvCoeffs;
+    const Mesh &m_mesh;
+    const BoundaryConditionData &m_bcData;
     const intType m_maxIterations;
     const FieldData<floatType> m_maxResiduals;
     const FieldData<floatType> m_relaxation;
@@ -114,6 +122,9 @@ private:
     {
 
         TIC("Sweeping")
+        
+        SetGhostCells(m_fields, m_mesh, m_bcData);
+
         // Triad starting on lo side
         for ( intType k = 0; k != m_nk; k++ ) {
 
@@ -143,6 +154,7 @@ private:
             }
         }
 
+        SetGhostCells(m_fields, m_mesh, m_bcData);
 
         // Triad starting on hi side
         for ( intType k = m_nk-1; k != -1; k-- ) {
@@ -172,6 +184,8 @@ private:
                 }
             }
         }
+
+        SetGhostCells(m_fields, m_mesh, m_bcData);
 
         TOC()
     }
