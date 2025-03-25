@@ -79,7 +79,7 @@ public:
         for ( intType nIterations = 1 ; nIterations <= m_maxIterations; nIterations++ )
         {
             // Reset residuals
-            ForAllFieldData( [&] (intType f) { m_residuals[f] = 0.0f; });
+            ForAllFieldData( [&] (intType f) { m_residuals[f] = 1.0f; });
 
             // Sweep domain
             Sweep3D();
@@ -144,19 +144,19 @@ private:
 
                 for ( intType i = 0; i != m_ni; i++ ) {
 
-                    FieldData<floatType> oldValues;
-                    oldValues.P    = m_fields.P( G(i, j, k) );
-                    oldValues.U[0] = m_fields.U[0]( G(i+1, j  , k  ) );
-                    oldValues.U[1] = m_fields.U[1]( G(i  , j+1, k  ) );
-                    oldValues.U[2] = m_fields.U[2]( G(i  , j  , k+1) );
+                    // FieldData<floatType> oldValues;
+                    // oldValues.P    = m_fields.P( G(i, j, k) );
+                    // oldValues.U[0] = m_fields.U[0]( G(i+1, j  , k  ) );
+                    // oldValues.U[1] = m_fields.U[1]( G(i  , j+1, k  ) );
+                    // oldValues.U[2] = m_fields.U[2]( G(i  , j  , k+1) );
 
                     // m_triadSolverForward->UpdateTriad( i, j, k, lineConstants );
                     m_triadSolverForward->UpdateTriad( i, j, k );
 
-                    m_residuals.P    += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
-                    m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i+1, j  , k  ) ) );
-                    m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j+1, k  ) ) );
-                    m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k+1) ) );
+                    // m_residuals.P    += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+                    // m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i+1, j  , k  ) ) );
+                    // m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j+1, k  ) ) );
+                    // m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k+1) ) );
 
                 }
             }
@@ -175,19 +175,19 @@ private:
 
                 for ( intType i = m_ni-1; i != -1; i-- ) {
 
-                    FieldData<floatType> oldValues;
-                    oldValues.P    = m_fields.P( G(i, j, k) );
-                    oldValues.U[0] = m_fields.U[0]( G(i-1, j  , k  ) );
-                    oldValues.U[1] = m_fields.U[1]( G(i  , j-1, k  ) );
-                    oldValues.U[2] = m_fields.U[2]( G(i  , j  , k-1) );
+                    // FieldData<floatType> oldValues;
+                    // oldValues.P    = m_fields.P( G(i, j, k) );
+                    // oldValues.U[0] = m_fields.U[0]( G(i-1, j  , k  ) );
+                    // oldValues.U[1] = m_fields.U[1]( G(i  , j-1, k  ) );
+                    // oldValues.U[2] = m_fields.U[2]( G(i  , j  , k-1) );
 
                     // m_triadSolverBackward->UpdateTriad( i, j, k, lineConstants );
                     m_triadSolverBackward->UpdateTriad( i, j, k );
 
-                    m_residuals.P    += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
-                    m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
-                    m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
-                    m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
+                    // m_residuals.P    += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+                    // m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
+                    // m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
+                    // m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
 
                 }
             }
@@ -252,7 +252,7 @@ public:
         for ( intType nIterations = 1 ; nIterations <= m_maxIterations; nIterations++ )
         {
             // Reset residuals
-            ForAllFieldData( [&] (intType f) { m_residuals[f] = 0.0f; });
+            ForAllFieldData( [&] (intType f) { m_residuals[f] = 1.0f; });
 
             // Update plane
             (this->*SolutionUpdater)();
@@ -388,9 +388,8 @@ public:
                     m_maxResiduals( smootherSettings.maxResiduals ),
                     m_relaxation( smootherSettings.relaxation ),
 
-                    m_resource( camp::resources::Host() ),
-                    m_forwardColorSet( CreateForward3ColorSet( {1, fvCoeffs.nCells(1), fvCoeffs.nCells(2)}, m_resource ) ),
-                    m_reverseColorSet( CreateReverse3ColorSet( {1, fvCoeffs.nCells(1), fvCoeffs.nCells(2)}, m_resource ) ),
+                    m_forwardColorSet( CreateForward1DColourSet(m_fvCoeffs.nCells(2)) ),
+                    m_reverseColorSet( CreateReverse1DColourSet(m_fvCoeffs.nCells(2)) ),
 
                     m_nCells( fvCoeffs.nCells ),
                     m_nCellsPlane( fvCoeffs.nCells(1), fvCoeffs.nCells(2) )
@@ -408,7 +407,7 @@ public:
         for ( intType nIterations = 1 ; nIterations <= m_maxIterations; nIterations++ )
         {
             // Reset residuals
-            ForAllFieldData( [&] (intType f) { m_residuals[f] = 0.0f; });
+            ForAllFieldData( [&] (intType f) { m_residuals[f] = 1.0f; });
 
             // Sweep domain
             Sweep3D();
@@ -448,8 +447,7 @@ private:
     const FieldData<floatType> m_maxResiduals;
     const FieldData<floatType> m_relaxation;
 
-    camp::resources::Resource m_resource;
-    RAJA::TypedIndexSet< RAJA::TypedListSegment<intType> > m_forwardColorSet,
+    RAJA::TypedIndexSet< RAJA::TypedRangeStrideSegment<intType> > m_forwardColorSet,
                                                            m_reverseColorSet;
 
     std::unique_ptr<TriadSolver<TC::e, TC::n, TC::t, MI >> m_triadSolverForward;
@@ -466,106 +464,65 @@ private:
         using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_parallel_for_exec>;
 
         // For thread safe reductions
-        RAJA::MultiReduceSum< RAJA::omp_multi_reduce, floatType > residualReductions( FieldData<floatType>::nData, 0.0f );
-
-        TIC("Sweeping")
-
-        // RAJA::region<RAJA::omp_parallel_region>( [&] () {
+        // RAJA::MultiReduceSum< RAJA::omp_multi_reduce, floatType > residualReductions( FieldData<floatType>::nData, 0.0f );
 
         SetGhostCells(m_fields, m_mesh, m_bcData);
         
-        // Triad starting on lo side
-        RAJA::forall<colorPolicy>( m_forwardColorSet, [&] ( intType planeIdx ) {
+        // Forward plane sweep
+        TIC("Sweeping")
+        RAJA::forall<colorPolicy>( m_forwardColorSet, [&] ( intType k ) {
 
-            auto subs = Ind2Sub( Eigen::Array<intType, 2, 1>{m_nCells(1), m_nCells(2)}, planeIdx );
+            for ( intType j = 0; j != m_nCells(1); j++ ) {
+                for ( intType i = 0; i != m_nCells(0); i++ ) {
 
-            intType j = subs[0],
-                    k = subs[1];
-       
-            for ( intType i = 0; i != m_nCells(0); i++ ) {
+                    // FieldData<floatType> oldValues;
+                    // oldValues.P    = m_fields.P( G(i, j, k) );
+                    // oldValues.U[0] = m_fields.U[0]( G(i+1, j  , k  ) );
+                    // oldValues.U[1] = m_fields.U[1]( G(i  , j+1, k  ) );
+                    // oldValues.U[2] = m_fields.U[2]( G(i  , j  , k+1) );
 
-                FieldData<floatType> oldValues;
-                oldValues.P    = m_fields.P( G(i, j, k) );
-                oldValues.U[0] = m_fields.U[0]( G(i+1, j  , k  ) );
-                oldValues.U[1] = m_fields.U[1]( G(i  , j+1, k  ) );
-                oldValues.U[2] = m_fields.U[2]( G(i  , j  , k+1) );
+                    m_triadSolverForward->UpdateTriad( i, j, k );
 
-                m_triadSolverForward->UpdateTriad( i, j, k );
+                    // residualReductions[0] += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+                    // residualReductions[1] += abs( oldValues.U[0] - m_fields.U[0]( G(i+1, j  , k  ) ) );
+                    // residualReductions[2] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j+1, k  ) ) );
+                    // residualReductions[3] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k+1) ) );
 
-                residualReductions[0] += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
-                residualReductions[1] += abs( oldValues.U[0] - m_fields.U[0]( G(i+1, j  , k  ) ) );
-                residualReductions[2] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j+1, k  ) ) );
-                residualReductions[3] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k+1) ) );
-
-                // m_residuals.P += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
-                // m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i+1, j  , k  ) ) );
-                // m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j+1, k  ) ) );
-                // m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k+1) ) );
-
-            }
-
-            // SetGhostCells(m_fields, m_mesh, m_bcData);
-
-            for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
-
-                FieldData<floatType> oldValues;
-                oldValues.P    = m_fields.P( G(i, j, k) );
-                oldValues.U[0] = m_fields.U[0]( G(i-1, j  , k  ) );
-                oldValues.U[1] = m_fields.U[1]( G(i  , j-1, k  ) );
-                oldValues.U[2] = m_fields.U[2]( G(i  , j  , k-1) );
-
-                m_triadSolverBackward->UpdateTriad( i, j, k );
-
-                residualReductions[0] += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
-                residualReductions[1] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
-                residualReductions[2] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
-                residualReductions[3] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
-
-                // m_residuals.P += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
-                // m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
-                // m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
-                // m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
-                
+                }
             }
 
         } );
+        TOC()
 
         SetGhostCells(m_fields, m_mesh, m_bcData);
 
+        // Reverse plane sweep
+        TIC("Sweeping")
+        RAJA::forall<colorPolicy>( m_reverseColorSet, [&] ( intType k)  {
 
-        // // Triad starting on hi side
-        // RAJA::forall<colorPolicy>( m_reverseColorSet, [&] ( intType planeIdx)  {
+            for ( intType j = m_nCells(1)-1; j != -1; j-- ) {
+                for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
 
-        //     auto subs = Ind2Sub( Eigen::Array<intType, 2, 1>{m_nCells(1), m_nCells(2)}, planeIdx );
+                    // FieldData<floatType> oldValues;
+                    // oldValues.P    = m_fields.P( G(i, j, k) );
+                    // oldValues.U[0] = m_fields.U[0]( G(i-1, j  , k  ) );
+                    // oldValues.U[1] = m_fields.U[1]( G(i  , j-1, k  ) );
+                    // oldValues.U[2] = m_fields.U[2]( G(i  , j  , k-1) );
 
-        //     intType j = subs[0],
-        //             k = subs[1];
+                    m_triadSolverBackward->UpdateTriad( i, j, k );
 
-        //     for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
-
-        //         FieldData<floatType> oldValues;
-        //         oldValues.P    = m_fields.P( G(i, j, k) );
-        //         oldValues.U[0] = m_fields.U[0]( G(i-1, j  , k  ) );
-        //         oldValues.U[1] = m_fields.U[1]( G(i  , j-1, k  ) );
-        //         oldValues.U[2] = m_fields.U[2]( G(i  , j  , k-1) );
-
-        //         m_triadSolverBackward->UpdateTriad( i, j, k );
-
-        //         // residualReductions[0] += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
-        //         // residualReductions[1] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
-        //         // residualReductions[2] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
-        //         // residualReductions[3] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
-
-        //         m_residuals.P += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
-        //         m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
-        //         m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
-        //         m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
+                    // residualReductions[0] += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+                    // residualReductions[1] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
+                    // residualReductions[2] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
+                    // residualReductions[3] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
                 
-        //     }
+                }
+            }
 
-        // } );
-
+        } );
         TOC()
+
+        SetGhostCells(m_fields, m_mesh, m_bcData);
 
         // // Copy to residuals
         // m_residuals.P    = residualReductions[0].get();

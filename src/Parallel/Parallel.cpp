@@ -7,6 +7,42 @@
 namespace CFD
 {
 
+RAJA::TypedIndexSet<RAJA::TypedRangeStrideSegment<intType>> CreateForward1DColourSet( const intType n )
+{
+    RAJA::TypedIndexSet<RAJA::TypedRangeStrideSegment<intType>> colorSet;
+
+    // Red nodes
+    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( 0, n - 2, 3 ) );
+
+    // Green nodes
+    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( 1, n - 1, 3 ) );
+
+    // Blue nodes
+    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( 2, n    , 3 ) );
+
+    return colorSet;
+}
+
+
+
+RAJA::TypedIndexSet<RAJA::TypedRangeStrideSegment<intType>> CreateReverse1DColourSet( const intType n )
+{
+    RAJA::TypedIndexSet<RAJA::TypedRangeStrideSegment<intType>> colorSet;
+
+    // Red nodes
+    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( n - 3, -1, -3 ) );
+
+    // Green nodes
+    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( n - 2, 0 , -3 ) );
+
+    // Blue nodes
+    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( n - 1, 1 , -3 ) );
+
+    return colorSet;
+}
+
+
+
 RAJA::TypedIndexSet<RAJA::TypedListSegment<intType>> CreateForward3ColorSet( const iArray3 &nCells,
                                                                              camp::resources::Resource res )
 {

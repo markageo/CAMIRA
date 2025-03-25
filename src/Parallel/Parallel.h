@@ -9,6 +9,11 @@
 namespace CFD
 {
 
+
+RAJA::TypedIndexSet<RAJA::TypedRangeStrideSegment<intType>> CreateForward1DColourSet( const intType );
+
+RAJA::TypedIndexSet<RAJA::TypedRangeStrideSegment<intType>> CreateReverse1DColourSet( const intType );
+
 RAJA::TypedIndexSet<RAJA::ListSegment> CreateForward3ColorSet( const iArray3 &,
                                                                camp::resources::Resource );
 
@@ -22,6 +27,7 @@ RAJA::TypedIndexSet<RAJA::ListSegment> Create3ColorSetColumns( const iArray3 &,
 
 RAJA::TypedIndexSet<RAJA::ListSegment> Create3ColorSetPlane( const iArray3 &,
                                                              camp::resources::Resource );                                         
+
 
 } // end namespace CFD
 
