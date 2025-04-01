@@ -390,7 +390,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
                 intType ig{ G(i) }, jg{ G(j) }, kg{ G(k) };
 
                 // U momentum
-                auto & xMomCoeffs = fvCoeffs.Mom.coeffs[X];
+                auto & xMomCoeffs = fvCoeffs.Mom[X];
                 xMomCoeffs.F(ig, jg, kg) += mask(ig, jg, kg)
                                           * (  residualsRestricted.U[X](ig, jg, kg)
 
@@ -411,7 +411,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
 
 
                 // V momentum
-                auto & yMomCoeffs = fvCoeffs.Mom.coeffs[Y];
+                auto & yMomCoeffs = fvCoeffs.Mom[Y];
                 yMomCoeffs.F(ig, jg, kg) += mask(ig, jg, kg) 
                                           * (   residualsRestricted.U[Y](ig, jg, kg)
 
@@ -432,7 +432,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
 
 
                 // W momentm
-                auto & zMomCoeffs = fvCoeffs.Mom.coeffs[Z];
+                auto & zMomCoeffs = fvCoeffs.Mom[Z];
                 zMomCoeffs.F(ig, jg, kg) += mask(ig, jg, kg)
                                           * (   residualsRestricted.U[Z](ig, jg, kg)
 
@@ -453,7 +453,7 @@ void TransformToCoarseGridEquations( FVCoefficients &fvCoeffs,
 
 
                 // Continuity 
-                auto & contCoeffs = fvCoeffs.Cont.coeffs;
+                auto & contCoeffs = fvCoeffs.Cont;
                 floatType pressureWideStencil = 0.0f;
                 if constexpr ( MI == MomentumInterpolation::Implicit ) {
                     pressureWideStencil = contCoeffs.AP[nn](ig, jg, kg) * fieldsRestricted.P( ig  , jg+2, kg  ) 
@@ -519,7 +519,7 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
                 intType ig{ G(i) }, jg{ G(j) }, kg{ G(k) };
 
                 // U momentum
-                auto & xMomCoeffs = fvCoeffs.Mom.coeffs[X];
+                auto & xMomCoeffs = fvCoeffs.Mom[X];
                 coarseGridRightHandSide.U[X](ig, jg, kg) = mask(ig, jg, kg)
                                               * (  residualsRestricted.U[X](ig, jg, kg)
 
@@ -540,7 +540,7 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
 
 
                 // V momentum
-                auto & yMomCoeffs = fvCoeffs.Mom.coeffs[Y];
+                auto & yMomCoeffs = fvCoeffs.Mom[Y];
                 coarseGridRightHandSide.U[Y](ig, jg, kg) += mask(ig, jg, kg) 
                                               * (   residualsRestricted.U[Y](ig, jg, kg)
 
@@ -560,7 +560,7 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
 
 
                 // W momentum
-                auto & zMomCoeffs = fvCoeffs.Mom.coeffs[Z];
+                auto & zMomCoeffs = fvCoeffs.Mom[Z];
                 coarseGridRightHandSide.U[Z](ig, jg, kg) += mask(ig, jg, kg)
                                               * (   residualsRestricted.U[Z](ig, jg, kg)
 
@@ -581,7 +581,7 @@ FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &fvCoeffs,
 
 
                 // Continuity 
-                auto & contCoeffs = fvCoeffs.Cont.coeffs;
+                auto &contCoeffs = fvCoeffs.Cont;
                 floatType pressureWideStencil = 0.0f;
                 if constexpr ( MI == MomentumInterpolation::Implicit ) {
                     pressureWideStencil = contCoeffs.AP[nn](ig, jg, kg) * fieldsRestricted.P( ig  , jg+2, kg  ) 

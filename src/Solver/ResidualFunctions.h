@@ -44,7 +44,7 @@ inline floatType CellMomentumResidual_x( const FieldData<Tensor3D> &fields,
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    auto & xMomCoeffs = fvCoeffs.Mom.coeffs[X];
+    auto &xMomCoeffs = fvCoeffs.Mom[X];
 
     floatType residual = - xMomCoeffs.AU[p](ig, jg, kg) * fields.U[X]( ig  , jg  , kg  ) 
                          - xMomCoeffs.AU[n](ig, jg, kg) * fields.U[X]( ig  , jg+1, kg  ) 
@@ -76,7 +76,7 @@ inline floatType CellMomentumResidual_y( const FieldData<Tensor3D> &fields,
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    auto & yMomCoeffs = fvCoeffs.Mom.coeffs[Y];
+    auto & yMomCoeffs = fvCoeffs.Mom[Y];
 
     floatType residual = - yMomCoeffs.AU[p](ig, jg, kg) * fields.U[Y]( ig  , jg  , kg  ) 
                          - yMomCoeffs.AU[n](ig, jg, kg) * fields.U[Y]( ig  , jg+1, kg  ) 
@@ -108,7 +108,7 @@ inline floatType CellMomentumResidual_z( const FieldData<Tensor3D> &fields,
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
 
-    auto & zMomCoeffs = fvCoeffs.Mom.coeffs[Z];
+    auto & zMomCoeffs = fvCoeffs.Mom[Z];
 
     floatType residual = - zMomCoeffs.AU[p](ig, jg, kg) * fields.U[Z]( ig  , jg  , kg  ) 
                          - zMomCoeffs.AU[n](ig, jg, kg) * fields.U[Z]( ig  , jg+1, kg  ) 
@@ -141,7 +141,7 @@ inline floatType CellContinuityResidual( const FieldData<Tensor3D> &fields,
     using enum TransportCoefficients::ENUMDATA;
 
     floatType pressureWideStencil = 0.0f;
-    auto & contCoeffs = fvCoeffs.Cont.coeffs;
+    auto & contCoeffs = fvCoeffs.Cont;
     if constexpr ( MI == MomentumInterpolation::Implicit ) {
         pressureWideStencil = contCoeffs.AP[nn](ig, jg, kg) * fields.P( ig  , jg+2, kg  ) 
                             + contCoeffs.AP[ee](ig, jg, kg) * fields.P( ig+2, jg  , kg  ) 
@@ -204,17 +204,17 @@ inline FieldData<floatType> ScaledL1NormResiduals( const FieldData<Tensor3D> &fi
 
                 // U momentum
                 residualU      += mask(ig, jg, kg) * abs( CellMomentumResidual_x(fields, fvCoeffs, ig, jg, kg) );
-                scalingFactorU += mask(ig, jg, kg) * abs( fvCoeffs.Mom.coeffs[X].AU[p](ig, jg, kg) * fields.U[X]( ig  , jg  , kg  ) );
+                scalingFactorU += mask(ig, jg, kg) * abs( fvCoeffs.Mom[X].AU[p](ig, jg, kg) * fields.U[X]( ig  , jg  , kg  ) );
 
 
                 // V momentum
                 residualV      += mask(ig, jg, kg) * abs( CellMomentumResidual_y(fields, fvCoeffs, ig, jg, kg) );
-                scalingFactorV += mask(ig, jg, kg) * abs( fvCoeffs.Mom.coeffs[Y].AU[p](ig, jg, kg) * fields.U[Y]( ig  , jg  , kg  ) );
+                scalingFactorV += mask(ig, jg, kg) * abs( fvCoeffs.Mom[Y].AU[p](ig, jg, kg) * fields.U[Y]( ig  , jg  , kg  ) );
 
 
                 // W momentm
                 residualW      += mask(ig, jg, kg) * abs( CellMomentumResidual_z(fields, fvCoeffs, ig, jg, kg) );             
-                scalingFactorW += mask(ig, jg, kg) * abs( fvCoeffs.Mom.coeffs[Z].AU[p](ig, jg, kg) * fields.U[Z]( ig  , jg  , kg  ) );
+                scalingFactorW += mask(ig, jg, kg) * abs( fvCoeffs.Mom[Z].AU[p](ig, jg, kg) * fields.U[Z]( ig  , jg  , kg  ) );
 
 
                 // Continuity 

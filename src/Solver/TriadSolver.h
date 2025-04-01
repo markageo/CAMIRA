@@ -51,24 +51,24 @@ public:
                     m_fieldsOld( fieldsOld ),
                     m_mask( mask ),
 
-                    m_momX_AU( fvCoeffs.Mom.coeffs[A::X].AU ),
-                    m_momY_AU( fvCoeffs.Mom.coeffs[A::Y].AU ),
-                    m_momZ_AU( fvCoeffs.Mom.coeffs[A::Z].AU ),
-                    m_cont_AP( fvCoeffs.Cont.coeffs.AP ),
-                    m_momX_AP( fvCoeffs.Mom.coeffs[A::X].AP ),
-                    m_momY_AP( fvCoeffs.Mom.coeffs[A::Y].AP ),
-                    m_momZ_AP( fvCoeffs.Mom.coeffs[A::Z].AP ),
-                    m_cont_AUX( fvCoeffs.Cont.coeffs.AU[A::X] ),
-                    m_cont_AUY( fvCoeffs.Cont.coeffs.AU[A::Y] ),
-                    m_cont_AUZ( fvCoeffs.Cont.coeffs.AU[A::Z] ),
-                    m_momX_B( fvCoeffs.Mom.coeffs[A::X].B ),
-                    m_momX_F( fvCoeffs.Mom.coeffs[A::X].F ),
-                    m_momY_B( fvCoeffs.Mom.coeffs[A::Y].B ),
-                    m_momY_F( fvCoeffs.Mom.coeffs[A::Y].F ),
-                    m_momZ_B( fvCoeffs.Mom.coeffs[A::Z].B ),
-                    m_momZ_F( fvCoeffs.Mom.coeffs[A::Z].F ),
-                    m_cont_B( fvCoeffs.Cont.coeffs.B ),
-                    m_cont_F( fvCoeffs.Cont.coeffs.F ),
+                    m_momX_AU( fvCoeffs.Mom[A::X].AU ),
+                    m_momY_AU( fvCoeffs.Mom[A::Y].AU ),
+                    m_momZ_AU( fvCoeffs.Mom[A::Z].AU ),
+                    m_cont_AP( fvCoeffs.Cont.AP ),
+                    m_momX_AP( fvCoeffs.Mom[A::X].AP ),
+                    m_momY_AP( fvCoeffs.Mom[A::Y].AP ),
+                    m_momZ_AP( fvCoeffs.Mom[A::Z].AP ),
+                    m_cont_AUX( fvCoeffs.Cont.AU[A::X] ),
+                    m_cont_AUY( fvCoeffs.Cont.AU[A::Y] ),
+                    m_cont_AUZ( fvCoeffs.Cont.AU[A::Z] ),
+                    m_momX_B( fvCoeffs.Mom[A::X].B ),
+                    m_momX_F( fvCoeffs.Mom[A::X].F ),
+                    m_momY_B( fvCoeffs.Mom[A::Y].B ),
+                    m_momY_F( fvCoeffs.Mom[A::Y].F ),
+                    m_momZ_B( fvCoeffs.Mom[A::Z].B ),
+                    m_momZ_F( fvCoeffs.Mom[A::Z].F ),
+                    m_cont_B( fvCoeffs.Cont.B ),
+                    m_cont_F( fvCoeffs.Cont.F ),
 
                     m_ni( fvCoeffs.nCells(0) ),
                     m_nj( fvCoeffs.nCells(1) ),
@@ -171,7 +171,7 @@ public:
 
         // Precompute momentum RHS divided by AP coefficients
         // U momentum
-        const floatType momX_AUpInv = ( m_momX_AU[p](igU, jgU, kgU) == 0 ) ? 0.0f : 1.0f / m_momX_AU[p](igU, jgU, kgU);
+        const floatType momX_AUpInv = ( m_momX_AU[p](igU, jgU, kgU) == 0 ) ? 0.0f : 1.0f / m_momX_AU[p](igU, jgU, kgU); 
         const floatType bU = ( m_momX_F(igU, jgU, kgU)
                              - m_momX_B(igU, jgU, kgU)  
 

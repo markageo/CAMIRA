@@ -72,9 +72,9 @@ void SetCoarseGridEquations( GridLevelData<MI> &gridLevelData,
 
     // Add the terms that appear on the RHS of the coarse grid equation
     EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
-        gld.fvCoeffs.Mom.coeffs[axis].F += coarseGridRightHandSide.U[axis];
+        gld.fvCoeffs.Mom[axis].F += coarseGridRightHandSide.U[axis];
     } );
-    gld.fvCoeffs.Cont.coeffs.F += coarseGridRightHandSide.P; 
+    gld.fvCoeffs.Cont.F += coarseGridRightHandSide.P; 
 }
 
 

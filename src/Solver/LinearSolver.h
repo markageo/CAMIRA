@@ -448,7 +448,7 @@ private:
     const FieldData<floatType> m_relaxation;
 
     RAJA::TypedIndexSet< RAJA::TypedRangeStrideSegment<intType> > m_forwardColorSet,
-                                                           m_reverseColorSet;
+                                                                  m_reverseColorSet;
 
     std::unique_ptr<TriadSolver<TC::e, TC::n, TC::t, MI >> m_triadSolverForward;
     std::unique_ptr<TriadSolver<TC::w, TC::s, TC::b, MI >> m_triadSolverBackward;
