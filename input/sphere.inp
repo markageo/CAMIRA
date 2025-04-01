@@ -1,7 +1,6 @@
 // Sphere flow
 
 Model {
-    rho  = 1
     nu   = 0.005
     transient = no
 }
