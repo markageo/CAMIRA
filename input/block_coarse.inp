@@ -70,7 +70,7 @@ Mesh {
 InitialConditions
 {
     type = uniform
-    u = 0
+    u = 1
     v = 0
     w = 0
     p = 0

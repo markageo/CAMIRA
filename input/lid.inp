@@ -103,12 +103,12 @@ Solver {
     Schemes {
 
         linearisation           = Picard
-        momentumInterpolation   = semiExplicit
+        momentumInterpolation   = implicit
         advectionScheme         = upwind
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
         
-        maxOuterIterations = 5000
+        maxOuterIterations = 10000
         maxContinuityOuterResidual = 0
         maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
 
@@ -130,7 +130,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 3
+        maxCoarseLevels = 2
 
         preSmoothingIterations = 3
         postSmoothingIterations = 3
