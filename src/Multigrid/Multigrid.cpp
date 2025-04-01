@@ -98,18 +98,18 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels,
                                                                  mgl.mesh.nCells(2) + 2*nGhost).setZero() );
 
 
-        // // Linear Solver
-        // switch ( inputData.smootherSettings.type ) {
-        //     case Smoothers::nestedLineSymmetric:
-        //         mgl.linearSolver = std::make_unique< nestedLineSymmetricSolverSerial<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, mgl.mesh, mgl.bcData, inputData.smootherSettings);
-        //         break;
+        // Linear Solver
+        switch ( inputData.smootherSettings.type ) {
+            case Smoothers::nestedLineSymmetric:
+                mgl.linearSolver = std::make_unique< nestedLineSymmetricSolverSerial<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, mgl.mesh, mgl.bcData, inputData.smootherSettings);
+                break;
             
-        //     case Smoothers::domainSymmetric:
-        //         mgl.linearSolver = std::make_unique< domainSymmetricSolverSerial<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, mgl.mesh, mgl.bcData, inputData.smootherSettings);
-        //         break;
-        // }
+            case Smoothers::domainSymmetric:
+                mgl.linearSolver = std::make_unique< domainSymmetricSolverSerial<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, mgl.mesh, mgl.bcData, inputData.smootherSettings);
+                break;
+        }
 
-        mgl.linearSolver = std::make_unique< domainSymmetricSolverParallel<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, mgl.mesh, mgl.bcData, inputData.smootherSettings);
+        // mgl.linearSolver = std::make_unique< domainSymmetricSolverParallel<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, mgl.mesh, mgl.bcData, inputData.smootherSettings);
         
 
     }
