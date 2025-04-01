@@ -1,7 +1,6 @@
 // Backwards facing step with no inflow region
 
 Model {
-    rho       = 1
     nu        = 0.025
     transient = no
 }

@@ -182,7 +182,8 @@ namespace
 
         const pt::ptree &modelTree = tree.get_child("Model");
 
-        inputData.rho = modelTree.get<floatType>("rho");
+        // inputData.rho = modelTree.get<floatType>("rho");
+        inputData.rho = 1.0f;       // Density fixed at 1 due to pressure coefficient memory optimisation.
         inputData.nu  = modelTree.get<floatType>("nu");
 
         std::string valueString = modelTree.get<std::string>("transient");

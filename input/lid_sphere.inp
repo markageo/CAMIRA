@@ -1,7 +1,6 @@
 // Lid driven cavity with sphere inside
 
 Model {
-    rho  = 1
     nu   = 0.001
     transient = no
 }
