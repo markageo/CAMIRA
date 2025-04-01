@@ -273,8 +273,8 @@ public:
                                 const floatType bW, 
                                 const floatType bP,
                                 const floatType momX_AUpInv, 
-                                const floatType momZ_AUpInv, 
-                                const floatType momY_AUpInv  )
+                                const floatType momY_AUpInv, 
+                                const floatType momZ_AUpInv  )
     {
         using namespace FVT;
         using enum Axis::ENUMDATA;
@@ -316,7 +316,7 @@ public:
                                 + m_relaxation.U[X] * ( bU - m_momX_AP[sUP::cCoupled](igU) * m_fields.P( ig, jg, kg ) * momX_AUpInv );
         
         // Update V from momentum
-        const floatType newV = ( 1.0f -m_relaxation.U[Y] ) * m_fieldsOld.U[Y]( igV, jgV, kgV )
+        const floatType newV = ( 1.0f - m_relaxation.U[Y] ) * m_fieldsOld.U[Y]( igV, jgV, kgV )
                                 + m_relaxation.U[Y] * ( bV - m_momY_AP[sVP::cCoupled](jgV) * m_fields.P( ig, jg, kg ) * momY_AUpInv );
         
         // Update W from momentum
