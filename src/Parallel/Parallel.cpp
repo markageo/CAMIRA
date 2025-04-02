@@ -12,13 +12,13 @@ RAJA::TypedIndexSet<RAJA::TypedRangeStrideSegment<intType>> CreateForward1DColou
     RAJA::TypedIndexSet<RAJA::TypedRangeStrideSegment<intType>> colorSet;
 
     // Red nodes
-    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( 0, n - 2, 3 ) );
+    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( 0, n, 3 ) );
 
     // Green nodes
-    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( 1, n - 1, 3 ) );
+    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( 1, n, 3 ) );
 
     // Blue nodes
-    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( 2, n    , 3 ) );
+    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( 2, n, 3 ) );
 
     return colorSet;
 }
@@ -30,13 +30,32 @@ RAJA::TypedIndexSet<RAJA::TypedRangeStrideSegment<intType>> CreateReverse1DColou
     RAJA::TypedIndexSet<RAJA::TypedRangeStrideSegment<intType>> colorSet;
 
     // Red nodes
-    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( n - 3, -1, -3 ) );
+    intType redStart = n - 3;   // If divisibly by 3
+    if ( n % 3 == 2 ) {
+        redStart = n - 2;
+    } else if ( n % 3 == 1 ) {
+        redStart = n - 1;
+    }
+    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( redStart, -1, -3 ) );
+
 
     // Green nodes
-    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( n - 2, 0 , -3 ) );
+    intType greenStart = redStart + 1;   // If divisibly by 3
+    if ( n % 3 == 2 ) {
+        greenStart = redStart + 1;
+    } else if ( n % 3 == 1 ) {
+        greenStart = redStart - 2;
+    }
+    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( greenStart, -1, -3 ) );
 
     // Blue nodes
-    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( n - 1, 1 , -3 ) );
+    intType blueStart = greenStart + 1;   // If divisibly by 3
+    if ( n % 3 == 2 ) {
+        blueStart = redStart - 1;
+    } else if ( n % 3 == 1 ) {
+        blueStart = redStart - 1;
+    }
+    colorSet.push_back( RAJA::TypedRangeStrideSegment<intType>( blueStart, -1, -3 ) );
 
     return colorSet;
 }

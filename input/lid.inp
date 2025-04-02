@@ -12,7 +12,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 50
+            nCells     = 15
             biasFactor = 1
         }
     }
@@ -20,7 +20,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 50
+            nCells     = 15
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 50
+            nCells     = 15
             biasFactor = 1
         }
     }
@@ -107,7 +107,7 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
         
-        maxOuterIterations = 10000
+        maxOuterIterations = 10
         maxContinuityOuterResidual = 0
         maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
 
@@ -129,7 +129,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 0
 
         preSmoothingIterations = 3
         postSmoothingIterations = 3
