@@ -1,7 +1,7 @@
 // Block flow
 
 Model {
-    nu   = 0.01
+    nu   = 0.02
     transient = no
 }
 
@@ -145,11 +145,11 @@ Solver {
 
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = upwind
+        advectionScheme         = QUICK
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 5
+        maxOuterIterations = 10
         maxContinuityOuterResidual = 1e-14
         maxMomentumOuterResiduals   = (1e-14, 1e-14, 1e-14)
 
@@ -157,14 +157,14 @@ Solver {
     
     Smoother {
 
-        type = nestedLineSymmetric
-        maxIterations = 4
+        type = domainSymmetric
+        maxIterations = 5
         maxResiduals = 1e-3
 
         planeSweepDirection = +z
         lineSweepDirection = +y
 
-        momentumRelaxation = (0.6, 0.6, 0.6)
+        momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
     }
