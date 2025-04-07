@@ -317,19 +317,19 @@ void BoundaryAdvectionCoefficients( FVCoefficients &fvCoeffs,
                                           * ( 1.0f - mesh.interpFactors[normal]( hiFaceIndex[normal] ) ) 
                                           * mesh.cellLengthsInv[normal]( hiCellIndex[normal] );
 
-                AU[east](G(hiCellIndex)) += faceFluxes[normal](hiFaceIndex) 
+                AU[east](G(hiCellIndex))  = faceFluxes[normal](hiFaceIndex) 
                                           * mesh.interpFactors[normal]( hiFaceIndex[normal] ) 
                                           * mesh.cellLengthsInv[normal]( hiCellIndex[normal] );
 
 
                 // Lo side boundary
-                AU[p   ](G(loCellIndex)) -= faceFluxes[normal](loFaceIndex) 
-                                          * mesh.interpFactors[normal]( loFaceIndex[normal] ) 
-                                          * mesh.cellLengthsInv[normal]( loCellIndex[normal] );
+                AU[p   ](G(loCellIndex)) += - faceFluxes[normal](loFaceIndex) 
+                                          *   mesh.interpFactors[normal]( loFaceIndex[normal] ) 
+                                          *   mesh.cellLengthsInv[normal]( loCellIndex[normal] );
 
-                AU[west](G(loCellIndex)) -= faceFluxes[normal](loFaceIndex) 
-                                          * ( 1.0f - mesh.interpFactors[normal]( loFaceIndex[normal] ) ) 
-                                          * mesh.cellLengthsInv[normal]( loCellIndex[normal] );
+                AU[west](G(loCellIndex))  = - faceFluxes[normal](loFaceIndex) 
+                                          *   ( 1.0f - mesh.interpFactors[normal]( loFaceIndex[normal] ) ) 
+                                          *   mesh.cellLengthsInv[normal]( loCellIndex[normal] );
 
             }
         }       
@@ -347,6 +347,9 @@ void SetAdvectionCoefficients( FVCoefficients &fvCoeffs,
 {
     using enum TransportCoefficients::ENUMDATA;
     
+    // Boundary terms
+    BoundaryAdvectionCoefficients(fvCoeffs, faceFluxes, mesh);
+
     // Interior terms
     switch ( fvCoeffs.advectionScheme ) {
 
@@ -367,8 +370,7 @@ void SetAdvectionCoefficients( FVCoefficients &fvCoeffs,
             break;
     }
 
-    // Boundary terms
-    BoundaryAdvectionCoefficients(fvCoeffs, faceFluxes, mesh);
+    
 }
 
 
@@ -1549,6 +1551,26 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
                                                 General Functions
 \*---------------------------------------------------------------------------------------------------------------*/
 
+
+void SetGhostCellsToConstant( Tensor3D &array,
+                              const floatType value )
+{
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        for ( intType i = 0; i != nGhost; i++ ) {
+
+            // Lo side
+            array.chip(i, axis).setConstant(value);
+
+            // Hi side
+            intType iHi = array.dimension(axis) - 1 - i;
+            array.chip(iHi, axis).setConstant(value);
+
+        } 
+    } );
+}
+
+
+
 // Set the coefficients that need to be relinearised to zero
 void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
 {
@@ -1556,10 +1578,14 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
     using enum Axis::ENUMDATA;
     
     // Momentum equations
-    EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
-        fvCoeffs.Mom[X].AU[tc].setZero();
-    } );
-    // fvCoeffs.Mom[X].AU[p].setZero();
+    // EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
+    //     fvCoeffs.Mom[X].AU[tc].setZero();
+    // } );
+    fvCoeffs.Mom[X].AU[p].setZero();
+
+    // Set the ghost cell central coefficients to 1 to avoid divide by zero
+    SetGhostCellsToConstant(fvCoeffs.Mom[X].AU[p], 1.0f);
+
 
     EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
         fvCoeffs.Mom[axis].B.setZero();
