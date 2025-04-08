@@ -185,7 +185,7 @@ Solver {
 }
 
 Parallel {
-    numberOfThreads = 1
+    numberOfThreads = 8
 }
 
 Output {

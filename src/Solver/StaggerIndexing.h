@@ -114,26 +114,30 @@ class StaggerIndexing
         // Pressure coupled in the momentum equation
         struct MomentumPressure
         {
-            static constexpr TC cCoupled = StaggerIndexing::OppositeCoeff( staggeredCoeff ),
-                                cLeft    = StaggerIndexing::LeftCoeff( StaggerIndexing::OppositeCoeff( staggeredCoeff ) ), 
-                                cRight   = StaggerIndexing::RightCoeff( StaggerIndexing::OppositeCoeff( staggeredCoeff ) );
+            static constexpr TC cCoupled  = StaggerIndexing::OppositeCoeff( staggeredCoeff ),
+                                cOpposite = staggeredCoeff,
+                                cLeft     = StaggerIndexing::LeftCoeff( StaggerIndexing::OppositeCoeff( staggeredCoeff ) ), 
+                                cRight    = StaggerIndexing::RightCoeff( StaggerIndexing::OppositeCoeff( staggeredCoeff ) );
 
-            static constexpr intType iCoupled = LUT::CoeffIndex[ cCoupled ],
-                                     iLeft    = LUT::CoeffIndex[ cLeft ], 
-                                     iRight   = LUT::CoeffIndex[ cRight ];
+            static constexpr intType iCoupled  = LUT::CoeffIndex[ cCoupled ],
+                                     iOpposite = - iCoupled,
+                                     iLeft     = LUT::CoeffIndex[ cLeft ], 
+                                     iRight    = LUT::CoeffIndex[ cRight ];
         };
 
 
         // Velocity coupled in the continuity equation
         struct ContinuityVelocity
         {
-            static constexpr TC cCoupled = staggeredCoeff,
-                                cLeft    = StaggerIndexing::LeftCoeff( staggeredCoeff ),
-                                cRight   = StaggerIndexing::RightCoeff( staggeredCoeff );
+            static constexpr TC cCoupled  = staggeredCoeff,
+                                cOpposite = StaggerIndexing::OppositeCoeff(staggeredCoeff),
+                                cLeft     = StaggerIndexing::LeftCoeff( staggeredCoeff ),
+                                cRight    = StaggerIndexing::RightCoeff( staggeredCoeff );
 
-            static constexpr intType iCoupled = LUT::CoeffIndex[ cCoupled ],
-                                     iLeft    = LUT::CoeffIndex[ cLeft ], 
-                                     iRight   = LUT::CoeffIndex[ cRight ];
+            static constexpr intType iCoupled  = LUT::CoeffIndex[ cCoupled ],
+                                     iOpposite = - iCoupled,
+                                     iLeft     = LUT::CoeffIndex[ cLeft ], 
+                                     iRight    = LUT::CoeffIndex[ cRight ];
         };
 
 };

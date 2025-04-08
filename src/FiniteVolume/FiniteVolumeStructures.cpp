@@ -171,30 +171,6 @@ std::vector< TransportCoefficients::ENUMDATA > MomentumVelocityEnums()
 }                                                                      
 
 
-
-std::vector< TransportCoefficients::ENUMDATA > MomentumPressureEnums( const Axis::ENUMDATA momentumEquation )
-{
-    using enum Axis::ENUMDATA;
-    using C = TransportCoefficients::ENUMDATA;
-
-    switch ( momentumEquation ) {
-        case X: 
-            return { C::p, C::e, C::w };
-            break;
-
-        case Y: 
-            return { C::p, C::n, C::s };
-            break;
-
-        case Z:
-            return { C::p, C::t, C::b };
-            break;
-    }
-    return {};
-}
-
-
-
 std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums( MomentumInterpolation mi ) 
 {
     using C = TransportCoefficients::ENUMDATA;

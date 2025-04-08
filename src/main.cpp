@@ -40,9 +40,9 @@ int main(int argc, char const *argv[])
                                               Solve
     \*-------------------------------------------------------------------------------------*/
 
-    std::cout << "Press enter to begin solve.";
-    std::cin.ignore();
-    std::cout << std::endl;
+    // std::cout << "Press enter to begin solve.";
+    // std::cin.ignore();
+    // std::cout << std::endl;
 
     omp_set_num_threads( inputData.parallelSettings.numberOfThreads );
 
