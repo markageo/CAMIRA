@@ -18,6 +18,7 @@
 #include <RAJA/pattern/kernel/Lambda.hpp>
 #include <RAJA/policy/sequential/policy.hpp>
 #include <RAJA/util/camp_aliases.hpp>
+#include <omp.h>
 
 
 #include "../IO/ArrayIO.h"
@@ -458,6 +459,7 @@ private:
     iArray3 m_nCells;
     iArray2 m_nCellsPlane;
 
+    __attribute__((flatten))
     void Sweep3D()
     {
         // using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::seq_exec>;
@@ -466,10 +468,12 @@ private:
         // For thread safe reductions
         // RAJA::MultiReduceSum< RAJA::omp_multi_reduce, floatType > residualReductions( FieldData<floatType>::nData, 0.0f );
 
+        TIC("Setting Ghost cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
+        TOC()
         
         // Forward plane sweep
-        TIC("Sweeping")
+        TIC("Sweeping 1")
         RAJA::forall<colorPolicy>( m_forwardColorSet, [&] ( intType k ) {
 
             for ( intType j = 0; j != m_nCells(1); j++ ) {
@@ -481,7 +485,7 @@ private:
                     // oldValues.U[1] = m_fields.U[1]( G(i  , j+1, k  ) );
                     // oldValues.U[2] = m_fields.U[2]( G(i  , j  , k+1) );
 
-                    m_triadSolverForward->UpdateTriad( i, j, k );
+                    m_triadSolverForward->UpdateTriadFull( i, j, k );
 
                     // residualReductions[0] += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
                     // residualReductions[1] += abs( oldValues.U[0] - m_fields.U[0]( G(i+1, j  , k  ) ) );
@@ -494,10 +498,12 @@ private:
         } );
         TOC()
 
+        TIC("Setting Ghost cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
+        TOC()
 
         // Reverse plane sweep
-        TIC("Sweeping")
+        TIC("Sweeping 2")
         RAJA::forall<colorPolicy>( m_reverseColorSet, [&] ( intType k)  {
 
             for ( intType j = m_nCells(1)-1; j != -1; j-- ) {
@@ -509,7 +515,7 @@ private:
                     // oldValues.U[1] = m_fields.U[1]( G(i  , j-1, k  ) );
                     // oldValues.U[2] = m_fields.U[2]( G(i  , j  , k-1) );
 
-                    m_triadSolverBackward->UpdateTriad( i, j, k );
+                    m_triadSolverBackward->UpdateTriadFull( i, j, k );
 
                     // residualReductions[0] += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
                     // residualReductions[1] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
@@ -522,7 +528,9 @@ private:
         } );
         TOC()
 
+        TIC("Setting Ghost cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
+        TOC()
 
         // // Copy to residuals
         // m_residuals.P    = residualReductions[0].get();
