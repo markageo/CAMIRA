@@ -30,7 +30,7 @@ namespace FVT
 
     // Eigen::Tensor ghost cell indexing - list indexing
     template<class ...Args> 
-    requires( sizeof...(Args) > 1 ) __attribute__((always_inline)) 
+    requires( sizeof...(Args) > 1 ) __attribute__((always_inline, flatten)) 
     inline Eigen::array< Eigen::Index, sizeof...(Args) > G( Args... args )
     {  
         Eigen::array< Eigen::Index, sizeof...(Args) > idx( {args...} );

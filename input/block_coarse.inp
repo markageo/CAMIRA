@@ -159,7 +159,7 @@ Solver {
 
         type = domainSymmetric
         maxIterations = 5
-        maxResiduals = 1e-3
+        maxResiduals = 0
 
         planeSweepDirection = +z
         lineSweepDirection = +y
@@ -177,15 +177,15 @@ Solver {
         postSmoothingIterations = 3
         fineGridIterations   = 2
 
-        maxCoarseGridIterations = 500
-        maxCoarseGridResiduals  = 1e-6
+        maxCoarseGridIterations = 250
+        maxCoarseGridResiduals  = 0
         
     }
 
 }
 
 Parallel {
-    numberOfThreads = 8
+    numberOfThreads = 2
 }
 
 Output {

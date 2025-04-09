@@ -556,13 +556,16 @@ inline floatType MWIWeightingCoeff( const TensorIndex3D &loIndex,
 {
     const intType idx = hiIndex[axis];    // Axis index of the face
     const floatType interpFactor = mesh.interpFactors[axis]( idx );
-    return  ( 1.0f - interpFactor ) *  AUUpInv( G(loIndex) )  +  interpFactor * AUUpInv( G(hiIndex) );
+    const TensorIndex3D loIndexG = G(loIndex),  // This is faster than using 'G' inline for some reason
+                        hiIndexG = G(hiIndex);
+    return  ( 1.0f - interpFactor ) * AUUpInv( loIndexG)  +  interpFactor * AUUpInv( hiIndexG );
 }
 
 
 
 // Fully implicit momentum interpolation coefficient for internal faces
 [[maybe_unused]]
+__attribute__((flatten))
 void MWInterpolationInteriorImplicit( FVCoefficients &fvCoeffs,
                                       const Mesh &mesh,
                                       const Axis::ENUMDATA axis )
@@ -1578,14 +1581,10 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
     using enum Axis::ENUMDATA;
     
     // Momentum equations
-    // EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
-    //     fvCoeffs.Mom[X].AU[tc].setZero();
-    // } );
     fvCoeffs.Mom[X].AU[p].setZero();
 
-    // Set the ghost cell central coefficients to 1 to avoid divide by zero
+    // Set the ghost cell central coefficients to 1 to avoid divide by zero in solver
     SetGhostCellsToConstant(fvCoeffs.Mom[X].AU[p], 1.0f);
-
 
     EnumFor<Axis> ( [&] (Axis::ENUMDATA axis) {
         fvCoeffs.Mom[axis].B.setZero();
@@ -1594,10 +1593,7 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
 
     
     // Continuity equation
-    EnumFor<TransportCoefficients>( [&] (TransportCoefficients::ENUMDATA tc) {
-        fvCoeffs.Cont.AP[tc].setZero();
-    } );
-    // fvCoeffs.Cont.AP[p].setZero();
+    fvCoeffs.Cont.AP[p].setZero();
 
     fvCoeffs.Cont.B.setZero();
     fvCoeffs.Cont.F.setZero();
