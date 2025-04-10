@@ -23,9 +23,9 @@ void LinearInterpInteriorFaceVelocitiesWithMWI( EnumVector<Axis, Tensor3D> &face
     using FVT::G;
 
     Tensor3D &faceVel = faceVelocities[ axis ];
-    const Tensor3D &cellVel = cellFields.U[ velocityComponent ];
-    const Tensor3D &cellPressure = cellFields.P;
-    const Tensor3D &momentumDiagCoeffInv = fvCoeffs.Mom[axis].diagCoeffInv;
+    const Tensor3D &cellVel                         = cellFields.U[ velocityComponent ];
+    const Tensor3D &cellPressure                    = cellFields.P;
+    const Tensor3D &momentumDiagCoeff               = fvCoeffs.Mom[axis].AU[TransportCoefficients::p];
     const std::array<Tensor1D, 4> &mwiSparseCoeffs  = fvCoeffs.mwiSparseCoeffs[axis];
     const std::array<Tensor1D, 2> &mwiCompactCoeffs = fvCoeffs.mwiCompactCoeffs[axis];
 
@@ -36,27 +36,28 @@ void LinearInterpInteriorFaceVelocitiesWithMWI( EnumVector<Axis, Tensor3D> &face
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
                 TensorIndex3D idx = {i, j, k},
-                             HiIndex = idx,
-                             LoIndex = idx,
-                             LoLoIndex = idx,
-                             HiHiIndex = idx;
-                LoIndex[axis]   -= 1;
-                LoLoIndex[axis] -= 2;
-                HiHiIndex[axis] += 1;
+                              hiIndex = idx,
+                              loIndex = idx,
+                              loloIndex = idx,
+                              hihiIndex = idx;
+                loIndex[axis]   -= 1;
+                loloIndex[axis] -= 2;
+                hihiIndex[axis] += 1;
 
-                faceVel(idx) = FaceInterpolatedVelocity<AdvectionSchemes::Central, +1>( cellVel, fvCoeffs, mesh, axis, HiIndex, LoIndex );
+                faceVel(idx) = FaceInterpolatedVelocity<AdvectionSchemes::Central, +1>( cellVel, fvCoeffs, mesh, axis, hiIndex, loIndex );
 
                 // Add MWI correction
-                floatType d = 0.5f * ( momentumDiagCoeffInv( G(HiIndex) )  +  momentumDiagCoeffInv( G(LoIndex) ) ); // SHOULD USE LINEAR INTERPOLATION COEFFICIENTS HERE
+                floatType d = ( 1.0f - mesh.interpFactors[axis](idx[axis]) ) * ( 1.0f / momentumDiagCoeff( G(loIndex) ) )  
+                            +  mesh.interpFactors[axis](idx[axis])           *  (1.0f / momentumDiagCoeff( G(hiIndex) ) );
                 floatType coeff0 = d *   mwiSparseCoeffs[0]( idx[axis] ),
                           coeff1 = d * ( mwiSparseCoeffs[1]( idx[axis] ) + mwiCompactCoeffs[0]( idx[axis] ) ),
                           coeff2 = d * ( mwiSparseCoeffs[2]( idx[axis] ) + mwiCompactCoeffs[1]( idx[axis] ) ),
                           coeff3 = d *   mwiSparseCoeffs[3]( idx[axis] );
 
-                faceVel( idx ) += coeff0 * cellPressure( G(LoLoIndex) )
-                                + coeff1 * cellPressure( G(LoIndex) )
-                                + coeff2 * cellPressure( G(HiIndex) )
-                                + coeff3 * cellPressure( G(HiHiIndex) );
+                faceVel( idx ) += coeff0 * cellPressure( G(loloIndex) )
+                                + coeff1 * cellPressure( G(loIndex) )
+                                + coeff2 * cellPressure( G(hiIndex) )
+                                + coeff3 * cellPressure( G(hihiIndex) );
 
             }
         }

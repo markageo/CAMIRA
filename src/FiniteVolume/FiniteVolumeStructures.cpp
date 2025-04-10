@@ -206,22 +206,19 @@ FVCoefficients::FVCoefficients() :
                             m_momentumVelocityCoeffs, 
                             m_gradientCoeffs[X],
                             CFD::Tensor3D(),
-                            CFD::Tensor3D(),
-                            m_diagCoeffInv }),
+                            CFD::Tensor3D() }),
                             
          MomentumEquation({ Y,
                             m_momentumVelocityCoeffs, 
                             m_gradientCoeffs[Y],
                             CFD::Tensor3D(),
-                            CFD::Tensor3D(),
-                            m_diagCoeffInv }), 
+                            CFD::Tensor3D() }), 
                             
          MomentumEquation({ Z,
                             m_momentumVelocityCoeffs, 
                             m_gradientCoeffs[Z],
                             CFD::Tensor3D(),
-                            CFD::Tensor3D(),
-                            m_diagCoeffInv }) 
+                            CFD::Tensor3D() }) 
         } )
 {};
 
@@ -230,7 +227,6 @@ FVCoefficients::FVCoefficients() :
 FVCoefficients::FVCoefficients( const iArray3 &dims, 
                                 MomentumInterpolation mi) :
     m_momentumVelocityCoeffs( MomentumVelocityEnums() , dims + 2*nGhost ),
-    m_diagCoeffInv( CFD::Tensor3D( dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost ).setZero() ),
     m_gradientCoeffs( { CFD::EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::e, C::w}, dims( X ) + 2*nGhost),
                         CFD::EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::n, C::s}, dims( Y ) + 2*nGhost),
                         CFD::EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::t, C::b}, dims( Z ) + 2*nGhost) } ),
@@ -253,22 +249,19 @@ FVCoefficients::FVCoefficients( const iArray3 &dims,
                               m_momentumVelocityCoeffs, 
                               m_gradientCoeffs[X],
                               CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero(),
-                              CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero() ,
-                              m_diagCoeffInv}),
+                              CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero() }),
               
               MomentumEquation({ Y,
                                  m_momentumVelocityCoeffs, 
                                  m_gradientCoeffs[Y],
                                  CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero(),
-                                 CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero() ,
-                                 m_diagCoeffInv }),
+                                 CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero() }),
 
               MomentumEquation({ Z,
                                  m_momentumVelocityCoeffs, 
                                  m_gradientCoeffs[Z],
                                  CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero(),
-                                 CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero() ,
-                                 m_diagCoeffInv })
+                                 CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero() })
     } ),
 
     diff({ EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::e, C::w}, dims(X) ),
@@ -283,7 +276,6 @@ FVCoefficients::FVCoefficients( const iArray3 &dims,
 // Copy constructor
 FVCoefficients::FVCoefficients( const FVCoefficients &that ) :
     m_momentumVelocityCoeffs( that.m_momentumVelocityCoeffs ),
-    m_diagCoeffInv( that.m_diagCoeffInv ),
     m_gradientCoeffs( that.m_gradientCoeffs ),
 
     Cont( { m_gradientCoeffs,
@@ -301,22 +293,19 @@ FVCoefficients::FVCoefficients( const FVCoefficients &that ) :
                               m_momentumVelocityCoeffs, 
                               m_gradientCoeffs[X],
                               that.Mom[X].B,
-                              that.Mom[X].F,
-                              m_diagCoeffInv }),
+                              that.Mom[X].F }),
               
            MomentumEquation({ Y,
                               m_momentumVelocityCoeffs, 
                               m_gradientCoeffs[Y],
                               that.Mom[Y].B,
-                              that.Mom[Y].F,
-                              m_diagCoeffInv }),
+                              that.Mom[Y].F }),
 
            MomentumEquation({ Z,
                               m_momentumVelocityCoeffs, 
                               m_gradientCoeffs[Z],
                               that.Mom[Z].B,
-                              that.Mom[Z].F,
-                              m_diagCoeffInv })
+                              that.Mom[Z].F })
         } ),
     diff( that.diff ),
     positiveFluxHiOrderAdvectionCoeffs( that.positiveFluxHiOrderAdvectionCoeffs ),
@@ -338,7 +327,6 @@ FVCoefficients& FVCoefficients::operator=( FVCoefficients that )
 {
     // References to shared coefficients already refer to the correct object
     std::swap( this->m_momentumVelocityCoeffs , that.m_momentumVelocityCoeffs );
-    std::swap( this->m_diagCoeffInv           , that.m_diagCoeffInv );
     std::swap( this->m_gradientCoeffs         , that.m_gradientCoeffs );
 
     // Continuity equation
@@ -376,7 +364,6 @@ FVCoefficients& FVCoefficients::operator=( FVCoefficients that )
 // Move constructor, copy and swap
 FVCoefficients::FVCoefficients( FVCoefficients &&that ) noexcept :
     m_momentumVelocityCoeffs( std::move( that.m_momentumVelocityCoeffs ) ),
-    m_diagCoeffInv( std::move( that.m_diagCoeffInv ) ),
     m_gradientCoeffs( std::move( that.m_gradientCoeffs ) ),
 
     Cont( { m_gradientCoeffs,
@@ -393,22 +380,19 @@ FVCoefficients::FVCoefficients( FVCoefficients &&that ) noexcept :
                               m_momentumVelocityCoeffs, 
                               m_gradientCoeffs[X],
                               std::move( that.Mom[X].B ),
-                              std::move( that.Mom[X].F ),
-                              m_diagCoeffInv }),
+                              std::move( that.Mom[X].F ) }),
               
            MomentumEquation({ Y,
                               m_momentumVelocityCoeffs, 
                               m_gradientCoeffs[Y],
                               std::move( that.Mom[Y].B ),
-                              std::move( that.Mom[Y].F ),
-                              m_diagCoeffInv }),
+                              std::move( that.Mom[Y].F ) }),
 
            MomentumEquation({ Z,
                               m_momentumVelocityCoeffs, 
                               m_gradientCoeffs[Z],
                               std::move( that.Mom[Z].B ),
-                              std::move( that.Mom[Z].F ),
-                              m_diagCoeffInv })
+                              std::move( that.Mom[Z].F ) })
         } ),
     diff( std::move( that.diff ) ),
     positiveFluxHiOrderAdvectionCoeffs( std::move( that.positiveFluxHiOrderAdvectionCoeffs ) ),

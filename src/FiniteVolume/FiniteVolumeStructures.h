@@ -17,7 +17,6 @@ private:
     // Velocity coefficients are shared for each momentum equation since they are the same, and this has significant memory savings.
     // To allow a seperated interface between momentum equation, they all hold references to this variable.
     EnumVector< TransportCoefficients, Tensor3D > m_momentumVelocityCoeffs;
-    Tensor3D m_diagCoeffInv;   
 
     // Pressure gradient coefficients in momentum equations are same as divergence coefficients in continuity equation (apart from 
     // density, which is absorbed into the pressure field). They will hold references to this variable. 
@@ -57,7 +56,6 @@ public:
         EnumVector<TransportCoefficients, Tensor1D> &AP;                         // Pressure coefficients (LHS), has dummy cells
         Tensor3D B;                                                              // Constants that come from boundary conditions, immersed boundary, etc., has dummy cells
         Tensor3D F;                                                              // Source terms (RHS), has dummy cells
-        Tensor3D &diagCoeffInv;                                                  // Inverse of diagonal coefficient, has dummy cells
     };
     EnumVector<Axis, MomentumEquation> Mom;
 

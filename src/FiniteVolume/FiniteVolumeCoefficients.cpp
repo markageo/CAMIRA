@@ -550,7 +550,7 @@ void SetMomentumInterpolationCompactConstants( FVCoefficients &fvCoeffs,
 __attribute__((always_inline)) 
 inline floatType MWIWeightingCoeff( const TensorIndex3D &loIndex,
                                     const TensorIndex3D &hiIndex,
-                                    const Tensor3D &AUUpInv, 
+                                    const Tensor3D &AUp, 
                                     const Mesh& mesh,
                                     const Axis::ENUMDATA axis)
 {
@@ -558,7 +558,8 @@ inline floatType MWIWeightingCoeff( const TensorIndex3D &loIndex,
     const floatType interpFactor = mesh.interpFactors[axis]( idx );
     const TensorIndex3D loIndexG = G(loIndex),  // This is faster than using 'G' inline for some reason
                         hiIndexG = G(hiIndex);
-    return  ( 1.0f - interpFactor ) * AUUpInv( loIndexG)  +  interpFactor * AUUpInv( hiIndexG );
+    return  ( 1.0f - interpFactor ) * ( 1.0f / AUp( loIndexG ) )  
+         +  interpFactor            * ( 1.0f / AUp( hiIndexG ) );
 }
 
 
@@ -576,7 +577,7 @@ void MWInterpolationInteriorImplicit( FVCoefficients &fvCoeffs,
 
     // Unpack
     EnumVector<TransportCoefficients, Tensor3D> &continuityPressureCoeffs = fvCoeffs.Cont.AP;
-    const Tensor3D &momentumDiagCoeffInv                                  = fvCoeffs.Mom[X].diagCoeffInv;
+    const Tensor3D &momentumDiagCoeff                                     = fvCoeffs.Mom[X].AU[p];
     const std::array< Tensor1D, 4 > &mwiSparseCoeffs                      = fvCoeffs.mwiSparseCoeffs[axis];
     const std::array< Tensor1D, 2 > &mwiCompactCoeffs                     = fvCoeffs.mwiCompactCoeffs[axis];
 
@@ -601,7 +602,7 @@ void MWInterpolationInteriorImplicit( FVCoefficients &fvCoeffs,
                               loIndex = { i, j, k };
                 loIndex[axis] -= 1;
 
-                const floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeffInv, mesh, axis );
+                const floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeff, mesh, axis );
 
                 // Coefficients for westmost to eastmost cell
                 const intType idx = hiIndex[axis];
@@ -638,7 +639,6 @@ void MWInterpolationInteriorImplicit( FVCoefficients &fvCoeffs,
 // Autovectorisation friendly version
 template< Axis::ENUMDATA axis > [[maybe_unused]]
 void MWInterpolationInteriorImplicit_autoVec( FVCoefficients &fvCoeffs,
-                                              const Tensor3D &momentumDiagCoeffInv,
                                               const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;
@@ -647,6 +647,7 @@ void MWInterpolationInteriorImplicit_autoVec( FVCoefficients &fvCoeffs,
 
     // Unpack
     EnumVector<TransportCoefficients, Tensor3D> &continuityPressureCoeffs = fvCoeffs.Cont.AP;
+    const Tensor3D &momentumDiagCoeff                                     = fvCoeffs.Mom[X].AU[p];
     const std::array< Tensor1D, 4 > &mwiSparseCoeffs                      = fvCoeffs.mwiSparseCoeffs[axis];
     const std::array< Tensor1D, 2 > &mwiCompactCoeffs                     = fvCoeffs.mwiCompactCoeffs[axis];
 
@@ -691,7 +692,7 @@ void MWInterpolationInteriorImplicit_autoVec( FVCoefficients &fvCoeffs,
                               loIndex = { i, j, k };
                 loIndex[axis] -= 1;
 
-                const floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeffInv, mesh, axis ); 
+                const floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeff, mesh, axis ); 
 
                 // Coefficients for westmost to eastmost cell
                 const intType idx = hiIndex[axis];
@@ -759,7 +760,7 @@ void MWInterpolationInteriorSemiExplicit( FVCoefficients &fvCoeffs,
     // Unpack
     EnumVector<TransportCoefficients, Tensor3D> &continuityPressureCoeffs = fvCoeffs.Cont.AP;
     Tensor3D &continuitySourceTerm                                        = fvCoeffs.Cont.B;
-    const Tensor3D &momentumDiagCoeffInv                                  = fvCoeffs.Mom[X].diagCoeffInv;
+    const Tensor3D &momentumDiagCoeff                                     = fvCoeffs.Mom[X].AU[p];
     const std::array< Tensor1D, 4 > &mwiSparseCoeffs                      = fvCoeffs.mwiSparseCoeffs[axis];
     const std::array< Tensor1D, 2 > &mwiCompactCoeffs                     = fvCoeffs.mwiCompactCoeffs[axis];
 
@@ -783,7 +784,7 @@ void MWInterpolationInteriorSemiExplicit( FVCoefficients &fvCoeffs,
                               loIndex = { i, j, k };
                 loIndex[axis] -= 1;
                  
-                const floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeffInv, mesh, axis );
+                const floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeff, mesh, axis );
 
                 const floatType LoCellLengthInv = mesh.cellLengthsInv[axis]( loIndex[axis] ),
                           HiCellLengthInv = mesh.cellLengthsInv[axis]( hiIndex[axis] );
@@ -851,7 +852,6 @@ void MWInterpolationInteriorSemiExplicit( FVCoefficients &fvCoeffs,
 template< Axis::ENUMDATA axis > [[maybe_unused]]
 void MWInterpolationInteriorSemiExplicit_autoVec( FVCoefficients &fvCoeffs, 
                                                   const Tensor3D &P,
-                                                  const Tensor3D &momentumDiagCoeffInv,
                                                   const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;
@@ -859,6 +859,7 @@ void MWInterpolationInteriorSemiExplicit_autoVec( FVCoefficients &fvCoeffs,
 
     // Unpack
     EnumVector<TransportCoefficients, Tensor3D> &continuityPressureCoeffs = fvCoeffs.Cont.AP;
+    const Tensor3D &momentumDiagCoeff                                     = fvCoeffs.Mom[X].AU[p];
     Tensor3D &continuitySourceTerm                                        = fvCoeffs.Cont.B;
     const std::array< Tensor1D, 4 > &mwiSparseCoeffs                      = fvCoeffs.mwiSparseCoeffs[axis];
     const std::array< Tensor1D, 2 > &mwiCompactCoeffs                     = fvCoeffs.mwiCompactCoeffs[axis];
@@ -902,7 +903,7 @@ void MWInterpolationInteriorSemiExplicit_autoVec( FVCoefficients &fvCoeffs,
                              loIndex = { i, j, k };
                 loIndex[axis] -= 1;
                 
-                const floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeffInv, mesh, axis );
+                const floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeff, mesh, axis );
 
                 // Coefficients for westmost to eastmost cell
                 const intType idx = hiIndex[axis];
@@ -1345,12 +1346,12 @@ void ContinuityIBSourceSemiExplicitMWI( FVCoefficients &fvCoeffs,
     ibSource += fvCoeffs.Cont.AP[coeff ](G(cellIndex)) * sourceTermData.ghostCellValues.P;
 
     // Explicit Pressure terms, face closest to IB
-    const Tensor3D &momentumDiagCoeffInv = fvCoeffs.Mom[faceNormal].diagCoeffInv;
+    const Tensor3D &momentumDiagCoeff = fvCoeffs.Mom[faceNormal].AU[TransportCoefficients::p];
     const std::array<Tensor1D, 4> &mwiSparseCoeffs = fvCoeffs.mwiSparseCoeffs[faceNormal];
     TensorIndex3D loIndex = ghostIsHiSide ? cellIndex : sourceTermData.cellIndex_g;
     TensorIndex3D hiIndex = ghostIsHiSide ? sourceTermData.cellIndex_g : cellIndex;
     intType idx = hiIndex[faceNormal];
-    floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeffInv, mesh, faceNormal );
+    floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeff, mesh, faceNormal );
 
     floatType ghostSparseCoeff  = ghostIsHiSide ? d * mwiSparseCoeffs[2](idx) : - d * mwiSparseCoeffs[1](idx);
      floatType ghostSparseCCoeff = ghostIsHiSide ? d * mwiSparseCoeffs[3](idx) : - d * mwiSparseCoeffs[0](idx);
@@ -1367,7 +1368,7 @@ void ContinuityIBSourceSemiExplicitMWI( FVCoefficients &fvCoeffs,
     loIndex = ghostIsHiSide ? sourceTermData.cellIndex_a : cellIndex;
     hiIndex = ghostIsHiSide ? cellIndex : sourceTermData.cellIndex_a;
     idx = hiIndex[faceNormal];
-    d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeffInv, mesh, faceNormal );
+    d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeff, mesh, faceNormal );
 
     ghostSparseCoeff  = ghostIsHiSide ? - d * mwiSparseCoeffs[3](idx) : d * mwiSparseCoeffs[0](idx);
 
@@ -1395,9 +1396,9 @@ void InteriorContinuityIBSourceSemiExplicitMWI( FVCoefficients &fvCoeffs,
     const TensorIndex3D loIndex = ghostIsHiSide ? sourceTermData.cellIndex_a : cellIndex;
     const TensorIndex3D hiIndex = ghostIsHiSide ? cellIndex : sourceTermData.cellIndex_a;
     const intType idx = hiIndex[faceNormal];
-    const Tensor3D &momentumDiagCoeffInv = fvCoeffs.Mom[faceNormal].diagCoeffInv;
+    const Tensor3D &momentumDiagCoeff = fvCoeffs.Mom[faceNormal].AU[TransportCoefficients::p];
     const std::array<Tensor1D, 4> &mwiSparseCoeffs = fvCoeffs.mwiSparseCoeffs[faceNormal];
-    const floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeffInv, mesh, faceNormal );
+    const floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeff, mesh, faceNormal );
 
     const floatType ghostSparseCoeff  = ghostIsHiSide ? d * mwiSparseCoeffs[3](idx) : - d * mwiSparseCoeffs[0](idx);
 
@@ -1600,19 +1601,6 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
 }
 
 
-
-void SetDiagCoeffInverse( FVCoefficients &fvCoeffs,
-                          const Mesh &mesh )
-{
-    using TC = TransportCoefficients;
-    using enum Axis::ENUMDATA;
-    const TensorIndex3D offsets = {nGhost, nGhost, nGhost},
-                        extents = {mesh.nCells[0], mesh.nCells[1], mesh.nCells[2]};
-
-    fvCoeffs.Mom[X].diagCoeffInv.slice(offsets, extents) = fvCoeffs.Mom[X].AU[TC::p].slice(offsets, extents).inverse();
-}
-
-
 }   // end anonymous namespace
 
 
@@ -1668,8 +1656,6 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     ChangeStencilToCentralAtIB( fvCoeffs, ibData, faceFluxes, mesh );
 
     AddUnsteadyTerm(fvCoeffs, fieldsPrevTime, fieldsPrevPrevTime, mesh);
-
-    SetDiagCoeffInverse(fvCoeffs, mesh);  
 
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, fields.P);
 
