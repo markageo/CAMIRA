@@ -59,16 +59,6 @@ elseif ( CFD_PRECISION STREQUAL "single" )
 endif()
 
 
-# Use of functions which were written for the compiler to autovectorise
-option ( CFD_USE_AUTOVEC_FUNCTIONS "Use functions written for the compiler to auto vectorize." off )
-if ( CFD_USE_AUTOVEC_FUNCTIONS )
-	message( STATUS "Using Auto Vectorization functions." )
-	add_compile_definitions( CFD_USE_AUTOVEC_FUNCTIONS )
-else()
-	message( STATUS "Not using Auto Vectorization functions." )
-endif()
-
-
 # Allow the ability to read fields in (for example to read in an initial condition), this requires VTk library
 option ( CFD_HAS_VTK_LIB "Allow extra features which require VTK library to be installed.")
 if ( CFD_HAS_VTK_LIB )

@@ -102,7 +102,7 @@ Solver {
     Schemes {
 
         linearisation           = Picard
-        momentumInterpolation   = implicit
+        momentumInterpolation   = semiExplicit
         advectionScheme         = upwind
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
