@@ -224,8 +224,8 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
 
     // Calculate residual
     FieldData<Tensor3D> residuals = ResidualsField<MI>( mgLevels[level].fields, 
-                                                            mgLevels[level].fvCoeffs, 
-                                                            mgLevels[level].ibData.mask );
+                                                        mgLevels[level].fvCoeffs, 
+                                                        mgLevels[level].ibData.mask );
 
     // Restrict residuals and solutions
     RestrictLevel(mgLevels, residuals, level, level+1);

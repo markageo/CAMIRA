@@ -1,7 +1,7 @@
 // Block flow
 
 Model {
-    nu   = 0.0025
+    nu   = 0.02
     transient = no
 }
 
@@ -38,7 +38,7 @@ Mesh {
 InitialConditions
 {    
     type = uniform
-    u = 0
+    u = 1
     v = 0
     w = 0
     p = 0
@@ -98,6 +98,7 @@ BoundaryConditions
 
 
 SolidGeometry {
+    boundaryTreatement = directionalImmersedBoundary
     Block {
         centerPosition = (2.5, 2, 2)
         dimensions     = (1, 1, 1)
@@ -110,20 +111,15 @@ Solver {
 
     Schemes {
 
-        timeScheme                = backwardsThreeLevel
-        timeStepSize              = 0.05
-        numberOfTimesteps         = 100
-        transientStoppingResidual = 
-
         linearisation           = Picard
-        momentumInterpolation   = implicit
+        momentumInterpolation   = semiExplicit
         advectionScheme         = QUICK
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
         maxOuterIterations = 1000
-        maxContinuityOuterResidual = 1e-6
-        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+        maxContinuityOuterResidual = 1e-12
+        maxMomentumOuterResiduals  = (1e-12, 1e-12, 1e-12)
 
     }
     
@@ -143,7 +139,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 3
+        maxCoarseLevels = 2
 
         preSmoothingIterations = 3
         postSmoothingIterations = 3
@@ -156,6 +152,9 @@ Solver {
 
 }
 
+Parallel {
+    numberOfThreads = 2
+}
 
 Output {
 

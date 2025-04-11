@@ -65,7 +65,7 @@ void LinearInterpInteriorFaceVelocitiesWithMWI( EnumVector<Axis, Tensor3D> &face
 }
 
 
-
+[[maybe_unused]]
 void LinearInterpInteriorFaceVelocities( EnumVector<Axis, Tensor3D> &faceVelocities, 
                                          const Tensor3D &cellVelocities, 
                                          const Mesh &mesh, 
@@ -88,6 +88,60 @@ void LinearInterpInteriorFaceVelocities( EnumVector<Axis, Tensor3D> &faceVelocit
                 
                 const floatType interpFactor = mesh.interpFactors[ axis ]( idx[axis] );
                 faceVel( idx ) = (1 - interpFactor) * cellVelocities( loIndexG ) + interpFactor*cellVelocities( hiIndexG );
+
+            }
+        }
+    }
+}
+
+
+// Performance optimised version
+template<Axis::ENUMDATA axis>
+void LinearInterpInteriorFaceVelocities2( EnumVector<Axis, Tensor3D> &faceVelocities, 
+                                          const Tensor3D &cellVelocities, 
+                                          const Mesh &mesh)
+{
+    using enum Axis::ENUMDATA;
+
+    Tensor3D &faceVel = faceVelocities[ axis ];
+
+    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+
+    floatType interpFactor;
+    TensorIndex3D hiIndexG, loIndexG;
+
+
+    for (intType k = startIndex[Z]; k != nFaces[Z]; k++ ) {
+
+        hiIndexG[Z] = G(k);
+        loIndexG[Z] = G(k);
+
+        if constexpr ( axis == Z ) {
+            interpFactor = mesh.interpFactors[ axis ]( k );
+            loIndexG[axis] -= 1;
+        }
+
+        for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+
+            hiIndexG[Y] = G(j);
+            loIndexG[Y] = G(j);
+
+            if constexpr ( axis == Y ) {
+                interpFactor = mesh.interpFactors[ axis ]( j );
+                loIndexG[axis] -= 1;
+            }
+
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+
+                hiIndexG[X] = G(i);
+                loIndexG[X] = G(i);
+
+                if constexpr ( axis == X ) {
+                    interpFactor = mesh.interpFactors[ axis ]( i );
+                    loIndexG[axis] -= 1;
+                }
+                
+                faceVel( i, j, k ) = (1 - interpFactor) * cellVelocities( loIndexG ) + interpFactor*cellVelocities( hiIndexG );
 
             }
         }
@@ -299,9 +353,13 @@ void UpdateFaceFluxes( EnumVector< Axis, Tensor3D > &faceFluxes,
                        const BoundaryConditionData &bcData )
 {
     // Internal faces
-    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        LinearInterpInteriorFaceVelocities( faceFluxes, cellVelocities[axis], mesh, axis);
-    } );
+    // EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+    //     LinearInterpInteriorFaceVelocities( faceFluxes, cellVelocities[axis], mesh, axis);
+    // } );
+    using enum Axis::ENUMDATA;
+    LinearInterpInteriorFaceVelocities2<X>( faceFluxes, cellVelocities[X], mesh);
+    LinearInterpInteriorFaceVelocities2<Y>( faceFluxes, cellVelocities[Y], mesh);
+    LinearInterpInteriorFaceVelocities2<Z>( faceFluxes, cellVelocities[Z], mesh);
 
     // Boundary faces
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {

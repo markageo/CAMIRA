@@ -14,12 +14,12 @@ template< AdvectionSchemes advectionScheme,
           intType          ghostDirection = 0 > // +1 for ghost cell on positive side, -1 for ghost cell on negative side, 0 for no ghost cell
 __attribute__((always_inline, flatten))
 inline floatType FaceInterpolatedVelocity( const Tensor3D &U,
-                                    const FVCoefficients &fvCoeffs,
-                                    const Mesh &mesh,
-                                    const Axis::ENUMDATA axis,
-                                    const TensorIndex3D &hiIndex,
-                                    const TensorIndex3D &loIndex,
-                                    const floatType ghostCellValue = 0.0f )
+                                           const FVCoefficients &fvCoeffs,
+                                           const Mesh &mesh,
+                                           const Axis::ENUMDATA axis,
+                                           const TensorIndex3D &hiIndex,
+                                           const TensorIndex3D &loIndex,
+                                           const floatType ghostCellValue = 0.0f )
 {
     using enum AdvectionSchemes;
 
