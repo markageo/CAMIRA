@@ -69,7 +69,7 @@ Mesh {
 InitialConditions
 {
     type = uniform
-    u = 0
+    u = 1
     v = 0
     w = 0
     p = 0
@@ -144,15 +144,12 @@ Solver {
     Schemes {
 
         linearisation           = Picard
-        momentumInterpolation   = implicit
+        momentumInterpolation   = semiExplicit
         advectionScheme         = QUICK
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
         
         maxOuterIterations = 10
-        maxContinuityOuterResidual = 1e-6
-        maxMomentumOuterResiduals   = (1e-6, 1e-6, 1e-6)
-        maxOuterIterations = 25
         maxContinuityOuterResidual = 1e-6
         maxMomentumOuterResiduals   = (1e-6, 1e-6, 1e-6)
 
@@ -174,13 +171,13 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 0
+        maxCoarseLevels = 3
 
         preSmoothingIterations = 3
         postSmoothingIterations = 3
         fineGridIterations   = 2
 
-        maxCoarseGridIterations = 500
+        maxCoarseGridIterations = 250
         maxCoarseGridResiduals  = 1e-6
         
     }
@@ -188,7 +185,7 @@ Solver {
 }
 
 Parallel {
-    numberOfThreads = 2
+    numberOfThreads = 4
 }
 
 
