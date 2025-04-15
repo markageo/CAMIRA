@@ -144,7 +144,7 @@ Solver {
     Schemes {
 
         linearisation           = Picard
-        momentumInterpolation   = semiExplicit
+        momentumInterpolation   = implicit
         advectionScheme         = QUICK
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
@@ -185,7 +185,7 @@ Solver {
 }
 
 Parallel {
-    numberOfThreads = 2
+    numberOfThreads = 8
 }
 
 Output {

@@ -111,7 +111,7 @@ struct TransportCoefficients
 
 // For looping through enum and applying lambda to each element
 template<typename enumStruct, typename L>
-void EnumFor( L&& f )
+inline void EnumFor( L&& f )
 {
     static_assert(std::is_same<enumStruct, Axis                 >::value ||
                   std::is_same<enumStruct, BoundaryConditions   >::value ||

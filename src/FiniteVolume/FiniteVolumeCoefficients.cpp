@@ -3,11 +3,18 @@
 #include "../Core/FVTools.h"
 #include "../Core/FVLookups.h"
 #include "FaceInterpolatedVelocity.h"
+#include "../Parallel/Parallel.h"
 
+#include <RAJA/index/RangeSegment.hpp>
+#include <RAJA/pattern/kernel.hpp>
+#include <RAJA/policy/openmp/kernel/Collapse.hpp>
+#include <RAJA/policy/openmp/policy.hpp>
+#include <RAJA/policy/sequential/policy.hpp>
 #include <algorithm>
 #include <iostream>
 #include <vector>
 #include <cmath>
+#include <functional>
 
 #include <string>
 #include "../IO/ArrayIO.h"
@@ -187,6 +194,8 @@ void SetHighOrderAdvectionCoefficients( FVCoefficients &fvCoeffs,
 // Upwind implicit coefficients with deffered correction for higher order schemes
 // Assumes that the 'p' coefficient has been set to zero
 template< AdvectionSchemes advectionScheme > 
+[[maybe_unused]]
+__attribute__((flatten))
 void InteriorAdvectionCoefficients( FVCoefficients &fvCoeffs, 
                                     const FieldData<Tensor3D> &fields,
                                     const EnumVector<Axis, Tensor3D> &faceFluxes, 
@@ -276,16 +285,17 @@ void InteriorAdvectionCoefficients( FVCoefficients &fvCoeffs,
 }
 
 
+
 // Direction is a template parameter to allow for compiler optimisations
 // Assumes that the 'p' coefficient has been set to zero
 template< AdvectionSchemes advectionScheme,
           Axis::ENUMDATA axis >
-void InteriorAdvectionCoefficients2Direction( FVCoefficients &fvCoeffs, 
-                                              const FieldData<Tensor3D> &fields,
-                                              const EnumVector<Axis, Tensor3D> &faceFluxes, 
-                                              const Mesh &mesh )
+__attribute__((flatten))
+void InteriorAdvectionCoefficientsDirection( FVCoefficients &fvCoeffs, 
+                                             const FieldData<Tensor3D> &fields,
+                                             const EnumVector<Axis, Tensor3D> &faceFluxes, 
+                                             const Mesh &mesh )
 {
-
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
     using FVT::G;
@@ -335,10 +345,6 @@ void InteriorAdvectionCoefficients2Direction( FVCoefficients &fvCoeffs,
                     loIndex[axis] -= 1;
                 }
 
-
-                hiIndex = { i, j, k },
-                loIndex = { i, j, k };
-                loIndex[axis] -= 1;
                 loCellLengthInv = mesh.cellLengthsInv[axis]( loIndex[axis] );
                 hiCellLengthInv = mesh.cellLengthsInv[axis]( hiIndex[axis] );
 
@@ -399,18 +405,138 @@ void InteriorAdvectionCoefficients2Direction( FVCoefficients &fvCoeffs,
 }
 
 
-// Optimised version
+
+template< Axis::ENUMDATA axis>
+struct AdvectionExecutionPolicy;
+template<>
+struct AdvectionExecutionPolicy< Axis::X > {
+    using type = RAJA::KernelPolicy< RAJA::statement::Collapse<RAJA::omp_parallel_collapse_exec,
+                                         RAJA::ArgList<2, 1>,
+                                         RAJA::statement::For< 0, RAJA::seq_exec, 
+                                             RAJA::statement::Lambda<0>
+                                         >  
+                                         
+                                     > 
+                                   >;  
+};
+
+template<>
+struct AdvectionExecutionPolicy< Axis::Y > {
+    using type = RAJA::KernelPolicy< RAJA::statement::For< 2, RAJA::omp_parallel_for_exec,
+                                         RAJA::statement::For< 1, RAJA::seq_exec, 
+                                             RAJA::statement::For< 0, RAJA::seq_exec, 
+                                                RAJA::statement::Lambda<0>
+                                             > 
+                                         > 
+                                     > 
+                                   >;  
+};
+
+template<>
+struct AdvectionExecutionPolicy< Axis::Z > {
+    using type = RAJA::KernelPolicy< RAJA::statement::For< 2, RAJA::seq_exec,
+                                         RAJA::statement::Collapse<RAJA::omp_parallel_collapse_exec, 
+                                             RAJA::ArgList<1, 0>,
+                                                RAJA::statement::Lambda<0>
+                                         > 
+                                     > 
+                                   >;  
+};
+
+
+// Upwind implicit coefficients with deffered correction for higher order schemes
 // Assumes that the 'p' coefficient has been set to zero
-template< AdvectionSchemes advectionScheme > 
-void InteriorAdvectionCoefficients2( FVCoefficients &fvCoeffs, 
-                                    const FieldData<Tensor3D> &fields,
-                                    const EnumVector<Axis, Tensor3D> &faceFluxes, 
-                                    const Mesh &mesh)
+template< AdvectionSchemes advectionScheme,
+          Axis::ENUMDATA axis >
+__attribute__((flatten))
+void InteriorAdvectionCoefficientsParallelDirection( FVCoefficients &fvCoeffs, 
+                                                     const FieldData<Tensor3D> &fields,
+                                                     const EnumVector<Axis, Tensor3D> &faceFluxes, 
+                                                     const Mesh &mesh)
 {
     using enum Axis::ENUMDATA;
-    InteriorAdvectionCoefficients2Direction<advectionScheme, X>(fvCoeffs, fields, faceFluxes, mesh);
-    InteriorAdvectionCoefficients2Direction<advectionScheme, Y>(fvCoeffs, fields, faceFluxes, mesh);
-    InteriorAdvectionCoefficients2Direction<advectionScheme, Z>(fvCoeffs, fields, faceFluxes, mesh);
+    using enum TransportCoefficients::ENUMDATA;
+    using FVT::G;
+
+    using execPolicy = AdvectionExecutionPolicy<axis>::type;  
+
+    constexpr bool hasDeferredCorrection = ( advectionScheme != AdvectionSchemes::Upwind );
+
+    auto &AU     = fvCoeffs.Mom[X].AU;  // All equations share the same underlying data
+    
+    const auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+
+    constexpr TransportCoefficients::ENUMDATA east = LUT::HiCoeff[axis], 
+                                              west = LUT::LoCoeff[axis];
+
+    RAJA::kernel<execPolicy>( 
+        RAJA::make_tuple( RAJA::TypedRangeSegment<intType>( startIndex[X], nFaces[X] ),
+                          RAJA::TypedRangeSegment<intType>( startIndex[Y], nFaces[Y] ),
+                          RAJA::TypedRangeSegment<intType>( startIndex[Z], nFaces[Z] ) 
+                        ),
+        [&] ( intType i, intType j, intType k ) {
+
+            TensorIndex3D hiIndex = { i, j, k },
+                          loIndex = { i, j, k };
+            loIndex[axis] -= 1;
+
+
+            const TensorIndex3D hiIndexG = G(hiIndex),
+                                loIndexG = G(loIndex);
+
+            const floatType faceFlux = faceFluxes[ axis ](i, j, k);
+            const bool fluxIsPositive = ( faceFlux >= 0.0f );
+
+            if ( fluxIsPositive ) {
+                AU[p   ](loIndexG) +=   faceFlux * mesh.cellLengthsInv[axis]( loIndex[axis] );
+                AU[east](loIndexG)  =   0.0f;
+                AU[p   ](hiIndexG) +=   0.0f;
+                AU[west](hiIndexG)  = - faceFlux * mesh.cellLengthsInv[axis]( hiIndex[axis] );
+            } else {
+                AU[p   ](loIndexG) +=   0.0f;
+                AU[east](loIndexG)  =   faceFlux * mesh.cellLengthsInv[axis]( loIndex[axis] );
+                AU[p   ](hiIndexG) += - faceFlux * mesh.cellLengthsInv[axis]( hiIndex[axis] );
+                AU[west](hiIndexG)  =   0.0f;
+            }
+
+
+            if constexpr ( hasDeferredCorrection ) {
+            
+                // Source term is different for each momentum equation (due to advected velocity)
+                EnumFor<Axis>( [&] (Axis::ENUMDATA comp) {
+
+                    const auto &U   = fields.U[comp];
+                    auto &sourceTerm = fvCoeffs.Mom[comp].B;
+
+                    floatType highOrderAdvectedVelocity{0.0f},
+                                upwindAdvectedVelocity{0.0f};
+
+                    if ( fluxIsPositive ) {
+                        highOrderAdvectedVelocity = FaceInterpolatedVelocity<advectionScheme         , +1>(U, fvCoeffs, mesh, axis, hiIndex, loIndex);
+                        upwindAdvectedVelocity    = FaceInterpolatedVelocity<AdvectionSchemes::Upwind, +1>(U, fvCoeffs, mesh, axis, hiIndex, loIndex);
+                    } else {
+                        highOrderAdvectedVelocity = FaceInterpolatedVelocity<advectionScheme         , -1>(U, fvCoeffs, mesh, axis, hiIndex, loIndex);
+                        upwindAdvectedVelocity    = FaceInterpolatedVelocity<AdvectionSchemes::Upwind, -1>(U, fvCoeffs, mesh, axis, hiIndex, loIndex);
+                    }
+
+                    // Deferred correction term
+                    sourceTerm(loIndexG) +=   fvCoeffs.advectionBlendingFactor 
+                                          *   faceFlux
+                                          *   ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
+                                          *   mesh.cellLengthsInv[axis]( loIndex[axis] );
+                        
+                    sourceTerm(hiIndexG) += - fvCoeffs.advectionBlendingFactor 
+                                          *   faceFlux
+                                          *   ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
+                                          *   mesh.cellLengthsInv[axis]( hiIndex[axis] );
+
+                } );
+
+            }
+            
+        }  
+    ); 
+
 }
 
 
@@ -476,13 +602,14 @@ void BoundaryAdvectionCoefficients( FVCoefficients &fvCoeffs,
     
 }
 
-
+[[maybe_unused]]
 void SetAdvectionCoefficients( FVCoefficients &fvCoeffs,
                                const FieldData<Tensor3D> &fields,
                                const EnumVector<Axis, Tensor3D> &faceFluxes,
                                const Mesh &mesh )
 {
     using enum TransportCoefficients::ENUMDATA;
+    using enum Axis::ENUMDATA;
     
     // Boundary terms
     BoundaryAdvectionCoefficients(fvCoeffs, faceFluxes, mesh);
@@ -491,23 +618,71 @@ void SetAdvectionCoefficients( FVCoefficients &fvCoeffs,
     switch ( fvCoeffs.advectionScheme ) {
 
         case AdvectionSchemes::Upwind:
-            InteriorAdvectionCoefficients2<AdvectionSchemes::Upwind>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsDirection<AdvectionSchemes::Upwind, X>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsDirection<AdvectionSchemes::Upwind, Y>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsDirection<AdvectionSchemes::Upwind, Z>(fvCoeffs, fields, faceFluxes, mesh);
             break;
 
         case AdvectionSchemes::Central:
-            InteriorAdvectionCoefficients2<AdvectionSchemes::Central>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsDirection<AdvectionSchemes::Central, X>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsDirection<AdvectionSchemes::Central, Y>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsDirection<AdvectionSchemes::Central, Z>(fvCoeffs, fields, faceFluxes, mesh);
             break;
 
         case AdvectionSchemes::SOU:
-            InteriorAdvectionCoefficients2<AdvectionSchemes::SOU>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsDirection<AdvectionSchemes::SOU, X>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsDirection<AdvectionSchemes::SOU, Y>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsDirection<AdvectionSchemes::SOU, Z>(fvCoeffs, fields, faceFluxes, mesh);
             break;
 
         case AdvectionSchemes::QUICK:
-            InteriorAdvectionCoefficients2<AdvectionSchemes::QUICK>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsDirection<AdvectionSchemes::QUICK, X>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsDirection<AdvectionSchemes::QUICK, Y>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsDirection<AdvectionSchemes::QUICK, Z>(fvCoeffs, fields, faceFluxes, mesh);
             break;
-    }
+    }      
+}
 
+
+
+void SetAdvectionCoefficientsParallel( FVCoefficients &fvCoeffs,
+                                       const FieldData<Tensor3D> &fields,
+                                       const EnumVector<Axis, Tensor3D> &faceFluxes,
+                                       const Mesh &mesh )
+{
+    using enum TransportCoefficients::ENUMDATA;
+    using enum Axis::ENUMDATA;
     
+    // Boundary terms
+    BoundaryAdvectionCoefficients(fvCoeffs, faceFluxes, mesh);
+
+    // Interior terms
+    switch ( fvCoeffs.advectionScheme ) {
+
+        case AdvectionSchemes::Upwind:
+            InteriorAdvectionCoefficientsParallelDirection<AdvectionSchemes::Upwind, X>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsParallelDirection<AdvectionSchemes::Upwind, Y>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsParallelDirection<AdvectionSchemes::Upwind, Z>(fvCoeffs, fields, faceFluxes, mesh);
+            break;
+
+        case AdvectionSchemes::Central:
+            InteriorAdvectionCoefficientsParallelDirection<AdvectionSchemes::Central, X>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsParallelDirection<AdvectionSchemes::Central, Y>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsParallelDirection<AdvectionSchemes::Central, Z>(fvCoeffs, fields, faceFluxes, mesh);
+            break;
+
+        case AdvectionSchemes::SOU:
+            InteriorAdvectionCoefficientsParallelDirection<AdvectionSchemes::SOU, X>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsParallelDirection<AdvectionSchemes::SOU, Y>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsParallelDirection<AdvectionSchemes::SOU, Z>(fvCoeffs, fields, faceFluxes, mesh);
+            break;
+
+        case AdvectionSchemes::QUICK:
+            InteriorAdvectionCoefficientsParallelDirection<AdvectionSchemes::QUICK, X>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsParallelDirection<AdvectionSchemes::QUICK, Y>(fvCoeffs, fields, faceFluxes, mesh);
+            InteriorAdvectionCoefficientsParallelDirection<AdvectionSchemes::QUICK, Z>(fvCoeffs, fields, faceFluxes, mesh);
+            break;
+    }    
 }
 
 
@@ -515,7 +690,7 @@ void SetAdvectionCoefficients( FVCoefficients &fvCoeffs,
                                            Add Diffusion Coefficients
 \*---------------------------------------------------------------------------------------------------------------*/
 
-
+[[maybe_unused]]
 void AddDiffusion( FVCoefficients &fvCoeffs,
                    const Mesh &mesh)
 {
@@ -560,6 +735,50 @@ void AddDiffusion( FVCoefficients &fvCoeffs,
             }
         }
     }
+
+}
+
+
+
+
+void AddDiffusionParallel( FVCoefficients &fvCoeffs,
+                           const Mesh &mesh )
+{
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+    using FVT::G;
+
+    auto &velCoeffs   = fvCoeffs.Mom[X].AU; // Shared data by all momentum equations
+    const auto &diffCoeffs = fvCoeffs.diff;
+
+    using execPolicy = RAJA::KernelPolicy< RAJA::statement::Collapse<RAJA::omp_parallel_collapse_exec,
+                                           RAJA::ArgList<2, 1, 0>,
+                                               RAJA::statement::Lambda<0>
+                                            > 
+                                         >;  
+
+    RAJA::kernel<execPolicy>( 
+        RAJA::make_tuple( RAJA::TypedRangeSegment<intType>( 0, mesh.nCells(X) ),
+                          RAJA::TypedRangeSegment<intType>( 0, mesh.nCells(Y) ),
+                          RAJA::TypedRangeSegment<intType>( 0, mesh.nCells(Z) ) 
+                        ),
+                            [&] ( intType i, intType j, intType k ) {
+                            const intType ig = G(i),
+                                          jg = G(j),
+                                          kg = G(k);
+
+                            velCoeffs[p](ig, jg, kg) += diffCoeffs[X][p](i) + diffCoeffs[Y][p](j) + diffCoeffs[Z][p](k);
+
+                            velCoeffs[e](ig, jg, kg) += diffCoeffs[X][e](i);
+                            velCoeffs[w](ig, jg, kg) += diffCoeffs[X][w](i);
+                            
+                            velCoeffs[n](ig, jg, kg) += diffCoeffs[Y][n](j);
+                            velCoeffs[s](ig, jg, kg) += diffCoeffs[Y][s](j);
+
+                            velCoeffs[t](ig, jg, kg) += diffCoeffs[Z][t](k);
+                            velCoeffs[b](ig, jg, kg) += diffCoeffs[Z][b](k);
+                            }
+                        );
 
 }
 
@@ -776,8 +995,8 @@ void MWInterpolationInteriorImplicit( FVCoefficients &fvCoeffs,
 template<Axis::ENUMDATA axis>
 [[maybe_unused]] 
 __attribute__((flatten))
-void MWInterpolationInteriorImplicit2( FVCoefficients &fvCoeffs,
-                                       const Mesh &mesh)
+void MWInterpolationInteriorImplicit( FVCoefficients &fvCoeffs,
+                                      const Mesh &mesh)
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
@@ -867,6 +1086,119 @@ void MWInterpolationInteriorImplicit2( FVCoefficients &fvCoeffs,
             }
         }
     }
+
+}
+
+
+
+template< Axis::ENUMDATA axis>
+struct MWIExecutionPolicy;
+template<>
+struct MWIExecutionPolicy< Axis::X > {
+    using type = RAJA::KernelPolicy< RAJA::statement::Collapse<RAJA::omp_parallel_collapse_exec,
+                                         RAJA::ArgList<2, 1>,
+                                         RAJA::statement::For< 0, RAJA::seq_exec, 
+                                             RAJA::statement::Lambda<0>
+                                         >  
+                                         
+                                     > 
+                                   >;  
+};
+
+template<>
+struct MWIExecutionPolicy< Axis::Y > {
+    using type = RAJA::KernelPolicy< RAJA::statement::For< 2, RAJA::omp_parallel_for_exec,
+                                         RAJA::statement::For< 1, RAJA::seq_exec, 
+                                             RAJA::statement::For< 0, RAJA::seq_exec, 
+                                                RAJA::statement::Lambda<0>
+                                             > 
+                                         > 
+                                     > 
+                                   >;  
+};
+
+template<>
+struct MWIExecutionPolicy< Axis::Z > {
+    using type = RAJA::KernelPolicy< RAJA::statement::For< 2, RAJA::seq_exec,
+                                         RAJA::statement::Collapse<RAJA::omp_parallel_collapse_exec, 
+                                             RAJA::ArgList<1, 0>,
+                                                RAJA::statement::Lambda<0>
+                                         > 
+                                     > 
+                                   >;  
+};
+
+
+// Fully implicit momentum interpolation coefficient for internal faces
+template< Axis::ENUMDATA axis >
+[[maybe_unused]]
+__attribute__((flatten))
+void MWInterpolationInteriorImplicitParallel( FVCoefficients &fvCoeffs,
+                                              const Mesh &mesh )
+{
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
+    using FVT::G;
+
+    using execPolicy = MWIExecutionPolicy<axis>::type;  
+
+    // Unpack
+    EnumVector<TransportCoefficients, Tensor3D> &continuityPressureCoeffs = fvCoeffs.Cont.AP;
+    const Tensor3D &momentumDiagCoeff                                     = fvCoeffs.Mom[X].AU[p];
+    const std::array< Tensor1D, 4 > &mwiSparseCoeffs                      = fvCoeffs.mwiSparseCoeffs[axis];
+    const std::array< Tensor1D, 2 > &mwiCompactCoeffs                     = fvCoeffs.mwiCompactCoeffs[axis];
+
+    // Cell indexing
+    constexpr TransportCoefficients::ENUMDATA east  = LUT::HiCoeff[axis], 
+                                              eeast = LUT::HiHiCoeff[axis],
+                                              west  = LUT::LoCoeff[axis],
+                                              wwest = LUT::LoLoCoeff[axis];
+
+    // Set the first most plane to zero only. We do this so that the high coefficients can be set in place, and less coefficients have to 
+    // be zeroed upon re-linearisation.
+    continuityPressureCoeffs[east ].chip(G(0), axis).setZero();
+    continuityPressureCoeffs[west ].chip(G(0), axis).setZero();
+
+    const auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+
+    RAJA::kernel<execPolicy>( 
+        RAJA::make_tuple( RAJA::TypedRangeSegment<intType>( startIndex[X], nFaces[X] ),
+                          RAJA::TypedRangeSegment<intType>( startIndex[Y], nFaces[Y] ),
+                          RAJA::TypedRangeSegment<intType>( startIndex[Z], nFaces[Z] ) 
+                        ),
+        [&] ( intType i, intType j, intType k ) {
+
+                TensorIndex3D hiIndex = { i, j, k },
+                              loIndex = { i, j, k };
+                loIndex[axis] -= 1;
+
+                const floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeff, mesh, axis );
+
+                // Coefficients for westmost to eastmost cell
+                const intType idx = hiIndex[axis];
+                floatType coeff0 = d * mwiSparseCoeffs[0](idx),
+                          coeff1 = d * ( mwiSparseCoeffs[1](idx) + mwiCompactCoeffs[0](idx) ),
+                          coeff2 = d * ( mwiSparseCoeffs[2](idx) + mwiCompactCoeffs[1](idx) ),
+                          coeff3 = d * mwiSparseCoeffs[3](idx);
+
+                // Cell on west side 
+                const floatType LoCellLengthInv = mesh.cellLengthsInv[axis]( loIndex[axis] );
+                loIndex = G(loIndex);
+                continuityPressureCoeffs[west ](loIndex) += coeff0 * LoCellLengthInv;
+                continuityPressureCoeffs[p    ](loIndex) += coeff1 * LoCellLengthInv;
+                continuityPressureCoeffs[east ](loIndex) += coeff2 * LoCellLengthInv;
+                continuityPressureCoeffs[eeast](loIndex)  = coeff3 * LoCellLengthInv;
+
+                // Cell on east side
+                const floatType HiCellLengthInv = mesh.cellLengthsInv[axis]( hiIndex[axis] );
+                hiIndex = G(hiIndex);
+                continuityPressureCoeffs[wwest](hiIndex)  = - coeff0 * HiCellLengthInv;
+                continuityPressureCoeffs[west ](hiIndex)  = - coeff1 * HiCellLengthInv;
+                continuityPressureCoeffs[p    ](hiIndex) += - coeff2 * HiCellLengthInv;
+                continuityPressureCoeffs[east ](hiIndex)  = - coeff3 * HiCellLengthInv;
+
+        }
+    );
 
 }
 
@@ -977,7 +1309,7 @@ void MWInterpolationInteriorSemiExplicit( FVCoefficients &fvCoeffs,
 template<Axis::ENUMDATA axis>
 [[maybe_unused]] 
 __attribute__((flatten))
-void MWInterpolationInteriorSemiExplicit2( FVCoefficients &fvCoeffs, 
+void MWInterpolationInteriorSemiExplicit( FVCoefficients &fvCoeffs, 
                                           const Tensor3D &P,
                                           const Mesh &mesh )
 {
@@ -1099,38 +1431,152 @@ void MWInterpolationInteriorSemiExplicit2( FVCoefficients &fvCoeffs,
 }
 
 
-// Set momentum interpolation coefficients
-void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
-                                           const Mesh &mesh,
-                          [[maybe_unused]] const Tensor3D &P )
+
+template< Axis::ENUMDATA axis >
+[[maybe_unused]]
+__attribute__((flatten))
+void MWInterpolationInteriorSemiExplicitParallel( FVCoefficients &fvCoeffs, 
+                                                  const Tensor3D &P,
+                                                  const Mesh &mesh )
 {
-    // Correction is zero at the boundary faces
-    // EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-    //     switch ( fvCoeffs.momentumInterpolation ) {
-    //         case MomentumInterpolation::Implicit:
-    //             MWInterpolationInteriorImplicit(fvCoeffs, mesh, axis);
-    //             break;
+    using enum Axis::ENUMDATA;
+    using enum TransportCoefficients::ENUMDATA;
 
-    //         case MomentumInterpolation::SemiExplicit:
-    //                 MWInterpolationInteriorSemiExplicit(fvCoeffs, P, mesh, axis);
-    //                 break;
-    //     }
-    // } );
+    using execPolicy = AdvectionExecutionPolicy<axis>::type;  
 
+    // Unpack
+    EnumVector<TransportCoefficients, Tensor3D> &continuityPressureCoeffs = fvCoeffs.Cont.AP;
+    Tensor3D &continuitySourceTerm                                        = fvCoeffs.Cont.B;
+    const Tensor3D &momentumDiagCoeff                                     = fvCoeffs.Mom[X].AU[p];
+    const std::array< Tensor1D, 4 > &mwiSparseCoeffs                      = fvCoeffs.mwiSparseCoeffs[axis];
+    const std::array< Tensor1D, 2 > &mwiCompactCoeffs                     = fvCoeffs.mwiCompactCoeffs[axis];
+
+    // For getting the index of a neighbouring cell
+    auto NeighbourIndex = [] ( TensorIndex3D index, intType shift, Axis::ENUMDATA shiftAxis ) { 
+        index[shiftAxis] += shift; 
+        return index; 
+    };
+
+    // Cell indexing
+    constexpr TransportCoefficients::ENUMDATA east  = LUT::HiCoeff[axis], 
+                                              west  = LUT::LoCoeff[axis];
+
+    const auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+
+    RAJA::kernel<execPolicy>( 
+        RAJA::make_tuple( RAJA::TypedRangeSegment<intType>( startIndex[X], nFaces[X] ),
+                          RAJA::TypedRangeSegment<intType>( startIndex[Y], nFaces[Y] ),
+                          RAJA::TypedRangeSegment<intType>( startIndex[Z], nFaces[Z] ) 
+                        ),
+        [&] ( intType i, intType j, intType k ) {
+
+                TensorIndex3D hiIndex = { i, j, k },
+                              loIndex = { i, j, k };
+                loIndex[axis] -= 1;
+                 
+                const floatType d = MWIWeightingCoeff( loIndex, hiIndex, momentumDiagCoeff, mesh, axis );
+
+                const floatType LoCellLengthInv = mesh.cellLengthsInv[axis]( loIndex[axis] ),
+                                HiCellLengthInv = mesh.cellLengthsInv[axis]( hiIndex[axis] );
+
+
+                // Implicit compact difference --------------------------------------------------------------------------
+                                
+
+                // Coefficients for westmost to eastmost cell
+                const intType idx = hiIndex[axis];
+                floatType coeffCompact0 = d * mwiCompactCoeffs[0](idx),
+                          coeffCompact1 = d * mwiCompactCoeffs[1](idx);
+
+                // Cell on west side 
+                continuityPressureCoeffs[p    ](G(loIndex)) +=   coeffCompact0 * LoCellLengthInv;
+                continuityPressureCoeffs[east ](G(loIndex))  =   coeffCompact1 * LoCellLengthInv;
+
+                // Cell on east side
+                continuityPressureCoeffs[west ](G(hiIndex))  = - coeffCompact0 * HiCellLengthInv;
+                continuityPressureCoeffs[p    ](G(hiIndex)) += - coeffCompact1 * HiCellLengthInv;
+
+
+                // Explicit sparse difference ---------------------------------------------------------------------------
+
+                const TensorIndex3D loWest  = NeighbourIndex( loIndex, -1, axis ),
+                                    loEast  = NeighbourIndex( loIndex,  1, axis ),
+                                    loEEast = NeighbourIndex( loIndex,  2, axis ),
+
+                                    hiWWest = NeighbourIndex( hiIndex, -2, axis ),
+                                    hiWest  = NeighbourIndex( hiIndex, -1, axis ),
+                                    hiEast  = NeighbourIndex( hiIndex,  1, axis );
+
+                const floatType coeffSparse0 = d * mwiSparseCoeffs[0](idx),
+                                coeffSparse1 = d * mwiSparseCoeffs[1](idx),
+                                coeffSparse2 = d * mwiSparseCoeffs[2](idx),
+                                coeffSparse3 = d * mwiSparseCoeffs[3](idx);
+
+                // Cell on west side 
+                continuitySourceTerm(G(loIndex)) += ( coeffSparse0 * P( G(loWest)  )
+                                                    + coeffSparse1 * P( G(loIndex) )
+                                                    + coeffSparse2 * P( G(loEast)  )
+                                                    + coeffSparse3 * P( G(loEEast) )
+                                                    ) * LoCellLengthInv;
+
+                // Cell on east side
+                continuitySourceTerm(G(hiIndex)) -= ( coeffSparse0 * P( G(hiWWest) )
+                                                    + coeffSparse1 * P( G(hiWest)  )
+                                                    + coeffSparse2 * P( G(hiIndex) )
+                                                    + coeffSparse3 * P( G(hiEast)  )
+                                                    ) * HiCellLengthInv;
+
+
+                // ------------------------------------------------------------------------------------------------------
+
+        }
+    );
+
+}
+
+
+
+// Set momentum interpolation coefficients
+[[maybe_unused]]
+void SetMomentumInterpolationCoefficientsParallel( FVCoefficients &fvCoeffs,
+                                                   const Mesh &mesh,
+                                                   const Tensor3D &P )
+{
     switch ( fvCoeffs.momentumInterpolation ) {
         case MomentumInterpolation::Implicit:
-            MWInterpolationInteriorImplicit2<Axis::X>(fvCoeffs, mesh);
-            MWInterpolationInteriorImplicit2<Axis::Y>(fvCoeffs, mesh);
-            MWInterpolationInteriorImplicit2<Axis::Z>(fvCoeffs, mesh);
+            MWInterpolationInteriorImplicitParallel<Axis::X>(fvCoeffs, mesh);
+            MWInterpolationInteriorImplicitParallel<Axis::Y>(fvCoeffs, mesh);
+            MWInterpolationInteriorImplicitParallel<Axis::Z>(fvCoeffs, mesh);
             break;
 
         case MomentumInterpolation::SemiExplicit:
-            MWInterpolationInteriorSemiExplicit2<Axis::X>(fvCoeffs, P, mesh);
-            MWInterpolationInteriorSemiExplicit2<Axis::Y>(fvCoeffs, P, mesh);
-            MWInterpolationInteriorSemiExplicit2<Axis::Z>(fvCoeffs, P, mesh);
+            MWInterpolationInteriorSemiExplicitParallel<Axis::X>(fvCoeffs, P, mesh);
+            MWInterpolationInteriorSemiExplicitParallel<Axis::Y>(fvCoeffs, P, mesh);
+            MWInterpolationInteriorSemiExplicitParallel<Axis::Z>(fvCoeffs, P, mesh);
             break;
     }
+}
 
+
+// Set momentum interpolation coefficients
+[[maybe_unused]]
+void SetMomentumInterpolationCoefficients( FVCoefficients &fvCoeffs,
+                                           const Mesh &mesh,
+                                           const Tensor3D &P )
+{
+    switch ( fvCoeffs.momentumInterpolation ) {
+        case MomentumInterpolation::Implicit:
+            MWInterpolationInteriorImplicit<Axis::X>(fvCoeffs, mesh);
+            MWInterpolationInteriorImplicit<Axis::Y>(fvCoeffs, mesh);
+            MWInterpolationInteriorImplicit<Axis::Z>(fvCoeffs, mesh);
+            break;
+
+        case MomentumInterpolation::SemiExplicit:
+            MWInterpolationInteriorSemiExplicit<Axis::X>(fvCoeffs, P, mesh);
+            MWInterpolationInteriorSemiExplicit<Axis::Y>(fvCoeffs, P, mesh);
+            MWInterpolationInteriorSemiExplicit<Axis::Z>(fvCoeffs, P, mesh);
+            break;
+    }
 }
 
 
@@ -1655,8 +2101,8 @@ void SetGhostCellsToConstant( Tensor3D &array,
 }
 
 
-
 // Set the coefficients that need to be relinearised to zero
+[[maybe_unused]]
 void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
 {
     using enum TransportCoefficients::ENUMDATA;
@@ -1680,6 +2126,43 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
     fvCoeffs.Cont.B.setZero();
     fvCoeffs.Cont.F.setZero();
 }
+
+
+// Set the coefficients that need to be relinearised to zero
+void ZeroNonlinearCoeffsParallel( FVCoefficients &fvCoeffs )
+{
+    using enum TransportCoefficients::ENUMDATA;
+    using enum Axis::ENUMDATA;
+    
+    // Each task will be done by a seperate thread
+    std::vector< std::function<void()> > tasks;
+
+    // Momentum equations 
+    tasks.emplace_back( [&] () { 
+        fvCoeffs.Mom[X].AU[p].setZero();
+        SetGhostCellsToConstant(fvCoeffs.Mom[X].AU[p], 1.0f); // To avoid divide by zero in solver
+    } );
+    
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        tasks.emplace_back( [&, axis] () { fvCoeffs.Mom[axis].B.setZero(); } );
+        tasks.emplace_back( [&, axis] () { fvCoeffs.Mom[axis].F.setZero(); } );
+    } );
+    
+    // Continuity equation
+    tasks.emplace_back( [&] () { fvCoeffs.Cont.AP[p].setZero(); } );
+    tasks.emplace_back( [&] () { fvCoeffs.Cont.B.setZero(); } );
+    tasks.emplace_back( [&] () { fvCoeffs.Cont.F.setZero(); } );
+
+    // Parallel execution
+    size_t nTasks = tasks.size();
+    RAJA::forall<RAJA::omp_parallel_for_exec>( 
+        RAJA::TypedRangeSegment<size_t>(0, nTasks), 
+        [&] (size_t i) {
+            tasks[i]();
+        } 
+    );
+}
+
 
 
 }   // end anonymous namespace
@@ -1728,19 +2211,33 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
                            const EnumVector<Axis, Tensor3D> &faceFluxes,
                            const IBData &ibData )
 {
-    ZeroNonlinearCoeffs(fvCoeffs);
+    TIC("Zero nonlinear coefficients")
+    ZeroNonlinearCoeffsParallel(fvCoeffs);
+    TOC()
 
-    SetAdvectionCoefficients(fvCoeffs, fields, faceFluxes, mesh);
+    TIC("Set advection")
+    SetAdvectionCoefficientsParallel(fvCoeffs, fields, faceFluxes, mesh);
+    TOC()
 
-    AddDiffusion(fvCoeffs, mesh);
+    TIC("Add diffusion")
+    AddDiffusionParallel(fvCoeffs, mesh);
+    TOC()
 
+    TIC("Change stencil to central at IB")
     ChangeStencilToCentralAtIB( fvCoeffs, ibData, faceFluxes, mesh );
+    TOC()
 
+    TIC("Add unsteady term")
     AddUnsteadyTerm(fvCoeffs, fieldsPrevTime, fieldsPrevPrevTime, mesh);
+    TOC()
 
-    SetMomentumInterpolationCoefficients(fvCoeffs, mesh, fields.P);
+    TIC("Set MWI coefficients")
+    SetMomentumInterpolationCoefficientsParallel(fvCoeffs, mesh, fields.P);
+    TOC()
 
+    TIC("Add IB source terms")
     AddIBSourceTerms(fvCoeffs, faceFluxes, ibData, fields, mesh);
+    TOC()
 }
 
 
