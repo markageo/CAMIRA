@@ -265,6 +265,7 @@ inline FieldData<Tensor3D> ResidualsField( const FieldData<Tensor3D> &fields,
                                              fvCoeffs.nCells[Y] + 2*CFD::nGhost, 
                                              fvCoeffs.nCells[Z] + 2*CFD::nGhost ).setZero() );
 
+    #pragma omp parallel for collapse(3)
     for ( intType k = 0; k != fvCoeffs.nCells[Z]; k++ ) {
         for ( intType j = 0; j != fvCoeffs.nCells[Y]; j++ ) {
             for ( intType i = 0; i != fvCoeffs.nCells[X]; i++ ) {
