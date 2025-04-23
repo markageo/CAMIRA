@@ -60,7 +60,6 @@ public:
     EnumVector<Axis, MomentumEquation> Mom;
 
     // Momentum equation auxiliary data
-    EnumVector< Axis, EnumVector<TransportCoefficients, Tensor1D> > diff;        // Diffusion coefficients (LHS)
     struct HiOrderAdvectionCoeffs {                                              // Precomputed high
         // SOU     : phi_f = g1 * phi_U  +  g2 * phi_UU
         // QUICK   : phi_f = phi_U  +  g1 * ( phi_D - phi_U )  +  g2 * ( phi_U - phi_UU )

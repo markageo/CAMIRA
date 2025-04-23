@@ -149,8 +149,8 @@ Solver {
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
         
-        maxOuterIterations = 10
-        maxContinuityOuterResidual = 1e-6
+        maxOuterIterations = 8
+        maxContinuityOuterResidual = 0
         maxMomentumOuterResiduals   = (1e-6, 1e-6, 1e-6)
 
     }
@@ -159,7 +159,7 @@ Solver {
 
         type = domainSymmetric
         maxIterations = 3
-        maxResiduals = 1e-3
+        maxResiduals = 0
 
         planeSweepDirection = +z
         lineSweepDirection = +y
@@ -177,8 +177,8 @@ Solver {
         postSmoothingIterations = 3
         fineGridIterations   = 2
 
-        maxCoarseGridIterations = 250
-        maxCoarseGridResiduals  = 1e-6
+        maxCoarseGridIterations = 100
+        maxCoarseGridResiduals  = 0
         
     }
 

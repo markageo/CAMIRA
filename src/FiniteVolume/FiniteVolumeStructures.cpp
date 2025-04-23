@@ -264,10 +264,6 @@ FVCoefficients::FVCoefficients( const iArray3 &dims,
                                  CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero() })
     } ),
 
-    diff({ EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::e, C::w}, dims(X) ),
-           EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::n, C::s}, dims(Y) ),
-           EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::t, C::b}, dims(Z) ) }),
-       
     nCells( dims )
 {};
 
@@ -307,7 +303,6 @@ FVCoefficients::FVCoefficients( const FVCoefficients &that ) :
                               that.Mom[Z].B,
                               that.Mom[Z].F })
         } ),
-    diff( that.diff ),
     positiveFluxHiOrderAdvectionCoeffs( that.positiveFluxHiOrderAdvectionCoeffs ),
     negativeFluxHiOrderAdvectionCoeffs( that.negativeFluxHiOrderAdvectionCoeffs ),
     advectionScheme( that.advectionScheme ),
@@ -345,7 +340,6 @@ FVCoefficients& FVCoefficients::operator=( FVCoefficients that )
         std::swap( this->Mom[axis].B        , that.Mom[axis].B );
         std::swap( this->Mom[axis].F        , that.Mom[axis].F );
     } );
-    std::swap( this->diff                              , that.diff );
     std::swap( this->positiveFluxHiOrderAdvectionCoeffs, that.positiveFluxHiOrderAdvectionCoeffs );
     std::swap( this->negativeFluxHiOrderAdvectionCoeffs, that.negativeFluxHiOrderAdvectionCoeffs );
     std::swap( this->advectionScheme                   , that.advectionScheme );
@@ -394,7 +388,6 @@ FVCoefficients::FVCoefficients( FVCoefficients &&that ) noexcept :
                               std::move( that.Mom[Z].B ),
                               std::move( that.Mom[Z].F ) })
         } ),
-    diff( std::move( that.diff ) ),
     positiveFluxHiOrderAdvectionCoeffs( std::move( that.positiveFluxHiOrderAdvectionCoeffs ) ),
     negativeFluxHiOrderAdvectionCoeffs( std::move( that.negativeFluxHiOrderAdvectionCoeffs ) ),
     advectionScheme( std::move( that.advectionScheme ) ),
