@@ -285,192 +285,184 @@ void SetHighOrderAdvectionCoefficients( FVCoefficients &fvCoeffs,
 
 
 
-template<AdvectionSchemes advectionScheme>
+
+template< AdvectionSchemes advectionScheme,
+          Axis::ENUMDATA axis > 
 __attribute__((flatten))
-void AddDeferredCorrectionImpl( FVCoefficients &fvCoeffs,
-                                const FieldData<Tensor3D> &fields,
-                                const EnumVector<Axis, Tensor3D> &faceFluxes,
-                                const Mesh &mesh )
+void AddDeferredCorrectionImplDirection( FVCoefficients &fvCoeffs, 
+                                         const FieldData<Tensor3D> &fields,
+                                         const EnumVector<Axis, Tensor3D> &faceFluxes, 
+                                         const Mesh &mesh)
 {
     using enum Axis::ENUMDATA;
-    using enum TransportCoefficients::ENUMDATA;
     using FVT::G;
 
-    if constexpr ( advectionScheme == AdvectionSchemes::Upwind )
-        return;
+    const auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
 
-    // #pragma omp parallel for collapse(3)
-    for (intType k = 0; k != mesh.nCells(Z); k++) {
-        for (intType j = 0; j != mesh.nCells(Y); j++) {
-            for (intType i = 0; i != mesh.nCells(X); i++) {
+    floatType loCellLengthInv, hiCellLengthInv;
+    TensorIndex3D loIndex, hiIndex;
+
+    for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+
+        hiIndex[Z] = k;
+        loIndex[Z] = k;
+
+        if constexpr ( axis == Z ) {
+            loCellLengthInv = mesh.cellLengthsInv[axis]( k-1 );
+            hiCellLengthInv = mesh.cellLengthsInv[axis]( k   );
+            loIndex[axis] -= 1;
+        }
+
+        for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+
+            hiIndex[Y] = j;
+            loIndex[Y] = j;
+
+            if constexpr ( axis == Y ) {
+                loCellLengthInv = mesh.cellLengthsInv[axis]( j-1 );
+                hiCellLengthInv = mesh.cellLengthsInv[axis]( j   );
+                loIndex[axis] -= 1;
+            }
+
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
                 
-                const intType ig = G(i),
-                              jg = G(j),
-                              kg = G(k);
+                hiIndex[X] = i;
+                loIndex[X] = i;
 
+                if constexpr ( axis == X ) {
+                    loCellLengthInv = mesh.cellLengthsInv[axis]( i-1 );
+                    hiCellLengthInv = mesh.cellLengthsInv[axis]( i   );
+                    loIndex[axis] -= 1;
+                }
 
-                // Lambda to avoid code repetition
-                auto SetSourceTerm = [&] ( const floatType &faceFlux,
-                                           const Axis::ENUMDATA axis,
-                                           const intType linearIndex,
-                                           const TensorIndex3D &loIndex,
-                                           const TensorIndex3D &hiIndex,
-                                           const floatType sign ) {
-                    if ( faceFlux >= 0 ) {
+                const floatType faceFlux = faceFluxes[ axis ](i, j, k);
+                const bool fluxIsPositive = ( faceFlux >= 0.0f );
+                
+                // Source term is different for each momentum equation (due to advected velocity)
+                EnumFor<Axis>( [&] (Axis::ENUMDATA comp) {
 
-                        EnumFor<Axis>( [&] (Axis::ENUMDATA comp) {
-                            const floatType highOrderAdvectedVelocity = FaceInterpolatedVelocity<advectionScheme         , +1>(fields.U[comp], fvCoeffs, mesh, axis, hiIndex, loIndex );
-                            const floatType upwindAdvectedVelocity    = FaceInterpolatedVelocity<AdvectionSchemes::Upwind, +1>(fields.U[comp], fvCoeffs, mesh, axis, hiIndex, loIndex );
-                            fvCoeffs.Mom[comp].B(ig, jg, kg) += sign
-                                                              * fvCoeffs.advectionBlendingFactor 
-                                                              * faceFlux 
-                                                              * ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
-                                                              * mesh.cellLengthsInv[axis](linearIndex);
-                        } );  
+                    const auto &U   = fields.U[comp];
+                    auto &sourceTerm = fvCoeffs.Mom[comp].B;
 
+                    floatType highOrderAdvectedVelocity{0.0f},
+                              upwindAdvectedVelocity{0.0f};
+
+                    if ( fluxIsPositive ) {
+                        highOrderAdvectedVelocity = FaceInterpolatedVelocity<advectionScheme         , +1>(U, fvCoeffs, mesh, axis, hiIndex, loIndex);
+                        upwindAdvectedVelocity    = FaceInterpolatedVelocity<AdvectionSchemes::Upwind, +1>(U, fvCoeffs, mesh, axis, hiIndex, loIndex);
                     } else {
-                        
-                        EnumFor<Axis>( [&] (Axis::ENUMDATA comp) {
-                            const floatType highOrderAdvectedVelocity = FaceInterpolatedVelocity<advectionScheme         , -1>(fields.U[comp], fvCoeffs, mesh, axis, hiIndex, loIndex );
-                            const floatType upwindAdvectedVelocity    = FaceInterpolatedVelocity<AdvectionSchemes::Upwind, -1>(fields.U[comp], fvCoeffs, mesh, axis, hiIndex, loIndex );
-                            fvCoeffs.Mom[comp].B(ig, jg, kg) += sign
-                                                              * fvCoeffs.advectionBlendingFactor 
-                                                              * faceFlux 
-                                                              * ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
-                                                              * mesh.cellLengthsInv[axis](linearIndex);
-                        } );  
-
+                        highOrderAdvectedVelocity = FaceInterpolatedVelocity<advectionScheme         , -1>(U, fvCoeffs, mesh, axis, hiIndex, loIndex);
+                        upwindAdvectedVelocity    = FaceInterpolatedVelocity<AdvectionSchemes::Upwind, -1>(U, fvCoeffs, mesh, axis, hiIndex, loIndex);
                     }
-                };
 
-                // east face
-                if ( i < mesh.nCells(X)-1 )
-                    SetSourceTerm( faceFluxes[X](i+1, j, k), X, i, {i  , j, k}, {i+1, j, k}, +1.0f);
+                    // Deferred correction term
+                    sourceTerm(G(loIndex)) +=   fvCoeffs.advectionBlendingFactor 
+                                            *   faceFlux
+                                            *   ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
+                                            *   loCellLengthInv;
+                        
+                    sourceTerm(G(hiIndex)) += - fvCoeffs.advectionBlendingFactor 
+                                            *   faceFlux
+                                            *   ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
+                                            *   hiCellLengthInv;
 
-                // west face
-                if ( i > 0 )
-                    SetSourceTerm( faceFluxes[X](i  , j, k), X, i, {i-1, j, k}, {i  , j, k}, -1.0f);
 
-                // north face
-                if ( j < mesh.nCells(Y)-1 )
-                    SetSourceTerm( faceFluxes[Y](i, j+1, k), Y, j, {i, j  , k}, {i, j+1, k}, +1.0f);
-
-                // south face
-                if ( j > 0)
-                    SetSourceTerm( faceFluxes[Y](i, j  , k), Y, j, {i, j-1, k}, {i, j  , k}, -1.0f);
-
-                // top face
-                if ( k < mesh.nCells(Z)-1 )
-                    SetSourceTerm( faceFluxes[Z](i, j, k+1), Z, k, {i, j, k  }, {i, j, k+1}, +1.0f);
-
-                // bottom face
-                if ( k > 0 )
-                    SetSourceTerm( faceFluxes[Z](i, j, k  ), Z, k, {i, j, k-1}, {i, j, k  }, -1.0f);
+                } );
                 
             }
         }
     }
-
+    
 }
 
 
 
 
-template<AdvectionSchemes advectionScheme>
+template< AdvectionSchemes advectionScheme,
+          Axis::ENUMDATA axis > 
 __attribute__((flatten))
-void AddDeferredCorrectionImpl2( FVCoefficients &fvCoeffs,
-                                 const FieldData<Tensor3D> &fields,
-                                 const EnumVector<Axis, Tensor3D> &faceFluxes,
-                                 const Mesh &mesh )
+void AddDeferredCorrectionImplDirectionParallel( FVCoefficients &fvCoeffs, 
+                                                const FieldData<Tensor3D> &fields,
+                                                const EnumVector<Axis, Tensor3D> &faceFluxes, 
+                                                const Mesh &mesh)
 {
     using enum Axis::ENUMDATA;
-    using enum TransportCoefficients::ENUMDATA;
     using FVT::G;
 
-    if constexpr ( advectionScheme == AdvectionSchemes::Upwind )
-        return;
+    const auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
 
-    #pragma omp parallel for
-    for (intType k = 0; k != mesh.nCells(Z); k++) {
+    auto LoopBody = [&] ( intType i, intType j, intType k ) {
+        TensorIndex3D hiIndex = { i, j, k },
+                      loIndex = { i, j, k };
+        loIndex[axis] -= 1;
 
-        const intType kg = G(k);
-        const floatType dz = mesh.cellLengthsInv[Z](k);
+        const floatType faceFlux = faceFluxes[ axis ](i, j, k);
+        const bool fluxIsPositive = ( faceFlux >= 0.0f );
+        
+        // Source term is different for each momentum equation (due to advected velocity)
+        EnumFor<Axis>( [&] (Axis::ENUMDATA comp) {
 
-        for (intType j = 0; j != mesh.nCells(Y); j++) {
+            const auto &U   = fields.U[comp];
+            auto &sourceTerm = fvCoeffs.Mom[comp].B;
 
-            const intType jg = G(j);
-            const floatType dy = mesh.cellLengthsInv[Y](j);
+            floatType highOrderAdvectedVelocity{0.0f},
+                        upwindAdvectedVelocity{0.0f};
 
-            for (intType i = 0; i != mesh.nCells(X); i++) {
+            if ( fluxIsPositive ) {
+                highOrderAdvectedVelocity = FaceInterpolatedVelocity<advectionScheme         , +1>(U, fvCoeffs, mesh, axis, hiIndex, loIndex);
+                upwindAdvectedVelocity    = FaceInterpolatedVelocity<AdvectionSchemes::Upwind, +1>(U, fvCoeffs, mesh, axis, hiIndex, loIndex);
+            } else {
+                highOrderAdvectedVelocity = FaceInterpolatedVelocity<advectionScheme         , -1>(U, fvCoeffs, mesh, axis, hiIndex, loIndex);
+                upwindAdvectedVelocity    = FaceInterpolatedVelocity<AdvectionSchemes::Upwind, -1>(U, fvCoeffs, mesh, axis, hiIndex, loIndex);
+            }
+
+            // Deferred correction term
+            sourceTerm(G(loIndex)) +=   fvCoeffs.advectionBlendingFactor 
+                                    *   faceFlux
+                                    *   ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
+                                    *   mesh.cellLengthsInv[axis]( loIndex[axis] );
                 
-                const intType ig = G(i);
-                const floatType dx = mesh.cellLengthsInv[X](i);
+            sourceTerm(G(hiIndex)) += - fvCoeffs.advectionBlendingFactor 
+                                    *   faceFlux
+                                    *   ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
+                                    *   mesh.cellLengthsInv[axis]( hiIndex[axis] );
 
 
-                // Lambda to avoid code repetition
-                auto SetSourceTerm = [&] ( const floatType faceFlux,
-                                           const floatType cellLengthInv,
-                                           const Axis::ENUMDATA axis,
-                                           const TensorIndex3D &loIndex,
-                                           const TensorIndex3D &hiIndex,
-                                           const floatType sign ) {
-                    if ( faceFlux >= 0 ) {
+        } );
 
-                        EnumFor<Axis>( [&] (Axis::ENUMDATA comp) {
-                            const floatType highOrderAdvectedVelocity = FaceInterpolatedVelocity<advectionScheme         , +1>(fields.U[comp], fvCoeffs, mesh, axis, hiIndex, loIndex );
-                            const floatType upwindAdvectedVelocity    = FaceInterpolatedVelocity<AdvectionSchemes::Upwind, +1>(fields.U[comp], fvCoeffs, mesh, axis, hiIndex, loIndex );
-                            fvCoeffs.Mom[comp].B(ig, jg, kg) += sign
-                                                              * fvCoeffs.advectionBlendingFactor 
-                                                              * faceFlux 
-                                                              * ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
-                                                              * cellLengthInv;
-                        } );  
+    };
 
-                    } else {
-                        
-                        EnumFor<Axis>( [&] (Axis::ENUMDATA comp) {
-                            const floatType highOrderAdvectedVelocity = FaceInterpolatedVelocity<advectionScheme         , -1>(fields.U[comp], fvCoeffs, mesh, axis, hiIndex, loIndex );
-                            const floatType upwindAdvectedVelocity    = FaceInterpolatedVelocity<AdvectionSchemes::Upwind, -1>(fields.U[comp], fvCoeffs, mesh, axis, hiIndex, loIndex );
-                            fvCoeffs.Mom[comp].B(ig, jg, kg) += sign
-                                                              * fvCoeffs.advectionBlendingFactor 
-                                                              * faceFlux 
-                                                              * ( highOrderAdvectedVelocity - upwindAdvectedVelocity ) 
-                                                              * cellLengthInv;
-                        } );  
-
-                    }
-                };
-
-                // east face
-                if ( i < mesh.nCells(X)-1 )
-                    SetSourceTerm( faceFluxes[X](i+1, j, k), dx, X, {i  , j, k}, {i+1, j, k}, +1.0f);
-
-                // west face
-                if ( i > 0 )
-                    SetSourceTerm( faceFluxes[X](i  , j, k), dx, X, {i-1, j, k}, {i  , j, k}, -1.0f);
-
-                // north face
-                if ( j < mesh.nCells(Y)-1 )
-                    SetSourceTerm( faceFluxes[Y](i, j+1, k), dy, Y, {i, j  , k}, {i, j+1, k}, +1.0f);
-
-                // south face
-                if ( j > 0)
-                    SetSourceTerm( faceFluxes[Y](i, j  , k), dy, Y, {i, j-1, k}, {i, j  , k}, -1.0f);
-
-                // top face
-                if ( k < mesh.nCells(Z)-1 )
-                    SetSourceTerm( faceFluxes[Z](i, j, k+1), dz, Z, {i, j, k  }, {i, j, k+1}, +1.0f);
-
-                // bottom face
-                if ( k > 0 )
-                    SetSourceTerm( faceFluxes[Z](i, j, k  ), dz, Z, {i, j, k-1}, {i, j, k  }, -1.0f);
-                
+    // Parallelise different nested loop due to different dependency in each axis
+    if        constexpr ( axis == X ) {
+        #pragma omp parallel for
+        for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+            for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+                for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+                    LoopBody(i, j, k);
+                }
+            }
+        }
+    } else if constexpr ( axis == Y ) {
+        #pragma omp parallel for
+        for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+            for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+                for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+                    LoopBody(i, j, k);
+                }
+            }
+        }
+    } else {
+        for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+            #pragma omp parallel for
+            for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+                for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+                    LoopBody(i, j, k);
+                }
             }
         }
     }
-
+    
 }
-
 
 
 
@@ -486,15 +478,21 @@ void AddDeferredCorrection( FVCoefficients &fvCoeffs,
             break;
         
         case ( AdvectionSchemes::Central):
-            AddDeferredCorrectionImpl<AdvectionSchemes::Central>(fvCoeffs, fields, faceFluxes, mesh);
+            AddDeferredCorrectionImplDirectionParallel<AdvectionSchemes::Central, Axis::X>(fvCoeffs, fields, faceFluxes, mesh);
+            AddDeferredCorrectionImplDirectionParallel<AdvectionSchemes::Central, Axis::Y>(fvCoeffs, fields, faceFluxes, mesh);
+            AddDeferredCorrectionImplDirectionParallel<AdvectionSchemes::Central, Axis::Z>(fvCoeffs, fields, faceFluxes, mesh);
             break;
 
         case ( AdvectionSchemes::SOU):
-            AddDeferredCorrectionImpl<AdvectionSchemes::SOU>(fvCoeffs, fields, faceFluxes, mesh);
+            AddDeferredCorrectionImplDirectionParallel<AdvectionSchemes::SOU, Axis::X>(fvCoeffs, fields, faceFluxes, mesh);
+            AddDeferredCorrectionImplDirectionParallel<AdvectionSchemes::SOU, Axis::Y>(fvCoeffs, fields, faceFluxes, mesh);
+            AddDeferredCorrectionImplDirectionParallel<AdvectionSchemes::SOU, Axis::Z>(fvCoeffs, fields, faceFluxes, mesh);
             break;
 
         case ( AdvectionSchemes::QUICK):
-            AddDeferredCorrectionImpl<AdvectionSchemes::QUICK>(fvCoeffs, fields, faceFluxes, mesh);
+            AddDeferredCorrectionImplDirectionParallel<AdvectionSchemes::QUICK, Axis::X>(fvCoeffs, fields, faceFluxes, mesh);
+            AddDeferredCorrectionImplDirectionParallel<AdvectionSchemes::QUICK, Axis::Y>(fvCoeffs, fields, faceFluxes, mesh);
+            AddDeferredCorrectionImplDirectionParallel<AdvectionSchemes::QUICK, Axis::Z>(fvCoeffs, fields, faceFluxes, mesh);
             break;
     }
 }
