@@ -171,12 +171,11 @@ OperationStatus SmoothWithFixedIterations( GridLevelData<MI> &gridLevelData,
 
 template< MomentumInterpolation MI >
 void RestrictLevel( std::vector< GridLevelData<MI> > &mgLevels,
-                    const FieldData<Tensor3D> &residuals,
                     const size_t fineLevel,
                     const size_t coarseLevel )
 {
-    mgLevels[coarseLevel].residualsRestricted = RestrictFields( residuals                  , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
-    mgLevels[coarseLevel].fieldsRestricted    = RestrictFields( mgLevels[fineLevel].fields , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
+    mgLevels[coarseLevel].residualsRestricted = RestrictFields( mgLevels[fineLevel].residuals, mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
+    mgLevels[coarseLevel].fieldsRestricted    = RestrictFields( mgLevels[fineLevel].fields   , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
     if ( mgLevels[coarseLevel].fieldsPrevTime.P.size() != 0 ) {
         mgLevels[coarseLevel].fieldsPrevTime    = RestrictFields( mgLevels[fineLevel].fieldsPrevTime     , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
     }
@@ -204,12 +203,12 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
     SmoothWithFixedIterations<MI>( mgLevels[level], mgSettings.preSmoothingIterations, mgEquationType );
 
     // Calculate residual
-    FieldData<Tensor3D> residuals = ResidualsField<MI>( mgLevels[level].fields, 
-                                                        mgLevels[level].fvCoeffs, 
-                                                        mgLevels[level].ibData.mask );
+    mgLevels[level].residuals = ResidualsField<MI>( mgLevels[level].fields, 
+                                                    mgLevels[level].fvCoeffs, 
+                                                    mgLevels[level].ibData.mask );
 
     // Restrict residuals and solutions
-    RestrictLevel(mgLevels, residuals, level, level+1);
+    RestrictLevel(mgLevels, level, level+1);
 
 
     // Solve coarse grid problem
@@ -222,15 +221,15 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
 
 
     if ( smootherStatus == OperationStatus::Sucess) {
-        FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
-                                                                            mgLevels[level+1].fieldsRestricted, 
-                                                                            mgLevels[level+1].mesh, 
-                                                                            mgLevels[level].mesh,
-                                                                            mgLevels[level].ibData.mask );
+        mgLevels[level].fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
+                                                                        mgLevels[level+1].fieldsRestricted, 
+                                                                        mgLevels[level+1].mesh, 
+                                                                        mgLevels[level].mesh,
+                                                                        mgLevels[level].ibData.mask );
 
         // Correct fine grid approximation
         ForAllFieldData( [&] (intType f) {
-            mgLevels[level].fields[f] += fineGridCorrection[f];
+            mgLevels[level].fields[f] += mgLevels[level].fineGridCorrection[f];
         } );
     }
 
@@ -246,12 +245,12 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
         }
 
         // Calculate residual
-        residuals = ResidualsField<MI>( mgLevels[level].fields, 
-                                        mgLevels[level].fvCoeffs, 
-                                        mgLevels[level].ibData.mask );
+        mgLevels[level].residuals = ResidualsField<MI>( mgLevels[level].fields, 
+                                                        mgLevels[level].fvCoeffs, 
+                                                        mgLevels[level].ibData.mask );
 
         // Restrict residuals and solution
-        RestrictLevel(mgLevels, residuals, level, level+1);
+        RestrictLevel(mgLevels, level, level+1);
 
         // Solve coarse grid problem
         smootherStatus = OperationStatus::Sucess;
@@ -268,15 +267,15 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
 
         // Compute fine grid correction 
         if ( smootherStatus == OperationStatus::Sucess) {
-            FieldData<Tensor3D> fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
-                                                                                mgLevels[level+1].fieldsRestricted, 
-                                                                                mgLevels[level+1].mesh, 
-                                                                                mgLevels[level].mesh,
-                                                                                mgLevels[level].ibData.mask );
+            mgLevels[level].fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
+                                                                            mgLevels[level+1].fieldsRestricted, 
+                                                                            mgLevels[level+1].mesh, 
+                                                                            mgLevels[level].mesh,
+                                                                            mgLevels[level].ibData.mask );
 
             // Correct fine grid approximation
             ForAllFieldData( [&] (intType f) {
-                mgLevels[level].fields[f] += fineGridCorrection[f];
+                mgLevels[level].fields[f] += mgLevels[level].fineGridCorrection[f];
             } );
         }
 
