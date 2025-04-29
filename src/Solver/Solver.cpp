@@ -44,6 +44,22 @@ void SetStencil( GridLevelData<MI> &gridLevelData,
 }
 
 
+template<MomentumInterpolation MI>
+void SetCoarseGridRightHandSide( GridLevelData<MI> &gridLevelData,
+                                 const MultigridEquation mgEquationType )
+{
+    if ( mgEquationType == MultigridEquation::NoTauCorrection )
+        return;
+
+    // Set the coarse grid right hand side in the stencil coefficients
+    SetStencil<MI>(gridLevelData, gridLevelData.fieldsRestricted);
+
+    gridLevelData.coarseGridRightHandSide = CalculateCoarseGridRightHandSide<MI >( gridLevelData.fvCoeffs,
+                                                                                   gridLevelData.fieldsRestricted,
+                                                                                   gridLevelData.residualsRestricted,
+                                                                                   gridLevelData.ibData.mask );
+}
+
 
 template< MomentumInterpolation MI >
 void SetFineGridEquations( GridLevelData<MI> &gridLevelData )
@@ -52,18 +68,8 @@ void SetFineGridEquations( GridLevelData<MI> &gridLevelData )
 }
 
 
-
 template< MomentumInterpolation MI >
-void SetCoarseGridRightHandSideInStencil( GridLevelData<MI> &gridLevelData )
-{
-    SetStencil<MI>(gridLevelData, gridLevelData.fieldsRestricted);
-}
-
-
-
-template< MomentumInterpolation MI >
-void SetCoarseGridEquations( GridLevelData<MI> &gridLevelData,
-                             const FieldData<Tensor3D> &coarseGridRightHandSide )
+void SetCoarseGridEquations( GridLevelData<MI> &gridLevelData )
 {
     auto &gld = gridLevelData;
 
@@ -72,9 +78,9 @@ void SetCoarseGridEquations( GridLevelData<MI> &gridLevelData,
 
     // Add the terms that appear on the RHS of the coarse grid equation
     EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
-        gld.fvCoeffs.Mom[axis].F += coarseGridRightHandSide.U[axis];
+        gld.fvCoeffs.Mom[axis].F += gridLevelData.coarseGridRightHandSide.U[axis];
     } );
-    gld.fvCoeffs.Cont.F += coarseGridRightHandSide.P; 
+    gld.fvCoeffs.Cont.F += gridLevelData.coarseGridRightHandSide.P; 
 }
 
 
@@ -87,19 +93,6 @@ OperationStatus Smooth( GridLevelData<MI > &gridLevelData,
 {
     OperationStatus returnFlag = OperationStatus::Sucess;
     FieldData<floatType> residualsScaleFactor;
-    FieldData<Tensor3D> coarseGridRightHandSide;
-
-    gridLevelData.fieldsOld = gridLevelData.fields;
-    if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
-        SetFineGridEquations<MI >( gridLevelData );              
-    } else {
-        SetCoarseGridRightHandSideInStencil( gridLevelData );
-        coarseGridRightHandSide = CalculateCoarseGridRightHandSide<MI >( gridLevelData.fvCoeffs,
-                                                                         gridLevelData.fieldsRestricted,
-                                                                         gridLevelData.residualsRestricted,
-                                                                         gridLevelData.ibData.mask );
-        SetCoarseGridEquations<MI >( gridLevelData, coarseGridRightHandSide );
-    }
 
     FieldData<floatType > residuals = ScaledL1NormResiduals<MI >( gridLevelData.fields, 
                                                                      gridLevelData.fvCoeffs, 
@@ -111,14 +104,11 @@ OperationStatus Smooth( GridLevelData<MI > &gridLevelData,
     while ( nIterations < maxIterations ) {
         nIterations++;
 
-        gridLevelData.linearSolver->UpdateState();
-        gridLevelData.linearSolver->Solve();
-
         gridLevelData.fieldsOld = gridLevelData.fields;
         if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
             SetFineGridEquations<MI>( gridLevelData );
         } else {
-            SetCoarseGridEquations<MI>( gridLevelData, coarseGridRightHandSide );
+            SetCoarseGridEquations<MI>( gridLevelData );
         }
 
         residuals = ScaledL1NormResiduals<MI>( gridLevelData.fields,
@@ -136,6 +126,8 @@ OperationStatus Smooth( GridLevelData<MI > &gridLevelData,
             break;
         }
 
+        gridLevelData.linearSolver->UpdateState();
+        gridLevelData.linearSolver->Solve();
     }
     std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", relative residuals: " << residuals.U[0] << ", " 
                                                                                                                        << residuals.U[1] << ", " 
@@ -157,32 +149,18 @@ OperationStatus SmoothWithFixedIterations( GridLevelData<MI> &gridLevelData,
                                            const intType maxIterations,
                                            const MultigridEquation mgEquationType )
 {
-    FieldData<floatType> residualsScaleFactor;
-    FieldData<Tensor3D> coarseGridRightHandSide;
-
-    gridLevelData.fieldsOld = gridLevelData.fields;
-    if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
-        SetFineGridEquations<MI>( gridLevelData );
-    } else {
-        SetCoarseGridRightHandSideInStencil( gridLevelData );
-        coarseGridRightHandSide = CalculateCoarseGridRightHandSide<MI>( gridLevelData.fvCoeffs,
-                                                                        gridLevelData.fieldsRestricted,
-                                                                        gridLevelData.residualsRestricted,
-                                                                        gridLevelData.ibData.mask );
-        SetCoarseGridEquations<MI>( gridLevelData, coarseGridRightHandSide );
-    }
-
     for ( intType nIterations = 1; nIterations <= maxIterations; nIterations++ ) {
-
-        gridLevelData.linearSolver->UpdateState();
-        gridLevelData.linearSolver->Solve();
 
         gridLevelData.fieldsOld = gridLevelData.fields;
         if ( mgEquationType == MultigridEquation::NoTauCorrection ) {
             SetFineGridEquations<MI>( gridLevelData );
         } else {
-            SetCoarseGridEquations<MI>( gridLevelData, coarseGridRightHandSide );
+            SetCoarseGridEquations<MI>( gridLevelData );
         }
+
+        gridLevelData.linearSolver->UpdateState();
+        gridLevelData.linearSolver->Solve();
+
     }
     std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", performed " << maxIterations << " iterations" << "\n";
 
@@ -219,6 +197,9 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
 {
     OperationStatus smootherStatus = OperationStatus::Sucess;
 
+    // Coarse grid right hand side is constant for this level
+    SetCoarseGridRightHandSide( mgLevels[level], mgEquationType );
+
     // Presmoothing 
     SmoothWithFixedIterations<MI>( mgLevels[level], mgSettings.preSmoothingIterations, mgEquationType );
 
@@ -233,6 +214,7 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
 
     // Solve coarse grid problem
     if ( mgLevels[level+1].isCoarsestLevel ) {  // This is bad if there is 0 coarse levels
+        SetCoarseGridRightHandSide( mgLevels[level+1], MultigridEquation::TauCorrection );
         smootherStatus = Smooth<MI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::TauCorrection );
     } else {
         Cycle<MGCycle, MI>( mgLevels, level+1, MultigridEquation::TauCorrection, mgSettings );
@@ -274,6 +256,7 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
         // Solve coarse grid problem
         smootherStatus = OperationStatus::Sucess;
         if ( mgLevels[level+1].isCoarsestLevel ) {  // This is bad if there is 0 coarse levels
+            SetCoarseGridRightHandSide( mgLevels[level+1], MultigridEquation::TauCorrection );
             smootherStatus = Smooth<MI>( mgLevels[level+1], mgSettings.maxCoarseGridResiduals, mgSettings.maxCoarseGridIterations, MultigridEquation::TauCorrection );
         } else {
             if        constexpr ( MGCycle == MultigridCycleType::F ) {
@@ -443,7 +426,6 @@ void SolveSteady( const InputData &inputData,
         
         TIC("Residuals and Logging")
         // Residuals
-        // SetFineGridEquations<MI, LI>( mgLevels[0] );
         SetStencil<MI>(mgLevels[0], mgLevels[0].fields);
         
         residualsOuter   = ScaledL1NormResiduals<MI>( mgLevels[0].fields, 
@@ -567,6 +549,7 @@ void SolveTransient( const InputData &inputData,
             TOC()
             
             TIC("Residuals and Logging")
+            SetStencil<MI>(mgLevels[0], mgLevels[0].fields);
             residualsOuter   = ScaledL1NormResiduals<MI>( mgLevels[0].fields, 
                                                           mgLevels[0].fvCoeffs, 
                                                           mgLevels[0].ibData.mask); 

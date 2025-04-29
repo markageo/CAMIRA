@@ -27,12 +27,13 @@ struct GridLevelData
     size_t level;
     bool isCoarsestLevel, isFinestLevel;
     Mesh mesh;
-    FieldData<Tensor3D> fields,                 // Solution at latest iteration (steady) or timestep t (transient)
-                        fieldsOld,              // Old estimate of fields, used for under-relaxation
-                        fieldsPrevTime,         // Solution at previous timestep t-1 (only used in transient)
-                        fieldsPrevPrevTime,     // Solution at timestep before previous timestep t-2 (only used in transient)
+    FieldData<Tensor3D> fields,                     // Solution at latest iteration (steady) or timestep t (transient)
+                        fieldsOld,                  // Old estimate of fields, used for under-relaxation
+                        fieldsPrevTime,             // Solution at previous timestep t-1 (only used in transient)
+                        fieldsPrevPrevTime,         // Solution at timestep before previous timestep t-2 (only used in transient)
                         fieldsRestricted,
-                        residualsRestricted;
+                        residualsRestricted,
+                        coarseGridRightHandSide;    // Only used on coarse grids
     BoundaryConditionData bcData;
     EnumVector<Axis, Tensor3D> faceFluxes;
     IBData ibData;
