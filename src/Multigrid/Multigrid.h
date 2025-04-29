@@ -32,7 +32,9 @@ struct GridLevelData
                         fieldsPrevTime,             // Solution at previous timestep t-1 (only used in transient)
                         fieldsPrevPrevTime,         // Solution at timestep before previous timestep t-2 (only used in transient)
                         fieldsRestricted,
+                        residuals,
                         residualsRestricted,
+                        fineGridCorrection,
                         coarseGridRightHandSide;    // Only used on coarse grids
     BoundaryConditionData bcData;
     EnumVector<Axis, Tensor3D> faceFluxes;
