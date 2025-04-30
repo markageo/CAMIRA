@@ -54,10 +54,11 @@ void SetCoarseGridRightHandSide( GridLevelData<MI> &gridLevelData,
     // Set the coarse grid right hand side in the stencil coefficients
     SetStencil<MI>(gridLevelData, gridLevelData.fieldsRestricted);
 
-    gridLevelData.coarseGridRightHandSide = CalculateCoarseGridRightHandSide<MI >( gridLevelData.fvCoeffs,
-                                                                                   gridLevelData.fieldsRestricted,
-                                                                                   gridLevelData.residualsRestricted,
-                                                                                   gridLevelData.ibData.mask );
+    CalculateCoarseGridRightHandSide<MI >( gridLevelData.coarseGridRightHandSide,
+                                           gridLevelData.fvCoeffs,
+                                           gridLevelData.fieldsRestricted,
+                                           gridLevelData.residualsRestricted,
+                                           gridLevelData.ibData.mask );
 }
 
 
@@ -174,15 +175,15 @@ void RestrictLevel( std::vector< GridLevelData<MI> > &mgLevels,
                     const size_t fineLevel,
                     const size_t coarseLevel )
 {
-    mgLevels[coarseLevel].residualsRestricted = RestrictFields( mgLevels[fineLevel].residuals, mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
-    mgLevels[coarseLevel].fieldsRestricted    = RestrictFields( mgLevels[fineLevel].fields   , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
+    RestrictFields( mgLevels[coarseLevel].residualsRestricted, mgLevels[fineLevel].residuals, mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
+    RestrictFields( mgLevels[coarseLevel].fieldsRestricted   , mgLevels[fineLevel].fields   , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
     if ( mgLevels[coarseLevel].fieldsPrevTime.P.size() != 0 ) {
-        mgLevels[coarseLevel].fieldsPrevTime    = RestrictFields( mgLevels[fineLevel].fieldsPrevTime     , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
+        RestrictFields( mgLevels[coarseLevel].fieldsPrevTime, mgLevels[fineLevel].fieldsPrevTime     , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
     }
     if ( mgLevels[coarseLevel].fieldsPrevPrevTime.P.size() != 0 ) {
-        mgLevels[coarseLevel].fieldsPrevPrevTime = RestrictFields( mgLevels[fineLevel].fieldsPrevPrevTime, mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
+        RestrictFields( mgLevels[coarseLevel].fieldsPrevPrevTime, mgLevels[fineLevel].fieldsPrevPrevTime, mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
     }
-    mgLevels[coarseLevel].fields    = mgLevels[coarseLevel].fieldsRestricted;
+    mgLevels[coarseLevel].fields = mgLevels[coarseLevel].fieldsRestricted;
 }
 
 
@@ -203,9 +204,10 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
     SmoothWithFixedIterations<MI>( mgLevels[level], mgSettings.preSmoothingIterations, mgEquationType );
 
     // Calculate residual
-    mgLevels[level].residuals = ResidualsField<MI>( mgLevels[level].fields, 
-                                                    mgLevels[level].fvCoeffs, 
-                                                    mgLevels[level].ibData.mask );
+    ResidualsField<MI>( mgLevels[level].residuals,
+                        mgLevels[level].fields, 
+                        mgLevels[level].fvCoeffs, 
+                        mgLevels[level].ibData.mask );
 
     // Restrict residuals and solutions
     RestrictLevel(mgLevels, level, level+1);
@@ -221,11 +223,12 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
 
 
     if ( smootherStatus == OperationStatus::Sucess) {
-        mgLevels[level].fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
-                                                                        mgLevels[level+1].fieldsRestricted, 
-                                                                        mgLevels[level+1].mesh, 
-                                                                        mgLevels[level].mesh,
-                                                                        mgLevels[level].ibData.mask );
+        ComputeFineGridCorrection( mgLevels[level].fineGridCorrection,
+                                   mgLevels[level+1].fields, 
+                                   mgLevels[level+1].fieldsRestricted, 
+                                   mgLevels[level+1].mesh, 
+                                   mgLevels[level].mesh,
+                                   mgLevels[level].ibData.mask );
 
         // Correct fine grid approximation
         ForAllFieldData( [&] (intType f) {
@@ -245,9 +248,10 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
         }
 
         // Calculate residual
-        mgLevels[level].residuals = ResidualsField<MI>( mgLevels[level].fields, 
-                                                        mgLevels[level].fvCoeffs, 
-                                                        mgLevels[level].ibData.mask );
+        ResidualsField<MI>( mgLevels[level].residuals,
+                            mgLevels[level].fields, 
+                            mgLevels[level].fvCoeffs, 
+                            mgLevels[level].ibData.mask );
 
         // Restrict residuals and solution
         RestrictLevel(mgLevels, level, level+1);
@@ -267,11 +271,12 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
 
         // Compute fine grid correction 
         if ( smootherStatus == OperationStatus::Sucess) {
-            mgLevels[level].fineGridCorrection = ComputeFineGridCorrection( mgLevels[level+1].fields, 
-                                                                            mgLevels[level+1].fieldsRestricted, 
-                                                                            mgLevels[level+1].mesh, 
-                                                                            mgLevels[level].mesh,
-                                                                            mgLevels[level].ibData.mask );
+            ComputeFineGridCorrection( mgLevels[level].fineGridCorrection,
+                                       mgLevels[level+1].fields, 
+                                       mgLevels[level+1].fieldsRestricted, 
+                                       mgLevels[level+1].mesh, 
+                                       mgLevels[level].mesh,
+                                       mgLevels[level].ibData.mask );
 
             // Correct fine grid approximation
             ForAllFieldData( [&] (intType f) {
@@ -304,7 +309,7 @@ void FMGInitialise( std::vector< GridLevelData<MI> > &mgLevels,
     // Prolongate
     if ( smootherStatus == OperationStatus::Sucess ) {
         ForAllFieldData( [&] (intType f) {
-            mgLevels[coarsestLevel-1].fields[f] = ProlongateField( mgLevels[coarsestLevel].fields[f], mgLevels[coarsestLevel].mesh, mgLevels[coarsestLevel-1].mesh );
+            ProlongateField(mgLevels[coarsestLevel-1].fields[f], mgLevels[coarsestLevel].fields[f], mgLevels[coarsestLevel].mesh, mgLevels[coarsestLevel-1].mesh );
         } );
         MaskFields( mgLevels[coarsestLevel-1].fields, mgLevels[coarsestLevel-1].ibData.mask );
     }
@@ -317,7 +322,7 @@ void FMGInitialise( std::vector< GridLevelData<MI> > &mgLevels,
 
         // Prolongate
         ForAllFieldData( [&] (intType f) {
-            mgLevels[level-1].fields[f] = ProlongateField( mgLevels[level].fields[f], mgLevels[level].mesh, mgLevels[level-1].mesh );
+            ProlongateField(mgLevels[level-1].fields[f], mgLevels[level].fields[f], mgLevels[level].mesh, mgLevels[level-1].mesh );
         } );
         MaskFields( mgLevels[level-1].fields, mgLevels[level-1].ibData.mask );
 
