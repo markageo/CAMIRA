@@ -254,16 +254,13 @@ inline FieldData<floatType> ScaledL1NormResiduals( const FieldData<Tensor3D> &fi
 
 // Calculate the local discrete equation residual field
 template< MomentumInterpolation MI >
-inline FieldData<Tensor3D> ResidualsField( const FieldData<Tensor3D> &fields,
-                                           const FVCoefficients &fvCoeffs,
-                                           const Tensor3D &mask )
+inline void ResidualsField( FieldData<Tensor3D> &residuals,
+                            const FieldData<Tensor3D> &fields,
+                            const FVCoefficients &fvCoeffs,
+                            const Tensor3D &mask )
 {
     using enum Axis::ENUMDATA;
     using enum TransportCoefficients::ENUMDATA;
-
-    FieldData<Tensor3D> residuals( Tensor3D( fvCoeffs.nCells[X] + 2*CFD::nGhost, 
-                                             fvCoeffs.nCells[Y] + 2*CFD::nGhost, 
-                                             fvCoeffs.nCells[Z] + 2*CFD::nGhost ).setZero() );
 
     #pragma omp parallel for collapse(3)
     for ( intType k = 0; k != fvCoeffs.nCells[Z]; k++ ) {
@@ -288,7 +285,6 @@ inline FieldData<Tensor3D> ResidualsField( const FieldData<Tensor3D> &fields,
         }
     }
 
-    return residuals;
 }
 
 

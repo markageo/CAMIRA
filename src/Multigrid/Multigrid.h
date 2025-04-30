@@ -52,25 +52,29 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &,
                   const AxisTransformationMap & );
 
 
-Tensor3D RestrictField( const Tensor3D &, 
-                        const Mesh &,
-                        const Mesh & );
+void RestrictField( Tensor3D &,
+                    const Tensor3D &, 
+                    const Mesh &,
+                    const Mesh & );
 
 
-Tensor3D ProlongateField( const Tensor3D &,
-                          const Mesh &,
-                          const Mesh & );
+void ProlongateField( Tensor3D &,
+                      const Tensor3D &,
+                      const Mesh &,
+                      const Mesh & );
 
-FieldData<Tensor3D> RestrictFields( const FieldData<Tensor3D>,
-                                   const Mesh &, 
-                                   const Mesh &, 
-                                   const Tensor3D &mask );
+void RestrictFields( FieldData<Tensor3D> &,
+                     const FieldData<Tensor3D> &,
+                     const Mesh &, 
+                     const Mesh &, 
+                     const Tensor3D &mask );
 
-FieldData<Tensor3D> ComputeFineGridCorrection( const FieldData<Tensor3D> &,
-                                               const FieldData<Tensor3D> &,
-                                               const Mesh &,
-                                               const Mesh &,
-                                               const Tensor3D & );
+void ComputeFineGridCorrection( FieldData<Tensor3D> &,
+                                const FieldData<Tensor3D> &,
+                                const FieldData<Tensor3D> &,
+                                const Mesh &,
+                                const Mesh &,
+                                const Tensor3D & );
 
 
 template< MomentumInterpolation MI >
@@ -81,10 +85,11 @@ void TransformToCoarseGridEquations( FVCoefficients &,
 
 
 template< MomentumInterpolation MI >
-FieldData<Tensor3D> CalculateCoarseGridRightHandSide( FVCoefficients &,
-                                                      const FieldData<Tensor3D> &,
-                                                      const FieldData<Tensor3D> &,
-                                                      const Tensor3D & );
+void CalculateCoarseGridRightHandSide( FieldData<Tensor3D> &,
+                                       const FVCoefficients &,
+                                       const FieldData<Tensor3D> &,
+                                       const FieldData<Tensor3D> &,
+                                       const Tensor3D & );
 
 }
 
