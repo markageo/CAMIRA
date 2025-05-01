@@ -157,7 +157,7 @@ Solver {
     
     Smoother {
 
-        type = domainSymmetric
+        type = domainSymmetricParallel
         maxIterations = 5
         maxResiduals = 0
 

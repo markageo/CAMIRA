@@ -126,7 +126,7 @@ Solver {
     
     Smoother {
 
-        type = nestedLineSymmetric
+        type = domainSymmetricParallel
         maxIterations = 5
         maxResiduals = 0
 
