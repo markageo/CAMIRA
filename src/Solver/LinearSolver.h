@@ -528,10 +528,6 @@ private:
         } );
         TOC()
 
-        TIC("Setting Ghost cells")
-        SetGhostCells(m_fields, m_mesh, m_bcData);
-        TOC()
-
         // // Copy to residuals
         // m_residuals.P    = residualReductions[0].get();
         // m_residuals.U[0] = residualReductions[1].get();
