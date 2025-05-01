@@ -138,37 +138,78 @@ void RestrictField( Tensor3D &coarseField,
     using enum Axis::ENUMDATA;
     using FVT::G;
 
-    auto SetFineIdicesAndInterpFactor = [&] ( floatType &lambda, intType &iFp1, intType &iFIncrement, const intType &iF, const intType iC, const Axis::ENUMDATA axis ) {
-        if ( coarseMesh.cellLengths[axis](iC) == fineMesh.cellLengths[axis](iF) ) { 
-            iFp1 = iF;
-            iFIncrement = 1;
-            lambda = 0.0f;
+    enum class AgglomerationState { 
+        AllAgglomerated, 
+        LoNotAgglomerated, 
+        HiNotAgglomerated 
+    };
+
+    EnumVector<Axis, AgglomerationState> agglomerationStates;
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        if        ( fineMesh.nCells[axis] == 2 * coarseMesh.nCells[axis] ) {
+            agglomerationStates[axis] = AgglomerationState::AllAgglomerated;
+        } else if ( fineMesh.cellLengths[axis](0) == coarseMesh.cellLengths[axis](0) ) {
+            agglomerationStates[axis] = AgglomerationState::LoNotAgglomerated;
         } else {
-            iFp1 = iF + 1;
-            iFIncrement = 2;
-            lambda = ( coarseMesh.cellCenters[axis](iC) - fineMesh.cellCenters[axis](iF) ) / ( fineMesh.cellCenters[axis](iFp1) - fineMesh.cellCenters[axis](iF) );
+            agglomerationStates[axis] = AgglomerationState::HiNotAgglomerated;
+        }
+        
+    } ); 
+
+
+    auto SetFineIdicesAndInterpFactor = [&] ( floatType &lambda, intType &iF, intType &iFp1, const intType iC, const Axis::ENUMDATA axis ) {
+        switch (agglomerationStates[axis]) {
+            case AgglomerationState::AllAgglomerated:
+                iF     = 2 * iC;
+                iFp1   = iF + 1;
+                lambda = ( coarseMesh.cellCenters[axis](iC) - fineMesh.cellCenters[axis](iF) ) / ( fineMesh.cellCenters[axis](iFp1) - fineMesh.cellCenters[axis](iF) );
+                break;
+
+            case AgglomerationState::LoNotAgglomerated:
+                if ( iC == 0 ) {
+                    iF     = 0;
+                    iFp1   = 0;
+                    lambda = 0.0f;
+                } else {
+                    iF     = 2 * iC - 1;
+                    iFp1   = iF + 1;
+                    lambda = ( coarseMesh.cellCenters[axis](iC) - fineMesh.cellCenters[axis](iF) ) / ( fineMesh.cellCenters[axis](iFp1) - fineMesh.cellCenters[axis](iF) );
+                }
+                break;
+
+            case AgglomerationState::HiNotAgglomerated:
+                iF = 2 * iC;
+                if ( iC < coarseMesh.nCells[axis]-1 ) {
+                    iFp1   = iF + 1;
+                    lambda = ( coarseMesh.cellCenters[axis](iC) - fineMesh.cellCenters[axis](iF) ) / ( fineMesh.cellCenters[axis](iFp1) - fineMesh.cellCenters[axis](iF) );
+                } else {
+                    iFp1   = iF;
+                    lambda = 0.0f;
+                }
+                break;
         }
     };
 
 
     // Iterate coarse grid
-    for ( intType kC = 0, kF = 0, kFIncrement = 2; kC != coarseMesh.nCells(Z); kC++, kF += kFIncrement ) {
+    #pragma omp parallel for
+    for ( intType kC = 0; kC != coarseMesh.nCells(Z); kC++ ) {
 
-        intType kFp1;
-        floatType lambdaZ;
-        SetFineIdicesAndInterpFactor(lambdaZ, kFp1, kFIncrement, kF, kC, Z);
+        intType kF(0), kFp1(0);
+        floatType lambdaZ(0.0f);
+        SetFineIdicesAndInterpFactor(lambdaZ, kF, kFp1, kC, Z);
 
-        for ( intType jC = 0, jF = 0, jFIncrement = 2; jC != coarseMesh.nCells(Y); jC++, jF += jFIncrement ) {
+        for ( intType jC = 0; jC != coarseMesh.nCells(Y); jC++ ) {
 
-            intType jFp1;
-            floatType lambdaY;
-            SetFineIdicesAndInterpFactor(lambdaY, jFp1, jFIncrement, jF, jC, Y);
+            intType jF(0), jFp1(0);
+            floatType lambdaY(0.0f);
+            SetFineIdicesAndInterpFactor(lambdaY, jF, jFp1, jC, Y);
 
-            for ( intType iC = 0, iF = 0, iFIncrement = 2; iC != coarseMesh.nCells(X); iC++, iF += iFIncrement ) {
+            for ( intType iC = 0; iC != coarseMesh.nCells(X); iC++ ) {
 
-                intType iFp1;
-                floatType lambdaX;
-                SetFineIdicesAndInterpFactor(lambdaX, iFp1, iFIncrement, iF, iC, X);
+                intType iF(0), iFp1(0);
+                floatType lambdaX(0.0f);
+                SetFineIdicesAndInterpFactor(lambdaX, iF, iFp1, iC, X);
 
                 // Points to interpolation from
                 floatType c000 = fineField( G(iF  , jF  , kF  ) ),
