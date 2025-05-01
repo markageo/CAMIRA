@@ -381,7 +381,6 @@ public:
                                    const InputData::SmootherSettings &smootherSettings ) : 
 
                     m_fields( fields ),
-                    m_fieldsOld( fieldsOld ),
                     m_fvCoeffs( fvCoeffs ),
                     m_mesh( mesh ),
                     m_bcData( bcData ),
@@ -414,7 +413,6 @@ public:
             Sweep3D();
 
             // Normalise residuals
-            ForAllFieldData( [&] (intType f) { m_residuals[f] /= static_cast<floatType>(m_nCells[0] * m_nCells[1] * m_nCells[2]); });
             if ( nIterations == 1 ) {
                 ForAllFieldData( [&] (intType f) { m_residualsInitialInv[f] = 1.0f / m_residuals[f]; });
             }
@@ -440,7 +438,7 @@ public:
 private:
 
     FieldData<Tensor3D> &m_fields;
-    const FieldData<Tensor3D> &m_fieldsOld;
+    FieldData<Tensor3D> m_fieldsOldIter;
     const FVCoefficients &m_fvCoeffs;
     const Mesh &m_mesh;
     const BoundaryConditionData &m_bcData;
@@ -465,8 +463,7 @@ private:
         // using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::seq_exec>;
         using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_parallel_for_exec>;
 
-        // For thread safe reductions
-        // RAJA::MultiReduceSum< RAJA::omp_multi_reduce, floatType > residualReductions( FieldData<floatType>::nData, 0.0f );
+        m_fieldsOldIter = m_fields;
 
         TIC("Setting Ghost cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
@@ -478,20 +475,7 @@ private:
 
             for ( intType j = 0; j != m_nCells(1); j++ ) {
                 for ( intType i = 0; i != m_nCells(0); i++ ) {
-
-                    // FieldData<floatType> oldValues;
-                    // oldValues.P    = m_fields.P( G(i, j, k) );
-                    // oldValues.U[0] = m_fields.U[0]( G(i+1, j  , k  ) );
-                    // oldValues.U[1] = m_fields.U[1]( G(i  , j+1, k  ) );
-                    // oldValues.U[2] = m_fields.U[2]( G(i  , j  , k+1) );
-
                     m_triadSolverForward->UpdateTriadFull( i, j, k );
-
-                    // residualReductions[0] += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
-                    // residualReductions[1] += abs( oldValues.U[0] - m_fields.U[0]( G(i+1, j  , k  ) ) );
-                    // residualReductions[2] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j+1, k  ) ) );
-                    // residualReductions[3] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k+1) ) );
-
                 }
             }
 
@@ -508,31 +492,14 @@ private:
 
             for ( intType j = m_nCells(1)-1; j != -1; j-- ) {
                 for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
-
-                    // FieldData<floatType> oldValues;
-                    // oldValues.P    = m_fields.P( G(i, j, k) );
-                    // oldValues.U[0] = m_fields.U[0]( G(i-1, j  , k  ) );
-                    // oldValues.U[1] = m_fields.U[1]( G(i  , j-1, k  ) );
-                    // oldValues.U[2] = m_fields.U[2]( G(i  , j  , k-1) );
-
                     m_triadSolverBackward->UpdateTriadFull( i, j, k );
-
-                    // residualReductions[0] += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
-                    // residualReductions[1] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
-                    // residualReductions[2] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
-                    // residualReductions[3] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
-                
                 }
             }
 
         } );
         TOC()
 
-        // // Copy to residuals
-        // m_residuals.P    = residualReductions[0].get();
-        // m_residuals.U[0] = residualReductions[1].get();
-        // m_residuals.U[1] = residualReductions[2].get();
-        // m_residuals.U[2] = residualReductions[3].get();
+        m_residuals = L1DiffResiduals( m_fields, m_fieldsOldIter );
 
     }
 
