@@ -133,7 +133,7 @@ inline void EnumFor( L&& f )
 
 // Solver settings
 enum class Smoothers {
-    nestedLineSymmetric, domainSymmetric
+    nestedLineSymmetricSerial, domainSymmetricSerial, domainSymmetricParallel
 };
 
 enum class GeometryBoundaryTreatement {

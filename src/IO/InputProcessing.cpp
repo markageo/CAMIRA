@@ -716,10 +716,12 @@ namespace
 
         // Solver type
         valueString = smootherTree.get<std::string>( "type" );
-        if        ( valueString == "nestedLineSymmetric" ) {
-            inputData.smootherSettings.type = Smoothers::nestedLineSymmetric;
-        } else if ( valueString == "domainSymmetric" ) {
-            inputData.smootherSettings.type = Smoothers::domainSymmetric;
+        if        ( valueString == "nestedLineSymmetricSerial" ) {
+            inputData.smootherSettings.type = Smoothers::nestedLineSymmetricSerial;
+        } else if ( valueString == "domainSymmetricSerial" ) {
+            inputData.smootherSettings.type = Smoothers::domainSymmetricSerial;
+        } else if ( valueString == "domainSymmetricParallel" ) {
+            inputData.smootherSettings.type = Smoothers::domainSymmetricParallel;
         } else {
             throw std::runtime_error( "'" + valueString + "' is not a valid smoother type." );
         }

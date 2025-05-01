@@ -145,19 +145,19 @@ private:
 
                 for ( intType i = 0; i != m_ni; i++ ) {
 
-                    // FieldData<floatType> oldValues;
-                    // oldValues.P    = m_fields.P( G(i, j, k) );
-                    // oldValues.U[0] = m_fields.U[0]( G(i+1, j  , k  ) );
-                    // oldValues.U[1] = m_fields.U[1]( G(i  , j+1, k  ) );
-                    // oldValues.U[2] = m_fields.U[2]( G(i  , j  , k+1) );
+                    FieldData<floatType> oldValues;
+                    oldValues.P    = m_fields.P( G(i, j, k) );
+                    oldValues.U[0] = m_fields.U[0]( G(i+1, j  , k  ) );
+                    oldValues.U[1] = m_fields.U[1]( G(i  , j+1, k  ) );
+                    oldValues.U[2] = m_fields.U[2]( G(i  , j  , k+1) );
 
                     // m_triadSolverForward->UpdateTriad( i, j, k, lineConstants );
                     m_triadSolverForward->UpdateTriad( i, j, k );
 
-                    // m_residuals.P    += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
-                    // m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i+1, j  , k  ) ) );
-                    // m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j+1, k  ) ) );
-                    // m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k+1) ) );
+                    m_residuals.P    += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+                    m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i+1, j  , k  ) ) );
+                    m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j+1, k  ) ) );
+                    m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k+1) ) );
 
                 }
             }
@@ -176,19 +176,19 @@ private:
 
                 for ( intType i = m_ni-1; i != -1; i-- ) {
 
-                    // FieldData<floatType> oldValues;
-                    // oldValues.P    = m_fields.P( G(i, j, k) );
-                    // oldValues.U[0] = m_fields.U[0]( G(i-1, j  , k  ) );
-                    // oldValues.U[1] = m_fields.U[1]( G(i  , j-1, k  ) );
-                    // oldValues.U[2] = m_fields.U[2]( G(i  , j  , k-1) );
+                    FieldData<floatType> oldValues;
+                    oldValues.P    = m_fields.P( G(i, j, k) );
+                    oldValues.U[0] = m_fields.U[0]( G(i-1, j  , k  ) );
+                    oldValues.U[1] = m_fields.U[1]( G(i  , j-1, k  ) );
+                    oldValues.U[2] = m_fields.U[2]( G(i  , j  , k-1) );
 
                     // m_triadSolverBackward->UpdateTriad( i, j, k, lineConstants );
                     m_triadSolverBackward->UpdateTriad( i, j, k );
 
-                    // m_residuals.P    += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
-                    // m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
-                    // m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
-                    // m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
+                    m_residuals.P    += abs( oldValues.P    - m_fields.P( G(i, j, k) ) );
+                    m_residuals.U[0] += abs( oldValues.U[0] - m_fields.U[0]( G(i-1, j  , k  ) ) );
+                    m_residuals.U[1] += abs( oldValues.U[1] - m_fields.U[1]( G(i  , j-1, k  ) ) );
+                    m_residuals.U[2] += abs( oldValues.U[2] - m_fields.U[2]( G(i  , j  , k-1) ) );
 
                 }
             }
