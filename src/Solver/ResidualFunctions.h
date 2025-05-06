@@ -15,19 +15,27 @@ namespace CFD
 
 using namespace FVT;
 
+
 // Calculated as the L1 norm of the difference between two arrays.
+[[ maybe_unused ]]
+inline floatType L1Diff( const Tensor3D &field1,
+                         const Tensor3D &field2 )
+{
+    auto fieldDiff = field2 - field1;  // auto lazily evaluates
+    floatType result = static_cast<Tensor0D>( fieldDiff.abs().mean() )(0);
+    return result;
+}
+
+
+// Calculated as the L1 norm of the difference between two arrays for FieldData object
 [[ maybe_unused ]]
 inline FieldData<floatType> L1DiffResiduals( const FieldData<Tensor3D> &fields1,
                                              const FieldData<Tensor3D> &fields2 )
 {
     FieldData<floatType> result;
     ForAllFieldData( [&] (intType i) { 
-
-        auto fieldDiff = fields2[i] - fields1[i];  // auto lazily evaluates
-        result[i] = static_cast<Tensor0D>( fieldDiff.abs().mean() )(0); 
-
+        result[i] = L1Diff( fields1[i], fields2[i] );
     });
-
     return result;
 }
 

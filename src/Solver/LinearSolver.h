@@ -20,6 +20,7 @@
 #include <RAJA/util/camp_aliases.hpp>
 #include <omp.h>
 
+#include <cassert>
 
 #include "../IO/ArrayIO.h"
 
@@ -392,10 +393,25 @@ public:
                     m_reverseColorSet( CreateReverse1DColourSet(m_fvCoeffs.nCells(2)) ),
 
                     m_nCells( fvCoeffs.nCells ),
-                    m_nCellsPlane( fvCoeffs.nCells(1), fvCoeffs.nCells(2) )
+                    m_nCellsPlane( fvCoeffs.nCells(1), fvCoeffs.nCells(2) ),
+
+                    // m_triadSolverForward_en(fields, fieldsOld, mask, fvCoeffs, smootherSettings),
+                    // m_triadSolverForward_es(fields, fieldsOld, mask, fvCoeffs, smootherSettings),
+                    // m_triadSolverForward_wn(fields, fieldsOld, mask, fvCoeffs, smootherSettings),
+                    // m_triadSolverForward_ws(fields, fieldsOld, mask, fvCoeffs, smootherSettings)
+
+                    m_triadSolverForward(fields, fieldsOld, mask, fvCoeffs, smootherSettings),
+                    m_triadSolverBackward(fields, fieldsOld, mask, fvCoeffs, smootherSettings)
+
+
     {
-        m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
-        m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+        // m_triadSolverForward_en = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+        // m_triadSolverForward_es = std::make_unique<TriadSolver<TC::e, TC::s, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+        // m_triadSolverForward_wn = std::make_unique<TriadSolver<TC::w, TC::n, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+        // m_triadSolverForward_ws = std::make_unique<TriadSolver<TC::w, TC::s, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+
+        // m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
+        // m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
     }
 
 
@@ -406,20 +422,26 @@ public:
 
         for ( intType nIterations = 1 ; nIterations <= m_maxIterations; nIterations++ )
         {
-            // Reset residuals
-            ForAllFieldData( [&] (intType f) { m_residuals[f] = 1.0f; });
+            TIC("Linear solver residuals")
+            m_pressureOld = m_fields.P;     // Only look at the pressure field to save time
+            TOC()
 
             // Sweep domain
-            Sweep3D();
+            TIC("Sweep3d Function")
+            Sweep3DTiled();
+            TOC()
 
             // Normalise residuals
+            TIC("Linear solver residuals")
+            m_residual = L1Diff(m_pressureOld, m_fields.P);
+            TOC()
             if ( nIterations == 1 ) {
-                ForAllFieldData( [&] (intType f) { m_residualsInitialInv[f] = 1.0f / m_residuals[f]; });
-            }
-            NormaliseResiduals(m_residuals, m_residualsInitialInv);
+                m_residualInitialInv = 1.0f / m_residual;
 
-            // Check residual tolerence
-            if ( MetResidualTolerence(m_residuals, m_maxResiduals) ) {
+            }
+            m_residual *= m_residualInitialInv;
+
+            if ( m_residual <= m_maxResiduals.P ) {
                 break;
             }
         }
@@ -430,8 +452,8 @@ public:
     // Update any precomputed values
     void UpdateState()
     {
-        m_triadSolverForward->UpdateGlobalConstants();
-        m_triadSolverBackward->UpdateGlobalConstants();
+        // m_triadSolverForward->UpdateGlobalConstants();
+        // m_triadSolverBackward->UpdateGlobalConstants();
     }
 
 
@@ -439,6 +461,7 @@ private:
 
     FieldData<Tensor3D> &m_fields;
     FieldData<Tensor3D> m_fieldsOldIter;
+    Tensor3D m_pressureOld;
     const FVCoefficients &m_fvCoeffs;
     const Mesh &m_mesh;
     const BoundaryConditionData &m_bcData;
@@ -449,57 +472,196 @@ private:
     RAJA::TypedIndexSet< RAJA::TypedRangeStrideSegment<intType> > m_forwardColorSet,
                                                                   m_reverseColorSet;
 
-    std::unique_ptr<TriadSolver<TC::e, TC::n, TC::t, MI >> m_triadSolverForward;
-    std::unique_ptr<TriadSolver<TC::w, TC::s, TC::b, MI >> m_triadSolverBackward;
+    // std::unique_ptr<TriadSolver<TC::e, TC::n, TC::t, MI >> m_triadSolverForward_en;
+    // std::unique_ptr<TriadSolver<TC::e, TC::s, TC::t, MI >> m_triadSolverForward_es;
+    // std::unique_ptr<TriadSolver<TC::w, TC::n, TC::t, MI >> m_triadSolverForward_wn;
+    // std::unique_ptr<TriadSolver<TC::w, TC::s, TC::t, MI >> m_triadSolverForward_ws;
 
-    FieldData<floatType> m_residuals, m_residualsInitialInv;
+    // TriadSolver<TC::e, TC::n, TC::t, MI > m_triadSolverForward_en;
+    // TriadSolver<TC::e, TC::s, TC::t, MI > m_triadSolverForward_es;
+    // TriadSolver<TC::w, TC::n, TC::t, MI > m_triadSolverForward_wn;
+    // TriadSolver<TC::w, TC::s, TC::t, MI > m_triadSolverForward_ws;
+
+    // std::unique_ptr<TriadSolver<TC::e, TC::n, TC::t, MI >> m_triadSolverForward;
+    // std::unique_ptr<TriadSolver<TC::w, TC::s, TC::b, MI >> m_triadSolverBackward;
+    TriadSolver<TC::e, TC::n, TC::t, MI > m_triadSolverForward;
+    TriadSolver<TC::w, TC::s, TC::b, MI > m_triadSolverBackward;
+
+    floatType m_residual, m_residualInitialInv;
 
     iArray3 m_nCells;
     iArray2 m_nCellsPlane;
 
+    // __attribute__((flatten))
+    // void Sweep3D()
+    // {
+    //     // using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::seq_exec>;
+    //     using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_parallel_for_exec>;
+
+    //     TIC("Setting Ghost cells")
+    //     SetGhostCells(m_fields, m_mesh, m_bcData);
+    //     TOC()
+        
+    //     // Forward plane sweep
+    //     TIC("Sweeping 1")
+    //     RAJA::forall<colorPolicy>( m_forwardColorSet, [&] ( intType k ) {
+
+    //         for ( intType j = 0; j != m_nCells(1); j++ ) {
+    //             for ( intType i = 0; i != m_nCells(0); i++ ) {
+    //                 m_triadSolverForward->UpdateTriad( i, j, k );
+    //             }
+    //         }
+
+    //     } );
+    //     TOC()
+
+    //     TIC("Setting Ghost cells")
+    //     SetGhostCells(m_fields, m_mesh, m_bcData);
+    //     TOC()
+
+    //     // Reverse plane sweep
+    //     TIC("Sweeping 2")
+    //     RAJA::forall<colorPolicy>( m_reverseColorSet, [&] ( intType k)  {
+
+    //         for ( intType j = m_nCells(1)-1; j != -1; j-- ) {
+    //             for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
+    //                 m_triadSolverBackward.UpdateTriad( i, j, k );
+    //             }
+    //         }
+
+    //     } );
+    //     TOC()
+
+    // }
+
     __attribute__((flatten))
-    void Sweep3D()
+    void Sweep3DTiled()
     {
         // using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::seq_exec>;
         using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_parallel_for_exec>;
-
-        m_fieldsOldIter = m_fields;
 
         TIC("Setting Ghost cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
         TOC()
         
-        // Forward plane sweep
+        // bool hasRemainederCellsX = ( m_mesh.nCells(0) % 2 == 0 ) ? false : true;
+        // bool hasRemainederCellsY = ( m_mesh.nCells(1) % 2 == 0 ) ? false : true;
+
+        // // Lambda for updating cells in a 2x2 box in the x-y plane with bottom left corner at (i, j, k).
+        // auto UpdateForwardBox = [&] (intType i, intType j, intType k) {
+            
+        //     // Bottom left
+        //     m_triadSolverForward_en.UpdateTriad( i, j, k );
+
+        //     // Bottom right
+        //     m_triadSolverForward_wn.UpdateTriad( i+1, j, k );
+
+        //     // Top left
+        //     m_triadSolverForward_es.UpdateTriad( i, j+1, k );
+
+        //     // Top right
+        //     m_triadSolverForward_ws.UpdateTriad( i+1, j+1, k );
+
+        // };
+
+        // // Forward plane sweep
+        // TIC("Sweeping 1")
+        // RAJA::forall<colorPolicy>( m_forwardColorSet, [&] ( intType k ) {
+
+        //     // Main cells in j direction
+        //     for ( intType j = 0; j < m_nCells(1)-1; j+= 2 ) {
+
+        //         // Main cells
+        //         for ( intType i = 0; i < m_nCells(0)-1; i += 2 ) {
+        //             UpdateForwardBox(i, j, k);
+        //         }
+
+        //         // // Remainder cells
+        //         // if ( hasRemainederCellsX ) {
+        //         //     intType i = m_nCells(0)-2;
+        //         //     UpdateForwardBox(i, j, k);
+        //         // }
+
+        //     }
+
+
+        //     // // Remainder cells in j direction
+        //     // if ( hasRemainederCellsY ) {
+        //     //     intType j = m_nCells(1)-2;
+
+        //     //     // Main cells
+        //     //     for ( intType i = 0; i < m_nCells(0)-1; i += 2 ) {
+        //     //         UpdateForwardBox(i, j, k);
+        //     //     }
+
+        //     //     // Remainder cells
+        //     //     if ( hasRemainederCellsX ) {
+        //     //         intType i = m_nCells(0)-2;
+        //     //         UpdateForwardBox(i, j, k);
+        //     //     }
+        //     // }
+
+        // } );
+        // TOC()
+
+
+        // // Forward plane sweep
+        // TIC("Sweeping 1")
+        // RAJA::forall<colorPolicy>( m_forwardColorSet, [&] ( intType k ) {
+
+        //     // Tiling assume perfect fit
+        //     constexpr intType tileSizeX = 2,
+        //                       tileSizeY = 2;
+        //     assert( (void("Tile size in x does not match" ), tileSizeX % m_nCells(0) == 0) );
+        //     assert( (void("Tile size in y does not match" ), tileSizeY % m_nCells(1) == 0) );
+
+        //     // Loop each tile
+        //     for ( intType j = 0; j < m_nCells(1); j += tileSizeY ) {
+        //         for ( intType i = 0; i < m_nCells(0); i += tileSizeX ) {
+
+        //             // Loop the tile
+        //             for ( intType tj = j; tj < j + tileSizeY; tj++ ) {
+        //                 for ( intType ti = i; ti < i + tileSizeX; ti++ ) {
+
+        //                     m_triadSolverForward->UpdateTriad( ti, tj, k );
+
+        //                 }
+        //             }
+
+        //         }
+        //     }
+
+        // } );
+        // TOC()
+
         TIC("Sweeping 1")
         RAJA::forall<colorPolicy>( m_forwardColorSet, [&] ( intType k ) {
 
             for ( intType j = 0; j != m_nCells(1); j++ ) {
                 for ( intType i = 0; i != m_nCells(0); i++ ) {
-                    m_triadSolverForward->UpdateTriadFull( i, j, k );
+                    m_triadSolverForward.UpdateTriad( i, j, k );
                 }
             }
 
         } );
         TOC()
 
-        TIC("Setting Ghost cells")
-        SetGhostCells(m_fields, m_mesh, m_bcData);
-        TOC()
+        // TIC("Setting Ghost cells")
+        // SetGhostCells(m_fields, m_mesh, m_bcData);
+        // TOC()
 
-        // Reverse plane sweep
-        TIC("Sweeping 2")
-        RAJA::forall<colorPolicy>( m_reverseColorSet, [&] ( intType k)  {
+        // // Reverse plane sweep
+        // TIC("Sweeping 2")
+        // RAJA::forall<colorPolicy>( m_reverseColorSet, [&] ( intType k)  {
 
-            for ( intType j = m_nCells(1)-1; j != -1; j-- ) {
-                for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
-                    m_triadSolverBackward->UpdateTriadFull( i, j, k );
-                }
-            }
+        //     for ( intType j = m_nCells(1)-1; j != -1; j-- ) {
+        //         for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
+        //             m_triadSolverBackward->UpdateTriad( i, j, k );
+        //         }
+        //     }
 
-        } );
-        TOC()
-
-        m_residuals = L1DiffResiduals( m_fields, m_fieldsOldIter );
+        // } );
+        // TOC()
 
     }
 

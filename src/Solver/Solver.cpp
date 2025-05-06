@@ -126,7 +126,7 @@ OperationStatus Smooth( GridLevelData<MI > &gridLevelData,
             returnFlag = OperationStatus::Sucess;
             break;
         }
-
+        
         gridLevelData.linearSolver->UpdateState();
         gridLevelData.linearSolver->Solve();
     }
@@ -552,7 +552,6 @@ void SolveTransient( const InputData &inputData,
             }
             TOC()
             
-            TIC("Residuals and Logging")
             SetStencil<MI>(mgLevels[0], mgLevels[0].fields);
             residualsOuter   = ScaledL1NormResiduals<MI>( mgLevels[0].fields, 
                                                           mgLevels[0].fvCoeffs, 
@@ -563,7 +562,6 @@ void SolveTransient( const InputData &inputData,
             massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
                                                          mgLevels[0].mesh);
             consoleLog.WriteResiduals( residualsOuter, massFluxResidual, nOuterIterations );
-            TOC() 
             
             if ( ResidualsDiverged(residualsOuter) ) {
                 abortTimestepping = true;
