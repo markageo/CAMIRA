@@ -89,13 +89,6 @@ void ApplyImplicitRelaxation( FVCoefficients &,
                               const Mesh & );
 
 
-// ----------------------------------------- Definition in GhostCells.cpp --------------------------------------- //
-
-void SetGhostCells( FieldData<Tensor3D> &,
-                    const Mesh &,
-                    const BoundaryConditionData & );
-
-
 // ---------------------------------------- Definition in VertexValues.cpp -------------------------------------- //
 
 

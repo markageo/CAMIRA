@@ -3,10 +3,9 @@
 
 #include "PlaneSolver.h"
 #include "TriadSolver.h"
-#include "TriadSolver2.h"
-#include "StaggerIndexing2.h"
 #include "StencilConstants.h"
 #include "ResidualFunctions.h"
+#include "../FiniteVolume/GhostCells.h"
 
 #include "../Core/Types.h"
 #include "../Core/FVTools.h"
@@ -384,6 +383,7 @@ public:
                                    const InputData::SmootherSettings &smootherSettings ) : 
 
                     m_fields( fields ),
+                    m_pressureOld( fields.P ),
                     m_fvCoeffs( fvCoeffs ),
                     m_mesh( mesh ),
                     m_bcData( bcData ),
@@ -394,69 +394,11 @@ public:
                     m_forwardColorSet( CreateForward1DColourSet(m_fvCoeffs.nCells(2)) ),
                     m_reverseColorSet( CreateReverse1DColourSet(m_fvCoeffs.nCells(2)) ),
 
-                    m_nCells( fvCoeffs.nCells ),
-                    m_nCellsPlane( fvCoeffs.nCells(1), fvCoeffs.nCells(2) ),
-
-                    // m_triadSolverForward_en(fields, fieldsOld, mask, fvCoeffs, smootherSettings),
-                    // m_triadSolverForward_es(fields, fieldsOld, mask, fvCoeffs, smootherSettings),
-                    // m_triadSolverForward_wn(fields, fieldsOld, mask, fvCoeffs, smootherSettings),
-                    // m_triadSolverForward_ws(fields, fieldsOld, mask, fvCoeffs, smootherSettings)
-
-                    // m_triadSolverForward_en(fields, fieldsOld, mask, fvCoeffs, smootherSettings, TC::e, TC::n, TC::t),
-                    // m_triadSolverForward_es(fields, fieldsOld, mask, fvCoeffs, smootherSettings, TC::e, TC::s, TC::t),
-                    // m_triadSolverForward_wn(fields, fieldsOld, mask, fvCoeffs, smootherSettings, TC::w, TC::n, TC::t),
-                    // m_triadSolverForward_ws(fields, fieldsOld, mask, fvCoeffs, smootherSettings, TC::w, TC::s, TC::t)
-
-                    // m_triadSolverForward(fields, fieldsOld, mask, fvCoeffs, smootherSettings)
-                    // m_triadSolverBackward(fields, fieldsOld, mask, fvCoeffs, smootherSettings)
-
                     m_triadSolverForward(fields, fieldsOld, mask, fvCoeffs, smootherSettings),
+                    m_triadSolverBackward(fields, fieldsOld, mask, fvCoeffs, smootherSettings),
 
-                    // m_staggerIndexings( {
-                    //                     EnumVector<Axis, StaggerIndexing2 >({ StaggerIndexing2(Axis::X, TransportCoefficients::e), 
-                    //                                                           StaggerIndexing2(Axis::Y, TransportCoefficients::n), 
-                    //                                                           StaggerIndexing2(Axis::Z, TransportCoefficients::t) }), 
-
-                    //                     EnumVector<Axis, StaggerIndexing2 >({ StaggerIndexing2(Axis::X, TransportCoefficients::w), 
-                    //                                                           StaggerIndexing2(Axis::Y, TransportCoefficients::n), 
-                    //                                                           StaggerIndexing2(Axis::Z, TransportCoefficients::t) }), 
-                        
-                    //                     EnumVector<Axis, StaggerIndexing2 >({ StaggerIndexing2(Axis::X, TransportCoefficients::e), 
-                    //                                                           StaggerIndexing2(Axis::Y, TransportCoefficients::s), 
-                    //                                                           StaggerIndexing2(Axis::Z, TransportCoefficients::t) }),  
-
-                    //                     EnumVector<Axis, StaggerIndexing2 >({ StaggerIndexing2(Axis::X, TransportCoefficients::w), 
-                    //                                                           StaggerIndexing2(Axis::Y, TransportCoefficients::s), 
-                    //                                                           StaggerIndexing2(Axis::Z, TransportCoefficients::t) })
-
-
-                    m_staggerIndexings( {
-                                            EnumVector<Axis, StaggerIndexing2 >({ StaggerIndexing2(Axis::X, TransportCoefficients::e), 
-                                                                                  StaggerIndexing2(Axis::Y, TransportCoefficients::n), 
-                                                                                  StaggerIndexing2(Axis::Z, TransportCoefficients::t) }), 
-
-                                            EnumVector<Axis, StaggerIndexing2 >({ StaggerIndexing2(Axis::X, TransportCoefficients::e), 
-                                                                                  StaggerIndexing2(Axis::Y, TransportCoefficients::n), 
-                                                                                  StaggerIndexing2(Axis::Z, TransportCoefficients::t) }), 
-                            
-                                            EnumVector<Axis, StaggerIndexing2 >({ StaggerIndexing2(Axis::X, TransportCoefficients::e), 
-                                                                                  StaggerIndexing2(Axis::Y, TransportCoefficients::n), 
-                                                                                  StaggerIndexing2(Axis::Z, TransportCoefficients::t) }),  
-
-                                            EnumVector<Axis, StaggerIndexing2 >({ StaggerIndexing2(Axis::X, TransportCoefficients::e), 
-                                                                                  StaggerIndexing2(Axis::Y, TransportCoefficients::n), 
-                                                                                  StaggerIndexing2(Axis::Z, TransportCoefficients::t) })
-                    } )
-
-    {
-        // m_triadSolverForward_en = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
-        // m_triadSolverForward_es = std::make_unique<TriadSolver<TC::e, TC::s, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
-        // m_triadSolverForward_wn = std::make_unique<TriadSolver<TC::w, TC::n, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
-        // m_triadSolverForward_ws = std::make_unique<TriadSolver<TC::w, TC::s, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
-
-        // m_triadSolverForward  = std::make_unique<TriadSolver<TC::e, TC::n, TC::t, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
-        // m_triadSolverBackward = std::make_unique<TriadSolver<TC::w, TC::s, TC::b, MI >>(fields, fieldsOld, mask, fvCoeffs, smootherSettings);
-    }
+                    m_nCells( fvCoeffs.nCells )
+    { }
 
 
     void Solve()
@@ -472,7 +414,7 @@ public:
 
             // Sweep domain
             TIC("Sweep3d Function")
-            Sweep3DTiled();
+            Sweep3D();
             TOC()
 
             // Normalise residuals
@@ -496,15 +438,14 @@ public:
     // Update any precomputed values
     void UpdateState()
     {
-        // m_triadSolverForward->UpdateGlobalConstants();
-        // m_triadSolverBackward->UpdateGlobalConstants();
+        m_triadSolverForward.UpdateGlobalConstants();
+        m_triadSolverBackward.UpdateGlobalConstants();
     }
 
 
 private:
 
     FieldData<Tensor3D> &m_fields;
-    FieldData<Tensor3D> m_fieldsOldIter;
     Tensor3D m_pressureOld;
     const FVCoefficients &m_fvCoeffs;
     const Mesh &m_mesh;
@@ -516,74 +457,14 @@ private:
     RAJA::TypedIndexSet< RAJA::TypedRangeStrideSegment<intType> > m_forwardColorSet,
                                                                   m_reverseColorSet;
 
-    // std::unique_ptr<TriadSolver<TC::e, TC::n, TC::t, MI >> m_triadSolverForward_en;
-    // std::unique_ptr<TriadSolver<TC::e, TC::s, TC::t, MI >> m_triadSolverForward_es;
-    // std::unique_ptr<TriadSolver<TC::w, TC::n, TC::t, MI >> m_triadSolverForward_wn;
-    // std::unique_ptr<TriadSolver<TC::w, TC::s, TC::t, MI >> m_triadSolverForward_ws;
-
-    // TriadSolver<TC::e, TC::n, TC::t, MI > m_triadSolverForward_en;
-    // TriadSolver<TC::e, TC::s, TC::t, MI > m_triadSolverForward_es;
-    // TriadSolver<TC::w, TC::n, TC::t, MI > m_triadSolverForward_wn;
-    // TriadSolver<TC::w, TC::s, TC::t, MI > m_triadSolverForward_ws;
-
-    TriadSolver2<MI> m_triadSolverForward;
-    // EnumVector<Axis, StaggerIndexing2> staggerIndexing_en, staggerIndexing_wn, staggerIndexing_es, staggerIndexing_ws;
-    std::vector< EnumVector<Axis, StaggerIndexing2 >> m_staggerIndexings;
-
-    // std::unique_ptr<TriadSolver<TC::e, TC::n, TC::t, MI >> m_triadSolverForward;
-    // std::unique_ptr<TriadSolver<TC::w, TC::s, TC::b, MI >> m_triadSolverBackward;
-    // TriadSolver<TC::e, TC::n, TC::t, MI > m_triadSolverForward;
-    // TriadSolver<TC::w, TC::s, TC::b, MI > m_triadSolverBackward;
-
-    floatType m_residual, m_residualInitialInv;
+    TriadSolver<TC::w, TC::s, TC::b, MI > m_triadSolverForward, m_triadSolverBackward;
 
     iArray3 m_nCells;
-    iArray2 m_nCellsPlane;
+    floatType m_residual, m_residualInitialInv;
 
-    // __attribute__((flatten))
-    // void Sweep3D()
-    // {
-    //     // using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::seq_exec>;
-    //     using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_parallel_for_exec>;
-
-    //     TIC("Setting Ghost cells")
-    //     SetGhostCells(m_fields, m_mesh, m_bcData);
-    //     TOC()
-        
-    //     // Forward plane sweep
-    //     TIC("Sweeping 1")
-    //     RAJA::forall<colorPolicy>( m_forwardColorSet, [&] ( intType k ) {
-
-    //         for ( intType j = 0; j != m_nCells(1); j++ ) {
-    //             for ( intType i = 0; i != m_nCells(0); i++ ) {
-    //                 m_triadSolverForward->UpdateTriad( i, j, k );
-    //             }
-    //         }
-
-    //     } );
-    //     TOC()
-
-    //     TIC("Setting Ghost cells")
-    //     SetGhostCells(m_fields, m_mesh, m_bcData);
-    //     TOC()
-
-    //     // Reverse plane sweep
-    //     TIC("Sweeping 2")
-    //     RAJA::forall<colorPolicy>( m_reverseColorSet, [&] ( intType k)  {
-
-    //         for ( intType j = m_nCells(1)-1; j != -1; j-- ) {
-    //             for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
-    //                 m_triadSolverBackward.UpdateTriad( i, j, k );
-    //             }
-    //         }
-
-    //     } );
-    //     TOC()
-
-    // }
-
+   
     __attribute__((flatten))
-    void Sweep3DTiled()
+    void Sweep3D()
     {
         // using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::seq_exec>;
         using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_parallel_for_exec>;
@@ -592,153 +473,38 @@ private:
         SetGhostCells(m_fields, m_mesh, m_bcData);
         TOC()
         
-        // bool hasRemainederCellsX = ( m_mesh.nCells(0) % 2 == 0 ) ? false : true;
-        // bool hasRemainederCellsY = ( m_mesh.nCells(1) % 2 == 0 ) ? false : true;
-
-        // // Lambda for updating cells in a 2x2 box in the x-y plane with bottom left corner at (i, j, k).
-        // auto UpdateForwardBox = [&] (intType i, intType j, intType k) {
-            
-        //     // Bottom left
-        //     m_triadSolverForward_en.UpdateTriad( i, j, k );
-
-        //     // Bottom right
-        //     m_triadSolverForward_wn.UpdateTriad( i+1, j, k );
-
-        //     // Top left
-        //     m_triadSolverForward_es.UpdateTriad( i, j+1, k );
-
-        //     // Top right
-        //     m_triadSolverForward_ws.UpdateTriad( i+1, j+1, k );
-
-        // };
-
-
         // Forward plane sweep
         TIC("Sweeping 1")
         RAJA::forall<colorPolicy>( m_forwardColorSet, [&] ( intType k ) {
 
-            // Main cells in j direction
-            for ( intType j = 0; j < m_nCells(1)-1; j+= 2 ) {
-
-                // Main cells
-                for ( intType i = 0; i < m_nCells(0)-1; i += 2 ) {
-
-                    // Solve the box
-                    intType idx = 0;    // Linear index for staggered indexing objects
-                    for ( intType bj = j; bj < j + 2; bj++ ) {
-                        for ( intType bi = i; bi < i + 2; bi++ ) {
-
-                            m_triadSolverForward.UpdateTriad( bi, bj, k, m_staggerIndexings[idx][0], m_staggerIndexings[idx][1], m_staggerIndexings[idx][2]  );
-                            
-                            idx++;
-                        }
-                    }
-
-
-                    // UpdateForwardBox(i, j, k);
-
-                    // // Bottom left
-                    // m_triadSolverForward.UpdateTriad( i, j, k, staggerIndexing_en[0], staggerIndexing_en[1], staggerIndexing_en[2] );
-
-                    // // Bottom right
-                    // m_triadSolverForward.UpdateTriad( i+1, j, k, staggerIndexing_wn[0], staggerIndexing_wn[1], staggerIndexing_wn[2]  );
-
-                    // // Top left
-                    // m_triadSolverForward.UpdateTriad( i, j+1, k, staggerIndexing_es[0], staggerIndexing_es[1], staggerIndexing_es[2] );
-
-                    // // Top right
-                    // m_triadSolverForward.UpdateTriad( i+1, j+1, k, staggerIndexing_ws[0], staggerIndexing_ws[1], staggerIndexing_ws[2] );
-
+            for ( intType j = 0; j != m_nCells(1); j++ ) {
+                for ( intType i = 0; i != m_nCells(0); i++ ) {
+                    m_triadSolverForward.UpdateTriad( i, j, k );
                 }
-
-                // // Remainder cells
-                // if ( hasRemainederCellsX ) {
-                //     intType i = m_nCells(0)-2;
-                //     UpdateForwardBox(i, j, k);
-                // }
-
             }
-
-
-        //     // // Remainder cells in j direction
-        //     // if ( hasRemainederCellsY ) {
-        //     //     intType j = m_nCells(1)-2;
-
-        //     //     // Main cells
-        //     //     for ( intType i = 0; i < m_nCells(0)-1; i += 2 ) {
-        //     //         UpdateForwardBox(i, j, k);
-        //     //     }
-
-        //     //     // Remainder cells
-        //     //     if ( hasRemainederCellsX ) {
-        //     //         intType i = m_nCells(0)-2;
-        //     //         UpdateForwardBox(i, j, k);
-        //     //     }
-        //     // }
 
         } );
         TOC()
 
+        TIC("Setting Ghost cells")
+        SetGhostCells(m_fields, m_mesh, m_bcData);
+        TOC()
 
-        // // Forward plane sweep
-        // TIC("Sweeping 1")
-        // RAJA::forall<colorPolicy>( m_forwardColorSet, [&] ( intType k ) {
+        // Reverse plane sweep
+        TIC("Sweeping 2")
+        RAJA::forall<colorPolicy>( m_reverseColorSet, [&] ( intType k)  {
 
-        //     // Tiling assume perfect fit
-        //     constexpr intType tileSizeX = 2,
-        //                       tileSizeY = 2;
-        //     assert( (void("Tile size in x does not match" ), tileSizeX % m_nCells(0) == 0) );
-        //     assert( (void("Tile size in y does not match" ), tileSizeY % m_nCells(1) == 0) );
+            for ( intType j = m_nCells(1)-1; j != -1; j-- ) {
+                for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
+                    m_triadSolverBackward.UpdateTriad( i, j, k );
+                }
+            }
 
-        //     // Loop each tile
-        //     for ( intType j = 0; j < m_nCells(1); j += tileSizeY ) {
-        //         for ( intType i = 0; i < m_nCells(0); i += tileSizeX ) {
-
-        //             // Loop the tile
-        //             for ( intType tj = j; tj < j + tileSizeY; tj++ ) {
-        //                 for ( intType ti = i; ti < i + tileSizeX; ti++ ) {
-
-        //                     m_triadSolverForward.UpdateTriad( ti, tj, k );
-
-        //                 }
-        //             }
-
-        //         }
-        //     }
-
-        // } );
-        // TOC()
-
-        // TIC("Sweeping 1")
-        // RAJA::forall<colorPolicy>( m_forwardColorSet, [&] ( intType k ) {
-
-        //     for ( intType j = 0; j != m_nCells(1); j++ ) {
-        //         for ( intType i = 0; i != m_nCells(0); i++ ) {
-        //             m_triadSolverForward.UpdateTriad( i, j, k );
-        //         }
-        //     }
-
-        // } );
-        // TOC()
-
-        // TIC("Setting Ghost cells")
-        // SetGhostCells(m_fields, m_mesh, m_bcData);
-        // TOC()
-
-        // // Reverse plane sweep
-        // TIC("Sweeping 2")
-        // RAJA::forall<colorPolicy>( m_reverseColorSet, [&] ( intType k)  {
-
-        //     for ( intType j = m_nCells(1)-1; j != -1; j-- ) {
-        //         for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
-        //             m_triadSolverBackward->UpdateTriad( i, j, k );
-        //         }
-        //     }
-
-        // } );
-        // TOC()
+        } );
+        TOC()
 
     }
+
 
 };
 

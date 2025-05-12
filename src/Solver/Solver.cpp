@@ -7,6 +7,7 @@
 #include "../CoordinateTransformations/AxisTransformationFunctions.h"
 #include "../DerivedQuantities/DerivedQuantities.h"
 #include "../FiniteVolume/FiniteVolume.h"
+#include "../FiniteVolume/GhostCells.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 #include "../Multigrid/Multigrid.h"
 
