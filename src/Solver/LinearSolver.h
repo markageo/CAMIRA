@@ -457,7 +457,8 @@ private:
     RAJA::TypedIndexSet< RAJA::TypedRangeStrideSegment<intType> > m_forwardColorSet,
                                                                   m_reverseColorSet;
 
-    TriadSolver<TC::w, TC::s, TC::b, MI > m_triadSolverForward, m_triadSolverBackward;
+    TriadSolver<TC::e, TC::n, TC::t, MI > m_triadSolverForward;
+    TriadSolver<TC::w, TC::s, TC::b, MI > m_triadSolverBackward;
 
     iArray3 m_nCells;
     floatType m_residual, m_residualInitialInv;
