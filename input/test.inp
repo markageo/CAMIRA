@@ -117,7 +117,7 @@ Solver {
     
     Smoother {
 
-        type = domainSymmetric
+        type = domainSymmetricParallel
         maxIterations = 4
         maxResiduals = 1e-3
 
@@ -142,6 +142,10 @@ Solver {
         
     }
 
+}
+
+Parallel {
+    numberOfThreads = 4
 }
 
 

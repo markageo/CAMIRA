@@ -246,8 +246,7 @@ inline FieldData<floatType> ScaledL1NormResiduals( const FieldData<Tensor3D> &fi
 
     // Continuity 
     residuals.P = residualP;
-
-
+    
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         if ( scalingFactor.U[axis] != 0.0f ) { // Division by zero
             residuals.U[axis] /= scalingFactor.U[axis];
