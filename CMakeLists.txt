@@ -99,7 +99,8 @@ target_compile_options(eigen_internal INTERFACE -Wno-array-bounds)
 add_library(eigen INTERFACE)
 target_link_libraries(eigen INTERFACE eigen_internal)
 
-
+# Openmp, so that it works with clang
+find_package(OpenMP REQUIRED)
 
 # CGAL library
 find_package(CGAL REQUIRED 
