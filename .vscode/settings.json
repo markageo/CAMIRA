@@ -2,6 +2,6 @@
     "files.associations": {
         "*.lxx": "cpp"
     },
-    "C_Cpp.intelliSenseEngine": "disabled",
+    "C_Cpp.intelliSenseEngine": "default",
     "editor.inlayHints.enabled": "off",
 }

@@ -64,6 +64,7 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels,
         } else {
             RestrictFields( mgl.fields, mgLevels[level-1].fields, mgLevels[level-1].mesh, mgLevels[level].mesh, mgLevels[level].ibData.mask );
         }
+        SetGhostCells(mgl.fields, mgl.mesh, mgl.bcData);
         mgl.fieldsRestricted = mgl.fields;
         
         switch ( inputData.schemes.timeScheme) {

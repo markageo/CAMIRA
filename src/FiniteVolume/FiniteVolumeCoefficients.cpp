@@ -5,11 +5,6 @@
 #include "FaceInterpolatedVelocity.h"
 #include "../Parallel/Parallel.h"
 
-#include <RAJA/index/RangeSegment.hpp>
-#include <RAJA/pattern/kernel.hpp>
-#include <RAJA/policy/openmp/kernel/Collapse.hpp>
-#include <RAJA/policy/openmp/policy.hpp>
-#include <RAJA/policy/sequential/policy.hpp>
 #include <algorithm>
 #include <iostream>
 #include <vector>
@@ -157,13 +152,17 @@ void DiagonalAdvectionDiffusionCoefficients( FVCoefficients &fvCoeffs,
                 const TensorIndex3D cellIdx = G(i, j, k);
 
                 AU[p](cellIdx) = - ( AU[n](cellIdx) + AU[s](cellIdx) )  
-                                 +  mesh.cellLengthsInv[X](i) * ( faceFluxes[X](i+1, j, k) - faceFluxes[X](i, j, k) )
-
                                  - ( AU[e](cellIdx) + AU[w](cellIdx) )  
-                                 +  mesh.cellLengthsInv[Y](j) * ( faceFluxes[Y](i, j+1, k) - faceFluxes[Y](i, j, k) )
+                                 - ( AU[t](cellIdx) + AU[b](cellIdx) );
 
-                                 - ( AU[t](cellIdx) + AU[b](cellIdx) )
-                                 +  mesh.cellLengthsInv[Z](k) * ( faceFluxes[Z](i, j, k+1) - faceFluxes[Z](i, j, k) );
+                floatType localDivergence = mesh.cellLengthsInv[X](i) * ( faceFluxes[X](i+1, j, k) - faceFluxes[X](i, j, k) )
+                                          + mesh.cellLengthsInv[Y](j) * ( faceFluxes[Y](i, j+1, k) - faceFluxes[Y](i, j, k) )
+                                          + mesh.cellLengthsInv[Z](k) * ( faceFluxes[Z](i, j, k+1) - faceFluxes[Z](i, j, k) );
+
+                // Local divergence is zero at convergence, so only add it if it increases diagonal dominance
+                if ( localDivergence >= 0.0f ) {
+                    AU[p](cellIdx) += localDivergence;
+                }
         
             }
         }
