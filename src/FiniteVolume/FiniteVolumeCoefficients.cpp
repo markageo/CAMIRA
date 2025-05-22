@@ -47,7 +47,8 @@ void OffDiagonalInternalAdvectionDiffusionCoefficients( FVCoefficients &fvCoeffs
     
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-        const auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+        iArray3 startIndex = {0, 0, 0}; startIndex(axis)++;
+        iArray3 nFaces = mesh.nFacesNormal[axis]; nFaces(axis)--;
 
         const TransportCoefficients::ENUMDATA east = LUT::HiCoeff[axis], 
                                               west = LUT::LoCoeff[axis];
@@ -297,7 +298,8 @@ void AddDeferredCorrectionImplDirection( FVCoefficients &fvCoeffs,
     using enum Axis::ENUMDATA;
     using FVT::G;
 
-    const auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+    iArray3 startIndex = {0, 0, 0}; startIndex(axis)++;
+    iArray3 nFaces = mesh.nFacesNormal[axis]; nFaces(axis)--;
 
     floatType loCellLengthInv, hiCellLengthInv;
     TensorIndex3D loIndex, hiIndex;
@@ -389,7 +391,8 @@ void AddDeferredCorrectionImplDirectionParallel( FVCoefficients &fvCoeffs,
     using enum Axis::ENUMDATA;
     using FVT::G;
 
-    const auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+    iArray3 startIndex = {0, 0, 0}; startIndex(axis)++;
+    iArray3 nFaces = mesh.nFacesNormal[axis]; nFaces(axis)--;
 
     auto LoopBody = [&] ( intType i, intType j, intType k ) {
         TensorIndex3D hiIndex = { i, j, k },
@@ -663,7 +666,8 @@ void MWInterpolationInteriorImplicitParallel( FVCoefficients &fvCoeffs,
     continuityPressureCoeffs[east ].chip(G(0), axis).setZero();
     continuityPressureCoeffs[west ].chip(G(0), axis).setZero();
 
-    const auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+    iArray3 startIndex = {0, 0, 0}; startIndex(axis)++;
+    iArray3 nFaces = mesh.nFacesNormal[axis]; nFaces(axis)--;
 
 
     // Lambda for loop body
@@ -762,7 +766,8 @@ void MWInterpolationInteriorImplicit( FVCoefficients &fvCoeffs,
     continuityPressureCoeffs[east ].chip(G(0), axis).setZero();
     continuityPressureCoeffs[west ].chip(G(0), axis).setZero();
 
-    const auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+    iArray3 startIndex = {0, 0, 0}; startIndex(axis)++;
+    iArray3 nFaces = mesh.nFacesNormal[axis]; nFaces(axis)--;
 
     TensorIndex3D loIndex, hiIndex;
     intType idx;
@@ -862,7 +867,8 @@ void MWInterpolationInteriorSemiExplicitParallel( FVCoefficients &fvCoeffs,
     const TransportCoefficients::ENUMDATA east  = LUT::HiCoeff[axis], 
                                           west  = LUT::LoCoeff[axis];
 
-    const auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+    iArray3 startIndex = {0, 0, 0}; startIndex(axis)++;
+    iArray3 nFaces = mesh.nFacesNormal[axis]; nFaces(axis)--;
 
 
     auto LoopBody = [&] (intType i, intType j, intType k) {
@@ -989,7 +995,8 @@ void MWInterpolationInteriorSemiExplicit( FVCoefficients &fvCoeffs,
     constexpr TransportCoefficients::ENUMDATA east  = LUT::HiCoeff[axis], 
                                               west  = LUT::LoCoeff[axis];
 
-    const auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+    iArray3 startIndex = {0, 0, 0}; startIndex(axis)++;
+    iArray3 nFaces = mesh.nFacesNormal[axis]; nFaces(axis)--;
 
     TensorIndex3D loIndex, hiIndex;
     intType idx;

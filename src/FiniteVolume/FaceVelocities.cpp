@@ -29,7 +29,8 @@ void LinearInterpInteriorFaceVelocitiesWithMWI( EnumVector<Axis, Tensor3D> &face
     const std::array<Tensor1D, 4> &mwiSparseCoeffs  = fvCoeffs.mwiSparseCoeffs[axis];
     const std::array<Tensor1D, 2> &mwiCompactCoeffs = fvCoeffs.mwiCompactCoeffs[axis];
 
-    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+    iArray3 startIndex = {0, 0, 0}; startIndex(axis)++;
+    iArray3 nFaces = mesh.nFacesNormal[axis]; nFaces(axis)--;
 
     for (intType k = startIndex[Z]; k != nFaces[Z]; k++ ) {
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
@@ -75,7 +76,8 @@ void LinearInterpInteriorFaceVelocities( EnumVector<Axis, Tensor3D> &faceVelocit
 
     Tensor3D &faceVel = faceVelocities[ axis ];
 
-    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+    iArray3 startIndex = {0, 0, 0}; startIndex(axis)++;
+    iArray3 nFaces = mesh.nFacesNormal[axis]; nFaces(axis)--;
 
     for (intType k = startIndex[Z]; k != nFaces[Z]; k++ ) {
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
@@ -105,7 +107,8 @@ void LinearInterpInteriorFaceVelocities2( EnumVector<Axis, Tensor3D> &faceVeloci
 
     Tensor3D &faceVel = faceVelocities[ axis ];
 
-    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+    iArray3 startIndex = {0, 0, 0}; startIndex(axis)++;
+    iArray3 nFaces = mesh.nFacesNormal[axis]; nFaces(axis)--;
 
     floatType interpFactor;
     TensorIndex3D hiIndexG, loIndexG;
@@ -162,7 +165,8 @@ void AdvectedInteriorFaceVelocities( EnumVector<Axis, Tensor3D> &faceVelocities,
 
     Tensor3D &faceVel = faceVelocities[ axis ];
 
-    auto [startIndex, nFaces] = FaceInternalIndices(mesh, axis);
+    iArray3 startIndex = {0, 0, 0}; startIndex(axis)++;
+    iArray3 nFaces = mesh.nFacesNormal[axis]; nFaces(axis)--;
 
     for (intType k = startIndex[Z]; k != nFaces[Z]; k++ ) {
         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
