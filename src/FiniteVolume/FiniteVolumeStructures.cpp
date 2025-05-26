@@ -24,8 +24,8 @@ namespace
     // Interpolates user defined profile onto the mesh in 1D. Points that are outside the user defined region are set 
     // to the value of the nearest point.
     Tensor1D InterpProfile1D( const Tensor1D x,
-                             const Tensor1D v, 
-                             const Tensor1D xquery )
+                              const Tensor1D v, 
+                              const Tensor1D xquery )
     {
         const intType nValuePoints = x.size(); 
         const intType nQueryPoints = xquery.size(); 
@@ -72,8 +72,8 @@ namespace
 
     // Interpolates a 1D profile onto a meshed boundary face
     Tensor2D SetBoundaryProfile1D( const InputData::Profile1D &profile1D,   
-                                  const Mesh& mesh,
-                                  const BoundaryPatches::ENUMDATA boundaryPatch )
+                                   const Mesh& mesh,
+                                   const BoundaryPatches::ENUMDATA boundaryPatch )
     {
         Axis::ENUMDATA profileAxis  = profile1D.axis,
                     normalAxis   = LUT::BoundaryPatchAxis[ boundaryPatch ],
@@ -165,10 +165,28 @@ namespace
 
 std::vector< TransportCoefficients::ENUMDATA > MomentumVelocityEnums()
 {
-    using enum Axis::ENUMDATA;
     using C = TransportCoefficients::ENUMDATA;
     return {C::p, C::n, C::e, C::s, C::w, C::t, C::b};
 }                                                                      
+
+
+std::vector< TransportCoefficients::ENUMDATA > GradientCoefficientEnums( Axis::ENUMDATA axis )
+{
+    using C = TransportCoefficients::ENUMDATA;
+    using enum Axis::ENUMDATA;
+
+    switch ( axis ) {
+        case X:
+            return {C::p, C::e, C::w};
+
+        case Y:
+            return {C::p, C::n, C::s};
+
+        case Z:
+            return {C::p, C::t, C::b};
+    }
+    return {};
+}   
 
 
 std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums( MomentumInterpolation mi ) 
@@ -226,46 +244,43 @@ FVCoefficients::FVCoefficients() :
 
 FVCoefficients::FVCoefficients( const iArray3 &dims, 
                                 MomentumInterpolation mi) :
-    m_momentumVelocityCoeffs( MomentumVelocityEnums() , dims + 2*nGhost ),
-    m_gradientCoeffs( { CFD::EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::e, C::w}, dims( X ) + 2*nGhost),
-                        CFD::EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::n, C::s}, dims( Y ) + 2*nGhost),
-                        CFD::EnumVector<TransportCoefficients, Tensor1D>( {C::p, C::t, C::b}, dims( Z ) + 2*nGhost) } ),
+    FVCoefficients()   // Call the default constructor to set references
+{
+    nCells = dims;
+    momentumInterpolation = mi;
 
-    Cont( { m_gradientCoeffs,
-            EnumVector<TransportCoefficients, Tensor3D>( ContinuityPressureEnums( mi ), dims + 2*nGhost ),
-            Tensor3D( dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost ).setZero(),
-            Tensor3D( dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost ).setZero()
-        } ),
-    
-    mwiSparseCoeffs( { std::array<Tensor1D, 4>{ Tensor1D(dims(X)+1).setZero(), Tensor1D(dims(X)+1).setZero(), Tensor1D(dims(X)+1).setZero(), Tensor1D(dims(X)+1).setZero() } ,
-                       std::array<Tensor1D, 4>{ Tensor1D(dims(Y)+1).setZero(), Tensor1D(dims(Y)+1).setZero(), Tensor1D(dims(Y)+1).setZero(), Tensor1D(dims(Y)+1).setZero() } ,
-                       std::array<Tensor1D, 4>{ Tensor1D(dims(Z)+1).setZero(), Tensor1D(dims(Z)+1).setZero(), Tensor1D(dims(Z)+1).setZero(), Tensor1D(dims(Z)+1).setZero() } } ),
-    mwiCompactCoeffs( { std::array<Tensor1D, 2>{ Tensor1D(dims(X)+1).setZero(), Tensor1D(dims(X)+1).setZero() } ,
-                        std::array<Tensor1D, 2>{ Tensor1D(dims(Y)+1).setZero(), Tensor1D(dims(Y)+1).setZero() } ,
-                        std::array<Tensor1D, 2>{ Tensor1D(dims(Z)+1).setZero(), Tensor1D(dims(Z)+1).setZero() } } ),
-    momentumInterpolation( mi ),
+    for ( auto tc : MomentumVelocityEnums() ) {
+        m_momentumVelocityCoeffs[tc] = Tensor3D( nCells(X) + 2*nGhost, nCells(Y) + 2*nGhost, nCells(Z) + 2*nGhost ).setZero();
+    }
 
-    Mom( { MomentumEquation({ X,
-                              m_momentumVelocityCoeffs, 
-                              m_gradientCoeffs[X],
-                              CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero(),
-                              CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero() }),
-              
-              MomentumEquation({ Y,
-                                 m_momentumVelocityCoeffs, 
-                                 m_gradientCoeffs[Y],
-                                 CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero(),
-                                 CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero() }),
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        for ( auto tc : GradientCoefficientEnums(axis) ) {
+            m_gradientCoeffs[axis][tc] = Tensor1D( nCells(axis) + 2*nGhost ).setZero();;
+        }
+    } );
 
-              MomentumEquation({ Z,
-                                 m_momentumVelocityCoeffs, 
-                                 m_gradientCoeffs[Z],
-                                 CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero(),
-                                 CFD::Tensor3D( dims(X) + 2*nGhost,  dims(Y) + 2*nGhost,  dims(Z) + 2*nGhost ).setZero() })
-    } ),
+    // Cont.AU set as reference to m_gradientCoeffs
+    for ( auto tc : ContinuityPressureEnums( momentumInterpolation ) ) {
+        Cont.AP[tc] = Tensor3D( nCells(X) + 2*nGhost, nCells(Y) + 2*nGhost, nCells(Z) + 2*nGhost ).setZero();
+    }
+    Cont.B = Tensor3D( nCells(X) + 2*nGhost, nCells(Y) + 2*nGhost, nCells(Z) + 2*nGhost ).setZero();
+    Cont.F = Tensor3D( nCells(X) + 2*nGhost, nCells(Y) + 2*nGhost, nCells(Z) + 2*nGhost ).setZero();
 
-    nCells( dims )
-{};
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        mwiSparseCoeffs[axis]  = { Tensor1D(nCells(axis)+1).setZero(), Tensor1D(nCells(axis)+1).setZero(), Tensor1D(nCells(axis)+1).setZero(), Tensor1D(nCells(axis)+1).setZero() };
+        mwiCompactCoeffs[axis] = { Tensor1D(nCells(axis)+1).setZero(), Tensor1D(nCells(axis)+1).setZero() };
+    } );
+
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        Mom[axis].component = axis;
+        // Mom[axis].AU set as reference to m_momentumVelocityCoeffs
+        // Mom[axis].AP set as reference to m_gradientCoeffs[axis]
+        Mom[axis].B = Tensor3D( nCells(X) + 2*nGhost, nCells(Y) + 2*nGhost, nCells(Z) + 2*nGhost ).setZero();
+        Mom[axis].F = Tensor3D( nCells(X) + 2*nGhost, nCells(Y) + 2*nGhost, nCells(Z) + 2*nGhost ).setZero();
+    } );
+
+};
 
 
 

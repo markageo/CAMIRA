@@ -329,15 +329,20 @@ EnumVector< Axis, EnumVector<Axis, Tensor3D> > InitialiseFaceAdvectedVelocities(
                                                                                  const EnumVector<Axis, Tensor3D> &faceFluxes,
                                                                                  const BoundaryConditionData &bcData)
 {
+    using enum Axis::ENUMDATA;
+
     // First index is the velocity component. Second index is the face normal.
     // Faces are staggered in the negative direction:
     //   cellFaceVelocity[X][X](i, j, k) -> u(i-1/2, j    , k    )
     //   cellFaceVelocity[X][Y](i, j, k) -> u(i    , j-1/2, k    )
     //   cellFaceVelocity[X][Z](i, j, k) -> u(i    , j    , k-1/2)
-    EnumVector< Axis, EnumVector<Axis, Tensor3D> > faceAdvectedVelocities( EnumVector<Axis, Tensor3D> ( {{Axis::X, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
-                                                                                                       {Axis::Y, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},
-                                                                                                       {Axis::Z, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} ) );
-
+    EnumVector< Axis, EnumVector<Axis, Tensor3D> > faceAdvectedVelocities;
+   
+    EnumFor<Axis>( [&] (Axis::ENUMDATA velocityComponent ) {
+        faceAdvectedVelocities[velocityComponent][X] = Tensor3D( mesh.nCells(X) + 1, mesh.nCells(Y)    , mesh.nCells(Z)     );
+        faceAdvectedVelocities[velocityComponent][Y] = Tensor3D( mesh.nCells(X)    , mesh.nCells(Y) + 1, mesh.nCells(Z)     );
+        faceAdvectedVelocities[velocityComponent][Z] = Tensor3D( mesh.nCells(X)    , mesh.nCells(Y)    , mesh.nCells(Z) + 1 );
+    } );
                                                      
     UpdateFaceAdvectedVelocities(faceAdvectedVelocities, mesh, fvCoeffs, cellVelocities, faceFluxes, bcData);
 
@@ -400,15 +405,19 @@ void UpdateFaceFluxesWithMWI( EnumVector< Axis, Tensor3D > &faceFluxes,
 EnumVector<Axis, Tensor3D> InitialiseFaceFluxes( const Mesh &mesh, 
                                                  const EnumVector<Axis, Tensor3D> &cellVelocities, 
                                                  const BoundaryConditionData &bcData)
-{
+{   
+    using enum Axis::ENUMDATA; 
+    
     // Faces are staggered in the negative direction:
     //   cellFaceFlux[X](i, j, k) -> u(i-1/2, j    , k    )
     //   cellFaceFlux[Y](i, j, k) -> u(i    , j-1/2, k    )
     //   cellFaceFlux[Z](i, j, k) -> u(i    , j    , k-1/2)
     // Subscript indicates the normal direction of the face.
-    EnumVector<Axis, Tensor3D> faceFluxes( {{Axis::X, {mesh.nCells(0) + 1, mesh.nCells(1)    , mesh.nCells(2)    }},
-                                            {Axis::Y, {mesh.nCells(0)    , mesh.nCells(1) + 1, mesh.nCells(2)    }},
-                                            {Axis::Z, {mesh.nCells(0)    , mesh.nCells(1)    , mesh.nCells(2) + 1}}} );
+    EnumVector<Axis, Tensor3D> faceFluxes;
+
+    faceFluxes[X] = Tensor3D( mesh.nCells(X) + 1, mesh.nCells(Y)    , mesh.nCells(Z)     );
+    faceFluxes[Y] = Tensor3D( mesh.nCells(X)    , mesh.nCells(Y) + 1, mesh.nCells(Z)     );
+    faceFluxes[Z] = Tensor3D( mesh.nCells(X)    , mesh.nCells(Y)    , mesh.nCells(Z) + 1 );
                                                      
     UpdateFaceFluxes(faceFluxes, mesh, cellVelocities, bcData);
 
