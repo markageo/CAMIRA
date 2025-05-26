@@ -7,6 +7,12 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>
 
+#include "umpire/Allocator.hpp"
+#include "umpire/ResourceManager.hpp"
+#include "umpire/Umpire.hpp"
+#include "RAJA/RAJA.hpp"
+
+
 #include <type_traits>
 #include <vector>
 #include <utility>
@@ -27,10 +33,14 @@ namespace CFD
 
 using intType = Eigen::Index;
 
-using Tensor0D = Eigen::Tensor<floatType, 0>;    // Column major
-using Tensor1D = Eigen::Tensor<floatType, 1>;    // Column major
-using Tensor2D = Eigen::Tensor<floatType, 2>;    // Column major
-using Tensor3D = Eigen::Tensor<floatType, 3>;    // Column major
+template<int DIM>
+using Tensor = Eigen::Tensor<floatType, DIM>;
+
+using Tensor0D = Tensor<0>;    // Column major
+using Tensor1D = Tensor<1>;    // Column major
+using Tensor2D = Tensor<2>;    // Column major
+using Tensor3D = Tensor<3>;    // Column major
+
 using TensorIndex3D = Eigen::array<Eigen::Index, 3>;
 using TensorIndex2D = Eigen::array<Eigen::Index, 2>;
 
@@ -42,6 +52,35 @@ using fArray2 = Eigen::Array<floatType, 2, 1>;
 using fVector3 = Eigen::Matrix<floatType, 3, 1>;
 using fVector2 = Eigen::Matrix<floatType, 2, 1>;
 
+
+using RAJALayout1D = RAJA::Layout<1>;
+using RAJALayout2D = RAJA::Layout<2, RAJA::PERM_JI >;   // Column major
+using RAJALayout3D = RAJA::Layout<3, RAJA::PERM_KJI>;   // Column major
+
+template <int, typename T>
+struct View; 
+
+// Specialization for 1D
+template <typename T>
+struct View<1, T> {
+    using type = RAJA::View<T, RAJALayout1D>;
+};
+
+// Specialization for 2D
+template <typename T>
+struct View<2, T> {
+    using type = RAJA::View<T, RAJALayout2D>;
+};
+
+// Specialization for 3D
+template <typename T>
+struct View<3, T> {
+    using type = RAJA::View<T, RAJALayout3D>;
+};
+
+using View1D = View<1, floatType>;
+using View2D = View<2, floatType>;
+using View3D = View<3, floatType>;
 
 
 // --------------------------------------------------------- Enums -------------------------------------------------------- //
@@ -109,6 +148,19 @@ struct TransportCoefficients
 };
 
 
+struct Fields
+{
+    enum ENUMDATA
+    {
+        U, 
+        V, 
+        W, 
+        P
+    };
+    const static int count = 3;
+};
+
+
 // For looping through enum and applying lambda to each element
 template<typename enumStruct, typename L>
 inline void EnumFor( L&& f )
@@ -116,7 +168,8 @@ inline void EnumFor( L&& f )
     static_assert(std::is_same<enumStruct, Axis                 >::value ||
                   std::is_same<enumStruct, BoundaryConditions   >::value ||
                   std::is_same<enumStruct, BoundaryPatches      >::value ||
-                  std::is_same<enumStruct, TransportCoefficients>::value);
+                  std::is_same<enumStruct, TransportCoefficients>::value ||
+                  std::is_same<enumStruct, Fields               >::value   );
 
     typename enumStruct::ENUMDATA enumName;
     for (int i = 0; i != enumStruct::count; i++) {
@@ -161,128 +214,64 @@ enum class MultigridCycleType {
 };
 
 
+// ---------------------------------------------------- EnumVector Class -------------------------------------------------- //
 
-// ------------------------------------------------------- Containers ----------------------------------------------------- //
-
-// Namespace for internal implementation.
-namespace CFD_INTERNAL
-{
-
-    // Contain the types needed when constructing multidimensional arrays. 1D arrays are not constructed using arrays for
-    // their indices.
-    template<class B>
-    struct dimTypes
-    { 
-        using dimsArray = intType;
-        using dimsArrayInternal = intType;
-
-        static dimsArrayInternal ConvertDimsArrayInternal( dimsArray dims ) 
-        { return dims; }
-    };
-
-    // Specialisation for multidimensional arrays, which are constructed using arrays for thier dimensions
-    template<class B>
-    requires( std::is_same< B, Tensor2D >::value || std::is_same< B, Tensor3D >::value )
-    struct dimTypes<B>
-    { 
-        using dimsArray = Eigen::Array<intType, B::NumDimensions, 1>;
-        using dimsArrayInternal = Eigen::array<intType, B::NumDimensions>;
-
-        // For converting Eigen::Array to Eigen::array. 
-        // Only Eigen::array<Eigen::Index, ...> can be used to construct tensors.
-        static dimsArrayInternal ConvertDimsArrayInternal( const dimsArray &dims ) 
-        {
-            dimsArrayInternal dimsInternal;
-            for ( Eigen::Index i = 0; i != B::NumDimensions; i++ ) {
-                dimsInternal[ static_cast<size_t>( i ) ] = dims(i);
-            }
-            return dimsInternal;
-        }
-        
-    };
-
-}   //  end namespace CFD_INTERNAL
-
-
-
-
-// Wrapper for std::array that can only be indexed using enums
+// Simple wrapper for c-style array that is safe to use in device code
 template <typename enumStruct, typename T>
-class EnumVector
+struct EnumVector
 {
     static_assert(std::is_same<enumStruct, CFD::Axis                 >::value ||
                   std::is_same<enumStruct, CFD::BoundaryConditions   >::value ||
                   std::is_same<enumStruct, CFD::BoundaryPatches      >::value ||
-                  std::is_same<enumStruct, CFD::TransportCoefficients>::value,
+                  std::is_same<enumStruct, CFD::TransportCoefficients>::value || 
+                  std::is_same<enumStruct, CFD::Fields               >::value,
                   "Template parameter must be struct containing ENUMDATA type.");
 
-    typedef typename enumStruct::ENUMDATA ENUMDATA;
-
-    static constexpr bool isArray = std::is_same< T, CFD::Tensor3D >::value || 
-                                    std::is_same< T, CFD::Tensor2D >::value || 
-                                    std::is_same< T, CFD::Tensor1D >::value;
+    T m_data[enumStruct::count];
 
 
-    // Construction for 1D arrays is handeled a bit differently
-    static constexpr bool isArrayND = std::is_same< T, CFD::Tensor2D >::value ||
-                                      std::is_same< T, CFD::Tensor3D >::value;
-
-    using dimsArray =  typename CFD_INTERNAL::dimTypes<T>::dimsArray;
-    using dimsArrayInternal =  typename CFD_INTERNAL::dimTypes<T>::dimsArrayInternal;
-
-    public:
-
-        // Constructors for general types
-        EnumVector() {};
-        EnumVector( const T &data ) { std::fill( m_dataVector.begin(), m_dataVector.end(), data ); };
-        constexpr EnumVector( const std::array<T, enumStruct::count> &arr ) : m_dataVector( arr ) {};
-
-        // Special constructors for array objects, all having same dimenions
-        EnumVector(const std::vector< ENUMDATA > &coeffs, const dimsArray &dims) 
-        requires( isArray ) 
-        {
-            dimsArrayInternal dimsInternal = CFD_INTERNAL::dimTypes<T>::ConvertDimsArrayInternal( dims );
-            for (const auto &index : coeffs) {
-                m_dataVector[index] = T( dimsInternal ).setZero();
-            }
-        }
-
-        // Special constructors for array objects, can have different dimensions
-        EnumVector( const std::vector< std::pair< ENUMDATA, dimsArray > > &arraySpec)  
-        requires ( isArray ) 
-        {
-            dimsArrayInternal dimsInternal;
-            for (size_t i = 0; i != arraySpec.size(); i++) {
-                dimsInternal = CFD_INTERNAL::dimTypes<T>::ConvertDimsArrayInternal( arraySpec[i].second );
-                m_dataVector[ arraySpec[i].first ] = T( dimsInternal ).setZero();
-            }
-        }
-
-        // Strong type indexing
-        constexpr T &operator[](const typename enumStruct::ENUMDATA idx)
-        { return m_dataVector[idx]; }
-
-        constexpr const T &operator[](const typename enumStruct::ENUMDATA idx) const 
-        { return m_dataVector[idx]; }
+    // No explicit constructor/copy/destructor/move for aggregate type
 
 
-        // Only allowed when the object is holding axis data since the enum values should not change
-        constexpr T &operator[](const size_t idx) requires( std::is_same<enumStruct, Axis>::value )
-        { return m_dataVector[idx]; }
+    // Strong type indexing
+    __host__ __device__
+    constexpr T &operator[](const typename enumStruct::ENUMDATA idx)
+    { return m_data[idx]; }
 
-        constexpr const T &operator[](const size_t idx) const requires( std::is_same<enumStruct, Axis>::value )
-        { return m_dataVector[idx]; }
+    __host__ __device__
+    constexpr const T &operator[](const typename enumStruct::ENUMDATA idx) const 
+    { return m_data[idx]; }
 
 
-        // Get underlying data
-        constexpr std::array<T, enumStruct::count> &get()
-        { return m_dataVector; }
+    // Only allowed when the object is holding axis data since the enum values should not change and are fairly standard
+    __host__ __device__
+    constexpr T &operator[](const size_t idx)
+    { 
+        static_assert( std::is_same<enumStruct, CFD::Axis>::value, "EnumVector indexed with integral value only allowed for Axis enums" );
+        return m_data[idx]; 
+    }
 
-    private:
-        std::array<T, enumStruct::count> m_dataVector;
+    __host__ __device__
+    constexpr const T &operator[](const size_t idx) const 
+    { 
+        static_assert( std::is_same<enumStruct, CFD::Axis>::value, "EnumVector indexed with integral value only allowed for Axis enums" );
+        return m_data[idx]; 
+    }
+
+
+    // Get pointer to data
+    __host__ __device__
+    constexpr T* data()
+    { return m_data; }
+
+    __host__ __device__
+    constexpr const T* data() const
+    { return m_data; }
 
 };
 
+
+// ---------------------------------------------------- FieldData Class -------------------------------------------------- //
 
 
 // A general struct for holding values corresponding to different fields
@@ -292,7 +281,7 @@ struct FieldData {
     dataType P;
     
     FieldData() { SetPointers(); };
-    FieldData( const dataType &data ) : U( data ), P( data ) 
+    FieldData( const dataType &data ) : U{ data, data, data }, P( data ) 
     { SetPointers(); };
 
     static constexpr intType nData = Axis::count + 1;   // This doesn't depend on datatype 
@@ -333,7 +322,7 @@ struct FieldData {
         std::array< dataType*, nData > m_dataPointers;
         
         void SetPointers()
-        { m_dataPointers = { &U[Axis::X], &U[Axis::Y], &U[Axis::Z], &P }; }
+        { m_dataPointers = { &U[Axis::X], &U[Axis::Y], &U[Axis::Z], &P }; } // Must match the enums in the Fields struct
 };
 
 
@@ -345,6 +334,126 @@ void ForAllFieldData( L&& f )
         f( i );
     }
 }
+
+
+// ---------------------------------------------------- ArrayND Class -------------------------------------------------- //
+
+// Class that wraps a RAJA::View and allocates its own memory to either DEVICE or HOST using umpire. 
+template<int DIM, typename T = floatType>
+class ArrayND {
+
+static_assert( DIM <= 3, "ArrayND dimensions must be 3 or less." );
+
+using ViewType = View<DIM, T>::type;
+
+private:
+
+    void* m_data;
+    int m_allocatorId;
+    ViewType m_view;
+
+public:
+
+    template<typename... Args>
+    ArrayND( std::string resource,
+                Args... dim_sizes)
+    {
+        static_assert( sizeof...(Args) == DIM, "Incorrect number of indices in ArrayND." );
+
+        if ( resource != "HOST" || resource != "DEVICE" ) {
+            throw std::runtime_error( "Resource for ArrayND must either be \"HOST\" or \"DEVICE\"." );
+        }
+
+        // Umpire allocator
+        auto &rm = umpire::ResourceManager::getInstance();
+        auto allocator = rm.getAllocator( resource ); 
+        m_allocatorId = allocator.getId();
+
+        // Allocate memory
+        intType size = (dim_sizes * ...);
+        m_data = static_cast<T*>( allocator.allocate( size * sizeof(T) ) );
+
+        // Create View
+        m_view = ViewType( m_data, dim_sizes... );
+    }
+
+
+    ArrayND()                                = default;
+    ArrayND( ArrayND const & )            = default;
+    ArrayND( ArrayND && )                 = default;
+    ArrayND &operator=( ArrayND const & ) = default;
+    ArrayND &operator=( ArrayND && )      = default;
+   
+
+    ~ArrayND() {
+        if ( m_data ) {
+            auto &rm = umpire::ResourceManager::getInstance();
+            auto allocator = rm.getAllocator( m_allocatorId );
+            allocator.deallocate(m_data);
+        } 
+    }
+
+
+    // Access the underlying view
+    __host__ __device__
+    ViewType& view()
+    { return m_view; }
+
+    __host__ __device__
+    ViewType& view() const
+    { return m_view; }
+
+
+    // Access to raw pointer
+    __host__ __device__
+    T* data()
+    { return static_cast<T*>( m_data ); }
+
+
+    // Total number of elements
+    __host__ __device__
+    intType size() const 
+    { return m_view.size(); }
+
+
+    // Extent of a particular dimension
+    __host__ __device__
+    intType dimension(intType dim) const { 
+        assert( (void("Multiarray dimension outside extents of array."), dim >= 0 && dim < DIM) );
+        return m_view.layout.extent(dim); 
+    }
+
+
+    // Multidimensional access
+    template<typename... Args>
+    __host__ __device__
+    T& operator()(Args... indices) {
+        static_assert(sizeof...(Args) == DIM, "Incorrect number of indices in ArrayND.");
+        return m_view(indices...);
+    }
+
+    template<typename... Args>
+    __host__ __device__
+    const T& operator()(Args... indices) const {
+        static_assert(sizeof...(Args) == DIM, "Incorrect number of indices in ArrayND.");
+        return m_view(indices...);
+    }
+
+    // Set all elements to constant value - host only
+    void setConstant( T value ) const {
+        auto &rm = umpire::ResourceManager::getInstance();
+        rm.memset( m_data, value );
+    }
+
+
+    // Set all elements to zero - host only
+    void setZero() const {
+        static_assert( std::is_arithmetic<T>::value, "SetZero member function only support for arithmetic types." );
+        auto &rm = umpire::ResourceManager::getInstance();
+        rm.memset( m_data, static_cast<T>(0) );
+    }
+
+};
 
 
 }   // end namespace CFD

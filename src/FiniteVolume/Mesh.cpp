@@ -192,8 +192,6 @@ void CalculateExtrapolationFactors(EnumVector<BoundaryPatches, Mesh::ExtrapFacto
         return;
     }
 
-
-    
     intType fieldIndex_p, fieldIndex_a; // Boundary cell node and the adjacent one
 
     // Positive patch boundary
@@ -339,40 +337,23 @@ void SetCoarsenedCellLengths( Tensor1D &coarseCellLengths,
 // Constructor, allocates mesh given dimensions
 Mesh::Mesh( const iArray3 &nCellsArg ) :
     nCells( nCellsArg ),
-
     nFacesNormal( { NumberOfFaces( nCells, Axis::X ), NumberOfFaces( nCells, Axis::Y ), NumberOfFaces( nCells, Axis::Z ) } ),
-
-    cellCenters( {{Axis::ENUMDATA::X, nCells(0)},
-                  {Axis::ENUMDATA::Y, nCells(1)},
-                  {Axis::ENUMDATA::Z, nCells(2)}} ),
-
-    cellFaces( {{Axis::ENUMDATA::X, nCells(0) + 1},
-                {Axis::ENUMDATA::Y, nCells(1) + 1},
-                {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
-
-    cellLengths( {{Axis::ENUMDATA::X, nCells(0)},
-                  {Axis::ENUMDATA::Y, nCells(1)},
-                  {Axis::ENUMDATA::Z, nCells(2)}} ),
-
-    cellLengthsInv( {{Axis::ENUMDATA::X, nCells(0)},
-                     {Axis::ENUMDATA::Y, nCells(1)},
-                     {Axis::ENUMDATA::Z, nCells(2)}} ),
-
-    cellCenterDiffInv( {{Axis::ENUMDATA::X, nCells(0) + 1},
-                        {Axis::ENUMDATA::Y, nCells(1) + 1},
-                        {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
-
-    interpFactors( {{Axis::ENUMDATA::X, nCells(0) + 1},
-                    {Axis::ENUMDATA::Y, nCells(1) + 1},
-                    {Axis::ENUMDATA::Z, nCells(2) + 1}} ),
-
-    cellFaceAreas( {{Axis::ENUMDATA::X, {nCells(1), nCells(2)} },
-                    {Axis::ENUMDATA::Y, {nCells(0), nCells(2)} },
-                    {Axis::ENUMDATA::Z, {nCells(0), nCells(1)} }} ),
-
     extrapFactors()
+    {
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            cellCenters[axis]       = Tensor1D( nCells(axis)     );
+            cellFaces[axis]         = Tensor1D( nCells(axis) + 1 );
+            cellLengths[axis]       = Tensor1D( nCells(axis)     );
+            cellLengthsInv[axis]    = Tensor1D( nCells(axis)     );
+            cellCenterDiffInv[axis] = Tensor1D( nCells(axis) + 1 );
+            interpFactors[axis]     = Tensor1D( nCells(axis) + 1 );
+        } );
 
-    {};
+        using enum Axis::ENUMDATA;
+        cellFaceAreas[X] = Tensor2D( nCells(1), nCells(2) );
+        cellFaceAreas[Y] = Tensor2D( nCells(0), nCells(2) );
+        cellFaceAreas[Z] = Tensor2D( nCells(0), nCells(1) );
+    };
 
 
 

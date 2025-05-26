@@ -1,6 +1,19 @@
 {
     "files.associations": {
-        "*.lxx": "cpp"
+        "*.lxx": "cpp",
+        "memory_resource": "cpp",
+        "optional": "cpp",
+        "ratio": "cpp",
+        "system_error": "cpp",
+        "array": "cpp",
+        "functional": "cpp",
+        "tuple": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "variant": "cpp",
+        "charconv": "cpp",
+        "chrono": "cpp",
+        "format": "cpp"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "editor.inlayHints.enabled": "off",
