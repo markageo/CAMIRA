@@ -1,0 +1,156 @@
+Date : 2026-04-01 14:37:22
+Directory : /home/mark/PhD/Code/CAMIRA-plume/src
+Total : 106 files,  12023 codes, 1282 comments, 4875 blanks, all 18180 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C++      |         84 |     11,834 |      1,282 |      4,845 |     17,961 |
+| CMake    |         22 |        189 |          0 |         30 |        219 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                   |        106 |     12,023 |      1,282 |      4,875 |     18,180 |
+| . (Files)                                                                                           |          1 |         18 |          0 |         11 |         29 |
+| Core                                                                                                |         26 |      2,595 |        275 |      1,083 |      3,953 |
+| Core (Files)                                                                                        |          6 |        463 |         48 |        189 |        700 |
+| Core/AxisTransformationMap                                                                          |          3 |        212 |         33 |         97 |        342 |
+| Core/Geometry                                                                                       |          3 |        419 |         58 |        199 |        676 |
+| Core/IO                                                                                             |         11 |      1,107 |        108 |        415 |      1,630 |
+| Core/Mesh                                                                                           |          3 |        394 |         28 |        183 |        605 |
+| Flow                                                                                                |         60 |      8,479 |        905 |      3,329 |     12,713 |
+| Flow (Files)                                                                                        |          3 |         96 |         15 |         39 |        150 |
+| Flow/CoordinateTransformations                                                                      |          3 |        344 |         52 |        178 |        574 |
+| Flow/DerivedQuantities                                                                              |          5 |        438 |         35 |        176 |        649 |
+| Flow/FiniteVolume                                                                                   |         13 |      2,389 |        315 |      1,023 |      3,727 |
+| Flow/ImmersedBoundary                                                                               |          4 |        474 |         88 |        232 |        794 |
+| Flow/InputProcessing                                                                                |          3 |        870 |        106 |        306 |      1,282 |
+| Flow/Multigrid                                                                                      |          3 |        471 |         33 |        147 |        651 |
+| Flow/Parallel                                                                                       |          3 |        179 |         10 |         86 |        275 |
+| Flow/Solver                                                                                         |         11 |      2,395 |        201 |        846 |      3,442 |
+| Flow/TurbulenceModels                                                                               |         12 |        823 |         50 |        296 |      1,169 |
+| Plume                                                                                               |         19 |        931 |        102 |        452 |      1,485 |
+| Plume (Files)                                                                                       |          3 |         41 |         14 |         26 |         81 |
+| Plume/Concentration                                                                                 |          3 |         85 |          6 |         46 |        137 |
+| Plume/InputProcessing                                                                               |          3 |        335 |         48 |        148 |        531 |
+| Plume/Particle                                                                                      |          2 |         93 |          6 |         47 |        146 |
+| Plume/Solver                                                                                        |          5 |        304 |         26 |        142 |        472 |
+| Plume/Sources                                                                                       |          3 |         73 |          2 |         43 |        118 |
++-----------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                                            | language | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| /home/mark/PhD/Code/CAMIRA-plume/src/CMakeLists.txt                                                 | CMake    |         18 |          0 |         11 |         29 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/ArrayIndexConversions.h                                   | C++      |         71 |          2 |         33 |        106 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/AxisTransformationMap/AxisTransformationMap.cpp           | C++      |        173 |         18 |         68 |        259 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/AxisTransformationMap/AxisTransformationMap.h             | C++      |         34 |         15 |         29 |         78 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/AxisTransformationMap/CMakeLists.txt                      | CMake    |          5 |          0 |          0 |          5 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/CMakeLists.txt                                            | CMake    |         12 |          0 |          4 |         16 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/FVLookups.h                                               | C++      |         56 |          7 |         24 |         87 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/FVTools.h                                                 | C++      |         50 |          8 |         23 |         81 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/Geometry/CMakeLists.txt                                   | CMake    |          5 |          0 |          3 |          8 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/Geometry/Geometry.cpp                                     | C++      |        347 |         57 |        162 |        566 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/Geometry/Geometry.h                                       | C++      |         67 |          1 |         34 |        102 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/IO/ArrayIO.h                                              | C++      |        104 |          8 |         39 |        151 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/IO/CMakeLists.txt                                         | CMake    |         12 |          0 |          3 |         15 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/IO/CSVReader.cpp                                          | C++      |         96 |          0 |         33 |        129 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/IO/CSVReader.h                                            | C++      |          6 |          0 |          3 |          9 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/IO/IOTools.h                                              | C++      |         54 |          7 |         23 |         84 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/IO/InputParser.cpp                                        | C++      |        348 |         49 |        117 |        514 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/IO/InputParser.h                                          | C++      |         10 |          1 |          7 |         18 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/IO/VTKReader.cpp                                          | C++      |        119 |          8 |         61 |        188 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/IO/VTKReader.h                                            | C++      |         15 |          0 |         12 |         27 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/IO/VTKWriter.h                                            | C++      |        286 |         33 |         96 |        415 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/IO/ptreeTranslators.h                                     | C++      |         57 |          2 |         21 |         80 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/Macros.h                                                  | C++      |         34 |          4 |         15 |         53 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/Mesh/CMakeLists.txt                                       | CMake    |          5 |          0 |          3 |          8 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/Mesh/Mesh.cpp                                             | C++      |        347 |         23 |        166 |        536 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/Mesh/Mesh.h                                               | C++      |         42 |          5 |         14 |         61 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Core/Types.h                                                   | C++      |        240 |         27 |         90 |        357 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/CMakeLists.txt                                            | CMake    |         17 |          0 |          3 |         20 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/ConfigEnums.h                                             | C++      |         33 |          0 |         14 |         47 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/CoordinateTransformations/AxisTransformationFunctions.cpp | C++      |        318 |         46 |        167 |        531 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/CoordinateTransformations/AxisTransformationFunctions.h   | C++      |         21 |          6 |         11 |         38 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/CoordinateTransformations/CMakeLists.txt                  | CMake    |          5 |          0 |          0 |          5 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/DerivedQuantities/CMakeLists.txt                          | CMake    |          7 |          0 |          0 |          7 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/DerivedQuantities/DerivedQuantities.h                     | C++      |         74 |          4 |         24 |        102 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/DerivedQuantities/FieldProbe.cpp                          | C++      |         98 |         16 |         45 |        159 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/DerivedQuantities/ForceCalculator.cpp                     | C++      |         69 |          1 |         27 |         97 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/DerivedQuantities/YPlusCalculator.cpp                     | C++      |        190 |         14 |         80 |        284 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/FiniteVolume/BoundaryConditionData.h                      | C++      |         22 |          2 |         11 |         35 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/FiniteVolume/BoundaryConditions.cpp                       | C++      |        129 |         14 |         59 |        202 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/FiniteVolume/CMakeLists.txt                               | CMake    |         15 |          0 |          0 |         15 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/FiniteVolume/FVCoefficients.cpp                           | C++      |        106 |          4 |         44 |        154 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/FiniteVolume/FVCoefficients.h                             | C++      |         57 |         17 |         28 |        102 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/FiniteVolume/FaceInterpolatedVelocity.h                   | C++      |         97 |          4 |         36 |        137 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/FiniteVolume/FaceVelocities.cpp                           | C++      |        216 |         18 |         83 |        317 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/FiniteVolume/FiniteVolume.h                               | C++      |          6 |          0 |          3 |          9 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/FiniteVolume/FiniteVolumeCoefficients.cpp                 | C++      |      1,349 |        219 |        590 |      2,158 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/FiniteVolume/FiniteVolumeFunctions.h                      | C++      |         42 |         10 |         30 |         82 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/FiniteVolume/GhostCells.h                                 | C++      |         73 |          3 |         29 |        105 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/FiniteVolume/InitialConditions.cpp                        | C++      |         65 |          2 |         22 |         89 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/FiniteVolume/VertexValues.cpp                             | C++      |        212 |         22 |         88 |        322 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/ImmersedBoundary/CMakeLists.txt                           | CMake    |          6 |          0 |          0 |          6 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/ImmersedBoundary/IBData.cpp                               | C++      |        300 |         63 |        133 |        496 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/ImmersedBoundary/IBSolverFunctions.cpp                    | C++      |        112 |         12 |         62 |        186 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/ImmersedBoundary/ImmersedBoundary.h                       | C++      |         56 |         13 |         37 |        106 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/InputProcessing/CMakeLists.txt                            | CMake    |          5 |          0 |          0 |          5 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/InputProcessing/InputProcessing.cpp                       | C++      |        731 |         94 |        267 |      1,092 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/InputProcessing/InputProcessing.h                         | C++      |        134 |         12 |         39 |        185 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Multigrid/CMakeLists.txt                                  | CMake    |          6 |          0 |          0 |          6 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Multigrid/Multigrid.cpp                                   | C++      |        386 |         32 |        121 |        539 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Multigrid/Multigrid.h                                     | C++      |         79 |          1 |         26 |        106 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Parallel/CMakeLists.txt                                   | CMake    |          6 |          0 |          0 |          6 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Parallel/Parallel.cpp                                     | C++      |        155 |         10 |         71 |        236 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Parallel/Parallel.h                                       | C++      |         18 |          0 |         15 |         33 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Solver/CMakeLists.txt                                     | CMake    |         13 |          0 |          0 |         13 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Solver/ConvergenceLogging.h                               | C++      |        380 |         17 |        113 |        510 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Solver/LineSolver.h                                       | C++      |        100 |          6 |         31 |        137 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Solver/LinearSolver.h                                     | C++      |        425 |         29 |        172 |        626 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Solver/PlaneSolver.h                                      | C++      |         88 |          4 |         34 |        126 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Solver/ResidualFunctions.h                                | C++      |        255 |         25 |        101 |        381 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Solver/Solver.cpp                                         | C++      |        461 |         50 |        139 |        650 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Solver/Solver.h                                           | C++      |         17 |          0 |          9 |         26 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Solver/StaggerIndexing.h                                  | C++      |        125 |          2 |         28 |        155 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Solver/StencilConstants.h                                 | C++      |        122 |         14 |         55 |        191 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/Solver/TriadSolver.h                                      | C++      |        409 |         54 |        164 |        627 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/TurbulenceModels/CMakeLists.txt                           | CMake    |         15 |          0 |          0 |         15 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/TurbulenceModels/Laminar.cpp                              | C++      |         21 |          0 |          8 |         29 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/TurbulenceModels/PrandtlZeroEquation.cpp                  | C++      |         50 |          3 |         23 |         76 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/TurbulenceModels/TurbulenceModelData.cpp                  | C++      |         47 |          0 |          9 |         56 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/TurbulenceModels/TurbulenceModelData.h                    | C++      |         28 |          0 |         12 |         40 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/TurbulenceModels/TurbulenceModelTools.h                   | C++      |        234 |         22 |         83 |        339 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/TurbulenceModels/TurbulenceModels.h                       | C++      |        108 |          7 |         34 |        149 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/TurbulenceModels/ZEQ0.cpp                                 | C++      |         51 |          4 |         23 |         78 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/TurbulenceModels/ZEQ1.cpp                                 | C++      |         54 |          4 |         21 |         79 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/TurbulenceModels/ZEQ2.cpp                                 | C++      |         71 |          3 |         27 |        101 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/TurbulenceModels/ZEQ3.cpp                                 | C++      |         69 |          4 |         26 |         99 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/TurbulenceModels/ZEQ4.cpp                                 | C++      |         75 |          3 |         30 |        108 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Flow/main.cpp                                                  | C++      |         46 |         15 |         22 |         83 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/CMakeLists.txt                                           | CMake    |         12 |          0 |          2 |         14 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/Concentration/CMakeLists.txt                             | CMake    |          5 |          0 |          1 |          6 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/Concentration/Concentration.cpp                          | C++      |         58 |          6 |         34 |         98 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/Concentration/Concentration.h                            | C++      |         22 |          0 |         11 |         33 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/ConfigEnums.h                                            | C++      |         12 |          0 |          7 |         19 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/InputProcessing/CMakeLists.txt                           | CMake    |          5 |          0 |          0 |          5 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/InputProcessing/InputProcessing.cpp                      | C++      |        266 |         39 |        122 |        427 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/InputProcessing/InputProcessing.h                        | C++      |         64 |          9 |         26 |         99 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/Particle/CMakeLists.txt                                  | CMake    |          3 |          0 |          0 |          3 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/Particle/Particle.h                                      | C++      |         90 |          6 |         47 |        143 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/Solver/CMakeLists.txt                                    | CMake    |          7 |          0 |          0 |          7 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/Solver/Logging.h                                         | C++      |         79 |          2 |         31 |        112 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/Solver/ParticleDynamics.h                                | C++      |        120 |          7 |         69 |        196 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/Solver/Solver.cpp                                        | C++      |         86 |         17 |         32 |        135 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/Solver/Solver.h                                          | C++      |         12 |          0 |         10 |         22 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/Sources/CMakeLists.txt                                   | CMake    |          5 |          0 |          0 |          5 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/Sources/Sources.cpp                                      | C++      |         48 |          2 |         31 |         81 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/Sources/Sources.h                                        | C++      |         20 |          0 |         12 |         32 |
+| /home/mark/PhD/Code/CAMIRA-plume/src/Plume/main.cpp                                                 | C++      |         17 |         14 |         17 |         48 |
+| Total                                                                                               |          |     12,023 |      1,282 |      4,875 |     18,180 |
++-----------------------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+

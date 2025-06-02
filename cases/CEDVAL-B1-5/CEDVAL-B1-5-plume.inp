@@ -1,0 +1,76 @@
+// CEDVAL B1-5 plume dispersion input file
+
+Model {
+    D = 1e-4
+    timeStepSize = 0.01
+    numberOfTimeSteps = 1000
+    initialParticlesPerUnitMass = 1e5
+    particleSplitTimeStepInterval = 0
+    maxNumberOfParticleSplits = 100
+}
+
+VelocityField {
+    velocityFieldFilename = "flow-output/fields_iter5.vtk"
+}
+
+SolidGeometry {
+    filename = flow-output/geometry.stl"
+}
+
+
+Sources
+{
+    InstantaneousReleasePoint {
+        location = (-0.07, -0.13, 0.015)
+        totalMass = 1
+    }
+}
+
+
+BoundaryConditions
+{
+    // Outflow
+    +x {
+        phi = outflow
+    }
+
+    // Inflow
+    -x {
+        phi = outflow
+    }
+
+    // Wall
+    +y {
+        phi = reflection
+    }
+
+    // Wall
+    -y {
+        phi = reflection
+    }
+
+    // Symmetry
+    +z {
+        phi = outflow
+    }
+
+    // Wall
+    -z {
+        phi = reflection
+    }
+}
+
+
+
+Parallel {
+    numberOfThreads = 4
+}
+
+Output {
+
+    outputFormatType        = BINARY
+    profilingFilename       = "plume-output/profiling.dat"
+    fieldOutputFilename     = "plume-output/fields.vtk"
+    fieldWriteInterval      = 1
+
+}

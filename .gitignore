@@ -7,6 +7,9 @@ output
 .cache
 .vscode
 
+.cache
+.vscode
+
 *.vtk
 *.dbg
 *.csv
