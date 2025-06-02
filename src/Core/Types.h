@@ -7,12 +7,6 @@
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>
 
-#include "umpire/Allocator.hpp"
-#include "umpire/ResourceManager.hpp"
-#include "umpire/Umpire.hpp"
-#include "RAJA/RAJA.hpp"
-
-
 #include <type_traits>
 #include <vector>
 #include <utility>
@@ -51,36 +45,6 @@ using fArray2 = Eigen::Array<floatType, 2, 1>;
 
 using fVector3 = Eigen::Matrix<floatType, 3, 1>;
 using fVector2 = Eigen::Matrix<floatType, 2, 1>;
-
-
-using RAJALayout1D = RAJA::Layout<1>;
-using RAJALayout2D = RAJA::Layout<2, RAJA::PERM_JI >;   // Column major
-using RAJALayout3D = RAJA::Layout<3, RAJA::PERM_KJI>;   // Column major
-
-template <int, typename T>
-struct View; 
-
-// Specialization for 1D
-template <typename T>
-struct View<1, T> {
-    using type = RAJA::View<T, RAJALayout1D>;
-};
-
-// Specialization for 2D
-template <typename T>
-struct View<2, T> {
-    using type = RAJA::View<T, RAJALayout2D>;
-};
-
-// Specialization for 3D
-template <typename T>
-struct View<3, T> {
-    using type = RAJA::View<T, RAJALayout3D>;
-};
-
-using View1D = View<1, floatType>;
-using View2D = View<2, floatType>;
-using View3D = View<3, floatType>;
 
 
 // --------------------------------------------------------- Enums -------------------------------------------------------- //
@@ -234,24 +198,20 @@ struct EnumVector
 
 
     // Strong type indexing
-    __host__ __device__
     constexpr T &operator[](const typename enumStruct::ENUMDATA idx)
     { return m_data[idx]; }
 
-    __host__ __device__
     constexpr const T &operator[](const typename enumStruct::ENUMDATA idx) const 
     { return m_data[idx]; }
 
 
     // Only allowed when the object is holding axis data since the enum values should not change and are fairly standard
-    __host__ __device__
     constexpr T &operator[](const size_t idx)
     { 
         static_assert( std::is_same<enumStruct, CFD::Axis>::value, "EnumVector indexed with integral value only allowed for Axis enums" );
         return m_data[idx]; 
     }
 
-    __host__ __device__
     constexpr const T &operator[](const size_t idx) const 
     { 
         static_assert( std::is_same<enumStruct, CFD::Axis>::value, "EnumVector indexed with integral value only allowed for Axis enums" );
@@ -260,11 +220,9 @@ struct EnumVector
 
 
     // Get pointer to data
-    __host__ __device__
     constexpr T* data()
     { return m_data; }
 
-    __host__ __device__
     constexpr const T* data() const
     { return m_data; }
 
@@ -335,125 +293,6 @@ void ForAllFieldData( L&& f )
     }
 }
 
-
-// ---------------------------------------------------- ArrayND Class -------------------------------------------------- //
-
-// Class that wraps a RAJA::View and allocates its own memory to either DEVICE or HOST using umpire. 
-template<int DIM, typename T = floatType>
-class ArrayND {
-
-static_assert( DIM <= 3, "ArrayND dimensions must be 3 or less." );
-
-using ViewType = View<DIM, T>::type;
-
-private:
-
-    void* m_data;
-    int m_allocatorId;
-    ViewType m_view;
-
-public:
-
-    template<typename... Args>
-    ArrayND( std::string resource,
-                Args... dim_sizes)
-    {
-        static_assert( sizeof...(Args) == DIM, "Incorrect number of indices in ArrayND." );
-
-        if ( resource != "HOST" || resource != "DEVICE" ) {
-            throw std::runtime_error( "Resource for ArrayND must either be \"HOST\" or \"DEVICE\"." );
-        }
-
-        // Umpire allocator
-        auto &rm = umpire::ResourceManager::getInstance();
-        auto allocator = rm.getAllocator( resource ); 
-        m_allocatorId = allocator.getId();
-
-        // Allocate memory
-        intType size = (dim_sizes * ...);
-        m_data = static_cast<T*>( allocator.allocate( size * sizeof(T) ) );
-
-        // Create View
-        m_view = ViewType( m_data, dim_sizes... );
-    }
-
-
-    ArrayND()                                = default;
-    ArrayND( ArrayND const & )            = default;
-    ArrayND( ArrayND && )                 = default;
-    ArrayND &operator=( ArrayND const & ) = default;
-    ArrayND &operator=( ArrayND && )      = default;
-   
-
-    ~ArrayND() {
-        if ( m_data ) {
-            auto &rm = umpire::ResourceManager::getInstance();
-            auto allocator = rm.getAllocator( m_allocatorId );
-            allocator.deallocate(m_data);
-        } 
-    }
-
-
-    // Access the underlying view
-    __host__ __device__
-    ViewType& view()
-    { return m_view; }
-
-    __host__ __device__
-    ViewType& view() const
-    { return m_view; }
-
-
-    // Access to raw pointer
-    __host__ __device__
-    T* data()
-    { return static_cast<T*>( m_data ); }
-
-
-    // Total number of elements
-    __host__ __device__
-    intType size() const 
-    { return m_view.size(); }
-
-
-    // Extent of a particular dimension
-    __host__ __device__
-    intType dimension(intType dim) const { 
-        assert( (void("Multiarray dimension outside extents of array."), dim >= 0 && dim < DIM) );
-        return m_view.layout.extent(dim); 
-    }
-
-
-    // Multidimensional access
-    template<typename... Args>
-    __host__ __device__
-    T& operator()(Args... indices) {
-        static_assert(sizeof...(Args) == DIM, "Incorrect number of indices in ArrayND.");
-        return m_view(indices...);
-    }
-
-    template<typename... Args>
-    __host__ __device__
-    const T& operator()(Args... indices) const {
-        static_assert(sizeof...(Args) == DIM, "Incorrect number of indices in ArrayND.");
-        return m_view(indices...);
-    }
-
-    // Set all elements to constant value - host only
-    void setConstant( T value ) const {
-        auto &rm = umpire::ResourceManager::getInstance();
-        rm.memset( m_data, value );
-    }
-
-
-    // Set all elements to zero - host only
-    void setZero() const {
-        static_assert( std::is_arithmetic<T>::value, "SetZero member function only support for arithmetic types." );
-        auto &rm = umpire::ResourceManager::getInstance();
-        rm.memset( m_data, static_cast<T>(0) );
-    }
-
-};
 
 
 }   // end namespace CFD

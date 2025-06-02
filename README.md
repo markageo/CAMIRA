@@ -4,7 +4,7 @@
 # CAMIRA
 CAMIRA (**C**oupled **A**lgorithm for **M**ultigrid **I**mmersed Boundary **R**eynolds **A**veraged Navier-Stokes, also an Aboriginal name for the word "windy") is a highly efficiency solver for the incompressible steady-state Reynolds-Averaged Navier-Stokes equations. The code and the methods used were developed as part of my PhD. 
 
-CAMIRA uses a fully coupled matrix free smoother with Full Approximation Scheme (FAS) multigrid to solve the equations on a rectillinear collocated finite volume grid. Complex geometries are accounted for using a mass conservative directional immersed boundary method. Details on these numerical methods can be found in the various [publications](#publications) that are part of this work. Using the [RAJA C++ Performance Portability Layer](https://github.com/LLNL/RAJA), CAMIRA can run in parallel on shared memory CPUs using OpenMP, or on GPUs using CUDA or HIP.
+CAMIRA uses a fully coupled matrix free smoother with Full Approximation Scheme (FAS) multigrid to solve the equations on a rectillinear collocated finite volume grid. Complex geometries are accounted for using a mass conservative directional immersed boundary method. Details on these numerical methods can be found in the various [publications](#publications) that are part of this work. CAMIRA can run in parallel on shared memory CPUs using OpenMP..
 
 
 ## Getting Started

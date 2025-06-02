@@ -2,31 +2,14 @@
 #define CFD_PARALLEL
 
 #include "../Core/Types.h"
-#include "RAJA/RAJA.hpp"
-#include "camp/resource.hpp"
-
+#include <vector>
 
 namespace CFD
 {
 
+std::vector< std::vector<intType> > CreateForward1DColourSet( const intType );
 
-RAJA::TypedIndexSet<RAJA::TypedRangeStrideSegment<intType>> CreateForward1DColourSet( const intType );
-
-RAJA::TypedIndexSet<RAJA::TypedRangeStrideSegment<intType>> CreateReverse1DColourSet( const intType );
-
-RAJA::TypedIndexSet<RAJA::ListSegment> CreateForward3ColorSet( const iArray3 &,
-                                                               camp::resources::Resource );
-
-RAJA::TypedIndexSet<RAJA::ListSegment> CreateReverse3ColorSet( const iArray3 &,
-                                                               camp::resources::Resource );
-
-
-RAJA::TypedIndexSet<RAJA::ListSegment> Create3ColorSetColumns( const iArray3 &,
-                                                               camp::resources::Resource );                                         
-
-
-RAJA::TypedIndexSet<RAJA::ListSegment> Create3ColorSetPlane( const iArray3 &,
-                                                             camp::resources::Resource );                                         
+std::vector< std::vector<intType> > CreateReverse1DColourSet( const intType );
 
 
 } // end namespace CFD
