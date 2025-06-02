@@ -108,14 +108,6 @@ find_package(CGAL REQUIRED
 			 PATHS libraries/CGAL-5.6 NO_DEFAULT_PATH )
 set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
 
-# Umpire and RAJA should be installed for GPU support, need to fix these up......
-set(CMAKE_CUDA_ARCHITECTURES native)
-set(CMAKE_CUDA_COMPILER /usr/local/cuda/bin/nvcc)
-
-find_package(umpire)
-find_package(RAJA)
-
-
 add_subdirectory(src)
 
 # Link time optimisation

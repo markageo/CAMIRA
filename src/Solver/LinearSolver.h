@@ -14,11 +14,6 @@
 #include "../FiniteVolume/FiniteVolume.h"
 #include "../Parallel/Parallel.h"
 #include "ArrayIndexConversions.h"
-#include <RAJA/index/RangeSegment.hpp>
-#include <RAJA/pattern/kernel.hpp>
-#include <RAJA/pattern/kernel/Lambda.hpp>
-#include <RAJA/policy/sequential/policy.hpp>
-#include <RAJA/util/camp_aliases.hpp>
 #include <omp.h>
 
 #include <cassert>
@@ -454,8 +449,8 @@ private:
     const FieldData<floatType> m_maxResiduals;
     const FieldData<floatType> m_relaxation;
 
-    RAJA::TypedIndexSet< RAJA::TypedRangeStrideSegment<intType> > m_forwardColorSet,
-                                                                  m_reverseColorSet;
+    std::vector< std::vector< intType > > m_forwardColorSet,
+                                          m_reverseColorSet;
 
     TriadSolver<TC::e, TC::n, TC::t, MI > m_triadSolverForward;
     TriadSolver<TC::w, TC::s, TC::b, MI > m_triadSolverBackward;
@@ -467,24 +462,26 @@ private:
     __attribute__((flatten))
     void Sweep3D()
     {
-        // using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::seq_exec>;
-        using colorPolicy = RAJA::ExecPolicy<RAJA::seq_segit, RAJA::omp_parallel_for_exec>;
 
         TIC("Setting Ghost cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
         TOC()
         
         // Forward plane sweep
-        TIC("Sweeping 1")
-        RAJA::forall<colorPolicy>( m_forwardColorSet, [&] ( intType k ) {
+        TIC("Forward Sweep")
+        for ( const std::vector<intType> &color : m_forwardColorSet ) {
 
-            for ( intType j = 0; j != m_nCells(1); j++ ) {
-                for ( intType i = 0; i != m_nCells(0); i++ ) {
-                    m_triadSolverForward.UpdateTriad( i, j, k );
+            #pragma omp parallel for
+            for ( intType k : color ) {
+
+                for ( intType j = 0; j != m_nCells(1); j++ ) {
+                    for ( intType i = 0; i != m_nCells(0); i++ ) {
+                        m_triadSolverForward.UpdateTriad( i, j, k );
+                    }
                 }
-            }
 
-        } );
+            }
+        }
         TOC()
 
         TIC("Setting Ghost cells")
@@ -492,16 +489,20 @@ private:
         TOC()
 
         // Reverse plane sweep
-        TIC("Sweeping 2")
-        RAJA::forall<colorPolicy>( m_reverseColorSet, [&] ( intType k)  {
+        TIC("Reverse Sweep")
+        for ( const std::vector<intType> &color : m_reverseColorSet ) {
 
-            for ( intType j = m_nCells(1)-1; j != -1; j-- ) {
-                for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
-                    m_triadSolverBackward.UpdateTriad( i, j, k );
+            #pragma omp parallel for
+            for ( intType k : color ) {
+
+                for ( intType j = m_nCells(1)-1; j != -1; j-- ) {
+                    for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
+                        m_triadSolverBackward.UpdateTriad( i, j, k );
+                    }
                 }
-            }
 
-        } );
+            }
+        } 
         TOC()
 
     }
