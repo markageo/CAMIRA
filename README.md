@@ -1,10 +1,71 @@
-# coupled-sweep-ns
 
-A coupled sweeping Navier-Stokes solver on rectilinear grids.
+<!-- # <img src="images/logo.png?raw=true" width="128" valign="middle" alt="RAJA"/> -->
 
-Tested for following compilers:
+# CAMIRA
+CAMIRA (**C**oupled **A**lgorithm for **M**ultigrid **I**mmersed Boundary **R**eynolds **A**veraged Navier-Stokes, also an Aboriginal name for the word "windy") is a highly efficiency solver for the incompressible steady-state Reynolds-Averaged Navier-Stokes equations. The code and the methods used were developed as part of my PhD. 
 
-g++ > 11.1.0
+CAMIRA uses a fully coupled matrix free smoother with Full Approximation Scheme (FAS) multigrid to solve the equations on a rectillinear collocated finite volume grid. Complex geometries are accounted for using a mass conservative directional immersed boundary method. Details on these numerical methods can be found in the various [publications](#publications) that are part of this work. Using the [RAJA C++ Performance Portability Layer](https://github.com/LLNL/RAJA), CAMIRA can run in parallel on shared memory CPUs using OpenMP, or on GPUs using CUDA or HIP.
 
-clang++ > 14.0.0
 
+## Getting Started
+
+### Prerequisites
+
+The CAMIRA code uses a number of external dependencies to work. These need to be installed on the system in order to successfully build and run the code. 
+
+* [VTK](https://vtk.org/) (Optional) - This is required to read in initial conditions for VTK files. It is not necessary to build and use the code, but required if you wish to read an initial condition field from file.
+* [CMake](https://cmake.org/) - To build the project.
+* Any C++ compiler which support C++20.
+
+CAMIRA also makes use of the [Eigen C++ linear algebra library](https://eigen.tuxfamily.org/index.php?title=Main_Page) and the [Computational Geometry Algorithms Library (CGAL)](https://www.cgal.org/). These are included within the source code and do not need to be installed by the user. 
+
+### Building
+
+The CAMIRA code lives in a GitHub [repository](https://github.com/mgeo2280/camira.git). To clone the repo, use the command:
+
+    git clone https://github.com/mgeo2280/camira.git
+
+Then build CAMIRA like any other CMake project:
+
+    mkdir build
+    cd build
+    cmake ../
+    make 
+Which will create an executable called `camira`. See [Usage](#usage) below for instructions on how to run the code. I recommend using `ccmake` or `cmake-gui` to configure so that the various compiler options can be seen and set interactively.
+
+
+## Usage
+
+After building the project, an executable called `camira` will be created. This can then be executed with an input file as:
+
+    ./camira inputFile.inp
+
+Where `inputFile.inp` is the input file used to run the code. All solver settings are controlled through this single input file. 
+
+A manual exists which describes how to create an input file and all the available options. This can be found in the `manual` directory of the [repository](https://github.com/mgeo2280/camira.git). 
+
+## Publications
+
+Below is a list of publications related to the development of this project.
+
+*  [George, M. A., Williamson, N., & Armfield, S. W. (2024). A coupled block implicit solver for the incompressible Navier–Stokes equations on collocated grids. Computers & Fluids, 284, 106426.](https://www.sciencedirect.com/science/article/pii/S0045793024002573)
+
+* [George, M., Williamson, N., & Armfield, S. W. Mass-Conserving Ghost Cell Immersed Boundary Method with Multigrid for Coupled Navier-Stokes. Available at SSRN 5216938.](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5216938)
+
+## Contact
+
+For any questions, ideas, suggestions, or bugs, please do not hesitate to contact me:
+
+Mark George - **mark.george@sydney.edu.au**
+
+
+
+## Acknowledgements
+
+My PhD Supervisors [Steven Armfield](https://www.sydney.edu.au/engineering/about/our-people/academic-staff/steven-armfield.html) and [Nicholas Williamson](https://www.sydney.edu.au/engineering/about/our-people/academic-staff/nicholas-williamson.html). Also [DMTC](https://dmtc.com.au/) and [DSTG Australia](https://www.dst.defence.gov.au/) for supporting the project.
+
+
+License
+-----------
+
+Distributed under the project_license. See `LICENSE.txt` for more information.

@@ -27,7 +27,7 @@ target_link_libraries(libs PRIVATE warning_flags)
 target_link_libraries(libs PUBLIC compiler_flags)
 
 # Main solver executable
-add_executable(main main.cpp)
-target_link_libraries(main PUBLIC libs)
+add_executable(camira main.cpp)
+target_link_libraries(camira PUBLIC libs)
 
 

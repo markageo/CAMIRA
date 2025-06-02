@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 # set the project name and version
-project(Coupled-Sweep-NS VERSION 1.0)
+project(CAMIRA VERSION 1.0)
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT supported OUTPUT error)
@@ -122,7 +122,7 @@ add_subdirectory(src)
 # Link time optimisation
 if( supported )
     message(STATUS "IPO / LTO enabled")
-    set_property(TARGET main PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    set_property(TARGET camira PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
 else()
     message(STATUS "IPO / LTO not supported: <${error}>")
 endif()
