@@ -1,0 +1,154 @@
+// Backwards facing step with no inflow region
+
+Model {
+    rho       = 1
+    nu        = 0.025
+    transient = no
+}
+
+Mesh {
+
+    domain = (1, 1, 1)
+
+    Grid x {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 30
+            biasFactor = 1
+        }
+    }
+
+    Grid y {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 30
+            biasFactor = 1
+        }
+    }
+
+    Grid z {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 30
+            biasFactor = 1
+        }
+    }
+}
+
+
+
+InitialConditions
+{
+    type = uniform
+    u = 1
+    v = 0
+    w = 0
+    p = 0
+}
+
+
+BoundaryConditions
+{
+    // Outflow
+    +x {
+        u = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Inflow
+    -x {
+        u = uniform, 2
+        v = uniform, 0
+        w = uniform, 0
+        p = uniform, 0
+    }
+
+    // Symmetry
+    +y {
+        u = zeroGradient
+        v = uniform, 0
+        w = uniform, 0
+        p = uniform, 0
+    }
+
+    // Wall
+    -y {
+        u = uniform, 4
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    +z {
+        u = zeroGradient
+        v = uniform, 0
+        w = uniform, 0
+        p = uniform, 0
+    }
+
+    // Wall
+    -z {
+        u = uniform, 6
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+}
+
+
+Solver {
+
+    Schemes {
+
+        linearisation           = Picard
+        momentumInterpolation   = implicit
+        advectionScheme         = QUICK
+        advectionBlendingFactor = 1
+        faceInterpolationScheme = weightedLinear
+
+        maxOuterIterations = 0
+        maxContinuityOuterResidual = 1e-10
+        maxMomentumOuterResiduals   = (1e-10, 1e-10, 1e-10)
+
+    }
+    
+    Smoother {
+
+        type = domainSymmetric
+        maxIterations = 4
+        maxResiduals = 1e-3
+
+        planeSweepDirection = +z
+        lineSweepDirection = +y
+
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
+
+    }
+
+    Multigrid {
+        cycle = F
+        maxCoarseLevels = 0
+
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
+        fineGridIterations   = 2
+
+        maxCoarseGridIterations = 500
+        maxCoarseGridResiduals  = 1e-6
+        
+    }
+
+}
+
+
+Output {
+
+    residualHistoryFilename = "output/residual_history.csv"
+    profilingFilename       = "output/profiling.dat"
+    fieldOutputFilename     = "output/fields.vtk"
+    fieldWriteInterval      = 0
+}
