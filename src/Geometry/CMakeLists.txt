@@ -1,4 +1,4 @@
-target_sources( libs 
+target_sources( implementation_libs 
     PRIVATE 
         Geometry.cpp 
     PRIVATE 

@@ -15,15 +15,8 @@ set (CMAKE_CXX_STANDARD 20)
 # For clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Add compiler flags
-add_library(compiler_flags INTERFACE)
-target_compile_features(compiler_flags INTERFACE cxx_std_20)
-target_compile_options(compiler_flags INTERFACE "-std=c++2a;-march=native;-mno-avx512f")
-
-add_library(warning_flags INTERFACE)
-target_compile_features(warning_flags INTERFACE cxx_std_20)
-target_compile_options(warning_flags INTERFACE "-Wall;-Wextra;-Wshadow;-Wunused;-Wconversion;-Wpedantic")
-
+# BLT
+include(blt/SetupBLT.cmake)
 
 # Add address sanitizer to the debug build
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")
@@ -90,23 +83,61 @@ endif()
 # Add libraries
 include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings
 
-# Supress eigen warnings
-add_library(eigen_internal INTERFACE)
-target_include_directories(eigen_internal SYSTEM INTERFACE ${CMAKE_SOURCE_DIR}/libraries/eigen-3.4.0)
-target_compile_options(eigen_internal INTERFACE -Wno-array-bounds)
-
-# Public Eigen target without warnings suppressed
-add_library(eigen INTERFACE)
-target_link_libraries(eigen INTERFACE eigen_internal)
+# Dont build tests and examples
+set(ENABLE_TESTS OFF CACHE BOOL "" FORCE)
+set(ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
 
 # Openmp, so that it works with clang
 find_package(OpenMP REQUIRED)
+
+# Eigen library
+blt_import_library( NAME eigen 
+					TREAT_INCLUDES_AS_SYSTEM ON
+					INCLUDES libraries/eigen-3.4.0/
+							 libraries/eigen-3.4.0/unsupported/
+					COMPILE_FLAGS -Wno-array-bounds		# There are a few of these coming from Eigen				
+					EXPORTABLE ON )
 
 # CGAL library
 find_package(CGAL REQUIRED 
 			 COMPONENTS Qt5
 			 PATHS libraries/CGAL-5.6 NO_DEFAULT_PATH )
 set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
+
+
+# Although RAJA and Umpire have their own version of camp in their directories, Umpire seems to have a bug with the 
+# camp_DIR variable definition. This gets around it.
+add_subdirectory(libraries/camp)
+blt_convert_to_system_includes(TARGET camp)
+
+if ( ENABLE_CUDA )
+    blt_add_target_definitions(
+      TO camp
+      SCOPE INTERFACE
+      TARGET_DEFINITIONS CAMP_HAVE_CUDA)
+endif ()
+
+if(ENABLE_HIP)
+    blt_add_target_definitions(
+      TO camp
+      SCOPE INTERFACE
+      TARGET_DEFINITIONS CAMP_HAVE_HIP)
+endif()
+
+# Umpire
+add_subdirectory(libraries/Umpire)
+blt_convert_to_system_includes(TARGET umpire)
+
+# RAJA
+add_subdirectory(libraries/RAJA)
+blt_convert_to_system_includes(TARGET RAJA)
+
+set(RAJA_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
+set(RAJA_ENABLE_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(RAJA_ENABLE_EXERCISES OFF CACHE BOOL "" FORCE)
+
+
+set(CMAKE_CUDA_ARCHITECTURES native CACHE STRING "")
 
 add_subdirectory(src)
 

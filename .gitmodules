@@ -1,0 +1,12 @@
+[submodule "blt"]
+	path = blt
+	url = git@github.com:LLNL/blt.git
+[submodule "libraries/RAJA"]
+	path = libraries/RAJA
+	url = git@github.com:LLNL/RAJA.git
+[submodule "libraries/Umpire"]
+	path = libraries/Umpire
+	url = git@github.com:LLNL/Umpire.git
+[submodule "libraries/camp"]
+	path = libraries/camp
+	url = git@github.com:LLNL/camp.git
