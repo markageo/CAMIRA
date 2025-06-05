@@ -1,11 +1,11 @@
-#ifndef CFD_MESH  
-#define CFD_MESH
+#ifndef CAMIRA_MESH  
+#define CAMIRA_MESH
 
 #include "../Core/Types.h"
 #include "../CoordinateTransformations/AxisTransformationMap.h"
 #include "../IO/InputProcessing.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 // Recitlinear mesh structure and mesher (on construction)
@@ -45,6 +45,6 @@ Mesh CoarsenMesh( const Mesh&,
                   const FaceInterpolationSchemes ); 
 
 
-} // end namespace CFD
+} // end namespace CAMIRA
 
-#endif // CFD_MESH
+#endif // CAMIRA_MESH

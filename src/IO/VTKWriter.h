@@ -14,7 +14,7 @@
 namespace VTK
 {
     
-#define CFD_VTK_DEFAULT_ASCII_PRECISION     6  
+#define CAMIRA_VTK_DEFAULT_ASCII_PRECISION     6  
 
 enum class WriteModes {
     ASCII, BINARY
@@ -85,7 +85,7 @@ class VTKWriterConfig
         VTKWriterConfig(sizeType dimX, sizeType dimY, sizeType dimZ) :
             m_dims{dimX, dimY, dimZ},
             m_writeMode( WriteModes::ASCII ), 
-            m_ASCIIPrecision( CFD_VTK_DEFAULT_ASCII_PRECISION )
+            m_ASCIIPrecision( CAMIRA_VTK_DEFAULT_ASCII_PRECISION )
             {};
 
         void SetWriteMode(WriteModes writeMode)

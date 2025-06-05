@@ -1,7 +1,7 @@
 #include "DerivedQuantities.h"
 #include "../Core/FVTools.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 ForceCalculator::ForceCalculator( const IBData &ibData, 
@@ -87,5 +87,5 @@ floatType ForceCalculator::GetAdvectiveIntegralForce( const Axis::ENUMDATA force
 
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 

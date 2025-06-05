@@ -1,9 +1,9 @@
-#ifndef CFD_FINITE_VOLUME_STRUCTURES   
-#define CFD_FINITE_VOLUME_STRUCTURES
+#ifndef CAMIRA_FINITE_VOLUME_STRUCTURES   
+#define CAMIRA_FINITE_VOLUME_STRUCTURES
 
 #include "../Core/Types.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 // -------------------------------------- Definition in FiniteVolumeStructures.cpp -------------------------------------- //
@@ -92,6 +92,6 @@ struct BoundaryConditionData {
 
 
 
-} // end namespace CFD
+} // end namespace CAMIRA
 
-#endif // CFD_FINITE_VOLUME_STRUCTURES
+#endif // CAMIRA_FINITE_VOLUME_STRUCTURES

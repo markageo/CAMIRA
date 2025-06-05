@@ -4,7 +4,7 @@
 #include "../FiniteVolume/FiniteVolume.h"
 
 
-namespace CFD
+namespace CAMIRA
 {
 
 
@@ -147,5 +147,5 @@ floatType FieldProbe::Coordinate( const intType axis ) const
 { return m_probePoint( axis ); }
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 

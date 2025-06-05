@@ -1,5 +1,5 @@
-#ifndef CFD_IMMERSED_BOUNDARY
-#define CFD_IMMERSED_BOUNDARY
+#ifndef CAMIRA_IMMERSED_BOUNDARY
+#define CAMIRA_IMMERSED_BOUNDARY
 
 #include "../Core/Types.h"
 #include "../Geometry/Geometry.h"
@@ -8,7 +8,7 @@
 
 #include <vector>
 
-namespace CFD {
+namespace CAMIRA {
 
 enum CellType {
     Solid    = 0,
@@ -92,8 +92,8 @@ void MaskFields( FieldData<Tensor3D> &, const Tensor3D & );
 
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 
 
 
-#endif  // CFD_IMMERSED_BOUNDARY
+#endif  // CAMIRA_IMMERSED_BOUNDARY

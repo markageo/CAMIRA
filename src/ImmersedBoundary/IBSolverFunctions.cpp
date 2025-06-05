@@ -3,7 +3,7 @@
 #include "../Core/FVTools.h"
 #include "../Core/FVLookups.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 namespace 
@@ -14,7 +14,7 @@ FieldData<floatType> GetIBFieldValues( const TensorIndex3D &cellIndex,
                                        const IBCell::SourceTermData &sourceTermData, 
                                        const FieldData<Tensor3D> &fields )
 {
-    using CFD::FVT::G;
+    using CAMIRA::FVT::G;
 
     // The value of velocity on the boundary, just hard code this to zero to be a solid wall
     // The pressure at the immersed boundary surface is not used
@@ -33,7 +33,7 @@ FieldData<floatType> ReconstructFaceValues( const TensorIndex3D &cellIndex,
                                             const IBCell::SourceTermData &sourceTermData, 
                                             const FieldData<Tensor3D> &fields )
 {
-    using CFD::FVT::G;
+    using CAMIRA::FVT::G;
 
     FieldData<floatType> faceValues( 0.0f );
 
@@ -97,7 +97,7 @@ FieldData<floatType> ExtrapolateFaceToGhostCells( const TensorIndex3D &cellIndex
                                                   const IBCell::SourceTermData &sourceTermData, 
                                                   const FieldData<Tensor3D> &fields )
 {
-    using CFD::FVT::G;
+    using CAMIRA::FVT::G;
 
     FieldData<floatType> ghostCellValues( 0.0f );
 
@@ -115,7 +115,7 @@ floatType GetFarPressureGhostCellValue( const TensorIndex3D &cellIndex,
                                         const IBCell::SourceTermData &sourceTermData,
                                         const FieldData<Tensor3D> &fields )
 {
-    using CFD::FVT::G;
+    using CAMIRA::FVT::G;
 
     return sourceTermData.farPressureCoeff_p * fields.P( G(cellIndex) )
          + sourceTermData.farPressureCoeff_a * fields.P( G(sourceTermData.cellIndex_a) )
@@ -173,4 +173,4 @@ void MaskFields( FieldData<Tensor3D> &fields,
 }
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA

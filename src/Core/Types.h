@@ -13,13 +13,13 @@
 #include <algorithm>
 
 
-namespace CFD 
+namespace CAMIRA 
 {
 
 
 // ----------------------------------------------------- Type Aliases ----------------------------------------------------- //
 
-#ifdef CFD_DOUBLE_PRECISION
+#ifdef CAMIRA_DOUBLE_PRECISION
     using floatType = double;
 #else
     using floatType = float;
@@ -184,11 +184,11 @@ enum class MultigridCycleType {
 template <typename enumStruct, typename T>
 struct EnumVector
 {
-    static_assert(std::is_same<enumStruct, CFD::Axis                 >::value ||
-                  std::is_same<enumStruct, CFD::BoundaryConditions   >::value ||
-                  std::is_same<enumStruct, CFD::BoundaryPatches      >::value ||
-                  std::is_same<enumStruct, CFD::TransportCoefficients>::value || 
-                  std::is_same<enumStruct, CFD::Fields               >::value,
+    static_assert(std::is_same<enumStruct, CAMIRA::Axis                 >::value ||
+                  std::is_same<enumStruct, CAMIRA::BoundaryConditions   >::value ||
+                  std::is_same<enumStruct, CAMIRA::BoundaryPatches      >::value ||
+                  std::is_same<enumStruct, CAMIRA::TransportCoefficients>::value || 
+                  std::is_same<enumStruct, CAMIRA::Fields               >::value,
                   "Template parameter must be struct containing ENUMDATA type.");
 
     T m_data[enumStruct::count];
@@ -208,13 +208,13 @@ struct EnumVector
     // Only allowed when the object is holding axis data since the enum values should not change and are fairly standard
     constexpr T &operator[](const size_t idx)
     { 
-        static_assert( std::is_same<enumStruct, CFD::Axis>::value, "EnumVector indexed with integral value only allowed for Axis enums" );
+        static_assert( std::is_same<enumStruct, CAMIRA::Axis>::value, "EnumVector indexed with integral value only allowed for Axis enums" );
         return m_data[idx]; 
     }
 
     constexpr const T &operator[](const size_t idx) const 
     { 
-        static_assert( std::is_same<enumStruct, CFD::Axis>::value, "EnumVector indexed with integral value only allowed for Axis enums" );
+        static_assert( std::is_same<enumStruct, CAMIRA::Axis>::value, "EnumVector indexed with integral value only allowed for Axis enums" );
         return m_data[idx]; 
     }
 
@@ -295,6 +295,6 @@ void ForAllFieldData( L&& f )
 
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 
 #endif // TYPES

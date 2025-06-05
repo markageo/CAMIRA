@@ -20,7 +20,7 @@
 
 #include "../IO/ArrayIO.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 using namespace FVT;
@@ -515,7 +515,7 @@ private:
 };
 
 
-}   // end namespace CFD    
+}   // end namespace CAMIRA    
 
 
 #endif // LINEAR_SOLVER

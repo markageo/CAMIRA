@@ -1,9 +1,9 @@
-#ifndef CFD_MACROS
-#define CFD_MACROS
+#ifndef CAMIRA_MACROS
+#define CAMIRA_MACROS
 
 
 // Profiling macros
-#ifdef CFD_PROFILING
+#ifdef CAMIRA_PROFILING
 #   if !defined(TIC) || !defined(TOC)
 #       include "profiler/profiler.h"
 #       define TIC(name) PROF::prof.tic(name);
@@ -11,7 +11,7 @@
 #   endif
 
     namespace PROF {
-        inline profiler<perf_counter::clock<time_units::SECONDS>> prof("CFD Profiling");
+        inline profiler<perf_counter::clock<time_units::SECONDS>> prof("CAMIRA_ Profiling");
     }
 
 #else
@@ -26,13 +26,13 @@
 
 // Loop autovectorisation
 #if defined(__clang__)
-#   define CFD_PRAGMA_VECTORIZE _Pragma("clang loop vectorize(enable)")
+#   define CAMIRA_PRAGMA_VECTORIZE _Pragma("clang loop vectorize(enable)")
 
 # elif defined(__GNUC__) || defined(__GNUG__)
-#   define CFD_PRAGMA_VECTORIZE _Pragma("GCC ivdep")
+#   define CAMIRA_PRAGMA_VECTORIZE _Pragma("GCC ivdep")
 
 # else
-#   define CFD_PRAGMA_VECTORIZE
+#   define CAMIRA_PRAGMA_VECTORIZE
 
 # endif
 
@@ -41,13 +41,13 @@
 // This may be important in certain functions.
 # if defined(__GNUC__) || defined(__GNUG__) || defined(__clang__)
 #   if !defined(__FAST_MATH__)
-#       define CFD_HONOR_INFINITIES_AND_NANS
+#       define CAMIRA_HONOR_INFINITIES_AND_NANS
 #   endif
 
 # else
-#   define CFD_HONOR_INFINITIES_AND_NANS
+#   define CAMIRA_HONOR_INFINITIES_AND_NANS
 
 # endif
 
 
-#endif // CFD_MACROS
+#endif // CAMIRA_MACROS

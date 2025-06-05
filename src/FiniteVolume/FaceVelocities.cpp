@@ -4,7 +4,7 @@
 #include "FaceInterpolatedVelocity.h"
 
 
-namespace CFD
+namespace CAMIRA
 {
 
 using namespace FVT;
@@ -508,4 +508,4 @@ template void SetIBFaceAdvectedVelocities<AdvectionSchemes::QUICK  >( EnumVector
 
 
 
-} // end namespace CFD
+} // end namespace CAMIRA

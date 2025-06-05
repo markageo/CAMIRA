@@ -15,7 +15,7 @@
 #include "FiniteVolumeFunctions.h"
 #include "FiniteVolumeStructures.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 using namespace FVT;
@@ -1737,4 +1737,4 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
 }
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA

@@ -1,11 +1,11 @@
-#ifndef CFD_DERIVED_QUANTITIES
-#define CFD_DERIVED_QUANTITIES
+#ifndef CAMIRA_DERIVED_QUANTITIES
+#define CAMIRA_DERIVED_QUANTITIES
 
 #include "../Core/Types.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 #include "../FiniteVolume/Mesh.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 // Calculate values and gradients between points using linear interpolation
@@ -60,6 +60,6 @@ class ForceCalculator
 
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 
-#endif // CFD_DERIVED_QUANTITIES
+#endif // CAMIRA_DERIVED_QUANTITIES

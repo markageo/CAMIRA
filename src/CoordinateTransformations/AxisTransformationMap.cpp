@@ -1,7 +1,7 @@
 #include "AxisTransformationMap.h"
 #include "../Core/FVLookups.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 AxisTransformationMap::AxisTransformationMap() :
@@ -116,4 +116,4 @@ AxisTransformationMap AxisTransformationMap::Inverse() const
 }
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA

@@ -40,28 +40,28 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Profiler
-option ( CFD_PROFILING "Enable CFD Profiling Tickers" on )
-if ( CFD_PROFILING )
-	message( STATUS "CFD profiling tickers are on!" )
-	add_compile_definitions( CFD_PROFILING )
+option ( CAMIRA_PROFILING "Enable CAMIRA Profiling Tickers" on )
+if ( CAMIRA_PROFILING )
+	message( STATUS "CAMIRA profiling tickers are on!" )
+	add_compile_definitions( CAMIRA_PROFILING )
 endif()
 
 
 # Selection of solver precision
-set(CFD_PRECISION "double" CACHE STRING "Precision of floating point numbers to compile in.")
-set_property(CACHE CFD_PRECISION PROPERTY STRINGS single double)
+set(CAMIRA_PRECISION "double" CACHE STRING "Precision of floating point numbers to compile in.")
+set_property(CACHE CAMIRA_PRECISION PROPERTY STRINGS single double)
 
-if ( CFD_PRECISION STREQUAL "double" )
+if ( CAMIRA_PRECISION STREQUAL "double" )
 	message( STATUS "Compiling in double precision" )
-	add_compile_definitions( CFD_DOUBLE_PRECISION )
-elseif ( CFD_PRECISION STREQUAL "single" )
+	add_compile_definitions( CAMIRA_DOUBLE_PRECISION )
+elseif ( CAMIRA_PRECISION STREQUAL "single" )
 	message( STATUS "Compiling in single precision" )
 endif()
 
 
 # Allow the ability to read fields in (for example to read in an initial condition), this requires VTk library
-option ( CFD_HAS_VTK_LIB "Allow extra features which require VTK library to be installed.")
-if ( CFD_HAS_VTK_LIB )
+option ( CAMIRA_HAS_VTK_LIB "Allow extra features which require VTK library to be installed.")
+if ( CAMIRA_HAS_VTK_LIB )
 
 	find_package( VTK COMPONENTS 
 				  CommonCore
@@ -77,7 +77,7 @@ if ( CFD_HAS_VTK_LIB )
 
 	if ( ${VTK_FOUND} )
 		message( STATUS "VTK library found successfully." )
-		add_compile_definitions( CFD_HAS_VTK_LIB )
+		add_compile_definitions( CAMIRA_HAS_VTK_LIB )
 	else()
 		message( FATAL_ERROR "Could not locate VTK library installation! This is required for some features, but not essential!" )
 	endif()

@@ -4,7 +4,7 @@
 #include "../Core/Types.h"
 #include <utility>
 
-namespace CFD
+namespace CAMIRA
 {
 
 
@@ -98,6 +98,6 @@ inline constexpr Eigen::array<Eigen::Index, ndims> Ind2Sub( const Eigen::Array<i
 }
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 
 #endif // INDEX_CONVERSIONS

@@ -11,16 +11,16 @@
 #include <string>
 
 
-namespace CFD
+namespace CAMIRA
 {
 
 // Write eigen tensor to a file for debugging
 template<typename T>
 void WriteArray(const std::string &filename, const T &array, const int precision = 6)
 {
-    static_assert(std::is_same< T, CFD::Tensor1D >::value ||
-                  std::is_same< T, CFD::Tensor2D >::value ||
-                  std::is_same< T, CFD::Tensor3D >::value,
+    static_assert(std::is_same< T, CAMIRA::Tensor1D >::value ||
+                  std::is_same< T, CAMIRA::Tensor2D >::value ||
+                  std::is_same< T, CAMIRA::Tensor3D >::value,
                   "Array type invalid.");
 
     std::ofstream fileStream(filename);
@@ -62,29 +62,29 @@ void WriteArray(const std::string &filename, const T &array, const int precision
 
 
 // Functions used for constructing arrays in ReadArray function
-namespace CFD_INTERNAL
+namespace CAMIRA_INTERNAL
 {
 
     // Template specialization for constructing array
     template<typename T> inline
-    T ConstructArray(const std::array<CFD::intType, 3> &dims) = delete;
+    T ConstructArray(const std::array<CAMIRA::intType, 3> &dims) = delete;
 
     template<> inline
-    CFD::Tensor1D ConstructArray<CFD::Tensor1D>(const std::array<CFD::intType, 3> &dims)
+    CAMIRA::Tensor1D ConstructArray<CAMIRA::Tensor1D>(const std::array<CAMIRA::intType, 3> &dims)
     {
-        return CFD::Tensor1D(dims[0]);
+        return CAMIRA::Tensor1D(dims[0]);
     }
 
     template<> inline
-    CFD::Tensor2D ConstructArray<CFD::Tensor2D>(const std::array<CFD::intType, 3> &dims)
+    CAMIRA::Tensor2D ConstructArray<CAMIRA::Tensor2D>(const std::array<CAMIRA::intType, 3> &dims)
     {
-        return CFD::Tensor2D(dims[0], dims[1]);
+        return CAMIRA::Tensor2D(dims[0], dims[1]);
     }
 
     template<> inline
-    CFD::Tensor3D ConstructArray<CFD::Tensor3D>(const std::array<CFD::intType, 3> &dims)
+    CAMIRA::Tensor3D ConstructArray<CAMIRA::Tensor3D>(const std::array<CAMIRA::intType, 3> &dims)
     {
-        return CFD::Tensor3D(dims[0], dims[1], dims[2]);
+        return CAMIRA::Tensor3D(dims[0], dims[1], dims[2]);
     }
 
 }
@@ -95,17 +95,17 @@ template<typename T>
 T ReadArray(const std::string &filename)
 {
 
-    static_assert(std::is_same< T, CFD::Tensor1D >::value ||
-                  std::is_same< T, CFD::Tensor2D >::value ||
-                  std::is_same< T, CFD::Tensor3D >::value,
+    static_assert(std::is_same< T, CAMIRA::Tensor1D >::value ||
+                  std::is_same< T, CAMIRA::Tensor2D >::value ||
+                  std::is_same< T, CAMIRA::Tensor3D >::value,
                   "Array type invalid.");
 
     std::ifstream fileStream(filename);
 
     // Get dimensions from first line
     std::string line, word;                  // Some temporary variables
-    CFD::intType dim, ndims = 0;
-    std::array<CFD::intType, 3> dims = {1, 1, 1}; // Unused dimensions have size 1   
+    CAMIRA::intType dim, ndims = 0;
+    std::array<CAMIRA::intType, 3> dims = {1, 1, 1}; // Unused dimensions have size 1   
     std::getline(fileStream, line);          // First line of file contains dimension information
     std::istringstream lineStream(line);     // For tokenizing line and casting 
     lineStream >> word;
@@ -119,16 +119,16 @@ T ReadArray(const std::string &filename)
     }
 
     // Array to return
-    T array( CFD_INTERNAL::ConstructArray<T>(dims) );
+    T array( CAMIRA_INTERNAL::ConstructArray<T>(dims) );
  
     // Read into the tensor, tensor must be column major, stride by number of columns to account 
     // for reading order not being continguous.
     auto *dataPointer = array.data();
-    CFD::intType idx;
+    CAMIRA::intType idx;
 
-    for (CFD::intType k = 0; k != dims[2]; k++) {
-        for (CFD::intType i = 0; i != dims[0]; i++) {
-            for (CFD::intType j = 0; j != dims[1]; j++) {
+    for (CAMIRA::intType k = 0; k != dims[2]; k++) {
+        for (CAMIRA::intType i = 0; i != dims[0]; i++) {
+            for (CAMIRA::intType j = 0; j != dims[1]; j++) {
 
                 idx = i + j*dims[0] + k*dims[0]*dims[1];
                 fileStream >> dataPointer[idx];
@@ -142,7 +142,7 @@ T ReadArray(const std::string &filename)
 
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 
 
 #endif // ARRAY_IO

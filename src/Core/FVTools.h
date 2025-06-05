@@ -5,7 +5,7 @@
 #include "../FiniteVolume/Mesh.h"
 
 
-namespace CFD 
+namespace CAMIRA 
 {
 
 // Number of ghost cells in solution field
@@ -54,9 +54,9 @@ namespace FVT
     arrayType RemoveGhostCells( const arrayType &array, 
                                 const intType nGhostCells)
     {
-        static_assert(std::is_same<arrayType, CFD::Tensor1D   >::value ||
-                      std::is_same<arrayType, CFD::Tensor2D   >::value ||
-                      std::is_same<arrayType, CFD::Tensor3D   >::value,
+        static_assert(std::is_same<arrayType, CAMIRA::Tensor1D   >::value ||
+                      std::is_same<arrayType, CAMIRA::Tensor2D   >::value ||
+                      std::is_same<arrayType, CAMIRA::Tensor3D   >::value,
                       "Template parameter must be a Tensor.");
 
         Eigen::array< Eigen::Index, arrayType::NumDimensions > offsets, extents;
@@ -71,6 +71,6 @@ namespace FVT
 
 }   // end namespace FVT
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 
 #endif // FV_TOOLS

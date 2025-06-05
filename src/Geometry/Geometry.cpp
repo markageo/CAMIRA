@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-namespace CFD
+namespace CAMIRA
 {
 
 namespace 

@@ -1,5 +1,5 @@
-#ifndef CFD_GHOST_CELLS 
-#define CFD_GHOST_CELLS
+#ifndef CAMIRA_GHOST_CELLS 
+#define CAMIRA_GHOST_CELLS
 
 
 #include "FiniteVolume.h"
@@ -9,7 +9,7 @@
 
 #include <utility>
 
-namespace CFD
+namespace CAMIRA
 {
  
 using namespace FVT;
@@ -93,7 +93,7 @@ inline void SetGhostCells( FieldData<Tensor3D> &fields,
 
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 
 
-#endif // CFD_GHOST_CELLS
+#endif // CAMIRA_GHOST_CELLS

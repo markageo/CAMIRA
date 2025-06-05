@@ -10,7 +10,7 @@
 
 #include <cmath>
 
-namespace CFD
+namespace CAMIRA
 {
 
 using namespace FVT;
@@ -369,6 +369,6 @@ inline bool ResidualsDiverged( const FieldData<floatType> &residuals )
     return false;
 }
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 
 #endif // RESIDUAL_FUNCTIONS

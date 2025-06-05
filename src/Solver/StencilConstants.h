@@ -8,7 +8,7 @@
 #include "../Core/FVTools.h"
 #include "../FiniteVolume/FiniteVolume.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 // Precalculate parts of stencil that are constant along a plane
@@ -39,7 +39,7 @@ FieldData<Tensor2D> CalculatePlaneConstants( const intType k,
 
     for ( intType j = 0; j != nj; j++ ) {
 
-        CFD_PRAGMA_VECTORIZE
+        CAMIRA_PRAGMA_VECTORIZE
         for ( intType i = 0; i != ni; i++ ) {
             intType ig{ G(i) }, jg{ G(j) };
 
@@ -126,7 +126,7 @@ FieldData<Tensor1D> CalculateLineConstants( const intType j,
 
     FieldData<Tensor1D> lineConstants( Tensor1D( fvCoeffs.nCells(Axis::X) + 2*nGhost ).setZero() );
 
-    CFD_PRAGMA_VECTORIZE
+    CAMIRA_PRAGMA_VECTORIZE
     for ( intType i = 0; i != ni; i++ ) {
         intType ig{ G(i) };
 
@@ -178,7 +178,7 @@ FieldData<Tensor1D> CalculateLineConstants( const intType j,
 }
 
 
-}   // end namespace CFD    
+}   // end namespace CAMIRA    
 
 
 #endif // STENCIL_CONSTANTS

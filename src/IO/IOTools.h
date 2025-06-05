@@ -1,9 +1,9 @@
-#ifndef CFD_IOTOOLS
-#define CFD_IOTOOLS
+#ifndef CAMIRA_IOTOOLS
+#define CAMIRA_IOTOOLS
 
 #include <string>
 
-namespace CFD 
+namespace CAMIRA 
 {
 
 namespace IOTOOLS
@@ -56,10 +56,10 @@ namespace IOTOOLS
 
 }   // end namespace IOTOOLS
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 
 
 
 
 
-#endif // CFD_IOTOOLS
+#endif // CAMIRA_IOTOOLS

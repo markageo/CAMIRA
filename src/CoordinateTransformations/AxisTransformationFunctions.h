@@ -11,7 +11,7 @@
 // the line sweeping direction is always in the y direction (in the code). This is more memory
 // efficient and is simpler to implement.
 
-namespace CFD
+namespace CAMIRA
 {
 
 // Return a transformation map from a plane and line sweeping direction
@@ -31,6 +31,6 @@ void TransformVectorFieldToUserCoordinates( EnumVector<Axis, Tensor3D> &, const 
 void TransformBCDataToUserCoordinates( BoundaryConditionData &, const AxisTransformationMap & );
 
 
-} // end namespace CFD
+} // end namespace CAMIRA
  
 #endif  // AXIS_TRANSFORMATION_FUNCTIONS

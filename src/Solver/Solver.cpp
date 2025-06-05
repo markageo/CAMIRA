@@ -19,7 +19,7 @@
 #include <iostream>
 #include <memory>
 
-namespace CFD
+namespace CAMIRA
 {
 
 namespace
@@ -617,4 +617,4 @@ template void SolveTransient<MomentumInterpolation::SemiExplicit>( const InputDa
 
 
 
-} // end namespace CFD
+} // end namespace CAMIRA

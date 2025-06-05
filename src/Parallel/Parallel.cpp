@@ -1,6 +1,6 @@
 #include "Parallel.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 
@@ -87,4 +87,4 @@ std::vector< std::vector<intType> > CreateReverse1DColourSet( const intType n )
 
 
 
-} // end namespace CFD
+} // end namespace CAMIRA

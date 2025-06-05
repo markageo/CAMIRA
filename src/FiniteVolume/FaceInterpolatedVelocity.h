@@ -1,12 +1,12 @@
-#ifndef CFD_FACE_INTERPOLATED_VELOCITY
-#define CFD_FACE_INTERPOLATED_VELOCITY
+#ifndef CAMIRA_FACE_INTERPOLATED_VELOCITY
+#define CAMIRA_FACE_INTERPOLATED_VELOCITY
 
 #include "FiniteVolume.h"
 #include "../Core/FVTools.h"
 #include "FiniteVolumeStructures.h"
 #include <sys/cdefs.h>
 
-namespace CFD {
+namespace CAMIRA {
 
 
 template< AdvectionSchemes advectionScheme,
@@ -129,4 +129,4 @@ inline floatType FaceInterpolatedVelocity( const Tensor3D &U,
 }
 
 
-#endif  // CFD_FACE_INTERPOLATED_VELOCITY
+#endif  // CAMIRA_FACE_INTERPOLATED_VELOCITY

@@ -1,4 +1,4 @@
-#ifdef CFD_HAS_VTK_LIB
+#ifdef CAMIRA_HAS_VTK_LIB
 #include "VTKReader.h"
 
 #include <vtkType.h>
@@ -16,9 +16,9 @@ namespace
 {
 
 // Copy cell face data from vtkRectilinearGrid into Eigen Tensors
-inline CFD::EnumVector<CFD::Axis, CFD::Tensor1D> GetCellFaces( vtkRectilinearGrid *vtkGrid )
+inline CAMIRA::EnumVector<CAMIRA::Axis, CAMIRA::Tensor1D> GetCellFaces( vtkRectilinearGrid *vtkGrid )
 {
-    using namespace CFD;
+    using namespace CAMIRA;
 
     int nFaces[3];
     vtkGrid->GetDimensions( nFaces );
@@ -37,10 +37,10 @@ inline CFD::EnumVector<CFD::Axis, CFD::Tensor1D> GetCellFaces( vtkRectilinearGri
 
 
 
-CFD::EnumVector<CFD::Axis, CFD::Tensor3D> GetVectorFieldFromVTKArray( vtkDataArray *dataArray,
+CAMIRA::EnumVector<CAMIRA::Axis, CAMIRA::Tensor3D> GetVectorFieldFromVTKArray( vtkDataArray *dataArray,
                                                                      const int nCells[3] )
 {
-    using namespace CFD;
+    using namespace CAMIRA;
 
     EnumVector<Axis, Tensor3D> vectorField( Tensor3D( nCells[0], nCells[1], nCells[2] ) );
     intType nCellsTotal = static_cast<intType>( nCells[0] ) 
@@ -65,10 +65,10 @@ CFD::EnumVector<CFD::Axis, CFD::Tensor3D> GetVectorFieldFromVTKArray( vtkDataArr
 
 
 
-CFD::Tensor3D GetScalarFieldFromVTKArray( vtkDataArray *dataArray,
+CAMIRA::Tensor3D GetScalarFieldFromVTKArray( vtkDataArray *dataArray,
                                          const int nCells[3] )
 {
-    using namespace CFD;
+    using namespace CAMIRA;
 
     Tensor3D scalarField( nCells[0], nCells[1], nCells[2] );
     intType nCellsTotal = static_cast<intType>( nCells[0] ) 
@@ -84,10 +84,10 @@ CFD::Tensor3D GetScalarFieldFromVTKArray( vtkDataArray *dataArray,
 
 
 // Copy vertex fields from vtkRectilinearGrid into Eigen Tensors
-inline CFD::FieldData<CFD::Tensor3D> GetFieldData( vtkDataSetAttributes *vtkDataSet,
+inline CAMIRA::FieldData<CAMIRA::Tensor3D> GetFieldData( vtkDataSetAttributes *vtkDataSet,
                                                    const int nPoints[3] )
 {
-    using namespace CFD;
+    using namespace CAMIRA;
     
     FieldData<Tensor3D> fieldData( Tensor3D( nPoints[0], nPoints[1], nPoints[2] ) );
 
@@ -113,9 +113,9 @@ inline CFD::FieldData<CFD::Tensor3D> GetFieldData( vtkDataSetAttributes *vtkData
 
 
 // Copy cell fields from vtkRectilinearGrid into Eigen Tensors
-inline CFD::FieldData<CFD::Tensor3D> GetCellFields( vtkRectilinearGrid *vtkGrid )
+inline CAMIRA::FieldData<CAMIRA::Tensor3D> GetCellFields( vtkRectilinearGrid *vtkGrid )
 {
-    using namespace CFD;
+    using namespace CAMIRA;
 
     int nCells[3];
     vtkGrid->GetCellDims( nCells );
@@ -128,9 +128,9 @@ inline CFD::FieldData<CFD::Tensor3D> GetCellFields( vtkRectilinearGrid *vtkGrid 
 
 
 // Copy vertex fields from vtkRectilinearGrid into Eigen Tensors
-inline CFD::FieldData<CFD::Tensor3D> GetVertexFields( vtkRectilinearGrid *vtkGrid )
+inline CAMIRA::FieldData<CAMIRA::Tensor3D> GetVertexFields( vtkRectilinearGrid *vtkGrid )
 {
-    using namespace CFD;
+    using namespace CAMIRA;
 
     int nPoints[3];
     vtkGrid->GetDimensions( nPoints );
@@ -145,7 +145,7 @@ inline CFD::FieldData<CFD::Tensor3D> GetVertexFields( vtkRectilinearGrid *vtkGri
 
 FieldFileData ReadVTKFields( const std::string &filename )
 {
-    using namespace CFD;
+    using namespace CAMIRA;
     
     FieldFileData fieldFileData;
 
@@ -157,12 +157,12 @@ FieldFileData ReadVTKFields( const std::string &filename )
     // Make sure the data type in the file is the same type as the code
     if ( vtkGrid->GetScalarType() == VTK_DOUBLE ) {
 
-        if ( !std::is_same<CFD::floatType, double>::value )
+        if ( !std::is_same<CAMIRA::floatType, double>::value )
             throw std::runtime_error( "Type mismatch. VTK files to be read must be in double precision" );
 
     } else if ( vtkGrid->GetScalarType() == VTK_FLOAT ) {
 
-        if ( !std::is_same<CFD::floatType, float>::value )
+        if ( !std::is_same<CAMIRA::floatType, float>::value )
             throw std::runtime_error( "Type mismatch. VTK files to be read must be in single precision" );
 
     }
@@ -177,4 +177,4 @@ FieldFileData ReadVTKFields( const std::string &filename )
 
 }   // end namespace VTK;
 
-#endif // CFD_HAS_VTK_LIB
+#endif // CAMIRA_HAS_VTK_LIB

@@ -6,7 +6,7 @@
 #include <utility>
 #include <limits>
 
-namespace CFD
+namespace CAMIRA
 {
 
 
@@ -561,4 +561,4 @@ Mesh CoarsenMesh( const Mesh &fineMesh,
 }
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
