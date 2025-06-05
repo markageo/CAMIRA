@@ -126,12 +126,13 @@ private:
 
     void Sweep3D()
     {
-
-        TIC("Sweeping")
         
+        TIC("Setting Ghost Cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
+        TOC()
 
         // Triad starting on lo side
+        TIC("Sweeping")
         for ( intType k = 0; k != m_nk; k++ ) {
 
             // FieldData<Tensor2D> planeConstants = CalculatePlaneConstants<TC::t, MI >(k, m_fvCoeffs, m_fields);
@@ -159,10 +160,15 @@ private:
                 }
             }
         }
+        TOC()
 
+        TIC("Setting Ghost Cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
+        TOC()
+
 
         // Triad starting on hi side
+        TIC("Sweeping")
         for ( intType k = m_nk-1; k != -1; k-- ) {
 
             // FieldData<Tensor2D> planeConstants = CalculatePlaneConstants<TC::b, MI >(k, m_fvCoeffs, m_fields);
@@ -190,9 +196,6 @@ private:
                 }
             }
         }
-
-        SetGhostCells(m_fields, m_mesh, m_bcData);
-
         TOC()
     }
 
@@ -303,19 +306,26 @@ private:
     // For 3D simulations
     void Sweep3D()
     {
+        TIC("Setting Ghost Cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
+        TOC()
 
+        TIC("Sweeping")
         for (intType k = 0; k != m_nk - 1; k++) { // Forward sweep
             Update(m_planeSolverTop, k);
         }
+        TOC()
 
+        TIC("Setting Ghost Cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
+        TOC()
 
+        TIC("Sweeping")
         for (intType k = m_nk - 1; k != 0; k--) { // Backward sweep
             Update(m_planeSolverBottom, k);
         }
+        TOC()
 
-        SetGhostCells(m_fields, m_mesh, m_bcData);
     }
 
     void UpdateState3D()
@@ -403,19 +413,13 @@ public:
 
         for ( intType nIterations = 1 ; nIterations <= m_maxIterations; nIterations++ )
         {
-            TIC("Linear solver residuals")
             m_pressureOld = m_fields.P;     // Only look at the pressure field to save time
-            TOC()
 
             // Sweep domain
-            TIC("Sweep3d Function")
             Sweep3D();
-            TOC()
 
             // Normalise residuals
-            TIC("Linear solver residuals")
             m_residual = L1Diff(m_pressureOld, m_fields.P);
-            TOC()
             if ( nIterations == 1 ) {
                 m_residualInitialInv = 1.0f / m_residual;
 
@@ -463,12 +467,12 @@ private:
     void Sweep3D()
     {
 
-        TIC("Setting Ghost cells")
+        TIC("Setting Ghost Cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
         TOC()
         
         // Forward plane sweep
-        TIC("Forward Sweep")
+        TIC("Sweeping")
         for ( const std::vector<intType> &color : m_forwardColorSet ) {
 
             #pragma omp parallel for
@@ -484,12 +488,12 @@ private:
         }
         TOC()
 
-        TIC("Setting Ghost cells")
+        TIC("Setting Ghost Cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
         TOC()
 
         // Reverse plane sweep
-        TIC("Reverse Sweep")
+        TIC("Sweeping")
         for ( const std::vector<intType> &color : m_reverseColorSet ) {
 
             #pragma omp parallel for
