@@ -27,10 +27,10 @@ namespace pt = boost::property_tree;
 
 
 // Read command line input for input file name
-CFD::InputData CFD::InputDataFromCommandLine(int argc, char const *argv[])
+CAMIRA::InputData CAMIRA::InputDataFromCommandLine(int argc, char const *argv[])
 {
     // InputData object to return
-    CFD::InputData inputData;
+    CAMIRA::InputData inputData;
 
     // Input file from first command line argument
     std::string inputFilename;
@@ -58,7 +58,7 @@ CFD::InputData CFD::InputDataFromCommandLine(int argc, char const *argv[])
         try
         {
             std::cout << "Reading input file '" + inputFilename + "' ... ";
-            inputData = CFD::ReadInputData(inputFilename);
+            inputData = CAMIRA::ReadInputData(inputFilename);
             std::cout << "Success."
                       << "\n\n";
             break;
@@ -89,12 +89,12 @@ CFD::InputData CFD::InputDataFromCommandLine(int argc, char const *argv[])
 
 
 // InputData constructor
-CFD::InputData::InputData() :
+CAMIRA::InputData::InputData() :
     meshSegments(),
     boundaryConditions()
     {
-        smootherSettings.planeSweepDirection = CFD::BoundaryPatches::zPositive;
-        smootherSettings.lineSweepDirection = CFD::BoundaryPatches::yPositive;
+        smootherSettings.planeSweepDirection = CAMIRA::BoundaryPatches::zPositive;
+        smootherSettings.lineSweepDirection = CAMIRA::BoundaryPatches::yPositive;
     };
 
 
@@ -119,12 +119,12 @@ std::vector<T> ParseVectorString( const std::string &vecString )
     
     while ( stringIterator != vecString.end() ) {
         if ( *stringIterator == VECTOR_END_CHAR ) {
-            vec.push_back( CFD::IOTOOLS::String2Type<T>(valueString) );
+            vec.push_back( CAMIRA::IOTOOLS::String2Type<T>(valueString) );
             break;
         }
 
         if ( *stringIterator == VECTOR_DELIMITER_CHAR ) {
-            vec.push_back( CFD::IOTOOLS::String2Type<T>(valueString) );
+            vec.push_back( CAMIRA::IOTOOLS::String2Type<T>(valueString) );
             valueString.clear();
         } else {
             valueString += *stringIterator;
@@ -169,7 +169,7 @@ namespace boost { namespace property_tree {
 namespace
 {
 
-    using namespace CFD;
+    using namespace CAMIRA;
 
     /*-------------------------------------------------------------------------------------*\
                                                Model
@@ -597,9 +597,9 @@ namespace
     \*-------------------------------------------------------------------------------------*/
 
 
-    CFD::BoundaryPatches::ENUMDATA String2BoundaryPatch(const std::string &bpString)
+    CAMIRA::BoundaryPatches::ENUMDATA String2BoundaryPatch(const std::string &bpString)
     {
-        using BP = CFD::BoundaryPatches::ENUMDATA;
+        using BP = CAMIRA::BoundaryPatches::ENUMDATA;
         if        ( bpString == "+x" ) {
             return BP::xPositive;
 
@@ -814,7 +814,7 @@ namespace
         using enum Axis::ENUMDATA;
         const pt::ptree &initialConditionsTree = tree.get_child("InitialConditions");
 
-        #if defined( CFD_HAS_VTK_LIB )
+        #if defined( CAMIRA_HAS_VTK_LIB )
             std::string valueString = initialConditionsTree.get<std::string>( "type" );
             if        ( valueString == "uniform" ) {
                 inputData.initialConditionType = InputData::InitialConditionTypes::uniform;
@@ -976,7 +976,7 @@ namespace
 
 
 // Parse input file and read into InputData structure
-CFD::InputData CFD::ReadInputData(const std::string &inputFilename) 
+CAMIRA::InputData CAMIRA::ReadInputData(const std::string &inputFilename) 
 {
     pt::ptree tree = INP::ParseFile(inputFilename);
 
@@ -996,7 +996,7 @@ CFD::InputData CFD::ReadInputData(const std::string &inputFilename)
 }
 
 // Parse input file and just read sweep directions
-std::tuple< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > CFD::ReadSweepDirections( const std::string &inputFilename )
+std::tuple< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > CAMIRA::ReadSweepDirections( const std::string &inputFilename )
 {
     pt::ptree tree = INP::ParseFile(inputFilename);
     const pt::ptree &smootherTree = tree.get_child("Solver").get_child("Smoother");

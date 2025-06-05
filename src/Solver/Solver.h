@@ -6,7 +6,7 @@
 #include "../FiniteVolume/FiniteVolume.h"
 #include "../CoordinateTransformations/AxisTransformationFunctions.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
     template< MomentumInterpolation >
@@ -15,7 +15,7 @@ namespace CFD
     template< MomentumInterpolation >
     void SolveTransient( const InputData &, const AxisTransformationMap &);
 
-}   // end namespace CFD    
+}   // end namespace CAMIRA    
 
 
 #endif // SOLVER

@@ -8,7 +8,7 @@
 #include <map>
 #include <tuple>
 
-namespace CFD
+namespace CAMIRA
 {
 
 
@@ -151,6 +151,6 @@ InputData InputDataFromCommandLine(int, char const **);
 std::tuple< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > ReadSweepDirections( const std::string & );
 
 
-} // end namespace CFD
+} // end namespace CAMIRA
 
 #endif  // INPUT_PROCESSING

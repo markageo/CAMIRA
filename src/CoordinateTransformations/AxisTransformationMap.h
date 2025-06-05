@@ -1,9 +1,9 @@
-#ifndef CFD_AXIS_TRANSFORMATION_MAP
-#define CFD_AXIS_TRANSFORMATION_MAP
+#ifndef CAMIRA_AXIS_TRANSFORMATION_MAP
+#define CAMIRA_AXIS_TRANSFORMATION_MAP
 
 #include "../Core/Types.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 // Structure for storing axis transformation, is just a one-to-one map
@@ -54,6 +54,6 @@ class AxisTransformationMap
         EnumVector<Axis, A> m_userAxis;    // User axis -> code axis
 };
 
-} // end namespace CFD
+} // end namespace CAMIRA
  
-#endif  // CFD_AXIS_TRANSFORMATION_MAP
+#endif  // CAMIRA_AXIS_TRANSFORMATION_MAP

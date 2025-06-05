@@ -14,7 +14,7 @@
 #include "../IO/ArrayIO.h"
 
 
-namespace CFD
+namespace CAMIRA
 {
 
 template < TransportCoefficients::ENUMDATA Ustag,
@@ -615,7 +615,7 @@ private:
 
 };
 
-}   // end namespace CFD    
+}   // end namespace CAMIRA    
 
 
 #endif // TRIAD_SOLVER

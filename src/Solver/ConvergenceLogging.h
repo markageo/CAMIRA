@@ -18,14 +18,14 @@
 #include <iomanip>
 #include <memory>
 
-namespace CFD
+namespace CAMIRA
 {
 
 // Set the output precision based on code precision
-#ifdef CFD_DOUBLE_PRECISION
-    #define CFD_FILE_WRITE_PRECISION 15
+#ifdef CAMIRA_DOUBLE_PRECISION
+    #define CAMIRA_FILE_WRITE_PRECISION 15
 #else
-    #define CFD_FILE_WRITE_PRECISION 7;
+    #define CAMIRA_FILE_WRITE_PRECISION 7;
 #endif
 
 class ConvergenceFile
@@ -33,7 +33,7 @@ class ConvergenceFile
 
     public:
         ConvergenceFile( const std::string &filename, 
-                         const int precision = CFD_FILE_WRITE_PRECISION, 
+                         const int precision = CAMIRA_FILE_WRITE_PRECISION, 
                          const int columnWidth = 14 ) :
             m_fileStream( filename ),
             m_precision( precision ),
@@ -89,7 +89,7 @@ class ResidualLogFile
     public:
         ResidualLogFile( const std::string &filename, 
                          const AxisTransformationMap &axisTransformation,
-                         const int precision = CFD_FILE_WRITE_PRECISION ) :
+                         const int precision = CAMIRA_FILE_WRITE_PRECISION ) :
             m_AT( axisTransformation ),
             m_convergenceFile( filename, precision )
         {            
@@ -137,7 +137,7 @@ class ProbeLogFile
         ProbeLogFile( const std::string &filename, 
                       const AxisTransformationMap &axisTransformation,
                       const FieldProbe &fieldProbe,
-                      const int precision = CFD_FILE_WRITE_PRECISION ) :
+                      const int precision = CAMIRA_FILE_WRITE_PRECISION ) :
             m_AT( axisTransformation ),
             m_convergenceFile( filename, precision )
         {            
@@ -187,7 +187,7 @@ class ForceLogFile
     public:
         ForceLogFile( const std::string &filename, 
                       const AxisTransformationMap &axisTransformation,
-                      const int precision = CFD_FILE_WRITE_PRECISION ) :
+                      const int precision = CAMIRA_FILE_WRITE_PRECISION ) :
             m_AT( axisTransformation ),
             m_convergenceFile( filename, precision )
         {            
@@ -328,7 +328,7 @@ class FieldWriter
                                          m_transformedMesh.cellFaces[Z].size() );
                 config.SetWriteMode(VTK::WriteModes::BINARY);
                 
-            VTK::gridVectorType<CFD::floatType> gridVector = { m_transformedMesh.cellFaces[X].data(), 
+            VTK::gridVectorType<CAMIRA::floatType> gridVector = { m_transformedMesh.cellFaces[X].data(), 
                                                                m_transformedMesh.cellFaces[Y].data(), 
                                                                m_transformedMesh.cellFaces[Z].data() };
 
@@ -412,7 +412,7 @@ class ResidualFieldWriter
                                          m_transformedMesh.cellFaces[Z].size() );
                 config.SetWriteMode(VTK::WriteModes::BINARY);
                 
-            VTK::gridVectorType<CFD::floatType> gridVector = { m_transformedMesh.cellFaces[X].data(), 
+            VTK::gridVectorType<CAMIRA::floatType> gridVector = { m_transformedMesh.cellFaces[X].data(), 
                                                                m_transformedMesh.cellFaces[Y].data(), 
                                                                m_transformedMesh.cellFaces[Z].data() };
 
@@ -439,7 +439,7 @@ class ResidualFieldWriter
 };
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 
 
 #endif // CONVERGENCE_LOGGING

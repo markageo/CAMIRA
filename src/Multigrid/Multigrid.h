@@ -1,5 +1,5 @@
-#ifndef CFD_MULTIGRID
-#define CFD_MULTIGRID
+#ifndef CAMIRA_MULTIGRID
+#define CAMIRA_MULTIGRID
 
 #include "../Core/Types.h"
 #include "../FiniteVolume/Mesh.h"
@@ -12,7 +12,7 @@
 #include<memory>
 
 
-namespace CFD
+namespace CAMIRA
 {
 
 enum class MultigridEquation {
@@ -93,4 +93,4 @@ void CalculateCoarseGridRightHandSide( FieldData<Tensor3D> &,
 
 }
 
-#endif  // CFD_MULTIGRID
+#endif  // CAMIRA_MULTIGRID

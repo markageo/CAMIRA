@@ -2,7 +2,7 @@
 #include "../Core/FVLookups.h"
 #include <Eigen/Geometry>
 
-namespace CFD
+namespace CAMIRA
 {
 
 
@@ -34,9 +34,9 @@ namespace
 namespace 
 {
 
-    Eigen::Matrix<CFD::intType, 3, 1> Axis2Vector(const CFD::BoundaryPatches::ENUMDATA axis)
+    Eigen::Matrix<CAMIRA::intType, 3, 1> Axis2Vector(const CAMIRA::BoundaryPatches::ENUMDATA axis)
     {
-        using BP = CFD::BoundaryPatches::ENUMDATA;
+        using BP = CAMIRA::BoundaryPatches::ENUMDATA;
         switch (axis)
         {
             case (BP::xPositive):
@@ -65,9 +65,9 @@ namespace
 
 
 
-    CFD::BoundaryPatches::ENUMDATA Vector2Axis(const Eigen::Matrix<CFD::intType, 3, 1> &vector)
+    CAMIRA::BoundaryPatches::ENUMDATA Vector2Axis(const Eigen::Matrix<CAMIRA::intType, 3, 1> &vector)
     {
-        using BP = CFD::BoundaryPatches::ENUMDATA;
+        using BP = CAMIRA::BoundaryPatches::ENUMDATA;
         if        ( ( vector.array() ==  Axis2Vector(BP::xPositive).array() ).all() ) {
             return BP::xPositive;
 
@@ -304,8 +304,8 @@ namespace
 AxisTransformationMap CreateAxisTransformation( BoundaryPatches::ENUMDATA planeSweepDirection,
                                                 BoundaryPatches::ENUMDATA lineSweepDirection ) 
 {
-    using BP = CFD::BoundaryPatches::ENUMDATA;
-    using directionVector = Eigen::Matrix<CFD::intType, 3, 1>;
+    using BP = CAMIRA::BoundaryPatches::ENUMDATA;
+    using directionVector = Eigen::Matrix<CAMIRA::intType, 3, 1>;
 
     AxisTransformationMap axisTransformation;
 
@@ -605,4 +605,4 @@ void TransformFieldToCodeCoordinates( FieldData<Tensor3D> &fieldData,
 }
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA

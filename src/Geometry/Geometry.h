@@ -1,5 +1,5 @@
-#ifndef CFD_GEOMETRY
-#define CFD_GEOMETRY
+#ifndef CAMIRA_GEOMETRY
+#define CAMIRA_GEOMETRY
 
 #include "../Core/Types.h"
 #include "../IO/InputProcessing.h"
@@ -11,7 +11,7 @@
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
 
 
-namespace CFD
+namespace CAMIRA
 {
 
 using CGAL_Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;    // This uses doubles, but is needed for correct distance queries
@@ -45,4 +45,4 @@ floatType NearestDistance( const Tree &,
 }
 
 
-#endif  // CFD_GEOMETRY
+#endif  // CAMIRA_GEOMETRY

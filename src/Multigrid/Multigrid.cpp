@@ -4,7 +4,7 @@
 #include "../Core/FVTools.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 namespace
@@ -498,4 +498,4 @@ template void CalculateCoarseGridRightHandSide<MomentumInterpolation::SemiExplic
 
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA

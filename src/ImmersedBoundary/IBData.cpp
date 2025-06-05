@@ -26,7 +26,7 @@
 #include <CGAL/boost/graph/IO/STL.h>
 
 
-namespace CFD
+namespace CAMIRA
 {
 
 namespace 
@@ -39,7 +39,7 @@ Tensor3D CreateCellMask( const Tree &tree,
     using enum Axis::ENUMDATA;
     using FVT::G;
 
-    Tensor3D mask = Tensor3D( mesh.nCells[X] + 2*CFD::nGhost, mesh.nCells[Y] + 2*CFD::nGhost, mesh.nCells[Z] + 2*CFD::nGhost ).setConstant( CellType::Fluid );
+    Tensor3D mask = Tensor3D( mesh.nCells[X] + 2*CAMIRA::nGhost, mesh.nCells[Y] + 2*CAMIRA::nGhost, mesh.nCells[Z] + 2*CAMIRA::nGhost ).setConstant( CellType::Fluid );
 
     // Identify cells with cell centeres inside the solid
     for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
@@ -137,7 +137,7 @@ void AddIBDataForDirection( IBCell &ibCell,
             break;
         }
         
-        case CFD::GeometryBoundaryTreatement::Staircase:
+        case CAMIRA::GeometryBoundaryTreatement::Staircase:
         {   
             // Distance to the nearest cell face, approximates the immersed boundary to be on the cell face
             // i.e. staircase approximation
@@ -393,7 +393,7 @@ IBData CreateImmersedBoundaryData( const InputData &inputData,
     // Create the initial mask. Ghost cells at domain boundaries should be masked out.
     const TensorIndex3D offsets = {nGhost, nGhost, nGhost},
                         extents = {mesh.nCells[0], mesh.nCells[1], mesh.nCells[2]};
-    ibData.mask = Tensor3D( mesh.nCells[X] + 2*CFD::nGhost, mesh.nCells[Y] + 2*CFD::nGhost, mesh.nCells[Z] + 2*CFD::nGhost ).setConstant( CellType::Solid );
+    ibData.mask = Tensor3D( mesh.nCells[X] + 2*CAMIRA::nGhost, mesh.nCells[Y] + 2*CAMIRA::nGhost, mesh.nCells[Z] + 2*CAMIRA::nGhost ).setConstant( CellType::Solid );
     ibData.mask.slice(offsets, extents) = ibData.mask.slice(offsets, extents).constant( CellType::Fluid );
 
     // Leave ibData empty if there is no geometry
@@ -441,4 +441,4 @@ void WriteGeometryToFile( const InputData &inputData,
 
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA

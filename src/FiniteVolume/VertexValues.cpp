@@ -1,7 +1,7 @@
 #include "FiniteVolume.h"
 #include "../Core/FVLookups.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 
@@ -315,4 +315,4 @@ FieldData<Tensor3D> GetVertexFields( const FieldData<Tensor3D> &fields,
 
 
 
-} // end namespace CFD
+} // end namespace CAMIRA

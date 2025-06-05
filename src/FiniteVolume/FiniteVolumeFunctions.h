@@ -1,5 +1,5 @@
-#ifndef CFD_FINITE_VOLUME_FUNCTIONS   
-#define CFD_FINITE_VOLUME_FUNCTIONS
+#ifndef CAMIRA_FINITE_VOLUME_FUNCTIONS   
+#define CAMIRA_FINITE_VOLUME_FUNCTIONS
 
 #include "Mesh.h"
 #include "FiniteVolumeStructures.h"
@@ -8,7 +8,7 @@
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 #include "../CoordinateTransformations/AxisTransformationFunctions.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 // -------------------------------------- Definition in FiniteVolumeStructures.cpp -------------------------------------- //
@@ -96,6 +96,6 @@ FieldData<Tensor3D> GetVertexFields( const FieldData<Tensor3D> &, const Mesh &, 
 
 
 
-} // end namespace CFD
+} // end namespace CAMIRA
 
-#endif // CFD_FINITE_VOLUME_FUNCTIONS
+#endif // CAMIRA_FINITE_VOLUME_FUNCTIONS

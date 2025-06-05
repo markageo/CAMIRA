@@ -10,7 +10,7 @@
 #include "../Core/FVTools.h"
 #include "../FiniteVolume/FiniteVolume.h"
 
-namespace CFD
+namespace CAMIRA
 {
 
 using namespace FVT;
@@ -112,7 +112,7 @@ private:
     }
 };
 
-}   // end namespace CFD    
+}   // end namespace CAMIRA    
 
 
 #endif // PLANE_SOLVER

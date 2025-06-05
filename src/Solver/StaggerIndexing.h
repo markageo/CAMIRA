@@ -5,7 +5,7 @@
 #include "../Core/FVLookups.h"
 #include <type_traits>
 
-namespace CFD
+namespace CAMIRA
 {
 
 template< Axis::ENUMDATA field, 
@@ -143,6 +143,6 @@ class StaggerIndexing
 };
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 
 #endif // STAGGER_INDEXING

@@ -4,7 +4,7 @@
 #include "Types.h"
 
 
-namespace CFD 
+namespace CAMIRA 
 {
 
 // Lookup Tables
@@ -78,6 +78,6 @@ namespace LUT
 }   // end namespace LUT
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA
 
 #endif // FV_LOOKUPS

@@ -27,12 +27,12 @@ int main(int argc, char const *argv[])
                                          Input Processing
     \*-------------------------------------------------------------------------------------*/
 
-    CFD::InputData inputData = CFD::InputDataFromCommandLine(argc, argv);
+    CAMIRA::InputData inputData = CAMIRA::InputDataFromCommandLine(argc, argv);
 
-    CFD::AxisTransformationMap axisTransformation = CreateAxisTransformation( inputData.smootherSettings.planeSweepDirection,
+    CAMIRA::AxisTransformationMap axisTransformation = CreateAxisTransformation( inputData.smootherSettings.planeSweepDirection,
                                                                               inputData.smootherSettings.lineSweepDirection );
 
-    CFD::TransformUserInputData(inputData, axisTransformation);
+    CAMIRA::TransformUserInputData(inputData, axisTransformation);
 
     /*-------------------------------------------------------------------------------------*\
                                               Solve
@@ -46,23 +46,23 @@ int main(int argc, char const *argv[])
 
     switch ( inputData.schemes.momentumInterpolation ) {
 
-        using MI = CFD::MomentumInterpolation;
+        using MI = CAMIRA::MomentumInterpolation;
 
         case ( MI::Implicit ):
 
             if ( inputData.transient ) {
-                CFD::SolveTransient< MI::Implicit >(inputData, axisTransformation);
+                CAMIRA::SolveTransient< MI::Implicit >(inputData, axisTransformation);
             } else {
-                CFD::SolveSteady< MI::Implicit >(inputData, axisTransformation);
+                CAMIRA::SolveSteady< MI::Implicit >(inputData, axisTransformation);
             }
             break;
 
         case ( MI::SemiExplicit ):
 
             if ( inputData.transient ) {
-                CFD::SolveTransient< MI::SemiExplicit >(inputData, axisTransformation);
+                CAMIRA::SolveTransient< MI::SemiExplicit >(inputData, axisTransformation);
             } else {
-                CFD::SolveSteady< MI::SemiExplicit >(inputData, axisTransformation);
+                CAMIRA::SolveSteady< MI::SemiExplicit >(inputData, axisTransformation);
             }
 
             break;
@@ -75,7 +75,7 @@ int main(int argc, char const *argv[])
 
 
     // Display profiling info to terminal and write to file
-    #ifdef CFD_PROFILING
+    #ifdef CAMIRA_PROFILING
         std::cout << PROF::prof;
 
         std::ofstream profilingFilestream( inputData.profilingFilename );

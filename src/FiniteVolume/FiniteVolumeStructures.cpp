@@ -9,7 +9,7 @@
 #include <cmath>
 #include <stdexcept>
 
-namespace CFD
+namespace CAMIRA
 {
 
 
@@ -216,27 +216,27 @@ using enum Axis::ENUMDATA;
 // Default constructor must be defined explicity since class holds references
 FVCoefficients::FVCoefficients() :
     Cont( { m_gradientCoeffs,
-            CFD::EnumVector<TransportCoefficients, Tensor3D>(),
-            CFD::Tensor3D(),
-            CFD::Tensor3D() } ),
+            CAMIRA::EnumVector<TransportCoefficients, Tensor3D>(),
+            CAMIRA::Tensor3D(),
+            CAMIRA::Tensor3D() } ),
 
     Mom( { MomentumEquation({ X,
                             m_momentumVelocityCoeffs, 
                             m_gradientCoeffs[X],
-                            CFD::Tensor3D(),
-                            CFD::Tensor3D() }),
+                            CAMIRA::Tensor3D(),
+                            CAMIRA::Tensor3D() }),
                             
          MomentumEquation({ Y,
                             m_momentumVelocityCoeffs, 
                             m_gradientCoeffs[Y],
-                            CFD::Tensor3D(),
-                            CFD::Tensor3D() }), 
+                            CAMIRA::Tensor3D(),
+                            CAMIRA::Tensor3D() }), 
                             
          MomentumEquation({ Z,
                             m_momentumVelocityCoeffs, 
                             m_gradientCoeffs[Z],
-                            CFD::Tensor3D(),
-                            CFD::Tensor3D() }) 
+                            CAMIRA::Tensor3D(),
+                            CAMIRA::Tensor3D() }) 
         } )
 {};
 
@@ -421,7 +421,7 @@ FVCoefficients::FVCoefficients( FVCoefficients &&that ) noexcept :
                                       InitialConditions
 \*-------------------------------------------------------------------------------------*/
 
-#ifdef CFD_HAS_VTK_LIB
+#ifdef CAMIRA_HAS_VTK_LIB
 FieldData<Tensor3D> SetInitialConditionFromVTKFile( const std::string &filename,
                                                     const Mesh &mesh,
                                                     const AxisTransformationMap &axisTransformation,
@@ -436,9 +436,9 @@ FieldData<Tensor3D> SetInitialConditionFromVTKFile( const std::string &filename,
     TensorIndex3D offsets = {nGhost, nGhost, nGhost},
                   extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
 
-    FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CFD::nGhost, 
-                                          mesh.nCells(1) + 2*CFD::nGhost, 
-                                          mesh.nCells(2) + 2*CFD::nGhost).setZero() );
+    FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CAMIRA::nGhost, 
+                                          mesh.nCells(1) + 2*CAMIRA::nGhost, 
+                                          mesh.nCells(2) + 2*CAMIRA::nGhost).setZero() );
 
     // Careful! Just checking the mesh is the same size, however it is possible that cell centers are at different locations.
     // Ideally should add the ability to do an interpolation.
@@ -464,9 +464,9 @@ FieldData<Tensor3D> SetInitialConditionUniform( const FieldData<floatType> &cons
     TensorIndex3D offsets = {nGhost, nGhost, nGhost},
                   extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
 
-    FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CFD::nGhost, 
-                                          mesh.nCells(1) + 2*CFD::nGhost, 
-                                          mesh.nCells(2) + 2*CFD::nGhost).setZero() );
+    FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CAMIRA::nGhost, 
+                                          mesh.nCells(1) + 2*CAMIRA::nGhost, 
+                                          mesh.nCells(2) + 2*CAMIRA::nGhost).setZero() );
 
     ForAllFieldData( [&] (intType i) { 
         fields[i].slice( offsets, extents ).setConstant( constantInitialConditions[i] );  
@@ -483,7 +483,7 @@ FieldData<Tensor3D> InitialiseFields( const Mesh &mesh,
 {
     FieldData<Tensor3D> fields;
 
-    #if defined( CFD_HAS_VTK_LIB )
+    #if defined( CAMIRA_HAS_VTK_LIB )
         switch ( inputData.initialConditionType ) {
             case InputData::InitialConditionTypes::uniform:
                 fields = SetInitialConditionUniform( inputData.constantInitialConditions, mesh );
@@ -501,4 +501,4 @@ FieldData<Tensor3D> InitialiseFields( const Mesh &mesh,
 }
 
 
-}   // end namespace CFD
+}   // end namespace CAMIRA

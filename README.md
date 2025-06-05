@@ -4,7 +4,7 @@
 # CAMIRA
 CAMIRA (**C**oupled **A**lgorithm for **M**ultigrid **I**mmersed Boundary **R**eynolds **A**veraged Navier-Stokes, also an Aboriginal name for the word "windy") is a highly efficiency solver for the incompressible steady-state Reynolds-Averaged Navier-Stokes equations. The code and the methods used were developed as part of my PhD. 
 
-CAMIRA uses a fully coupled matrix free smoother with Full Approximation Scheme (FAS) multigrid to solve the equations on a rectillinear collocated finite volume grid. Complex geometries are accounted for using a mass conservative directional immersed boundary method. Details on these numerical methods can be found in the various [publications](#publications) that are part of this work. CAMIRA can run in parallel on shared memory CPUs using OpenMP..
+CAMIRA uses a fully coupled matrix free smoother with Full Approximation Scheme (FAS) multigrid to solve the equations on a rectillinear collocated finite volume grid. Complex geometries are accounted for using a mass conservative directional immersed boundary method. Details on these numerical methods can be found in the various [publications](#publications) that are part of this work. CAMIRA can run in parallel on shared memory CPUs using OpenMP.
 
 
 ## Getting Started
@@ -15,15 +15,15 @@ The CAMIRA code uses a number of external dependencies to work. These need to be
 
 * [VTK](https://vtk.org/) (Optional) - This is required to read in initial conditions for VTK files. It is not necessary to build and use the code, but required if you wish to read an initial condition field from file.
 * [CMake](https://cmake.org/) - To build the project.
-* Any C++ compiler which support C++20.
+* A C++ compiler which support C++20. Clang and GCC have be tested to work.
 
 CAMIRA also makes use of the [Eigen C++ linear algebra library](https://eigen.tuxfamily.org/index.php?title=Main_Page) and the [Computational Geometry Algorithms Library (CGAL)](https://www.cgal.org/). These are included within the source code and do not need to be installed by the user. 
 
 ### Building
 
-The CAMIRA code lives in a GitHub [repository](https://github.com/mgeo2280/camira.git). To clone the repo, use the command:
+The CAMIRA code lives in a GitHub [repository](https://github.com/markageo/CAMIRA.git). To clone the repo, use the command:
 
-    git clone https://github.com/mgeo2280/camira.git
+    git clone https://github.com/markageo/CAMIRA.git
 
 Then build CAMIRA like any other CMake project:
 
@@ -51,6 +51,14 @@ Below is a list of publications related to the development of this project.
 *  [George, M. A., Williamson, N., & Armfield, S. W. (2024). A coupled block implicit solver for the incompressible Navier–Stokes equations on collocated grids. Computers & Fluids, 284, 106426.](https://www.sciencedirect.com/science/article/pii/S0045793024002573)
 
 * [George, M., Williamson, N., & Armfield, S. W. Mass-Conserving Ghost Cell Immersed Boundary Method with Multigrid for Coupled Navier-Stokes. Available at SSRN 5216938.](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5216938)
+
+
+## Roadmap
+
+CAMIRA is a work in progress. Here are some upcoming featuresL
+* Inclusion of turbulence models to solve the RANS equations. Currently CAMIRA solves the steady laminar equations. Although it does have the option to include an unsteady term.
+* Support for GPU and CPU parallelism through the [RAJA Portability Suite](https://github.com/LLNL/RAJA).
+
 
 ## Contact
 
