@@ -27,14 +27,12 @@ int main(int argc, char const *argv[])
                                          Input Processing
     \*-------------------------------------------------------------------------------------*/
 
-    TIC("Input Processing")
     CFD::InputData inputData = CFD::InputDataFromCommandLine(argc, argv);
 
     CFD::AxisTransformationMap axisTransformation = CreateAxisTransformation( inputData.smootherSettings.planeSweepDirection,
                                                                               inputData.smootherSettings.lineSweepDirection );
 
     CFD::TransformUserInputData(inputData, axisTransformation);
-    TOC()
 
     /*-------------------------------------------------------------------------------------*\
                                               Solve
@@ -46,7 +44,6 @@ int main(int argc, char const *argv[])
 
     omp_set_num_threads( inputData.parallelSettings.numberOfThreads );
 
-    TIC("Solver");
     switch ( inputData.schemes.momentumInterpolation ) {
 
         using MI = CFD::MomentumInterpolation;
@@ -70,7 +67,6 @@ int main(int argc, char const *argv[])
 
             break;
     }
-    TOC();
 
 
     /*-------------------------------------------------------------------------------------*\

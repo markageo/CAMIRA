@@ -1721,33 +1721,19 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
                            const EnumVector<Axis, Tensor3D> &faceFluxes,
                            const IBData &ibData )
 {
-    TIC("Zero nonlinear coefficients")
     ZeroNonlinearCoeffs(fvCoeffs);
-    TOC()
-    
-    TIC("Set advection diffusion")
+
     SetAdvectionDiffusionCoefficients(fvCoeffs, faceFluxes, mesh);
-    TOC()
 
-    TIC("Add deferred correction")
     AddDeferredCorrection(fvCoeffs, fields, faceFluxes, mesh);
-    TOC()
-
-    TIC("Change stencil to central at IB")
+  
     ChangeStencilToCentralAtIB( fvCoeffs, ibData, faceFluxes, mesh );
-    TOC()
 
-    TIC("Add unsteady term")
     AddUnsteadyTerm(fvCoeffs, fieldsPrevTime, fieldsPrevPrevTime, mesh);
-    TOC()
-
-    TIC("Set MWI coefficients")
+ 
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, fields.P);
-    TOC()
 
-    TIC("Add IB source terms")
     AddIBSourceTerms(fvCoeffs, faceFluxes, ibData, fields, mesh);
-    TOC()
 }
 
 

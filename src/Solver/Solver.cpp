@@ -37,11 +37,13 @@ void SetStencil( GridLevelData<MI> &gridLevelData,
 {
     auto &gld = gridLevelData; 
 
+    TIC("Updating Coefficients")
     SetGhostCells( fields, gridLevelData.mesh, gridLevelData.bcData );
     UpdateIBData( gld.ibData, fields );
     UpdateFaceFluxes( gld.faceFluxes, gld.mesh, fields.U, gld.bcData);
     SetIBFaceFluxes( gld.faceFluxes, gld.ibData );
     UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, fields, gld.fieldsPrevTime, gld.fieldsPrevPrevTime, gld.faceFluxes, gld.ibData);
+    TOC()
 }
 
 
