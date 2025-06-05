@@ -30,7 +30,7 @@ int main(int argc, char const *argv[])
     CAMIRA::InputData inputData = CAMIRA::InputDataFromCommandLine(argc, argv);
 
     CAMIRA::AxisTransformationMap axisTransformation = CreateAxisTransformation( inputData.smootherSettings.planeSweepDirection,
-                                                                              inputData.smootherSettings.lineSweepDirection );
+                                                                                 inputData.smootherSettings.lineSweepDirection );
 
     CAMIRA::TransformUserInputData(inputData, axisTransformation);
 
@@ -42,7 +42,9 @@ int main(int argc, char const *argv[])
     // std::cin.ignore();
     // std::cout << std::endl;
 
-    omp_set_num_threads( inputData.parallelSettings.numberOfThreads );
+    #ifdef ENABLE_OPENMP
+        omp_set_num_threads( inputData.parallelSettings.numberOfThreads );
+    #endif
 
     switch ( inputData.schemes.momentumInterpolation ) {
 
