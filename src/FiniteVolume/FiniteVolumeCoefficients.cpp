@@ -1688,7 +1688,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
                                          const InputData &inputData)
 {
     // Default construct the coefficients class
-    FVCoefficients fvCoeffs( mesh.nCells, inputData.schemes.momentumInterpolation );
+    FVCoefficients fvCoeffs( "HOST", mesh.nCells, inputData.schemes.momentumInterpolation );
 
     fvCoeffs.rho = inputData.rho;
     fvCoeffs.nu  = inputData.nu;

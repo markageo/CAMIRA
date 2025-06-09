@@ -202,7 +202,11 @@ std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums( Momentum
     return {};
 }
 
-
+template<typename T>
+EnumVector<TransportCoefficients, T> GetTransportCoefficientsArray( T object )
+{
+    return EnumVector<CFD::TransportCoefficients, T>({ object, object, object, object, object, object, object, object, object, object, object, object, object });
+}
 
 
 }   // end anonymous namespace
@@ -213,62 +217,85 @@ std::vector< TransportCoefficients::ENUMDATA > ContinuityPressureEnums( Momentum
 using C = TransportCoefficients::ENUMDATA;
 using enum Axis::ENUMDATA;
 
-// Default constructor must be defined explicity since class holds references
-FVCoefficients::FVCoefficients() :
+// No default constructor
+
+FVCoefficients::FVCoefficients( std::string resource,
+                                const iArray3 &dims, 
+                                MomentumInterpolation mi) :
+    m_momentumVelocityCoeffs( GetTransportCoefficientsArray( View3D(resource, dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost) ) ),
+
+    m_gradientCoeffs( { GetTransportCoefficientsArray( View1D(resource, dims(X) + 2*nGhost) ),
+                        GetTransportCoefficientsArray( View1D(resource, dims(Y) + 2*nGhost) ),
+                        GetTransportCoefficientsArray( View1D(resource, dims(Z) + 2*nGhost) ) } ),
+    
     Cont( { m_gradientCoeffs,
-            CAMIRA::EnumVector<TransportCoefficients, Tensor3D>(),
-            CAMIRA::Tensor3D(),
-            CAMIRA::Tensor3D() } ),
+            GetTransportCoefficientsArray( View3D(resource, dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost) ),
+            View3D(resource, dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost),
+            View3D(resource, dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost) } ),
 
     Mom( { MomentumEquation({ X,
-                            m_momentumVelocityCoeffs, 
-                            m_gradientCoeffs[X],
-                            CAMIRA::Tensor3D(),
-                            CAMIRA::Tensor3D() }),
+                              m_momentumVelocityCoeffs, 
+                              m_gradientCoeffs[X],
+                              View3D(resource, dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost),
+                              View3D(resource, dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost) }),
                             
-         MomentumEquation({ Y,
-                            m_momentumVelocityCoeffs, 
-                            m_gradientCoeffs[Y],
-                            CAMIRA::Tensor3D(),
-                            CAMIRA::Tensor3D() }), 
+           MomentumEquation({ Y,
+                              m_momentumVelocityCoeffs, 
+                              m_gradientCoeffs[Y],
+                              View3D(resource, dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost),
+                              View3D(resource, dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost) }), 
                             
-         MomentumEquation({ Z,
-                            m_momentumVelocityCoeffs, 
-                            m_gradientCoeffs[Z],
-                            CAMIRA::Tensor3D(),
-                            CAMIRA::Tensor3D() }) 
-        } )
-{};
+           MomentumEquation({ Z,
+                              m_momentumVelocityCoeffs, 
+                              m_gradientCoeffs[Z],
+                              View3D(resource, dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost),
+                              View3D(resource, dims(X) + 2*nGhost, dims(Y) + 2*nGhost, dims(Z) + 2*nGhost) }) 
+        } ),
 
 
+    mwiSparseCoeffs( {{ View1D(resource, dims(X) + 1), View1D(resource, dims(X) + 1), View1D(resource, dims(X) + 1), View1D(resource, dims(X) + 1) },
+                      { View1D(resource, dims(Y) + 1), View1D(resource, dims(Y) + 1), View1D(resource, dims(Y) + 1), View1D(resource, dims(Y) + 1) },
+                      { View1D(resource, dims(Z) + 1), View1D(resource, dims(Z) + 1), View1D(resource, dims(Z) + 1), View1D(resource, dims(Z) + 1) }} ),
 
-FVCoefficients::FVCoefficients( const iArray3 &dims, 
-                                MomentumInterpolation mi) :
-    FVCoefficients()   // Call the default constructor to set references
+    mwiCompactCoeffs( {{ View1D(resource, dims(X) + 1), View1D(resource, dims(X) + 1) },
+                       { View1D(resource, dims(Y) + 1), View1D(resource, dims(Y) + 1) },
+                       { View1D(resource, dims(Z) + 1), View1D(resource, dims(Z) + 1) }} )
 {
     nCells = dims;
     momentumInterpolation = mi;
 
     for ( auto tc : MomentumVelocityEnums() ) {
-        m_momentumVelocityCoeffs[tc] = Tensor3D( nCells(X) + 2*nGhost, nCells(Y) + 2*nGhost, nCells(Z) + 2*nGhost ).setZero();
+        m_momentumVelocityCoeffs[tc].allocate();
+        m_momentumVelocityCoeffs[tc].setZero();
     }
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         for ( auto tc : GradientCoefficientEnums(axis) ) {
-            m_gradientCoeffs[axis][tc] = Tensor1D( nCells(axis) + 2*nGhost ).setZero();;
+            m_gradientCoeffs[axis][tc].allocate();
+            m_gradientCoeffs[axis][tc].setZero();
         }
     } );
 
     // Cont.AU set as reference to m_gradientCoeffs
     for ( auto tc : ContinuityPressureEnums( momentumInterpolation ) ) {
-        Cont.AP[tc] = Tensor3D( nCells(X) + 2*nGhost, nCells(Y) + 2*nGhost, nCells(Z) + 2*nGhost ).setZero();
+        Cont.AP[tc].allocate();
+        Cont.AP[tc].setZero();
     }
-    Cont.B = Tensor3D( nCells(X) + 2*nGhost, nCells(Y) + 2*nGhost, nCells(Z) + 2*nGhost ).setZero();
-    Cont.F = Tensor3D( nCells(X) + 2*nGhost, nCells(Y) + 2*nGhost, nCells(Z) + 2*nGhost ).setZero();
+    Cont.B.allocate();
+    Cont.B.setZero();
+
+    Cont.F.allocate();
+    Cont.F.setZero();
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        mwiSparseCoeffs[axis]  = { Tensor1D(nCells(axis)+1).setZero(), Tensor1D(nCells(axis)+1).setZero(), Tensor1D(nCells(axis)+1).setZero(), Tensor1D(nCells(axis)+1).setZero() };
-        mwiCompactCoeffs[axis] = { Tensor1D(nCells(axis)+1).setZero(), Tensor1D(nCells(axis)+1).setZero() };
+        for ( int i = 0; i != 4; i++ ) {
+            mwiSparseCoeffs[axis][i].allocate();
+            mwiSparseCoeffs[axis][i].setZero();
+        }
+        for ( int i = 0; i != 2; i++ ) {
+            mwiCompactCoeffs[axis][i].allocate();
+            mwiCompactCoeffs[axis][i].setZero();
+        }
     } );
 
 
@@ -276,11 +303,53 @@ FVCoefficients::FVCoefficients( const iArray3 &dims,
         Mom[axis].component = axis;
         // Mom[axis].AU set as reference to m_momentumVelocityCoeffs
         // Mom[axis].AP set as reference to m_gradientCoeffs[axis]
-        Mom[axis].B = Tensor3D( nCells(X) + 2*nGhost, nCells(Y) + 2*nGhost, nCells(Z) + 2*nGhost ).setZero();
-        Mom[axis].F = Tensor3D( nCells(X) + 2*nGhost, nCells(Y) + 2*nGhost, nCells(Z) + 2*nGhost ).setZero();
+        Mom[axis].B.allocate();
+        Mom[axis].B.setZero();
+
+        Mom[axis].F.allocate();
+        Mom[axis].F.setZero();
     } );
 
 };
+
+
+// Destructor
+FVCoefficients::~FVCoefficients()
+{
+    for ( auto tc : MomentumVelocityEnums() ) {
+        m_momentumVelocityCoeffs[tc].deallocate();
+    }
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        for ( auto tc : GradientCoefficientEnums(axis) ) {
+            m_gradientCoeffs[axis][tc].deallocate();
+        }
+    } );
+
+    // Cont.AU set as reference to m_gradientCoeffs
+    for ( auto tc : ContinuityPressureEnums( momentumInterpolation ) ) {
+        Cont.AP[tc].deallocate();
+    }
+    Cont.B.deallocate();
+    Cont.F.deallocate();
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        for ( int i = 0; i != 4; i++ ) {
+            mwiSparseCoeffs[axis][i].deallocate();
+        }
+        for ( int i = 0; i != 2; i++ ) {
+            mwiCompactCoeffs[axis][i].deallocate();
+        }
+    } );
+
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        // Mom[axis].AU set as reference to m_momentumVelocityCoeffs
+        // Mom[axis].AP set as reference to m_gradientCoeffs[axis]
+        Mom[axis].B.deallocate();
+        Mom[axis].F.deallocate();
+    } );
+}
 
 
 
@@ -329,45 +398,6 @@ FVCoefficients::FVCoefficients( const FVCoefficients &that ) :
     rho( that.rho ),
     nCells( that.nCells )
 {};
-
-
-
-// Copy assignment
-FVCoefficients& FVCoefficients::operator=( FVCoefficients that )
-{
-    // References to shared coefficients already refer to the correct object
-    std::swap( this->m_momentumVelocityCoeffs , that.m_momentumVelocityCoeffs );
-    std::swap( this->m_gradientCoeffs         , that.m_gradientCoeffs );
-
-    // Continuity equation
-    std::swap( this->Cont.AP, that.Cont.AP );
-    std::swap( this->Cont.B , that.Cont.B );
-    std::swap( this->Cont.F , that.Cont.F );
-
-    std::swap( this->mwiSparseCoeffs      , that.mwiSparseCoeffs );
-    std::swap( this->mwiCompactCoeffs     , that.mwiCompactCoeffs );
-    std::swap( this->momentumInterpolation, that.momentumInterpolation );
-
-
-    // Momentum equations
-    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        std::swap( this->Mom[axis].component, that.Mom[axis].component );
-        std::swap( this->Mom[axis].B        , that.Mom[axis].B );
-        std::swap( this->Mom[axis].F        , that.Mom[axis].F );
-    } );
-    std::swap( this->positiveFluxHiOrderAdvectionCoeffs, that.positiveFluxHiOrderAdvectionCoeffs );
-    std::swap( this->negativeFluxHiOrderAdvectionCoeffs, that.negativeFluxHiOrderAdvectionCoeffs );
-    std::swap( this->advectionScheme                   , that.advectionScheme );
-    std::swap( this->timeScheme                        , that.timeScheme );
-    std::swap( this->timeStep                          , that.timeStep );
-    std::swap( this->advectionBlendingFactor           , that.advectionBlendingFactor );
-
-    std::swap( this->nu    , that.nu );
-    std::swap( this->rho   , that.rho );
-    std::swap( this->nCells, that.nCells );
-    return *this;
-}
-
 
 
 // Move constructor, copy and swap

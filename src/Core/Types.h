@@ -53,11 +53,11 @@ using fVector2 = Eigen::Matrix<floatType, 2, 1>;
 
 
 template<int DIM, typename T>
-class ArrayND;
+class View;
 
-using Array1D = ArrayND<1, floatType>;
-using Array2D = ArrayND<2, floatType>;
-using Array3D = ArrayND<3, floatType>;
+using View1D = View<1, floatType>;
+using View2D = View<2, floatType>;
+using View3D = View<3, floatType>;
 
 
 
@@ -192,14 +192,14 @@ enum class MultigridCycleType {
 };
 
 
-// ------------------------------------------------------ ArrayND Class --------------------------------------------------- //
+// ------------------------------------------------------ View Class --------------------------------------------------- //
 
 
 namespace CAMIRA_INTERNAL 
 {
 
     // Structs that are specialised to hold permutation array for RAJA::Views. These need to be std::arrays, 
-    // but do not want to make them members of the ArrayND class.
+    // but do not want to make them members of the View class.
     template<int>
     struct ViewPermutation;
 
@@ -218,43 +218,51 @@ namespace CAMIRA_INTERNAL
 }   // end namespace CAMIRA_INTERNAL
 
 
-// Class that wraps a RAJA::View and allocates its own memory to either DEVICE or HOST using umpire. 
+// Class that wraps a RAJA::View that can allocate and deallocate its own memory to either DEVICE or HOST using umpire. 
 template<int DIM, typename T>
-class ArrayND {
+class View {
 
-static_assert( DIM <= 3, "ArrayND dimensions must be 3 or less." );
+static_assert( DIM <= 3, "View dimensions must be 3 or less." );
 
 using ViewType = RAJA::View<T, RAJA::Layout<2, intType, 0>>;
 
 private:
 
     floatType* m_data;
-    int m_allocatorId;  // Only hold the allocator id, not the allocator itself since it is not safe to use in device code
     ViewType m_view;
 
 public:
 
     template<typename... Args>
-    ArrayND( std::string resource,
-             Args... dim_sizes) :
+    View( Args... dim_sizes ) :
         m_data( nullptr ),
-        m_allocatorId( -1 ),
         m_view( m_data, RAJA::make_permuted_layout( {{dim_sizes...}}, 
                                                     CAMIRA_INTERNAL::ViewPermutation<DIM>::perm ) )    // Need to set dimensions of view at construction
     {
-        static_assert( sizeof...(Args) == DIM, "Incorrect number of indices in ArrayND." );
+        static_assert( sizeof...(Args) == DIM, "Incorrect number of indices in View." );
+    }
+
+
+    View()                          = default;
+    View( View const & )            = default;
+    View( View && )                 = default;
+    View &operator=( View const & ) = default;
+    View &operator=( View && )      = default;
+    ~View()                         = default;
+
+
+    void allocate( const std::string &resource ) {
 
         if ( resource != "HOST" && resource != "DEVICE" ) {
-            throw std::runtime_error( "Resource for ArrayND must either be \"HOST\" or \"DEVICE\"." );
+            throw std::runtime_error( "Resource for View must either be \"HOST\" or \"DEVICE\"." );
         }
 
         // Umpire allocator
         auto &rm = umpire::ResourceManager::getInstance();
         auto allocator = rm.getAllocator( resource ); 
-        m_allocatorId = allocator.getId();
 
         // Allocate memory
-        intType size = (dim_sizes * ...);
+        intType size = m_view.size();
         m_data = static_cast<T*>( allocator.allocate( size * sizeof(T) ) );
 
         // Reset view pointer
@@ -262,19 +270,10 @@ public:
     }
 
 
-    ArrayND()                             = default;
-    ArrayND( ArrayND const & )            = default;
-    ArrayND( ArrayND && )                 = default;
-    ArrayND &operator=( ArrayND const & ) = default;
-    ArrayND &operator=( ArrayND && )      = default;
-    ~ArrayND()                            = default;
-
-
-    void CleanUp() {
+    void deallocate() {
         if ( m_data ) {
             auto &rm = umpire::ResourceManager::getInstance();
-            auto allocator = rm.getAllocator( m_allocatorId );
-            allocator.deallocate(m_data);
+            rm.deallocate(m_data);
             m_data = nullptr;
         }     
         m_view.set_data(m_data);
@@ -283,11 +282,11 @@ public:
 
     // Access the underlying view
     RAJA_HOST_DEVICE
-    ViewType& view()
+    View& view()
     { return m_view; }
 
     RAJA_HOST_DEVICE
-    ViewType& view() const
+    View& view() const
     { return m_view; }
 
 
@@ -315,34 +314,34 @@ public:
     template<typename... Args>
     RAJA_HOST_DEVICE
     T& operator()(Args... indices) {
-        static_assert(sizeof...(Args) == DIM, "Incorrect number of indices in ArrayND.");
+        static_assert(sizeof...(Args) == DIM, "Incorrect number of indices in View.");
         return m_view(indices...);
     }
 
     template<typename... Args>
     RAJA_HOST_DEVICE
     T& operator()(Args... indices) const {
-        static_assert(sizeof...(Args) == DIM, "Incorrect number of indices in ArrayND.");
+        static_assert(sizeof...(Args) == DIM, "Incorrect number of indices in View.");
         return m_view(indices...);
     }
 
     // Copy underlying data from given array to this one
-    void CopyDataFrom( const ArrayND<DIM, T> &sourceArray ) const 
+    void copyDataFrom( const View<DIM, T> &sourceView ) const 
     { 
         auto &rm = umpire::ResourceManager::getInstance();
-        rm.copy( m_data, sourceArray.data() );  
+        rm.copy( m_data, sourceView.data() );  
     }
 
 
     // Set all elements to constant value - host only
-    void SetConstant( T value ) const {
+    void setConstant( T value ) const {
         auto &rm = umpire::ResourceManager::getInstance();
         rm.memset( m_data, value );
     }
 
 
     // Set all elements to zero - host only
-    void SetZero() const {
+    void setZero() const {
         static_assert( std::is_arithmetic<T>::value, "SetZero member function only supported for arithmetic types." );
         auto &rm = umpire::ResourceManager::getInstance();
         rm.memset( m_data, static_cast<T>(0) );
