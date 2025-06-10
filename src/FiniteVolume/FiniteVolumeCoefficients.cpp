@@ -4,6 +4,7 @@
 #include "../Core/FVLookups.h"
 #include "FaceInterpolatedVelocity.h"
 #include "../Parallel/Parallel.h"
+#include "../TurbulenceModels/TurbulenceModels.h"
 
 #include <algorithm>
 #include <iostream>
@@ -11,9 +12,6 @@
 #include <cmath>
 #include <functional>
 
-#include <string>
-#include "FiniteVolumeFunctions.h"
-#include "FiniteVolumeStructures.h"
 
 namespace CAMIRA
 {
@@ -1210,6 +1208,54 @@ void AddUnsteadyTerm( FVCoefficients &fvCoeffs,
 
 
 
+
+/*---------------------------------------------------------------------------------------------------------------*\
+                                                 Turbulence Models
+\*---------------------------------------------------------------------------------------------------------------*/
+
+
+void SetTurbulenceModelData( FVCoefficients &fvCoeffs,
+                             const Mesh &mesh )
+{
+    using enum Axis::ENUMDATA;
+
+    floatType nuTurbInitial = 0.0f;
+    if ( fvCoeffs.timeScheme != TimeSchemes::Steady || fvCoeffs.turbulenceModel == TurbulenceModels::Laminar )
+        nuTurbInitial = 0.0f;
+
+    // Allocate and initialise turbulence viscosity
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        fvCoeffs.nuTurb[axis] = Tensor3D( mesh.nFacesNormal[axis][X], mesh.nFacesNormal[axis][Y], mesh.nFacesNormal[axis][Z] ).setConstant(nuTurbInitial);
+    } );
+
+    switch ( fvCoeffs.turbulenceModel ) {
+        case TurbulenceModels::Laminar:
+            fvCoeffs.turbModel = std::make_unique< TurbulenceModel<TurbulenceModels::Laminar> >(); 
+            break;
+        case TurbulenceModels::ChenAndXuZeroEquation:
+            fvCoeffs.turbModel = std::make_unique< TurbulenceModel<TurbulenceModels::ChenAndXuZeroEquation> >(); 
+            break;
+        case TurbulenceModels::PrandtlZeroEquation:
+            fvCoeffs.turbModel = std::make_unique< TurbulenceModel<TurbulenceModels::PrandtlZeroEquation> >();
+            break;
+        case TurbulenceModels::Null:
+            /* NULL */
+            break;
+    }
+    // fvCoeffs.turbModel->SetTurbulenceModelData( mesh, geometry, bcData );    // TODO
+}
+
+
+
+void SetTurbulenceViscosityField( FVCoefficients &fvCoeffs,
+                                  const FieldData<Tensor3D> &fields,
+                                  const Mesh &mesh )
+{
+    fvCoeffs.turbModel->SetTurbulenceViscosityField(fvCoeffs.nuTurb, fields, mesh);
+}
+
+
+
 /*---------------------------------------------------------------------------------------------------------------*\
                                             Immersed Boundary Functions
 \*---------------------------------------------------------------------------------------------------------------*/
@@ -1707,6 +1753,8 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
 
     SetGhostCellsToConstant(fvCoeffs.Mom[Axis::X].AU[TransportCoefficients::p], 1.0f); // To avoid divide by zero in solver
 
+    SetTurbulenceModelData(fvCoeffs, mesh);
+
     return fvCoeffs;
 }
 
@@ -1722,6 +1770,8 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
                            const IBData &ibData )
 {
     ZeroNonlinearCoeffs(fvCoeffs);
+
+    SetTurbulenceViscosityField(fvCoeffs, fields, mesh);
 
     SetAdvectionDiffusionCoefficients(fvCoeffs, faceFluxes, mesh);
 

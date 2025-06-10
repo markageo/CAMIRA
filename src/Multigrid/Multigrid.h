@@ -3,7 +3,7 @@
 
 #include "../Core/Types.h"
 #include "../FiniteVolume/Mesh.h"
-#include "../FiniteVolume/FiniteVolumeStructures.h"
+#include "../FiniteVolume/FiniteVolume.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 #include "../IO/InputProcessing.h"
 #include "../Solver/LinearSolver.h"

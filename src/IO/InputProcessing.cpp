@@ -194,6 +194,31 @@ namespace
         } else {
             throw std::runtime_error(  "'" + valueString + "' is not a transient option. Must be either 'yes' or 'no'." );
         }  
+
+
+        // Expect a turbulence model if transient is false
+        if ( inputData.transient == false ) {
+
+            valueString = modelTree.get<std::string>("turbulenceModel");
+            if ( valueString == "laminar" ) {
+
+                inputData.turbulenceModel = TurbulenceModels::Laminar;
+
+            } else if ( valueString == "PrandtlZeroEquation" ) {
+
+                inputData.turbulenceModel = TurbulenceModels::PrandtlZeroEquation;
+
+            } else if ( valueString == "ChenAndXuZeroEquation" ) {
+                
+                inputData.turbulenceModel = TurbulenceModels::ChenAndXuZeroEquation;
+
+            } else {
+                throw std::runtime_error( "'" + valueString + "' is not a valid turbulence model." );
+            }
+
+        } else {
+            inputData.turbulenceModel = TurbulenceModels::Null;    // Turbulence model not defined when transient
+        }
     }
 
 

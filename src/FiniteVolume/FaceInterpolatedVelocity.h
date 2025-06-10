@@ -3,7 +3,6 @@
 
 #include "FiniteVolume.h"
 #include "../Core/FVTools.h"
-#include "FiniteVolumeStructures.h"
 #include <sys/cdefs.h>
 
 namespace CAMIRA {

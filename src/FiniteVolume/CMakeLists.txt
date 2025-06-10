@@ -2,11 +2,14 @@ target_sources( libs
     PRIVATE 
         FaceVelocities.cpp 
         FiniteVolumeCoefficients.cpp 
-        FiniteVolumeStructures.cpp 
+        InitialConditions.cpp
+        BoundaryConditions.cpp 
+        FVCoefficients.cpp
         VertexValues.cpp
         Mesh.cpp 
     PRIVATE 
-        FiniteVolumeStructures.h
+        FVCoefficients.h
+        BoundaryConditionData.h
         FiniteVolumeFunctions.h
         FiniteVolume.h
         Mesh.h

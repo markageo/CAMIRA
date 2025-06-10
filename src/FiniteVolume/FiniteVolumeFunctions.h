@@ -2,7 +2,7 @@
 #define CAMIRA_FINITE_VOLUME_FUNCTIONS
 
 #include "Mesh.h"
-#include "FiniteVolumeStructures.h"
+#include "FVCoefficients.h"
 #include "../Core/Types.h"
 #include "../IO/InputProcessing.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
@@ -11,10 +11,14 @@
 namespace CAMIRA
 {
 
-// -------------------------------------- Definition in FiniteVolumeStructures.cpp -------------------------------------- //
+// -------------------------------------- Definition in InitialConditions.cpp -------------------------------------- //
 
 // Allocate and initialise the fields
 FieldData<Tensor3D> InitialiseFields(const Mesh &, const InputData &, const AxisTransformationMap & );
+
+
+
+// -------------------------------------- Definition in BoundaryConditions.cpp -------------------------------------- //
 
 // Calculate and set boundary condition data for all fields
 BoundaryConditionData SetBoundaryConditionData( const InputData &, const Mesh & );

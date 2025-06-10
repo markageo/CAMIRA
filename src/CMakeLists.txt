@@ -12,6 +12,7 @@ add_subdirectory(Solver)
 add_subdirectory(Core)
 add_subdirectory(CoordinateTransformations)
 add_subdirectory(Parallel)
+add_subdirectory(TurbulenceModels)
 
 # Link libraries
 target_link_libraries(libs PUBLIC eigen)
