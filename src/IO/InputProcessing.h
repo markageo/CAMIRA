@@ -26,6 +26,7 @@ struct InputData
     // Model
     floatType rho, nu;
     bool transient;
+    TurbulenceModels turbulenceModel;
 
     // Domain bounds
     fArray3 domainLowerBounds,

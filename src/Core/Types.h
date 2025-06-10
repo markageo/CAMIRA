@@ -173,6 +173,10 @@ enum class TimeSchemes {
     Steady, BackwardsEuler, BackwardsThreeLevel
 };
 
+enum class TurbulenceModels {
+    Null, Laminar, PrandtlZeroEquation, ChenAndXuZeroEquation
+};
+
 enum class MultigridCycleType {
     V, F, W
 };

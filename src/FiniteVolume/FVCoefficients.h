@@ -1,7 +1,9 @@
-#ifndef CAMIRA_FINITE_VOLUME_STRUCTURES   
-#define CAMIRA_FINITE_VOLUME_STRUCTURES
+#ifndef CAMIRA_FVCOEFFICIENTS  
+#define CAMIRA_FVCOEFFICIENTS
 
 #include "../Core/Types.h"
+#include "../TurbulenceModels/TurbulenceModels.h"
+#include <memory>
 
 namespace CAMIRA
 {
@@ -72,6 +74,12 @@ public:
     floatType advectionBlendingFactor;
 
 
+    // Turbulence model data
+    TurbulenceModels turbulenceModel;
+    EnumVector<Axis, Tensor3D> nuTurb;                                          // Turbulence viscosity, stored at cell faces
+    std::unique_ptr<TurbulenceModelInterface> turbModel;
+    
+
     // General data
     floatType nu, rho;
     iArray3 nCells;
@@ -79,19 +87,6 @@ public:
 
 
 
-// Structure to store all domain boundary condition information
-struct BoundaryConditionData {
-    struct Patch {
-        BoundaryConditions::ENUMDATA type;
-        Tensor2D value;
-    };
-    using Patches = EnumVector< BoundaryPatches, Patch >;
-    FieldData< Patches > fields; 
-    bool pressureFieldIsFloating;
-};
-
-
-
 } // end namespace CAMIRA
 
-#endif // CAMIRA_FINITE_VOLUME_STRUCTURES
+#endif // CAMIRA_FVCOEFFICIENTS
