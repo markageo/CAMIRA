@@ -1,8 +1,9 @@
 // Lid driven cavity
 
 Model {
-    nu   = 0.05
-    transient = no
+    nu              = 0.05
+    transient       = no
+    turbulenceModel = ChenAndXuZeroEquation
 }
 
 Mesh {
@@ -144,7 +145,7 @@ Solver {
 }
 
 Parallel {
-    numberOfThreads = 4
+    numberOfThreads = 1
 }
 
 Output {

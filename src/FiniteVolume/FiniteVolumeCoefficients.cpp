@@ -57,12 +57,14 @@ void OffDiagonalInternalAdvectionDiffusionCoefficients( FVCoefficients &fvCoeffs
                     const intType fidx = hiIndex[axis];
                     const floatType faceFlux = faceFluxes[ axis ](i, j, k);
 
-                    AU[east](G(loIndex)) = ( - fvCoeffs.nu * mesh.cellCenterDiffInv[axis](fidx)      // Diffusion
+                    floatType nuEff = fvCoeffs.nu + fvCoeffs.nuTurb[axis](fidx);
+
+                    AU[east](G(loIndex)) = ( - nuEff * mesh.cellCenterDiffInv[axis](fidx)            // Diffusion
                                              + std::min( faceFlux, static_cast<floatType>(0.0f) )    // Advection (upwind)
                                            ) * mesh.cellLengthsInv[axis](loIndex[axis]);
 
 
-                    AU[west](G(hiIndex)) = ( - fvCoeffs.nu * mesh.cellCenterDiffInv[axis](fidx)      // Diffusion
+                    AU[west](G(hiIndex)) = ( - nuEff * mesh.cellCenterDiffInv[axis](fidx)            // Diffusion
                                              - std::max( faceFlux, static_cast<floatType>(0.0f) )    // Advection (upwind)
                                            ) * mesh.cellLengthsInv[axis](hiIndex[axis]);              
                    
@@ -113,12 +115,14 @@ void OffDiagonalBoundaryAdvectionDiffusionCoefficients( FVCoefficients &fvCoeffs
                 hiCellIndex[normal] -= 1;
 
                 // Lo side boundary
-                AU[west](G(loCellIndex))  = ( - fvCoeffs.nu * mesh.cellCenterDiffInv[normal](loFaceIndex[normal])                             // Diffusion
+                floatType nuEffLo = fvCoeffs.nu + fvCoeffs.nuTurb[normal](loFaceIndex);
+                AU[west](G(loCellIndex))  = ( - nuEffLo * mesh.cellCenterDiffInv[normal](loFaceIndex[normal])                                 // Diffusion
                                               - faceFluxes[normal](loFaceIndex) * ( 1.0f - mesh.interpFactors[normal](loFaceIndex[normal]) )  // Advection (central)
                                             ) * mesh.cellLengthsInv[normal](loCellIndex[normal]);
 
                 // Hi side boundary
-                AU[east](G(hiCellIndex))  = ( - fvCoeffs.nu * mesh.cellCenterDiffInv[normal](hiFaceIndex[normal])                             // Diffusion
+                floatType nuEffHi = fvCoeffs.nu + fvCoeffs.nuTurb[normal](hiFaceIndex);
+                AU[east](G(hiCellIndex))  = ( - nuEffHi * mesh.cellCenterDiffInv[normal](hiFaceIndex[normal])                                 // Diffusion
                                               + faceFluxes[normal](hiFaceIndex) * mesh.interpFactors[normal](hiFaceIndex[normal])             // Advection (central)
                                             ) * mesh.cellLengthsInv[normal](hiCellIndex[normal]);
 
@@ -1214,44 +1218,26 @@ void AddUnsteadyTerm( FVCoefficients &fvCoeffs,
 \*---------------------------------------------------------------------------------------------------------------*/
 
 
-void SetTurbulenceModelData( FVCoefficients &fvCoeffs,
-                             const Mesh &mesh )
+void InitialiseTurbulenceViscosity( FVCoefficients &fvCoeffs,
+                                    const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;
 
-    floatType nuTurbInitial = 0.0f;
-    if ( fvCoeffs.timeScheme != TimeSchemes::Steady || fvCoeffs.turbulenceModel == TurbulenceModels::Laminar )
-        nuTurbInitial = 0.0f;
-
     // Allocate and initialise turbulence viscosity
+    floatType nuTurbInitial = 0.0f;
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
         fvCoeffs.nuTurb[axis] = Tensor3D( mesh.nFacesNormal[axis][X], mesh.nFacesNormal[axis][Y], mesh.nFacesNormal[axis][Z] ).setConstant(nuTurbInitial);
     } );
-
-    switch ( fvCoeffs.turbulenceModel ) {
-        case TurbulenceModels::Laminar:
-            fvCoeffs.turbModel = std::make_unique< TurbulenceModel<TurbulenceModels::Laminar> >(); 
-            break;
-        case TurbulenceModels::ChenAndXuZeroEquation:
-            fvCoeffs.turbModel = std::make_unique< TurbulenceModel<TurbulenceModels::ChenAndXuZeroEquation> >(); 
-            break;
-        case TurbulenceModels::PrandtlZeroEquation:
-            fvCoeffs.turbModel = std::make_unique< TurbulenceModel<TurbulenceModels::PrandtlZeroEquation> >();
-            break;
-        case TurbulenceModels::Null:
-            /* NULL */
-            break;
-    }
-    // fvCoeffs.turbModel->SetTurbulenceModelData( mesh, geometry, bcData );    // TODO
 }
 
 
 
 void SetTurbulenceViscosityField( FVCoefficients &fvCoeffs,
+                                  const TurbulenceModelData &turbModelData,
                                   const FieldData<Tensor3D> &fields,
                                   const Mesh &mesh )
 {
-    fvCoeffs.turbModel->SetTurbulenceViscosityField(fvCoeffs.nuTurb, fields, mesh);
+    turbModelData.turbModel->SetTurbulenceViscosityField(fvCoeffs.nuTurb, fields, mesh);
 }
 
 
@@ -1745,6 +1731,8 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     fvCoeffs.timeStep                = inputData.schemes.timeStep;
     fvCoeffs.advectionBlendingFactor = inputData.schemes.advectionBlendingFactor;
 
+    InitialiseTurbulenceViscosity(fvCoeffs, mesh);
+
     SetCellGradientCoefficients(fvCoeffs, mesh);
     SetHighOrderAdvectionCoefficients(fvCoeffs, mesh);
 
@@ -1752,8 +1740,6 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     SetMomentumInterpolationCompactConstants(fvCoeffs, mesh);
 
     SetGhostCellsToConstant(fvCoeffs.Mom[Axis::X].AU[TransportCoefficients::p], 1.0f); // To avoid divide by zero in solver
-
-    SetTurbulenceModelData(fvCoeffs, mesh);
 
     return fvCoeffs;
 }
@@ -1767,11 +1753,12 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
                            const FieldData<Tensor3D> &fieldsPrevTime,
                            const FieldData<Tensor3D> &fieldsPrevPrevTime,
                            const EnumVector<Axis, Tensor3D> &faceFluxes,
-                           const IBData &ibData )
+                           const IBData &ibData,
+                           const TurbulenceModelData &turbModelData )
 {
     ZeroNonlinearCoeffs(fvCoeffs);
 
-    SetTurbulenceViscosityField(fvCoeffs, fields, mesh);
+    SetTurbulenceViscosityField(fvCoeffs, turbModelData, fields, mesh);
 
     SetAdvectionDiffusionCoefficients(fvCoeffs, faceFluxes, mesh);
 

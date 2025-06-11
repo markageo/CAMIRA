@@ -74,10 +74,8 @@ public:
     floatType advectionBlendingFactor;
 
 
-    // Turbulence model data
-    TurbulenceModels turbulenceModel;
-    EnumVector<Axis, Tensor3D> nuTurb;                                          // Turbulence viscosity, stored at cell faces
-    std::unique_ptr<TurbulenceModelInterface> turbModel;
+    // Turbulence Viscosity
+    EnumVector<Axis, Tensor3D> nuTurb;                                          // stored at cell faces
     
 
     // General data

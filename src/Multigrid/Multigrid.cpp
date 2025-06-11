@@ -7,13 +7,6 @@
 namespace CAMIRA
 {
 
-namespace
-{
-
-
-
-} // end anonymous namespace
-
 template< MomentumInterpolation MI >
 void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels, 
                   const InputData &inputData,
@@ -52,11 +45,12 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels,
         // Boundary condition data
         mgl.bcData = SetBoundaryConditionData(inputData, mgl.mesh);
 
-
         // Immersed boundary data
         mgl.ibData = CreateImmersedBoundaryData(inputData, axisTransofrmation, mgl.mesh);
 
-
+        // Turbulence model data
+        mgl.turbModelData = CreateTurbulenceModelData(inputData, mgl.mesh, mgl.bcData);
+    
         // Allocate and initialise fields
         mgl.fields = InitialiseFields(mgl.mesh, inputData, axisTransofrmation);
         if ( level == 0 ) {
@@ -90,7 +84,7 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels,
         mgl.faceFluxes = InitialiseFaceFluxes(mgl.mesh, mgl.fields.U, mgl.bcData);
 
         // Set the coefficients that depend on linearisation
-        UpdateFVCoefficients( mgl.fvCoeffs, mgl.mesh, mgl.fields, mgl.fieldsPrevTime, mgl.fieldsPrevPrevTime, mgl.faceFluxes, mgl.ibData );
+        UpdateFVCoefficients( mgl.fvCoeffs, mgl.mesh, mgl.fields, mgl.fieldsPrevTime, mgl.fieldsPrevPrevTime, mgl.faceFluxes, mgl.ibData, mgl.turbModelData );
 
 
         // Allocate and initialise residualsRestricted
