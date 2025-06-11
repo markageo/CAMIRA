@@ -6,6 +6,7 @@
 #include "../Core/Types.h"
 #include "../IO/InputProcessing.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
+#include "../TurbulenceModels/TurbulenceModelData.h"
 #include "../CoordinateTransformations/AxisTransformationFunctions.h"
 
 namespace CAMIRA
@@ -84,13 +85,8 @@ void UpdateFVCoefficients( FVCoefficients &,
                            const FieldData< Tensor3D > &, 
                            const FieldData< Tensor3D > &, 
                            const EnumVector< Axis, Tensor3D > &,
-                           const IBData & );
-
-
-
-void ApplyImplicitRelaxation( FVCoefficients &, 
-                              const FieldData<Tensor3D> &,
-                              const Mesh & );
+                           const IBData &,
+                           const TurbulenceModelData & );
 
 
 // ---------------------------------------- Definition in VertexValues.cpp -------------------------------------- //

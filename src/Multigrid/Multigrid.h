@@ -5,6 +5,7 @@
 #include "../FiniteVolume/Mesh.h"
 #include "../FiniteVolume/FiniteVolume.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
+#include "../TurbulenceModels/TurbulenceModelData.h"
 #include "../IO/InputProcessing.h"
 #include "../Solver/LinearSolver.h"
 #include "../CoordinateTransformations/AxisTransformationFunctions.h"
@@ -39,6 +40,7 @@ struct GridLevelData
     BoundaryConditionData bcData;
     EnumVector<Axis, Tensor3D> faceFluxes;
     IBData ibData;
+    TurbulenceModelData turbModelData;
     FVCoefficients fvCoeffs;
     std::unique_ptr< LinearSolverInterface<MI> > linearSolver;
 };
