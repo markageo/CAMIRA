@@ -28,7 +28,7 @@ TurbulenceModelData CreateTurbulenceModelData( const InputData &inputData,
             turbModelData.turbModel = std::make_unique< TurbulenceModel<TurbulenceModels::PrandtlZeroEquation> >();
             break;
         case TurbulenceModels::Null:
-            /* NULL */
+            turbModelData.turbModel = std::make_unique< TurbulenceModel<TurbulenceModels::Laminar> >();     // Laminar just sets tubulence viscosity to zero
             break;
     }
     turbModelData.turbModel->SetTurbulenceModelData( mesh, geometry, bcData );
