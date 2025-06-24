@@ -137,8 +137,7 @@ inline EnumVector<Axis, Tensor3D> NearestWallDistance( const Mesh &mesh,
     EnumVector<BoundaryPatches, bool> domainBoundaryWalls;
     
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
-        if ( detail::IsWallBC(bcData, bp)  ) 
-        { 
+        if ( detail::IsWallBC(bcData, bp)  ) { 
             domainBoundaryWalls[bp] = true;
         } else {
             domainBoundaryWalls[bp] = false;
