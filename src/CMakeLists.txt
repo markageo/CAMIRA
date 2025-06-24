@@ -15,7 +15,7 @@ add_subdirectory(Parallel)
 
 # Link libraries
 target_link_libraries(libs PUBLIC eigen)
-target_link_libraries(libs PUBLIC CGAL::CGAL CGAL::CGAL_Basic_viewer)
+target_link_libraries(libs PUBLIC CGAL::CGAL)
 target_link_libraries(libs PUBLIC OpenMP::OpenMP_CXX)
 
 if ( CAMIRA_HAS_VTK_LIB )
