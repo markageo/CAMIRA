@@ -1,19 +1,19 @@
 // Block flow
 
 Model {
-    nu   = 0.02
+    nu   = 0.002
     transient = no
+    turbulenceModel = ChenAndXuZeroEquation
 }
 
 Mesh {
 
-    domainLowerBounds = (0, 0, 0)
-    domainUpperBounds = (12, 4, 4)
+    domain = (20, 4, 4)
 
     Grid x {
         Segment {
-            bounds     = (0, 12)
-            nCells     = 240
+            bounds     = (0, 20)
+            nCells     = 400
             biasFactor = 1
         }
     }
@@ -113,14 +113,14 @@ Solver {
     Schemes {
 
         linearisation           = Picard
-        momentumInterpolation   = semiExplicit
-        advectionScheme         = QUICK
+        momentumInterpolation   = implicit
+        advectionScheme         = upwind
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
         maxOuterIterations = 1000
-        maxContinuityOuterResidual = 1e-12
-        maxMomentumOuterResiduals  = (1e-12, 1e-12, 1e-12)
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 
     }
     
@@ -133,28 +133,28 @@ Solver {
         planeSweepDirection = +z
         lineSweepDirection = +y
 
-        momentumRelaxation = (1, 1, 1)
+        momentumRelaxation = (0.9, 0.9, 0.9)
         pressureRelaxation = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 3
 
         preSmoothingIterations = 3
         postSmoothingIterations = 3
-        fineGridIterations   = 2
+        fineGridIterations   = 3
 
-        maxCoarseGridIterations = 500
-        maxCoarseGridResiduals  = 1e-6
+        maxCoarseGridIterations = 100
+        maxCoarseGridResiduals  = 1e-12
         
     }
 
 }
 
 Parallel {
-    numberOfThreads = 2
+    numberOfThreads = 8
 }
 
 Output {
@@ -163,6 +163,6 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
-    fieldWriteInterval      = 1
+    fieldWriteInterval      = 0
 
 }

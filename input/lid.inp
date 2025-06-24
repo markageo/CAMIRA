@@ -1,7 +1,7 @@
 // Lid driven cavity
 
 Model {
-    nu              = 0.05
+    nu              = 0.0001
     transient       = no
     turbulenceModel = ChenAndXuZeroEquation
 }
@@ -14,7 +14,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 128
+            nCells     = 64
             biasFactor = 1
         }
     }
@@ -22,7 +22,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 128
+            nCells     = 64
             biasFactor = 1
         }
     }
@@ -30,7 +30,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 128
+            nCells     = 64
             biasFactor = 1
         }
     }
@@ -104,12 +104,12 @@ Solver {
     Schemes {
 
         linearisation           = Picard
-        momentumInterpolation   = semiExplicit
+        momentumInterpolation   = implicit
         advectionScheme         = upwind
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
         
-        maxOuterIterations = 10
+        maxOuterIterations = 10000
         maxContinuityOuterResidual = 1e-8
         maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
 
@@ -124,7 +124,7 @@ Solver {
         planeSweepDirection = +z
         lineSweepDirection = +y
 
-        momentumRelaxation = (1, 1, 1)
+        momentumRelaxation = (0.65, 0.65, 0.65)
         pressureRelaxation = 1
 
     }
@@ -133,19 +133,19 @@ Solver {
         cycle = F
         maxCoarseLevels = 3
 
-        preSmoothingIterations = 3
-        postSmoothingIterations = 3
+        preSmoothingIterations = 2
+        postSmoothingIterations = 2
         fineGridIterations   = 3
 
-        maxCoarseGridIterations = 250
-        maxCoarseGridResiduals  = 0
+        maxCoarseGridIterations = 100
+        maxCoarseGridResiduals  = 1e-10
 
     }
 
 }
 
 Parallel {
-    numberOfThreads = 1
+    numberOfThreads = 4
 }
 
 Output {
