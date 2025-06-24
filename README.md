@@ -11,13 +11,16 @@ CAMIRA uses a fully coupled matrix free smoother with Full Approximation Scheme 
 
 ### Prerequisites
 
+CAMIRA makes use of the [Eigen C++ linear algebra library](https://eigen.tuxfamily.org/index.php?title=Main_Page) and the [Computational Geometry Algorithms Library (CGAL)](https://www.cgal.org/). These are included within the source code and do not need to be installed by the user. 
+
 The CAMIRA code uses a number of external dependencies to work. These need to be installed on the system in order to successfully build and run the code. 
 
 * [VTK](https://vtk.org/) (Optional) - This is required to read in initial conditions for VTK files. It is not necessary to build and use the code, but required if you wish to read an initial condition field from file.
+* [GMP](https://gmplib.org/), [MPFR](https://www.mpfr.org/), and [Boost](https://www.boost.org/) -  All required for [CGAL](https://www.cgal.org/).
 * [CMake](https://cmake.org/) - To build the project.
-* A C++ compiler which support C++20. Clang and GCC have be tested to work.
+* A C++ compiler which supports C++20. Clang and GCC have be tested to work.
 
-CAMIRA also makes use of the [Eigen C++ linear algebra library](https://eigen.tuxfamily.org/index.php?title=Main_Page) and the [Computational Geometry Algorithms Library (CGAL)](https://www.cgal.org/). These are included within the source code and do not need to be installed by the user. 
+
 
 ### Building
 
