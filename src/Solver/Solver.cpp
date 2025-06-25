@@ -167,7 +167,8 @@ void RestrictLevel( std::vector< GridLevelData<MI> > &mgLevels,
                     const size_t coarseLevel )
 {
     RestrictFields( mgLevels[coarseLevel].residualsRestricted, mgLevels[fineLevel].residuals, mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
-    RestrictFields( mgLevels[coarseLevel].fieldsRestricted   , mgLevels[fineLevel].fields   , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
+    // RestrictFields( mgLevels[coarseLevel].fieldsRestricted   , mgLevels[fineLevel].fields   , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
+    mgLevels[coarseLevel].fieldsRestricted = mgLevels[coarseLevel].fields;
     if ( mgLevels[coarseLevel].fieldsPrevTime.P.size() != 0 ) {
         RestrictFields( mgLevels[coarseLevel].fieldsPrevTime, mgLevels[fineLevel].fieldsPrevTime     , mgLevels[fineLevel].mesh, mgLevels[coarseLevel].mesh, mgLevels[coarseLevel].ibData.mask );
     }
@@ -224,7 +225,7 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
 
         // Correct fine grid approximation
         ForAllFieldData( [&] (intType f) {
-            mgLevels[level].fields[f] += mgLevels[level].fineGridCorrection[f];
+            mgLevels[level].fields[f] +=  mgLevels[level].fineGridCorrection[f];
         } );
     }
 
