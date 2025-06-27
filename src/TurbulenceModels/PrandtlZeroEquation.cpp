@@ -31,6 +31,7 @@ void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceModelD
 
 void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceViscosityField( EnumVector<Axis, Tensor3D> &nuTurbulent,
                                                                                           const FieldData<Tensor3D> &fields,
+                                                                         [[maybe_unused]] const IBData &ibData,
                                                                                           const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;

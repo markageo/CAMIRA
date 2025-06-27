@@ -1235,9 +1235,10 @@ void InitialiseTurbulenceViscosity( FVCoefficients &fvCoeffs,
 void SetTurbulenceViscosityField( FVCoefficients &fvCoeffs,
                                   const TurbulenceModelData &turbModelData,
                                   const FieldData<Tensor3D> &fields,
+                                  const IBData &ibData,
                                   const Mesh &mesh )
 {
-    turbModelData.turbModel->SetTurbulenceViscosityField(fvCoeffs.nuTurb, fields, mesh);
+    turbModelData.turbModel->SetTurbulenceViscosityField(fvCoeffs.nuTurb, fields, ibData, mesh);
 }
 
 
@@ -2005,7 +2006,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
 {
     ZeroNonlinearCoeffs(fvCoeffs);
 
-    SetTurbulenceViscosityField(fvCoeffs, turbModelData, fields, mesh);
+    SetTurbulenceViscosityField(fvCoeffs, turbModelData, fields, ibData, mesh);
 
     SetAdvectionDiffusionCoefficients(fvCoeffs, faceFluxes, mesh);
 

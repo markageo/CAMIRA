@@ -11,6 +11,7 @@ void TurbulenceModel<TurbulenceModels::Laminar>::SetTurbulenceModelData( [[ mayb
 
 void TurbulenceModel<TurbulenceModels::Laminar>::SetTurbulenceViscosityField( EnumVector<Axis, Tensor3D> &nuTurbulent,
                                                                               [[ maybe_unused ]] const FieldData<Tensor3D> &fields,
+                                                                              [[ maybe_unused ]] const IBData &ibData,
                                                                               [[ maybe_unused ]] const Mesh &mesh )
 {
     EnumFor<Axis>( [&] (Axis::ENUMDATA faceNormal) {

@@ -1,7 +1,7 @@
 // Block flow
 
 Model {
-    nu   = 0.002
+    nu   = 0.0000002
     transient = no
     turbulenceModel = ChenAndXuZeroEquation
 }
@@ -13,7 +13,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 20)
-            nCells     = 400
+            nCells     = 120
             biasFactor = 1
         }
     }
@@ -21,7 +21,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 4)
-            nCells     = 80
+            nCells     = 30
             biasFactor = 1
         }
     }
@@ -29,7 +29,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 4)
-            nCells     = 80
+            nCells     = 30
             biasFactor = 1
         }
     }
@@ -101,7 +101,7 @@ BoundaryConditions
 SolidGeometry {
     boundaryTreatement = directionalImmersedBoundary
     Block {
-        centerPosition = (2.5, 2, 2)
+        centerPosition = (4, 2, 2)
         dimensions     = (1, 1, 1)
         rotation       = (0, 0, 0)
     }
@@ -118,7 +118,7 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 1000
+        maxOuterIterations = 100
         maxContinuityOuterResidual = 1e-6
         maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 
@@ -128,19 +128,19 @@ Solver {
 
         type = domainSymmetricParallel
         maxIterations = 3
-        maxResiduals = 1e-3
+        maxResiduals = 1e-5
 
         planeSweepDirection = +z
         lineSweepDirection = +y
 
-        momentumRelaxation = (0.9, 0.9, 0.9)
+        momentumRelaxation = (0.8, 0.8, 0.8)
         pressureRelaxation = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 3
+        maxCoarseLevels = 0
 
         preSmoothingIterations = 3
         postSmoothingIterations = 3
@@ -154,7 +154,7 @@ Solver {
 }
 
 Parallel {
-    numberOfThreads = 8
+    numberOfThreads = 4
 }
 
 Output {
@@ -163,6 +163,12 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
-    fieldWriteInterval      = 0
+    fieldWriteInterval      = 1
+
+    Monitors {
+        ForceCalculator {
+            filename = "output/forces.csv"
+        }
+    }
 
 }

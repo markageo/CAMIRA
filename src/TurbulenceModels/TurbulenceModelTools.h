@@ -159,8 +159,9 @@ inline EnumVector<Axis, Tensor3D> NearestWallDistance( const Mesh &mesh,
                                          (faceNormal == Z) ? mesh.cellFaces[Z](k) : mesh.cellCenters[Z](k), };
 
                     // Ignore if this point is inside the geometry
-                    if ( PointInside( tree, faceCoords(X), faceCoords(Y), faceCoords(Z) ) ) 
-                        continue; 
+                    // Commented out since immersed boundary faces can be inside the solid, but may still need a distance to compute the eddy viscosity
+                    // if ( PointInside( tree, faceCoords(X), faceCoords(Y), faceCoords(Z) ) ) 
+                    //     continue; 
 
                     // Distance to the nearest geometry object
                     wallDistance[faceNormal](faceIndex) = inf;
