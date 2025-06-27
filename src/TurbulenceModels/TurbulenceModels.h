@@ -3,6 +3,7 @@
 
 #include "../Core/Types.h"
 #include "../FiniteVolume/Mesh.h"
+#include "../ImmersedBoundary/ImmersedBoundary.h"
 #include "../FiniteVolume/BoundaryConditionData.h"
 #include "../Geometry/Geometry.h"
 
@@ -15,7 +16,7 @@ namespace CAMIRA
 struct TurbulenceModelInterface
 {
     virtual void SetTurbulenceModelData(const Mesh &, const Polyhedron &, const BoundaryConditionData &) = 0; 
-    virtual void SetTurbulenceViscosityField(EnumVector<Axis, Tensor3D> &, const FieldData<Tensor3D> &, const Mesh &) = 0;
+    virtual void SetTurbulenceViscosityField(EnumVector<Axis, Tensor3D> &, const FieldData<Tensor3D> &, const IBData &, const Mesh &) = 0;
 };
 
 
@@ -27,7 +28,7 @@ template<>
 struct TurbulenceModel< TurbulenceModels::Laminar > : public TurbulenceModelInterface
 {
     void SetTurbulenceModelData(const Mesh &, const Polyhedron &, const BoundaryConditionData &);
-    void SetTurbulenceViscosityField(EnumVector<Axis, Tensor3D> &, const FieldData<Tensor3D> &, const Mesh &);
+    void SetTurbulenceViscosityField(EnumVector<Axis, Tensor3D> &, const FieldData<Tensor3D> &, const IBData &, const Mesh &);
 };
 
 
@@ -35,7 +36,7 @@ template<>
 struct TurbulenceModel< TurbulenceModels::ChenAndXuZeroEquation > : public TurbulenceModelInterface
 {
     void SetTurbulenceModelData(const Mesh &, const Polyhedron &, const BoundaryConditionData &);
-    void SetTurbulenceViscosityField(EnumVector<Axis, Tensor3D> &, const FieldData<Tensor3D> &, const Mesh &);
+    void SetTurbulenceViscosityField(EnumVector<Axis, Tensor3D> &, const FieldData<Tensor3D> &, const IBData &, const Mesh &);
 
     private:
         floatType m_proportionalityConstant;
@@ -47,7 +48,7 @@ template<>
 struct TurbulenceModel< TurbulenceModels::PrandtlZeroEquation > : public TurbulenceModelInterface
 {
     void SetTurbulenceModelData(const Mesh &, const Polyhedron &, const BoundaryConditionData &);
-    void SetTurbulenceViscosityField(EnumVector<Axis, Tensor3D> &, const FieldData<Tensor3D> &, const Mesh &);
+    void SetTurbulenceViscosityField(EnumVector<Axis, Tensor3D> &, const FieldData<Tensor3D> &, const IBData &, const Mesh &);
 
     private:
         floatType m_vonKarmanConstant;
