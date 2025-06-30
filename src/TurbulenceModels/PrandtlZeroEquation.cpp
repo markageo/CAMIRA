@@ -11,8 +11,9 @@
 namespace CAMIRA
 {
 
-void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceModelData( const Mesh &mesh,
-                                                                                     const Polyhedron &geometry,
+void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceModelData( const InputData &inputData, 
+                                                                                     const Mesh &mesh,
+                                                                  [[ maybe_unused ]] const IBData &ibData,
                                                                                      const BoundaryConditionData &bcData )
 { 
     using enum Axis::ENUMDATA;
@@ -21,10 +22,11 @@ void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceModelD
     m_vonKarmanConstant = 0.4;
 
     // Length scale, distance to nearest wall
+    Polyhedron geometry = MakeGeometry( inputData );
     Tree tree = MakeAABBTree( geometry );
     m_wallDistance = NearestWallDistance( mesh, tree, bcData );
 
-    m_velocityDeformationRate = Tensor3D( mesh.nCells[X], mesh.nCells[Y], mesh.nCells[Z] ).setZero();
+    m_velocityDeformationRate = Tensor3D( mesh.nCells[X] + 2*nGhost, mesh.nCells[Y] + 2*nGhost, mesh.nCells[Z] + 2*nGhost ).setZero();
 }
 
 
@@ -37,7 +39,7 @@ void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceViscos
     using enum Axis::ENUMDATA;
     using FVT::G;
 
-    CalculateVelocityDeformationRate( m_velocityDeformationRate, fields, mesh );
+    CalculateVelocityDeformationRate( m_velocityDeformationRate, fields, ibData, mesh );
 
     EnumFor<Axis>( [&] (Axis::ENUMDATA faceNormal) {
 
@@ -45,22 +47,15 @@ void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceViscos
             for ( intType j = 0; j != mesh.nFacesNormal[faceNormal][Y]; j++ ) {
                 for ( intType i = 0; i != mesh.nFacesNormal[faceNormal][X]; i++ ) {
 
-                    TensorIndex3D faceIndex   = { i, j, k },
-                                  loCellIndex = { i, j, k },
-                                  hiCellIndex = { i, j, k };
-                    loCellIndex[faceNormal] -= 1;
+                    TensorIndex3D faceIndex    = { i, j, k },
+                                  loCellIndexG = G( i, j, k ),
+                                  hiCellIndexG = G( i, j, k );
+                    loCellIndexG[faceNormal] -= 1;
                     
-                    floatType lambda = mesh.interpFactors[faceNormal]( faceIndex[faceNormal] );
-                    floatType Sface = 0.0f;
-                    if        ( faceIndex[faceNormal] == 0 ) {
-                        Sface = m_velocityDeformationRate(hiCellIndex);
-                    } else if ( faceIndex[faceNormal] == mesh.nFacesNormal[faceNormal][faceNormal]-1 ) {
-                        Sface = m_velocityDeformationRate(loCellIndex);
-                    } else {
-                        Sface = (1.0f - lambda) * m_velocityDeformationRate(loCellIndex)  +  lambda * m_velocityDeformationRate(hiCellIndex);
-                    }
+                    const floatType lambda = mesh.interpFactors[faceNormal]( faceIndex[faceNormal] );
+                    const floatType Sface = (1.0f - lambda) * m_velocityDeformationRate(loCellIndexG)  +  lambda * m_velocityDeformationRate(hiCellIndexG);
                     
-                    floatType lmix = m_vonKarmanConstant * m_wallDistance[faceNormal](faceIndex);
+                    const floatType lmix = m_vonKarmanConstant * m_wallDistance[faceNormal](faceIndex);
 
                     nuTurbulent[faceNormal](faceIndex) = lmix * lmix * Sface;
                     
@@ -69,6 +64,33 @@ void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceViscos
         }
 
     } );
+
+
+     // Go back through and correct for the immersed boundary faces
+    for ( const auto &ibCellComponent : ibData.ibCells ) {
+        for ( const auto &ibCell : ibCellComponent ) { 
+
+            const TensorIndex3D &cellIndex = ibCell.cellIndex;
+
+            for ( const auto &sourceTermData : ibCell.sourceTermsData ) {
+
+                const Axis::ENUMDATA faceNormal = sourceTermData.direction;
+
+                // Get face index
+                TensorIndex3D faceIndex = cellIndex;
+                faceIndex[faceNormal] += sourceTermData.faceDirectionIndex;
+
+                // Cell face velocity deformation rate. Just take internal cell value
+                const floatType Sface = m_velocityDeformationRate( G(cellIndex) );
+
+                const floatType lmix = m_vonKarmanConstant * m_wallDistance[faceNormal](faceIndex);
+
+                nuTurbulent[faceNormal](faceIndex) = lmix * lmix * Sface;
+
+            }
+        }
+    }
+
 }
 
 }   // end namespace CAMIRA

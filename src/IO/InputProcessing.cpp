@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <map>
 #include <filesystem>
+#include <memory>
 
 #define VECTOR_START_CHAR       '('
 #define VECTOR_END_CHAR         ')'
@@ -197,9 +198,11 @@ namespace
 
 
         // Expect a turbulence model if transient is false
+        inputData.turbulenceModel = TurbulenceModels::Null;    // Turbulence model not defined when transient
         if ( inputData.transient == false ) {
 
-            valueString = modelTree.get<std::string>("turbulenceModel");
+            const pt::ptree &turbulenceModelTree = modelTree.get_child("TurbulenceModel");
+            valueString = turbulenceModelTree.get<std::string>("model");
             if ( valueString == "laminar" ) {
 
                 inputData.turbulenceModel = TurbulenceModels::Laminar;
@@ -208,17 +211,68 @@ namespace
 
                 inputData.turbulenceModel = TurbulenceModels::PrandtlZeroEquation;
 
-            } else if ( valueString == "ChenAndXuZeroEquation" ) {
+            } else if ( valueString == "ZEQ0" ) {
                 
-                inputData.turbulenceModel = TurbulenceModels::ChenAndXuZeroEquation;
+                inputData.turbulenceModel = TurbulenceModels::ZEQ0;
+
+            } else if ( valueString == "ZEQ1" ) {
+                
+                inputData.turbulenceModel = TurbulenceModels::ZEQ1;
+                
+                inputData.zeq1ModelData.reynoldsNumberBuildingHeight            = turbulenceModelTree.get<floatType>("inflowReBuildingHeight");
+                inputData.zeq1ModelData.inflowTurbulenceIntensityBuildingHeight = turbulenceModelTree.get<floatType>("inflowTurbIntensityBuildingHeight");
+
+            } else if ( valueString == "ZEQ2" ) {
+                
+                inputData.turbulenceModel = TurbulenceModels::ZEQ2;
+
+                inputData.zeq2ModelData.averageBuildingHeight                  = turbulenceModelTree.get<floatType>("averageBuildingHeight");
+                inputData.zeq2ModelData.inflowVelocityBuildingHeight           = turbulenceModelTree.get<floatType>("inflowVelocityBuildingHeight");
+                inputData.zeq2ModelData.inflowTKEBuildingHeight                = turbulenceModelTree.get<floatType>("inflowTKEBuildingHeight");
+                inputData.zeq2ModelData.inflowIntergralTimeScaleBuildingHeight = turbulenceModelTree.get<floatType>("inflowIntegralTimescaleBuildingHeight");
+
+            } else if ( valueString == "ZEQ3" ) {
+                
+                inputData.turbulenceModel = TurbulenceModels::ZEQ3;
+
+                const std::string axisString = turbulenceModelTree.get<std::string>("heightAxis");
+                if        ( axisString == "x" ) {
+                    inputData.zeq3ModelData.heightAxis = Axis::X;
+                } else if ( axisString == "y") {
+                    inputData.zeq3ModelData.heightAxis = Axis::Y;
+                } else if ( axisString == "z" ) {
+                    inputData.zeq3ModelData.heightAxis = Axis::Z;
+                } else {
+                    throw std::runtime_error( "Invalid height axis direction." );
+                }
+                inputData.zeq3ModelData.averageBuildingHeight        = turbulenceModelTree.get<floatType>("averageBuildingHeight");
+                inputData.zeq3ModelData.inflowVelocityBuildingHeight = turbulenceModelTree.get<floatType>("inflowVelocityBuildingHeight");
+                inputData.zeq3ModelData.roughnessLength              = turbulenceModelTree.get<floatType>("roughnessLength");
+
+            } else if ( valueString == "ZEQ4" ) {
+                
+                inputData.turbulenceModel = TurbulenceModels::ZEQ4;
+
+                const std::string axisString = turbulenceModelTree.get<std::string>("heightAxis");
+                if        ( axisString == "x" ) {
+                    inputData.zeq4ModelData.heightAxis = Axis::X;
+                } else if ( axisString == "y") {
+                    inputData.zeq4ModelData.heightAxis = Axis::Y;
+                } else if ( axisString == "z" ) {
+                    inputData.zeq4ModelData.heightAxis = Axis::Z;
+                } else {
+                    throw std::runtime_error( "Invalid height axis direction." );
+                }
+                inputData.zeq4ModelData.averageBuildingHeight = turbulenceModelTree.get<floatType>("averageBuildingHeight");
+                inputData.zeq4ModelData.averageBuildingWidth  = turbulenceModelTree.get<floatType>("averageBuildingWidth");
+                inputData.zeq4ModelData.referenceHeight       = turbulenceModelTree.get<floatType>("referenceHeight");
 
             } else {
                 throw std::runtime_error( "'" + valueString + "' is not a valid turbulence model." );
             }
 
-        } else {
-            inputData.turbulenceModel = TurbulenceModels::Null;    // Turbulence model not defined when transient
-        }
+        } 
+        
     }
 
 

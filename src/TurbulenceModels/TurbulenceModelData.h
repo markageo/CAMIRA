@@ -6,6 +6,7 @@
 #include "../IO/InputProcessing.h"
 #include "../FiniteVolume/Mesh.h"
 #include "../FiniteVolume/BoundaryConditionData.h"
+#include "../ImmersedBoundary/ImmersedBoundary.h"
 
 #include <memory>
 
@@ -19,7 +20,10 @@ struct TurbulenceModelData
     std::unique_ptr<TurbulenceModelInterface> turbModel;
 };
 
-TurbulenceModelData CreateTurbulenceModelData( const InputData &, const Mesh &, const BoundaryConditionData & );
+TurbulenceModelData CreateTurbulenceModelData( const InputData &, 
+                                               const Mesh &, 
+                                               const IBData &,
+                                               const BoundaryConditionData & );
 
 
 }   // end namespace CAMIRA

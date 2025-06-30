@@ -7,6 +7,7 @@
 #include <utility>
 #include <map>
 #include <tuple>
+#include <memory>
 
 namespace CAMIRA
 {
@@ -14,7 +15,7 @@ namespace CAMIRA
 
 // -------------------------------------- Definition in InputProcessing.cpp -------------------------------------- //
 
-
+// Holds all use input data from input file
 struct InputData
 {
     // Constructor
@@ -26,12 +27,37 @@ struct InputData
     // Model
     floatType rho, nu;
     bool transient;
-    TurbulenceModels turbulenceModel;
 
     // Domain bounds
     fArray3 domainLowerBounds,
             domainUpperBounds;
 
+    TurbulenceModels turbulenceModel;
+    struct ZEQ1ModelData {
+        floatType reynoldsNumberBuildingHeight,                     // Inflow reynolds number at average building height
+                  inflowTurbulenceIntensityBuildingHeight;          // Inflow turbulence intensity at average building height
+    } zeq1ModelData;
+
+    struct ZEQ2ModelData {
+        floatType averageBuildingHeight,                            // Average building height
+                  inflowVelocityBuildingHeight,                     // Inflow velocity magnitude at average building height
+                  inflowTKEBuildingHeight,                          // Inflow turbulence kinetic energy at average building height
+                  inflowIntergralTimeScaleBuildingHeight;           // Inflow integral timescale at average building height
+    } zeq2ModelData;
+
+    struct ZEQ3ModelData {
+        Axis::ENUMDATA heightAxis;                                  // The axis which corresponds to height from ground level
+        floatType averageBuildingHeight,                            // Average building height
+                  inflowVelocityBuildingHeight,                     // Inflow velocity magnitude at average building height
+                  roughnessLength;   
+    } zeq3ModelData;
+
+    struct ZEQ4ModelData {
+        Axis::ENUMDATA heightAxis;                                  // The axis which corresponds to height from ground level
+        floatType averageBuildingHeight,                            // Average building height
+                  averageBuildingWidth,                             // Average building width
+                  referenceHeight;                                  // Reference height for city
+    } zeq4ModelData;
 
     // Mesh
     struct MeshSegment {
@@ -78,7 +104,6 @@ struct InputData
     };
     using FieldBoundaryConditions = EnumVector< BoundaryPatches, BoundaryConditionInputData >;
     FieldData< FieldBoundaryConditions > boundaryConditions;
-
 
     // Initial conditions
     enum class InitialConditionTypes { uniform, vtkFile };

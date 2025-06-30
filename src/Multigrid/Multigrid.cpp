@@ -49,7 +49,7 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels,
         mgl.ibData = CreateImmersedBoundaryData(inputData, axisTransofrmation, mgl.mesh);
 
         // Turbulence model data
-        mgl.turbModelData = CreateTurbulenceModelData(inputData, mgl.mesh, mgl.bcData);
+        mgl.turbModelData = CreateTurbulenceModelData(inputData, mgl.mesh, mgl.ibData, mgl.bcData);
     
         // Allocate and initialise fields
         mgl.fields = InitialiseFields(mgl.mesh, inputData, axisTransofrmation);

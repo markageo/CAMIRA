@@ -3,7 +3,9 @@
 Model {
     nu   = 0.0000002
     transient = no
-    turbulenceModel = ChenAndXuZeroEquation
+    TurbulenceModel {
+        model = laminar
+    }
 }
 
 Mesh {
