@@ -174,7 +174,7 @@ enum class TimeSchemes {
 };
 
 enum class TurbulenceModels {
-    Null, Laminar, PrandtlZeroEquation, ChenAndXuZeroEquation
+    Null, Laminar, PrandtlZeroEquation, ZEQ0, ZEQ1, ZEQ2, ZEQ3, ZEQ4
 };
 
 enum class MultigridCycleType {

@@ -7,18 +7,15 @@
 #include "../Geometry/Geometry.h"
 #include "TurbulenceModelTools.h"
 
-
-// DEBUGGING
-#include <memory>
-#include "../IO/VTKWriter.h"
-// END DEBUGGING
+// Chen, Q., & Xu, W. (1998). A zero-equation turbulence model for indoor airflow simulation. Energy and buildings, 28(2), 137-144.
 
 namespace CAMIRA
 {
 
-void TurbulenceModel<TurbulenceModels::ChenAndXuZeroEquation>::SetTurbulenceModelData( const Mesh &mesh,
-                                                                                       const Polyhedron &geometry,
-                                                                                       const BoundaryConditionData &bcData )
+void TurbulenceModel<TurbulenceModels::ZEQ0>::SetTurbulenceModelData( const InputData &inputData,
+                                                                      const Mesh &mesh,
+                                                   [[ maybe_unused ]] const IBData &ibData,
+                                                                      const BoundaryConditionData &bcData )
 { 
     using enum Axis::ENUMDATA;
 
@@ -26,16 +23,17 @@ void TurbulenceModel<TurbulenceModels::ChenAndXuZeroEquation>::SetTurbulenceMode
     m_proportionalityConstant = 0.03874;
 
     // Length scale, distance to nearest wall
+    Polyhedron geometry = MakeGeometry( inputData );
     Tree tree = MakeAABBTree( geometry );
     m_wallDistance = NearestWallDistance( mesh, tree, bcData );
 }
 
 
 
-void TurbulenceModel<TurbulenceModels::ChenAndXuZeroEquation>::SetTurbulenceViscosityField( EnumVector<Axis, Tensor3D> &nuTurbulent,
-                                                                                            const FieldData<Tensor3D> &fields,
-                                                                                            const IBData &ibData,
-                                                                                            const Mesh &mesh )
+void TurbulenceModel<TurbulenceModels::ZEQ0>::SetTurbulenceViscosityField( EnumVector<Axis, Tensor3D> &nuTurbulent,
+                                                                           const FieldData<Tensor3D> &fields,
+                                                                           const IBData &ibData,
+                                                                           const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;
     using FVT::G;

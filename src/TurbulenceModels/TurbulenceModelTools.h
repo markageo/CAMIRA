@@ -71,6 +71,7 @@ inline bool IsWallBC( const BoundaryConditionData &bcData,
 // Rate of strain tensor squared 
 inline void CalculateVelocityDeformationRate( Tensor3D &S,
                                               const FieldData<Tensor3D> &fields, 
+                                              const IBData &ibData,
                                               const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;
@@ -107,7 +108,7 @@ inline void CalculateVelocityDeformationRate( Tensor3D &S,
 
                 } );
 
-                S(i, j, k) = sqrt(
+                S(cellP)    = sqrt(
                                ddxU[X] * ddxU[X]
                              + ddyU[Y] * ddyU[Y]
                              + ddzU[Z] * ddzU[Z]
@@ -119,6 +120,115 @@ inline void CalculateVelocityDeformationRate( Tensor3D &S,
             }
         }
     }    
+
+
+    // Go back through and correct for the immersed boundary faces
+    for ( const auto &ibCellComponent : ibData.ibCells ) {
+        for ( const auto &ibCell : ibCellComponent ) {
+
+            const intType i = ibCell.cellIndex[X];
+            const intType j = ibCell.cellIndex[Y];
+            const intType k = ibCell.cellIndex[Z];
+
+            TensorIndex3D cellP = G(i  , j  , k  ),
+                          cellN = G(j  , j+1, k  ),
+                          cellS = G(i  , j-1, k  ),
+                          cellE = G(i+1, j  , k  ),
+                          cellW = G(i-1, j  , k  ),
+                          cellT = G(i  , j  , k+1),
+                          cellB = G(i  , j  , k-1);
+
+
+            // Set the ghost cell values if they need to be
+            EnumVector<Axis, floatType> velocityE, velocityW, 
+                                        velocityN, velocityS, 
+                                        velocityT, velocityB;
+
+            // Set them to the field value initially
+            EnumFor<Axis>( [&] (Axis::ENUMDATA velocityComponent) {
+                velocityE[velocityComponent] = fields.U[velocityComponent](cellE);
+                velocityW[velocityComponent] = fields.U[velocityComponent](cellW);
+                velocityN[velocityComponent] = fields.U[velocityComponent](cellN);
+                velocityS[velocityComponent] = fields.U[velocityComponent](cellS);
+                velocityT[velocityComponent] = fields.U[velocityComponent](cellT);
+                velocityB[velocityComponent] = fields.U[velocityComponent](cellB);
+            } );
+
+            // Modify any that are an IB ghost cell
+            for ( const auto &sourceTermData : ibCell.sourceTermsData ) {
+                const Axis::ENUMDATA faceNormal = sourceTermData.direction;
+
+                if ( sourceTermData.directionIndex > 0 ) {  // Ghost cell on hi side
+                    switch ( faceNormal ) {
+                        case (Axis::X):
+                            EnumFor<Axis>( [&] (Axis::ENUMDATA c) { velocityE[c] = sourceTermData.ghostCellValues.U[c]; } );
+                            break;
+                        case (Axis::Y):
+                            EnumFor<Axis>( [&] (Axis::ENUMDATA c) { velocityN[c] = sourceTermData.ghostCellValues.U[c]; } );
+                            break;
+                        case (Axis::Z):
+                            EnumFor<Axis>( [&] (Axis::ENUMDATA c) { velocityT[c] = sourceTermData.ghostCellValues.U[c]; } );
+                            break;
+                    }
+                } else {                                    // Ghost cell on lo side
+                    switch ( faceNormal ) {
+                        case (Axis::X):
+                            EnumFor<Axis>( [&] (Axis::ENUMDATA c) { velocityW[c] = sourceTermData.ghostCellValues.U[c]; } );
+                            break;
+                        case (Axis::Y):
+                            EnumFor<Axis>( [&] (Axis::ENUMDATA c) { velocityS[c] = sourceTermData.ghostCellValues.U[c]; } );
+                            break;
+                        case (Axis::Z):
+                            EnumFor<Axis>( [&] (Axis::ENUMDATA c) { velocityB[c] = sourceTermData.ghostCellValues.U[c]; } );
+                            break;
+                    }
+                }
+
+            }
+
+            EnumVector<Axis, floatType>  ddxU, ddyU, ddzU;
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+                ddxU[axis] =  0.5 * (   mesh.cellCenterDiffInv[X](i+1)                                   *  velocityE[axis]
+                                    + ( mesh.cellCenterDiffInv[X](i) - mesh.cellCenterDiffInv[X](i+1) )  *  fields.U[axis](cellP) 
+                                    -   mesh.cellCenterDiffInv[X](i)                                     *  velocityW[axis]       );
+
+
+                ddyU[axis] =  0.5 * (   mesh.cellCenterDiffInv[Y](j+1)                                   *  velocityN[axis]
+                                    + ( mesh.cellCenterDiffInv[Y](j) - mesh.cellCenterDiffInv[Y](j+1) )  *  fields.U[axis](cellP) 
+                                    -   mesh.cellCenterDiffInv[Y](j)                                     *  velocityS[axis]       );
+
+                ddzU[axis] =  0.5 * (   mesh.cellCenterDiffInv[Z](k+1)                                   *  velocityT[axis]
+                                    + ( mesh.cellCenterDiffInv[Z](k) - mesh.cellCenterDiffInv[Z](k+1) )  *  fields.U[axis](cellP) 
+                                    -   mesh.cellCenterDiffInv[Z](k)                                     *  velocityB[axis]       );
+
+            } );
+
+            S(cellP)    = sqrt(
+                            ddxU[X] * ddxU[X]
+                            + ddyU[Y] * ddyU[Y]
+                            + ddzU[Z] * ddzU[Z]
+                            + 0.5 * ( ddyU[X] + ddxU[Y] ) * ( ddyU[X] + ddxU[Y] )
+                            + 0.5 * ( ddzU[X] + ddxU[Z] ) * ( ddzU[X] + ddxU[Z] )
+                            + 0.5 * ( ddzU[Y] + ddyU[Z] ) * ( ddzU[Y] + ddyU[Z] )
+                        );
+        }
+    }
+
+
+    // Set domain boundary ghost cells - set so cell face equals cell centre value
+    for ( intType i = 0; i != BoundaryPatches::count; i++ ) {
+        auto boundaryPatch = static_cast<BoundaryPatches::ENUMDATA>(i);
+        
+        Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
+
+        intType iCell_p = ( boundaryPatch == LUT::NegativePatch[axis] ) ? 0  : mesh.nCells[axis] - 1,
+                iCell_g = ( boundaryPatch == LUT::NegativePatch[axis] ) ? -1 : mesh.nCells[axis];
+
+
+        S.chip( G(iCell_g), axis ) = S.chip( G(iCell_p) , axis );
+    }
+
 }
 
 

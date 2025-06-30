@@ -3,8 +3,9 @@
 namespace CAMIRA
 {
 
-void TurbulenceModel<TurbulenceModels::Laminar>::SetTurbulenceModelData( [[ maybe_unused ]] const Mesh &mesh,
-                                                                         [[ maybe_unused ]] const Polyhedron &geometry,
+void TurbulenceModel<TurbulenceModels::Laminar>::SetTurbulenceModelData( [[ maybe_unused ]] const InputData &inputData,
+                                                                         [[ maybe_unused ]] const Mesh &mesh,
+                                                                         [[ maybe_unused ]] const IBData &ibData,
                                                                          [[ maybe_unused ]] const BoundaryConditionData &bcData )
 { /* NULL */ }
 
