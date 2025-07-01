@@ -109,6 +109,17 @@ namespace
         } );
     }
 
+    // Remaps the users model data
+    void TransformModel( InputData &inputData, 
+                         const AxisTransformationMap &axisTransformation )
+    {
+        // Turbulence model reference height
+        if        ( inputData.turbulenceModel == TurbulenceModels::ZEQ3 ) {
+            inputData.zeq3ModelData.heightAxis = axisTransformation.CodeAxis( inputData.zeq3ModelData.heightAxis );
+        } else if ( inputData.turbulenceModel == TurbulenceModels::ZEQ4 ) {
+            inputData.zeq4ModelData.heightAxis = axisTransformation.CodeAxis( inputData.zeq4ModelData.heightAxis );
+        }
+    }
 
 
     // Remaps the users boundary conditions
@@ -355,6 +366,7 @@ void TransformUserInputData( InputData &inputData,
     inputData.smootherSettings.planeSweepDirection = BoundaryPatches::zPositive;
     inputData.smootherSettings.lineSweepDirection  = BoundaryPatches::yPositive;
 
+    TransformModel( inputData, axisTransformation );
     TransformBoundaryConditions( inputData, axisTransformation );
     TransformInitialConditions( inputData, axisTransformation );
     TransformGeometry( inputData, axisTransformation );
