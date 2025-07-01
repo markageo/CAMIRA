@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <cmath>
 
+#include <iostream>
+
 // Liu, J., Srebric, J., & Yu, N. (2013, July). A rapid and reliable numerical method for predictions of outdoor thermal environment in actual 
 // urban areas. In Heat Transfer Summer Conference (Vol. 55492, p. V003T21A008). American Society of Mechanical Engineers.
 
@@ -81,9 +83,10 @@ void TurbulenceModel<TurbulenceModels::ZEQ3>::SetTurbulenceViscosityField( EnumV
                     const floatType z = ( m_heightAxis == faceNormal ) ? mesh.cellFaces[m_heightAxis]( faceIndex[m_heightAxis] )
                                                                        : mesh.cellCenters[m_heightAxis]( faceIndex[m_heightAxis] );
 
-                    const floatType nuOut = 0.16f
-                                          * m_inflowVelocityBuildingHeight
-                                          * ( z + m_roughnessLength ) / std::log( ( z + m_roughnessLength ) / m_roughnessLength ); 
+                    const floatType nuOut = ( z == 0 ) ? 0.0f       //  Avoid division by zero
+                                                       : 0.16f
+                                                       * m_inflowVelocityBuildingHeight
+                                                       * ( z + m_roughnessLength ) / std::log( ( z + m_roughnessLength ) / m_roughnessLength );  
 
                     nuTurbulent[faceNormal](faceIndex) = std::max( nuIn, nuOut );
                     
@@ -124,10 +127,11 @@ void TurbulenceModel<TurbulenceModels::ZEQ3>::SetTurbulenceViscosityField( EnumV
 
                 const floatType z = ( m_heightAxis == faceNormal ) ? mesh.cellFaces[m_heightAxis]( faceIndex[m_heightAxis] )
                                                                    : mesh.cellCenters[m_heightAxis]( faceIndex[m_heightAxis] );
-                                                                    
-                const floatType nuOut = 0.16f
-                                        * m_inflowVelocityBuildingHeight
-                                        * ( z + m_roughnessLength ) / std::log( ( z + m_roughnessLength ) / m_roughnessLength ); 
+
+                const floatType nuOut = ( z == 0 ) ? 0.0f       //  Avoid division by zero
+                                                   : 0.16f
+                                                   * m_inflowVelocityBuildingHeight
+                                                   * ( z + m_roughnessLength ) / std::log( ( z + m_roughnessLength ) / m_roughnessLength );  
 
                 nuTurbulent[faceNormal](faceIndex) = std::max( nuIn, nuOut );
 

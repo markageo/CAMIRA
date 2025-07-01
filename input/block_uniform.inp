@@ -1,10 +1,14 @@
 // Block flow
 
 Model {
-    nu   = 0.0000002
+    nu   = 0.00002
     transient = no
     TurbulenceModel {
-        model = laminar
+        model = ZEQ4
+        heightAxis = y
+        averageBuildingHeight = 1
+        averageBuildingWidth = 1
+        referenceHeight = 1
     }
 }
 
@@ -15,7 +19,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 20)
-            nCells     = 120
+            nCells     = 150
             biasFactor = 1
         }
     }
