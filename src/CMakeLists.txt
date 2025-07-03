@@ -13,6 +13,7 @@ add_subdirectory(Core)
 add_subdirectory(CoordinateTransformations)
 add_subdirectory(Parallel)
 add_subdirectory(TurbulenceModels)
+add_subdirectory(BoostConv)
 
 # Link libraries
 target_link_libraries(libs PUBLIC eigen)
