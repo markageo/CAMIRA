@@ -63,23 +63,19 @@ Tensor3D CreateCellMask( const Tree &tree,
 
 
 
-// Check if a cell is a fluid cell within the domain boundary
-bool CellIsFluid( const TensorIndex3D &cellIndex_a,
-                  const Tensor3D &mask,
-                  const Mesh &mesh )
+// Check if a cell is within the domain boundary
+bool CellIsInDomain( const TensorIndex3D &cellIndex,
+                     const Mesh &mesh )
 {
     using FVT::G;
-
-    if ( static_cast<intType>( mask( G(cellIndex_a) ) ) == CellType::Solid ) 
-        return false;
 
     for ( intType a = 0; a != Axis::count; a++ ) {
         Axis::ENUMDATA axis = static_cast<Axis::ENUMDATA>( a );
 
-         if ( cellIndex_a[axis] < 0 )
+         if ( cellIndex[axis] < 0 )
             return false;
 
-        if ( cellIndex_a[axis] > ( mesh.nCells[axis] - 1 ) )
+        if ( cellIndex[axis] > ( mesh.nCells[axis] - 1 ) )
             return false;
 
     }
@@ -93,7 +89,6 @@ bool CellIsFluid( const TensorIndex3D &cellIndex_a,
 void AddIBDataForDirection( IBCell &ibCell, 
                             const Axis::ENUMDATA axis,
                             const intType directionIndex,
-                            const Tensor3D &mask,
                             const Mesh &mesh,
                             const Tree &tree, 
                             const InputData &inputData )
@@ -119,9 +114,9 @@ void AddIBDataForDirection( IBCell &ibCell,
 
     intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
 
-    // Ensure that there is enough space between the IB and other IBs and the domain boundary
-    if ( !CellIsFluid( cellIndex_a, mask, mesh ) ) {
-        throw std::runtime_error( "Invalid immersed boundary geometry and mesh specification: There must be at least one fluid cell between domain and solid boundaries on all grid levels!" );
+    // Ensure that there is enough space between the IB and the domain boundary
+    if ( !CellIsInDomain( cellIndex_a, mesh ) ) {
+        throw std::runtime_error( "Invalid immersed boundary geometry and mesh specification: There must be at least one fluid cell between solid and domain boundaries on all grid levels!" );
     }
 
     switch ( inputData.geoemtryBoundaryTreatement ) {
@@ -153,8 +148,6 @@ void AddIBDataForDirection( IBCell &ibCell,
 
     // Face area vector
     sourceTermData.faceAreaComponent = static_cast<floatType>( directionIndex )   // Gives the correct sign
-                                    //  * mesh.cellLengths[LUT::LoOrthogonalAxis[axis]]( cellIndex[ LUT::LoOrthogonalAxis[axis] ] )
-                                    //  * mesh.cellLengths[LUT::HiOrthogonalAxis[axis]]( cellIndex[ LUT::HiOrthogonalAxis[axis] ] );
                                      * mesh.cellFaceAreas[axis]( cellIndex[ LUT::LoOrthogonalAxis[axis] ], cellIndex[ LUT::HiOrthogonalAxis[axis] ] );    
     
 
@@ -351,7 +344,7 @@ std::vector<IBCell> CreateIBCellDataForComponent( const Tensor3D &mask,
                     bool atHiBoundary = ( cellIndex[axis] == mesh.nCells[axis]-1  );
                     if ( !atHiBoundary && static_cast<intType>( mask(G(hiSideCellIndex)) ) == CellType::Solid ) {
                         CheckIBCellPtr();
-                        AddIBDataForDirection( *ibCellPtr, axis, +1, mask, mesh, tree, inputData );
+                        AddIBDataForDirection( *ibCellPtr, axis, +1, mesh, tree, inputData );
                     }
 
                     // Solid on lo side
@@ -360,7 +353,7 @@ std::vector<IBCell> CreateIBCellDataForComponent( const Tensor3D &mask,
                     bool atLoBoundary = ( cellIndex[axis] == 0  );
                     if ( !atLoBoundary && static_cast<intType>( mask(G(loSideCellIndex)) ) == CellType::Solid ) {
                         CheckIBCellPtr();
-                        AddIBDataForDirection( *ibCellPtr, axis, -1, mask, mesh, tree, inputData );
+                        AddIBDataForDirection( *ibCellPtr, axis, -1, mesh, tree, inputData );
                     }
 
                 } );
