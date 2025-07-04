@@ -23,13 +23,15 @@ void TurbulenceModel<TurbulenceModels::ZEQ4>::SetTurbulenceModelData( const Inpu
 { 
     using enum Axis::ENUMDATA;
 
-    m_heightAxis            = inputData.zeq4ModelData.heightAxis;
-    m_averageBuildingHeight = inputData.zeq4ModelData.averageBuildingHeight;
-    m_averageBuildingWidth  = inputData.zeq4ModelData.averageBuildingWidth;
-    m_referenceHeight       = inputData.zeq4ModelData.referenceHeight;
-    m_Cmu                   = 0.09f;
-    m_Ig                    = 0.1f;
-    m_alpha                 = 0.22;
+    m_eddyViscosityRelaxation = inputData.eddyViscosityRelaxation;
+
+    m_heightAxis              = inputData.zeq4ModelData.heightAxis;
+    m_averageBuildingHeight   = inputData.zeq4ModelData.averageBuildingHeight;
+    m_averageBuildingWidth    = inputData.zeq4ModelData.averageBuildingWidth;
+    m_referenceHeight         = inputData.zeq4ModelData.referenceHeight;
+    m_Cmu                     = 0.09f;
+    m_Ig                      = 0.1f;
+    m_alpha                   = 0.22;
 
     // Length scale, distance to nearest wall
     Polyhedron geometry = MakeGeometry( inputData );
@@ -98,7 +100,10 @@ void TurbulenceModel<TurbulenceModels::ZEQ4>::SetTurbulenceViscosityField( EnumV
                                           * faceVelocityMagnitude
                                           * m_wallDistance[faceNormal](faceIndex);
 
-                    nuTurbulent[faceNormal](faceIndex) = std::max( nuIn, nuOut );
+                    const floatType nuTurbulentNew = std::max( nuIn, nuOut );
+
+                    nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
+                                                       + m_eddyViscosityRelaxation * nuTurbulentNew;
                     
                 }
             }
@@ -151,7 +156,10 @@ void TurbulenceModel<TurbulenceModels::ZEQ4>::SetTurbulenceViscosityField( EnumV
                                         * m_wallDistance[faceNormal](faceIndex);
 
                 // Modify the turbulent viscosity
-                nuTurbulent[faceNormal](faceIndex) = std::max( nuIn, nuOut );
+                const floatType nuTurbulentNew = std::max( nuIn, nuOut );
+
+                nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
+                                                   + m_eddyViscosityRelaxation * nuTurbulentNew;
 
             }
         }

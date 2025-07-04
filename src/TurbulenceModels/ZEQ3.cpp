@@ -25,6 +25,8 @@ void TurbulenceModel<TurbulenceModels::ZEQ3>::SetTurbulenceModelData( const Inpu
 { 
     using enum Axis::ENUMDATA;
 
+    m_eddyViscosityRelaxation      = inputData.eddyViscosityRelaxation;
+
     m_heightAxis                   = inputData.zeq3ModelData.heightAxis;
     m_averageBuildingHeight        = inputData.zeq3ModelData.averageBuildingHeight;
     m_inflowVelocityBuildingHeight = inputData.zeq3ModelData.inflowVelocityBuildingHeight;
@@ -88,7 +90,10 @@ void TurbulenceModel<TurbulenceModels::ZEQ3>::SetTurbulenceViscosityField( EnumV
                                                        * m_inflowVelocityBuildingHeight
                                                        * ( z + m_roughnessLength ) / std::log( ( z + m_roughnessLength ) / m_roughnessLength );  
 
-                    nuTurbulent[faceNormal](faceIndex) = std::max( nuIn, nuOut );
+                    const floatType nuTurbulentNew = std::max( nuIn, nuOut );
+
+                    nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
+                                                       + m_eddyViscosityRelaxation * nuTurbulentNew;
                     
                 }
             }
@@ -133,7 +138,10 @@ void TurbulenceModel<TurbulenceModels::ZEQ3>::SetTurbulenceViscosityField( EnumV
                                                    * m_inflowVelocityBuildingHeight
                                                    * ( z + m_roughnessLength ) / std::log( ( z + m_roughnessLength ) / m_roughnessLength );  
 
-                nuTurbulent[faceNormal](faceIndex) = std::max( nuIn, nuOut );
+                const floatType nuTurbulentNew = std::max( nuIn, nuOut );
+
+                nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
+                                                   + m_eddyViscosityRelaxation * nuTurbulentNew;
 
             }
         }

@@ -20,6 +20,8 @@ void TurbulenceModel<TurbulenceModels::ZEQ1>::SetTurbulenceModelData( const Inpu
 { 
     using enum Axis::ENUMDATA;
 
+    m_eddyViscosityRelaxation                 = inputData.eddyViscosityRelaxation;
+
     m_reynoldsNumberBuildingHeight            = inputData.zeq1ModelData.reynoldsNumberBuildingHeight;
     m_inflowTurbulenceIntensityBuildingHeight = inputData.zeq1ModelData.inflowTurbulenceIntensityBuildingHeight; 
 
@@ -64,11 +66,14 @@ void TurbulenceModel<TurbulenceModels::ZEQ1>::SetTurbulenceViscosityField( EnumV
                     const floatType loVelocityMagnitude = sqrt( std::pow(fields.U[X](loCellIndexG), 2.0f) + std::pow(fields.U[Y](loCellIndexG), 2.0f) + std::pow(fields.U[Z](loCellIndexG), 2.0f) );
                     const floatType faceVelocityMagnitude = ( 1.0f - lambda ) * loVelocityMagnitude  +  lambda * hiVelocityMagnitude;
 
-                    nuTurbulent[faceNormal](faceIndex) = 0.2f 
-                                                       * ( 1.0e5 / m_reynoldsNumberBuildingHeight )
-                                                       * m_inflowTurbulenceIntensityBuildingHeight
-                                                       * faceVelocityMagnitude
-                                                       * m_wallDistance[faceNormal](faceIndex);
+                    const floatType nuTurbulentNew = 0.2f 
+                                                   * ( 1.0e5 / m_reynoldsNumberBuildingHeight )
+                                                   * m_inflowTurbulenceIntensityBuildingHeight
+                                                   * faceVelocityMagnitude
+                                                   * m_wallDistance[faceNormal](faceIndex);
+                                                       
+                    nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
+                                                       + m_eddyViscosityRelaxation * nuTurbulentNew;
                     
                 }
             }
@@ -99,11 +104,14 @@ void TurbulenceModel<TurbulenceModels::ZEQ1>::SetTurbulenceViscosityField( EnumV
                                                         );
 
                 // Modify the turbulent viscosity
-                nuTurbulent[faceNormal](faceIndex) = 0.2f 
-                                                   * ( 1e5 / m_reynoldsNumberBuildingHeight )
-                                                   * m_inflowTurbulenceIntensityBuildingHeight
-                                                   * faceVelocityMagnitude
-                                                   * m_wallDistance[faceNormal](faceIndex);
+                const floatType nuTurbulentNew = 0.2f 
+                                               * ( 1.0e5 / m_reynoldsNumberBuildingHeight )
+                                               * m_inflowTurbulenceIntensityBuildingHeight
+                                               * faceVelocityMagnitude
+                                               * m_wallDistance[faceNormal](faceIndex);
+                
+                nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
+                                                   + m_eddyViscosityRelaxation * nuTurbulentNew;
 
             }
         }
