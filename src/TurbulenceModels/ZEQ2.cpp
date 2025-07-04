@@ -21,6 +21,8 @@ void TurbulenceModel<TurbulenceModels::ZEQ2>::SetTurbulenceModelData( const Inpu
 { 
     using enum Axis::ENUMDATA;
 
+    m_eddyViscosityRelaxation                = inputData.eddyViscosityRelaxation;
+
     m_averageBuildingHeight                  = inputData.zeq2ModelData.averageBuildingHeight;
     m_inflowVelocityBuildingHeight           = inputData.zeq2ModelData.inflowVelocityBuildingHeight;
     m_inflowTKEBuildingHeight                = inputData.zeq2ModelData.inflowTKEBuildingHeight;
@@ -73,11 +75,15 @@ void TurbulenceModel<TurbulenceModels::ZEQ2>::SetTurbulenceViscosityField( EnumV
                     const floatType bReBulk = std::pow( ( m_inflowVelocityBuildingHeight * m_averageBuildingHeight ) / m_nu            , 1.0f/3.0f );
 
                     const floatType wallDistanceNormalised = m_wallDistance[faceNormal](faceIndex) / m_wallDistanceLengthScale;
-                    nuTurbulent[faceNormal](faceIndex) = aReTurb 
-                                                       * wallDistanceNormalised
-                                                       * exp( -bReBulk * wallDistanceNormalised )
-                                                       * faceVelocityMagnitude
-                                                       * m_wallDistance[faceNormal](faceIndex);
+
+                    const floatType nuTurbulentNew = aReTurb 
+                                                   * wallDistanceNormalised
+                                                   * exp( -bReBulk * wallDistanceNormalised )
+                                                   * faceVelocityMagnitude
+                                                   * m_wallDistance[faceNormal](faceIndex);
+                                                       
+                    nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
+                                                       + m_eddyViscosityRelaxation * nuTurbulentNew;
                     
                 }
             }
@@ -112,11 +118,15 @@ void TurbulenceModel<TurbulenceModels::ZEQ2>::SetTurbulenceViscosityField( EnumV
                 const floatType bReBulk = std::pow( ( m_inflowVelocityBuildingHeight * m_averageBuildingHeight ) / m_nu            , 1.0f/3.0f );
 
                 const floatType wallDistanceNormalised = m_wallDistance[faceNormal](faceIndex) / m_wallDistanceLengthScale;
-                nuTurbulent[faceNormal](faceIndex) = aReTurb 
-                                                    * wallDistanceNormalised
-                                                    * exp( -bReBulk * wallDistanceNormalised )
-                                                    * faceVelocityMagnitude
-                                                    * m_wallDistance[faceNormal](faceIndex);
+                
+                const floatType nuTurbulentNew = aReTurb 
+                                               * wallDistanceNormalised
+                                               * exp( -bReBulk * wallDistanceNormalised )
+                                               * faceVelocityMagnitude
+                                               * m_wallDistance[faceNormal](faceIndex);
+                                                    
+                nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
+                                                       + m_eddyViscosityRelaxation * nuTurbulentNew;
 
             }
         }

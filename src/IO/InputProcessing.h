@@ -33,6 +33,7 @@ struct InputData
             domainUpperBounds;
 
     TurbulenceModels turbulenceModel;
+    floatType eddyViscosityRelaxation;
     struct ZEQ1ModelData {
         floatType reynoldsNumberBuildingHeight,                     // Inflow reynolds number at average building height
                   inflowTurbulenceIntensityBuildingHeight;          // Inflow turbulence intensity at average building height

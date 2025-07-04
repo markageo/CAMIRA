@@ -139,6 +139,7 @@ Solver {
         planeSweepDirection = +z
         lineSweepDirection = +y
 
+        eddyViscosityRelaxation = 1
         momentumRelaxation = (0.8, 0.8, 0.8)
         pressureRelaxation = 1
 

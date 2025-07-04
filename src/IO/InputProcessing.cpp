@@ -840,6 +840,11 @@ namespace
         // Pressure relaxation
         inputData.smootherSettings.relaxation.P = smootherTree.get<floatType>( "pressureRelaxation" );
 
+        // Eddy viscosity relaxation (if turbulence model is used)
+        if ( inputData.turbulenceModel != TurbulenceModels::Laminar || inputData.turbulenceModel != TurbulenceModels::Null ) {
+            inputData.eddyViscosityRelaxation = smootherTree.get<floatType>( "eddyViscosityRelaxation" );
+        }
+
         // Plane sweep direction
         valueString = smootherTree.get<std::string>( "planeSweepDirection" );
         inputData.smootherSettings.planeSweepDirection = String2BoundaryPatch( valueString );

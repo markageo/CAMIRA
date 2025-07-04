@@ -18,6 +18,8 @@ void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceModelD
 { 
     using enum Axis::ENUMDATA;
 
+    m_eddyViscosityRelaxation = inputData.eddyViscosityRelaxation;
+
     // Constant of proportionality
     m_vonKarmanConstant = 0.4;
 
@@ -57,7 +59,10 @@ void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceViscos
                     
                     const floatType lmix = m_vonKarmanConstant * m_wallDistance[faceNormal](faceIndex);
 
-                    nuTurbulent[faceNormal](faceIndex) = lmix * lmix * Sface;
+                    const floatType nuTurbulentNew = lmix * lmix * Sface;
+
+                    nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
+                                                       + m_eddyViscosityRelaxation * nuTurbulentNew;
                     
                 }
             }
@@ -85,7 +90,10 @@ void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceViscos
 
                 const floatType lmix = m_vonKarmanConstant * m_wallDistance[faceNormal](faceIndex);
 
-                nuTurbulent[faceNormal](faceIndex) = lmix * lmix * Sface;
+                const floatType nuTurbulentNew = lmix * lmix * Sface;
+
+                nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
+                                                   + m_eddyViscosityRelaxation * nuTurbulentNew;
 
             }
         }

@@ -17,6 +17,9 @@ struct TurbulenceModelInterface
 {
     virtual void SetTurbulenceModelData(const InputData &, const Mesh &, const IBData &, const BoundaryConditionData &) = 0; 
     virtual void SetTurbulenceViscosityField(EnumVector<Axis, Tensor3D> &, const FieldData<Tensor3D> &, const IBData &, const Mesh &) = 0;
+
+    protected:
+        floatType m_eddyViscosityRelaxation;
 };
 
 

@@ -19,6 +19,8 @@ void TurbulenceModel<TurbulenceModels::ZEQ0>::SetTurbulenceModelData( const Inpu
 { 
     using enum Axis::ENUMDATA;
 
+    m_eddyViscosityRelaxation = inputData.eddyViscosityRelaxation;
+
     // Constant of proportionality
     m_proportionalityConstant = 0.03874;
 
@@ -63,9 +65,12 @@ void TurbulenceModel<TurbulenceModels::ZEQ0>::SetTurbulenceViscosityField( EnumV
                     const floatType loVelocityMagnitude = sqrt( std::pow(fields.U[X](loCellIndexG), 2.0f) + std::pow(fields.U[Y](loCellIndexG), 2.0f) + std::pow(fields.U[Z](loCellIndexG), 2.0f) );
                     const floatType faceVelocityMagnitude = ( 1.0f - lambda ) * loVelocityMagnitude  +  lambda * hiVelocityMagnitude;
 
-                    nuTurbulent[faceNormal](faceIndex) = m_proportionalityConstant
-                                                       * m_wallDistance[faceNormal](faceIndex)
-                                                       * faceVelocityMagnitude;
+                    const floatType nuTurbulentNew = m_proportionalityConstant
+                                                   * m_wallDistance[faceNormal](faceIndex)
+                                                   * faceVelocityMagnitude;
+                                              
+                    nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
+                                                       + m_eddyViscosityRelaxation * nuTurbulentNew;
                     
                 }
             }
@@ -96,9 +101,12 @@ void TurbulenceModel<TurbulenceModels::ZEQ0>::SetTurbulenceViscosityField( EnumV
                                                         );
 
                 // Modify the turbulent viscosity
-                nuTurbulent[faceNormal](faceIndex) = m_proportionalityConstant
-                                                   * m_wallDistance[faceNormal](faceIndex)
-                                                   * faceVelocityMagnitude;
+                const floatType nuTurbulentNew = m_proportionalityConstant
+                                               * m_wallDistance[faceNormal](faceIndex)
+                                               * faceVelocityMagnitude;
+                                                   
+                nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
+                                                   + m_eddyViscosityRelaxation * nuTurbulentNew;
 
 
             }
