@@ -188,9 +188,6 @@ Solver {
 
 }
 
-Parallel {
-    numberOfThreads = 4
-}
 
 
 Output {

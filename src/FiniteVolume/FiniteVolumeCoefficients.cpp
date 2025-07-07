@@ -1280,51 +1280,95 @@ void CalculateCellCenterVelocityGradient( Tensor3D &gradientField,
     }
 
 
-    // Recalculate the cells that border the immersed boundary to use directional ghost cell values
-    for ( const auto &ibCellComponent : ibData.ibCells ) {
-        for ( const auto &ibCell : ibCellComponent ) { 
+    // // Recalculate the cells that border the immersed boundary to use directional ghost cell values
+    // for ( const auto &ibCellComponent : ibData.ibCells ) {
+    //     for ( const auto &ibCell : ibCellComponent ) { 
 
-            const TensorIndex3D &cellIndex = ibCell.cellIndex;
-            TensorIndex3D hiCellIndex = cellIndex; hiCellIndex[gradientDirection]++;
-            TensorIndex3D loCellIndex = cellIndex; loCellIndex[gradientDirection]--;
+    //         const TensorIndex3D &cellIndex = ibCell.cellIndex;
+    //         TensorIndex3D hiCellIndex = cellIndex; hiCellIndex[gradientDirection]++;
+    //         TensorIndex3D loCellIndex = cellIndex; loCellIndex[gradientDirection]--;
 
-            floatType hiCellFieldValue = field( G(hiCellIndex) ),
-                      loCellFieldValue = field( G(loCellIndex) );
+    //         floatType hiCellFieldValue = field( G(hiCellIndex) ),
+    //                   loCellFieldValue = field( G(loCellIndex) );
 
-            for ( const auto &sourceTermData : ibCell.sourceTermsData ) {
+    //         for ( const auto &sourceTermData : ibCell.sourceTermsData ) {
 
-                if ( sourceTermData.direction != gradientDirection )
-                    continue;
+    //             if ( sourceTermData.direction != gradientDirection )
+    //                 continue;
 
-                // Ghost cell on hi side
-                if ( sourceTermData.directionIndex == 1 ) 
-                    hiCellFieldValue = sourceTermData.faceValues.U[velocityComponent];
+    //             // Ghost cell on hi side
+    //             if ( sourceTermData.directionIndex == 1 ) 
+    //                 hiCellFieldValue = sourceTermData.faceValues.U[velocityComponent];
 
-                // Ghost cell on lo side
-                if ( sourceTermData.directionIndex == -1 ) 
-                    loCellFieldValue = sourceTermData.faceValues.U[velocityComponent];
+    //             // Ghost cell on lo side
+    //             if ( sourceTermData.directionIndex == -1 ) 
+    //                 loCellFieldValue = sourceTermData.faceValues.U[velocityComponent];
 
-            }
+    //         }
 
-            const floatType hiInterpFactor = mesh.interpFactors[gradientDirection]( hiCellIndex[gradientDirection] ); 
-            const floatType loInterpFactor = mesh.interpFactors[gradientDirection]( cellIndex[gradientDirection]   ); 
+    //         const floatType hiInterpFactor = mesh.interpFactors[gradientDirection]( hiCellIndex[gradientDirection] ); 
+    //         const floatType loInterpFactor = mesh.interpFactors[gradientDirection]( cellIndex[gradientDirection]   ); 
 
-            const floatType hiFaceValue = (1.0f - hiInterpFactor) * field( G(cellIndex  ) )
-                                        + hiInterpFactor          * hiCellFieldValue;
-            const floatType loFaceValue = (1.0f - loInterpFactor) * loCellFieldValue
-                                        + loInterpFactor          * field( G(cellIndex  ) );
+    //         const floatType hiFaceValue = (1.0f - hiInterpFactor) * field( G(cellIndex  ) )
+    //                                     + hiInterpFactor          * hiCellFieldValue;
+    //         const floatType loFaceValue = (1.0f - loInterpFactor) * loCellFieldValue
+    //                                     + loInterpFactor          * field( G(cellIndex  ) );
 
-            gradientField( cellIndex ) = ibData.mask(G(cellIndex)) 
-                                    * ( hiFaceValue - loFaceValue ) * mesh.cellLengthsInv[gradientDirection]( cellIndex[gradientDirection] );
+    //         gradientField( cellIndex ) = ibData.mask(G(cellIndex)) 
+    //                                 * ( hiFaceValue - loFaceValue ) * mesh.cellLengthsInv[gradientDirection]( cellIndex[gradientDirection] );
 
-        }
-    }
+    //     }
+    // }
 
 }
 
 
 
-void AddExplicitEddyViscosityTermInternalFaces( FVCoefficients &fvCoeffs,
+// void AddExplicitEddyViscosityTermInternalFaces( FVCoefficients &fvCoeffs,
+//                                                 const Mesh &mesh,
+//                                                 const IBData &ibData,
+//                                                 const Tensor3D &gradientField,
+//                                                 const Axis::ENUMDATA faceNormal,
+//                                                 const Axis::ENUMDATA momentumEquationComponent )
+// {
+//     using enum Axis::ENUMDATA; 
+//     using FVT::G;
+
+//     // Iterate all internal faces
+//     iArray3 startIndex = {0, 0, 0}; startIndex(faceNormal)++;
+//     iArray3 nFaces = mesh.nFacesNormal[faceNormal]; nFaces(faceNormal)--;
+
+//     for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+//         for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+//             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+
+//                 const TensorIndex3D faceIndex = {i, j, k};
+//                 TensorIndex3D loCellIndex     = {i, j, k}; loCellIndex[faceNormal]--;
+//                 TensorIndex3D hiCellIndex     = {i, j, k};
+
+//                 // Do not add a contribution if this is an immersed boundary face, this will be added later
+//                 floatType ibMask = ibData.mask( G(loCellIndex) ) * ibData.mask( G(hiCellIndex) );
+
+//                 // Interpolate the gradient onto the face
+//                 floatType lambda = mesh.interpFactors[faceNormal]( faceIndex[faceNormal] );
+//                 floatType faceGradient = ( 1.0f - lambda ) * gradientField( loCellIndex )
+//                                         + lambda           * gradientField( hiCellIndex );
+
+//                 // Add the contribution to the source term faces
+//                 floatType nuEff = fvCoeffs.nu + fvCoeffs.nuTurb[faceNormal](faceIndex);
+
+//                 fvCoeffs.Mom[momentumEquationComponent].B( G(loCellIndex) ) += - ibMask * nuEff * faceGradient * mesh.cellLengthsInv[faceNormal]( loCellIndex[faceNormal] );
+
+//                 fvCoeffs.Mom[momentumEquationComponent].B( G(hiCellIndex) ) += + ibMask * nuEff * faceGradient * mesh.cellLengthsInv[faceNormal]( hiCellIndex[faceNormal] );
+
+//             }
+//         }
+//     }
+// }
+
+
+
+void AddExplicitEddyViscosityTermInternalFaces1( FVCoefficients &fvCoeffs,
                                                 const Mesh &mesh,
                                                 const IBData &ibData,
                                                 const Tensor3D &gradientField,
@@ -1343,16 +1387,62 @@ void AddExplicitEddyViscosityTermInternalFaces( FVCoefficients &fvCoeffs,
             for (intType i = startIndex[X]; i != nFaces[X]; i++) {
 
                 const TensorIndex3D faceIndex = {i, j, k};
-                TensorIndex3D loCellIndex = {i, j, k}; loCellIndex[faceNormal]--;
-                TensorIndex3D hiCellIndex = {i, j, k};
+                TensorIndex3D loCellIndex     = {i, j, k}; loCellIndex[faceNormal]--;
+                TensorIndex3D hiCellIndex     = {i, j, k};
 
-                // Do not add a contribution if this is an immersed boundary face, this will be added later
+                // Do not add a contribution if this is an immersed boundary  or domain boundary face, this will be added later
                 floatType ibMask = ibData.mask( G(loCellIndex) ) * ibData.mask( G(hiCellIndex) );
 
                 // Interpolate the gradient onto the face
                 floatType lambda = mesh.interpFactors[faceNormal]( faceIndex[faceNormal] );
                 floatType faceGradient = ( 1.0f - lambda ) * gradientField( loCellIndex )
                                         + lambda           * gradientField( hiCellIndex );
+
+                // Add the contribution to the source term faces
+                floatType nuEff = fvCoeffs.nu + fvCoeffs.nuTurb[faceNormal](faceIndex);
+
+                fvCoeffs.Mom[momentumEquationComponent].B( G(loCellIndex) ) += - ibMask * nuEff * faceGradient * mesh.cellLengthsInv[faceNormal]( loCellIndex[faceNormal] );
+
+                fvCoeffs.Mom[momentumEquationComponent].B( G(hiCellIndex) ) += + ibMask * nuEff * faceGradient * mesh.cellLengthsInv[faceNormal]( hiCellIndex[faceNormal] );
+
+            }
+        }
+    }
+}
+
+
+
+
+void AddExplicitEddyViscosityTermInternalFaces2( FVCoefficients &fvCoeffs,
+                                                 const Mesh &mesh,
+                                                 const IBData &ibData,
+                                                 const Tensor3D &field,
+                                                 const Axis::ENUMDATA faceNormal,
+                                                 const Axis::ENUMDATA momentumEquationComponent )
+{
+    using enum Axis::ENUMDATA; 
+    using FVT::G;
+
+    // Iterate all internal faces
+    iArray3 startIndex = {0, 0, 0}; startIndex(faceNormal)++;
+    iArray3 nFaces = mesh.nFacesNormal[faceNormal]; nFaces(faceNormal)--;
+
+    for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
+        for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
+            for (intType i = startIndex[X]; i != nFaces[X]; i++) {
+
+                const TensorIndex3D faceIndex = {i, j, k};
+                TensorIndex3D loCellIndex     = {i, j, k}; loCellIndex[faceNormal]--;
+                TensorIndex3D hiCellIndex     = {i, j, k};
+
+                // Do not add a contribution if this is an immersed boundary  or domain boundary face, this will be added later
+                floatType ibMask = ibData.mask( G(loCellIndex) ) * ibData.mask( G(hiCellIndex) );
+                ibMask = 1;
+
+                // Caclulate cell face gradient
+                floatType faceGradient = ( field( G(hiCellIndex) ) - field( G(loCellIndex) ) )
+                                       * mesh.cellCenterDiffInv[faceNormal]( faceIndex[faceNormal] );
+
 
                 // Add the contribution to the source term faces
                 floatType nuEff = fvCoeffs.nu + fvCoeffs.nuTurb[faceNormal](faceIndex);
@@ -1470,17 +1560,32 @@ void AddExplicitEddyViscosityTerm( FVCoefficients &fvCoeffs,
         // Each face normal seperately
         EnumFor<Axis>( [&] (Axis::ENUMDATA faceNormal) {    // Take derivative of this velcoity components
 
+            if ( axis == faceNormal ) {
+
+                // Calculate gradients using sparse gradient
+                AddExplicitEddyViscosityTermInternalFaces2( fvCoeffs, mesh, ibData, fields[faceNormal], faceNormal, axis );
+                
+            } else {
+
+                // // Calculate cell center gradients
+                // CalculateCellCenterVelocityGradient( gradientField, mesh, ibData, fields, faceNormal, axis );
+
+                // // Contribution to internal faces
+                // AddExplicitEddyViscosityTermInternalFaces1( fvCoeffs, mesh, ibData, gradientField, faceNormal, axis );
+
+            }
+
             // Calculate cell center gradients
-            CalculateCellCenterVelocityGradient( gradientField, mesh, ibData, fields, faceNormal, axis );
+            // CalculateCellCenterVelocityGradient( gradientField, mesh, ibData, fields, faceNormal, axis );
 
             // Contribution to internal faces
-            AddExplicitEddyViscosityTermInternalFaces( fvCoeffs, mesh, ibData, gradientField, faceNormal, axis );
+            // AddExplicitEddyViscosityTermInternalFaces( fvCoeffs, mesh, ibData, gradientField, faceNormal, axis );
 
             // Contribution to domain boundary faces
-            AddExplicitEddyViscosityTermDomainBoundaryFaces( fvCoeffs, mesh, gradientField, faceNormal, axis );
+            // AddExplicitEddyViscosityTermDomainBoundaryFaces( fvCoeffs, mesh, gradientField, faceNormal, axis );
 
             // Contribution to immersed boundary faces
-            AddExplicitEddyViscosityTermImmersedBoundaryFaces( fvCoeffs, mesh, ibData, gradientField, faceNormal, axis );
+            // AddExplicitEddyViscosityTermImmersedBoundaryFaces( fvCoeffs, mesh, ibData, gradientField, faceNormal, axis );
             
         } );
 
@@ -2012,7 +2117,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
 
     AddDeferredCorrection(fvCoeffs, fields, faceFluxes, mesh);
   
-    // AddExplicitEddyViscosityTerm(fvCoeffs, mesh, ibData, turbModelData, fields);
+    AddExplicitEddyViscosityTerm(fvCoeffs, mesh, ibData, turbModelData, fields);
 
     ChangeStencilToCentralAtIB( fvCoeffs, ibData, faceFluxes, mesh );
 
