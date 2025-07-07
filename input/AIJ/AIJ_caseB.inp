@@ -1,81 +1,46 @@
-// Sphere flow
+// AIJ case B, turbulent flow over 1:4:4 block
 
 Model {
-    nu   = 0.005
+    nu   = 1.5e-5
     transient = no
+    TurbulenceModel {
+        model = ZEQ0
+    }
 }
 
 Mesh {
 
     domainLowerBounds = (0, 0, 0)
-    domainUpperBounds = (26, 12, 12)
+    domainUpperBounds = (4.05, 2.2, 1.2)
 
     Grid x {
         Segment {
-            bounds     = (0, 8.5)
-            nCells     = 159
-            biasFactor = -3
-        }
-
-        Segment {
-            bounds     = (8.5, 9.5)
-            nCells     = 38
+            bounds     = (0, 4.05)
+            nCells     = 85
             biasFactor = 1
         }
-
-        Segment {
-            bounds     = (9.5, 26)
-            nCells     = 318
-            biasFactor = 4
-        }
     }
-
 
     Grid y {
         Segment {
-            bounds     = (0, 5.5)
-            nCells     = 110
-            biasFactor = -3
-        }
-
-        Segment {
-            bounds     = (5.5, 6.5)
-            nCells     = 38
+            bounds     = (0, 2.2)
+            nCells     = 50
             biasFactor = 1
-        }
-
-        Segment {
-            bounds     = (6.5, 12)
-            nCells     = 110
-            biasFactor = 3
         }
     }
 
-
     Grid z {
         Segment {
-            bounds     = (0, 5.5)
-            nCells     = 110
-            biasFactor = -3
-        }
-
-        Segment {
-            bounds     = (5.5, 6.5)
-            nCells     = 38
+            bounds     = (0, 1.2)
+            nCells     = 44
             biasFactor = 1
-        }
-
-        Segment {
-            bounds     = (6.5, 12)
-            nCells     = 110
-            biasFactor = 3
         }
     }
 }
 
 
 InitialConditions
-{
+{    
     type = uniform
     u = 1
     v = 0
@@ -96,6 +61,7 @@ BoundaryConditions
 
     // Inflow
     -x {
+        // u = profile1D, "AIJ_caseB_inflow.prof"
         u = uniform, 1
         v = uniform, 0
         w = uniform, 0
@@ -126,10 +92,10 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Symmetry
+    // Wall
     -z {
-        u = zeroGradient
-        v = zeroGradient
+        u = uniform, 0
+        v = uniform, 0
         w = uniform, 0
         p = zeroGradient
     }
@@ -137,12 +103,11 @@ BoundaryConditions
 
 
 SolidGeometry {
-
     boundaryTreatement = directionalImmersedBoundary
-
-    Sphere {
-        centerPosition = (9, 6, 6)
-        diameter       = 1
+    Block {
+        centerPosition = (1.025, 1.1, 0.1)
+        dimensions     = (0.05, 0.2, 0.2)
+        rotation       = (0, 0, 0)
     }
 }
 
@@ -153,59 +118,62 @@ Solver {
 
         linearisation           = Picard
         momentumInterpolation   = implicit
-        advectionScheme         = QUICK
-        advectionBlendingFactor = 1
+        advectionScheme         = upwind
+        advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 15
-        maxContinuityOuterResidual = 1e-8
-        maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
+        maxOuterIterations = 5
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 
     }
     
     Smoother {
 
-        type = domainSymmetricParallel
-        maxIterations = 2
-        maxResiduals = 1e-3
+        type = nestedLineSymmetricSerial
+        maxIterations = 3
+        maxResiduals = 1e-5
 
         planeSweepDirection = +z
         lineSweepDirection = +y
 
-        momentumRelaxation = (0.7, 0.7, 0.7)
-        pressureRelaxation = 1
+        eddyViscosityRelaxation = 1
+        momentumRelaxation      = (0.8, 0.8, 0.8)
+        pressureRelaxation      = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 1
+        maxCoarseLevels = 0
 
         preSmoothingIterations = 2
         postSmoothingIterations = 2
-        fineGridIterations   = 2
+        fineGridIterations   = 3
 
-        maxCoarseGridIterations = 200
-        maxCoarseGridResiduals  = 1e-6
+        maxCoarseGridIterations = 50
+        maxCoarseGridResiduals  = 1e-8
         
     }
 
 }
 
+Parallel {
+    numberOfThreads = 4
+}
 
 Output {
 
-    residualHistoryFilename = "output/residualHistory.csv"
+    residualHistoryFilename = "output/residual_history.csv"
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
-    fieldWriteInterval      = 0
+    fieldWriteInterval      = 1
 
     Monitors {
         ForceCalculator {
             filename = "output/forces.csv"
         }
     }
-    
 
 }

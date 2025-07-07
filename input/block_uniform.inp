@@ -1,10 +1,10 @@
 // Block flow
 
 Model {
-    nu   = 0.00002
+    nu   = 0.0005
     transient = no
     TurbulenceModel {
-        model = ZEQ4
+        model = ZEQ0
         heightAxis = y
         averageBuildingHeight = 1
         averageBuildingWidth = 1
@@ -19,7 +19,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 20)
-            nCells     = 150
+            nCells     = 200
             biasFactor = 1
         }
     }
@@ -27,7 +27,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 4)
-            nCells     = 30
+            nCells     = 40
             biasFactor = 1
         }
     }
@@ -35,7 +35,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 4)
-            nCells     = 30
+            nCells     = 40
             biasFactor = 1
         }
     }
@@ -140,21 +140,21 @@ Solver {
         lineSweepDirection = +y
 
         eddyViscosityRelaxation = 1
-        momentumRelaxation = (0.8, 0.8, 0.8)
-        pressureRelaxation = 1
+        momentumRelaxation      = (0.8, 0.8, 0.8)
+        pressureRelaxation      = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 0
+        maxCoarseLevels = 4
 
-        preSmoothingIterations = 3
-        postSmoothingIterations = 3
+        preSmoothingIterations = 2
+        postSmoothingIterations = 2
         fineGridIterations   = 3
 
-        maxCoarseGridIterations = 100
-        maxCoarseGridResiduals  = 1e-12
+        maxCoarseGridIterations = 50
+        maxCoarseGridResiduals  = 1e-8
         
     }
 
