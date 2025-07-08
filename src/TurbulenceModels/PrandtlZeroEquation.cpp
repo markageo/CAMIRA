@@ -33,7 +33,7 @@ void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceModelD
 
 
 
-void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceViscosityField( EnumVector<Axis, Tensor3D> &nuTurbulent,
+void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceViscosityField( Tensor3D &nuTurbulent,
                                                                                           const FieldData<Tensor3D> &fields,
                                                                          [[maybe_unused]] const IBData &ibData,
                                                                                           const Mesh &mesh )
@@ -43,58 +43,19 @@ void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceViscos
 
     CalculateVelocityDeformationRate( m_velocityDeformationRate, fields, ibData, mesh );
 
-    EnumFor<Axis>( [&] (Axis::ENUMDATA faceNormal) {
+    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
+        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
+            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
 
-        for ( intType k = 0; k != mesh.nFacesNormal[faceNormal][Z]; k++ ) {
-            for ( intType j = 0; j != mesh.nFacesNormal[faceNormal][Y]; j++ ) {
-                for ( intType i = 0; i != mesh.nFacesNormal[faceNormal][X]; i++ ) {
+                const TensorIndex3D cellIndexG = G(i, j, k);
 
-                    TensorIndex3D faceIndex    = { i, j, k },
-                                  loCellIndexG = G( i, j, k ),
-                                  hiCellIndexG = G( i, j, k );
-                    loCellIndexG[faceNormal] -= 1;
-                    
-                    const floatType lambda = mesh.interpFactors[faceNormal]( faceIndex[faceNormal] );
-                    const floatType Sface = (1.0f - lambda) * m_velocityDeformationRate(loCellIndexG)  +  lambda * m_velocityDeformationRate(hiCellIndexG);
-                    
-                    const floatType lmix = m_vonKarmanConstant * m_wallDistance[faceNormal](faceIndex);
+                const floatType lmix = m_vonKarmanConstant * m_wallDistance(cellIndexG);
 
-                    const floatType nuTurbulentNew = lmix * lmix * Sface;
+                const floatType nuTurbulentNew = lmix * lmix * m_velocityDeformationRate(cellIndexG);
 
-                    nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
-                                                       + m_eddyViscosityRelaxation * nuTurbulentNew;
-                    
-                }
-            }
-        }
-
-    } );
-
-
-     // Go back through and correct for the immersed boundary faces
-    for ( const auto &ibCellComponent : ibData.ibCells ) {
-        for ( const auto &ibCell : ibCellComponent ) { 
-
-            const TensorIndex3D &cellIndex = ibCell.cellIndex;
-
-            for ( const auto &sourceTermData : ibCell.sourceTermsData ) {
-
-                const Axis::ENUMDATA faceNormal = sourceTermData.direction;
-
-                // Get face index
-                TensorIndex3D faceIndex = cellIndex;
-                faceIndex[faceNormal] += sourceTermData.faceDirectionIndex;
-
-                // Cell face velocity deformation rate. Just take internal cell value
-                const floatType Sface = m_velocityDeformationRate( G(cellIndex) );
-
-                const floatType lmix = m_vonKarmanConstant * m_wallDistance[faceNormal](faceIndex);
-
-                const floatType nuTurbulentNew = lmix * lmix * Sface;
-
-                nuTurbulent[faceNormal](faceIndex) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent[faceNormal](faceIndex)
-                                                   + m_eddyViscosityRelaxation * nuTurbulentNew;
-
+                nuTurbulent(cellIndexG) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent(cellIndexG)
+                                     + m_eddyViscosityRelaxation * nuTurbulentNew;
+                
             }
         }
     }

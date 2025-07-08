@@ -68,7 +68,7 @@ inline bool IsWallBC( const BoundaryConditionData &bcData,
 
 
 
-// Rate of strain tensor squared 
+// Rate of strain tensor squared, calculated at cell centers
 inline void CalculateVelocityDeformationRate( Tensor3D &S,
                                               const FieldData<Tensor3D> &fields, 
                                               const IBData &ibData,
@@ -108,7 +108,8 @@ inline void CalculateVelocityDeformationRate( Tensor3D &S,
 
                 } );
 
-                S(cellP)    = sqrt(
+                S(cellP)    = ibData.mask(cellP)
+                            * sqrt(
                                ddxU[X] * ddxU[X]
                              + ddyU[Y] * ddyU[Y]
                              + ddzU[Z] * ddzU[Z]
@@ -220,11 +221,10 @@ inline void CalculateVelocityDeformationRate( Tensor3D &S,
     for ( intType i = 0; i != BoundaryPatches::count; i++ ) {
         auto boundaryPatch = static_cast<BoundaryPatches::ENUMDATA>(i);
         
-        Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
+        const Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
 
         intType iCell_p = ( boundaryPatch == LUT::NegativePatch[axis] ) ? 0  : mesh.nCells[axis] - 1,
                 iCell_g = ( boundaryPatch == LUT::NegativePatch[axis] ) ? -1 : mesh.nCells[axis];
-
 
         S.chip( G(iCell_g), axis ) = S.chip( G(iCell_p) , axis );
     }
@@ -233,15 +233,16 @@ inline void CalculateVelocityDeformationRate( Tensor3D &S,
 
 
 
-inline EnumVector<Axis, Tensor3D> NearestWallDistance( const Mesh &mesh,
-                                                       const Tree &tree,
-                                                       const BoundaryConditionData &bcData )
+inline Tensor3D NearestWallDistance( const Mesh &mesh,
+                                     const Tree &tree,
+                                     const BoundaryConditionData &bcData )
 {
     using enum Axis::ENUMDATA;
+    using FVT::G;
 
-    EnumVector<Axis, Tensor3D> wallDistance( { Tensor3D( mesh.nFacesNormal[X][X], mesh.nFacesNormal[X][Y], mesh.nFacesNormal[X][Z] ).setZero(),
-                                               Tensor3D( mesh.nFacesNormal[Y][X], mesh.nFacesNormal[Y][Y], mesh.nFacesNormal[Y][Z] ).setZero(),
-                                               Tensor3D( mesh.nFacesNormal[Z][X], mesh.nFacesNormal[Z][Y], mesh.nFacesNormal[Z][Z] ).setZero() } );
+    Tensor3D wallDistance = Tensor3D( mesh.nCells[X] + 2*nGhost, 
+                                      mesh.nCells[Y] + 2*nGhost,
+                                      mesh.nCells[Z] + 2*nGhost ).setZero();
 
     // Work out which domain boundaries are walls and store the result
     EnumVector<BoundaryPatches, bool> domainBoundaryWalls;
@@ -257,53 +258,87 @@ inline EnumVector<Axis, Tensor3D> NearestWallDistance( const Mesh &mesh,
 
     floatType inf = std::numeric_limits<floatType>::infinity();
 
-    EnumFor<Axis>( [&] (Axis::ENUMDATA faceNormal) {
+    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
+        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
+            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
 
-        for ( intType k = 0; k != mesh.nFacesNormal[faceNormal][Z]; k++ ) {
-            for ( intType j = 0; j != mesh.nFacesNormal[faceNormal][Y]; j++ ) {
-                for ( intType i = 0; i != mesh.nFacesNormal[faceNormal][X]; i++ ) {
+                TensorIndex3D cellIndexG = G(i, j, k);
+                fVector3 cellCoords{ mesh.cellCenters[X](i), mesh.cellCenters[Y](j), mesh.cellCenters[Z](k) };
 
-                    TensorIndex3D faceIndex{i, j, k};
-                    fVector3 faceCoords{ (faceNormal == X) ? mesh.cellFaces[X](i) : mesh.cellCenters[X](i),
-                                         (faceNormal == Y) ? mesh.cellFaces[Y](j) : mesh.cellCenters[Y](j),
-                                         (faceNormal == Z) ? mesh.cellFaces[Z](k) : mesh.cellCenters[Z](k), };
+                // Ignore if this point is inside the geometry
+                if ( PointInside( tree, cellCoords(X), cellCoords(Y), cellCoords(Z) ) ) 
+                    continue; 
 
-                    // Ignore if this point is inside the geometry
-                    // Commented out since immersed boundary faces can be inside the solid, but may still need a distance to compute the eddy viscosity
-                    // if ( PointInside( tree, faceCoords(X), faceCoords(Y), faceCoords(Z) ) ) 
-                    //     continue; 
+                // Distance to the nearest geometry object
+                wallDistance(cellIndexG) = inf;
+                if ( !tree.empty() ) {
+                    wallDistance(cellIndexG) = NearestDistance( tree,
+                                                                cellCoords[X],
+                                                                cellCoords[Y],
+                                                                cellCoords[Z] );
+                }
 
-                    // Distance to the nearest geometry object
-                    wallDistance[faceNormal](faceIndex) = inf;
-                    if ( !tree.empty() ){
-                        wallDistance[faceNormal](faceIndex) = NearestDistance( tree,
-                                                                               faceCoords[X],
-                                                                               faceCoords[Y],
-                                                                               faceCoords[Z] );
+                // Check if there is a domain boundary that is closer
+                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                    
+                    if ( domainBoundaryWalls[ LUT::NegativePatch[axis] ] ) {
+                        wallDistance(cellIndexG) = std::min( wallDistance(cellIndexG),
+                                                             abs( cellCoords[axis] - mesh.cellFaces[axis]( 0 ) ) );
                     }
 
-                    // Check if there is a domain boundary that is closer
-                    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                        
-                        if ( domainBoundaryWalls[ LUT::NegativePatch[axis] ] ) {
-                            wallDistance[faceNormal](faceIndex) = std::min( wallDistance[faceNormal](faceIndex),
-                                                                            abs( faceCoords[axis] - mesh.cellFaces[axis]( 0 ) ) );
-                        }
+                    if ( domainBoundaryWalls[ LUT::PositivePatch[axis] ] ) {
+                        wallDistance(cellIndexG) = std::min( wallDistance(cellIndexG),
+                                                             abs( mesh.cellFaces[axis]( mesh.nFacesNormal[axis](axis) - 1 ) - cellCoords[axis] ) );
+                    }
 
-                        if ( domainBoundaryWalls[ LUT::PositivePatch[axis] ] ) {
-                            wallDistance[faceNormal](faceIndex) = std::min( wallDistance[faceNormal](faceIndex),
-                                                                            abs( mesh.cellFaces[axis]( mesh.nFacesNormal[axis](axis) - 1 ) - faceCoords[axis] ) );
-                        }
+                } );
 
-                    } );
+            }
+        }
+    }
+
+
+    // Boundary ghost cells
+    EnumFor<BoundaryPatches>( [&] ( BoundaryPatches::ENUMDATA bp ) {
+
+        // Leave the ghost cell value as zero if it is a wall
+        // Since a harmonic mean is used for the turbulent viscosity, this will automatically make the face viscosity zero if 
+        // any one of the viscosity are zero, because the wall distance is zero for example
+        if ( !detail::IsWallBC(bcData, bp) ) {
+
+            // Axis normal
+            Axis::ENUMDATA normal = LUT::BoundaryPatchAxis[bp];
+
+            Axis::ENUMDATA axis1 = LUT::LoOrthogonalAxis[normal],
+                           axis2 = LUT::HiOrthogonalAxis[normal];
+
+            // Iterate plane
+            for ( intType idx1 = 0; idx1 != mesh.nCells(axis1); idx1++ ) {
+                for ( intType idx2 = 0; idx2 != mesh.nCells(axis2); idx2++ ) {
+                    
+                    TensorIndex3D cellIndex, cellIndex_g;
+                    cellIndex[axis1] = idx1;
+                    cellIndex[axis2] = idx2;
+                    cellIndex_g = cellIndex;
+
+                    if ( bp == LUT::PositivePatch[normal] ) {
+                        cellIndex[normal]   = mesh.nCells[normal];
+                        cellIndex_g[normal] = cellIndex[normal] + 1;
+                    } else {
+                        cellIndex[normal]   = 0;
+                        cellIndex_g[normal] = cellIndex[normal] - 1;
+                    }
+
+                    // Kind of like a Neumann condition or something
+                    wallDistance(G(cellIndex_g)) = wallDistance(G(cellIndex));
 
                 }
-            }
+            }   
+
         }
 
     } );
 
-    
     return wallDistance;
 } 
 

@@ -10,14 +10,12 @@ void TurbulenceModel<TurbulenceModels::Laminar>::SetTurbulenceModelData( [[ mayb
 { /* NULL */ }
 
 
-void TurbulenceModel<TurbulenceModels::Laminar>::SetTurbulenceViscosityField( EnumVector<Axis, Tensor3D> &nuTurbulent,
+void TurbulenceModel<TurbulenceModels::Laminar>::SetTurbulenceViscosityField( Tensor3D &nuTurbulent,
                                                                               [[ maybe_unused ]] const FieldData<Tensor3D> &fields,
                                                                               [[ maybe_unused ]] const IBData &ibData,
                                                                               [[ maybe_unused ]] const Mesh &mesh )
 {
-    EnumFor<Axis>( [&] (Axis::ENUMDATA faceNormal) {
-        nuTurbulent[faceNormal].setZero();
-    } );
+    nuTurbulent.setZero();
 }
 
 }   // end namespace CAMIRA

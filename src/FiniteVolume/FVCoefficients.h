@@ -75,7 +75,7 @@ public:
 
 
     // Turbulence Viscosity
-    EnumVector<Axis, Tensor3D> nuTurb;                                          // stored at cell faces
+    Tensor3D nuTurb;                                                            // Stored at cell centers, has ghost cells for BCs
     
 
     // General data
