@@ -362,11 +362,12 @@ void SolveSteady( const InputData &inputData,
     SetMGLevels( mgLevels, inputData, axisTransformation );
 
     // References to finest grid
-    auto& fields = mgLevels[0].fields;
-    auto& mesh   = mgLevels[0].mesh;
-    auto& bcData = mgLevels[0].bcData;
-    auto& ibData = mgLevels[0].ibData;
-    auto& mask   = mgLevels[0].ibData.mask;
+    auto &fields   = mgLevels[0].fields;
+    auto &fvCoeffs = mgLevels[0].fvCoeffs;
+    auto &mesh     = mgLevels[0].mesh;
+    auto &bcData   = mgLevels[0].bcData;
+    auto &ibData   = mgLevels[0].ibData;
+    auto &mask     = mgLevels[0].ibData.mask;
 
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
@@ -385,7 +386,7 @@ void SolveSteady( const InputData &inputData,
     if ( inputData.calculateForces )
         forceLogFilePtr = std::make_unique<ForceLogFile>( inputData.forceCalculatorFilename, axisTransformation );
 
-    FieldWriter fieldWriter( fields, mask, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
+    FieldWriter fieldWriter( fields, fvCoeffs, mask, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 
@@ -495,11 +496,12 @@ void SolveTransient( const InputData &inputData,
     SetMGLevels( mgLevels, inputData, axisTransformation );
 
     // References to finest grid
-    auto& fields = mgLevels[0].fields;
-    auto& mesh   = mgLevels[0].mesh;
-    auto& bcData = mgLevels[0].bcData;
-    auto& ibData = mgLevels[0].ibData;
-    auto& mask   = mgLevels[0].ibData.mask;
+    auto &fields   = mgLevels[0].fields;
+    auto &fvCoeffs = mgLevels[0].fvCoeffs;
+    auto &mesh     = mgLevels[0].mesh;
+    auto &bcData   = mgLevels[0].bcData;
+    auto &ibData   = mgLevels[0].ibData;
+    auto &mask     = mgLevels[0].ibData.mask;
 
     // Initialise residuals
     FieldData<floatType> residualsOuter(0.0f), residualsScaleFactor(1.0f);
@@ -519,7 +521,7 @@ void SolveTransient( const InputData &inputData,
         forceLogFilePtr = std::make_unique<ForceLogFile>( inputData.forceCalculatorFilename, axisTransformation );
 
 
-    FieldWriter fieldWriter( fields, mask, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
+    FieldWriter fieldWriter( fields, fvCoeffs, mask, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 

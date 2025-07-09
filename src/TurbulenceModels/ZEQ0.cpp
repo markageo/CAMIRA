@@ -40,9 +40,10 @@ void TurbulenceModel<TurbulenceModels::ZEQ0>::SetTurbulenceViscosityField( Tenso
     using enum Axis::ENUMDATA;
     using FVT::G;
 
-    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
-        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
-            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
+    // Includes ghost cells
+    for ( intType k = -1; k != mesh.nCells[Z] + 1; k++ ) {
+        for ( intType j = -1; j != mesh.nCells[Y] + 1; j++ ) {
+            for ( intType i = -1; i != mesh.nCells[X] + 1; i++ ) {
 
                 const TensorIndex3D cellIndexG = G(i, j, k);
 

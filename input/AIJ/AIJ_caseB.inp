@@ -5,6 +5,8 @@ Model {
     transient = no
     TurbulenceModel {
         model = ZEQ0
+        inflowReBuildingHeight = 104533
+        inflowTurbIntensityBuildingHeight = 0.05
     }
 }
 
@@ -16,7 +18,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 4.05)
-            nCells     = 85
+            nCells     = 170
             biasFactor = 1
         }
     }
@@ -24,7 +26,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 2.2)
-            nCells     = 50
+            nCells     = 100
             biasFactor = 1
         }
     }
@@ -32,7 +34,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1.2)
-            nCells     = 44
+            nCells     = 88
             biasFactor = 1
         }
     }
@@ -61,8 +63,8 @@ BoundaryConditions
 
     // Inflow
     -x {
-        // u = profile1D, "AIJ_caseB_inflow.prof"
-        u = uniform, 1
+        u = profile1D, "AIJ_caseB_inflow.prof"
+        // u = uniform, 1
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
@@ -107,7 +109,7 @@ SolidGeometry {
     Block {
         centerPosition = (1.025, 1.1, 0.1)
         dimensions     = (0.05, 0.2, 0.2)
-        rotation       = (0, 0, 0)
+        rotation       = (0, 0, 35)
     }
 }
 
@@ -122,9 +124,9 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 50
-        maxContinuityOuterResidual = 1e-6
-        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+        maxOuterIterations = 10
+        maxContinuityOuterResidual = 1e-8
+        maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
 
     }
     
@@ -138,14 +140,14 @@ Solver {
         lineSweepDirection = +y
 
         eddyViscosityRelaxation = 1
-        momentumRelaxation      = (0.7, 0.7, 0.7)
+        momentumRelaxation      = (0.8, 0.8, 0.8)
         pressureRelaxation      = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 4
+        maxCoarseLevels = 3
 
         preSmoothingIterations = 2
         postSmoothingIterations = 2
