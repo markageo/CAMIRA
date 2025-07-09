@@ -51,9 +51,10 @@ void TurbulenceModel<TurbulenceModels::ZEQ3>::SetTurbulenceViscosityField( Tenso
     using enum Axis::ENUMDATA;
     using FVT::G;
 
-    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
-        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
-            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
+    // Includes ghost cells
+    for ( intType k = -1; k != mesh.nCells[Z] + 1; k++ ) {
+        for ( intType j = -1; j != mesh.nCells[Y] + 1; j++ ) {
+            for ( intType i = -1; i != mesh.nCells[X] + 1; i++ ) {
 
                 const TensorIndex3D cellIndex  = {i, j, k};
                 const TensorIndex3D cellIndexG = G(i, j, k);
@@ -67,8 +68,8 @@ void TurbulenceModel<TurbulenceModels::ZEQ3>::SetTurbulenceViscosityField( Tenso
                                       * exp( - m_b * m_wallDistance(cellIndexG) / m_averageBuildingHeight )
                                       * velocityMagnitude
                                       * std::pow( m_wallDistance(cellIndexG) / m_averageBuildingHeight, 2.0f );
-
-                const floatType z = mesh.cellCenters[m_heightAxis]( cellIndex[m_heightAxis] );
+  
+                const floatType z = GetVerticalHeight( mesh, cellIndex, m_heightAxis );
 
                 const floatType nuOut = ( z == 0 ) ? 0.0f       //  Avoid division by zero
                                                    : 0.16f

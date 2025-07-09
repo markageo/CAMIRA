@@ -343,6 +343,33 @@ inline Tensor3D NearestWallDistance( const Mesh &mesh,
 } 
 
 
+// Gets vertical coordinate/height.
+// Assumes 'floor' is on the negative side of the axis and is the domain boundary
+inline floatType GetVerticalHeight( const Mesh &mesh,
+                                    const TensorIndex3D &cellIndex,
+                                    const Axis::ENUMDATA heightAxis )
+{
+    // Check for ghost cell
+    if ( cellIndex[heightAxis] < 0 ) {
+
+        // Below the floor, just make this zero
+        return 0.0;              
+
+    } else if ( cellIndex[heightAxis] > mesh.nCells[heightAxis] - 1 ) {
+
+        // Above the domain, just use first interior cell value
+        return mesh.cellCenters[heightAxis]( mesh.nCells[heightAxis] - 1 ) - mesh.cellFaces[heightAxis](0);   
+
+    } else {
+
+        // No ghost cell
+        return mesh.cellCenters[heightAxis]( cellIndex[heightAxis] ) - mesh.cellFaces[heightAxis](0);
+
+    }
+}
+
+
+
 }   // end namespace CAMIRA
 
 

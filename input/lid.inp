@@ -3,7 +3,9 @@
 Model {
     nu              = 0.0001
     transient       = no
-    turbulenceModel = ChenAndXuZeroEquation
+    TurbulenceModel {
+        model = ZEQ0
+    }
 }
 
 Mesh {
@@ -124,6 +126,7 @@ Solver {
         planeSweepDirection = +z
         lineSweepDirection = +y
 
+        eddyViscosityRelaxation = 1
         momentumRelaxation = (0.65, 0.65, 0.65)
         pressureRelaxation = 1
 
@@ -131,7 +134,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 3
+        maxCoarseLevels = 0
 
         preSmoothingIterations = 2
         postSmoothingIterations = 2

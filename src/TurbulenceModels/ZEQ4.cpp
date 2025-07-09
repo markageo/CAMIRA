@@ -53,9 +53,10 @@ void TurbulenceModel<TurbulenceModels::ZEQ4>::SetTurbulenceViscosityField( Tenso
 
     CalculateVelocityDeformationRate( m_velocityDeformationRate, fields, ibData, mesh );
 
-    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
-        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
-            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
+    // Includes ghost cells
+    for ( intType k = -1; k != mesh.nCells[Z] + 1; k++ ) {
+        for ( intType j = -1; j != mesh.nCells[Y] + 1; j++ ) {
+            for ( intType i = -1; i != mesh.nCells[X] + 1; i++ ) {
 
                 const TensorIndex3D cellIndex  = {i, j, k};
                 const TensorIndex3D cellIndexG = G(i, j, k);
@@ -64,7 +65,7 @@ void TurbulenceModel<TurbulenceModels::ZEQ4>::SetTurbulenceViscosityField( Tenso
                                                         + std::pow(fields.U[Y](cellIndexG), 2.0f) 
                                                         + std::pow(fields.U[Z](cellIndexG), 2.0f) );
 
-                const floatType z = mesh.cellCenters[m_heightAxis]( cellIndex[m_heightAxis] );
+                const floatType z = GetVerticalHeight( mesh, cellIndex, m_heightAxis );
 
                 const floatType nuIn  = m_velocityDeformationRate(cellIndexG) 
                                       * std::pow( 
