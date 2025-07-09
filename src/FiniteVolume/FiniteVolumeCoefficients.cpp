@@ -1399,9 +1399,9 @@ void AddExplicitEddyViscosityTermOffDiagonal( FVCoefficients &fvCoeffs,
     using enum Axis::ENUMDATA; 
     using FVT::G;
 
-    // Iterate all faces
-    iArray3 startIndex = {0, 0, 0};
-    iArray3 nFaces = mesh.nFacesNormal[faceNormal]; 
+    // Iterate internal faces
+    iArray3 startIndex = {0, 0, 0}; startIndex(faceNormal)++;
+    iArray3 nFaces = mesh.nFacesNormal[faceNormal]; nFaces(faceNormal)--;
 
     // for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
     //     for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {
@@ -1493,9 +1493,9 @@ void AddExplicitEddyViscosityTermDiagonal( FVCoefficients &fvCoeffs,
     using enum Axis::ENUMDATA; 
     using FVT::G;
 
-    // Iterate all faces, domain boundaries handled by ghost cells
-    iArray3 startIndex = {0, 0, 0};
-    iArray3 nFaces = mesh.nFacesNormal[faceNormal]; 
+    // Iterate internal faces
+    iArray3 startIndex = {0, 0, 0}; startIndex(faceNormal)++;
+    iArray3 nFaces = mesh.nFacesNormal[faceNormal]; nFaces(faceNormal)--;
 
     // for (intType k = startIndex[Z]; k != nFaces[Z]; k++) {
     //     for (intType j = startIndex[Y]; j != nFaces[Y]; j++) {

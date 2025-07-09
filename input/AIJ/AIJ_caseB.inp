@@ -4,9 +4,11 @@ Model {
     nu   = 1.5e-5
     transient = no
     TurbulenceModel {
-        model = ZEQ0
-        inflowReBuildingHeight = 104533
-        inflowTurbIntensityBuildingHeight = 0.05
+        model = ZEQ4
+        heightAxis = z
+        averageBuildingHeight = 0.2
+        averageBuildingWidth = 0.2
+        referenceHeight = 0.2
     }
 }
 
@@ -18,7 +20,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 4.05)
-            nCells     = 170
+            nCells     = 85
             biasFactor = 1
         }
     }
@@ -26,7 +28,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 2.2)
-            nCells     = 100
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -34,7 +36,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1.2)
-            nCells     = 88
+            nCells     = 44
             biasFactor = 1
         }
     }
@@ -124,7 +126,7 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 10
+        maxOuterIterations = 99
         maxContinuityOuterResidual = 1e-8
         maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
 
