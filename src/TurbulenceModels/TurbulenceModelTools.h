@@ -322,7 +322,7 @@ inline Tensor3D NearestWallDistance( const Mesh &mesh,
                     cellIndex_g = cellIndex;
 
                     if ( bp == LUT::PositivePatch[normal] ) {
-                        cellIndex[normal]   = mesh.nCells[normal];
+                        cellIndex[normal]   = mesh.nCells[normal] - 1;
                         cellIndex_g[normal] = cellIndex[normal] + 1;
                     } else {
                         cellIndex[normal]   = 0;
