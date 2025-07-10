@@ -881,11 +881,31 @@ namespace
         // Max iterations
         inputData.multigridSettings.preSmoothingIterations  = multigridTree.get<intType>( "preSmoothingIterations" );
         inputData.multigridSettings.postSmoothingIterations = multigridTree.get<intType>( "postSmoothingIterations" );
-        inputData.multigridSettings.maxCoarseGridIterations    = multigridTree.get<intType>( "maxCoarseGridIterations" );
+        inputData.multigridSettings.maxCoarseGridIterations = multigridTree.get<intType>( "maxCoarseGridIterations" );
         inputData.multigridSettings.fineGridIterations      = multigridTree.get<intType>( "fineGridIterations" );
 
         // Max residuals
         inputData.multigridSettings.maxCoarseGridResiduals    = multigridTree.get<floatType>( "maxCoarseGridResiduals" );
+
+    }
+
+
+
+    void ReadBoostConvSettings( InputData &inputData, 
+                                const pt::ptree &solverTree) 
+    {
+        boost::optional<const pt::ptree &> boostConvTreeOptional = solverTree.get_child_optional( "BoostConv" );
+        if ( !boostConvTreeOptional ) {
+            inputData.boostConvSettings.useBoostConv = false;
+            return;
+        }
+
+        const pt::ptree &boostConvTree = boostConvTreeOptional.get();
+
+        inputData.boostConvSettings.useBoostConv   = true;
+        inputData.boostConvSettings.basisSize      = boostConvTree.get<intType>( "basisSize" );
+        inputData.boostConvSettings.startIteration = boostConvTree.get<intType>( "startIteration" );
+        inputData.boostConvSettings.relaxation     = boostConvTree.get<floatType>( "relaxation" ); 
 
     }
 
@@ -905,6 +925,8 @@ namespace
         // Read multigrid settings
         ReadMultigridSettings(inputData, solverTree);
 
+        // Read BoostConv settings (which is optional for the user)
+        ReadBoostConvSettings(inputData, solverTree);
     }
 
 
