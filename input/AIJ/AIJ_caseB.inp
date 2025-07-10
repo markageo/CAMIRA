@@ -4,7 +4,7 @@ Model {
     nu   = 1.5e-5
     transient = no
     TurbulenceModel {
-        model = ZEQ4
+        model = ZEQ0
         heightAxis = z
         averageBuildingHeight = 0.2
         averageBuildingWidth = 0.2
@@ -20,7 +20,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 4.05)
-            nCells     = 85
+            nCells     = 170
             biasFactor = 1
         }
     }
@@ -28,7 +28,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 2.2)
-            nCells     = 50
+            nCells     = 100
             biasFactor = 1
         }
     }
@@ -36,7 +36,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1.2)
-            nCells     = 44
+            nCells     = 88
             biasFactor = 1
         }
     }
@@ -66,7 +66,6 @@ BoundaryConditions
     // Inflow
     -x {
         u = profile1D, "AIJ_caseB_inflow.prof"
-        // u = uniform, 1
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
@@ -126,8 +125,8 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 99
-        maxContinuityOuterResidual = 1e-8
+        maxOuterIterations = 150
+        maxContinuityOuterResidual = 0
         maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
 
     }
@@ -149,15 +148,21 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 3
+        maxCoarseLevels = 4
 
         preSmoothingIterations = 2
         postSmoothingIterations = 2
         fineGridIterations   = 3
 
-        maxCoarseGridIterations = 50
-        maxCoarseGridResiduals  = 1e-8
+        maxCoarseGridIterations = 100
+        maxCoarseGridResiduals  = 1e-12
         
+    }
+
+    BoostConv {
+        basisSize      = 5
+        startIteration = 2
+        relaxation     = 0.6
     }
 
 }
@@ -172,7 +177,7 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
-    fieldWriteInterval      = 1
+    fieldWriteInterval      = 0
 
     Monitors {
         ForceCalculator {

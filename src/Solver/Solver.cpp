@@ -10,9 +10,7 @@
 #include "../FiniteVolume/GhostCells.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 #include "../Multigrid/Multigrid.h"
-
-#include "../IO/ArrayIO.h"
-#include "../IO/VTKWriter.h"
+#include "../BoostConv/BoostConv.h"
 
 #include "ResidualFunctions.h"
 
@@ -369,6 +367,20 @@ void SolveSteady( const InputData &inputData,
     auto &ibData   = mgLevels[0].ibData;
     auto &mask     = mgLevels[0].ibData.mask;
 
+    // BoostConv
+    std::unique_ptr<BoostConv> boostConvPtr;
+    FieldData<Tensor3D> fieldsPrevIter, diffResidual;
+    if ( inputData.boostConvSettings.useBoostConv ) {
+        fieldsPrevIter = fields;
+        diffResidual = FieldData<Tensor3D>( Tensor3D( mesh.nCells[0] + 2*nGhost,
+                                                      mesh.nCells[1] + 2*nGhost, 
+                                                      mesh.nCells[2] + 2*nGhost  ).setZero() );
+        boostConvPtr = std::make_unique<BoostConv>( inputData.boostConvSettings.basisSize, 
+                                                    inputData.boostConvSettings.startIteration, 
+                                                    inputData.boostConvSettings.relaxation, 
+                                                    diffResidual);
+    }
+
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
     floatType massFluxResidual;
@@ -466,6 +478,21 @@ void SolveSteady( const InputData &inputData,
         if ( writeFields && (nOuterIterations % inputData.fieldWriteInterval) == 0 ) {
             fieldWriter.WriteDataIteration( nOuterIterations );
         }  
+
+        // BoostConv
+        if ( inputData.boostConvSettings.useBoostConv ) {
+            TIC("BoostConv")
+            ForAllFieldData( [&] (intType f) {
+                diffResidual[f] = fields[f] - fieldsPrevIter[f];
+            } );
+            fieldsPrevIter = fields;
+            boostConvPtr->UpdateStateModification( diffResidual );
+            ForAllFieldData( [&] (intType f) {
+                fields[f] += boostConvPtr->stateModification[f];
+            } );
+            TOC()
+        }
+        
 
     }
 
