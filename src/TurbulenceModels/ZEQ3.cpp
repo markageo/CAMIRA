@@ -45,7 +45,7 @@ void TurbulenceModel<TurbulenceModels::ZEQ3>::SetTurbulenceModelData( const Inpu
 
 void TurbulenceModel<TurbulenceModels::ZEQ3>::SetTurbulenceViscosityField( Tensor3D &nuTurbulent,
                                                                            const FieldData<Tensor3D> &fields,
-                                                                           const IBData &ibData,
+                                                        [[ maybe_unused ]] const IBData &ibData,
                                                                            const Mesh &mesh )
 {
     using enum Axis::ENUMDATA;
