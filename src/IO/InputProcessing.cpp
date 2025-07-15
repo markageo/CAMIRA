@@ -203,17 +203,18 @@ namespace
     \*-------------------------------------------------------------------------------------*/
 
     void ValidateSegmentBounds(const std::vector<InputData::MeshSegment> &meshSegment, 
-                               const floatType &domainSize)
+                               const floatType domainLowerBound,
+                               const floatType domainUpperBound)
     {
-
-        // The first one must start at zero
-        if (meshSegment.front().startCoordinate != 0.0) {
-            throw std::runtime_error( "Mesh segments must start at coordinate 0." );
+        // The first one must start at the lower bounds
+        if ( meshSegment.front().startCoordinate != domainLowerBound ) {
+            throw std::runtime_error( "Mesh segments must start at lower bounds." );
         }
 
-        // Must end at the given domain size
-        if (meshSegment.back().endCoordinate != domainSize ) {
-            throw std::runtime_error( "Mesh segments to not match given domain bounds." );
+
+        // Must end at the upper bounds
+        if ( meshSegment.back().endCoordinate != domainUpperBound ) {
+            throw std::runtime_error( "Mesh segments must end at upper bounds." );
         }
 
 
@@ -223,7 +224,6 @@ namespace
                 throw std::runtime_error( "Mesh segments must not overlap or have gaps." );
             }
         }
-
     }
 
 
@@ -258,27 +258,33 @@ namespace
 
         const pt::ptree &meshTree = tree.get_child( "Mesh" );
 
-        // Domain
-        std::vector<floatType> domainSizeTemp = meshTree.get< std::vector<floatType> >( "domain" );
-        inputData.domainSize(0) = domainSizeTemp[0];
-        inputData.domainSize(1) = domainSizeTemp[1];
-        inputData.domainSize(2) = domainSizeTemp[2];
+        // Domain bounds
+        std::vector<floatType> domainLowerBoundsTemp = meshTree.get< std::vector<floatType> >( "domainLowerBounds" );
+        inputData.domainLowerBounds(0) = domainLowerBoundsTemp[0];
+        inputData.domainLowerBounds(1) = domainLowerBoundsTemp[1];
+        inputData.domainLowerBounds(2) = domainLowerBoundsTemp[2];
+
+        std::vector<floatType> domainUpperBoundsTemp = meshTree.get< std::vector<floatType> >( "domainUpperBounds" );
+        inputData.domainUpperBounds(0) = domainUpperBoundsTemp[0];
+        inputData.domainUpperBounds(1) = domainUpperBoundsTemp[1];
+        inputData.domainUpperBounds(2) = domainUpperBoundsTemp[2];
+
 
         // Grids
         ReadGrid(inputData.meshSegments[X], meshTree, "Gridx");
         ReadGrid(inputData.meshSegments[Y], meshTree, "Gridy");
         ReadGrid(inputData.meshSegments[Z], meshTree, "Gridz");
 
-        // Sort in increasing order of lower bound
-        auto sortComparison = [](const auto& i, const auto& j) { return i.startCoordinate < j.startCoordinate; };
-        std::sort( inputData.meshSegments[X].begin(), inputData.meshSegments[X].end(), sortComparison);
-        std::sort( inputData.meshSegments[Y].begin(), inputData.meshSegments[Y].end(), sortComparison );
-        std::sort( inputData.meshSegments[Z].begin(), inputData.meshSegments[Z].end(), sortComparison );
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-        // Check that the bounds are valid
-        ValidateSegmentBounds(inputData.meshSegments[X], inputData.domainSize[X]);
-        ValidateSegmentBounds(inputData.meshSegments[Y], inputData.domainSize[Y]);
-        ValidateSegmentBounds(inputData.meshSegments[Z], inputData.domainSize[Z]);
+            // Sort in increasing order of lower bound
+            auto sortComparison = [](const auto& i, const auto& j) { return i.startCoordinate < j.startCoordinate; };
+            std::sort( inputData.meshSegments[axis].begin(), inputData.meshSegments[axis].end(), sortComparison);
+
+            // Check that the bounds are valid
+            ValidateSegmentBounds(inputData.meshSegments[axis], inputData.domainLowerBounds[axis], inputData.domainUpperBounds[axis]);
+
+        } );
 
     }
 

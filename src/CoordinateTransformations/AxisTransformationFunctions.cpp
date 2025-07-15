@@ -119,11 +119,13 @@ namespace
 
         // Temporary for boundary conditions as user specifies them
         const auto boundaryConditionsUser = boundaryConditions;
-        fArray3 domainSizeUser = inputData.domainSize;
+        fArray3 domainLowerBoundsUser = inputData.domainLowerBounds,
+                domainUpperBoundsUser = inputData.domainUpperBounds;
         
         EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
 
-            inputData.domainSize( codeAxis ) = domainSizeUser( axisTransformation.UserAxis( codeAxis ) ); 
+            inputData.domainLowerBounds( codeAxis ) = domainLowerBoundsUser( axisTransformation.UserAxis( codeAxis ) ); 
+            inputData.domainUpperBounds( codeAxis ) = domainUpperBoundsUser( axisTransformation.UserAxis( codeAxis ) ); 
 
         } );
 
@@ -187,12 +189,14 @@ namespace
 
         // Create temporary copy of mesh data to take data from
         EnumVector<Axis, std::vector<InputData::MeshSegment> > userMeshSegments = inputData.meshSegments;
-        fArray3 userDomainSize = inputData.domainSize;
+        fArray3 userDomainLowerBounds = inputData.domainLowerBounds,
+                userDomainUpperBounds = inputData.domainUpperBounds;
 
         EnumFor<Axis>( [&] (Axis::ENUMDATA codeAxis) {
 
             inputData.meshSegments[ codeAxis ] = userMeshSegments[ axisTransformation.UserAxis( codeAxis ) ];
-            inputData.domainSize( codeAxis )   = userDomainSize[ axisTransformation.UserAxis( codeAxis ) ];
+            inputData.domainLowerBounds( codeAxis )   = userDomainLowerBounds[ axisTransformation.UserAxis( codeAxis ) ];
+            inputData.domainUpperBounds( codeAxis )   = userDomainUpperBounds[ axisTransformation.UserAxis( codeAxis ) ];
 
             if ( axisTransformation.CodeAxisReversed( codeAxis ) ) {
                 ReverseMesh(inputData.meshSegments[ codeAxis ]);
