@@ -27,9 +27,9 @@ struct InputData
     floatType rho, nu;
     bool transient;
 
-
-    // Domain size
-    fArray3 domainSize;
+    // Domain bounds
+    fArray3 domainLowerBounds,
+            domainUpperBounds;
 
 
     // Mesh

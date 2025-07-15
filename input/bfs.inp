@@ -6,8 +6,8 @@ Model {
 }
 
 Mesh {
-
-    domain = (6, 3, 1)
+    domainLowerBounds = (0, 0, 0)
+    domainUpperBounds = (6, 3, 1)
 
     Grid x {
         Segment {

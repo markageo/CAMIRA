@@ -7,24 +7,25 @@ Model {
 
 Mesh {
 
-    domain = (10, 4, 3)
+    domainLowerBounds = (0, 0, 0)
+    domainUpperBounds = (10, 4, 3)
 
     Grid x {
         Segment {
             bounds     = (0, 1.8)
-            nCells     = 28
+            nCells     = 22
             biasFactor = -2
         }
 
         Segment {
             bounds     = (1.8, 3.2)
-            nCells     = 34
+            nCells     = 27
             biasFactor = 1
         }
 
         Segment {
             bounds     = (3.2, 10)
-            nCells     = 95
+            nCells     = 76
             biasFactor = 3
         }
     }
@@ -33,13 +34,13 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 22
+            nCells     = 18
             biasFactor = 1
         }
 
         Segment {
             bounds     = (1, 4)
-            nCells     = 40
+            nCells     = 32
             biasFactor = 2
         }
     }
@@ -47,19 +48,19 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 0.8)
-            nCells     = 16
+            nCells     = 13
             biasFactor = -1.5
         }
 
         Segment {
             bounds     = (0.8, 2.2)
-            nCells     = 34
+            nCells     = 27
             biasFactor = 1
         }
 
         Segment {
             bounds     = (2.2, 3)
-            nCells     = 16
+            nCells     = 13
             biasFactor = 1.5
         }
     }
@@ -69,7 +70,7 @@ Mesh {
 InitialConditions
 {
     type = uniform
-    u = 1
+    u = 0
     v = 0
     w = 0
     p = 0
@@ -149,16 +150,19 @@ Solver {
         advectionBlendingFactor = 1
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 6
-        maxContinuityOuterResidual = 1e-14
-        maxMomentumOuterResiduals   = (1e-14, 1e-14, 1e-14)
+        implicitMomentumRelaxation = (1, 1, 1)
+        implicitPressureRelaxation = 1
+
+        maxOuterIterations = 100
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals   = (1e-6, 1e-6, 1e-6)
 
     }
     
     Smoother {
 
         type = domainSymmetricParallel
-        maxIterations = 5
+        maxIterations = 2
         maxResiduals = 1e-3
 
         planeSweepDirection = +z
@@ -177,8 +181,8 @@ Solver {
         postSmoothingIterations = 3
         fineGridIterations   = 2
 
-        maxCoarseGridIterations = 200
-        maxCoarseGridResiduals  = 1e-12
+        maxCoarseGridIterations = 500
+        maxCoarseGridResiduals  = 1e-6
         
     }
 
@@ -187,6 +191,7 @@ Solver {
 Parallel {
     numberOfThreads = 4
 }
+
 
 Output {
 
