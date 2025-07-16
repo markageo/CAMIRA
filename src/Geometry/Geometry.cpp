@@ -14,6 +14,7 @@
 #include <CGAL/IO/facets_in_complex_2_to_triangle_mesh.h>
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/Polygon_mesh_processing/connected_components.h>
+#include <CGAL/Aff_transformation_3.h>
 
 #include <boost/property_map/property_map.hpp>
 
@@ -178,9 +179,6 @@ void AddBlocks( std::vector< Polyhedron > &geometryPolyhedra,
 }
 
 
-}   // end anonymous namespace
-
-
 
 /*-------------------------------------------------------------------------------------*\
                                         Spheres
@@ -258,21 +256,68 @@ void AddSpheres( std::vector< Polyhedron > &geometryPolyhedra,
 \*-------------------------------------------------------------------------------------*/
 
 
+void RotatePolyhedron( Polyhedron &P, 
+                       const fArray3 &rotationAnglesDegrees )
+{
+    using Transformation = CGAL::Aff_transformation_3<CGAL_Kernel>;
+    using enum Axis::ENUMDATA;
+
+    // Convert to radians
+    const fArray3 rotationAnglesRadians = rotationAnglesDegrees * M_PI / 180.0; 
+    const floatType thetaX = rotationAnglesRadians(X),
+                    thetaY = rotationAnglesRadians(Y),
+                    thetaZ = rotationAnglesRadians(Z);  
+
+    // Rotate X
+    Transformation rotationX( 1.0, 0.0, 0.0,
+                              0.0, std::cos( thetaX ), - std::sin( thetaX ),
+                              0.0, std::sin( thetaX ),   std::cos( thetaX ) );
+
+    // Rotate Y
+    Transformation rotationY(  std::cos( thetaY ), 0.0, std::sin( thetaY ),
+                               0.0, 1.0, 0.0, 
+                              -std::sin( thetaY ), 0.0, std::cos( thetaY ) );
+
+    // Rotate Z
+    Transformation rotationZ( std::cos( thetaZ ), -std::sin( thetaZ ), 0.0,
+                              std::sin( thetaZ ),  std::cos( thetaZ ), 0.0,
+                              0.0, 0.0, 1.0 );
+
+    // Apply transformation to all points                              
+    for (auto v = P.points_begin(); v != P.points_end(); v++) {
+        *v = rotationX.transform(*v);
+        *v = rotationY.transform(*v);
+        *v = rotationZ.transform(*v);
+    }
+
+}
+
+
+
 void AddSTLFiles( std::vector< Polyhedron > &geometryPolyhedra,
                   const InputData &inputData )
 {
-    for ( const std::string &filename : inputData.geometrySTLFiles ) {
+
+    for ( const InputData::STLGeometryData &stlGeometryData : inputData.stlGeometries ) {
 
         Polyhedron P;
-        bool success = CGAL::IO::read_STL( filename, P );
+        bool success = CGAL::IO::read_STL( stlGeometryData.filename, P );
         if ( !success ) {
-            throw std::runtime_error( "Failed reading STL geometry file '" + filename + "'." );
+            throw std::runtime_error( "Failed reading STL geometry file '" + stlGeometryData.filename + "'." );
         }
+
+        // Rotate the geometry
+        RotatePolyhedron( P, stlGeometryData.rotation );
+
         geometryPolyhedra.push_back( P );
 
     }
+
 }
 
+
+
+}   // end anonymous namespace
 
 
 /*-------------------------------------------------------------------------------------*\

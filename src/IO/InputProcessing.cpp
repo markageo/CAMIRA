@@ -337,8 +337,22 @@ namespace
     {
         std::string valueString = solidObject.second.get< std::string >( "type" );
         if ( valueString == "STL" ) {
-            valueString = solidObject.second.get< std::string >( "filename" );
-            inputData.geometrySTLFiles.push_back( valueString );
+
+            inputData.stlGeometries.emplace_back();
+
+            // filename
+            inputData.stlGeometries.back().filename = solidObject.second.get< std::string >( "filename" );
+
+            // Rotation for STL file is optional
+            boost::optional< std::vector<floatType> > rotationOptional = solidObject.second.get_optional< std::vector<floatType> >( "rotation" );
+            if ( rotationOptional ) {
+                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                    inputData.stlGeometries.back().rotation(axis) = rotationOptional.get()[axis];
+                } );
+            } else {
+                inputData.stlGeometries.back().rotation = {0, 0, 0};
+            }
+
         } else {
             throw std::runtime_error(  "'" + valueString + "' is not a supported geometry file type." );
         }

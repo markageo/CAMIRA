@@ -52,11 +52,14 @@ struct InputData
         fArray3 centerPosition;
         floatType diameter;
     };
+    struct STLGeometryData {
+        std::string filename;
+        fArray3 rotation;   // Rotation about origin
+    };
     std::vector< SolidBlockData > solidBlocks;
     std::vector< SolidSphereData > solidSpheres; 
-    std::vector< std::string > geometrySTLFiles;
+    std::vector< STLGeometryData > stlGeometries;
     bool hasIBGeometry;
-
 
 
     // Boundary conditions
