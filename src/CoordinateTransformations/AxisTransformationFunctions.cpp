@@ -269,6 +269,11 @@ namespace
         for ( InputData::SolidSphereData &solidSphere : inputData.solidSpheres ) {
             solidSphere.centerPosition = TransformPositionArray3ToCode( solidSphere.centerPosition, axisTransformation );
         }
+
+        // STL files
+        for ( InputData::STLGeometryData &stlGeometryData : inputData.stlGeometries ) {
+            stlGeometryData.rotation       = TransformAxisArray3ToCode( stlGeometryData.rotation, axisTransformation );
+        }
     }
 
 
