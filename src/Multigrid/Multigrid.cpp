@@ -10,14 +10,14 @@ namespace CAMIRA
 template< MomentumInterpolation MI >
 void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels, 
                   const InputData &inputData,
-                  const AxisTransformationMap &axisTransofrmation )
+                  const AxisTransformationMap &axisTransformation )
 {
 
     const InputData::MultigridSettings &mgSettings = inputData.multigridSettings;
 
     // Write the geometry to file
     if ( inputData.outputGeometry ) {
-        WriteGeometryToFile(inputData, axisTransofrmation);
+        WriteGeometryToFile(inputData, axisTransformation);
     }
 
     // Reserve data. The linear solver holds references to the fields which can break if the vector is resized
@@ -27,7 +27,7 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels,
 
         if ( level == 0 ) {
             mgLevels.emplace_back();
-            mgLevels[level].mesh = CreateMesh( inputData, axisTransofrmation );
+            mgLevels[level].mesh = CreateMesh( inputData, axisTransformation );
             mgLevels[level].isFinestLevel   = true;
             mgLevels[level].isCoarsestLevel = false;
         } else if ( MeshCanBeCoarsened( mgLevels[level-1].mesh ) ) {
@@ -46,13 +46,13 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels,
         mgl.bcData = SetBoundaryConditionData(inputData, mgl.mesh);
 
         // Immersed boundary data
-        mgl.ibData = CreateImmersedBoundaryData(inputData, axisTransofrmation, mgl.mesh);
+        mgl.ibData = CreateImmersedBoundaryData(inputData, axisTransformation, mgl.mesh);
 
         // Turbulence model data
-        mgl.turbModelData = CreateTurbulenceModelData(inputData, mgl.mesh, mgl.ibData, mgl.bcData);
+        mgl.turbModelData = CreateTurbulenceModelData(inputData, axisTransformation, mgl.mesh, mgl.ibData, mgl.bcData);
     
         // Allocate and initialise fields
-        mgl.fields = InitialiseFields(mgl.mesh, inputData, axisTransofrmation);
+        mgl.fields = InitialiseFields(mgl.mesh, inputData, axisTransformation);
         if ( level == 0 ) {
             MaskFields(mgl.fields, mgl.ibData.mask);
         } else {

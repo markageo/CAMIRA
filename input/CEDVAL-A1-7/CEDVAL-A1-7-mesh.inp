@@ -1,0 +1,31 @@
+// CEDVAL A1-7 
+// Mesh file
+
+
+domainLowerBounds = (-0.5, -0.2, 0  )
+domainUpperBounds = (1   ,  0.2, 0.4)
+
+Grid x {
+    Segment {
+        bounds     = (-0.5, 1)
+        nCells     = 150
+        biasFactor = 1
+    }
+}
+
+Grid y {
+    Segment {
+        bounds     = (-0.2, 0.2)
+        nCells     = 40
+        biasFactor = 1
+    }
+}
+
+Grid z {
+    Segment {
+        bounds     = (0, 0.4)
+        nCells     = 40
+        biasFactor = 1
+    }
+}
+

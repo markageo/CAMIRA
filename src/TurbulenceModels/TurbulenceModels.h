@@ -3,6 +3,7 @@
 
 #include "../Core/Types.h"
 #include "../FiniteVolume/Mesh.h"
+#include "../CoordinateTransformations/AxisTransformationMap.h"
 #include "../ImmersedBoundary/ImmersedBoundary.h"
 #include "../FiniteVolume/BoundaryConditionData.h"
 #include "../Geometry/Geometry.h"
@@ -15,7 +16,7 @@ namespace CAMIRA
 
 struct TurbulenceModelInterface
 {
-    virtual void SetTurbulenceModelData(const InputData &, const Mesh &, const IBData &, const BoundaryConditionData &) = 0; 
+    virtual void SetTurbulenceModelData(const InputData &, const AxisTransformationMap &, const Mesh &, const IBData &, const BoundaryConditionData &) = 0; 
     virtual void SetTurbulenceViscosityField(Tensor3D &, const FieldData<Tensor3D> &, const IBData &, const Mesh &) = 0;
 
     protected:
@@ -30,7 +31,7 @@ struct TurbulenceModel;
 template<>
 struct TurbulenceModel< TurbulenceModels::Laminar > : public TurbulenceModelInterface
 {
-    void SetTurbulenceModelData(const InputData &, const Mesh &, const IBData &, const BoundaryConditionData &);
+    void SetTurbulenceModelData(const InputData &, const AxisTransformationMap &, const Mesh &, const IBData &, const BoundaryConditionData &);
     void SetTurbulenceViscosityField(Tensor3D &, const FieldData<Tensor3D> &, const IBData &, const Mesh &);
 };
 
@@ -39,7 +40,7 @@ struct TurbulenceModel< TurbulenceModels::Laminar > : public TurbulenceModelInte
 template<>
 struct TurbulenceModel< TurbulenceModels::PrandtlZeroEquation > : public TurbulenceModelInterface
 {
-    void SetTurbulenceModelData(const InputData &, const Mesh &, const IBData &, const BoundaryConditionData &);
+    void SetTurbulenceModelData(const InputData &, const AxisTransformationMap &, const Mesh &, const IBData &, const BoundaryConditionData &);
     void SetTurbulenceViscosityField(Tensor3D &, const FieldData<Tensor3D> &, const IBData &, const Mesh &);
 
     private:
@@ -53,7 +54,7 @@ struct TurbulenceModel< TurbulenceModels::PrandtlZeroEquation > : public Turbule
 template<>
 struct TurbulenceModel< TurbulenceModels::ZEQ0 > : public TurbulenceModelInterface
 {
-    void SetTurbulenceModelData(const InputData &, const Mesh &, const IBData &, const BoundaryConditionData &);
+    void SetTurbulenceModelData(const InputData &, const AxisTransformationMap &, const Mesh &, const IBData &, const BoundaryConditionData &);
     void SetTurbulenceViscosityField(Tensor3D &, const FieldData<Tensor3D> &, const IBData &, const Mesh &);
 
     private:
@@ -66,7 +67,7 @@ struct TurbulenceModel< TurbulenceModels::ZEQ0 > : public TurbulenceModelInterfa
 template<>
 struct TurbulenceModel< TurbulenceModels::ZEQ1 > : public TurbulenceModelInterface
 {
-    void SetTurbulenceModelData(const InputData &, const Mesh &, const IBData &, const BoundaryConditionData &);
+    void SetTurbulenceModelData(const InputData &, const AxisTransformationMap &, const Mesh &, const IBData &, const BoundaryConditionData &);
     void SetTurbulenceViscosityField(Tensor3D &, const FieldData<Tensor3D> &, const IBData &, const Mesh &);
 
     private:
@@ -80,7 +81,7 @@ struct TurbulenceModel< TurbulenceModels::ZEQ1 > : public TurbulenceModelInterfa
 template<>
 struct TurbulenceModel< TurbulenceModels::ZEQ2 > : public TurbulenceModelInterface
 {
-    void SetTurbulenceModelData(const InputData &, const Mesh &, const IBData &, const BoundaryConditionData &);
+    void SetTurbulenceModelData(const InputData &, const AxisTransformationMap &, const Mesh &, const IBData &, const BoundaryConditionData &);
     void SetTurbulenceViscosityField(Tensor3D &, const FieldData<Tensor3D> &, const IBData &, const Mesh &);
 
     private:
@@ -98,7 +99,7 @@ struct TurbulenceModel< TurbulenceModels::ZEQ2 > : public TurbulenceModelInterfa
 template<>
 struct TurbulenceModel< TurbulenceModels::ZEQ3 > : public TurbulenceModelInterface
 {
-    void SetTurbulenceModelData(const InputData &, const Mesh &, const IBData &, const BoundaryConditionData &);
+    void SetTurbulenceModelData(const InputData &, const AxisTransformationMap &, const Mesh &, const IBData &, const BoundaryConditionData &);
     void SetTurbulenceViscosityField(Tensor3D &, const FieldData<Tensor3D> &, const IBData &, const Mesh &);
 
     private:
@@ -117,7 +118,7 @@ struct TurbulenceModel< TurbulenceModels::ZEQ3 > : public TurbulenceModelInterfa
 template<>
 struct TurbulenceModel< TurbulenceModels::ZEQ4 > : public TurbulenceModelInterface
 {
-    void SetTurbulenceModelData(const InputData &, const Mesh &, const IBData &, const BoundaryConditionData &);
+    void SetTurbulenceModelData(const InputData &, const AxisTransformationMap &, const Mesh &, const IBData &, const BoundaryConditionData &);
     void SetTurbulenceViscosityField(Tensor3D &, const FieldData<Tensor3D> &, const IBData &, const Mesh &);
 
     private:

@@ -8,6 +8,7 @@ namespace CAMIRA
 {
 
 TurbulenceModelData CreateTurbulenceModelData( const InputData &inputData, 
+                                               const AxisTransformationMap &axisTransformation,
                                                const Mesh &mesh,  
                                                const IBData &ibData,
                                                const BoundaryConditionData &bcData )
@@ -42,7 +43,7 @@ TurbulenceModelData CreateTurbulenceModelData( const InputData &inputData,
             turbModelData.turbModel = std::make_unique< TurbulenceModel<TurbulenceModels::Laminar> >();     // Laminar just sets tubulence viscosity to zero
             break;
     }
-    turbModelData.turbModel->SetTurbulenceModelData( inputData, mesh, ibData, bcData );
+    turbModelData.turbModel->SetTurbulenceModelData( inputData, axisTransformation, mesh, ibData, bcData );
 
     return turbModelData;
 }

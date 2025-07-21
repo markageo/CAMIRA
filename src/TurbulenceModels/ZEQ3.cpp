@@ -19,6 +19,7 @@ namespace CAMIRA
 {
 
 void TurbulenceModel<TurbulenceModels::ZEQ3>::SetTurbulenceModelData( const InputData &inputData,
+                                                                      const AxisTransformationMap &axisTransformation,
                                                                       const Mesh &mesh,
                                                    [[ maybe_unused ]] const IBData &ibData,
                                                                       const BoundaryConditionData &bcData )
@@ -36,7 +37,7 @@ void TurbulenceModel<TurbulenceModels::ZEQ3>::SetTurbulenceModelData( const Inpu
     m_b                            = 1.75f;
 
     // Length scale, distance to nearest wall
-    Polyhedron geometry = MakeGeometry( inputData );
+    Polyhedron geometry = MakeGeometry( inputData, axisTransformation );
     Tree tree = MakeAABBTree( geometry );
     m_wallDistance = NearestWallDistance( mesh, tree, bcData );
 }
