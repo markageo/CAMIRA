@@ -375,6 +375,7 @@ std::vector<IBCell> CreateIBCellDataForComponent( const Tensor3D &mask,
 
 
 IBData CreateImmersedBoundaryData( const InputData &inputData,
+                                   const AxisTransformationMap &axisTransformation,
                                    const Mesh &mesh )
 {
 
@@ -393,7 +394,7 @@ IBData CreateImmersedBoundaryData( const InputData &inputData,
     if ( !inputData.hasIBGeometry )
         return ibData;
 
-    Polyhedron geometry = MakeGeometry( inputData );
+    Polyhedron geometry = MakeGeometry( inputData, axisTransformation );
 
     // Separate the geometry into connected components
     std::vector<Polyhedron> polyVector = SeparatePolyhedron( geometry );
@@ -424,13 +425,11 @@ void WriteGeometryToFile( const InputData &inputData,
 {
     InputData inputDataUserCoordinates( inputData );
     TransformUserInputData( inputDataUserCoordinates, axisTransformation.Inverse() );
-    Polyhedron PUserCoordinates = MakeGeometry( inputDataUserCoordinates );
+    Polyhedron PUserCoordinates = MakeGeometry( inputDataUserCoordinates, axisTransformation.Identity() );
 
     std::ofstream out(  IOTOOLS::RemoveFileExtension( inputData.geometryOutputFilename, ".stl" ) + ".stl" );
     CGAL::IO::write_STL( out, PUserCoordinates );
 }
-
-
 
 
 

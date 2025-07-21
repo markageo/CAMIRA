@@ -78,6 +78,16 @@ bool AxisTransformationMap::CodeAxisReversed( const A codeAxis ) const
     return false;
 }
 
+floatType AxisTransformationMap::CodeAxisReverseSign( const A codeAxis ) const
+{
+    if ( CodeAxisReversed( codeAxis ) ) {
+        return -1;
+    } else {
+        return +1;
+    }
+}
+
+
 
 // User patch from code patch
 BoundaryPatches::ENUMDATA AxisTransformationMap::UserPatch(const BP codePatch) const
@@ -104,6 +114,16 @@ bool AxisTransformationMap::UserAxisReversed( const A userAxis ) const
 }
 
 
+floatType AxisTransformationMap::UserAxisReverseSign( const A userAxis ) const
+{
+    if ( UserAxisReversed( userAxis ) ) {
+        return -1;
+    } else {
+        return +1;
+    }
+}
+
+
 AxisTransformationMap AxisTransformationMap::Inverse() const
 {
     AxisTransformationMap inverseAxisTrasformation;
@@ -113,6 +133,19 @@ AxisTransformationMap AxisTransformationMap::Inverse() const
     } );
 
     return inverseAxisTrasformation;
+}
+
+
+
+AxisTransformationMap AxisTransformationMap::Identity() const
+{
+    AxisTransformationMap identityAxisTransformation;
+
+    EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
+        identityAxisTransformation.Set( bp, bp );
+    } );
+
+    return identityAxisTransformation;
 }
 
 

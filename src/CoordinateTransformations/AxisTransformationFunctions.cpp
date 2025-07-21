@@ -272,7 +272,7 @@ namespace
 
         // STL files
         for ( InputData::STLGeometryData &stlGeometryData : inputData.stlGeometries ) {
-            stlGeometryData.rotation       = TransformAxisArray3ToCode( stlGeometryData.rotation, axisTransformation );
+            stlGeometryData.rotation   = TransformAxisArray3ToCode( stlGeometryData.rotation, axisTransformation );
         }
     }
 

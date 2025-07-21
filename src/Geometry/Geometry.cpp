@@ -284,18 +284,34 @@ void RotatePolyhedron( Polyhedron &P,
                               0.0, 0.0, 1.0 );
 
     // Apply transformation to all points                              
-    for (auto v = P.points_begin(); v != P.points_end(); v++) {
-        *v = rotationX.transform(*v);
-        *v = rotationY.transform(*v);
-        *v = rotationZ.transform(*v);
+    for (auto p = P.points_begin(); p != P.points_end(); p++) {
+        *p = rotationX.transform(*p);
+        *p = rotationY.transform(*p);
+        *p = rotationZ.transform(*p);
     }
 
 }
 
 
+void TransformPolyhedronFromUserToCodeCoordinates( Polyhedron &P,
+                                                   const AxisTransformationMap &axisTransformation )
+{
+    using enum Axis::ENUMDATA;
+    using Point = CGAL_Kernel::Point_3;
+
+    for (auto p = P.points_begin(); p != P.points_end(); p++) {
+
+        *p = Point( axisTransformation.CodeAxisReverseSign(X) * p->cartesian( axisTransformation.UserAxis(X) ),
+                    axisTransformation.CodeAxisReverseSign(Y) * p->cartesian( axisTransformation.UserAxis(Y) ),
+                    axisTransformation.CodeAxisReverseSign(Z) * p->cartesian( axisTransformation.UserAxis(Z) ) );
+
+    }
+}
+
 
 void AddSTLFiles( std::vector< Polyhedron > &geometryPolyhedra,
-                  const InputData &inputData )
+                  const InputData &inputData,
+                  const AxisTransformationMap &axisTransformation )
 {
 
     for ( const InputData::STLGeometryData &stlGeometryData : inputData.stlGeometries ) {
@@ -305,6 +321,9 @@ void AddSTLFiles( std::vector< Polyhedron > &geometryPolyhedra,
         if ( !success ) {
             throw std::runtime_error( "Failed reading STL geometry file '" + stlGeometryData.filename + "'." );
         }
+
+        // Transform the geometry to code coordinates
+        TransformPolyhedronFromUserToCodeCoordinates( P, axisTransformation );
 
         // Rotate the geometry
         RotatePolyhedron( P, stlGeometryData.rotation );
@@ -325,12 +344,13 @@ void AddSTLFiles( std::vector< Polyhedron > &geometryPolyhedra,
 \*-------------------------------------------------------------------------------------*/
 
 
-Polyhedron MakeGeometry( const InputData &inputData )
+Polyhedron MakeGeometry( const InputData &inputData,
+                         const AxisTransformationMap &axisTransformation )
 {
     std::vector< Polyhedron > geometryPolyhedra;
     AddBlocks( geometryPolyhedra, inputData );
     AddSpheres( geometryPolyhedra, inputData );
-    AddSTLFiles( geometryPolyhedra, inputData );
+    AddSTLFiles( geometryPolyhedra, inputData, axisTransformation );
 
     Polyhedron P;
     for ( Polyhedron & polyhedron : geometryPolyhedra ) {
