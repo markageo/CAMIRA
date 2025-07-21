@@ -3,6 +3,7 @@
 
 #include "../Core/Types.h"
 #include "../IO/InputProcessing.h"
+#include "../CoordinateTransformations/AxisTransformationMap.h"
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>
@@ -18,7 +19,8 @@ using CGAL_Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;    // T
 using Polyhedron = CGAL::Polyhedron_3< CGAL_Kernel >;
 using Tree = CGAL::AABB_tree< CGAL::AABB_traits<CGAL_Kernel, CGAL::AABB_face_graph_triangle_primitive<Polyhedron>> >;
 
-Polyhedron MakeGeometry( const InputData & );
+Polyhedron MakeGeometry( const InputData &,
+                         const AxisTransformationMap & );
 
 std::vector<Polyhedron> SeparatePolyhedron( const Polyhedron & );
 

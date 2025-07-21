@@ -95,8 +95,8 @@ OperationStatus Smooth( GridLevelData<MI > &gridLevelData,
     FieldData<floatType> residualsScaleFactor;
 
     FieldData<floatType > residuals = ScaledL1NormResiduals<MI >( gridLevelData.fields, 
-                                                                     gridLevelData.fvCoeffs, 
-                                                                     gridLevelData.ibData.mask);
+                                                                  gridLevelData.fvCoeffs, 
+                                                                  gridLevelData.ibData.mask );
     SetResidualsNormalisationFactor( residualsScaleFactor, residuals );
     NormaliseResiduals( residuals, residualsScaleFactor );
 

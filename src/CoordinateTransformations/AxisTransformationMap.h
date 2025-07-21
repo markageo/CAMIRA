@@ -27,6 +27,9 @@ class AxisTransformationMap
 
         // If code axis is mapped to the negative direction of a user axis
         bool CodeAxisReversed( const A ) const;
+
+        // Same as CodeAxisReversed but returns +1 if no reversed and -1 if reversed
+        floatType CodeAxisReverseSign( const A ) const;
        
 
         // User patch from code patch
@@ -38,9 +41,15 @@ class AxisTransformationMap
         // If user axis is mapped to the negative direction of a code axis
         bool UserAxisReversed( const A ) const;
 
+        // Same as UserAxisReversed but returns +1 if no reversed and -1 if reversed
+        floatType UserAxisReverseSign( const A ) const;
+
 
         // Returns an axis transformation map that is the inverse of the current one (i.e. code and user axis swapped around)
         AxisTransformationMap Inverse() const;
+
+        // Returns an axis transformation map that is the identity (i.e. no transformation is applied)
+        AxisTransformationMap Identity() const;
 
 
     private:
