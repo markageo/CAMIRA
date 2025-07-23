@@ -57,10 +57,10 @@ BoundaryConditions
         p = zeroGradient
     }
 
-    // Wall
+    // Symmetry
     +z {
-        u = uniform, 0
-        v = uniform, 0
+        u = zeroGradient
+        v = zeroGradient
         w = uniform, 0
         p = zeroGradient
     }
@@ -111,20 +111,20 @@ Solver {
         lineSweepDirection = +y
 
         eddyViscosityRelaxation = 1
-        momentumRelaxation      = (0.6, 0.6, 0.6)
+        momentumRelaxation      = (0.85, 0.85, 0.85)
         pressureRelaxation      = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 4
 
-        preSmoothingIterations = 3
-        postSmoothingIterations = 3
-        fineGridIterations   = 3
+        preSmoothingIterations = 4
+        postSmoothingIterations = 4
+        fineGridIterations   = 5
 
-        maxCoarseGridIterations = 100
+        maxCoarseGridIterations = 50
         maxCoarseGridResiduals  = 1e-10
         
     }
