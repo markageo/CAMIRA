@@ -1,22 +1,22 @@
-// CEDVAL B1-5 primary input file
+// CEDVAL B1-1 primary input file
 
 Model {
     nu   = 1.5e-5
     transient = no
     TurbulenceModel {
-        #include "CEDVAL-B1-5-ZEQ1.inp"
+        #include "CEDVAL-B1-1-ZEQ1.inp"
     }
 }
 
 Mesh {
-    #include "CEDVAL-B1-5-mesh.inp"
+    #include "CEDVAL-B1-1-mesh.inp"
 }
 
 
 InitialConditions
 {    
     type = uniform
-    u = 4
+    u = 3.425
     v = 0
     w = 0
     p = 0
@@ -35,7 +35,7 @@ BoundaryConditions
 
     // Inflow
     -x {
-        u = profile1D, "CEDVAL-B1-5-inflow.prof"
+        u = profile1D, "CEDVAL-B1-1-inflow.prof"
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
@@ -76,11 +76,11 @@ BoundaryConditions
 
 
 SolidGeometry {
-    boundaryTreatement = staircase
+    boundaryTreatement = directionalImmersedBoundary
     
     FromFile {
         type = STL
-        filename = "input/CEDVAL-B1-5/CEDVAL-B1-5-geometry-filled.stl"
+        filename = "input/CEDVAL-B1-1/CEDVAL-B1-1-geometry.stl"
         rotation = (0, 0, 0)
     }
 }
@@ -96,7 +96,7 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 1000
+        maxOuterIterations = 10
         maxContinuityOuterResidual = 1e-6
         maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 
@@ -105,14 +105,14 @@ Solver {
     Smoother {
 
         type = domainSymmetricParallel
-        maxIterations = 5
+        maxIterations = 3
         maxResiduals = 1e-5
 
         planeSweepDirection = +z
-        lineSweepDirection = +y
+        lineSweepDirection = +x
 
         eddyViscosityRelaxation = 1
-        momentumRelaxation      = (0.7, 0.7, 0.7)
+        momentumRelaxation      = (0.95, 0.95, 0.95)
         pressureRelaxation      = 1
 
     }
@@ -123,9 +123,9 @@ Solver {
 
         preSmoothingIterations = 3
         postSmoothingIterations = 3
-        fineGridIterations   = 3
+        fineGridIterations   = 2
 
-        maxCoarseGridIterations = 50
+        maxCoarseGridIterations = 150
         maxCoarseGridResiduals  = 1e-10
         
     }
@@ -142,7 +142,7 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
-    fieldWriteInterval      = 1
+    fieldWriteInterval      = 0
 
     Monitors {
         ForceCalculator {
