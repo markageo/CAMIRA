@@ -396,8 +396,22 @@ public:
                     m_maxResiduals( smootherSettings.maxResiduals ),
                     m_relaxation( smootherSettings.relaxation ),
 
-                    m_forwardColorSet( CreateForward1DColourSet(m_fvCoeffs.nCells(2)) ),
-                    m_reverseColorSet( CreateReverse1DColourSet(m_fvCoeffs.nCells(2)) ),
+                    #if   defined( CAMIRA_PARALLEL_COLOURING_POINTS )
+
+                        m_forwardColorSet( CreateForward3DColorSet(m_fvCoeffs.nCells) ),
+                        m_reverseColorSet( CreateReverse3DColorSet(m_fvCoeffs.nCells) ),
+
+                    #elif defined( CAMIRA_PARALLEL_COLOURING_LINES )
+
+                        m_forwardColorSet( CreateForward2DColorSet(m_fvCoeffs.nCells) ),
+                        m_reverseColorSet( CreateReverse2DColorSet(m_fvCoeffs.nCells) ),
+
+                    #elif defined( CAMIRA_PARALLEL_COLOURING_PLANES )
+
+                        m_forwardColorSet( CreateForward1DColorSet(m_fvCoeffs.nCells(2)) ),
+                        m_reverseColorSet( CreateReverse1DColorSet(m_fvCoeffs.nCells(2)) ),
+
+                    #endif
 
                     m_triadSolverForward(fields, fieldsOld, mask, fvCoeffs, smootherSettings),
                     m_triadSolverBackward(fields, fieldsOld, mask, fvCoeffs, smootherSettings),
@@ -466,51 +480,136 @@ private:
     __attribute__((flatten))
     void Sweep3D()
     {
+        #if defined( CAMIRA_PARALLEL_COLOURING_LINES )
+            const iArray2 nCellsPlane = { m_nCells(1), m_nCells(2) };
+        #endif
 
         TIC("Setting Ghost Cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
         TOC()
-        
-        // Forward plane sweep
+
+        // Forward sweep
         TIC("Sweeping")
-        for ( const std::vector<intType> &color : m_forwardColorSet ) {
+        #if   defined( CAMIRA_PARALLEL_COLOURING_POINTS )
 
-            #pragma omp parallel for
-            for ( intType k : color ) {
+            for ( const std::vector<intType> &color : m_forwardColorSet ) {
 
-                for ( intType j = 0; j != m_nCells(1); j++ ) {
+                #pragma omp parallel for
+                for ( intType idx : color ) {
+
+                    const auto subs = Ind2Sub(  m_nCells, idx );
+                    const intType i = subs[0],
+                                  j = subs[1],
+                                  k = subs[2];
+
+                    m_triadSolverForward.UpdateTriad( i, j, k );
+
+                }
+            }
+
+
+        #elif defined( CAMIRA_PARALLEL_COLOURING_LINES )
+
+            for ( const std::vector<intType> &color : m_forwardColorSet ) {
+
+                #pragma omp parallel for
+                for ( intType idx : color ) {
+
+                    const auto subs = Ind2Sub( nCellsPlane, idx );
+                    const intType j = subs[0],
+                                  k = subs[1];
+
                     for ( intType i = 0; i != m_nCells(0); i++ ) {
                         m_triadSolverForward.UpdateTriad( i, j, k );
                     }
-                }
 
+                }
             }
-        }
+
+
+        #elif defined( CAMIRA_PARALLEL_COLOURING_PLANES )
+
+            for ( const std::vector<intType> &color : m_forwardColorSet ) {
+
+                #pragma omp parallel for
+                for ( intType k : color ) {
+
+                    for ( intType j = 0; j != m_nCells(1); j++ ) {
+                        for ( intType i = 0; i != m_nCells(0); i++ ) {
+                            m_triadSolverForward.UpdateTriad( i, j, k );
+                        }
+                    }
+
+                }
+            }
+
+        #endif
         TOC()
+
 
         TIC("Setting Ghost Cells")
         SetGhostCells(m_fields, m_mesh, m_bcData);
         TOC()
 
+
         // Reverse plane sweep
         TIC("Sweeping")
-        for ( const std::vector<intType> &color : m_reverseColorSet ) {
+        #if defined( CAMIRA_PARALLEL_COLOURING_POINTS )
 
-            #pragma omp parallel for
-            for ( intType k : color ) {
+            for ( const std::vector<intType> &color : m_reverseColorSet ) {
 
-                for ( intType j = m_nCells(1)-1; j != -1; j-- ) {
+                #pragma omp parallel for
+                for ( intType idx : color ) {
+
+                    auto subs = Ind2Sub(  m_nCells, idx );
+                    const intType i = subs[0],
+                                  j = subs[1],
+                                  k = subs[2];
+
+                    m_triadSolverBackward.UpdateTriad( i, j, k );
+
+                }
+            }
+
+        #elif defined( CAMIRA_PARALLEL_COLOURING_LINES )
+
+            for ( const std::vector<intType> &color : m_reverseColorSet ) {
+
+                #pragma omp parallel for
+                for ( intType idx : color ) {
+
+                    const auto subs = Ind2Sub( nCellsPlane, idx );
+                    const intType j = subs[0],
+                                  k = subs[1];
+
                     for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
                         m_triadSolverBackward.UpdateTriad( i, j, k );
                     }
-                }
 
+                }
             }
-        } 
+
+        #elif defined( CAMIRA_PARALLEL_COLOURING_PLANES )
+
+            for ( const std::vector<intType> &color : m_reverseColorSet ) {
+
+                #pragma omp parallel for
+                for ( intType k : color ) {
+
+                    for ( intType j = m_nCells(1)-1; j != -1; j-- ) {
+                        for ( intType i = m_nCells(0)-1; i != -1; i-- ) {
+                            m_triadSolverBackward.UpdateTriad( i, j, k );
+                        }
+                    }
+
+                }
+            } 
+
+        #endif
+
         TOC()
 
     }
-
 
 };
 
