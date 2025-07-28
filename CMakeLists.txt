@@ -59,6 +59,29 @@ elseif ( CAMIRA_PRECISION STREQUAL "single" )
 endif()
 
 
+
+# Parallel smoother strategy
+set(CAMIRA_PARALLEL_COLOURING_STRATEGY "planes" CACHE STRING "Method of colour ordering for parallel smoother")
+set_property(CACHE CAMIRA_PARALLEL_COLOURING_STRATEGY PROPERTY STRINGS points lines planes)
+
+if ( CAMIRA_PARALLEL_COLOURING_STRATEGY STREQUAL "points" )
+
+	message( STATUS "Parallel colour strategy: points" )
+	add_compile_definitions( CAMIRA_PARALLEL_COLOURING_POINTS )
+
+elseif ( CAMIRA_PARALLEL_COLOURING_STRATEGY STREQUAL "lines" )
+
+	message( STATUS "Parallel colour strategy: lines" )
+	add_compile_definitions( CAMIRA_PARALLEL_COLOURING_LINES )
+
+elseif ( CAMIRA_PARALLEL_COLOURING_STRATEGY STREQUAL "planes" )
+
+	message( STATUS "Parallel colour strategy: planes" )
+	add_compile_definitions( CAMIRA_PARALLEL_COLOURING_PLANES )
+
+endif()
+
+
 # Allow the ability to read fields in (for example to read in an initial condition), this requires VTk library
 option ( CAMIRA_HAS_VTK_LIB "Allow extra features which require VTK library to be installed.")
 if ( CAMIRA_HAS_VTK_LIB )
