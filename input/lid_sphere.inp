@@ -3,6 +3,9 @@
 Model {
     nu   = 0.001
     transient = no
+    TurbulenceModel {
+        model = laminar
+    }
 }
 
 Mesh {
@@ -134,6 +137,7 @@ Solver {
         planeSweepDirection = +z
         lineSweepDirection = +y
 
+        eddyViscosityRelaxation = 1
         momentumRelaxation = (0.95, 0.95, 0.95)
         pressureRelaxation = 1
 
@@ -148,10 +152,14 @@ Solver {
         fineGridIterations   = 2
 
         maxCoarseGridIterations = 200
-        maxCoarseGridResiduals  = 1e-6
+        maxCoarseGridResiduals  = 1e-12
         
     }
 
+}
+
+Parallel {
+    numberOfThreads = 4
 }
 
 

@@ -1961,8 +1961,10 @@ void AddIBSourceTerms( FVCoefficients &fvCoeffs,
                        const Mesh &mesh )
 {
 
-    // Set source terms
+    // These loop cannot be done in parallel as some function modify not only the ibCell, but the cell adjacent to it, which could be 
+    // the ibCell of another iteration.
     for ( auto &ibCellComponent : ibData.ibCells ) {
+
         for ( auto &ibCell : ibCellComponent ) { 
 
             const TensorIndex3D cellIndex = ibCell.cellIndex;
