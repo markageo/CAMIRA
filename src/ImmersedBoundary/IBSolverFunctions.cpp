@@ -59,6 +59,7 @@ floatType CalculateVelocityFluxError( std::vector<IBCell> &ibCellsComponent )
     floatType velocityFluxError = 0.0f;
     floatType velocityFlux = 0.0f;
     
+    #pragma omp parallel for
     for ( auto &ibCell : ibCellsComponent ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
@@ -81,6 +82,7 @@ void CorrectIBFaceVelocities( std::vector<IBCell> &ibCellsComponent )
     floatType velocityFluxError = CalculateVelocityFluxError( ibCellsComponent );
 
     // Add the corrections to each face velocity
+    #pragma omp parallel for
     for ( auto &ibCell : ibCellsComponent ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
@@ -134,6 +136,7 @@ void UpdateIBData( IBData &ibData,
     // Go through each component, we do this so each one gets its own correction
     for ( auto &ibCellsComponent : ibData.ibCells ) {
 
+        #pragma omp parallel for 
         for ( auto &ibCell : ibCellsComponent ) { 
             for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
@@ -149,6 +152,7 @@ void UpdateIBData( IBData &ibData,
         // Correct them to globally conserve mass
         CorrectIBFaceVelocities( ibCellsComponent );
 
+        #pragma omp parallel for
         for ( auto &ibCell : ibCellsComponent ) { 
             for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 

@@ -434,6 +434,8 @@ void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &faceFluxes,
                       const IBData &ibData ) 
 {
     for ( auto &ibCellComponent : ibData.ibCells ) {
+
+        #pragma omp parallel for
         for ( auto &ibCell : ibCellComponent ) { 
             for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
@@ -458,6 +460,8 @@ void SetIBFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> >
                                   const IBData &ibData ) 
 {
     for ( auto &ibCellComponent : ibData.ibCells ) {
+
+        #pragma omp parallel for
         for ( auto &ibCell : ibCellComponent ) { 
             for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
