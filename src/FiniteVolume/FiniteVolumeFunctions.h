@@ -33,11 +33,6 @@ EnumVector<Axis, Tensor3D> InitialiseFaceFluxes( const Mesh &,
                                                  const EnumVector<Axis, Tensor3D> &, 
                                                  const BoundaryConditionData &);
 
-EnumVector< Axis, EnumVector<Axis, Tensor3D> > InitialiseFaceAdvectedVelocities( const Mesh &, 
-                                                                                 const FVCoefficients &,
-                                                                                 const EnumVector<Axis, Tensor3D> &, 
-                                                                                 const EnumVector<Axis, Tensor3D> &, 
-                                                                                 const BoundaryConditionData &);
 
 // Update face velocities
 void UpdateFaceFluxes( EnumVector<Axis, Tensor3D> &, 
@@ -51,24 +46,9 @@ void UpdateFaceFluxesWithMWI( EnumVector<Axis, Tensor3D> &,
                               const FVCoefficients &, 
                               const BoundaryConditionData &);
 
-void UpdateFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> > &, 
-                                   const Mesh &, 
-                                   const FVCoefficients &,
-                                   const EnumVector<Axis, Tensor3D> &, 
-                                   const EnumVector<Axis, Tensor3D> &, 
-                                   const BoundaryConditionData &);
 
 void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &, 
                       const IBData & );
-
-template<AdvectionSchemes>
-void SetIBFaceAdvectedVelocities( EnumVector< Axis, EnumVector<Axis, Tensor3D> > &,
-                                  const EnumVector< Axis, Tensor3D > &,
-                                  const FieldData<Tensor3D> &,
-                                  const FVCoefficients &,
-                                  const Mesh &,
-                                  const IBData & ); 
-
 
 
 
