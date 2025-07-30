@@ -310,7 +310,6 @@ void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &faceFluxes,
 {
     for ( auto &ibCellComponent : ibData.ibCells ) {
 
-        #pragma omp parallel for
         for ( auto &ibCell : ibCellComponent ) { 
             for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 

@@ -1,7 +1,8 @@
-// Lid driven cavity with sphere inside
+// 3D sphere in lid driven cavity
 
 Model {
-    nu   = 0.001
+    rho  = 1
+    nu   = 0.005
     transient = no
     TurbulenceModel {
         model = laminar
@@ -16,7 +17,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 40
+            nCells     = 80
             biasFactor = 1
         }
     }
@@ -24,7 +25,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 40
+            nCells     = 80
             biasFactor = 1
         }
     }
@@ -32,7 +33,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 40
+            nCells     = 80
             biasFactor = 1
         }
     }
@@ -130,28 +131,28 @@ Solver {
     
     Smoother {
 
-        type = domainSymmetricParallel
-        maxIterations = 2
+        type = nestedLineSymmetricSerial
+        maxIterations = 3
         maxResiduals = 1e-3
 
         planeSweepDirection = +z
-        lineSweepDirection = +y
+        lineSweepDirection = +x
 
         eddyViscosityRelaxation = 1
-        momentumRelaxation = (0.95, 0.95, 0.95)
+        momentumRelaxation = (0.98, 0.98, 0.98)
         pressureRelaxation = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 1
+        maxCoarseLevels = 2
 
         preSmoothingIterations = 2
         postSmoothingIterations = 2
         fineGridIterations   = 2
 
-        maxCoarseGridIterations = 200
+        maxCoarseGridIterations = 150
         maxCoarseGridResiduals  = 1e-12
         
     }

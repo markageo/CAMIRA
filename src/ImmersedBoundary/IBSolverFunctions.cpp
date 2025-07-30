@@ -59,7 +59,6 @@ floatType CalculateVelocityFluxError( std::vector<IBCell> &ibCellsComponent )
     floatType velocityFluxError = 0.0f;
     floatType velocityFlux = 0.0f;
     
-    #pragma omp parallel for
     for ( auto &ibCell : ibCellsComponent ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
