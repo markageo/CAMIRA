@@ -77,6 +77,7 @@ inline void CalculateVelocityDeformationRate( Tensor3D &S,
     using enum Axis::ENUMDATA;
     using FVT::G;
 
+    #pragma omp parallel for collapse(3)
     for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
         for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
             for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
@@ -125,6 +126,8 @@ inline void CalculateVelocityDeformationRate( Tensor3D &S,
 
     // Go back through and correct for the immersed boundary faces
     for ( const auto &ibCellComponent : ibData.ibCells ) {
+
+        #pragma omp parallel for 
         for ( const auto &ibCell : ibCellComponent ) {
 
             const intType i = ibCell.cellIndex[X];
@@ -233,16 +236,18 @@ inline void CalculateVelocityDeformationRate( Tensor3D &S,
 
 
 
-inline Tensor3D NearestWallDistance( const Mesh &mesh,
+inline Tensor3D NearestWallDistance( Tensor3D &wallDistance,
+                                     const Mesh &mesh,
                                      const Tree &tree,
                                      const BoundaryConditionData &bcData )
 {
     using enum Axis::ENUMDATA;
     using FVT::G;
 
-    Tensor3D wallDistance = Tensor3D( mesh.nCells[X] + 2*nGhost, 
-                                      mesh.nCells[Y] + 2*nGhost,
-                                      mesh.nCells[Z] + 2*nGhost ).setZero();
+    wallDistance = Tensor3D( mesh.nCells[X] + 2*nGhost, 
+                             mesh.nCells[Y] + 2*nGhost,
+                             mesh.nCells[Z] + 2*nGhost );
+    SetTensorZeroParallel( wallDistance );
 
     // Work out which domain boundaries are walls and store the result
     EnumVector<BoundaryPatches, bool> domainBoundaryWalls;
@@ -258,6 +263,7 @@ inline Tensor3D NearestWallDistance( const Mesh &mesh,
 
     floatType inf = std::numeric_limits<floatType>::infinity();
 
+    #pragma omp parallel for collapse(3)
     for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
         for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
             for ( intType i = 0; i != mesh.nCells[X]; i++ ) {

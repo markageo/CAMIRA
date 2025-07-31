@@ -7,14 +7,13 @@
 namespace CAMIRA
 {
 
-TurbulenceModelData CreateTurbulenceModelData( const InputData &inputData, 
-                                               const AxisTransformationMap &axisTransformation,
-                                               const Mesh &mesh,  
-                                               const IBData &ibData,
-                                               const BoundaryConditionData &bcData )
+void SetTurbulenceModelData( TurbulenceModelData &turbModelData, 
+                             const InputData &inputData, 
+                             const AxisTransformationMap &axisTransformation,
+                             const Mesh &mesh,  
+                             const IBData &ibData,
+                             const BoundaryConditionData &bcData )
 {
-    TurbulenceModelData turbModelData;
-
     turbModelData.model = inputData.turbulenceModel;
 
     switch ( turbModelData.model ) {
@@ -44,8 +43,6 @@ TurbulenceModelData CreateTurbulenceModelData( const InputData &inputData,
             break;
     }
     turbModelData.turbModel->SetTurbulenceModelData( inputData, axisTransformation, mesh, ibData, bcData );
-
-    return turbModelData;
 }
 
 

@@ -43,76 +43,104 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels,
 
 
         // Boundary condition data
-        mgl.bcData = SetBoundaryConditionData(inputData, mgl.mesh);
+        SetBoundaryConditionData(mgl.bcData, inputData, mgl.mesh);
 
         // Immersed boundary data
-        mgl.ibData = CreateImmersedBoundaryData(inputData, axisTransformation, mgl.mesh);
+        SetImmersedBoundaryData(mgl.ibData, inputData, axisTransformation, mgl.mesh);
 
         // Turbulence model data
-        mgl.turbModelData = CreateTurbulenceModelData(inputData, axisTransformation, mgl.mesh, mgl.ibData, mgl.bcData);
+        SetTurbulenceModelData(mgl.turbModelData, inputData, axisTransformation, mgl.mesh, mgl.ibData, mgl.bcData);
     
         // Allocate and initialise fields
-        mgl.fields = InitialiseFields(mgl.mesh, inputData, axisTransformation);
+        mgl.fields = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0) + 2*nGhost, 
+                                                    mgl.mesh.nCells(1) + 2*nGhost, 
+                                                    mgl.mesh.nCells(2) + 2*nGhost) );
+        SetTensorZeroParallel( mgl.fields );
+        InitialiseFields( mgl.fields, mgl.mesh, inputData, axisTransformation); 
+
         if ( level == 0 ) {
             MaskFields(mgl.fields, mgl.ibData.mask);
         } else {
             RestrictFields( mgl.fields, mgLevels[level-1].fields, mgLevels[level-1].mesh, mgLevels[level].mesh, mgLevels[level].ibData.mask );
         }
         SetGhostCells(mgl.fields, mgl.mesh, mgl.bcData);
-        mgl.fieldsRestricted = mgl.fields;
+
+        SetAndCopyTensorParallel( mgl.fieldsRestricted    , mgl.fields );
         
         switch ( inputData.schemes.timeScheme) {
             case TimeSchemes::BackwardsEuler:
-                mgl.fieldsPrevTime        = mgl.fields;
+                SetAndCopyTensorParallel( mgl.fieldsPrevTime    , mgl.fields );
                 break;
 
             case TimeSchemes::BackwardsThreeLevel:
-                mgl.fieldsPrevTime        = mgl.fields;
-                mgl.fieldsPrevPrevTime    = mgl.fields;
+                SetAndCopyTensorParallel( mgl.fieldsPrevTime    , mgl.fields );
+                SetAndCopyTensorParallel( mgl.fieldsPrevPrevTime, mgl.fields );
                 break;
 
             case TimeSchemes::Steady:
                 /* NULL */
                 break;
         }
-        mgl.fieldsOld = mgl.fields;
+        SetAndCopyTensorParallel( mgl.fieldsOld, mgl.fields );
 
         // Finite volume coefficients
-        mgl.fvCoeffs = InitialiseFVCoefficients(mgl.mesh, inputData);
+        mgl.fvCoeffsPtr = std::make_unique< FVCoefficients >( mgl.mesh.nCells, inputData.schemes.momentumInterpolation );
+        InitialiseFVCoefficients(*mgl.fvCoeffsPtr, mgl.mesh, inputData);
 
         // Face fluxes and advected velocities
-        mgl.faceFluxes = InitialiseFaceFluxes(mgl.mesh, mgl.fields.U, mgl.bcData);
-
+        // Faces are staggered in the negative direction:
+        //   cellFaceFlux[X](i, j, k) -> u(i-1/2, j    , k    )
+        //   cellFaceFlux[Y](i, j, k) -> u(i    , j-1/2, k    )
+        //   cellFaceFlux[Z](i, j, k) -> u(i    , j    , k-1/2)
+        // Subscript indicates the normal direction of the face.
+        mgl.faceFluxes[0] = Tensor3D( mgl.mesh.nCells(0) + 1, mgl.mesh.nCells(1)    , mgl.mesh.nCells(2)     );
+        mgl.faceFluxes[1] = Tensor3D( mgl.mesh.nCells(0)    , mgl.mesh.nCells(1) + 1, mgl.mesh.nCells(2)     );
+        mgl.faceFluxes[2] = Tensor3D( mgl.mesh.nCells(0)    , mgl.mesh.nCells(1)    , mgl.mesh.nCells(2) + 1 );
+        EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+            SetTensorZeroParallel( mgl.faceFluxes[axis] );
+        } );
+        UpdateFaceFluxes(mgl.faceFluxes, mgl.mesh, mgl.fields.U, mgl.bcData);
+        
         // Set the coefficients that depend on linearisation
-        UpdateFVCoefficients( mgl.fvCoeffs, mgl.mesh, mgl.fields, mgl.fieldsPrevTime, mgl.fieldsPrevPrevTime, mgl.faceFluxes, mgl.ibData, mgl.turbModelData );
+        UpdateFVCoefficients( *mgl.fvCoeffsPtr, mgl.mesh, mgl.fields, mgl.fieldsPrevTime, mgl.fieldsPrevPrevTime, mgl.faceFluxes, mgl.ibData, mgl.turbModelData );
 
 
-        // Allocate and initialise residualsRestricted
+        // Allocate multigrid fields
         mgl.residuals = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0) + 2*nGhost, 
                                                        mgl.mesh.nCells(1) + 2*nGhost, 
-                                                       mgl.mesh.nCells(2) + 2*nGhost).setZero() );
-        mgl.residualsRestricted = mgl.residuals;
+                                                       mgl.mesh.nCells(2) + 2*nGhost) );
+        
+        mgl.residualsRestricted = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0) + 2*nGhost, 
+                                                                 mgl.mesh.nCells(1) + 2*nGhost, 
+                                                                 mgl.mesh.nCells(2) + 2*nGhost) );
 
         mgl.fineGridCorrection = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0) + 2*nGhost, 
                                                                 mgl.mesh.nCells(1) + 2*nGhost, 
-                                                                mgl.mesh.nCells(2) + 2*nGhost).setZero() );
+                                                                mgl.mesh.nCells(2) + 2*nGhost) );
+        
 
         mgl.coarseGridRightHandSide = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0) + 2*nGhost, 
                                                                      mgl.mesh.nCells(1) + 2*nGhost, 
-                                                                     mgl.mesh.nCells(2) + 2*nGhost).setZero() );
+                                                                     mgl.mesh.nCells(2) + 2*nGhost) );
+        
+        // Initialise multigrid fields
+        SetTensorZeroParallel( mgl.residuals );
+        SetTensorZeroParallel( mgl.residualsRestricted );
+        SetTensorZeroParallel( mgl.fineGridCorrection );
+        SetTensorZeroParallel( mgl.coarseGridRightHandSide );
 
         // Linear Solver
         switch ( inputData.smootherSettings.type ) {
             case Smoothers::nestedLineSymmetricSerial:
-                mgl.linearSolver = std::make_unique< nestedLineSymmetricSolverSerial<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, mgl.mesh, mgl.bcData, inputData.smootherSettings);
+                mgl.linearSolverPtr = std::make_unique< nestedLineSymmetricSolverSerial<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, *mgl.fvCoeffsPtr, mgl.mesh, mgl.bcData, inputData.smootherSettings);
                 break;
             
             case Smoothers::domainSymmetricSerial:
-                mgl.linearSolver = std::make_unique< domainSymmetricSolverSerial<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, mgl.mesh, mgl.bcData, inputData.smootherSettings);
+                mgl.linearSolverPtr = std::make_unique< domainSymmetricSolverSerial<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, *mgl.fvCoeffsPtr, mgl.mesh, mgl.bcData, inputData.smootherSettings);
                 break;
 
             case Smoothers::domainSymmetricParallel:
-                mgl.linearSolver = std::make_unique< domainSymmetricSolverParallel<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, mgl.fvCoeffs, mgl.mesh, mgl.bcData, inputData.smootherSettings);
+                mgl.linearSolverPtr = std::make_unique< domainSymmetricSolverParallel<MI> >(mgl.fields, mgl.fieldsOld, mgl.ibData.mask, *mgl.fvCoeffsPtr, mgl.mesh, mgl.bcData, inputData.smootherSettings);
                 break;
         }
 

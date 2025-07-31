@@ -12,10 +12,11 @@ namespace CAMIRA
 {
 
 #ifdef CAMIRA_HAS_VTK_LIB
-FieldData<Tensor3D> SetInitialConditionFromVTKFile( const std::string &filename,
-                                                    const Mesh &mesh,
-                                                    const AxisTransformationMap &axisTransformation,
-                                                    const InputData &inputData )
+void SetInitialConditionFromVTKFile( FieldData<Tensor3D> &fields
+                                     const std::string &filename,
+                                     const Mesh &mesh,
+                                     const AxisTransformationMap &axisTransformation,
+                                     const InputData &inputData )
 {
     VTK::FieldFileData fieldFileData = VTK::ReadVTKFields( filename );
     
@@ -25,10 +26,6 @@ FieldData<Tensor3D> SetInitialConditionFromVTKFile( const std::string &filename,
 
     TensorIndex3D offsets = {nGhost, nGhost, nGhost},
                   extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
-
-    FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CAMIRA::nGhost, 
-                                          mesh.nCells(1) + 2*CAMIRA::nGhost, 
-                                          mesh.nCells(2) + 2*CAMIRA::nGhost).setZero() );
 
     // Careful! Just checking the mesh is the same size, however it is possible that cell centers are at different locations.
     // Ideally should add the ability to do an interpolation.
@@ -48,46 +45,38 @@ FieldData<Tensor3D> SetInitialConditionFromVTKFile( const std::string &filename,
 
 
 
-FieldData<Tensor3D> SetInitialConditionUniform( const FieldData<floatType> &constantInitialConditions,
-                                                const Mesh &mesh )
+void SetInitialConditionUniform( FieldData<Tensor3D> &fields,
+                                 const FieldData<floatType> &constantInitialConditions,
+                                 const Mesh &mesh )
 {
     TensorIndex3D offsets = {nGhost, nGhost, nGhost},
                   extents = {mesh.nCells(0), mesh.nCells(1), mesh.nCells(2)};
 
-    FieldData<Tensor3D> fields( Tensor3D( mesh.nCells(0) + 2*CAMIRA::nGhost, 
-                                          mesh.nCells(1) + 2*CAMIRA::nGhost, 
-                                          mesh.nCells(2) + 2*CAMIRA::nGhost).setZero() );
-
     ForAllFieldData( [&] (intType i) { 
         fields[i].slice( offsets, extents ).setConstant( constantInitialConditions[i] );  
     } );
-    
-    return fields;
 }
 
 
 
-FieldData<Tensor3D> InitialiseFields( const Mesh &mesh, 
-                                      const InputData &inputData,
-                     [[maybe_unused]] const AxisTransformationMap &axisTransformation )
+void InitialiseFields( FieldData<Tensor3D> &fields,
+                       const Mesh &mesh, 
+                       const InputData &inputData,
+      [[maybe_unused]] const AxisTransformationMap &axisTransformation )
 {
-    FieldData<Tensor3D> fields;
-
     #if defined( CAMIRA_HAS_VTK_LIB )
         switch ( inputData.initialConditionType ) {
             case InputData::InitialConditionTypes::uniform:
-                fields = SetInitialConditionUniform( inputData.constantInitialConditions, mesh );
+                SetInitialConditionUniform( fields, inputData.constantInitialConditions, mesh );
                 break;
 
             case InputData::InitialConditionTypes::vtkFile:
-                fields = SetInitialConditionFromVTKFile( inputData.initialConditionsFieldFilename, mesh, axisTransformation, inputData );
+                SetInitialConditionFromVTKFile( fields, inputData.initialConditionsFieldFilename, mesh, axisTransformation, inputData );
                 break;
         }
     #else
-        fields = SetInitialConditionUniform( inputData.constantInitialConditions, mesh );
+        SetInitialConditionUniform( fields, inputData.constantInitialConditions, mesh );
     #endif
-
-    return fields;
 }
 
 

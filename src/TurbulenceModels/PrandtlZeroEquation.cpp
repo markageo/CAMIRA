@@ -27,9 +27,10 @@ void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceModelD
     // Length scale, distance to nearest wall
     Polyhedron geometry = MakeGeometry( inputData, axisTransformation );
     Tree tree = MakeAABBTree( geometry );
-    m_wallDistance = NearestWallDistance( mesh, tree, bcData );
-
-    m_velocityDeformationRate = Tensor3D( mesh.nCells[X] + 2*nGhost, mesh.nCells[Y] + 2*nGhost, mesh.nCells[Z] + 2*nGhost ).setZero();
+    NearestWallDistance( m_wallDistance, mesh, tree, bcData );
+    
+    m_velocityDeformationRate = Tensor3D( mesh.nCells[X] + 2*nGhost, mesh.nCells[Y] + 2*nGhost, mesh.nCells[Z] + 2*nGhost );
+    SetTensorZeroParallel( m_velocityDeformationRate );
 }
 
 
@@ -45,6 +46,7 @@ void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceViscos
     CalculateVelocityDeformationRate( m_velocityDeformationRate, fields, ibData, mesh );
 
     // Includes ghost cells
+    #pragma omp parallel for collapse(3)
     for ( intType k = -1; k != mesh.nCells[Z] + 1; k++ ) {
         for ( intType j = -1; j != mesh.nCells[Y] + 1; j++ ) {
             for ( intType i = -1; i != mesh.nCells[X] + 1; i++ ) {
@@ -56,7 +58,7 @@ void TurbulenceModel<TurbulenceModels::PrandtlZeroEquation>::SetTurbulenceViscos
                 const floatType nuTurbulentNew = lmix * lmix * m_velocityDeformationRate(cellIndexG);
 
                 nuTurbulent(cellIndexG) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent(cellIndexG)
-                                     + m_eddyViscosityRelaxation * nuTurbulentNew;
+                                        + m_eddyViscosityRelaxation * nuTurbulentNew;
                 
             }
         }

@@ -1247,16 +1247,13 @@ void AddUnsteadyTerm( FVCoefficients &fvCoeffs,
 \*---------------------------------------------------------------------------------------------------------------*/
 
 
-void InitialiseTurbulenceViscosity( FVCoefficients &fvCoeffs,
-                                    const Mesh &mesh )
+void InitialiseTurbulenceViscosity( FVCoefficients &fvCoeffs )
 {
     using enum Axis::ENUMDATA;
 
     // Allocate and initialise turbulence viscosity
     floatType nuTurbInitial = 0.0f;
-    fvCoeffs.nuTurb = Tensor3D( mesh.nCells[X] + 2*nGhost, 
-                                mesh.nCells[Y] + 2*nGhost, 
-                                mesh.nCells[Z] + 2*nGhost ).setConstant(nuTurbInitial);
+    fvCoeffs.nuTurb.setConstant( nuTurbInitial );
 }
 
 
@@ -2081,7 +2078,6 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
 }
 
 
-
 }   // end anonymous namespace
 
 
@@ -2092,11 +2088,11 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
                                             Set and Update Functions
 \*---------------------------------------------------------------------------------------------------------------*/
 
-FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
-                                         const InputData &inputData)
+void InitialiseFVCoefficients( FVCoefficients &fvCoeffs,
+                               const Mesh &mesh,
+                               const InputData &inputData)
 {
-    // Default construct the coefficients class
-    FVCoefficients fvCoeffs( mesh.nCells, inputData.schemes.momentumInterpolation );
+    // Assumes fvCoeffs has been initialised to the correct
 
     fvCoeffs.rho = inputData.rho;
     fvCoeffs.nu  = inputData.nu;
@@ -2107,7 +2103,7 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     fvCoeffs.timeStep                = inputData.schemes.timeStep;
     fvCoeffs.advectionBlendingFactor = inputData.schemes.advectionBlendingFactor;
 
-    InitialiseTurbulenceViscosity(fvCoeffs, mesh);
+    InitialiseTurbulenceViscosity(fvCoeffs);
 
     SetCellGradientCoefficients(fvCoeffs, mesh);
     SetHighOrderAdvectionCoefficients(fvCoeffs, mesh);
@@ -2116,8 +2112,6 @@ FVCoefficients InitialiseFVCoefficients( const Mesh &mesh,
     SetMomentumInterpolationCompactConstants(fvCoeffs, mesh);
 
     SetGhostCellsToConstant(fvCoeffs.Mom[Axis::X].AU[TransportCoefficients::p], 1.0f); // To avoid divide by zero in solver
-
-    return fvCoeffs;
 }
 
 

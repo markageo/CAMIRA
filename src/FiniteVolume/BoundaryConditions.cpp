@@ -108,12 +108,10 @@ namespace
 
 
 
-BoundaryConditionData SetBoundaryConditionData( const InputData &inputData,
-                                                const Mesh &mesh )
+void SetBoundaryConditionData( BoundaryConditionData &bcData,
+                               const InputData &inputData,
+                               const Mesh &mesh )
 {
-
-    BoundaryConditionData bcData;
-
     // Set boundary condition data for use in solver
     ForAllFieldData( [&] (intType f) {
 
@@ -141,8 +139,6 @@ BoundaryConditionData SetBoundaryConditionData( const InputData &inputData,
             bcData.pressureFieldIsFloating = false;
         }
     } );
-
-    return bcData;
 }
 
 

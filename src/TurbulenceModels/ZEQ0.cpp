@@ -28,7 +28,7 @@ void TurbulenceModel<TurbulenceModels::ZEQ0>::SetTurbulenceModelData( const Inpu
     // Length scale, distance to nearest wall
     Polyhedron geometry = MakeGeometry( inputData, axisTransformation );
     Tree tree = MakeAABBTree( geometry );
-    m_wallDistance = NearestWallDistance( mesh, tree, bcData );
+    NearestWallDistance( m_wallDistance, mesh, tree, bcData );
 }
 
 
@@ -42,6 +42,7 @@ void TurbulenceModel<TurbulenceModels::ZEQ0>::SetTurbulenceViscosityField( Tenso
     using FVT::G;
 
     // Includes ghost cells
+    #pragma omp parallel for collapse(3)
     for ( intType k = -1; k != mesh.nCells[Z] + 1; k++ ) {
         for ( intType j = -1; j != mesh.nCells[Y] + 1; j++ ) {
             for ( intType i = -1; i != mesh.nCells[X] + 1; i++ ) {
