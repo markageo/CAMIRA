@@ -20,11 +20,12 @@ struct TurbulenceModelData
     std::unique_ptr<TurbulenceModelInterface> turbModel;
 };
 
-TurbulenceModelData CreateTurbulenceModelData( const InputData &, 
-                                               const AxisTransformationMap &,
-                                               const Mesh &, 
-                                               const IBData &,
-                                               const BoundaryConditionData & );
+void SetTurbulenceModelData( TurbulenceModelData &,
+                             const InputData &, 
+                             const AxisTransformationMap &,
+                             const Mesh &, 
+                             const IBData &,
+                             const BoundaryConditionData & );
 
 
 }   // end namespace CAMIRA

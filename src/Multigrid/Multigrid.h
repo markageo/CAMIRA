@@ -37,12 +37,12 @@ struct GridLevelData
                         residualsRestricted,
                         fineGridCorrection,
                         coarseGridRightHandSide;    // Only used on coarse grids
-    BoundaryConditionData bcData;
     EnumVector<Axis, Tensor3D> faceFluxes;
+    BoundaryConditionData bcData;
     IBData ibData;
     TurbulenceModelData turbModelData;
-    FVCoefficients fvCoeffs;
-    std::unique_ptr< LinearSolverInterface<MI> > linearSolver;
+    std::unique_ptr< FVCoefficients > fvCoeffsPtr;  
+    std::unique_ptr< LinearSolverInterface<MI> > linearSolverPtr;
 };
 
 

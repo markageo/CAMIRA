@@ -29,9 +29,15 @@ public:
 
     FVCoefficients();
     FVCoefficients(const iArray3 &, MomentumInterpolation);
-    FVCoefficients(const FVCoefficients &);
-    FVCoefficients &operator=(FVCoefficients);
-    FVCoefficients(FVCoefficients&&) noexcept;
+
+    // Delete copy and move constructors
+    // Copy and move for this class are not neccessary
+    // In the case of NUMA aware allocations, copy and move can break the NUMA layout
+    FVCoefficients(const FVCoefficients &) = delete;
+    FVCoefficients &operator=(const FVCoefficients &) = delete;
+    FVCoefficients(FVCoefficients &&) = delete;
+    FVCoefficients &operator=(FVCoefficients &&) = delete;
+
 
 
     // Continuity equation data

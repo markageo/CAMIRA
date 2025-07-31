@@ -15,24 +15,18 @@ namespace CAMIRA
 // -------------------------------------- Definition in InitialConditions.cpp -------------------------------------- //
 
 // Allocate and initialise the fields
-FieldData<Tensor3D> InitialiseFields(const Mesh &, const InputData &, const AxisTransformationMap & );
+void InitialiseFields( FieldData<Tensor3D> &, const Mesh &, const InputData &, const AxisTransformationMap & );
 
 
 
 // -------------------------------------- Definition in BoundaryConditions.cpp -------------------------------------- //
 
 // Calculate and set boundary condition data for all fields
-BoundaryConditionData SetBoundaryConditionData( const InputData &, const Mesh & );
+void SetBoundaryConditionData( BoundaryConditionData &, const InputData &, const Mesh & );
 
 
 
 // -------------------------------------- Definition in FaceVelocities.cpp -------------------------------------- //
-
-// Allocate and initialise face velocities
-EnumVector<Axis, Tensor3D> InitialiseFaceFluxes( const Mesh &, 
-                                                 const EnumVector<Axis, Tensor3D> &, 
-                                                 const BoundaryConditionData &);
-
 
 // Update face velocities
 void UpdateFaceFluxes( EnumVector<Axis, Tensor3D> &, 
@@ -55,8 +49,9 @@ void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &,
 // ---------------------------------- Definition in FiniteVolumeCoefficients.cpp --------------------------------- //
 
 // Allocate and initialise finite volume coefficients
-FVCoefficients InitialiseFVCoefficients( const Mesh &,
-                                         const InputData &);
+void InitialiseFVCoefficients( FVCoefficients &,
+                               const Mesh &,
+                               const InputData &);
 
 // Update finite volume coefficients 
 void UpdateFVCoefficients( FVCoefficients &, 

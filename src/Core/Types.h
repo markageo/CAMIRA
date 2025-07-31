@@ -144,8 +144,6 @@ inline void EnumFor( L&& f )
 
 
 
-
-
 // ---------------------------------------------------- Solver Parameters -------------------------------------------------- //
 
 // Solver settings
@@ -295,6 +293,127 @@ void ForAllFieldData( L&& f )
     for ( intType i = 0; i != FieldData<int>::nData; i++ ) {
         f( i );
     }
+}
+
+
+
+// ---------------------------------------------- Parallel Tensor SetConstant ------------------------------------------------- //
+
+// These functions initialise the data in parallel, analogous to the setZero member function for Tensors.
+// These are useful when running code on NUMA machines to make use of the first touch policy.
+template< typename T >
+[[maybe_unused]]
+inline void SetTensorConstantParallel( T &tensor, 
+                                 const floatType &value )
+{
+    static_assert(std::is_same<T, Tensor0D >::value ||
+                  std::is_same<T, Tensor1D >::value ||
+                  std::is_same<T, Tensor2D >::value ||
+                  std::is_same<T, Tensor3D >::value );
+
+
+    #pragma omp parallel for
+    for ( intType i = 0; i != tensor.size(); i++ ) {
+        tensor.data()[i] = value;
+    }
+
+}
+
+
+
+template< typename T >
+[[maybe_unused]]
+inline void SetTensorZeroParallel( T &tensor )
+{
+    SetTensorConstantParallel( tensor, 0.0f );
+}
+
+
+// Overloads for FieldData objects of Tensors
+template< typename T >
+[[maybe_unused]]
+inline void SetTensorConstantParallel( FieldData<T> &fieldData, 
+                                       const floatType &value )
+{
+    ForAllFieldData( [&] (intType f) {
+        SetTensorConstantParallel( fieldData[f], value );
+    } );
+}
+
+
+template< typename T >
+[[maybe_unused]]
+inline void SetTensorZeroParallel( FieldData<T> &fieldData )
+{
+    SetTensorConstantParallel( fieldData, 0.0f );
+}
+
+
+
+// ------------------------------------------------ Parallel Tensor Copy ---------------------------------------------------- //
+
+// Copies contents of one tensor to another in parallel.
+// These are useful when running code on NUMA machines to make use of the first touch policy.
+// To use this, need to allocate tensor being copied into, but not initialised to make use of first touch policy
+template< typename T >
+[[maybe_unused]]
+inline void CopyTensorParallel( T &tensorCopy, 
+                                const T &tensor )
+{
+    static_assert(std::is_same<T, Tensor0D >::value ||
+                  std::is_same<T, Tensor1D >::value ||
+                  std::is_same<T, Tensor2D >::value ||
+                  std::is_same<T, Tensor3D >::value );
+
+
+    #pragma omp parallel for
+    for ( intType i = 0; i != tensor.size(); i++ ) {
+        tensorCopy.data()[i] = tensor.data()[i];
+    }
+    
+}
+
+
+
+// This function will allocate the tensor being copied to such that it is the same size as the initial tensor
+template< typename T >
+[[maybe_unused]]
+inline void SetAndCopyTensorParallel( T &tensorCopy, 
+                                      const T &tensor )
+{
+    static_assert(std::is_same<T, Tensor0D >::value ||
+                  std::is_same<T, Tensor1D >::value ||
+                  std::is_same<T, Tensor2D >::value ||
+                  std::is_same<T, Tensor3D >::value );
+
+    tensorCopy = T( tensor.dimensions() );
+
+    CopyTensorParallel( tensorCopy, tensor );
+}
+
+
+
+// Overloads for FieldData objects of Tensors
+template< typename T >
+[[maybe_unused]]
+inline void CopyTensorParallel( FieldData<T> &fieldDataCopy, 
+                                const FieldData<T> &fieldData )
+{
+    ForAllFieldData( [&] (intType f) {
+        CopyTensorParallel( fieldDataCopy[f], fieldData[f] );
+    } );
+}
+
+template< typename T >
+[[maybe_unused]]
+inline void SetAndCopyTensorParallel( FieldData<T> &fieldDataCopy, 
+                                      const FieldData<T> &fieldData )
+{
+    ForAllFieldData( [&] (intType f) {
+        fieldDataCopy[f] = T( fieldData[f].dimensions() );
+    } );
+    
+    CopyTensorParallel( fieldDataCopy, fieldData );
 }
 
 

@@ -374,25 +374,24 @@ std::vector<IBCell> CreateIBCellDataForComponent( const Tensor3D &mask,
 
 
 
-IBData CreateImmersedBoundaryData( const InputData &inputData,
-                                   const AxisTransformationMap &axisTransformation,
-                                   const Mesh &mesh )
+void SetImmersedBoundaryData( IBData &ibData,
+                              const InputData &inputData,
+                              const AxisTransformationMap &axisTransformation,
+                              const Mesh &mesh )
 {
-
     using enum Axis::ENUMDATA;
     using FVT::G;
-
-    IBData ibData;
 
     // Create the initial mask. Ghost cells at domain boundaries should be masked out.
     const TensorIndex3D offsets = {nGhost, nGhost, nGhost},
                         extents = {mesh.nCells[0], mesh.nCells[1], mesh.nCells[2]};
-    ibData.mask = Tensor3D( mesh.nCells[X] + 2*CAMIRA::nGhost, mesh.nCells[Y] + 2*CAMIRA::nGhost, mesh.nCells[Z] + 2*CAMIRA::nGhost ).setConstant( CellType::Solid );
+    ibData.mask = Tensor3D( mesh.nCells[X] + 2*CAMIRA::nGhost, mesh.nCells[Y] + 2*CAMIRA::nGhost, mesh.nCells[Z] + 2*CAMIRA::nGhost );
+    SetTensorConstantParallel( ibData.mask, CellType::Solid );
     ibData.mask.slice(offsets, extents) = ibData.mask.slice(offsets, extents).constant( CellType::Fluid );
 
     // Leave ibData empty if there is no geometry
     if ( !inputData.hasIBGeometry )
-        return ibData;
+        return;
 
     Polyhedron geometry = MakeGeometry( inputData, axisTransformation );
 
@@ -400,6 +399,7 @@ IBData CreateImmersedBoundaryData( const InputData &inputData,
     std::vector<Polyhedron> polyVector = SeparatePolyhedron( geometry );
 
     // Set the IBcells for each one
+    // ibData.ibCells.clear();
     for ( const Polyhedron &poly : polyVector ) {
 
         Tree tree = MakeAABBTree( poly );
@@ -414,8 +414,6 @@ IBData CreateImmersedBoundaryData( const InputData &inputData,
         ibData.ibCells.emplace_back( CreateIBCellDataForComponent( localMask, tree, mesh, inputData ) );
 
     }
-
-    return ibData;
 }
 
 

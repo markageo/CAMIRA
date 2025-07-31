@@ -40,7 +40,7 @@ void SetStencil( GridLevelData<MI> &gridLevelData,
     UpdateIBData( gld.ibData, fields );
     UpdateFaceFluxes( gld.faceFluxes, gld.mesh, fields.U, gld.bcData);
     SetIBFaceFluxes( gld.faceFluxes, gld.ibData );
-    UpdateFVCoefficients( gld.fvCoeffs, gld.mesh, fields, gld.fieldsPrevTime, gld.fieldsPrevPrevTime, gld.faceFluxes, gld.ibData, gld.turbModelData);
+    UpdateFVCoefficients( *gld.fvCoeffsPtr, gld.mesh, fields, gld.fieldsPrevTime, gld.fieldsPrevPrevTime, gld.faceFluxes, gld.ibData, gld.turbModelData);
     TOC()
 }
 
@@ -56,7 +56,7 @@ void SetCoarseGridRightHandSide( GridLevelData<MI> &gridLevelData,
     SetStencil<MI>(gridLevelData, gridLevelData.fieldsRestricted);
 
     CalculateCoarseGridRightHandSide<MI >( gridLevelData.coarseGridRightHandSide,
-                                           gridLevelData.fvCoeffs,
+                                           *gridLevelData.fvCoeffsPtr,
                                            gridLevelData.fieldsRestricted,
                                            gridLevelData.residualsRestricted,
                                            gridLevelData.ibData.mask );
@@ -76,9 +76,9 @@ void SetEquations( GridLevelData<MI> &gridLevelData,
 
         // Add the terms that appear on the RHS of the coarse grid equation
         EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
-            gridLevelData.fvCoeffs.Mom[axis].F += gridLevelData.coarseGridRightHandSide.U[axis];
+            gridLevelData.fvCoeffsPtr->Mom[axis].F += gridLevelData.coarseGridRightHandSide.U[axis];
         } );
-        gridLevelData.fvCoeffs.Cont.F += gridLevelData.coarseGridRightHandSide.P; 
+        gridLevelData.fvCoeffsPtr->Cont.F += gridLevelData.coarseGridRightHandSide.P; 
     } 
 }
 
@@ -93,7 +93,7 @@ OperationStatus Smooth( GridLevelData<MI > &gridLevelData,
     FieldData<floatType> residualsScaleFactor;
 
     FieldData<floatType > residuals = ScaledL1NormResiduals<MI >( gridLevelData.fields, 
-                                                                  gridLevelData.fvCoeffs, 
+                                                                  *gridLevelData.fvCoeffsPtr, 
                                                                   gridLevelData.ibData.mask );
     SetResidualsNormalisationFactor( residualsScaleFactor, residuals );
     NormaliseResiduals( residuals, residualsScaleFactor );
@@ -106,7 +106,7 @@ OperationStatus Smooth( GridLevelData<MI > &gridLevelData,
         SetEquations<MI>( gridLevelData, mgEquationType );
 
         residuals = ScaledL1NormResiduals<MI>( gridLevelData.fields,
-                                               gridLevelData.fvCoeffs,
+                                               *gridLevelData.fvCoeffsPtr,
                                                gridLevelData.ibData.mask );
         NormaliseResiduals( residuals, residualsScaleFactor );
 
@@ -120,8 +120,8 @@ OperationStatus Smooth( GridLevelData<MI > &gridLevelData,
             break;
         }
         
-        gridLevelData.linearSolver->UpdateState();
-        gridLevelData.linearSolver->Solve();
+        gridLevelData.linearSolverPtr->UpdateState();
+        gridLevelData.linearSolverPtr->Solve();
     }
     std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", relative residuals: " << residuals.U[0] << ", " 
                                                                                                                        << residuals.U[1] << ", " 
@@ -148,8 +148,8 @@ OperationStatus SmoothWithFixedIterations( GridLevelData<MI> &gridLevelData,
         gridLevelData.fieldsOld = gridLevelData.fields;
         SetEquations<MI>( gridLevelData, mgEquationType );
 
-        gridLevelData.linearSolver->UpdateState();
-        gridLevelData.linearSolver->Solve();
+        gridLevelData.linearSolverPtr->UpdateState();
+        gridLevelData.linearSolverPtr->Solve();
 
     }
     std::cout << std::string(gridLevelData.level, ' ') << " Level " << gridLevelData.level << ", performed " << maxIterations << " iterations" << "\n";
@@ -197,7 +197,7 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
     SetEquations<MI>( mgLevels[level], mgEquationType );
     ResidualsField<MI>( mgLevels[level].residuals,
                         mgLevels[level].fields, 
-                        mgLevels[level].fvCoeffs, 
+                        *mgLevels[level].fvCoeffsPtr, 
                         mgLevels[level].ibData.mask );
 
     // Restrict residuals and solutions
@@ -242,7 +242,7 @@ void Cycle( std::vector< GridLevelData<MI> > &mgLevels,
         SetEquations<MI>( mgLevels[level], mgEquationType );
         ResidualsField<MI>( mgLevels[level].residuals,
                             mgLevels[level].fields, 
-                            mgLevels[level].fvCoeffs, 
+                            *mgLevels[level].fvCoeffsPtr, 
                             mgLevels[level].ibData.mask );
 
         // Restrict residuals and solution
@@ -361,7 +361,7 @@ void SolveSteady( const InputData &inputData,
 
     // References to finest grid
     auto &fields   = mgLevels[0].fields;
-    auto &fvCoeffs = mgLevels[0].fvCoeffs;
+    auto &fvCoeffs = *mgLevels[0].fvCoeffsPtr;
     auto &mesh     = mgLevels[0].mesh;
     auto &bcData   = mgLevels[0].bcData;
     auto &ibData   = mgLevels[0].ibData;
@@ -406,7 +406,7 @@ void SolveSteady( const InputData &inputData,
 
     // Calculate initial residual
     residualsOuter   = ScaledL1NormResiduals<MI>( mgLevels[0].fields, 
-                                                  mgLevels[0].fvCoeffs, 
+                                                  *mgLevels[0].fvCoeffsPtr, 
                                                   mgLevels[0].ibData.mask);
     SetResidualsNormalisationFactor( residualsScaleFactor, residualsOuter );
     NormaliseResiduals( residualsOuter, residualsScaleFactor );
@@ -440,7 +440,7 @@ void SolveSteady( const InputData &inputData,
         SetStencil<MI>(mgLevels[0], mgLevels[0].fields);
         
         residualsOuter   = ScaledL1NormResiduals<MI>( mgLevels[0].fields, 
-                                                      mgLevels[0].fvCoeffs, 
+                                                      *mgLevels[0].fvCoeffsPtr, 
                                                       mgLevels[0].ibData.mask); 
         NormaliseResiduals( residualsOuter, residualsScaleFactor );
         massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
@@ -524,7 +524,7 @@ void SolveTransient( const InputData &inputData,
 
     // References to finest grid
     auto &fields   = mgLevels[0].fields;
-    auto &fvCoeffs = mgLevels[0].fvCoeffs;
+    auto &fvCoeffs = *mgLevels[0].fvCoeffsPtr;
     auto &mesh     = mgLevels[0].mesh;
     auto &bcData   = mgLevels[0].bcData;
     auto &ibData   = mgLevels[0].ibData;
@@ -577,7 +577,7 @@ void SolveTransient( const InputData &inputData,
             
             SetStencil<MI>(mgLevels[0], mgLevels[0].fields);
             residualsOuter   = ScaledL1NormResiduals<MI>( mgLevels[0].fields, 
-                                                          mgLevels[0].fvCoeffs, 
+                                                          *mgLevels[0].fvCoeffsPtr, 
                                                           mgLevels[0].ibData.mask); 
             // if ( nOuterIterations == 1 )
             //     SetResidualsNormalisationFactor( residualsScaleFactor, residualsOuter );
