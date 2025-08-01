@@ -318,9 +318,9 @@ public:
                                 + m_relaxation.U[Z] * ( bW - m_momZ_AP[sWP::cCoupled](kgW) * m_fields.P( ig, jg, kg ) / m_momZ_AU[p](igW, jgW, kgW));
 
         // Momentum update
-        m_fields.U[X]( igU, jgU, kgU ) = (1.0f - maskP * maskU ) * m_fields.U[X]( igU, jgU, kgU )  +  maskP * maskU * newU;
-        m_fields.U[Y]( igV, jgV, kgV ) = (1.0f - maskP * maskV ) * m_fields.U[Y]( igV, jgV, kgV )  +  maskP * maskV * newV;
-        m_fields.U[Z]( igW, jgW, kgW ) = (1.0f - maskP * maskW ) * m_fields.U[Z]( igW, jgW, kgW )  +  maskP * maskW * newW;
+        m_fields.U[X]( igU, jgU, kgU ) = (1.0f - maskU ) * m_fields.U[X]( igU, jgU, kgU )  +  maskU * newU;
+        m_fields.U[Y]( igV, jgV, kgV ) = (1.0f - maskV ) * m_fields.U[Y]( igV, jgV, kgV )  +  maskV * newV;
+        m_fields.U[Z]( igW, jgW, kgW ) = (1.0f - maskW ) * m_fields.U[Z]( igW, jgW, kgW )  +  maskW * newW;
 
     }
 
@@ -569,14 +569,14 @@ public:
 
 
         // Momentum update
-        m_fields.U[X]( igU, jgU, kgU ) = (1.0f - maskP * maskU ) * m_fields.U[X]( igU, jgU, kgU )  +  maskP * maskU * newUS;
-        m_fields.U[X]( ig , jg , kg  ) = (1.0f - maskP         ) * m_fields.U[X]( ig , jg , kg  )  +  maskP *         newUC;
+        m_fields.U[X]( igU, jgU, kgU ) = (1.0f - maskU ) * m_fields.U[X]( igU, jgU, kgU )  +  maskU * newUS;
+        m_fields.U[X]( ig , jg , kg  ) = (1.0f - maskP ) * m_fields.U[X]( ig , jg , kg  )  +  maskP * newUC;
 
-        m_fields.U[Y]( igV, jgV, kgV ) = (1.0f - maskP * maskV ) * m_fields.U[Y]( igV, jgV, kgV )  +  maskP * maskV * newVS;
-        m_fields.U[Y]( ig , jg , kg  ) = (1.0f - maskP         ) * m_fields.U[Y]( ig , jg , kg  )  +  maskP *         newVC;
+        m_fields.U[Y]( igV, jgV, kgV ) = (1.0f - maskV ) * m_fields.U[Y]( igV, jgV, kgV )  +  maskV * newVS;
+        m_fields.U[Y]( ig , jg , kg  ) = (1.0f - maskP ) * m_fields.U[Y]( ig , jg , kg  )  +  maskP * newVC;
 
-        m_fields.U[Z]( igW, jgW, kgW ) = (1.0f - maskP * maskW ) * m_fields.U[Z]( igW, jgW, kgW )  +  maskP * maskW * newWS;
-        m_fields.U[Z]( ig , jg , kg  ) = (1.0f - maskP         ) * m_fields.U[Z]( ig , jg , kg  )  +  maskP *         newWC;
+        m_fields.U[Z]( igW, jgW, kgW ) = (1.0f - maskW ) * m_fields.U[Z]( igW, jgW, kgW )  +  maskW * newWS;
+        m_fields.U[Z]( ig , jg , kg  ) = (1.0f - maskP ) * m_fields.U[Z]( ig , jg , kg  )  +  maskP * newWC;
 
     }
 
