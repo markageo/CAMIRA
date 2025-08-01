@@ -139,7 +139,7 @@ FVCoefficients::FVCoefficients( const iArray3 &dims,
 
     } );
 
-    nuTurb = Tensor3D( nCells(X) + 2*nGhost, nCells(X) + 2*nGhost, nCells(X) + 2*nGhost );
+    nuTurb = Tensor3D( nCells(X) + 2*nGhost, nCells(Y) + 2*nGhost, nCells(Z) + 2*nGhost );  // FIX THIS IDIOT
     SetTensorZeroParallel( nuTurb );
 
 };
