@@ -16,7 +16,7 @@ Mesh {
 InitialConditions
 {    
     type = uniform
-    u = 4
+    u = 5
     v = 0
     w = 0
     p = 0
@@ -76,12 +76,12 @@ BoundaryConditions
 
 
 SolidGeometry {
-    boundaryTreatement = staircase
+    boundaryTreatement = directionalImmersedBoundary
     
     FromFile {
         type = STL
-        filename = "input/CEDVAL-B1-5/CEDVAL-B1-5-geometry-filled.stl"
-        rotation = (0, 0, 0)
+        filename = "input/CEDVAL-B1-5/CEDVAL-B1-5-geometry.stl"
+        rotation = (0, 0, 23)
     }
 }
 
@@ -105,27 +105,27 @@ Solver {
     Smoother {
 
         type = domainSymmetricParallel
-        maxIterations = 5
+        maxIterations = 2
         maxResiduals = 1e-5
 
         planeSweepDirection = +z
         lineSweepDirection = +y
 
         eddyViscosityRelaxation = 1
-        momentumRelaxation      = (0.7, 0.7, 0.7)
+        momentumRelaxation      = (0.9, 0.9, 0.9)
         pressureRelaxation      = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 1
 
-        preSmoothingIterations = 3
-        postSmoothingIterations = 3
-        fineGridIterations   = 3
+        preSmoothingIterations = 2
+        postSmoothingIterations = 2
+        fineGridIterations   = 6
 
-        maxCoarseGridIterations = 50
+        maxCoarseGridIterations = 100
         maxCoarseGridResiduals  = 1e-10
         
     }

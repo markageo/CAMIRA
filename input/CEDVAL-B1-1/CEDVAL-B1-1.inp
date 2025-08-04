@@ -96,7 +96,7 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 10
+        maxOuterIterations = 100
         maxContinuityOuterResidual = 1e-6
         maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 
@@ -112,7 +112,7 @@ Solver {
         lineSweepDirection = +x
 
         eddyViscosityRelaxation = 1
-        momentumRelaxation      = (0.95, 0.95, 0.95)
+        momentumRelaxation      = (0.8, 0.8, 0.8)
         pressureRelaxation      = 1
 
     }
@@ -121,11 +121,11 @@ Solver {
         cycle = F
         maxCoarseLevels = 2
 
-        preSmoothingIterations = 3
-        postSmoothingIterations = 3
-        fineGridIterations   = 2
+        preSmoothingIterations = 2
+        postSmoothingIterations = 2
+        fineGridIterations   = 6
 
-        maxCoarseGridIterations = 150
+        maxCoarseGridIterations = 100
         maxCoarseGridResiduals  = 1e-10
         
     }
@@ -142,7 +142,7 @@ Output {
     profilingFilename       = "output/profiling.dat"
     fieldOutputFilename     = "output/fields.vtk"
     geometryOutputFilename  = "output/geometry.stl"
-    fieldWriteInterval      = 0
+    fieldWriteInterval      = 1
 
     Monitors {
         ForceCalculator {

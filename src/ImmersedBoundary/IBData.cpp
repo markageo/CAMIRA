@@ -63,26 +63,52 @@ Tensor3D CreateCellMask( const Tree &tree,
 
 
 
-// Check if a cell is within the domain boundary
-bool CellIsInDomain( const TensorIndex3D &cellIndex,
-                     const Mesh &mesh )
+// Masks cells that form a single cell "cavity". These can cause instability and are a highly degenerate case
+void RemoveMaskSingleCellCavities( Tensor3D &mask,
+                                   const Mesh &mesh )
 {
     using FVT::G;
+    using enum Axis::ENUMDATA;
 
-    for ( intType a = 0; a != Axis::count; a++ ) {
-        Axis::ENUMDATA axis = static_cast<Axis::ENUMDATA>( a );
+    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
+        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
+            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
 
-         if ( cellIndex[axis] < 0 )
-            return false;
+                // Must be a fluid cell
+                if ( static_cast<intType>( mask(G(i, j, k)) ) == CellType::Solid )
+                    continue;
 
-        if ( cellIndex[axis] > ( mesh.nCells[axis] - 1 ) )
-            return false;
+                EnumVector<Axis, intType> maskedCount{0, 0, 0};
 
+                // x 
+                maskedCount[X] += 1 - static_cast<intType>( mask( G( i + 1, j, k ) ) );
+                maskedCount[X] += 1 - static_cast<intType>( mask( G( i - 1, j, k ) ) );
+
+                // y
+                maskedCount[Y] += 1 - static_cast<intType>( mask( G( i, j + 1, k ) ) );
+                maskedCount[Y] += 1 - static_cast<intType>( mask( G( i, j - 1, k ) ) );
+
+                // z
+                maskedCount[Z] += 1 - static_cast<intType>( mask( G( i, j, k + 1 ) ) );
+                maskedCount[Z] += 1 - static_cast<intType>( mask( G( i, j, k - 1 ) ) );
+
+                // Check for cavity
+                intType numMaskedNeighbourCells = 0;
+                bool hasDirectionWithBothSidesMasked = false;
+                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                    numMaskedNeighbourCells += maskedCount[axis];
+                    if ( maskedCount[axis] > 1 ) {
+                        hasDirectionWithBothSidesMasked = true;
+                    }
+                } );
+
+                if ( hasDirectionWithBothSidesMasked && numMaskedNeighbourCells > 2 )
+                    mask( G(i, j, k) ) = CellType::Solid;
+
+            }
+        }
     }
-
-    return true;
 }
-
 
 
 // Sets data for a particular source term in a particular direciton for a particular cell
@@ -114,11 +140,6 @@ void AddIBDataForDirection( IBCell &ibCell,
 
     intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
 
-    // Ensure that there is enough space between the IB and the domain boundary
-    if ( !CellIsInDomain( cellIndex_a, mesh ) ) {
-        throw std::runtime_error( "Invalid immersed boundary geometry and mesh specification: There must be at least one fluid cell between solid and domain boundaries on all grid levels!" );
-    }
-
     switch ( inputData.geoemtryBoundaryTreatement ) {
         case GeometryBoundaryTreatement::DirectionalImmersedBoundary:
         {
@@ -128,7 +149,25 @@ void AddIBDataForDirection( IBCell &ibCell,
                                        mesh.cellCenters[Z](cellIndex[Z]) );
             fVector3 rayDirection( 0, 0, 0 );
             rayDirection[ axis ] = static_cast<floatType>( directionIndex );
-            sourceTermData.ibDistance = NearestRayIntersection(tree, queryPointCoords, rayDirection);
+
+            floatType ibDistance = NearestRayIntersection(tree, queryPointCoords, rayDirection);
+
+            // Deal with some possible degenerate cases in the geometry
+            const bool noIntersectionFound = ibDistance < 0.0f;
+
+            TensorIndex3D cellIndex_gg = cellIndex_g;
+            cellIndex_gg[axis] += directionIndex;
+            const floatType maxAllowableIBDistance = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f 
+                                                   + mesh.cellLengths[axis](cellIndex_g[axis])
+                                                   + mesh.cellLengths[axis](cellIndex_gg[axis]);
+            const bool ibDistanceTooLarge  = ibDistance > maxAllowableIBDistance;
+
+            if ( noIntersectionFound || ibDistanceTooLarge ) {
+                sourceTermData.ibDistance = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f;     // Take the nearest cell face
+            } else {
+                sourceTermData.ibDistance = ibDistance;
+            }
+            
             break;
         }
         
@@ -144,7 +183,6 @@ void AddIBDataForDirection( IBCell &ibCell,
             break;
     }
     const floatType &ibDistance = sourceTermData.ibDistance;
-
 
     // Face area vector
     sourceTermData.faceAreaComponent = static_cast<floatType>( directionIndex )   // Gives the correct sign
@@ -406,6 +444,8 @@ void SetImmersedBoundaryData( IBData &ibData,
 
         // Local mask for just this component
         Tensor3D localMask = CreateCellMask( tree, mesh );
+
+        RemoveMaskSingleCellCavities( localMask, mesh );
 
         // Add the contribution to the global mask
         ibData.mask *= localMask;

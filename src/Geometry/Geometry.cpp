@@ -449,6 +449,9 @@ floatType NearestRayIntersection( const Tree &tree,
     const Ray    ray( rayOrigin, rayOrientation );
     Ray_intersection intersection = tree.first_intersection( ray );
 
+    if ( !intersection ) 
+        return -1.0f;   // No intersection was found
+
     Point* intersectionPoint = boost::get<Point>( &(intersection->first) ); 
     floatType distance2 = static_cast<floatType>( CGAL::squared_distance( *intersectionPoint, rayOrigin ) );
 

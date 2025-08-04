@@ -144,9 +144,6 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels,
                 break;
         }
 
-        
-        
-
     }
     mgLevels.back().isCoarsestLevel = true;
     mgLevels.shrink_to_fit();

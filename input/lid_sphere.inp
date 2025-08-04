@@ -135,7 +135,7 @@ Solver {
         maxIterations = 3
         maxResiduals = 1e-3
 
-        planeSweepDirection = +z
+        planeSweepDirection = +y
         lineSweepDirection = +x
 
         eddyViscosityRelaxation = 1
