@@ -75,7 +75,7 @@ void TurbulenceModel<TurbulenceModels::ZEQ4>::SetTurbulenceViscosityField( Tenso
                                                 1.8f
                                             * ( 1.0f - exp( -0.645 * std::pow( m_averageBuildingWidth / m_averageBuildingHeight, 0.8 ) ) )
                                             * ( -2.0f * std::min( z / m_averageBuildingHeight , static_cast<floatType>( 1.0 ) ) )
-                                            * std::pow( m_wallDistance(cellIndexG), 2.0 )
+                                            * m_wallDistance(cellIndexG)
                                         , 2.0f );
 
                 const floatType nuOut = sqrt( m_Cmu )

@@ -209,7 +209,7 @@ inline void CalculateVelocityDeformationRate( Tensor3D &S,
             } );
 
             S(cellP)    = sqrt(
-                            ddxU[X] * ddxU[X]
+                              ddxU[X] * ddxU[X]
                             + ddyU[Y] * ddyU[Y]
                             + ddzU[Z] * ddzU[Z]
                             + 0.5 * ( ddyU[X] + ddxU[Y] ) * ( ddyU[X] + ddxU[Y] )
