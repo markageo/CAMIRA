@@ -226,10 +226,21 @@ namespace
                 
                 inputData.turbulenceModel = TurbulenceModels::ZEQ2;
 
+                const std::string axisString = turbulenceModelTree.get<std::string>("heightAxis");
+                if        ( axisString == "x" ) {
+                    inputData.zeq2ModelData.heightAxis = Axis::X;
+                } else if ( axisString == "y") {
+                    inputData.zeq2ModelData.heightAxis = Axis::Y;
+                } else if ( axisString == "z" ) {
+                    inputData.zeq2ModelData.heightAxis = Axis::Z;
+                } else {
+                    throw std::runtime_error( "Invalid height axis direction." );
+                }
                 inputData.zeq2ModelData.averageBuildingHeight                  = turbulenceModelTree.get<floatType>("averageBuildingHeight");
                 inputData.zeq2ModelData.inflowVelocityBuildingHeight           = turbulenceModelTree.get<floatType>("inflowVelocityBuildingHeight");
                 inputData.zeq2ModelData.inflowTKEBuildingHeight                = turbulenceModelTree.get<floatType>("inflowTKEBuildingHeight");
                 inputData.zeq2ModelData.inflowIntergralTimeScaleBuildingHeight = turbulenceModelTree.get<floatType>("inflowIntegralTimescaleBuildingHeight");
+                inputData.zeq2ModelData.roughnessLength                        = turbulenceModelTree.get<floatType>("roughnessLength");
 
             } else if ( valueString == "ZEQ3" ) {
                 

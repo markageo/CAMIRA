@@ -9,7 +9,7 @@ Model {
 }
 
 Mesh {
-    #include "CEDVAL-A1-7-mesh.inp"
+    #include "CEDVAL-A1-7-mesh_4.inp"
 }
 
 
@@ -95,9 +95,9 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 100
-        maxContinuityOuterResidual = 1e-6
-        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+        maxOuterIterations = 50
+        maxContinuityOuterResidual = 1e-4
+        maxMomentumOuterResiduals  = (1e-4, 1e-4, 1e-4)
 
     }
     
@@ -111,14 +111,14 @@ Solver {
         lineSweepDirection = +y
 
         eddyViscosityRelaxation = 1
-        momentumRelaxation      = (0.85, 0.85, 0.85)
+        momentumRelaxation      = (0.8, 0.8, 0.8)
         pressureRelaxation      = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 4
+        maxCoarseLevels = 3
 
         preSmoothingIterations = 4
         postSmoothingIterations = 4
