@@ -85,11 +85,13 @@ struct TurbulenceModel< TurbulenceModels::ZEQ2 > : public TurbulenceModelInterfa
     void SetTurbulenceViscosityField(Tensor3D &, const FieldData<Tensor3D> &, const IBData &, const Mesh &);
 
     private:
+        Axis::ENUMDATA m_heightAxis;                                  // The axis which corresponds to height from ground level
         floatType m_averageBuildingHeight,                            // Average building height
                   m_inflowVelocityBuildingHeight,                     // Inflow velocity magnitude at average building height
                   m_inflowTKEBuildingHeight,                          // Inflow turbulence kinetic energy at average building height
                   m_inflowIntergralTimeScaleBuildingHeight,           // Inflow integral timescale at average building height
                   m_wallDistanceLengthScale,                          // Reference length for wall distance, usually just 1.
+                  m_roughnessLength,                                  // Roughness length
                   m_nu;                                               // Kinematic viscosity
         Tensor3D m_wallDistance;                                      // Stored at cell centers, has ghost cells
 };

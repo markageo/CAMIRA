@@ -40,10 +40,12 @@ struct InputData
     } zeq1ModelData;
 
     struct ZEQ2ModelData {
+        Axis::ENUMDATA heightAxis;                                  // The axis which corresponds to height from ground level
         floatType averageBuildingHeight,                            // Average building height
                   inflowVelocityBuildingHeight,                     // Inflow velocity magnitude at average building height
                   inflowTKEBuildingHeight,                          // Inflow turbulence kinetic energy at average building height
-                  inflowIntergralTimeScaleBuildingHeight;           // Inflow integral timescale at average building height
+                  inflowIntergralTimeScaleBuildingHeight,           // Inflow integral timescale at average building height
+                  roughnessLength;   
     } zeq2ModelData;
 
     struct ZEQ3ModelData {

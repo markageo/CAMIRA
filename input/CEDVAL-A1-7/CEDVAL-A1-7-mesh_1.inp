@@ -3,24 +3,24 @@
 
 
 domainLowerBounds = (-1  , -0.75, 0)
-domainUpperBounds = (2   ,  0.75, 1)
+domainUpperBounds = (2.5   ,  0.75, 1)
 
 Grid x {
     Segment {
         bounds     = (-1, -0.09)
-        nCells     = 40
+        nCells     = 27
         biasFactor = -3.5
     }
 
     Segment {
         bounds     = (-0.09, 0.09)
-        nCells     = 19
+        nCells     = 13
         biasFactor = 1
     }
 
     Segment {
-        bounds     = (0.09, 2)
-        nCells     = 80
+        bounds     = (0.09, 2.5)
+        nCells     = 57
         biasFactor = 4.5
     }
 }
@@ -29,19 +29,19 @@ Grid x {
 Grid y {
     Segment {
         bounds     = (-0.75, -0.09)
-        nCells     = 30
+        nCells     = 20
         biasFactor = -3.5
     }
 
     Segment {
         bounds     = (-0.09, 0.09)
-        nCells     = 19
+        nCells     = 13
         biasFactor = 1
     }
 
     Segment {
         bounds     = (0.09, 0.75)
-        nCells     = 30
+        nCells     = 20
         biasFactor = 3.5
     }
 }
@@ -50,13 +50,13 @@ Grid y {
 Grid z {
     Segment {
         bounds     = (0, 0.125)
-        nCells     = 19
+        nCells     = 13
         biasFactor = 1
     }
 
     Segment {
         bounds     = (0.125, 1)
-        nCells     = 50
+        nCells     = 33
         biasFactor = 4.75
     }
 }

@@ -24,10 +24,12 @@ void TurbulenceModel<TurbulenceModels::ZEQ2>::SetTurbulenceModelData( const Inpu
 
     m_eddyViscosityRelaxation                = inputData.eddyViscosityRelaxation;
 
+    m_heightAxis                             = inputData.zeq2ModelData.heightAxis;
     m_averageBuildingHeight                  = inputData.zeq2ModelData.averageBuildingHeight;
     m_inflowVelocityBuildingHeight           = inputData.zeq2ModelData.inflowVelocityBuildingHeight;
     m_inflowTKEBuildingHeight                = inputData.zeq2ModelData.inflowTKEBuildingHeight;
     m_inflowIntergralTimeScaleBuildingHeight = inputData.zeq2ModelData.inflowIntergralTimeScaleBuildingHeight;
+    m_roughnessLength                        = inputData.zeq2ModelData.roughnessLength;
     m_wallDistanceLengthScale                = 1.0f;
     m_nu                                     = inputData.nu;
 
@@ -53,6 +55,7 @@ void TurbulenceModel<TurbulenceModels::ZEQ2>::SetTurbulenceViscosityField( Tenso
         for ( intType j = -1; j != mesh.nCells[Y] + 1; j++ ) {
             for ( intType i = -1; i != mesh.nCells[X] + 1; i++ ) {
 
+                const TensorIndex3D cellIndex  = {i, j, k};
                 const TensorIndex3D cellIndexG = G(i, j, k);
 
                 const floatType velocityMagnitude = sqrt( std::pow(fields.U[X](cellIndexG), 2.0f) 
@@ -64,12 +67,20 @@ void TurbulenceModel<TurbulenceModels::ZEQ2>::SetTurbulenceViscosityField( Tenso
 
                 const floatType wallDistanceNormalised = m_wallDistance(cellIndexG) / m_wallDistanceLengthScale;
 
-                const floatType nuTurbulentNew = aReTurb 
-                                               * wallDistanceNormalised
-                                               * exp( -bReBulk * wallDistanceNormalised )
-                                               * velocityMagnitude
-                                               * m_wallDistance(cellIndexG);
-                                                       
+                const floatType nuIn = aReTurb 
+                                     * wallDistanceNormalised
+                                     * exp( -bReBulk * wallDistanceNormalised )
+                                     * velocityMagnitude
+                                     * m_wallDistance(cellIndexG);
+
+                const floatType z = GetVerticalHeight( mesh, cellIndex, m_heightAxis );
+
+                const floatType nuOut = ( z == 0 ) ? 0.0f       //  Avoid division by zero
+                                                   : 0.16f
+                                                   * m_inflowVelocityBuildingHeight
+                                                   * ( z + m_roughnessLength ) / std::log( ( z + m_roughnessLength ) / m_roughnessLength );  
+
+                const floatType nuTurbulentNew = std::max( nuIn, nuOut );                                      
 
                 nuTurbulent(cellIndexG) = (1.0f - m_eddyViscosityRelaxation ) * nuTurbulent(cellIndexG)
                                         + m_eddyViscosityRelaxation * nuTurbulentNew;

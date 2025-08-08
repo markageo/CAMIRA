@@ -2,7 +2,9 @@
 // ZEQ2 model data
 
 model                                 = ZEQ2
+heightAxis                            = z
 averageBuildingHeight                 = 0.125
 inflowVelocityBuildingHeight          = 3.425
 inflowTKEBuildingHeight               = 0.3959  
 inflowIntegralTimescaleBuildingHeight = 0.03650     // ~ 0.15 * L / Ti / U
+roughnessLength                       = 0.0004
