@@ -94,18 +94,21 @@ inline void CalculateVelocityDeformationRate( Tensor3D &S,
 
                 EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-                    ddxU[axis] =  0.5 * (   mesh.cellCenterDiffInv[X](i+1)                                   *  fields.U[axis](cellE)
-                                        + ( mesh.cellCenterDiffInv[X](i) - mesh.cellCenterDiffInv[X](i+1) )  *  fields.U[axis](cellP) 
-                                        -   mesh.cellCenterDiffInv[X](i)                                     *  fields.U[axis](cellW) );
+                    ddxU[axis] = ( mesh.interpFactors[X](i+1)                                        *  fields.U[axis](cellE)
+                                 + ( 1.0f - mesh.interpFactors[X](i+1) - mesh.interpFactors[X](i) )  *  fields.U[axis](cellP) 
+                                 - ( 1.0f - mesh.interpFactors[X](i) )                               *  fields.U[axis](cellW) ) 
+                               * mesh.cellLengthsInv[X](i);
 
 
-                    ddyU[axis] =  0.5 * (   mesh.cellCenterDiffInv[Y](j+1)                                   *  fields.U[axis](cellN)
-                                        + ( mesh.cellCenterDiffInv[Y](j) - mesh.cellCenterDiffInv[Y](j+1) )  *  fields.U[axis](cellP) 
-                                        -   mesh.cellCenterDiffInv[Y](j)                                     *  fields.U[axis](cellS) );
+                    ddyU[axis] = ( mesh.interpFactors[Y](j+1)                                        *  fields.U[axis](cellN)
+                                 + ( 1.0f - mesh.interpFactors[Y](j+1) - mesh.interpFactors[Y](j) )  *  fields.U[axis](cellP) 
+                                 - ( 1.0f - mesh.interpFactors[Y](j) )                               *  fields.U[axis](cellS) ) 
+                               * mesh.cellLengthsInv[Y](j);                                 
 
-                    ddzU[axis] =  0.5 * (   mesh.cellCenterDiffInv[Z](k+1)                                   *  fields.U[axis](cellT)
-                                        + ( mesh.cellCenterDiffInv[Z](k) - mesh.cellCenterDiffInv[Z](k+1) )  *  fields.U[axis](cellP) 
-                                        -   mesh.cellCenterDiffInv[Z](k)                                     *  fields.U[axis](cellB) );
+                    ddzU[axis] = ( mesh.interpFactors[Z](k+1)                                        *  fields.U[axis](cellT)
+                                 + ( 1.0f - mesh.interpFactors[Z](k+1) - mesh.interpFactors[Z](k) )  *  fields.U[axis](cellP) 
+                                 - ( 1.0f - mesh.interpFactors[Z](k) )                               *  fields.U[axis](cellB) ) 
+                               * mesh.cellLengthsInv[Z](k);   
 
                 } );
 
@@ -193,18 +196,21 @@ inline void CalculateVelocityDeformationRate( Tensor3D &S,
             EnumVector<Axis, floatType>  ddxU, ddyU, ddzU;
             EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-                ddxU[axis] =  0.5 * (   mesh.cellCenterDiffInv[X](i+1)                                   *  velocityE[axis]
-                                    + ( mesh.cellCenterDiffInv[X](i) - mesh.cellCenterDiffInv[X](i+1) )  *  fields.U[axis](cellP) 
-                                    -   mesh.cellCenterDiffInv[X](i)                                     *  velocityW[axis]       );
+                ddxU[axis] = ( mesh.interpFactors[X](i+1)                                        *  fields.U[axis](cellE)
+                             + ( 1.0f - mesh.interpFactors[X](i+1) - mesh.interpFactors[X](i) )  *  fields.U[axis](cellP) 
+                             - ( 1.0f - mesh.interpFactors[X](i) )                               *  fields.U[axis](cellW) ) 
+                            * mesh.cellLengthsInv[X](i);
 
 
-                ddyU[axis] =  0.5 * (   mesh.cellCenterDiffInv[Y](j+1)                                   *  velocityN[axis]
-                                    + ( mesh.cellCenterDiffInv[Y](j) - mesh.cellCenterDiffInv[Y](j+1) )  *  fields.U[axis](cellP) 
-                                    -   mesh.cellCenterDiffInv[Y](j)                                     *  velocityS[axis]       );
+                ddyU[axis] = ( mesh.interpFactors[Y](j+1)                                        *  fields.U[axis](cellN)
+                             + ( 1.0f - mesh.interpFactors[Y](j+1) - mesh.interpFactors[Y](j) )  *  fields.U[axis](cellP) 
+                             - ( 1.0f - mesh.interpFactors[Y](j) )                               *  fields.U[axis](cellS) ) 
+                            * mesh.cellLengthsInv[Y](j);                                 
 
-                ddzU[axis] =  0.5 * (   mesh.cellCenterDiffInv[Z](k+1)                                   *  velocityT[axis]
-                                    + ( mesh.cellCenterDiffInv[Z](k) - mesh.cellCenterDiffInv[Z](k+1) )  *  fields.U[axis](cellP) 
-                                    -   mesh.cellCenterDiffInv[Z](k)                                     *  velocityB[axis]       );
+                ddzU[axis] = ( mesh.interpFactors[Z](k+1)                                        *  fields.U[axis](cellT)
+                             + ( 1.0f - mesh.interpFactors[Z](k+1) - mesh.interpFactors[Z](k) )  *  fields.U[axis](cellP) 
+                             - ( 1.0f - mesh.interpFactors[Z](k) )                               *  fields.U[axis](cellB) ) 
+                            * mesh.cellLengthsInv[Z](k);   
 
             } );
 
