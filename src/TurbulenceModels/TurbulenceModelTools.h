@@ -25,48 +25,6 @@
 namespace CAMIRA
 {
 
-namespace detail
-{
-
-inline bool IsZeroArray( const Tensor2D &array )
-{
-    floatType testValue = 0.0f;
-    const Eigen::Tensor<bool, 0> isConstant = ( array == testValue ).all();
-    return isConstant(0);
-}
-
-
-
-inline bool IsWallBC( const BoundaryConditionData &bcData,
-               const BoundaryPatches::ENUMDATA &bp)
-{
-    // Is wall BC if:
-    // Pressure boundary condition is either extrapolated or zeroGradient
-    // No velocity component in wall normal direction (can be a moving wall)
-
-    using enum Axis::ENUMDATA;
-    Axis::ENUMDATA wallNormal = LUT::BoundaryPatchAxis[ bp ];
-
-    bool isValidWallPressureBC =  bcData.fields.P[bp].type == BoundaryConditions::zeroGradient
-                               || bcData.fields.P[bp].type == BoundaryConditions::extrapolated;
-    if ( !isValidWallPressureBC )
-        return false; 
-
-    bool allVelocityBCsFixed =  bcData.fields.U[X][bp].type == BoundaryConditions::fixed
-                             && bcData.fields.U[Y][bp].type == BoundaryConditions::fixed
-                             && bcData.fields.U[Z][bp].type == BoundaryConditions::fixed;
-
-    bool wallNormalVelocityIsZero = detail::IsZeroArray( bcData.fields.U[wallNormal][bp].value );
-
-    if ( allVelocityBCsFixed && wallNormalVelocityIsZero )
-        return true;
-
-    return false;
-}
-
-}   // end namespace detail
-
-
 
 // Rate of strain tensor squared, calculated at cell centers
 inline void CalculateVelocityDeformationRate( Tensor3D &S,
@@ -255,18 +213,6 @@ inline Tensor3D NearestWallDistance( Tensor3D &wallDistance,
                              mesh.nCells[Z] + 2*nGhost );
     SetTensorZeroParallel( wallDistance );
 
-    // Work out which domain boundaries are walls and store the result
-    EnumVector<BoundaryPatches, bool> domainBoundaryWalls;
-    
-    EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
-        if ( detail::IsWallBC(bcData, bp)  ) { 
-            domainBoundaryWalls[bp] = true;
-        } else {
-            domainBoundaryWalls[bp] = false;
-        } 
-    } );
-
-
     floatType inf = std::numeric_limits<floatType>::infinity();
 
     #pragma omp parallel for collapse(3)
@@ -293,12 +239,12 @@ inline Tensor3D NearestWallDistance( Tensor3D &wallDistance,
                 // Check if there is a domain boundary that is closer
                 EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
                     
-                    if ( domainBoundaryWalls[ LUT::NegativePatch[axis] ] ) {
+                    if ( bcData.isWall[ LUT::NegativePatch[axis] ] ) {
                         wallDistance(cellIndexG) = std::min( wallDistance(cellIndexG),
                                                              abs( cellCoords[axis] - mesh.cellFaces[axis]( 0 ) ) );
                     }
 
-                    if ( domainBoundaryWalls[ LUT::PositivePatch[axis] ] ) {
+                    if ( bcData.isWall[ LUT::PositivePatch[axis] ] ) {
                         wallDistance(cellIndexG) = std::min( wallDistance(cellIndexG),
                                                              abs( mesh.cellFaces[axis]( mesh.nFacesNormal[axis](axis) - 1 ) - cellCoords[axis] ) );
                     }
@@ -316,7 +262,7 @@ inline Tensor3D NearestWallDistance( Tensor3D &wallDistance,
         // Leave the ghost cell value as zero if it is a wall
         // Since a harmonic mean is used for the turbulent viscosity, this will automatically make the face viscosity zero if 
         // any one of the viscosity are zero, because the wall distance is zero for example
-        if ( !detail::IsWallBC(bcData, bp) ) {
+        if ( !bcData.isWall[bp] ) {
 
             // Axis normal
             Axis::ENUMDATA normal = LUT::BoundaryPatchAxis[bp];

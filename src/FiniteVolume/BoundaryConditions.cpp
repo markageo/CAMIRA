@@ -103,6 +103,44 @@ namespace
     }
 
 
+
+    inline bool IsZeroArray( const Tensor2D &array )
+    {
+        floatType testValue = 0.0f;
+        const Eigen::Tensor<bool, 0> isConstant = ( array == testValue ).all();
+        return isConstant(0);
+    }
+
+
+
+    bool IsWallBC( const BoundaryConditionData &bcData,
+                   const BoundaryPatches::ENUMDATA &bp )
+    {
+        // Is wall BC if:
+        // Pressure boundary condition is either extrapolated or zeroGradient
+        // No velocity component in wall normal direction (can be a moving wall)
+
+        using enum Axis::ENUMDATA;
+        Axis::ENUMDATA wallNormal = LUT::BoundaryPatchAxis[ bp ];
+
+        bool isValidWallPressureBC =  bcData.fields.P[bp].type == BoundaryConditions::zeroGradient
+                                   || bcData.fields.P[bp].type == BoundaryConditions::extrapolated;
+        if ( !isValidWallPressureBC )
+            return false; 
+
+        bool allVelocityBCsFixed =  bcData.fields.U[X][bp].type == BoundaryConditions::fixed
+                                 && bcData.fields.U[Y][bp].type == BoundaryConditions::fixed
+                                 && bcData.fields.U[Z][bp].type == BoundaryConditions::fixed;
+
+        bool wallNormalVelocityIsZero = IsZeroArray( bcData.fields.U[wallNormal][bp].value );
+
+        if ( allVelocityBCsFixed && wallNormalVelocityIsZero )
+            return true;
+
+        return false;
+    }
+
+
 }   // end anonymous namespace
 
 
@@ -132,13 +170,24 @@ void SetBoundaryConditionData( BoundaryConditionData &bcData,
     } );
 
 
-    // Pressure field will be floating if none of the pathces are fixed
+    // Pressure field will be floating if none of the patches are fixed
     bcData.pressureFieldIsFloating = true;
     EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
         if ( bcData.fields.P[bp].type == BoundaryConditions::fixed ) {
             bcData.pressureFieldIsFloating = false;
         }
     } );
+
+
+    // Set which boundary patches are walls
+    EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA bp) {
+        if ( IsWallBC( bcData, bp ) ) {
+            bcData.isWall[bp] = true;
+        } else {
+            bcData.isWall[bp] = false;
+        }
+    } );
+
 }
 
 

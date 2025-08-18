@@ -1013,6 +1013,7 @@ namespace
                        const pt::ptree &outputTree )
     {
         inputData.calculateForces = false;
+        inputData.calculateYPlus  = false;
 
         // It's ok if there is no monitors tree
         boost::optional<const pt::ptree &> monitorsTreeOptional = outputTree.get_child_optional( "Monitors" );
@@ -1030,6 +1031,14 @@ namespace
 
                 inputData.calculateForces = true;
                 inputData.forceCalculatorFilename = monitor.second.get<std::string>( "filename" );
+
+            } else if ( monitor.first == "yPlus" ) {
+
+                if ( inputData.calculateYPlus )
+                    throw std::runtime_error(  "Multiple yPlus monitors specified. Only one can be specified!" );
+
+                inputData.calculateYPlus = true;
+                inputData.yPlusCalculatorFilename = monitor.second.get<std::string>( "filename" );
 
             } else if ( monitor.first == "Probe" ) {
                 InputData::ProbeData tempProbeData;

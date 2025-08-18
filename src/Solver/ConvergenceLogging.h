@@ -224,6 +224,44 @@ class ForceLogFile
 
 
 
+class YPlusLogFile
+{
+
+    public:
+        YPlusLogFile( const std::string &filename, 
+                      const int precision = CAMIRA_FILE_WRITE_PRECISION ) :
+            m_convergenceFile( filename, precision )
+        {            
+            // Comment description of file
+            std::string fileDescription = "Boundary cell y+ logging";
+            m_convergenceFile.WriteCommentLine( fileDescription );
+
+            // Write header
+            m_convergenceFile.WriteLine( "Iteration", 
+                                         "Min", 
+                                         "Max",
+                                         "Average");
+        }
+
+        void WriteData( const floatType min,
+                        const floatType max,
+                        const floatType average,  
+                        const intType nIterations )
+        {
+            m_convergenceFile.WriteLine( nIterations,
+                                         min, 
+                                         max, 
+                                         average );
+        }
+
+
+    private:
+        ConvergenceFile m_convergenceFile;
+};
+
+
+
+
 class ConsoleLog
 {
 

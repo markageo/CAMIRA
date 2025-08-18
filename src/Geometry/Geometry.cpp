@@ -1,5 +1,7 @@
 #include "Geometry.h"
 
+#include "../Core/FVLookups.h"
+
 #include <Eigen/Dense>
 
 #include <CGAL/Simple_cartesian.h>
@@ -25,6 +27,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 namespace CAMIRA
 {
@@ -474,6 +477,21 @@ floatType NearestDistance( const Tree &tree,
     return sqrt( static_cast<floatType>( distance2 ) );
 }
 
+
+
+// Gets coordinates of nearest point on tree to the query point
+fVector3 NearestPoint( const Tree &tree, 
+                       const floatType xq, 
+                       const floatType yq, 
+                       const floatType zq  )
+{
+    using Point        = Polyhedron::Point_3;
+
+    Point pointq(xq, yq, zq);
+    Point pointClosest = tree.closest_point( pointq );
+
+    return { pointClosest.x(), pointClosest.y(), pointClosest.z() };
+}
 
 
 }
