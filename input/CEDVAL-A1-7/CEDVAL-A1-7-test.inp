@@ -4,12 +4,12 @@ Model {
     nu   = 1.5e-5
     transient = no
     TurbulenceModel {
-        #include "CEDVAL-A1-7-ZEQ1.inp"
+        #include "CEDVAL-A1-7-ZEQ3.inp"
     }
 }
 
 Mesh {
-    #include "CEDVAL-A1-7-mesh_4.inp"
+    #include "CEDVAL-A1-7-mesh_2.inp"
 }
 
 
@@ -95,9 +95,9 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 50
-        maxContinuityOuterResidual = 1e-4
-        maxMomentumOuterResiduals  = (1e-4, 1e-4, 1e-4)
+        maxOuterIterations = 25
+        maxContinuityOuterResidual = 1e-8
+        maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
 
     }
     
@@ -108,10 +108,10 @@ Solver {
         maxResiduals = 1e-5
 
         planeSweepDirection = +z
-        lineSweepDirection = +y
+        lineSweepDirection = +x
 
         eddyViscosityRelaxation = 1
-        momentumRelaxation      = (0.8, 0.8, 0.8)
+        momentumRelaxation      = (0.85, 0.85, 0.85)
         pressureRelaxation      = 1
 
     }
@@ -120,9 +120,9 @@ Solver {
         cycle = F
         maxCoarseLevels = 3
 
-        preSmoothingIterations = 4
-        postSmoothingIterations = 4
-        fineGridIterations   = 5
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
+        fineGridIterations   = 3
 
         maxCoarseGridIterations = 50
         maxCoarseGridResiduals  = 1e-10
@@ -132,7 +132,7 @@ Solver {
 }
 
 Parallel {
-    numberOfThreads = 4
+    numberOfThreads = 8
 }
 
 Output {
@@ -146,6 +146,10 @@ Output {
     Monitors {
         ForceCalculator {
             filename = "output/forces.csv"
+        }
+
+        yPlus {
+            filename = "output/yPlus.csv""
         }
     }
 

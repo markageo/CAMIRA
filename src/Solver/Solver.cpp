@@ -385,7 +385,7 @@ void SolveSteady( const InputData &inputData,
     FieldData<floatType> residualsOuter, residualsScaleFactor;
     floatType massFluxResidual;
 
-    // Logging objects
+    // Field probe logging
     std::vector< FieldProbe > fieldProbes;
     std::vector< ProbeLogFile > probeLogFiles;
     for ( const auto &probeData : inputData.probes ) {
@@ -393,11 +393,19 @@ void SolveSteady( const InputData &inputData,
         probeLogFiles.emplace_back( probeData.filename, axisTransformation, fieldProbes.back() );
     }
     
+    // Force calculator logging
     ForceCalculator forceCalculator( ibData, mesh, fields, inputData.rho, inputData.nu );
     std::unique_ptr<ForceLogFile> forceLogFilePtr;
     if ( inputData.calculateForces )
         forceLogFilePtr = std::make_unique<ForceLogFile>( inputData.forceCalculatorFilename, axisTransformation );
 
+    // y+ logging
+    YPlusCalculator yPlusCalculator( inputData, axisTransformation, bcData, ibData, mesh, fields );
+    std::unique_ptr<YPlusLogFile> yPlusLogFilePtr;
+    if ( inputData.calculateYPlus )
+        yPlusLogFilePtr = std::make_unique<YPlusLogFile>( inputData.yPlusCalculatorFilename );
+
+    // Fields and residuals logging
     FieldWriter fieldWriter( fields, fvCoeffs, mask, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
@@ -457,6 +465,12 @@ void SolveSteady( const InputData &inputData,
         // Forces
         if ( forceLogFilePtr ) {
             forceLogFilePtr->WriteData( forceCalculator.GetForce(), nOuterIterations );
+        }
+
+        // yPlus
+        if ( yPlusLogFilePtr ) {
+            yPlusCalculator.Update();
+            yPlusLogFilePtr->WriteData(yPlusCalculator.minYPlus, yPlusCalculator.maxYPlus, yPlusCalculator.averageYPlus, nOuterIterations );
         }
         TOC() 
         
@@ -534,7 +548,7 @@ void SolveTransient( const InputData &inputData,
     FieldData<floatType> residualsOuter(0.0f), residualsScaleFactor(1.0f);
     floatType massFluxResidual(0.0f);
 
-    // Logging objects
+    // Field probe logging
     std::vector< FieldProbe > fieldProbes;
     std::vector< ProbeLogFile > probeLogFiles;
     for ( const auto &probeData : inputData.probes ) {
@@ -542,12 +556,19 @@ void SolveTransient( const InputData &inputData,
         probeLogFiles.emplace_back( probeData.filename, axisTransformation, fieldProbes.back() );
     }
     
+    // Force calculator logging
     ForceCalculator forceCalculator( ibData, mesh, fields, inputData.rho, inputData.nu );
     std::unique_ptr<ForceLogFile> forceLogFilePtr;
     if ( inputData.calculateForces )
         forceLogFilePtr = std::make_unique<ForceLogFile>( inputData.forceCalculatorFilename, axisTransformation );
 
+    // y+ logging
+    YPlusCalculator yPlusCalculator( inputData, axisTransformation, bcData, ibData, mesh, fields );
+    std::unique_ptr<YPlusLogFile> yPlusLogFilePtr;
+    if ( inputData.calculateYPlus )
+        yPlusLogFilePtr = std::make_unique<YPlusLogFile>( inputData.yPlusCalculatorFilename );
 
+    // Fields and residuals logging
     FieldWriter fieldWriter( fields, fvCoeffs, mask, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
@@ -603,13 +624,21 @@ void SolveTransient( const InputData &inputData,
             }
         }
 
+        // Probes
         for ( size_t p = 0; p != fieldProbes.size(); p++ ) {
             probeLogFiles[p].WriteData( ProbeAllFieldValues( mgLevels[0].fields, fieldProbes[p] ), 
                                         timeStepNumber );
         }
 
+        // Forces
         if ( forceLogFilePtr ) {
             forceLogFilePtr->WriteData( forceCalculator.GetForce(), timeStepNumber );
+        }
+
+        // yPlus
+        if ( yPlusLogFilePtr ) {
+            yPlusCalculator.Update();
+            yPlusLogFilePtr->WriteData(yPlusCalculator.minYPlus, yPlusCalculator.maxYPlus, yPlusCalculator.averageYPlus, timeStepNumber );
         }
 
         residualsLogFile.WriteData( residualsOuter, massFluxResidual, timeStepNumber );
@@ -624,8 +653,7 @@ void SolveTransient( const InputData &inputData,
         }
 
         mgLevels[0].fieldsPrevPrevTime = mgLevels[0].fieldsPrevTime;
-        mgLevels[0].fieldsPrevTime    = mgLevels[0].fields;
-
+        mgLevels[0].fieldsPrevTime     = mgLevels[0].fields;
     }
 
 

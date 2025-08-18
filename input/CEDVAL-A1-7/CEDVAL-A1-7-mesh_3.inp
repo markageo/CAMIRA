@@ -2,13 +2,13 @@
 // Mesh file
 
 
-domainLowerBounds = (-1  , -0.75, 0)
+domainLowerBounds = (-0.75  , -0.75, 0)
 domainUpperBounds = (2.5   ,  0.75, 1)
 
 Grid x {
     Segment {
-        bounds     = (-1, -0.09)
-        nCells     = 60
+        bounds     = (-0.75, -0.09)
+        nCells     = 51
         biasFactor = -3.5
     }
 
@@ -20,7 +20,7 @@ Grid x {
 
     Segment {
         bounds     = (0.09, 2.5)
-        nCells     = 128
+        nCells     = 143
         biasFactor = 4.5
     }
 }
@@ -29,7 +29,7 @@ Grid x {
 Grid y {
     Segment {
         bounds     = (-0.75, -0.09)
-        nCells     = 45
+        nCells     = 51
         biasFactor = -3.5
     }
 
@@ -41,7 +41,7 @@ Grid y {
 
     Segment {
         bounds     = (0.09, 0.75)
-        nCells     = 45
+        nCells     = 51
         biasFactor = 3.5
     }
 }
@@ -56,7 +56,7 @@ Grid z {
 
     Segment {
         bounds     = (0.125, 1)
-        nCells     = 75
+        nCells     = 78
         biasFactor = 4.75
     }
 }

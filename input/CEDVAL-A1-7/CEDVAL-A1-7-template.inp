@@ -1,22 +1,22 @@
-// CEDVAL B1-5 primary input file
+// CEDVAL A1-7 primary input file
 
 Model {
     nu   = 1.5e-5
     transient = no
     TurbulenceModel {
-        #include "CEDVAL-B1-5-ZEQ3.inp"
+        #include "CEDVAL-A1-7-ZEQ3.inp"
     }
 }
 
 Mesh {
-    #include "CEDVAL-B1-5-mesh.inp"
+    #include "CEDVAL-A1-7-mesh_$MESH_FILE_NUMBER.inp"
 }
 
 
 InitialConditions
 {    
     type = uniform
-    u = 5
+    u = 3.425
     v = 0
     w = 0
     p = 0
@@ -35,7 +35,7 @@ BoundaryConditions
 
     // Inflow
     -x {
-        u = profile1D, "CEDVAL-B1-5-inflow.prof"
+        u = profile1D, "CEDVAL-A1-7-inflow.prof"
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
@@ -77,11 +77,10 @@ BoundaryConditions
 
 SolidGeometry {
     boundaryTreatement = directionalImmersedBoundary
-    
-    FromFile {
-        type = STL
-        filename = "input/CEDVAL-B1-5/CEDVAL-B1-5-geometry.stl"
-        rotation = (0, 0, 23)
+    Block {
+        centerPosition = (0, 0, 0.0625)
+        dimensions     = (0.125, 0.125, 0.125)
+        rotation       = (0, 0, 40)
     }
 }
 
@@ -96,36 +95,36 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 1000
-        maxContinuityOuterResidual = 1e-6
-        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+        maxOuterIterations = 25
+        maxContinuityOuterResidual = 1e-8
+        maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
 
     }
     
     Smoother {
 
         type = domainSymmetricParallel
-        maxIterations = 2
+        maxIterations = 3
         maxResiduals = 1e-5
 
-        planeSweepDirection = +z
-        lineSweepDirection = +y
+        planeSweepDirection = $PLANE_SWEEP_DIRECTION
+        lineSweepDirection = $LINE_SWEEP_DIRECTION
 
         eddyViscosityRelaxation = 1
-        momentumRelaxation      = (0.9, 0.9, 0.9)
+        momentumRelaxation      = (0.85, 0.85, 0.85)
         pressureRelaxation      = 1
 
     }
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 1
+        maxCoarseLevels = $COARSE_LEVELS
 
-        preSmoothingIterations = 2
-        postSmoothingIterations = 2
-        fineGridIterations   = 6
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
+        fineGridIterations   = 3
 
-        maxCoarseGridIterations = 100
+        maxCoarseGridIterations = 50
         maxCoarseGridResiduals  = 1e-10
         
     }
@@ -133,20 +132,24 @@ Solver {
 }
 
 Parallel {
-    numberOfThreads = 4
+    numberOfThreads = 8
 }
 
 Output {
 
-    residualHistoryFilename = "output/residual_history.csv"
-    profilingFilename       = "output/profiling.dat"
-    fieldOutputFilename     = "output/fields.vtk"
-    geometryOutputFilename  = "output/geometry.stl"
-    fieldWriteInterval      = 1
+    residualHistoryFilename = "$CASE_DIRECTORY/residual_history.csv"
+    profilingFilename       = "$CASE_DIRECTORY/profiling.dat"
+    fieldOutputFilename     = "$CASE_DIRECTORY/fields.vtk"
+    geometryOutputFilename  = "$CASE_DIRECTORY/geometry.stl"
+    fieldWriteInterval      = 0
 
     Monitors {
         ForceCalculator {
-            filename = "output/forces.csv"
+            filename = "$CASE_DIRECTORY/forces.csv"
+        }
+
+        yPlus {
+            filename = "$CASE_DIRECTORY/yPlus.csv""
         }
     }
 

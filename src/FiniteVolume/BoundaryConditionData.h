@@ -18,6 +18,7 @@ struct BoundaryConditionData {
     };
     using Patches = EnumVector< BoundaryPatches, Patch >;
     FieldData< Patches > fields; 
+    EnumVector< BoundaryPatches, bool > isWall;
     bool pressureFieldIsFloating;
 };
 

@@ -44,6 +44,11 @@ floatType NearestDistance( const Tree &,
                            const floatType ); 
 
 
+fVector3 NearestPoint( const Tree &, 
+                       const floatType, 
+                       const floatType, 
+                       const floatType );
+
 }
 
 

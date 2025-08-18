@@ -181,6 +181,9 @@ struct InputData
     bool calculateForces;
     std::string forceCalculatorFilename;
 
+    bool calculateYPlus;
+    std::string yPlusCalculatorFilename;
+
 };
 
 
