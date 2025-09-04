@@ -16,7 +16,7 @@ Mesh {
 InitialConditions
 {    
     type = uniform
-    u = 5
+    u = 4.21
     v = 0
     w = 0
     p = 0
@@ -81,7 +81,7 @@ SolidGeometry {
     FromFile {
         type = STL
         filename = "input/CEDVAL-B1-5/CEDVAL-B1-5-geometry.stl"
-        rotation = (0, 0, 23)
+        rotation = (0, 0, -29)
     }
 }
 
@@ -123,7 +123,7 @@ Solver {
 
         preSmoothingIterations = 2
         postSmoothingIterations = 2
-        fineGridIterations   = 6
+        fineGridIterations   = 5
 
         maxCoarseGridIterations = 100
         maxCoarseGridResiduals  = 1e-10
@@ -133,7 +133,7 @@ Solver {
 }
 
 Parallel {
-    numberOfThreads = 4
+    numberOfThreads = 8
 }
 
 Output {

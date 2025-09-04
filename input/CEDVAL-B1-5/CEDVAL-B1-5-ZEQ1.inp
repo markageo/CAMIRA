@@ -1,6 +1,0 @@
-// CEDVAL B1-5
-// ZEQ1 model data
-
-model                             = ZEQ1
-inflowReBuildingHeight            = 14640
-inflowTurbIntensityBuildingHeight = 0.193

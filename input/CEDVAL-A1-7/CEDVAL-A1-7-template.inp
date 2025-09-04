@@ -9,7 +9,7 @@ Model {
 }
 
 Mesh {
-    #include "CEDVAL-A1-7-mesh_$MESH_FILE_NUMBER.inp"
+    #include "CEDVAL-A1-7-mesh.inp"
 }
 
 
@@ -118,7 +118,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = $COARSE_LEVELS
+        maxCoarseLevels = 3
 
         preSmoothingIterations = 3
         postSmoothingIterations = 3
