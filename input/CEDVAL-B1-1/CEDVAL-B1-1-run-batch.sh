@@ -2,16 +2,17 @@
 
 
 inputFileExtension=".inp"
-inputFilename="CEDVAL-A1-7"$inputFileExtension
-inputFileTemplateFilename="CEDVAL-A1-7-template"$inputFileExtension
+inputFilename="CEDVAL-B1-1"$inputFileExtension
+inputFileTemplateFilename="CEDVAL-B1-1-template"$inputFileExtension
 executableDir="/home/mark/PhD/Code/CAMIRA"
 outputDir="/home/mark/PhD/Code/CAMIRA/output"
+
 
 # List of sweeping directions
 sweepDirections=("+x" "+y" "+z")
 
 # Check for results folder and create it if it doesn't exist
-resultsFolderName=$outputDir/"CEDVAL-A1-7"
+resultsFolderName=$outputDir/"CEDVAL-B1-1"
 if [ ! -d $resultsFolderName ]; then
     mkdir $resultsFolderName
 fi
@@ -63,7 +64,7 @@ for planeSweepDirIdx in ${!sweepDirections[@]}; do
 
             # Header 
             echo $'\n\n' >> $logFileName
-            echo "================= CEDVAL A1-7 ================= " | tee -a $logFileName
+            echo "================= CEDVAL B1-1 ================= " | tee -a $logFileName
             echo "Plane sweep direction: "$planeSweepDir            | tee -a $logFileName
             echo "Line sweep direction:  "$lineSweepDir             | tee -a $logFileName
             

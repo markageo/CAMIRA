@@ -1,10 +1,10 @@
 // CEDVAL B1-1 primary input file
 
 Model {
-    nu   = 1.5e-5
+    nu   = 1.57e-5
     transient = no
     TurbulenceModel {
-        #include "CEDVAL-B1-1-ZEQ1.inp"
+        #include "CEDVAL-B1-1-ZEQ3.inp"
     }
 }
 
@@ -16,7 +16,7 @@ Mesh {
 InitialConditions
 {    
     type = uniform
-    u = 3.425
+    u = 4.51
     v = 0
     w = 0
     p = 0
@@ -108,8 +108,8 @@ Solver {
         maxIterations = 3
         maxResiduals = 1e-5
 
-        planeSweepDirection = +z
-        lineSweepDirection = +x
+        planeSweepDirection = $PLANE_SWEEP_DIRECTION
+        lineSweepDirection = $LINE_SWEEP_DIRECTION
 
         eddyViscosityRelaxation = 1
         momentumRelaxation      = (0.8, 0.8, 0.8)
@@ -119,7 +119,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 2
+        maxCoarseLevels = 3
 
         preSmoothingIterations = 2
         postSmoothingIterations = 2
@@ -138,15 +138,19 @@ Parallel {
 
 Output {
 
-    residualHistoryFilename = "output/residual_history.csv"
-    profilingFilename       = "output/profiling.dat"
-    fieldOutputFilename     = "output/fields.vtk"
-    geometryOutputFilename  = "output/geometry.stl"
-    fieldWriteInterval      = 1
+    residualHistoryFilename = "$CASE_DIRECTORY/residual_history.csv"
+    profilingFilename       = "$CASE_DIRECTORY/profiling.dat"
+    fieldOutputFilename     = "$CASE_DIRECTORY/fields.vtk"
+    geometryOutputFilename  = "$CASE_DIRECTORY/geometry.stl"
+    fieldWriteInterval      = 0
 
     Monitors {
         ForceCalculator {
-            filename = "output/forces.csv"
+            filename = "$CASE_DIRECTORY/forces.csv"
+        }
+
+        yPlus {
+            filename = "$CASE_DIRECTORY/yPlus.csv""
         }
     }
 

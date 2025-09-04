@@ -1,50 +1,22 @@
-// AIJ case B, turbulent flow over 1:4:4 block
+// CEDVAL B1-1 primary input file
 
 Model {
     nu   = 1.5e-5
     transient = no
     TurbulenceModel {
-        model                             = ZEQ1
-        inflowReBuildingHeight            = 68440
-        inflowTurbIntensityBuildingHeight = 0.15
+        #include "CEDVAL-B1-1-ZEQ3.inp"
     }
 }
 
 Mesh {
-
-    domainLowerBounds = (0, 0, 0)
-    domainUpperBounds = (4.05, 2.2, 1.2)
-
-    Grid x {
-        Segment {
-            bounds     = (0, 4.05)
-            nCells     = 170
-            biasFactor = 1
-        }
-    }
-
-    Grid y {
-        Segment {
-            bounds     = (0, 2.2)
-            nCells     = 100
-            biasFactor = 1
-        }
-    }
-
-    Grid z {
-        Segment {
-            bounds     = (0, 1.2)
-            nCells     = 88
-            biasFactor = 1
-        }
-    }
+    #include "CEDVAL-B1-1-mesh.inp"
 }
 
 
 InitialConditions
 {    
     type = uniform
-    u = 1
+    u = 4.51
     v = 0
     w = 0
     p = 0
@@ -63,25 +35,25 @@ BoundaryConditions
 
     // Inflow
     -x {
-        u = profile1D, "AIJ_caseB_inflow.prof"
+        u = profile1D, "CEDVAL-B1-1-inflow.prof"
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
     }
 
-    // Symmetry
+    // Wall
     +y {
-        u = zeroGradient
+        u = uniform, 0
         v = uniform, 0
-        w = zeroGradient
+        w = uniform, 0
         p = zeroGradient
     }
 
-    // Symmetry
+    // Wall
     -y {
-        u = zeroGradient
+        u = uniform, 0
         v = uniform, 0
-        w = zeroGradient
+        w = uniform, 0
         p = zeroGradient
     }
 
@@ -105,10 +77,11 @@ BoundaryConditions
 
 SolidGeometry {
     boundaryTreatement = directionalImmersedBoundary
-    Block {
-        centerPosition = (1.025, 1.1, 0.1)
-        dimensions     = (0.05, 0.2, 0.2)
-        rotation       = (0, 0, 35)
+    
+    FromFile {
+        type = STL
+        filename = "input/CEDVAL-B1-1/CEDVAL-B1-1-geometry.stl"
+        rotation = (0, 0, 0)
     }
 }
 
@@ -123,9 +96,9 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 150
-        maxContinuityOuterResidual = 1e-10
-        maxMomentumOuterResiduals  = (1e-10, 1e-10, 1e-10)
+        maxOuterIterations = 100
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 
     }
     
@@ -136,7 +109,7 @@ Solver {
         maxResiduals = 1e-5
 
         planeSweepDirection = +z
-        lineSweepDirection = +y
+        lineSweepDirection = +x
 
         eddyViscosityRelaxation = 1
         momentumRelaxation      = (0.8, 0.8, 0.8)
@@ -146,27 +119,21 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 4
+        maxCoarseLevels = 2
 
         preSmoothingIterations = 2
         postSmoothingIterations = 2
-        fineGridIterations   = 3
+        fineGridIterations   = 5
 
         maxCoarseGridIterations = 100
-        maxCoarseGridResiduals  = 1e-12
+        maxCoarseGridResiduals  = 1e-10
         
-    }
-
-    BoostConv {
-        basisSize      = 5
-        startIteration = 2
-        relaxation     = 0.6
     }
 
 }
 
 Parallel {
-    numberOfThreads = 4
+    numberOfThreads = 8
 }
 
 Output {
@@ -180,6 +147,10 @@ Output {
     Monitors {
         ForceCalculator {
             filename = "output/forces.csv"
+        }
+
+        yPlus {
+            filename = "output/yPlus.csv""
         }
     }
 

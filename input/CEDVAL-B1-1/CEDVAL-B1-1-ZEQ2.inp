@@ -1,8 +1,0 @@
-// CEDVAL B1-1
-// ZEQ2 model data
-
-model                                 = ZEQ2
-averageBuildingHeight                 = 0.125
-inflowVelocityBuildingHeight          = 4.51
-inflowTKEBuildingHeight               = 0.8817      // ~ (3/2) * (Ti U )^2  
-inflowIntegralTimescaleBuildingHeight = 0.02446     // ~ 0.15 * L / Ti / U

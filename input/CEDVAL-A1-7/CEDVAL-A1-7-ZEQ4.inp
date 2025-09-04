@@ -1,8 +1,0 @@
-// CEDVAL A1-7
-// ZEQ4 model data
-
-model                 = ZEQ4
-heightAxis            = z
-averageBuildingHeight = 0.125
-averageBuildingWidth  = 0.125
-referenceHeight       = 1.75     // 350 m scaled by wind tunnel scale (200)
