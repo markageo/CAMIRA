@@ -138,7 +138,7 @@ BoundaryConditions
 
 SolidGeometry {
 
-    boundaryTreatement = directionalImmersedBoundary
+    boundaryTreatement = immersedBoundary
 
     Sphere {
         centerPosition = (9, 6, 6)

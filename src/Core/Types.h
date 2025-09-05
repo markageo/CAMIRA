@@ -152,7 +152,7 @@ enum class Smoothers {
 };
 
 enum class GeometryBoundaryTreatement {
-    Staircase, DirectionalImmersedBoundary
+    Staircase, ImmersedBoundary
 };
 
 enum class MomentumInterpolation {

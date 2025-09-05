@@ -4,4 +4,6 @@ target_sources( libs
         ForceCalculator.cpp
         YPlusCalculator.cpp
     PRIVATE 
-        DerivedQuantities.h )
+        FieldProbe.h
+        ForceCalculator.h
+        YPlusCalculator.h )

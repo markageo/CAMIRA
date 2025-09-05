@@ -198,6 +198,7 @@ namespace
 
 
         // Expect a turbulence model if transient is false
+        inputData.useWallFunctions = false;
         inputData.turbulenceModel = TurbulenceModels::Null;    // Turbulence model not defined when transient
         if ( inputData.transient == false ) {
 
@@ -282,6 +283,16 @@ namespace
                 throw std::runtime_error( "'" + valueString + "' is not a valid turbulence model." );
             }
 
+            // Check if wall functions are to be used
+            valueString = turbulenceModelTree.get<std::string>("wallFunctions");
+            if ( valueString == "yes" ) {
+                inputData.useWallFunctions = true;
+            } else if ( valueString == "no" ) {
+                inputData.useWallFunctions = false;
+            } else {
+                throw std::runtime_error( "'" + valueString + "' option can be either yes or no." );
+            }
+        
         } 
         
     }
@@ -464,8 +475,8 @@ namespace
 
         // Geometry boundary treatement
         std::string valueString = solidGeometryTree.get<std::string>( "boundaryTreatement" );
-        if        ( valueString == "directionalImmersedBoundary" ) {
-            inputData.geoemtryBoundaryTreatement = GeometryBoundaryTreatement::DirectionalImmersedBoundary;
+        if        ( valueString == "immersedBoundary" ) {
+            inputData.geoemtryBoundaryTreatement = GeometryBoundaryTreatement::ImmersedBoundary;
         } else if ( valueString == "staircase" ) {
             inputData.geoemtryBoundaryTreatement = GeometryBoundaryTreatement::Staircase;
         } else {

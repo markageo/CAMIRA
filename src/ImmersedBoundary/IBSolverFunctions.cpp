@@ -21,8 +21,8 @@ FieldData<floatType> GetIBFieldValues( const TensorIndex3D &cellIndex,
     FieldData<floatType> ibValues( 0.0f );
 
     // Extrapolate pressure onto the immersed boundary
-    ibValues.P = sourceTermData.ibExtrapCoeff_p * fields.P( G(cellIndex) )
-               + sourceTermData.ibExtrapCoeff_a * fields.P( G(sourceTermData.cellIndex_a) );
+    ibValues.P = sourceTermData.directionalIBDataPtr->ibExtrapCoeff_p * fields.P( G(cellIndex) )
+               + sourceTermData.directionalIBDataPtr->ibExtrapCoeff_a * fields.P( G(sourceTermData.cellIndex_a) );
 
     return ibValues;
 }
@@ -39,14 +39,14 @@ FieldData<floatType> ReconstructFaceValues( const TensorIndex3D &cellIndex,
 
     // Velocity reconstruction using immersed boundary
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        faceValues.U[axis] = sourceTermData.faceReconstructionCoeff_p  * fields.U[axis]( G(cellIndex) )
-                           + sourceTermData.faceReconstructionCoeff_a  * fields.U[axis]( G(sourceTermData.cellIndex_a) )
-                           + sourceTermData.faceReconstructionCoeff_ib * sourceTermData.ibValues.U[axis];
+        faceValues.U[axis] = sourceTermData.directionalIBDataPtr->faceReconstructionCoeff_p  * fields.U[axis]( G(cellIndex) )
+                           + sourceTermData.directionalIBDataPtr->faceReconstructionCoeff_a  * fields.U[axis]( G(sourceTermData.cellIndex_a) )
+                           + sourceTermData.directionalIBDataPtr->faceReconstructionCoeff_ib * sourceTermData.ibValues.U[axis];
     } );
 
     // Pressure extrapolated to face
-    faceValues.P = sourceTermData.faceExtrapCoeff_p  *  fields.P( G(cellIndex) )
-                 + sourceTermData.faceExtrapCoeff_a  *  fields.P( G(sourceTermData.cellIndex_a) );
+    faceValues.P = sourceTermData.directionalIBDataPtr->faceExtrapCoeff_p  *  fields.P( G(cellIndex) )
+                 + sourceTermData.directionalIBDataPtr->faceExtrapCoeff_a  *  fields.P( G(sourceTermData.cellIndex_a) );
 
     return faceValues;
 }

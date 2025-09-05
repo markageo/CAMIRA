@@ -5,8 +5,6 @@
 #include "../Core/Types.h"
 #include "../Core/FVTools.h"
 #include "../FiniteVolume/FiniteVolume.h"
-#include "../DerivedQuantities/DerivedQuantities.h"
-
 
 #include <cmath>
 

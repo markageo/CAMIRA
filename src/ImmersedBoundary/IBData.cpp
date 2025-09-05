@@ -111,6 +111,152 @@ void RemoveMaskSingleCellCavities( Tensor3D &mask,
 }
 
 
+
+
+// Sets data for Immersed Boundary Method without wall functions
+void AddNoWallFunctionIBDataForDirection( IBCell::SourceTermData &sourceTermData, 
+                                          const TensorIndex3D &cellIndex,
+                                          const Axis::ENUMDATA axis,
+                                          const intType directionIndex,
+                                          const Mesh &mesh,
+                                          const Tree &tree, 
+                                          const InputData &inputData )
+{
+    using enum Axis::ENUMDATA;
+
+    sourceTermData.directionalIBDataPtr = std::make_unique<DirectionalIBData>();
+
+    auto &directionalIBData = *sourceTermData.directionalIBDataPtr;
+
+    TensorIndex3D &cellIndex_a = sourceTermData.cellIndex_a;
+    TensorIndex3D &cellIndex_g = sourceTermData.cellIndex_g;
+
+    switch ( inputData.geoemtryBoundaryTreatement ) {
+        case GeometryBoundaryTreatement::ImmersedBoundary:
+        {
+            // Distance from cell center to immersed boundary along this coordinate direction
+            fVector3 queryPointCoords( mesh.cellCenters[X](cellIndex[X]),
+                                       mesh.cellCenters[Y](cellIndex[Y]),
+                                       mesh.cellCenters[Z](cellIndex[Z]) );
+            fVector3 rayDirection( 0, 0, 0 );
+            rayDirection[ axis ] = static_cast<floatType>( directionIndex );
+
+            floatType ibDistance = NearestRayIntersection(tree, queryPointCoords, rayDirection);
+
+            // Deal with some possible degenerate cases in the geometry
+            const bool noIntersectionFound = ibDistance < 0.0f;
+
+            TensorIndex3D cellIndex_gg = cellIndex_g;
+            cellIndex_gg[axis] += directionIndex;
+            const floatType maxAllowableIBDistance = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f 
+                                                   + mesh.cellLengths[axis](cellIndex_g[axis])
+                                                   + mesh.cellLengths[axis](cellIndex_gg[axis]);
+            const bool ibDistanceTooLarge  = ibDistance > maxAllowableIBDistance;
+
+            if ( noIntersectionFound || ibDistanceTooLarge ) {
+                directionalIBData.ibDistance = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f;     // Take the nearest cell face
+            } else {
+                directionalIBData.ibDistance = ibDistance;
+            }
+            
+            break;
+        }
+        
+        case CAMIRA::GeometryBoundaryTreatement::Staircase:
+        {   
+            // Distance to the nearest cell face, approximates the immersed boundary to be on the cell face
+            // i.e. staircase approximation
+            directionalIBData.ibDistance = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f;
+            break;
+        }
+
+        default:
+            break;
+    }
+    const floatType &ibDistance = directionalIBData.ibDistance;
+
+
+    // Reconstruction coefficients from fluid onto face. May use further points due to stability condition
+    bool meetsGhostStabilityCondition =  ibDistance >= ( mesh.cellLengths[axis](cellIndex[axis]) / 2.0f );
+    if ( meetsGhostStabilityCondition ) {
+
+        // Linear
+        floatType dxpOn2 = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f ;
+        directionalIBData.faceReconstructionCoeff_p  = ( ibDistance - dxpOn2 ) / ( ibDistance );
+        directionalIBData.faceReconstructionCoeff_a  = 0.0f;
+        directionalIBData.faceReconstructionCoeff_ib = dxpOn2 / ibDistance;
+
+        // // Quadratic
+        // floatType dxp = mesh.cellLengths[axis](cellIndex[axis]);
+        // floatType la  = abs( mesh.cellCenters[axis](cellIndex[axis]) - mesh.cellCenters[axis](cellIndex_a[axis]) );
+        // directionalIBData.faceReconstructionCoeff_p  = - dxp * dxp / ( 4 * ibDistance * la )
+        //                                           +   dxp * ( ibDistance - la ) / ( 2 * ibDistance * la );
+        // directionalIBData.faceReconstructionCoeff_a  =   dxp * dxp /  ( 4 * la * ( ibDistance * la ) )
+        //                                           -   dxp * ibDistance / ( 2 * la * ( ibDistance + la ) );
+        // directionalIBData.faceReconstructionCoeff_ib =   dxp * dxp / ( 4 * ibDistance * ( ibDistance + la ) )
+        //                                           +   dxp * la / ( 2 * ibDistance * ( ibDistance + la ) );
+
+
+    } else {
+
+        // Stencil skip
+        floatType dxp = mesh.cellLengths[axis](cellIndex[axis]);
+        floatType dxa = mesh.cellLengths[axis](cellIndex_a[axis]);
+        floatType denominator =  dxp  +  dxa  +  2.0f * ibDistance;
+        directionalIBData.faceReconstructionCoeff_p  = 0.0f;
+        directionalIBData.faceReconstructionCoeff_a  = ( dxp - 2.0f * ibDistance ) / denominator;
+        directionalIBData.faceReconstructionCoeff_ib = ( dxa + 2.0f * dxp ) / denominator;
+
+        // // Nearest face
+        // floatType dxp    = mesh.cellLengths[axis](cellIndex[axis]),
+        //           lambda = mesh.interpFactors[axis]( fidx - directionIndex );
+        // floatType denominator =  2.0f * ibDistance  + dxp;
+        // if ( directionIndex == +1 ) {
+        //     directionalIBData.faceReconstructionCoeff_p  = lambda          * ( 2.0f * ibDistance - dxp ) / denominator;
+        //     directionalIBData.faceReconstructionCoeff_a  = (1.0f - lambda) * ( 2.0f * ibDistance - dxp ) / denominator;
+        // } else {
+        //     directionalIBData.faceReconstructionCoeff_p  = (1.0f - lambda) * ( 2.0f * ibDistance - dxp ) / denominator;
+        //     directionalIBData.faceReconstructionCoeff_a  = lambda          * ( 2.0f * ibDistance - dxp ) / denominator;
+        // }
+        // directionalIBData.faceReconstructionCoeff_ib = 2.0f * dxp / denominator;
+
+        // // Just set to zero
+        // directionalIBData.faceReconstructionCoeff_p  = 0.0f;
+        // directionalIBData.faceReconstructionCoeff_a  = 0.0f; 
+        // directionalIBData.faceReconstructionCoeff_ib = 1.0f;
+    }
+
+
+    // Extrapolation coefficients from fluid to immersed boundary surface
+    floatType cellInteriorDistance = abs( mesh.cellCenters[axis](cellIndex_a[axis]) - mesh.cellCenters[axis](cellIndex[axis]) ); 
+    directionalIBData.ibExtrapCoeff_p =   ibDistance / cellInteriorDistance  +  1.0f;
+    directionalIBData.ibExtrapCoeff_a = - ibDistance / cellInteriorDistance;
+
+
+    // Extrapolation coefficients from fluid to face (Does not account for presence of IB)
+    directionalIBData.faceExtrapCoeff_p =   0.05f * mesh.cellLengths[axis](cellIndex[axis]) / cellInteriorDistance  +  1.0f;
+    directionalIBData.faceExtrapCoeff_a = - 0.05f * mesh.cellLengths[axis](cellIndex[axis]) / cellInteriorDistance;
+}
+
+
+
+
+// Sets data for Immersed Boundary Method with wall functions 
+void AddWallFunctionIBDataForDirection( IBCell::SourceTermData &sourceTermData, 
+                                        const TensorIndex3D &cellIndex,
+                                        const Axis::ENUMDATA axis,
+                                        const intType directionIndex,
+                                        const Mesh &mesh,
+                                        const Tree &tree, 
+                                        const InputData &inputData )
+{
+    using enum Axis::ENUMDATA;
+
+    // sourceTermData.wallFunctionDataPtr = std::make_unique<WallFunctionData>();
+}
+
+
+
 // Sets data for a particular source term in a particular direciton for a particular cell
 void AddIBDataForDirection( IBCell &ibCell, 
                             const Axis::ENUMDATA axis,
@@ -140,107 +286,21 @@ void AddIBDataForDirection( IBCell &ibCell,
 
     intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
 
-    switch ( inputData.geoemtryBoundaryTreatement ) {
-        case GeometryBoundaryTreatement::DirectionalImmersedBoundary:
-        {
-            // Distance from cell center to immersed boundary along this coordinate direction
-            fVector3 queryPointCoords( mesh.cellCenters[X](cellIndex[X]),
-                                       mesh.cellCenters[Y](cellIndex[Y]),
-                                       mesh.cellCenters[Z](cellIndex[Z]) );
-            fVector3 rayDirection( 0, 0, 0 );
-            rayDirection[ axis ] = static_cast<floatType>( directionIndex );
+    // Set data that is specific to whether or not wall functions are used
+    if ( inputData.useWallFunctions ) {
 
-            floatType ibDistance = NearestRayIntersection(tree, queryPointCoords, rayDirection);
+        AddWallFunctionIBDataForDirection( sourceTermData, cellIndex, axis, directionIndex, mesh, tree, inputData );
 
-            // Deal with some possible degenerate cases in the geometry
-            const bool noIntersectionFound = ibDistance < 0.0f;
+    } else {
 
-            TensorIndex3D cellIndex_gg = cellIndex_g;
-            cellIndex_gg[axis] += directionIndex;
-            const floatType maxAllowableIBDistance = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f 
-                                                   + mesh.cellLengths[axis](cellIndex_g[axis])
-                                                   + mesh.cellLengths[axis](cellIndex_gg[axis]);
-            const bool ibDistanceTooLarge  = ibDistance > maxAllowableIBDistance;
-
-            if ( noIntersectionFound || ibDistanceTooLarge ) {
-                sourceTermData.ibDistance = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f;     // Take the nearest cell face
-            } else {
-                sourceTermData.ibDistance = ibDistance;
-            }
-            
-            break;
-        }
-        
-        case CAMIRA::GeometryBoundaryTreatement::Staircase:
-        {   
-            // Distance to the nearest cell face, approximates the immersed boundary to be on the cell face
-            // i.e. staircase approximation
-            sourceTermData.ibDistance = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f;
-            break;
-        }
-
-        default:
-            break;
+        AddNoWallFunctionIBDataForDirection( sourceTermData, cellIndex, axis, directionIndex, mesh, tree, inputData );
     }
-    const floatType &ibDistance = sourceTermData.ibDistance;
+
 
     // Face area vector
     sourceTermData.faceAreaComponent = static_cast<floatType>( directionIndex )   // Gives the correct sign
                                      * mesh.cellFaceAreas[axis]( cellIndex[ LUT::LoOrthogonalAxis[axis] ], cellIndex[ LUT::HiOrthogonalAxis[axis] ] );    
     
-
-
-    // Reconstruction coefficients from fluid onto face. May use further points due to stability condition
-    bool meetsGhostStabilityCondition =  ibDistance >= ( mesh.cellLengths[axis](cellIndex[axis]) / 2.0f );
-    if ( meetsGhostStabilityCondition ) {
-
-        // Linear
-        floatType dxpOn2 = mesh.cellLengths[axis](cellIndex[axis]) / 2.0f ;
-        sourceTermData.faceReconstructionCoeff_p  = ( ibDistance - dxpOn2 ) / ( ibDistance );
-        sourceTermData.faceReconstructionCoeff_a  = 0.0f;
-        sourceTermData.faceReconstructionCoeff_ib = dxpOn2 / ibDistance;
-
-        // // Quadratic
-        // floatType dxp = mesh.cellLengths[axis](cellIndex[axis]);
-        // floatType la  = abs( mesh.cellCenters[axis](cellIndex[axis]) - mesh.cellCenters[axis](cellIndex_a[axis]) );
-        // sourceTermData.faceReconstructionCoeff_p  = - dxp * dxp / ( 4 * ibDistance * la )
-        //                                           +   dxp * ( ibDistance - la ) / ( 2 * ibDistance * la );
-        // sourceTermData.faceReconstructionCoeff_a  =   dxp * dxp /  ( 4 * la * ( ibDistance * la ) )
-        //                                           -   dxp * ibDistance / ( 2 * la * ( ibDistance + la ) );
-        // sourceTermData.faceReconstructionCoeff_ib =   dxp * dxp / ( 4 * ibDistance * ( ibDistance + la ) )
-        //                                           +   dxp * la / ( 2 * ibDistance * ( ibDistance + la ) );
-
-
-    } else {
-
-        // Stencil skip
-        floatType dxp = mesh.cellLengths[axis](cellIndex[axis]);
-        floatType dxa = mesh.cellLengths[axis](cellIndex_a[axis]);
-        floatType denominator =  dxp  +  dxa  +  2.0f * ibDistance;
-        sourceTermData.faceReconstructionCoeff_p  = 0.0f;
-        sourceTermData.faceReconstructionCoeff_a  = ( dxp - 2.0f * ibDistance ) / denominator;
-        sourceTermData.faceReconstructionCoeff_ib = ( dxa + 2.0f * dxp ) / denominator;
-
-        // // Nearest face
-        // floatType dxp    = mesh.cellLengths[axis](cellIndex[axis]),
-        //           lambda = mesh.interpFactors[axis]( fidx - directionIndex );
-        // floatType denominator =  2.0f * ibDistance  + dxp;
-        // if ( directionIndex == +1 ) {
-        //     sourceTermData.faceReconstructionCoeff_p  = lambda          * ( 2.0f * ibDistance - dxp ) / denominator;
-        //     sourceTermData.faceReconstructionCoeff_a  = (1.0f - lambda) * ( 2.0f * ibDistance - dxp ) / denominator;
-        // } else {
-        //     sourceTermData.faceReconstructionCoeff_p  = (1.0f - lambda) * ( 2.0f * ibDistance - dxp ) / denominator;
-        //     sourceTermData.faceReconstructionCoeff_a  = lambda          * ( 2.0f * ibDistance - dxp ) / denominator;
-        // }
-        // sourceTermData.faceReconstructionCoeff_ib = 2.0f * dxp / denominator;
-
-        // // Just set to zero
-        // sourceTermData.faceReconstructionCoeff_p  = 0.0f;
-        // sourceTermData.faceReconstructionCoeff_a  = 0.0f; 
-        // sourceTermData.faceReconstructionCoeff_ib = 1.0f;
-    }
-
-
     // Extrapolation coefficients from face to ghost cell
     if        ( directionIndex == +1 ) {    // Face on Hi side
 
@@ -253,18 +313,6 @@ void AddIBDataForDirection( IBCell &ibCell,
         sourceTermData.ghostExtrapCoeff_f = 1.0f / (1.0f - mesh.interpFactors[axis](fidx));
 
     }
-
-
-    // Extrapolation coefficients from fluid to immersed boundary surface
-    floatType cellInteriorDistance = abs( mesh.cellCenters[axis](cellIndex_a[axis]) - mesh.cellCenters[axis](cellIndex[axis]) ); 
-    sourceTermData.ibExtrapCoeff_p =   ibDistance / cellInteriorDistance  +  1.0f;
-    sourceTermData.ibExtrapCoeff_a = - ibDistance / cellInteriorDistance;
-
-
-    // Extrapolation coefficients from fluid to face (Does not account for presence of IB)
-    sourceTermData.faceExtrapCoeff_p =   0.05f * mesh.cellLengths[axis](cellIndex[axis]) / cellInteriorDistance  +  1.0f;
-    sourceTermData.faceExtrapCoeff_a = - 0.05f * mesh.cellLengths[axis](cellIndex[axis]) / cellInteriorDistance;
-
 
     // Far pressure ghost cell coefficients
     if        ( directionIndex == +1 ) {    // Ghost cell on Hi side
@@ -320,7 +368,12 @@ void SetVelocityFluxCorrectionCoefficient( std::vector<IBCell> &ibCellsComponent
     for ( auto &ibCell : ibCellsComponent ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
-            floatType ibCellFaceDistance = abs( sourceTermData.ibDistance - mesh.cellLengths[sourceTermData.direction](ibCell.cellIndex[sourceTermData.direction]) );
+            floatType ibCellFaceDistance = 0.0f;
+            if ( sourceTermData.directionalIBDataPtr ) {
+                ibCellFaceDistance = abs( sourceTermData.directionalIBDataPtr->ibDistance - mesh.cellLengths[sourceTermData.direction](ibCell.cellIndex[sourceTermData.direction]) );
+            } else if ( sourceTermData.wallFunctionDataPtr ) {
+                ibCellFaceDistance = sourceTermData.wallFunctionDataPtr->faceCenterDistance;
+            }
 
             denominator += std::pow( abs( sourceTermData.faceAreaComponent * ibCellFaceDistance) , 2.0f );
 
@@ -331,8 +384,12 @@ void SetVelocityFluxCorrectionCoefficient( std::vector<IBCell> &ibCellsComponent
     for ( auto &ibCell : ibCellsComponent ) { 
         for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
-            floatType ibCellFaceDistance = abs( sourceTermData.ibDistance - mesh.cellLengths[sourceTermData.direction](ibCell.cellIndex[sourceTermData.direction]) );
-
+            floatType ibCellFaceDistance = 0.0f;
+            if ( sourceTermData.directionalIBDataPtr ) {
+                ibCellFaceDistance = abs( sourceTermData.directionalIBDataPtr->ibDistance - mesh.cellLengths[sourceTermData.direction](ibCell.cellIndex[sourceTermData.direction]) );
+            } else if ( sourceTermData.wallFunctionDataPtr ) {
+                ibCellFaceDistance = sourceTermData.wallFunctionDataPtr->faceCenterDistance;
+            }
             sourceTermData.velocityFluxCorrectionCoeff = ( std::pow( ibCellFaceDistance, 2.0f ) 
                                                         * sourceTermData.faceAreaComponent 
                                                         ) / denominator;

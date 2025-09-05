@@ -76,7 +76,7 @@ BoundaryConditions
 
 
 SolidGeometry {
-    boundaryTreatement = directionalImmersedBoundary
+    boundaryTreatement = immersedBoundary
     
     FromFile {
         type = STL

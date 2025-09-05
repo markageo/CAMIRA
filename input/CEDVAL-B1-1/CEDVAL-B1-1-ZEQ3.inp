@@ -6,3 +6,5 @@ heightAxis                   = z
 averageBuildingHeight        = 0.125
 inflowVelocityBuildingHeight = 4.51
 roughnessLength              = 0.0007
+
+wallFunctions                = no

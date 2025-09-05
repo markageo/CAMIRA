@@ -130,7 +130,7 @@ BoundaryConditions
 
 
 SolidGeometry {
-    boundaryTreatement = directionalImmersedBoundary
+    boundaryTreatement = immersedBoundary
     
     Block {
         centerPosition = (2.5, 0.5, 1.5)

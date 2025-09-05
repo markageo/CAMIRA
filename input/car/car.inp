@@ -5,7 +5,7 @@ Model {
     transient = no
     TurbulenceModel {
         //model = laminar
-        #include "car-ZEQ1.inp"
+        #include "car-ZEQ3.inp"
     }
 }
 
@@ -77,7 +77,7 @@ BoundaryConditions
 
 
 SolidGeometry {
-    boundaryTreatement = directionalImmersedBoundary
+    boundaryTreatement = immersedBoundary
     FromFile {
         type = STL
         filename = "input/car/car_cleaned_2.stl"

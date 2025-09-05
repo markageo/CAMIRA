@@ -102,7 +102,7 @@ BoundaryConditions
 
 
 SolidGeometry {
-    boundaryTreatement = directionalImmersedBoundary
+    boundaryTreatement = immersedBoundary
     // FromFile {
     //     type = STL
     //     filename = "lid_sphere_geometry.stl"

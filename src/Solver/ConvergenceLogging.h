@@ -7,7 +7,9 @@
 #include "../CoordinateTransformations/AxisTransformationFunctions.h"
 #include "../IO/IOTools.h"
 #include "../FiniteVolume/FiniteVolume.h"
-#include "../DerivedQuantities/DerivedQuantities.h"
+#include "../DerivedQuantities/ForceCalculator.h"
+#include "../DerivedQuantities/FieldProbe.h"
+#include "../DerivedQuantities/YPlusCalculator.h"
 #include "../IO/VTKWriter.h"
 
 #include <fstream>
