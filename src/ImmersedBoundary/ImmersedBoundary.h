@@ -21,46 +21,55 @@ enum CellType {
 // --------------------------------------- Definition in IBData.cpp -------------------------------------- //
 
 
-// Specific coefficients and data for directional immersed boundary method
-struct DirectionalIBData
-{
-    // Coefficients for reconstructing velocity field onto face
-    floatType faceReconstructionCoeff_p,         // Multiplies with immediate cell value
-              faceReconstructionCoeff_a,         // Multiplies with first interior cell
-              faceReconstructionCoeff_ib;        // Multiplies with IB value
 
-    // For extrapolating directly onto AB face from fluid cells (does not account for IB), i.e. not a reconstruction
-    floatType faceExtrapCoeff_p,
-              faceExtrapCoeff_a;
-
-    // Coefficients for extrapolating onto the immersed boundary surface from fluid cells
-    floatType ibExtrapCoeff_p,           // Boundary cell
-              ibExtrapCoeff_a;           // One interior of boundary cell  
-
-    // Distance of center to IB surface along coordinate direction
-    floatType ibDistance;
-
-};
-
-
-// Specific coefficients and data for wall functions
-struct WallFunctionData
-{
-    FieldProbe fieldProbe;
-    fVector3 normalVector;
-
-    // Distance of image point to IB surface along normal direction
-    floatType imagePointDistance;
-
-    // Distance of of face center to IB surface along normal direction
-    floatType faceCenterDistance;
-};
 
 
 // Contains data for a single forced cell
 struct IBCell {
     TensorIndex3D cellIndex;
     
+
+    // Specific coefficients and data for directional immersed boundary method
+    struct DirectionalIBData
+    {
+        // Coefficients for reconstructing velocity field onto face
+        floatType faceReconstructionCoeff_p,         // Multiplies with immediate cell value
+                faceReconstructionCoeff_a,         // Multiplies with first interior cell
+                faceReconstructionCoeff_ib;        // Multiplies with IB value
+
+        // For extrapolating directly onto AB face from fluid cells (does not account for IB), i.e. not a reconstruction
+        floatType faceExtrapCoeff_p,
+                faceExtrapCoeff_a;
+
+        // Coefficients for extrapolating onto the immersed boundary surface from fluid cells
+        floatType ibExtrapCoeff_p,           // Boundary cell
+                ibExtrapCoeff_a;           // One interior of boundary cell  
+
+        // Distance of center to IB surface along coordinate direction
+        floatType ibDistance;
+
+    };
+
+
+    // Specific coefficients and data for wall functions
+    struct WallFunctionData
+    {
+        std::unique_ptr<FieldProbe> fieldProbePtr;
+
+        // Outward unit normal vector from surface to face center
+        fVector3 normalVector;
+
+        // Distance of image point to IB surface along normal direction
+        floatType imagePointDistance;
+
+        // Distance of of face center to IB surface along normal direction
+        floatType faceCenterDistance;
+
+        // Store this for diagnostics, and useful for initial guess
+        floatType yPlusImagePoint;
+
+    };
+
     struct SourceTermData {
         Axis::ENUMDATA direction;
         intType        directionIndex,        // Cell index offset, either +1 or -1.
@@ -93,15 +102,17 @@ struct IBCell {
                              faceValues,        // Field variables on face between ghost cell and interior cell  
                              ghostCellValues;   // Field variables at ghost cell
         floatType farPressureGhostCellValue;
-        floatType wallShear;                    // Wall shear value at the face, only needed in wall functions
+        fVector3 wallShearStress;               // Wall shear value at the face, only needed in wall functions
     };
     std::vector< SourceTermData > sourceTermsData;
        
 };
 
 struct IBData {
+    bool useWallFunctions;
     std::vector< std::vector< IBCell > > ibCells;   // Outer vector is for each geometry component, inner vector is the cells
     Tensor3D mask;
+    floatType nu, rho;  // Need these for wall functions
 };
 
 

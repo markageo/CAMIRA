@@ -57,8 +57,61 @@ Tensor3D CreateCellMask( const Tree &tree,
         }
     }
 
-
     return mask;
+}
+
+
+
+// Extend the cell mask so that face centers on the AB are always outside the solid boundary
+void ExtendCellMask( Tensor3D &mask,
+                     const Tree &tree, 
+                     const Mesh &mesh )
+{
+    using enum Axis::ENUMDATA;
+    using FVT::G;
+
+    // Identify cells with cell centeres inside the solid
+    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
+        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
+            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
+
+                // Only changing fluid points
+                if ( static_cast<intType>( mask(G(i, j, k)) ) == CellType::Solid )
+                    continue;
+
+                TensorIndex3D cellIndex = {i, j, k};
+
+                // Mask this cell if any of its face centers are inside the solid
+                bool hasFaceInsideSolid = false;
+
+                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+
+                    fVector3 faceCoordinates;
+
+                    // Positive side face
+                    EnumFor<Axis>( [&] (Axis::ENUMDATA a) {
+                        faceCoordinates[a] = ( a == axis ) ? mesh.cellFaces[a]( cellIndex[a] + 1 ) : mesh.cellCenters[a]( cellIndex[a] );
+                    } );
+                    
+                    if ( PointInside( tree, faceCoordinates[X], faceCoordinates[Y], faceCoordinates[Z] )  )
+                        hasFaceInsideSolid = true;
+
+                    
+                    // Negative side face
+                    faceCoordinates[axis] = mesh.cellFaces[axis]( cellIndex[axis] );
+                    
+                    if ( PointInside( tree, faceCoordinates[X], faceCoordinates[Y], faceCoordinates[Z] )  )
+                        hasFaceInsideSolid = true;
+
+                } );
+
+                if ( hasFaceInsideSolid )   
+                    mask(G(i, j, k)) = CellType::Solid;
+
+            }
+        }
+    }
+
 }
 
 
@@ -112,6 +165,128 @@ void RemoveMaskSingleCellCavities( Tensor3D &mask,
 
 
 
+// Check if a given index is within the domain bounds
+bool OutOfBounds( const TensorIndex3D &index,
+                  const Mesh &mesh )
+{
+    // Can't use EnumFor since return statements inside loop
+    for ( int a = 0; a != Axis::count; a++ ) {  
+        Axis::ENUMDATA axis = static_cast<Axis::ENUMDATA>(a);
+
+        if ( index[axis] < 0 )
+            return true;
+
+        if ( index[axis] > mesh.nCells[axis]-1 )
+            return true;
+    }
+
+    return false;
+}
+
+
+
+floatType DiagonalCellDistance( const TensorIndex3D &cellIndex,
+                                const Mesh &mesh )
+{
+    floatType distanceSq = 0.0;
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        distanceSq += pow( mesh.cellLengths[axis]( cellIndex[axis] ), 2 );
+    } );
+    return sqrt( distanceSq );
+}
+
+
+
+// Determine the length of the image point from the immersed boundary. We take this as the maximum 
+// diagonal length of the cells surrounding the given cell
+floatType GetImagePointDistance( const TensorIndex3D &cellIndex, 
+                                 const Mesh &mesh )
+{
+    floatType maxValue = 0.0f;
+    std::array<intType, 3> deltaIndex = {-1, 0, 1};
+
+    for ( intType dk : deltaIndex ) {
+        for ( intType dj : deltaIndex ) {
+            for ( intType di : deltaIndex ) {
+
+                bool isNeighbour = ( dk != 0 ) || ( dj != 0 ) || ( di != 0 );
+                if ( !isNeighbour ) {
+                    continue;
+                }
+
+                TensorIndex3D neighbourIndex = cellIndex;
+                neighbourIndex[0] += di;
+                neighbourIndex[1] += dj;
+                neighbourIndex[2] += dk;
+
+                if ( OutOfBounds( neighbourIndex, mesh ) ) {
+                    continue;
+                }
+
+                floatType diagonalCellDistance = DiagonalCellDistance( neighbourIndex, mesh ); 
+
+                if ( diagonalCellDistance >= maxValue ) {
+                    maxValue = diagonalCellDistance;
+                }
+
+            }
+        }
+    }
+
+    return maxValue;
+}
+
+
+
+// Sets data for Immersed Boundary Method with wall functions 
+void AddWallFunctionIBDataForDirection( IBCell::SourceTermData &sourceTermData, 
+                                        const TensorIndex3D &cellIndex,
+                                        const Mesh &mesh,
+                                        const Tree &tree )
+{
+    using enum Axis::ENUMDATA;
+
+    sourceTermData.wallFunctionDataPtr = std::make_unique<IBCell::WallFunctionData>();
+    auto &wallFunctionData = (*sourceTermData.wallFunctionDataPtr);
+
+    // Face index
+    TensorIndex3D faceIndex = cellIndex;
+    faceIndex[sourceTermData.direction] += sourceTermData.faceDirectionIndex;
+
+    // Face coordiantes
+    fVector3 faceCoordinates;
+    EnumFor<Axis>( [&] (Axis::ENUMDATA a) {
+        faceCoordinates[a] = ( sourceTermData.direction == a ) ? mesh.cellFaces[a]( faceIndex[a] ) : mesh.cellCenters[a]( faceIndex[a] );
+    } );
+
+
+    // Nearest to the face on the immersed boundary
+    fVector3 nearestIBPoint = NearestPoint( tree, faceCoordinates[X], faceCoordinates[Y], faceCoordinates[Z] );
+
+    // Normal vector
+    wallFunctionData.normalVector = faceCoordinates - nearestIBPoint;
+
+    // Nearest point distnace
+    wallFunctionData.faceCenterDistance = wallFunctionData.normalVector.norm();
+
+    // Normalise the normal vector
+    wallFunctionData.normalVector.normalize();
+
+    // Distance to image point
+    wallFunctionData.imagePointDistance = GetImagePointDistance( cellIndex, mesh );
+
+    // Image point coordinates
+    fVector3 imagePoint = faceCoordinates + wallFunctionData.imagePointDistance * wallFunctionData.normalVector; 
+
+    // Construct field probe at image point
+    wallFunctionData.fieldProbePtr = std::make_unique<FieldProbe>( mesh, imagePoint );
+
+    // Initialise y+
+    wallFunctionData.yPlusImagePoint = 0.0f;
+
+}
+
+
 
 // Sets data for Immersed Boundary Method without wall functions
 void AddNoWallFunctionIBDataForDirection( IBCell::SourceTermData &sourceTermData, 
@@ -124,7 +299,7 @@ void AddNoWallFunctionIBDataForDirection( IBCell::SourceTermData &sourceTermData
 {
     using enum Axis::ENUMDATA;
 
-    sourceTermData.directionalIBDataPtr = std::make_unique<DirectionalIBData>();
+    sourceTermData.directionalIBDataPtr = std::make_unique<IBCell::DirectionalIBData>();
 
     auto &directionalIBData = *sourceTermData.directionalIBDataPtr;
 
@@ -239,24 +414,6 @@ void AddNoWallFunctionIBDataForDirection( IBCell::SourceTermData &sourceTermData
 }
 
 
-
-
-// Sets data for Immersed Boundary Method with wall functions 
-void AddWallFunctionIBDataForDirection( IBCell::SourceTermData &sourceTermData, 
-                                        const TensorIndex3D &cellIndex,
-                                        const Axis::ENUMDATA axis,
-                                        const intType directionIndex,
-                                        const Mesh &mesh,
-                                        const Tree &tree, 
-                                        const InputData &inputData )
-{
-    using enum Axis::ENUMDATA;
-
-    // sourceTermData.wallFunctionDataPtr = std::make_unique<WallFunctionData>();
-}
-
-
-
 // Sets data for a particular source term in a particular direciton for a particular cell
 void AddIBDataForDirection( IBCell &ibCell, 
                             const Axis::ENUMDATA axis,
@@ -289,7 +446,7 @@ void AddIBDataForDirection( IBCell &ibCell,
     // Set data that is specific to whether or not wall functions are used
     if ( inputData.useWallFunctions ) {
 
-        AddWallFunctionIBDataForDirection( sourceTermData, cellIndex, axis, directionIndex, mesh, tree, inputData );
+        AddWallFunctionIBDataForDirection( sourceTermData, cellIndex, mesh, tree );
 
     } else {
 
@@ -483,6 +640,10 @@ void SetImmersedBoundaryData( IBData &ibData,
     ibData.mask = Tensor3D( mesh.nCells[X] + 2*CAMIRA::nGhost, mesh.nCells[Y] + 2*CAMIRA::nGhost, mesh.nCells[Z] + 2*CAMIRA::nGhost );
     SetTensorConstantParallel( ibData.mask, CellType::Solid );
     ibData.mask.slice(offsets, extents) = ibData.mask.slice(offsets, extents).constant( CellType::Fluid );
+    
+    ibData.useWallFunctions = inputData.useWallFunctions;
+    ibData.rho = inputData.rho;
+    ibData.nu  = inputData.nu;
 
     // Leave ibData empty if there is no geometry
     if ( !inputData.hasIBGeometry )
@@ -501,6 +662,9 @@ void SetImmersedBoundaryData( IBData &ibData,
 
         // Local mask for just this component
         Tensor3D localMask = CreateCellMask( tree, mesh );
+
+        if ( inputData.useWallFunctions )
+            ExtendCellMask( localMask, tree, mesh );
 
         RemoveMaskSingleCellCavities( localMask, mesh );
 

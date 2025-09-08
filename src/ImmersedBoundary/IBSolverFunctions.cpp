@@ -3,13 +3,15 @@
 #include "../Core/FVTools.h"
 #include "../Core/FVLookups.h"
 
+#include <cmath>
+
 namespace CAMIRA
 {
 
 namespace 
 {
 
-
+// ------------------------------------------- Functions for IB without wall functions -------------------------------------------
 FieldData<floatType> GetIBFieldValues( const TensorIndex3D &cellIndex,
                                        const IBCell::SourceTermData &sourceTermData, 
                                        const FieldData<Tensor3D> &fields )
@@ -51,7 +53,138 @@ FieldData<floatType> ReconstructFaceValues( const TensorIndex3D &cellIndex,
     return faceValues;
 }
 
+// --------------------------------------------------------------------------------------------------------------------------------
 
+
+
+// --------------------------------------------- Functions for IB with wall functions ---------------------------------------------
+
+
+void WallFunctionFaceVelocitiesAndWallShear( IBCell::SourceTermData &sourceTermData, 
+                                             const FieldData<Tensor3D> &fields,
+                                             const floatType nu, 
+                                             const floatType rho )
+{
+    using enum Axis::ENUMDATA;
+
+    const fVector3 &normalVector = sourceTermData.wallFunctionDataPtr->normalVector;
+    floatType &yPlusImagePoint   = sourceTermData.wallFunctionDataPtr->yPlusImagePoint;
+    floatType &yImagePoint       = sourceTermData.wallFunctionDataPtr->imagePointDistance;
+    floatType &yFace             = sourceTermData.wallFunctionDataPtr->faceCenterDistance;
+
+    // Log law constants
+    const floatType kappa = 0.41f;
+    const floatType CPlus = 5.0f;
+
+    // Calculate tangential velocity at the image point
+    fVector3 imagePointVelocity = { sourceTermData.wallFunctionDataPtr->fieldProbePtr->GetFieldValue( fields.U[X] ),
+                                    sourceTermData.wallFunctionDataPtr->fieldProbePtr->GetFieldValue( fields.U[Y] ),
+                                    sourceTermData.wallFunctionDataPtr->fieldProbePtr->GetFieldValue( fields.U[Z] ) };
+
+    
+    fVector3 imagePointWallNormalVelocity = imagePointVelocity.dot( normalVector ) * normalVector;
+
+    fVector3 imagePointWallTangentialVelocity = imagePointVelocity - imagePointWallNormalVelocity;
+
+    floatType imagePointWallTangentialVelocityMagnitude = imagePointWallTangentialVelocity.norm();
+
+    floatType Rey = imagePointWallTangentialVelocityMagnitude * yImagePoint / nu;
+
+    // Solve the log law for y+ using Newtons method
+    intType maxIters = 10;
+    floatType tol = 1e-5;
+    for ( intType k = 0; k != maxIters; k++ ) {
+
+        // Set the old guess
+        floatType yPlusImagePointOld = yPlusImagePoint;
+
+        // Update guess
+        yPlusImagePoint = ( yPlusImagePointOld + kappa * Rey )
+                        / ( std::log( yPlusImagePointOld ) + 1.0f + kappa * CPlus );
+
+        // Check tolerence
+        floatType eps = abs( yPlusImagePoint - yPlusImagePointOld );
+        if ( eps < tol ) {
+            break;
+        }
+        // std::cout << eps << std::endl;
+            
+
+    }
+
+    // std::cout << yPlusImagePoint << ", ";
+
+    if ( yPlusImagePoint > 400 )
+        yPlusImagePoint = 400;
+
+    if ( yPlusImagePoint < 20 )
+        yPlusImagePoint = 20;
+
+    if ( !std::isfinite( yPlusImagePoint ) )   
+        yPlusImagePoint = 50;
+
+    // yPlusImagePoint = 50;
+
+    // std::cout << yPlusImagePoint << std::endl;
+
+    // Calculate friction velocity
+    floatType frictionVelocity = yPlusImagePoint * nu / yImagePoint;
+    
+    // Tangential velocity at cell face from log law
+    floatType yPlusFace = yFace * frictionVelocity / nu;
+
+    floatType uPlusFace = ( 1.0f / kappa ) * std::log( yPlusFace ) + CPlus;
+    fVector3 faceWallTangentialVelocity = uPlusFace * frictionVelocity * imagePointWallTangentialVelocity.normalized();
+
+    // Normal velocity at cell face
+    fVector3 faceWallNormalVelocity = ( yFace / yImagePoint ) * imagePointWallNormalVelocity;
+
+    // Cartesian velocity components at face
+    fVector3 faceVelocity = faceWallNormalVelocity + faceWallTangentialVelocity;
+
+    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+        sourceTermData.faceValues.U[axis] = faceVelocity[axis];
+    } );
+
+    // // DEBUGGING
+    // EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+    //     sourceTermData.faceValues.U[axis] = ( yFace / yImagePoint ) * imagePointVelocity[axis];
+    // } );
+    
+
+    // Calculate the wall shear stress magntiude
+    floatType wallShearMagnitude = rho * frictionVelocity * frictionVelocity;
+
+    // Components of tangential velocity that are tangent to the cell face
+    fVector3 onFaceTangentVector = faceWallTangentialVelocity;
+    onFaceTangentVector[sourceTermData.direction] = 0.0f;
+    onFaceTangentVector.normalize();
+    
+    sourceTermData.wallShearStress = wallShearMagnitude * onFaceTangentVector;
+
+}
+
+
+
+void WallFunctionFacePressure( IBCell::SourceTermData &sourceTermData, 
+                               const FieldData<Tensor3D> &fields )
+{
+
+    floatType imagePointPressure = sourceTermData.wallFunctionDataPtr->fieldProbePtr->GetFieldValue( fields.P );
+
+    // Neumann condition
+    sourceTermData.faceValues.P = imagePointPressure;
+
+}
+
+
+
+// --------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+// ---------------------------------------------- Shared functions for all IB methods ---------------------------------------------
 
 floatType CalculateVelocityFluxError( std::vector<IBCell> &ibCellsComponent )
 {
@@ -123,6 +256,8 @@ floatType GetFarPressureGhostCellValue( const TensorIndex3D &cellIndex,
          + sourceTermData.farPressureCoeff_g * sourceTermData.ghostCellValues.P;    
 }
 
+// --------------------------------------------------------------------------------------------------------------------------------
+
 
 }   // end anonymous namespace
 
@@ -135,18 +270,39 @@ void UpdateIBData( IBData &ibData,
     // Go through each component, we do this so each one gets its own correction
     for ( auto &ibCellsComponent : ibData.ibCells ) {
 
-        #pragma omp parallel for 
-        for ( auto &ibCell : ibCellsComponent ) { 
-            for ( auto &sourceTermData : ibCell.sourceTermsData ) {
+        if ( ibData.useWallFunctions ) {
 
-                // Update values on the immersed boundary
-                sourceTermData.ibValues = GetIBFieldValues( ibCell.cellIndex, sourceTermData, fields );
+            #pragma omp parallel for 
+            for ( auto &ibCell : ibCellsComponent ) { 
+                for ( auto &sourceTermData : ibCell.sourceTermsData ) {
 
-                // Use new immersed boundary values to update the face values
-                sourceTermData.faceValues = ReconstructFaceValues( ibCell.cellIndex, sourceTermData, fields );
+                    // Use wall function to update velocities at cell face and wall shear stress
+                    WallFunctionFaceVelocitiesAndWallShear( sourceTermData, fields, ibData.nu, ibData.rho );
 
+                    // Set the face pressure
+                    WallFunctionFacePressure( sourceTermData, fields );
+
+
+                }
             }
+
+        } else {
+
+            #pragma omp parallel for 
+            for ( auto &ibCell : ibCellsComponent ) { 
+                for ( auto &sourceTermData : ibCell.sourceTermsData ) {
+
+                    // Update values on the immersed boundary
+                    sourceTermData.ibValues = GetIBFieldValues( ibCell.cellIndex, sourceTermData, fields );
+
+                    // Use new immersed boundary values to update the face values
+                    sourceTermData.faceValues = ReconstructFaceValues( ibCell.cellIndex, sourceTermData, fields );
+
+                }
+            }
+
         }
+
 
         // Correct them to globally conserve mass
         CorrectIBFaceVelocities( ibCellsComponent );

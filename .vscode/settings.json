@@ -77,7 +77,8 @@
         "shared_mutex": "cpp",
         "stdfloat": "cpp",
         "typeindex": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "alignedvector3": "cpp"
     },
     "C_Cpp.intelliSenseEngine": "default",
     "editor.inlayHints.enabled": "off",

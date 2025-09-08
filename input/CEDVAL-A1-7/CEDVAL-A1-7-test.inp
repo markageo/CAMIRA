@@ -95,7 +95,7 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 25
+        maxOuterIterations = 10
         maxContinuityOuterResidual = 1e-6
         maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
 
@@ -108,7 +108,7 @@ Solver {
         maxResiduals = 1e-5
 
         planeSweepDirection = +z
-        lineSweepDirection = +x
+        lineSweepDirection = +y
 
         eddyViscosityRelaxation = 1
         momentumRelaxation      = (0.85, 0.85, 0.85)
@@ -132,7 +132,7 @@ Solver {
 }
 
 Parallel {
-    numberOfThreads = 8
+    numberOfThreads = 1
 }
 
 Output {
