@@ -1,4 +1,4 @@
-// CEDVAL B1-5
+// CEDVAL B1-4
 // Mesh file
 
 
@@ -8,19 +8,19 @@ domainUpperBounds = (2.2   ,  0.75, 1)
 Grid x {
     Segment {
         bounds     = (-1.2, -0.38)
-        nCells     = 69
+        nCells     = 55
         biasFactor = -3.5
     }
 
     Segment {
         bounds     = (-0.38, 0.38)
-        nCells     = 139
+        nCells     = 110
         biasFactor = 1
     }
 
     Segment {
         bounds     = (0.38, 2.2)
-        nCells     = 139
+        nCells     = 110
         biasFactor = 4.5
     }
 }
@@ -29,19 +29,19 @@ Grid x {
 Grid y {
     Segment {
         bounds     = (-0.75, -0.38)
-        nCells     = 35
+        nCells     = 28
         biasFactor = -3
     }
     
     Segment {
         bounds     = (-0.38, 0.38)
-        nCells     = 139
+        nCells     = 110
         biasFactor = 1
     }
 
     Segment {
         bounds     = (0.38, 0.75)
-        nCells     = 35
+        nCells     = 28
         biasFactor = 3
     }
 }
@@ -52,13 +52,13 @@ Grid y {
 Grid z {
     Segment {
         bounds     = (0, 0.09)
-        nCells     = 18
+        nCells     = 14
         biasFactor = 1
     }
 
     Segment {
         bounds     = (0.09, 1)
-        nCells     = 69
+        nCells     = 55
         biasFactor = 3.5
     }
 }
