@@ -1,15 +1,15 @@
-// CEDVAL B1-5 primary input file
+// CEDVAL B1-6 primary input file
 
 Model {
     nu   = 1.57e-5
     transient = no
     TurbulenceModel {
-        #include "CEDVAL-B1-5-ZEQ3.inp"
+        #include "CEDVAL-B1-6-ZEQ3.inp"
     }
 }
 
 Mesh {
-    #include "CEDVAL-B1-5-mesh.inp"
+    #include "CEDVAL-B1-6-mesh.inp"
 }
 
 
@@ -35,7 +35,7 @@ BoundaryConditions
 
     // Inflow
     -x {
-        u = profile1D, "CEDVAL-B1-5-inflow.prof"
+        u = profile1D, "CEDVAL-B1-6-inflow.prof"
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
@@ -80,8 +80,8 @@ SolidGeometry {
     
     FromFile {
         type = STL
-        filename = "input/CEDVAL-B1-5/CEDVAL-B1-5-geometry.stl"
-        rotation = (0, 0, -29)
+        filename = "input/CEDVAL-B1-6/CEDVAL-B1-6-geometry.stl"
+        rotation = (0, 0, -61)
     }
 }
 
