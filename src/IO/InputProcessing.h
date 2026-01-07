@@ -151,14 +151,6 @@ struct InputData
     };
     MultigridSettings multigridSettings;
 
-    struct BoostConvSettings {
-        bool useBoostConv;
-        intType basisSize,
-                startIteration;
-        floatType relaxation;
-    };
-    BoostConvSettings boostConvSettings;
-
     struct ParallelSettings {
         intType numberOfThreads;
     };

@@ -902,26 +902,6 @@ namespace
 
 
 
-    void ReadBoostConvSettings( InputData &inputData, 
-                                const pt::ptree &solverTree) 
-    {
-        boost::optional<const pt::ptree &> boostConvTreeOptional = solverTree.get_child_optional( "BoostConv" );
-        if ( !boostConvTreeOptional ) {
-            inputData.boostConvSettings.useBoostConv = false;
-            return;
-        }
-
-        const pt::ptree &boostConvTree = boostConvTreeOptional.get();
-
-        inputData.boostConvSettings.useBoostConv   = true;
-        inputData.boostConvSettings.basisSize      = boostConvTree.get<intType>( "basisSize" );
-        inputData.boostConvSettings.startIteration = boostConvTree.get<intType>( "startIteration" );
-        inputData.boostConvSettings.relaxation     = boostConvTree.get<floatType>( "relaxation" ); 
-
-    }
-
-
-
     void ReadSolver(InputData &inputData, 
                     const pt::ptree &tree)
     {
@@ -935,9 +915,6 @@ namespace
 
         // Read multigrid settings
         ReadMultigridSettings(inputData, solverTree);
-
-        // Read BoostConv settings (which is optional for the user)
-        ReadBoostConvSettings(inputData, solverTree);
     }
 
 
