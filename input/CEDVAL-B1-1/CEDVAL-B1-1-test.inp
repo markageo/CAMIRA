@@ -1,7 +1,7 @@
 // CEDVAL B1-1 primary input file
 
 Model {
-    nu   = 1.5e-5
+    nu   = 1.57e-5
     transient = no
     TurbulenceModel {
         #include "CEDVAL-B1-1-ZEQ3.inp"
@@ -108,8 +108,8 @@ Solver {
         maxIterations = 3
         maxResiduals = 1e-5
 
-        planeSweepDirection = +z
-        lineSweepDirection = +x
+        planeSweepDirection = +x
+        lineSweepDirection = +z
 
         eddyViscosityRelaxation = 1
         momentumRelaxation      = (0.8, 0.8, 0.8)

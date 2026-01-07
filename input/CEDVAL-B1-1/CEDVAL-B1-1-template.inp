@@ -80,7 +80,7 @@ SolidGeometry {
     
     FromFile {
         type = STL
-        filename = "input/CEDVAL-B1-1/CEDVAL-B1-1-geometry.stl"
+        filename = "CEDVAL-B1-1-geometry.stl"
         rotation = (0, 0, 0)
     }
 }
@@ -96,9 +96,9 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 100
-        maxContinuityOuterResidual = 1e-6
-        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+        maxOuterIterations = 1000
+        maxContinuityOuterResidual = 1e-10
+        maxMomentumOuterResiduals  = (1e-10, 1e-10, 1e-10)
 
     }
     
@@ -119,11 +119,11 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 3
+        maxCoarseLevels = 2
 
         preSmoothingIterations = 2
         postSmoothingIterations = 2
-        fineGridIterations   = 6
+        fineGridIterations   = 5
 
         maxCoarseGridIterations = 100
         maxCoarseGridResiduals  = 1e-10
@@ -133,7 +133,7 @@ Solver {
 }
 
 Parallel {
-    numberOfThreads = 4
+    numberOfThreads = 8
 }
 
 Output {
