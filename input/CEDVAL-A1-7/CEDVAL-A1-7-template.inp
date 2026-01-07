@@ -1,7 +1,7 @@
 // CEDVAL A1-7 primary input file
 
 Model {
-    nu   = 1.5e-5
+    nu   = 1.57e-5
     transient = no
     TurbulenceModel {
         #include "CEDVAL-A1-7-ZEQ3.inp"
@@ -80,7 +80,7 @@ SolidGeometry {
     Block {
         centerPosition = (0, 0, 0.0625)
         dimensions     = (0.125, 0.125, 0.125)
-        rotation       = (0, 0, 40)
+        rotation       = (0, 0, -40)
     }
 }
 
@@ -95,9 +95,9 @@ Solver {
         advectionBlendingFactor = 1.0
         faceInterpolationScheme = weightedLinear
 
-        maxOuterIterations = 25
-        maxContinuityOuterResidual = 1e-8
-        maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
+        maxOuterIterations = 100
+        maxContinuityOuterResidual = 1e-10
+        maxMomentumOuterResiduals  = (1e-10, 1e-10, 1e-10)
 
     }
     

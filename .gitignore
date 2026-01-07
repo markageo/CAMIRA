@@ -3,7 +3,6 @@ camira
 build
 batchruns
 output
-.cache
 
 .cache
 .vscode

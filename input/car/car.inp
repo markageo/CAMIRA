@@ -1,11 +1,11 @@
 // Flow over a car
 
 Model {
-    nu   = 0.15
+    nu   = 1.5e-5
     transient = no
     TurbulenceModel {
         //model = laminar
-        #include "car-ZEQ1.inp"
+        #include "car-ZEQ3.inp"
     }
 }
 
@@ -17,7 +17,7 @@ Mesh {
 InitialConditions
 {    
     type = uniform
-    u = 100
+    u = 1
     v = 0
     w = 0
     p = 0
@@ -36,7 +36,7 @@ BoundaryConditions
 
     // Inflow
     -x {
-        u = uniform, 100
+        u = uniform, 1
         v = uniform, 0
         w = uniform, 0
         p = zeroGradient
@@ -80,8 +80,8 @@ SolidGeometry {
     boundaryTreatement = directionalImmersedBoundary
     FromFile {
         type = STL
-        filename = "input/car/car_cleaned_2.stl"
-        rotation = (0, 0, 180)
+        filename = "input/car/car-geometry.stl"
+        rotation = (0, 0, 0)
     }
 }
 
@@ -109,10 +109,10 @@ Solver {
         maxResiduals = 1e-5
 
         planeSweepDirection = +z
-        lineSweepDirection = +x
+        lineSweepDirection = +y
 
         eddyViscosityRelaxation = 1
-        momentumRelaxation      = (1, 1, 1)
+        momentumRelaxation      = (0.8, 0.8, 0.8)
         pressureRelaxation      = 1
 
     }
@@ -133,7 +133,7 @@ Solver {
 }
 
 Parallel {
-    numberOfThreads = 4
+    numberOfThreads = 8
 }
 
 Output {

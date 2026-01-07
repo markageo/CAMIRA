@@ -2,6 +2,6 @@
 
 model                        = ZEQ3
 heightAxis                   = z
-averageBuildingHeight        = 0.125
-inflowVelocityBuildingHeight = 3.425
-roughnessLength              = 0.0004
+averageBuildingHeight        = 1
+inflowVelocityBuildingHeight = 1
+roughnessLength              = 0.004
