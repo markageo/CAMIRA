@@ -153,9 +153,9 @@ Parallel {
 
 Output {
 
-    residualHistoryFilename = "output/residual_history.csv"
-    profilingFilename       = "output/profiling.dat"
-    fieldOutputFilename     = "output/fields.vtk"
+    residualHistoryFilename = "../output/residual_history.csv"
+    profilingFilename       = "../output/profiling.dat"
+    fieldOutputFilename     = "../output/fields.vtk"
     fieldWriteInterval      = 0
 
 }

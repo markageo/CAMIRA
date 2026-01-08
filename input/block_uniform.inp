@@ -166,15 +166,15 @@ Parallel {
 
 Output {
 
-    residualHistoryFilename = "output/residual_history.csv"
-    profilingFilename       = "output/profiling.dat"
-    fieldOutputFilename     = "output/fields.vtk"
-    geometryOutputFilename  = "output/geometry.stl"
+    residualHistoryFilename = "../output/residual_history.csv"
+    profilingFilename       = "../output/profiling.dat"
+    fieldOutputFilename     = "../output/fields.vtk"
+    geometryOutputFilename  = "../output/geometry.stl"
     fieldWriteInterval      = 1
 
     Monitors {
         ForceCalculator {
-            filename = "output/forces.csv"
+            filename = "../output/forces.csv"
         }
     }
 
