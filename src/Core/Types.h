@@ -151,7 +151,7 @@ enum class Smoothers {
     nestedLineSymmetricSerial, domainSymmetricSerial, domainSymmetricParallel
 };
 
-enum class GeometryBoundaryTreatement {
+enum class GeometryBoundaryTreatment {
     Staircase, DirectionalImmersedBoundary
 };
 

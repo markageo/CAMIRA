@@ -77,7 +77,7 @@ BoundaryConditions
 
 
 SolidGeometry {
-    boundaryTreatement = directionalImmersedBoundary
+    boundaryTreatment = directionalImmersedBoundary
     FromFile {
         type = STL
         filename = "car-geometry.stl"
