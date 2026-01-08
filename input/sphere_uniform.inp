@@ -159,15 +159,15 @@ Solver {
 
 Output {
 
-    residualHistoryFilename = "output/residualHistory.csv"
-    profilingFilename       = "output/profiling.dat"
-    fieldOutputFilename     = "output/fields.vtk"
-    geometryOutputFilename  = "output/geometry.stl"
+    residualHistoryFilename = "../output/residualHistory.csv"
+    profilingFilename       = "../output/profiling.dat"
+    fieldOutputFilename     = "../output/fields.vtk"
+    geometryOutputFilename  = "../output/geometry.stl"
     fieldWriteInterval      = 1
 
     Monitors {
         ForceCalculator {
-            filename = "output/forces.csv"
+            filename = "../output/forces.csv"
         }
     }
     

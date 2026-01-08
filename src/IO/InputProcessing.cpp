@@ -432,6 +432,7 @@ namespace
 
             // filename
             inputData.stlGeometries.back().filename = solidObject.second.get< std::string >( "filename" );
+            IOTOOLS::PrependRelativePath( inputData.stlGeometries.back().filename, inputData.inputFileDirectory );
 
             // Rotation for STL file is optional
             boost::optional< std::vector<floatType> > rotationOptional = solidObject.second.get_optional< std::vector<floatType> >( "rotation" );
@@ -542,10 +543,7 @@ namespace
             filename += *stringIterator;
         }
 
-        // Add the directory to the input filename
-        if ( !inputFileDirectory.empty() ){
-            filename = inputFileDirectory + "/" + filename;
-        }
+        IOTOOLS::PrependRelativePath( filename, inputFileDirectory );
             
 
         // Read in profile data from csv file
@@ -948,6 +946,7 @@ namespace
 
                 case InputData::InitialConditionTypes::vtkFile:
                     inputData.initialConditionsFieldFilename = initialConditionsTree.get<std::string>( "filename" );
+                    IOTOOLS::PrependRelativePath( inputData.initialConditionsFieldFilename, inputData.inputFileDirectory );
                     break;
             }
         #else
@@ -1008,6 +1007,7 @@ namespace
 
                 inputData.calculateForces = true;
                 inputData.forceCalculatorFilename = monitor.second.get<std::string>( "filename" );
+                IOTOOLS::PrependRelativePath( inputData.forceCalculatorFilename, inputData.inputFileDirectory );
 
             } else if ( monitor.first == "yPlus" ) {
 
@@ -1016,11 +1016,13 @@ namespace
 
                 inputData.calculateYPlus = true;
                 inputData.yPlusCalculatorFilename = monitor.second.get<std::string>( "filename" );
+                IOTOOLS::PrependRelativePath( inputData.yPlusCalculatorFilename, inputData.inputFileDirectory );
 
             } else if ( monitor.first == "Probe" ) {
                 InputData::ProbeData tempProbeData;
                 std::vector<floatType> tempLocation = monitor.second.get< std::vector<floatType> >( "location" ); 
                 tempProbeData.filename              = monitor.second.get<std::string>( "filename" );
+                IOTOOLS::PrependRelativePath( tempProbeData.filename, inputData.inputFileDirectory );
                 EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
                     tempProbeData.location(axis) = tempLocation[axis];
                 } );
@@ -1066,12 +1068,15 @@ namespace
 
         // Residual history filename
         inputData.residualHistoryFilename = outputTree.get<std::string>( "residualHistoryFilename" );
+        IOTOOLS::PrependRelativePath( inputData.residualHistoryFilename, inputData.inputFileDirectory );
 
         // Profiling information filename
         inputData.profilingFilename = outputTree.get<std::string>( "profilingFilename" );
+        IOTOOLS::PrependRelativePath( inputData.profilingFilename, inputData.inputFileDirectory );
 
         // Field output filename
         inputData.fieldOutputFilename = outputTree.get<std::string>( "fieldOutputFilename" );
+        IOTOOLS::PrependRelativePath( inputData.fieldOutputFilename, inputData.inputFileDirectory );
 
         // Geometry out filename, the user does not have to output the geometry to file
         inputData.outputGeometry = false;
@@ -1081,6 +1086,7 @@ namespace
             if ( geometryOutputFilenameOptional ) {
                 inputData.outputGeometry = true;
                 inputData.geometryOutputFilename = geometryOutputFilenameOptional.get();
+                IOTOOLS::PrependRelativePath( inputData.geometryOutputFilename, inputData.inputFileDirectory );
             }
 
         }

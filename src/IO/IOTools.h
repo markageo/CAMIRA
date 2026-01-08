@@ -2,6 +2,7 @@
 #define CAMIRA_IOTOOLS
 
 #include <string>
+#include <filesystem>
 
 namespace CAMIRA 
 {
@@ -51,6 +52,17 @@ namespace IOTOOLS
             return filename.substr( 0, lastPointPosition );
         }
         return filename;
+    }
+
+    // If a path is not an absolute path, add the given directory to it
+    inline void PrependRelativePath( std::string &pathString,
+                                     const std::string &directoryToPrependString )
+    {
+        std::filesystem::path path( pathString );
+
+        if ( !path.is_absolute() ) {
+            pathString = directoryToPrependString + "/" + pathString;
+        }
     }
 
 

@@ -103,11 +103,6 @@ BoundaryConditions
 
 SolidGeometry {
     boundaryTreatement = directionalImmersedBoundary
-    // FromFile {
-    //     type = STL
-    //     filename = "lid_sphere_geometry.stl"
-    // }
-
     Sphere {
         centerPosition = (0.5, 0.5, 0.5)
         diameter       = 0.25
@@ -166,9 +161,9 @@ Parallel {
 
 Output {
 
-    residualHistoryFilename = "output/residualHistory.csv"
-    profilingFilename       = "output/profiling.dat"
-    fieldOutputFilename     = "output/fields.vtk"
-    geometryOutputFilename  = "output/geometry.stl"
+    residualHistoryFilename = "../output/residualHistory.csv"
+    profilingFilename       = "../output/profiling.dat"
+    fieldOutputFilename     = "../output/fields.vtk"
+    geometryOutputFilename  = "../output/geometry.stl"
     fieldWriteInterval      = 0
 }

@@ -80,7 +80,7 @@ SolidGeometry {
     
     FromFile {
         type = STL
-        filename = "input/CEDVAL-B1-5/CEDVAL-B1-5-geometry.stl"
+        filename = "CEDVAL-B1-5-geometry.stl"
         rotation = (0, 0, -29)
     }
 }
@@ -138,19 +138,19 @@ Parallel {
 
 Output {
 
-    residualHistoryFilename = "output/residual_history.csv"
-    profilingFilename       = "output/profiling.dat"
-    fieldOutputFilename     = "output/fields.vtk"
-    geometryOutputFilename  = "output/geometry.stl"
+    residualHistoryFilename = "../../output/residual_history.csv"
+    profilingFilename       = "../../output/profiling.dat"
+    fieldOutputFilename     = "../../output/fields.vtk"
+    geometryOutputFilename  = "../../output/geometry.stl"
     fieldWriteInterval      = 0
 
     Monitors {
         ForceCalculator {
-            filename = "output/forces.csv"
+            filename = "../../output/forces.csv"
         }
 
         yPlus {
-            filename = "output/yPlus.csv""
+            filename = "../../output/yPlus.csv""
         }
     }
 

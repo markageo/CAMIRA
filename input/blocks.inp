@@ -166,15 +166,15 @@ Solver {
 
 Output {
 
-    residualHistoryFilename = "output/residual_history.csv"
-    profilingFilename       = "output/profiling.dat"
-    fieldOutputFilename     = "output/fields.vtk"
-    geometryOutputFilename  = "output/geometry.stl"
+    residualHistoryFilename = "../output/residual_history.csv"
+    profilingFilename       = "../output/profiling.dat"
+    fieldOutputFilename     = "../output/fields.vtk"
+    geometryOutputFilename  = "../output/geometry.stl"
     fieldWriteInterval      = 0
 
     Monitors {
         Probe {
-            filename = "output/probe1.csv"
+            filename = "../output/probe1.csv"
             location = (1, 0.5, 0.5)
         }
     }
