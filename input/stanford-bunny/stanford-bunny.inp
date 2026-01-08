@@ -76,7 +76,7 @@ BoundaryConditions
 
 
 SolidGeometry {
-    boundaryTreatement = directionalImmersedBoundary
+    boundaryTreatment = directionalImmersedBoundary
     FromFile {
         type = STL
         filename = "stanford-bunny-geometry.stl"

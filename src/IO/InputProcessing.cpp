@@ -464,11 +464,11 @@ namespace
         const pt::ptree &solidGeometryTree = solidGeometryTreeOptional.get();
 
         // Geometry boundary treatement
-        std::string valueString = solidGeometryTree.get<std::string>( "boundaryTreatement" );
+        std::string valueString = solidGeometryTree.get<std::string>( "boundaryTreatment" );
         if        ( valueString == "directionalImmersedBoundary" ) {
-            inputData.geoemtryBoundaryTreatement = GeometryBoundaryTreatement::DirectionalImmersedBoundary;
+            inputData.geoemtryBoundaryTreatment = GeometryBoundaryTreatment::DirectionalImmersedBoundary;
         } else if ( valueString == "staircase" ) {
-            inputData.geoemtryBoundaryTreatement = GeometryBoundaryTreatement::Staircase;
+            inputData.geoemtryBoundaryTreatment = GeometryBoundaryTreatment::Staircase;
         } else {
             throw std::runtime_error(  "'" + valueString + "' is not a valid solid geometry treatement method." );
         }

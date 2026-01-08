@@ -72,7 +72,7 @@ struct InputData
     EnumVector< Axis, std::vector< MeshSegment > > meshSegments;
 
     // Solid Geometry
-    GeometryBoundaryTreatement geoemtryBoundaryTreatement;
+    GeometryBoundaryTreatment geoemtryBoundaryTreatment;
     struct SolidBlockData {
         fArray3 centerPosition, 
                  dimensions, 

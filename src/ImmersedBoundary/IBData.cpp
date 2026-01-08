@@ -140,8 +140,8 @@ void AddIBDataForDirection( IBCell &ibCell,
 
     intType fidx = cellIndex[axis] + sourceTermData.faceDirectionIndex;
 
-    switch ( inputData.geoemtryBoundaryTreatement ) {
-        case GeometryBoundaryTreatement::DirectionalImmersedBoundary:
+    switch ( inputData.geoemtryBoundaryTreatment ) {
+        case GeometryBoundaryTreatment::DirectionalImmersedBoundary:
         {
             // Distance from cell center to immersed boundary along this coordinate direction
             fVector3 queryPointCoords( mesh.cellCenters[X](cellIndex[X]),
@@ -171,7 +171,7 @@ void AddIBDataForDirection( IBCell &ibCell,
             break;
         }
         
-        case CAMIRA::GeometryBoundaryTreatement::Staircase:
+        case CAMIRA::GeometryBoundaryTreatment::Staircase:
         {   
             // Distance to the nearest cell face, approximates the immersed boundary to be on the cell face
             // i.e. staircase approximation
