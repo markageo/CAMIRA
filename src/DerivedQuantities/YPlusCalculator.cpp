@@ -233,6 +233,14 @@ void YPlusCalculator::Update()
     using enum Axis::ENUMDATA;
     using FVT::G;
 
+    // Possible there is not wall cells
+    if ( m_wallCells.empty() ) {
+        minYPlus = 0.0f;
+        maxYPlus = 0.0f;
+        averageYPlus = 0.0f;
+        return;
+    }
+
     for ( auto &wallCellData : m_wallCells ) {
 
         // Approximate the wall shear stress with one sided difference
