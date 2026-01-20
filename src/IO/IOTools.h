@@ -61,7 +61,8 @@ namespace IOTOOLS
         std::filesystem::path path( pathString );
 
         if ( !path.is_absolute() ) {
-            pathString = directoryToPrependString + "/" + pathString;
+            if ( !directoryToPrependString.empty() )
+                pathString = directoryToPrependString + "/" + pathString;
         }
     }
 
