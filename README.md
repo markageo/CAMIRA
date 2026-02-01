@@ -53,13 +53,20 @@ Below is a list of publications related to the development of this project.
 
 *  [George, M. A., Williamson, N., & Armfield, S. W. (2024). A coupled block implicit solver for the incompressible Navier–Stokes equations on collocated grids. Computers & Fluids, 284, 106426.](https://www.sciencedirect.com/science/article/pii/S0045793024002573)
 
-* [George, M., Williamson, N., & Armfield, S. W. Mass-Conserving Ghost Cell Immersed Boundary Method with Multigrid for Coupled Navier-Stokes. Available at SSRN 5216938.](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5216938)
+
+* [George, M. A., Williamson, N., & Armfield, S. W. (2025). Mass-conserving ghost cell immersed boundary method with multigrid for coupled Navier-Stokes solvers. Journal of Computational Physics, 114276.](https://www.sciencedirect.com/science/article/pii/S0021999125005595)
+
+* [George, M., Williamson, N., & Armfield, S. W. Coupled FAS Multigrid for the Incompressible Navier-Stokes Equations on Collocated Grids. Available at SSRN 5460400 (Under review in Computers & Fluids).](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5460400)
+
+
+* [George, M. A., (2026) A Rapid Steady Solver for the Navier-Stokes Equations, Ph.D. thesis, The University of Sydney]()
 
 
 ## Roadmap
 
-CAMIRA is a work in progress. Here are some upcoming featuresL
-* Inclusion of turbulence models to solve the RANS equations. Currently CAMIRA solves the steady laminar equations. Although it does have the option to include an unsteady term.
+CAMIRA is a work in progress. Here are some upcoming features:
+* Inclusion of wall models for turbulence models.
+* Addition of more sophisticated turbulence models, beyond the zero-equation models present. 
 * Support for GPU and CPU parallelism through the [RAJA Portability Suite](https://github.com/LLNL/RAJA).
 
 
@@ -67,7 +74,7 @@ CAMIRA is a work in progress. Here are some upcoming featuresL
 
 For any questions, ideas, suggestions, or bugs, please do not hesitate to contact me:
 
-Mark George - **mark.george@sydney.edu.au**
+Mark George - **markgeorge0311@hotmail.com**
 
 
 
