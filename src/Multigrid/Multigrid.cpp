@@ -43,15 +43,22 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels,
 
 
         // Boundary condition data
+        TIC("Boundary Condition")
         SetBoundaryConditionData(mgl.bcData, inputData, mgl.mesh);
+        TOC()
 
         // Immersed boundary data
+        TIC("Immersed Boundary")
         SetImmersedBoundaryData(mgl.ibData, inputData, axisTransformation, mgl.mesh);
+        TOC()
 
         // Turbulence model data
+        TIC("Turbulence Model")
         SetTurbulenceModelData(mgl.turbModelData, inputData, axisTransformation, mgl.mesh, mgl.ibData, mgl.bcData);
+        TOC()
     
         // Allocate and initialise fields
+        TIC("Field  and Coefficient Initialisation")
         mgl.fields = FieldData<Tensor3D>( Tensor3D( mgl.mesh.nCells(0) + 2*nGhost, 
                                                     mgl.mesh.nCells(1) + 2*nGhost, 
                                                     mgl.mesh.nCells(2) + 2*nGhost) );
@@ -128,6 +135,7 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels,
         SetTensorZeroParallel( mgl.residualsRestricted );
         SetTensorZeroParallel( mgl.fineGridCorrection );
         SetTensorZeroParallel( mgl.coarseGridRightHandSide );
+        TOC()
 
         // Linear Solver
         switch ( inputData.smootherSettings.type ) {

@@ -70,44 +70,59 @@ void RemoveMaskSingleCellCavities( Tensor3D &mask,
     using FVT::G;
     using enum Axis::ENUMDATA;
 
-    for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
-        for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
-            for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
+    // It is possible for the filling of one cavity to create another
+    // Iterate until there are no more left. 
+    const intType maxIterations = 25;
+    for ( intType iters = 0; iters != maxIterations; iters++ ) {
 
-                // Must be a fluid cell
-                if ( static_cast<intType>( mask(G(i, j, k)) ) == CellType::Solid )
-                    continue;
+        intType numCavities = 0;
 
-                EnumVector<Axis, intType> maskedCount{0, 0, 0};
+        for ( intType k = 0; k != mesh.nCells[Z]; k++ ) {
+            for ( intType j = 0; j != mesh.nCells[Y]; j++ ) {
+                for ( intType i = 0; i != mesh.nCells[X]; i++ ) {
 
-                // x 
-                maskedCount[X] += 1 - static_cast<intType>( mask( G( i + 1, j, k ) ) );
-                maskedCount[X] += 1 - static_cast<intType>( mask( G( i - 1, j, k ) ) );
+                    // Must be a fluid cell
+                    if ( static_cast<intType>( mask(G(i, j, k)) ) == CellType::Solid )
+                        continue;
 
-                // y
-                maskedCount[Y] += 1 - static_cast<intType>( mask( G( i, j + 1, k ) ) );
-                maskedCount[Y] += 1 - static_cast<intType>( mask( G( i, j - 1, k ) ) );
+                    EnumVector<Axis, intType> maskedCount{0, 0, 0};
 
-                // z
-                maskedCount[Z] += 1 - static_cast<intType>( mask( G( i, j, k + 1 ) ) );
-                maskedCount[Z] += 1 - static_cast<intType>( mask( G( i, j, k - 1 ) ) );
+                    // x 
+                    maskedCount[X] += 1 - static_cast<intType>( mask( G( i + 1, j, k ) ) );
+                    maskedCount[X] += 1 - static_cast<intType>( mask( G( i - 1, j, k ) ) );
 
-                // Check for cavity
-                intType numMaskedNeighbourCells = 0;
-                bool hasDirectionWithBothSidesMasked = false;
-                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                    numMaskedNeighbourCells += maskedCount[axis];
-                    if ( maskedCount[axis] > 1 ) {
-                        hasDirectionWithBothSidesMasked = true;
+                    // y
+                    maskedCount[Y] += 1 - static_cast<intType>( mask( G( i, j + 1, k ) ) );
+                    maskedCount[Y] += 1 - static_cast<intType>( mask( G( i, j - 1, k ) ) );
+
+                    // z
+                    maskedCount[Z] += 1 - static_cast<intType>( mask( G( i, j, k + 1 ) ) );
+                    maskedCount[Z] += 1 - static_cast<intType>( mask( G( i, j, k - 1 ) ) );
+
+                    // Check for cavity
+                    intType numMaskedNeighbourCells = 0;
+                    bool hasDirectionWithBothSidesMasked = false;
+                    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                        numMaskedNeighbourCells += maskedCount[axis];
+                        if ( maskedCount[axis] > 1 ) {
+                            hasDirectionWithBothSidesMasked = true;
+                        }
+                    } );
+
+                    bool hasCavity = hasDirectionWithBothSidesMasked && numMaskedNeighbourCells > 2;
+                    if ( hasCavity ) {
+                        mask( G(i, j, k) ) = CellType::Solid;
+                        numCavities++;
                     }
-                } );
 
-                if ( hasDirectionWithBothSidesMasked && numMaskedNeighbourCells > 2 )
-                    mask( G(i, j, k) ) = CellType::Solid;
-
+                }
             }
         }
-    }
+
+        if ( numCavities == 0 ) 
+            break;
+
+    } 
 }
 
 
@@ -445,8 +460,6 @@ void SetImmersedBoundaryData( IBData &ibData,
         // Local mask for just this component
         Tensor3D localMask = CreateCellMask( tree, mesh );
 
-        RemoveMaskSingleCellCavities( localMask, mesh );
-
         // Add the contribution to the global mask
         ibData.mask *= localMask;
 
@@ -454,6 +467,9 @@ void SetImmersedBoundaryData( IBData &ibData,
         ibData.ibCells.emplace_back( CreateIBCellDataForComponent( localMask, tree, mesh, inputData ) );
 
     }
+
+    // Remove single cell cavities in the mask, which can cause instabilities
+    RemoveMaskSingleCellCavities( ibData.mask, mesh );
 }
 
 
