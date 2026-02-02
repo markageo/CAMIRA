@@ -17,6 +17,7 @@
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/Polygon_mesh_processing/connected_components.h>
 #include <CGAL/Aff_transformation_3.h>
+// #include <CGAL/Polygon_mesh_processing/split_connected_components.h>
 
 #include <boost/property_map/property_map.hpp>
 
@@ -379,38 +380,19 @@ Tree MakeAABBTree( const Polyhedron &polyhedron )
 }
 
 
+
 std::vector<Polyhedron> SeparatePolyhedron( const Polyhedron &polyhedron )
 {
-    using face_descriptor     = boost::graph_traits<Polyhedron>::face_descriptor;
-    using FaceComponentMap   = std::map<face_descriptor, std::size_t>;
-
     std::vector<Polyhedron> components;
-    if ( polyhedron.empty() )
+
+    if (polyhedron.empty())
         return components;
 
-    // FaceComponentMap holds references to the original polyhedron, a new one needs to be created for each sub polyhedron if keep_connected_components is to be used. 
-    // Need to create the map for the original poly so we know the number of components
-    FaceComponentMap faceComponentMap;
-    std::size_t nComponents = CGAL::Polygon_mesh_processing::connected_components( polyhedron, 
-                                                                                   boost::associative_property_map<FaceComponentMap>(faceComponentMap));
+    CGAL::Polygon_mesh_processing::split_connected_components(
+        polyhedron,
+        components
+    );
 
-    // Make a new poly for each component
-    for ( std::size_t i = 0; i != nComponents; i++ ) {
-
-        Polyhedron subPolyhedron = polyhedron;
-            
-        // Make FaceComponentMap for this poly
-        CGAL::Polygon_mesh_processing::connected_components( subPolyhedron, 
-                                                             boost::associative_property_map<FaceComponentMap>(faceComponentMap));
-
-        std::vector<std::size_t> componentsToKeep = {i};
-        
-        CGAL::Polygon_mesh_processing::keep_connected_components( subPolyhedron, 
-                                                                  componentsToKeep, 
-                                                                  boost::make_assoc_property_map(faceComponentMap));
-        components.push_back( std::move( subPolyhedron ) );
-    }
-    
     return components;
 }
 
