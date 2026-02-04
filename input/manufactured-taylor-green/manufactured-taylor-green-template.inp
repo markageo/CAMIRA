@@ -1,5 +1,3 @@
-// Lid driven cavity
-
 Model {
     nu              = 1
     transient       = no

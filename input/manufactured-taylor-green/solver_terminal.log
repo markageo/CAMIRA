@@ -156,19 +156,19 @@ iteration: 69   , U: 1.810273e-09,   V: 1.810273e-09,   W: 1.265317e-09,   Local
 *** SOLUTION CONVERGED ***
 
 
-[CAMIRA_ Profiling:                           0.13s] [nCalls   1] (100.00%)
-[    Untimed:                                 0.00s] [nCalls   1] (  0.12%)
-[    Pre processing:                          0.00s] [nCalls   1] (  1.72%)
-[    Solver Loop:                             0.13s] [nCalls   1] ( 98.17%)
-[        Untimed:                             0.00s] [nCalls   1] (  2.13%)
-[        Multigrid Cycling:                   0.09s] [nCalls  69] ( 66.79%)
-[            Untimed:                         0.01s] [nCalls  69] (  4.50%)
-[            Setting Ghost Cells:             0.01s] [nCalls 414] (  7.50%)
-[            Sweeping:                        0.04s] [nCalls 414] ( 30.65%)
-[            Updating Coefficients:           0.03s] [nCalls  69] ( 24.13%)
-[        Residuals and Logging:               0.04s] [nCalls  69] ( 29.25%)
-[            Untimed:                         0.01s] [nCalls  69] (  4.95%)
-[            Updating Coefficients:           0.03s] [nCalls  69] ( 24.30%)
+[CAMIRA_ Profiling:                           0.40s] [nCalls   1] (100.00%)
+[    Untimed:                                 0.00s] [nCalls   1] (  0.09%)
+[    Pre processing:                          0.01s] [nCalls   1] (  2.00%)
+[    Solver Loop:                             0.39s] [nCalls   1] ( 97.91%)
+[        Untimed:                             0.01s] [nCalls   1] (  2.92%)
+[        Multigrid Cycling:                   0.25s] [nCalls  69] ( 63.01%)
+[            Untimed:                         0.01s] [nCalls  69] (  3.03%)
+[            Setting Ghost Cells:             0.01s] [nCalls 414] (  2.46%)
+[            Sweeping:                        0.13s] [nCalls 414] ( 32.24%)
+[            Updating Coefficients:           0.10s] [nCalls  69] ( 25.29%)
+[        Residuals and Logging:               0.13s] [nCalls  69] ( 31.98%)
+[            Untimed:                         0.03s] [nCalls  69] (  6.47%)
+[            Updating Coefficients:           0.10s] [nCalls  69] ( 25.51%)
 
 
 
@@ -589,19 +589,19 @@ iteration: 200  , U: 3.497831e-09,   V: 3.497831e-09,   W: 7.660179e-10,   Local
 *** SOLUTION CONVERGED ***
 
 
-[CAMIRA_ Profiling:                           2.95s] [nCalls    1] (100.00%)
-[    Untimed:                                 0.00s] [nCalls    1] (  0.00%)
-[    Pre processing:                          0.01s] [nCalls    1] (  0.46%)
-[    Solver Loop:                             2.94s] [nCalls    1] ( 99.54%)
-[        Untimed:                             0.02s] [nCalls    1] (  0.70%)
-[        Multigrid Cycling:                   2.04s] [nCalls  200] ( 69.04%)
-[            Untimed:                         0.14s] [nCalls  200] (  4.80%)
-[            Setting Ghost Cells:             0.10s] [nCalls 1200] (  3.37%)
-[            Sweeping:                        1.08s] [nCalls 1200] ( 36.72%)
-[            Updating Coefficients:           0.71s] [nCalls  200] ( 24.15%)
-[        Residuals and Logging:               0.88s] [nCalls  200] ( 29.80%)
-[            Untimed:                         0.16s] [nCalls  200] (  5.56%)
-[            Updating Coefficients:           0.72s] [nCalls  200] ( 24.24%)
+[CAMIRA_ Profiling:                           4.92s] [nCalls    1] (100.00%)
+[    Untimed:                                 0.00s] [nCalls    1] (  0.01%)
+[    Pre processing:                          0.03s] [nCalls    1] (  0.60%)
+[    Solver Loop:                             4.89s] [nCalls    1] ( 99.40%)
+[        Untimed:                             0.04s] [nCalls    1] (  0.78%)
+[        Multigrid Cycling:                   3.55s] [nCalls  200] ( 72.07%)
+[            Untimed:                         0.24s] [nCalls  200] (  4.89%)
+[            Setting Ghost Cells:             0.07s] [nCalls 1200] (  1.38%)
+[            Sweeping:                        2.21s] [nCalls 1200] ( 44.85%)
+[            Updating Coefficients:           1.03s] [nCalls  200] ( 20.96%)
+[        Residuals and Logging:               1.31s] [nCalls  200] ( 26.54%)
+[            Untimed:                         0.28s] [nCalls  200] (  5.69%)
+[            Updating Coefficients:           1.03s] [nCalls  200] ( 20.85%)
 
 
 
@@ -647,206 +647,19 @@ iteration: 4    , U: 2.797894e-11,   V: 2.797894e-11,   W: 1.784084e-11,   Local
 *** SOLUTION CONVERGED ***
 
 
-[CAMIRA_ Profiling:                          13.33s] [nCalls    1] (100.00%)
+[CAMIRA_ Profiling:                          24.39s] [nCalls    1] (100.00%)
 [    Untimed:                                 0.00s] [nCalls    1] (  0.00%)
-[    Pre processing:                          0.11s] [nCalls    1] (  0.85%)
-[    Solver Loop:                            13.22s] [nCalls    1] ( 99.15%)
-[        Untimed:                             0.16s] [nCalls    1] (  1.22%)
-[        Multigrid Cycling:                  12.91s] [nCalls    4] ( 96.85%)
-[            Untimed:                         1.43s] [nCalls    4] ( 10.70%)
-[            Setting Ghost Cells:             0.51s] [nCalls 5592] (  3.79%)
-[            Sweeping:                        6.44s] [nCalls 5592] ( 48.34%)
-[            Updating Coefficients:           4.53s] [nCalls  948] ( 34.02%)
-[        Residuals and Logging:               0.15s] [nCalls    4] (  1.09%)
-[            Untimed:                         0.02s] [nCalls    4] (  0.18%)
-[            Updating Coefficients:           0.12s] [nCalls    4] (  0.91%)
-
-
-
-================= Now running case ================= 
-Advection Scheme:      upwind
-Mesh:                  160x160x160
-Reading input file 'manufactured-taylor-green.inp' ... Success.
-
-Generating mesh ... Success.
-Number of cells        : 4096000
-Min. cell growth ratios: (1, 1, 1)
-Max. cell growth ratios: (1, 1, 1)
-Min. cell aspect ratio : 1
-Max. cell aspect ratio : 1
-
-Convergence Residuals:
-iteration: 0    , U: 3.257084e+07,   V: 3.257084e+07,   W: 6.368691e+07,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
-   Level 2, relative residuals: 9.356946e-07, 9.356946e-07, 6.083724e-07, 6.311141e-06,  after 100 iterations.
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 1.773919e-07, 1.773919e-07, 8.286471e-08, 1.987899e-01,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 8.398641e-08, 8.398641e-08, 3.781224e-08, 5.415850e-05,  after 100 iterations.
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 1.403281e-08, 1.403281e-08, 9.627741e-09, 1.390944e-05,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 1.633777e-08, 1.633777e-08, 8.780008e-09, 1.025509e-05,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 1    , U: 2.235666e-06,   V: 2.235666e-06,   W: 2.067955e-06,   Local Coninuity: 1.111788e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 4.732979e-09, 4.732979e-09, 2.584564e-09, 3.407836e-06,  after 100 iterations.
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 4.081120e-10, 4.081120e-10, 3.258786e-10, 5.390500e-07,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 1.757541e-10, 1.757541e-10, 1.019641e-10, 1.471342e-07,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 2    , U: 3.288987e-08,   V: 3.288987e-08,   W: 2.622326e-08,   Local Coninuity: 1.261979e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 5.565241e-11, 5.565241e-11, 3.178574e-11, 4.484562e-08,  after 100 iterations.
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 6.151266e-12, 6.151267e-12, 5.091638e-12, 8.684581e-09,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 1.724992e-12, 1.724993e-12, 1.115681e-12, 1.722139e-09,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 3    , U: 5.763831e-10,   V: 5.763831e-10,   W: 4.058801e-10,   Local Coninuity: 2.013537e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 6.794644e-13, 6.794646e-13, 4.348397e-13, 6.465818e-10,  after 100 iterations.
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 2.396744e-13, 2.396743e-13, 9.647082e-14, 9.857753e-11,  after 94 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 1.783288e-13, 1.783304e-13, 5.240660e-14, 9.297164e-11,  after 76 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 4    , U: 1.206269e-11,   V: 1.206269e-11,   W: 8.305319e-12,   Local Coninuity: 4.174071e-10,   Global Mass Flux: 0.000000e+00
-*** SOLUTION CONVERGED ***
-
-
-[CAMIRA_ Profiling:                          48.46s] [nCalls    1] (100.00%)
-[    Untimed:                                 0.00s] [nCalls    1] (  0.00%)
-[    Pre processing:                          0.87s] [nCalls    1] (  1.80%)
-[    Solver Loop:                            47.59s] [nCalls    1] ( 98.20%)
-[        Untimed:                             1.51s] [nCalls    1] (  3.11%)
-[        Multigrid Cycling:                  44.85s] [nCalls    4] ( 92.55%)
-[            Untimed:                         5.07s] [nCalls    4] ( 10.46%)
-[            Setting Ghost Cells:             1.14s] [nCalls 8664] (  2.35%)
-[            Sweeping:                       21.71s] [nCalls 8664] ( 44.79%)
-[            Updating Coefficients:          16.94s] [nCalls 1488] ( 34.95%)
-[        Residuals and Logging:               1.23s] [nCalls    4] (  2.54%)
-[            Untimed:                         0.27s] [nCalls    4] (  0.55%)
-[            Updating Coefficients:           0.96s] [nCalls    4] (  1.99%)
-
-
-
-================= Now running case ================= 
-Advection Scheme:      upwind
-Mesh:                  320x320x320
-Reading input file 'manufactured-taylor-green.inp' ... Success.
-
-Generating mesh ... Success.
-Number of cells        : 32768000
-Min. cell growth ratios: (1, 1, 1)
-Max. cell growth ratios: (1, 1, 1)
-Min. cell aspect ratio : 1
-Max. cell aspect ratio : 1
-
-Convergence Residuals:
-iteration: 0    , U: 2.605660e+08,   V: 2.605660e+08,   W: 5.094932e+08,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
-    Level 3, relative residuals: 9.356946e-07, 9.356946e-07, 6.083724e-07, 6.311141e-06,  after 100 iterations.
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 1.773919e-07, 1.773919e-07, 8.286471e-08, 1.987899e-01,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 8.398641e-08, 8.398641e-08, 3.781224e-08, 5.415850e-05,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 2.856060e-08, 2.856060e-08, 1.315281e-08, 1.718463e-05,  after 100 iterations.
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 6.740012e-09, 6.740012e-09, 4.649621e-09, 6.161014e-06,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 7.539082e-09, 7.539082e-09, 4.491821e-09, 5.559874e-06,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 7.744163e-09, 7.744163e-09, 4.203216e-09, 4.283293e-06,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 1    , U: 5.701410e-07,   V: 5.701410e-07,   W: 5.995872e-07,   Local Coninuity: 6.322042e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 2.885806e-09, 2.885806e-09, 1.587162e-09, 1.890036e-06,  after 100 iterations.
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 2.692815e-10, 2.692815e-10, 2.083626e-10, 2.968242e-07,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 1.644249e-11, 1.644249e-11, 1.175479e-11, 2.207819e-08,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 6.205012e-11, 6.205012e-11, 4.195531e-11, 6.087995e-08,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 2    , U: 6.920644e-09,   V: 6.920644e-09,   W: 6.735600e-09,   Local Coninuity: 6.808616e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 2.226950e-11, 2.226950e-11, 1.446108e-11, 2.103099e-08,  after 100 iterations.
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 2.396967e-12, 2.396966e-12, 1.949778e-12, 3.755717e-09,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 8.851939e-13, 8.851928e-13, 7.702557e-13, 1.484149e-09,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 8.093359e-13, 8.093360e-13, 6.633377e-13, 1.150111e-09,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 3    , U: 9.513261e-11,   V: 9.513261e-11,   W: 8.983857e-11,   Local Coninuity: 8.894087e-09,   Global Mass Flux: 0.000000e+00
-*** SOLUTION CONVERGED ***
-
-
-[CAMIRA_ Profiling:                         230.41s] [nCalls    1] (100.00%)
-[    Untimed:                                 0.00s] [nCalls    1] (  0.00%)
-[    Pre processing:                          6.67s] [nCalls    1] (  2.90%)
-[    Solver Loop:                           223.74s] [nCalls    1] ( 97.10%)
-[        Untimed:                            13.24s] [nCalls    1] (  5.75%)
-[        Multigrid Cycling:                 202.49s] [nCalls    3] ( 87.88%)
-[            Untimed:                        24.22s] [nCalls    3] ( 10.51%)
-[            Setting Ghost Cells:             2.37s] [nCalls 9648] (  1.03%)
-[            Sweeping:                       96.88s] [nCalls 9648] ( 42.05%)
-[            Updating Coefficients:          79.02s] [nCalls 1668] ( 34.30%)
-[        Residuals and Logging:               8.01s] [nCalls    3] (  3.48%)
-[            Untimed:                         1.78s] [nCalls    3] (  0.77%)
-[            Updating Coefficients:           6.23s] [nCalls    3] (  2.70%)
+[    Pre processing:                          0.19s] [nCalls    1] (  0.80%)
+[    Solver Loop:                            24.20s] [nCalls    1] ( 99.20%)
+[        Untimed:                             0.26s] [nCalls    1] (  1.08%)
+[        Multigrid Cycling:                  23.70s] [nCalls    4] ( 97.18%)
+[            Untimed:                         2.33s] [nCalls    4] (  9.54%)
+[            Setting Ghost Cells:             0.37s] [nCalls 5592] (  1.50%)
+[            Sweeping:                       13.68s] [nCalls 5592] ( 56.08%)
+[            Updating Coefficients:           7.33s] [nCalls  948] ( 30.06%)
+[        Residuals and Logging:               0.23s] [nCalls    4] (  0.94%)
+[            Untimed:                         0.04s] [nCalls    4] (  0.18%)
+[            Updating Coefficients:           0.18s] [nCalls    4] (  0.76%)
 
 
 
@@ -1005,19 +818,19 @@ iteration: 69   , U: 1.815209e-09,   V: 1.815209e-09,   W: 1.277275e-09,   Local
 *** SOLUTION CONVERGED ***
 
 
-[CAMIRA_ Profiling:                           0.14s] [nCalls   1] (100.00%)
+[CAMIRA_ Profiling:                           0.27s] [nCalls   1] (100.00%)
 [    Untimed:                                 0.00s] [nCalls   1] (  0.10%)
-[    Pre processing:                          0.00s] [nCalls   1] (  1.76%)
-[    Solver Loop:                             0.14s] [nCalls   1] ( 98.14%)
-[        Untimed:                             0.00s] [nCalls   1] (  2.01%)
-[        Multigrid Cycling:                   0.09s] [nCalls  69] ( 65.57%)
-[            Untimed:                         0.01s] [nCalls  69] (  4.00%)
-[            Setting Ghost Cells:             0.01s] [nCalls 414] (  7.01%)
-[            Sweeping:                        0.04s] [nCalls 414] ( 29.01%)
-[            Updating Coefficients:           0.04s] [nCalls  69] ( 25.55%)
-[        Residuals and Logging:               0.04s] [nCalls  69] ( 30.57%)
-[            Untimed:                         0.01s] [nCalls  69] (  4.86%)
-[            Updating Coefficients:           0.04s] [nCalls  69] ( 25.71%)
+[    Pre processing:                          0.00s] [nCalls   1] (  1.54%)
+[    Solver Loop:                             0.27s] [nCalls   1] ( 98.37%)
+[        Untimed:                             0.01s] [nCalls   1] (  1.89%)
+[        Multigrid Cycling:                   0.17s] [nCalls  69] ( 62.57%)
+[            Untimed:                         0.01s] [nCalls  69] (  3.59%)
+[            Setting Ghost Cells:             0.01s] [nCalls 414] (  2.97%)
+[            Sweeping:                        0.07s] [nCalls 414] ( 26.53%)
+[            Updating Coefficients:           0.08s] [nCalls  69] ( 29.48%)
+[        Residuals and Logging:               0.09s] [nCalls  69] ( 33.90%)
+[            Untimed:                         0.01s] [nCalls  69] (  4.01%)
+[            Updating Coefficients:           0.08s] [nCalls  69] ( 29.88%)
 
 
 
@@ -1438,19 +1251,19 @@ iteration: 200  , U: 3.502367e-09,   V: 3.502367e-09,   W: 7.660556e-10,   Local
 *** SOLUTION CONVERGED ***
 
 
-[CAMIRA_ Profiling:                           3.20s] [nCalls    1] (100.00%)
-[    Untimed:                                 0.00s] [nCalls    1] (  0.00%)
-[    Pre processing:                          0.01s] [nCalls    1] (  0.43%)
-[    Solver Loop:                             3.18s] [nCalls    1] ( 99.56%)
-[        Untimed:                             0.02s] [nCalls    1] (  0.67%)
-[        Multigrid Cycling:                   2.19s] [nCalls  200] ( 68.45%)
-[            Untimed:                         0.14s] [nCalls  200] (  4.46%)
-[            Setting Ghost Cells:             0.10s] [nCalls 1200] (  3.13%)
-[            Sweeping:                        1.13s] [nCalls 1200] ( 35.49%)
-[            Updating Coefficients:           0.81s] [nCalls  200] ( 25.37%)
-[        Residuals and Logging:               0.97s] [nCalls  200] ( 30.44%)
-[            Untimed:                         0.17s] [nCalls  200] (  5.27%)
-[            Updating Coefficients:           0.80s] [nCalls  200] ( 25.17%)
+[CAMIRA_ Profiling:                           6.50s] [nCalls    1] (100.00%)
+[    Untimed:                                 0.00s] [nCalls    1] (  0.01%)
+[    Pre processing:                          0.03s] [nCalls    1] (  0.53%)
+[    Solver Loop:                             6.47s] [nCalls    1] ( 99.46%)
+[        Untimed:                             0.04s] [nCalls    1] (  0.63%)
+[        Multigrid Cycling:                   4.48s] [nCalls  200] ( 68.88%)
+[            Untimed:                         0.24s] [nCalls  200] (  3.70%)
+[            Setting Ghost Cells:             0.07s] [nCalls 1200] (  1.00%)
+[            Sweeping:                        2.53s] [nCalls 1200] ( 38.90%)
+[            Updating Coefficients:           1.64s] [nCalls  200] ( 25.28%)
+[        Residuals and Logging:               1.95s] [nCalls  200] ( 29.95%)
+[            Untimed:                         0.29s] [nCalls  200] (  4.46%)
+[            Updating Coefficients:           1.66s] [nCalls  200] ( 25.49%)
 
 
 
@@ -1496,203 +1309,16 @@ iteration: 4    , U: 2.791995e-11,   V: 2.791995e-11,   W: 1.781687e-11,   Local
 *** SOLUTION CONVERGED ***
 
 
-[CAMIRA_ Profiling:                          13.62s] [nCalls    1] (100.00%)
+[CAMIRA_ Profiling:                          27.30s] [nCalls    1] (100.00%)
 [    Untimed:                                 0.00s] [nCalls    1] (  0.00%)
-[    Pre processing:                          0.12s] [nCalls    1] (  0.85%)
-[    Solver Loop:                            13.51s] [nCalls    1] ( 99.15%)
-[        Untimed:                             0.17s] [nCalls    1] (  1.22%)
-[        Multigrid Cycling:                  13.18s] [nCalls    4] ( 96.76%)
-[            Untimed:                         1.38s] [nCalls    4] ( 10.15%)
-[            Setting Ghost Cells:             0.51s] [nCalls 5592] (  3.72%)
-[            Sweeping:                        6.34s] [nCalls 5592] ( 46.56%)
-[            Updating Coefficients:           4.95s] [nCalls  948] ( 36.33%)
-[        Residuals and Logging:               0.16s] [nCalls    4] (  1.17%)
-[            Untimed:                         0.02s] [nCalls    4] (  0.17%)
-[            Updating Coefficients:           0.14s] [nCalls    4] (  1.00%)
-
-
-
-================= Now running case ================= 
-Advection Scheme:      QUICK
-Mesh:                  160x160x160
-Reading input file 'manufactured-taylor-green.inp' ... Success.
-
-Generating mesh ... Success.
-Number of cells        : 4096000
-Min. cell growth ratios: (1, 1, 1)
-Max. cell growth ratios: (1, 1, 1)
-Min. cell aspect ratio : 1
-Max. cell aspect ratio : 1
-
-Convergence Residuals:
-iteration: 0    , U: 3.257084e+07,   V: 3.257084e+07,   W: 6.368691e+07,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
-   Level 2, relative residuals: 9.376566e-07, 9.376566e-07, 6.108467e-07, 6.321497e-06,  after 100 iterations.
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 1.775498e-07, 1.775498e-07, 8.299264e-08, 1.988634e-01,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 8.408203e-08, 8.408203e-08, 3.787547e-08, 5.428200e-05,  after 100 iterations.
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 1.405711e-08, 1.405711e-08, 9.637768e-09, 1.392579e-05,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 1.635842e-08, 1.635842e-08, 8.786795e-09, 1.026610e-05,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 1    , U: 2.234624e-06,   V: 2.234624e-06,   W: 2.066616e-06,   Local Coninuity: 1.111353e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 4.738325e-09, 4.738325e-09, 2.586136e-09, 3.410405e-06,  after 100 iterations.
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 4.083332e-10, 4.083332e-10, 3.259605e-10, 5.392236e-07,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 1.760587e-10, 1.760587e-10, 1.021124e-10, 1.473687e-07,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 2    , U: 3.288435e-08,   V: 3.288435e-08,   W: 2.621526e-08,   Local Coninuity: 1.261841e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 5.574504e-11, 5.574504e-11, 3.182146e-11, 4.489542e-08,  after 100 iterations.
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 6.154115e-12, 6.154115e-12, 5.093403e-12, 8.687019e-09,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 1.729152e-12, 1.729153e-12, 1.118073e-12, 1.725448e-09,  after 100 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 3    , U: 5.765036e-10,   V: 5.765036e-10,   W: 4.058291e-10,   Local Coninuity: 2.013842e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 6.804430e-13, 6.804421e-13, 4.352655e-13, 6.471421e-10,  after 100 iterations.
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 2.395162e-13, 2.395151e-13, 9.634371e-14, 9.866193e-11,  after 94 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, relative residuals: 1.778401e-13, 1.778401e-13, 5.214548e-14, 9.307252e-11,  after 76 iterations.
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 4    , U: 1.206934e-11,   V: 1.206934e-11,   W: 8.307139e-12,   Local Coninuity: 4.176244e-10,   Global Mass Flux: 0.000000e+00
-*** SOLUTION CONVERGED ***
-
-
-[CAMIRA_ Profiling:                          50.39s] [nCalls    1] (100.00%)
-[    Untimed:                                 0.00s] [nCalls    1] (  0.00%)
-[    Pre processing:                          0.94s] [nCalls    1] (  1.86%)
-[    Solver Loop:                            49.45s] [nCalls    1] ( 98.14%)
-[        Untimed:                             1.53s] [nCalls    1] (  3.03%)
-[        Multigrid Cycling:                  46.56s] [nCalls    4] ( 92.41%)
-[            Untimed:                         5.05s] [nCalls    4] ( 10.02%)
-[            Setting Ghost Cells:             1.16s] [nCalls 8664] (  2.30%)
-[            Sweeping:                       21.65s] [nCalls 8664] ( 42.96%)
-[            Updating Coefficients:          18.71s] [nCalls 1488] ( 37.13%)
-[        Residuals and Logging:               1.36s] [nCalls    4] (  2.70%)
-[            Untimed:                         0.27s] [nCalls    4] (  0.53%)
-[            Updating Coefficients:           1.09s] [nCalls    4] (  2.16%)
-
-
-
-================= Now running case ================= 
-Advection Scheme:      QUICK
-Mesh:                  320x320x320
-Reading input file 'manufactured-taylor-green.inp' ... Success.
-
-Generating mesh ... Success.
-Number of cells        : 32768000
-Min. cell growth ratios: (1, 1, 1)
-Max. cell growth ratios: (1, 1, 1)
-Min. cell aspect ratio : 1
-Max. cell aspect ratio : 1
-
-Convergence Residuals:
-iteration: 0    , U: 2.605660e+08,   V: 2.605660e+08,   W: 5.094932e+08,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
-    Level 3, relative residuals: 9.376566e-07, 9.376566e-07, 6.108467e-07, 6.321497e-06,  after 100 iterations.
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 1.775498e-07, 1.775498e-07, 8.299264e-08, 1.988634e-01,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 8.408203e-08, 8.408203e-08, 3.787547e-08, 5.428200e-05,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 2.860099e-08, 2.860099e-08, 1.318400e-08, 1.723557e-05,  after 100 iterations.
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 6.753703e-09, 6.753703e-09, 4.655661e-09, 6.169579e-06,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 7.549012e-09, 7.549012e-09, 4.495363e-09, 5.564893e-06,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 7.754726e-09, 7.754726e-09, 4.206674e-09, 4.287692e-06,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 1    , U: 5.699928e-07,   V: 5.699928e-07,   W: 5.993258e-07,   Local Coninuity: 6.320391e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 2.889244e-09, 2.889244e-09, 1.588176e-09, 1.891500e-06,  after 100 iterations.
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 2.693880e-10, 2.693880e-10, 2.083785e-10, 2.968771e-07,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 1.642021e-11, 1.642021e-11, 1.173298e-11, 2.205973e-08,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 6.218564e-11, 6.218564e-11, 4.201658e-11, 6.096441e-08,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 2    , U: 6.919448e-09,   V: 6.919448e-09,   W: 6.732604e-09,   Local Coninuity: 6.806578e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 2.230316e-11, 2.230316e-11, 1.447628e-11, 2.105454e-08,  after 100 iterations.
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 2.401450e-12, 2.401451e-12, 1.952887e-12, 3.761915e-09,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 8.868572e-13, 8.868582e-13, 7.719048e-13, 1.487012e-09,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-  Level 1, performed 2 iterations
-   Level 2, performed 2 iterations
-    Level 3, relative residuals: 8.112732e-13, 8.112732e-13, 6.645881e-13, 1.152121e-09,  after 100 iterations.
-   Level 2, performed 2 iterations
-  Level 1, performed 2 iterations
- Level 0, performed 3 iterations
-iteration: 3    , U: 9.513466e-11,   V: 9.513466e-11,   W: 8.980375e-11,   Local Coninuity: 8.892324e-09,   Global Mass Flux: 0.000000e+00
-*** SOLUTION CONVERGED ***
-
-
-[CAMIRA_ Profiling:                         243.86s] [nCalls    1] (100.00%)
-[    Untimed:                                 0.00s] [nCalls    1] (  0.00%)
-[    Pre processing:                          6.98s] [nCalls    1] (  2.86%)
-[    Solver Loop:                           236.88s] [nCalls    1] ( 97.14%)
-[        Untimed:                            12.54s] [nCalls    1] (  5.14%)
-[        Multigrid Cycling:                 215.90s] [nCalls    3] ( 88.54%)
-[            Untimed:                        23.80s] [nCalls    3] (  9.76%)
-[            Setting Ghost Cells:             2.34s] [nCalls 9648] (  0.96%)
-[            Sweeping:                       97.79s] [nCalls 9648] ( 40.10%)
-[            Updating Coefficients:          91.98s] [nCalls 1668] ( 37.72%)
-[        Residuals and Logging:               8.44s] [nCalls    3] (  3.46%)
-[            Untimed:                         1.67s] [nCalls    3] (  0.69%)
-[            Updating Coefficients:           6.76s] [nCalls    3] (  2.77%)
+[    Pre processing:                          0.21s] [nCalls    1] (  0.77%)
+[    Solver Loop:                            27.09s] [nCalls    1] ( 99.23%)
+[        Untimed:                             0.28s] [nCalls    1] (  1.03%)
+[        Multigrid Cycling:                  26.51s] [nCalls    4] ( 97.13%)
+[            Untimed:                         2.32s] [nCalls    4] (  8.49%)
+[            Setting Ghost Cells:             0.42s] [nCalls 5592] (  1.53%)
+[            Sweeping:                       14.20s] [nCalls 5592] ( 52.02%)
+[            Updating Coefficients:           9.58s] [nCalls  948] ( 35.10%)
+[        Residuals and Logging:               0.29s] [nCalls    4] (  1.06%)
+[            Untimed:                         0.04s] [nCalls    4] (  0.16%)
+[            Updating Coefficients:           0.25s] [nCalls    4] (  0.91%)
