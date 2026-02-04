@@ -2078,6 +2078,47 @@ void ZeroNonlinearCoeffs( FVCoefficients &fvCoeffs )
 }
 
 
+
+// Add source term for method of manufactured solutions
+void AddManufacturedSolutionSourceTerm( FVCoefficients &fvCoeffs, 
+                                        const Mesh &mesh )
+{
+
+    using enum Axis::ENUMDATA;
+    using FVT::G;
+
+    const floatType L = 1,
+                    nu = fvCoeffs.nu,
+                    rho = fvCoeffs.rho;
+
+    for ( intType k = 0; k != mesh.nCells(Z); k++ ) {
+        for ( intType j = 0; j != mesh.nCells(Y); j++ ) {
+            for ( intType i = 0; i != mesh.nCells(X); i++ ) {
+
+                const floatType x = mesh.cellCenters[X](i),
+                                y = mesh.cellCenters[Y](j),
+                                z = mesh.cellCenters[Z](k);
+
+                const floatType Sx = -M_PI*std::sin(M_PI*x/L)*std::pow(std::sin(M_PI*y/L), 2)*std::cos(M_PI*x/L)*std::pow(std::cos(M_PI*z/L), 2)/L + 2*M_PI*std::sin(M_PI*x/L)*std::pow(std::sin(M_PI*z/L), 2)*std::cos(M_PI*x/L)*std::pow(std::cos(M_PI*y/L), 2)/L + M_PI*std::sin(M_PI*x/L)*std::cos(M_PI*x/L)*std::pow(std::cos(M_PI*y/L), 2)*std::pow(std::cos(M_PI*z/L), 2)/L + M_PI*std::sin(M_PI*y/L)*std::sin(M_PI*z/L)*std::cos(M_PI*x/L)/(L*rho) + 3*std::pow(M_PI, 2)*nu*std::sin(M_PI*x/L)*std::cos(M_PI*y/L)*std::cos(M_PI*z/L)/std::pow(L, 2);
+
+                const floatType Sy = -M_PI*std::pow(std::sin(M_PI*x/L), 2)*std::sin(M_PI*y/L)*std::cos(M_PI*y/L)*std::pow(std::cos(M_PI*z/L), 2)/L + 2*M_PI*std::sin(M_PI*y/L)*std::pow(std::sin(M_PI*z/L), 2)*std::pow(std::cos(M_PI*x/L), 2)*std::cos(M_PI*y/L)/L + M_PI*std::sin(M_PI*y/L)*std::pow(std::cos(M_PI*x/L), 2)*std::cos(M_PI*y/L)*std::pow(std::cos(M_PI*z/L), 2)/L + M_PI*std::sin(M_PI*x/L)*std::sin(M_PI*z/L)*std::cos(M_PI*y/L)/(L*rho) + 3*std::pow(M_PI, 2)*nu*std::sin(M_PI*y/L)*std::cos(M_PI*x/L)*std::cos(M_PI*z/L)/std::pow(L, 2);
+
+                const floatType Sz = 2*M_PI*std::pow(std::sin(M_PI*x/L), 2)*std::sin(M_PI*z/L)*std::pow(std::cos(M_PI*y/L), 2)*std::cos(M_PI*z/L)/L + 2*M_PI*std::pow(std::sin(M_PI*y/L), 2)*std::sin(M_PI*z/L)*std::pow(std::cos(M_PI*x/L), 2)*std::cos(M_PI*z/L)/L + 4*M_PI*std::sin(M_PI*z/L)*std::pow(std::cos(M_PI*x/L), 2)*std::pow(std::cos(M_PI*y/L), 2)*std::cos(M_PI*z/L)/L + M_PI*std::sin(M_PI*x/L)*std::sin(M_PI*y/L)*std::cos(M_PI*z/L)/(L*rho) - 6*std::pow(M_PI, 2)*nu*std::sin(M_PI*z/L)*std::cos(M_PI*x/L)*std::cos(M_PI*y/L)/std::pow(L, 2);
+
+
+                fvCoeffs.Mom[X].B( G(i, j, k) ) += - Sx;
+
+                fvCoeffs.Mom[Y].B( G(i, j, k) ) += - Sy;
+
+                fvCoeffs.Mom[Z].B( G(i, j, k) ) += - Sz;
+
+            }
+        }
+    }
+
+}
+
+
 }   // end anonymous namespace
 
 
@@ -2092,8 +2133,7 @@ void InitialiseFVCoefficients( FVCoefficients &fvCoeffs,
                                const Mesh &mesh,
                                const InputData &inputData)
 {
-    // Assumes fvCoeffs has been initialised to the correct
-
+    // Assumes fvCoeffs has been initialised to the correct dimensions
     fvCoeffs.rho = inputData.rho;
     fvCoeffs.nu  = inputData.nu;
 
@@ -2143,6 +2183,8 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     SetMomentumInterpolationCoefficients(fvCoeffs, mesh, fields.P);
 
     AddIBSourceTerms(fvCoeffs, faceFluxes, ibData, fields, mesh);
+
+    AddManufacturedSolutionSourceTerm(fvCoeffs, mesh);
 }
 
 
