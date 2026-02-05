@@ -8,29 +8,29 @@ Model {
 
 Mesh {
 
-    domainLowerBounds = (0, 0, 0)
+    domainLowerBounds = (-1, -1, -1)
     domainUpperBounds = (1, 1, 1)
 
     Grid x {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 80
+            bounds     = (-1, 1)
+            nCells     = 320
             biasFactor = 1
         }
     }
 
     Grid y {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 80
+            bounds     = (-1, 1)
+            nCells     = 320
             biasFactor = 1
         }
     }
 
     Grid z {
         Segment {
-            bounds     = (0, 1)
-            nCells     = 80
+            bounds     = (-1, 1)
+            nCells     = 320
             biasFactor = 1
         }
     }
@@ -104,8 +104,8 @@ Solver {
         faceInterpolationScheme = weightedLinear
         
         maxOuterIterations = 10000
-        maxContinuityOuterResidual = 1e-8
-        maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
+        maxContinuityOuterResidual = 1e-12
+        maxMomentumOuterResiduals  = (1e-12, 1e-12, 1e-12)
 
     }
     
@@ -126,7 +126,7 @@ Solver {
 
     Multigrid {
         cycle = F
-        maxCoarseLevels = 1
+        maxCoarseLevels = 3
 
         preSmoothingIterations = 2
         postSmoothingIterations = 2
@@ -145,9 +145,9 @@ Parallel {
 
 Output {
 
-    residualHistoryFilename = "results/manufactured_taylor_green_80x80x80_QUICK/residual_history.csv"
-    profilingFilename       = "results/manufactured_taylor_green_80x80x80_QUICK/profiling.dat"
-    fieldOutputFilename     = "results/manufactured_taylor_green_80x80x80_QUICK/fields.vtk"
+    residualHistoryFilename = "results/manufactured_taylor_green_320x320x320_QUICK/residual_history.csv"
+    profilingFilename       = "results/manufactured_taylor_green_320x320x320_QUICK/profiling.dat"
+    fieldOutputFilename     = "results/manufactured_taylor_green_320x320x320_QUICK/fields.vtk"
     fieldWriteInterval      = 0
 
 }

@@ -2,668 +2,6 @@
 
 
 ================= Now running case ================= 
-Advection Scheme:      upwind
-Mesh:                  20x20x20
-Reading input file 'manufactured-taylor-green.inp' ... Success.
-
-Generating mesh ... Success.
-Number of cells        : 8000
-Min. cell growth ratios: (1, 1, 1)
-Max. cell growth ratios: (1, 1, 1)
-Min. cell aspect ratio : 1
-Max. cell aspect ratio : 1
-
-Convergence Residuals:
-iteration: 0    , U: 6.366447e+04,   V: 6.366447e+04,   W: 1.244530e+05,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 1    , U: 6.724085e-02,   V: 6.724085e-02,   W: 7.246350e-02,   Local Coninuity: 5.815688e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 2    , U: 2.827309e-02,   V: 2.827309e-02,   W: 3.006012e-02,   Local Coninuity: 3.727249e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 3    , U: 1.583596e-02,   V: 1.583596e-02,   W: 1.571521e-02,   Local Coninuity: 2.834674e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 4    , U: 9.573973e-03,   V: 9.573973e-03,   W: 9.183160e-03,   Local Coninuity: 1.534077e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 5    , U: 5.818275e-03,   V: 5.818275e-03,   W: 5.418982e-03,   Local Coninuity: 9.328891e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 6    , U: 3.744144e-03,   V: 3.744144e-03,   W: 3.429719e-03,   Local Coninuity: 6.427827e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 7    , U: 2.388792e-03,   V: 2.388792e-03,   W: 2.257440e-03,   Local Coninuity: 4.485094e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 8    , U: 1.575749e-03,   V: 1.575749e-03,   W: 1.503910e-03,   Local Coninuity: 3.130834e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 9    , U: 1.013056e-03,   V: 1.013056e-03,   W: 9.874999e-04,   Local Coninuity: 1.908165e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 10   , U: 6.583067e-04,   V: 6.583067e-04,   W: 6.479338e-04,   Local Coninuity: 1.232211e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 11   , U: 4.498455e-04,   V: 4.498455e-04,   W: 4.341606e-04,   Local Coninuity: 9.875575e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 12   , U: 3.160201e-04,   V: 3.160201e-04,   W: 2.938821e-04,   Local Coninuity: 7.787977e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 13   , U: 2.176501e-04,   V: 2.176501e-04,   W: 2.000931e-04,   Local Coninuity: 5.113844e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 14   , U: 1.405363e-04,   V: 1.405363e-04,   W: 1.343106e-04,   Local Coninuity: 2.529414e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 15   , U: 9.423664e-05,   V: 9.423664e-05,   W: 9.176858e-05,   Local Coninuity: 2.211636e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 16   , U: 7.759001e-05,   V: 7.759001e-05,   W: 6.706818e-05,   Local Coninuity: 2.854479e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 17   , U: 6.212388e-05,   V: 6.212388e-05,   W: 4.961479e-05,   Local Coninuity: 2.668089e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 18   , U: 4.410695e-05,   V: 4.410695e-05,   W: 3.914139e-05,   Local Coninuity: 1.826196e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 19   , U: 2.636035e-05,   V: 2.636035e-05,   W: 3.058277e-05,   Local Coninuity: 8.442804e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 20   , U: 1.626905e-05,   V: 1.626905e-05,   W: 2.112214e-05,   Local Coninuity: 6.052328e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 21   , U: 1.637948e-05,   V: 1.637948e-05,   W: 1.421085e-05,   Local Coninuity: 9.173579e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 22   , U: 1.676013e-05,   V: 1.676013e-05,   W: 1.108447e-05,   Local Coninuity: 9.611511e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 23   , U: 1.312213e-05,   V: 1.312213e-05,   W: 1.246343e-05,   Local Coninuity: 7.171522e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 24   , U: 7.787577e-06,   V: 7.787577e-06,   W: 1.182748e-05,   Local Coninuity: 3.908664e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 25   , U: 5.990744e-06,   V: 5.990744e-06,   W: 8.713468e-06,   Local Coninuity: 2.873257e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 26   , U: 7.023726e-06,   V: 7.023726e-06,   W: 5.510088e-06,   Local Coninuity: 3.495159e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 27   , U: 7.045738e-06,   V: 7.045738e-06,   W: 3.501266e-06,   Local Coninuity: 3.706581e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 28   , U: 5.237115e-06,   V: 5.237115e-06,   W: 4.568816e-06,   Local Coninuity: 2.954487e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 29   , U: 2.934172e-06,   V: 2.934172e-06,   W: 4.568778e-06,   Local Coninuity: 1.767869e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 30   , U: 2.814210e-06,   V: 2.814210e-06,   W: 3.492111e-06,   Local Coninuity: 1.214438e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 31   , U: 3.094538e-06,   V: 3.094538e-06,   W: 2.211038e-06,   Local Coninuity: 1.269015e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 32   , U: 2.942647e-06,   V: 2.942647e-06,   W: 1.307168e-06,   Local Coninuity: 1.380236e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 33   , U: 2.170062e-06,   V: 2.170062e-06,   W: 1.640419e-06,   Local Coninuity: 1.173953e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 34   , U: 1.260803e-06,   V: 1.260803e-06,   W: 1.719136e-06,   Local Coninuity: 7.785528e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 35   , U: 1.285703e-06,   V: 1.285703e-06,   W: 1.370966e-06,   Local Coninuity: 5.334653e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 36   , U: 1.333659e-06,   V: 1.333659e-06,   W: 8.791419e-07,   Local Coninuity: 4.739604e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 37   , U: 1.208856e-06,   V: 1.208856e-06,   W: 5.066608e-07,   Local Coninuity: 5.068270e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 38   , U: 8.867775e-07,   V: 8.867775e-07,   W: 5.796022e-07,   Local Coninuity: 4.548624e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 39   , U: 5.188636e-07,   V: 5.188636e-07,   W: 6.361527e-07,   Local Coninuity: 3.252939e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 40   , U: 5.369032e-07,   V: 5.369032e-07,   W: 5.265776e-07,   Local Coninuity: 2.245201e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 41   , U: 5.471611e-07,   V: 5.471611e-07,   W: 3.424403e-07,   Local Coninuity: 1.767250e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 42   , U: 4.825637e-07,   V: 4.825637e-07,   W: 1.948382e-07,   Local Coninuity: 1.827942e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 43   , U: 3.557121e-07,   V: 3.557121e-07,   W: 2.031679e-07,   Local Coninuity: 1.717960e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 44   , U: 2.098108e-07,   V: 2.098108e-07,   W: 2.314813e-07,   Local Coninuity: 1.308928e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 45   , U: 2.127973e-07,   V: 2.127973e-07,   W: 1.986115e-07,   Local Coninuity: 9.243192e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 46   , U: 2.179313e-07,   V: 2.179313e-07,   W: 1.317125e-07,   Local Coninuity: 6.671420e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 47   , U: 1.891748e-07,   V: 1.891748e-07,   W: 7.440819e-08,   Local Coninuity: 6.535129e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 48   , U: 1.401596e-07,   V: 1.401596e-07,   W: 7.053795e-08,   Local Coninuity: 6.348176e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 49   , U: 8.314596e-08,   V: 8.314596e-08,   W: 8.310814e-08,   Local Coninuity: 5.097829e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 50   , U: 8.093699e-08,   V: 8.093699e-08,   W: 7.374662e-08,   Local Coninuity: 3.703545e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 51   , U: 8.446468e-08,   V: 8.446468e-08,   W: 4.997849e-08,   Local Coninuity: 2.532194e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 52   , U: 7.291073e-08,   V: 7.291073e-08,   W: 2.815086e-08,   Local Coninuity: 2.321057e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 53   , U: 5.426854e-08,   V: 5.426854e-08,   W: 2.443967e-08,   Local Coninuity: 2.304062e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 54   , U: 3.250124e-08,   V: 3.250124e-08,   W: 2.951643e-08,   Local Coninuity: 1.935510e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 55   , U: 2.986383e-08,   V: 2.986383e-08,   W: 2.701969e-08,   Local Coninuity: 1.450765e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 56   , U: 3.203624e-08,   V: 3.203624e-08,   W: 1.873750e-08,   Local Coninuity: 9.651120e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 57   , U: 2.771600e-08,   V: 2.771600e-08,   W: 1.056427e-08,   Local Coninuity: 8.230305e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 58   , U: 2.070153e-08,   V: 2.070153e-08,   W: 8.457515e-09,   Local Coninuity: 8.241143e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 59   , U: 1.254730e-08,   V: 1.254730e-08,   W: 1.039401e-08,   Local Coninuity: 7.194666e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 60   , U: 1.076250e-08,   V: 1.076250e-08,   W: 9.788816e-09,   Local Coninuity: 5.567482e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 61   , U: 1.192860e-08,   V: 1.192860e-08,   W: 6.947959e-09,   Local Coninuity: 3.673651e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 62   , U: 1.040310e-08,   V: 1.040310e-08,   W: 3.931381e-09,   Local Coninuity: 2.926241e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 63   , U: 7.791538e-09,   V: 7.791538e-09,   W: 2.940102e-09,   Local Coninuity: 2.915529e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 64   , U: 4.790846e-09,   V: 4.790846e-09,   W: 3.635277e-09,   Local Coninuity: 2.629204e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 65   , U: 3.823435e-09,   V: 3.823435e-09,   W: 3.512946e-09,   Local Coninuity: 2.099457e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 66   , U: 4.373125e-09,   V: 4.373125e-09,   W: 2.550938e-09,   Local Coninuity: 1.392136e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 67   , U: 3.861572e-09,   V: 3.861572e-09,   W: 1.453246e-09,   Local Coninuity: 1.044430e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 68   , U: 2.900235e-09,   V: 2.900235e-09,   W: 1.025973e-09,   Local Coninuity: 1.022794e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 69   , U: 1.810273e-09,   V: 1.810273e-09,   W: 1.265317e-09,   Local Coninuity: 9.474028e-09,   Global Mass Flux: 0.000000e+00
-*** SOLUTION CONVERGED ***
-
-
-[CAMIRA_ Profiling:                           0.40s] [nCalls   1] (100.00%)
-[    Untimed:                                 0.00s] [nCalls   1] (  0.09%)
-[    Pre processing:                          0.01s] [nCalls   1] (  2.00%)
-[    Solver Loop:                             0.39s] [nCalls   1] ( 97.91%)
-[        Untimed:                             0.01s] [nCalls   1] (  2.92%)
-[        Multigrid Cycling:                   0.25s] [nCalls  69] ( 63.01%)
-[            Untimed:                         0.01s] [nCalls  69] (  3.03%)
-[            Setting Ghost Cells:             0.01s] [nCalls 414] (  2.46%)
-[            Sweeping:                        0.13s] [nCalls 414] ( 32.24%)
-[            Updating Coefficients:           0.10s] [nCalls  69] ( 25.29%)
-[        Residuals and Logging:               0.13s] [nCalls  69] ( 31.98%)
-[            Untimed:                         0.03s] [nCalls  69] (  6.47%)
-[            Updating Coefficients:           0.10s] [nCalls  69] ( 25.51%)
-
-
-
-================= Now running case ================= 
-Advection Scheme:      upwind
-Mesh:                  40x40x40
-Reading input file 'manufactured-taylor-green.inp' ... Success.
-
-Generating mesh ... Success.
-Number of cells        : 64000
-Min. cell growth ratios: (1, 1, 1)
-Max. cell growth ratios: (1, 1, 1)
-Min. cell aspect ratio : 1
-Max. cell aspect ratio : 1
-
-Convergence Residuals:
-iteration: 0    , U: 5.089736e+05,   V: 5.089736e+05,   W: 9.952291e+05,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 1    , U: 7.650170e-02,   V: 7.650170e-02,   W: 8.452418e-02,   Local Coninuity: 3.276172e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 2    , U: 3.733211e-02,   V: 3.733211e-02,   W: 4.060988e-02,   Local Coninuity: 3.379193e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 3    , U: 2.392148e-02,   V: 2.392148e-02,   W: 2.619909e-02,   Local Coninuity: 2.649197e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 4    , U: 1.673371e-02,   V: 1.673371e-02,   W: 1.857106e-02,   Local Coninuity: 2.202918e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 5    , U: 1.264988e-02,   V: 1.264988e-02,   W: 1.383394e-02,   Local Coninuity: 2.286192e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 6    , U: 1.031085e-02,   V: 1.031085e-02,   W: 1.088913e-02,   Local Coninuity: 2.130494e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 7    , U: 8.553342e-03,   V: 8.553342e-03,   W: 8.786918e-03,   Local Coninuity: 1.671392e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 8    , U: 7.141253e-03,   V: 7.141253e-03,   W: 7.113372e-03,   Local Coninuity: 1.297096e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 9    , U: 6.013790e-03,   V: 6.013790e-03,   W: 5.828878e-03,   Local Coninuity: 1.080031e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 10   , U: 5.132122e-03,   V: 5.132122e-03,   W: 4.889975e-03,   Local Coninuity: 1.004591e-02,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 11   , U: 4.414024e-03,   V: 4.414024e-03,   W: 4.236523e-03,   Local Coninuity: 9.258442e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 12   , U: 3.732223e-03,   V: 3.732223e-03,   W: 3.688233e-03,   Local Coninuity: 7.877288e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 13   , U: 3.125486e-03,   V: 3.125486e-03,   W: 3.211517e-03,   Local Coninuity: 6.703479e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 14   , U: 2.670786e-03,   V: 2.670786e-03,   W: 2.813539e-03,   Local Coninuity: 6.181001e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 15   , U: 2.342822e-03,   V: 2.342822e-03,   W: 2.488693e-03,   Local Coninuity: 5.864322e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 16   , U: 2.057371e-03,   V: 2.057371e-03,   W: 2.197053e-03,   Local Coninuity: 5.150684e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 17   , U: 1.806576e-03,   V: 1.806576e-03,   W: 1.928627e-03,   Local Coninuity: 4.348905e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 18   , U: 1.612337e-03,   V: 1.612337e-03,   W: 1.694066e-03,   Local Coninuity: 3.951466e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 19   , U: 1.453199e-03,   V: 1.453199e-03,   W: 1.494249e-03,   Local Coninuity: 3.710528e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 20   , U: 1.303046e-03,   V: 1.303046e-03,   W: 1.323001e-03,   Local Coninuity: 3.295888e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 21   , U: 1.159358e-03,   V: 1.159358e-03,   W: 1.172502e-03,   Local Coninuity: 2.794968e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 22   , U: 1.028406e-03,   V: 1.028406e-03,   W: 1.039358e-03,   Local Coninuity: 2.414206e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 23   , U: 9.159978e-04,   V: 9.159978e-04,   W: 9.244010e-04,   Local Coninuity: 2.194738e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 24   , U: 8.230101e-04,   V: 8.230101e-04,   W: 8.285951e-04,   Local Coninuity: 2.048894e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 25   , U: 7.366845e-04,   V: 7.366845e-04,   W: 7.451696e-04,   Local Coninuity: 1.835974e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 26   , U: 6.553028e-04,   V: 6.553028e-04,   W: 6.675923e-04,   Local Coninuity: 1.579276e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 27   , U: 5.845113e-04,   V: 5.845113e-04,   W: 5.967226e-04,   Local Coninuity: 1.420835e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 28   , U: 5.278053e-04,   V: 5.278053e-04,   W: 5.359327e-04,   Local Coninuity: 1.361140e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 29   , U: 4.796351e-04,   V: 4.796351e-04,   W: 4.826585e-04,   Local Coninuity: 1.300441e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 30   , U: 4.341736e-04,   V: 4.341736e-04,   W: 4.338415e-04,   Local Coninuity: 1.188996e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 31   , U: 3.911540e-04,   V: 3.911540e-04,   W: 3.889512e-04,   Local Coninuity: 1.063344e-03,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 32   , U: 3.512988e-04,   V: 3.512988e-04,   W: 3.487845e-04,   Local Coninuity: 9.536217e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 33   , U: 3.147082e-04,   V: 3.147082e-04,   W: 3.130721e-04,   Local Coninuity: 8.407004e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 34   , U: 2.809480e-04,   V: 2.809480e-04,   W: 2.806739e-04,   Local Coninuity: 7.143354e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 35   , U: 2.500432e-04,   V: 2.500432e-04,   W: 2.511770e-04,   Local Coninuity: 6.046568e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 36   , U: 2.238101e-04,   V: 2.238101e-04,   W: 2.253633e-04,   Local Coninuity: 5.542112e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 37   , U: 2.031803e-04,   V: 2.031803e-04,   W: 2.034912e-04,   Local Coninuity: 5.380860e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 38   , U: 1.848134e-04,   V: 1.848134e-04,   W: 1.838211e-04,   Local Coninuity: 5.087384e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 39   , U: 1.672140e-04,   V: 1.672140e-04,   W: 1.656786e-04,   Local Coninuity: 4.598754e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 40   , U: 1.506746e-04,   V: 1.506746e-04,   W: 1.489063e-04,   Local Coninuity: 4.039680e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 41   , U: 1.359622e-04,   V: 1.359622e-04,   W: 1.337897e-04,   Local Coninuity: 3.532076e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 42   , U: 1.227186e-04,   V: 1.227186e-04,   W: 1.204003e-04,   Local Coninuity: 3.077056e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 43   , U: 1.106338e-04,   V: 1.106338e-04,   W: 1.084744e-04,   Local Coninuity: 2.690346e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 44   , U: 1.002037e-04,   V: 1.002037e-04,   W: 9.790793e-05,   Local Coninuity: 2.545753e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 45   , U: 9.132215e-05,   V: 9.132215e-05,   W: 8.856932e-05,   Local Coninuity: 2.533242e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 46   , U: 8.315381e-05,   V: 8.315381e-05,   W: 8.011236e-05,   Local Coninuity: 2.488277e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 47   , U: 7.539952e-05,   V: 7.539952e-05,   W: 7.241744e-05,   Local Coninuity: 2.356732e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 48   , U: 6.803047e-05,   V: 6.803047e-05,   W: 6.534237e-05,   Local Coninuity: 2.145431e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 49   , U: 6.114254e-05,   V: 6.114254e-05,   W: 5.880835e-05,   Local Coninuity: 1.884751e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 50   , U: 5.479173e-05,   V: 5.479173e-05,   W: 5.281420e-05,   Local Coninuity: 1.604320e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 51   , U: 4.890440e-05,   V: 4.890440e-05,   W: 4.740411e-05,   Local Coninuity: 1.330539e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 52   , U: 4.361011e-05,   V: 4.361011e-05,   W: 4.247112e-05,   Local Coninuity: 1.101662e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 53   , U: 3.918371e-05,   V: 3.918371e-05,   W: 3.809517e-05,   Local Coninuity: 9.845255e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 54   , U: 3.574842e-05,   V: 3.574842e-05,   W: 3.444553e-05,   Local Coninuity: 9.868982e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 55   , U: 3.287996e-05,   V: 3.287996e-05,   W: 3.135450e-05,   Local Coninuity: 1.029062e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 56   , U: 3.024362e-05,   V: 3.024362e-05,   W: 2.857197e-05,   Local Coninuity: 1.032434e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 57   , U: 2.769755e-05,   V: 2.769755e-05,   W: 2.598876e-05,   Local Coninuity: 9.809411e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 58   , U: 2.518970e-05,   V: 2.518970e-05,   W: 2.356281e-05,   Local Coninuity: 8.816887e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 59   , U: 2.272476e-05,   V: 2.272476e-05,   W: 2.128003e-05,   Local Coninuity: 7.514601e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 60   , U: 2.037193e-05,   V: 2.037193e-05,   W: 1.913696e-05,   Local Coninuity: 6.191948e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 61   , U: 1.829617e-05,   V: 1.829617e-05,   W: 1.716026e-05,   Local Coninuity: 5.492890e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 62   , U: 1.658686e-05,   V: 1.658686e-05,   W: 1.556753e-05,   Local Coninuity: 5.518157e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 63   , U: 1.518637e-05,   V: 1.518637e-05,   W: 1.411481e-05,   Local Coninuity: 5.664362e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 64   , U: 1.395099e-05,   V: 1.395099e-05,   W: 1.277582e-05,   Local Coninuity: 5.694951e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 65   , U: 1.274323e-05,   V: 1.274323e-05,   W: 1.154483e-05,   Local Coninuity: 5.498096e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 66   , U: 1.154421e-05,   V: 1.154421e-05,   W: 1.045316e-05,   Local Coninuity: 5.122568e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 67   , U: 1.037480e-05,   V: 1.037480e-05,   W: 9.495917e-06,   Local Coninuity: 4.602704e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 68   , U: 9.223072e-06,   V: 9.223072e-06,   W: 8.610258e-06,   Local Coninuity: 3.921399e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 69   , U: 8.172149e-06,   V: 8.172149e-06,   W: 7.767662e-06,   Local Coninuity: 3.223007e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 70   , U: 7.409249e-06,   V: 7.409249e-06,   W: 6.999800e-06,   Local Coninuity: 2.854688e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 71   , U: 6.859555e-06,   V: 6.859555e-06,   W: 6.311150e-06,   Local Coninuity: 2.682708e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 72   , U: 6.424768e-06,   V: 6.424768e-06,   W: 5.683780e-06,   Local Coninuity: 2.622669e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 73   , U: 6.062779e-06,   V: 6.062779e-06,   W: 5.149127e-06,   Local Coninuity: 2.678517e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 74   , U: 5.714829e-06,   V: 5.714829e-06,   W: 4.701119e-06,   Local Coninuity: 2.734538e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 75   , U: 5.349419e-06,   V: 5.349419e-06,   W: 4.322820e-06,   Local Coninuity: 2.722194e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 76   , U: 4.885867e-06,   V: 4.885867e-06,   W: 4.000994e-06,   Local Coninuity: 2.568845e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 77   , U: 4.339810e-06,   V: 4.339810e-06,   W: 3.710408e-06,   Local Coninuity: 2.308274e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 78   , U: 3.813201e-06,   V: 3.813201e-06,   W: 3.416166e-06,   Local Coninuity: 2.099035e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 79   , U: 3.417145e-06,   V: 3.417145e-06,   W: 3.137187e-06,   Local Coninuity: 2.016431e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 80   , U: 3.158298e-06,   V: 3.158298e-06,   W: 2.843719e-06,   Local Coninuity: 1.898924e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 81   , U: 3.012955e-06,   V: 3.012955e-06,   W: 2.535823e-06,   Local Coninuity: 1.768372e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 82   , U: 2.907917e-06,   V: 2.907917e-06,   W: 2.243515e-06,   Local Coninuity: 1.655013e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 83   , U: 2.744676e-06,   V: 2.744676e-06,   W: 1.993660e-06,   Local Coninuity: 1.578481e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 84   , U: 2.509505e-06,   V: 2.509505e-06,   W: 1.810966e-06,   Local Coninuity: 1.555576e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 85   , U: 2.193283e-06,   V: 2.193283e-06,   W: 1.685879e-06,   Local Coninuity: 1.495992e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 86   , U: 1.846884e-06,   V: 1.846884e-06,   W: 1.587548e-06,   Local Coninuity: 1.381889e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 87   , U: 1.613479e-06,   V: 1.613479e-06,   W: 1.498822e-06,   Local Coninuity: 1.296969e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 88   , U: 1.515855e-06,   V: 1.515855e-06,   W: 1.406476e-06,   Local Coninuity: 1.204483e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 89   , U: 1.505333e-06,   V: 1.505333e-06,   W: 1.278595e-06,   Local Coninuity: 1.060280e-05,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 90   , U: 1.548496e-06,   V: 1.548496e-06,   W: 1.122136e-06,   Local Coninuity: 9.258385e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 91   , U: 1.592777e-06,   V: 1.592777e-06,   W: 9.774059e-07,   Local Coninuity: 8.603091e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 92   , U: 1.566177e-06,   V: 1.566177e-06,   W: 8.672679e-07,   Local Coninuity: 8.584353e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 93   , U: 1.469665e-06,   V: 1.469665e-06,   W: 8.050059e-07,   Local Coninuity: 8.981537e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 94   , U: 1.290137e-06,   V: 1.290137e-06,   W: 7.864671e-07,   Local Coninuity: 9.098543e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 95   , U: 1.068721e-06,   V: 1.068721e-06,   W: 7.898160e-07,   Local Coninuity: 8.993762e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 96   , U: 8.847670e-07,   V: 8.847670e-07,   W: 7.929477e-07,   Local Coninuity: 8.914730e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 97   , U: 8.058270e-07,   V: 8.058270e-07,   W: 7.734788e-07,   Local Coninuity: 8.415089e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 98   , U: 8.432861e-07,   V: 8.432861e-07,   W: 7.101325e-07,   Local Coninuity: 7.441510e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 99   , U: 9.356946e-07,   V: 9.356946e-07,   W: 6.083724e-07,   Local Coninuity: 6.311141e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 100  , U: 1.003917e-06,   V: 1.003917e-06,   W: 4.967295e-07,   Local Coninuity: 5.370926e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 101  , U: 9.905234e-07,   V: 9.905234e-07,   W: 4.063826e-07,   Local Coninuity: 5.004310e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 102  , U: 9.073728e-07,   V: 9.073728e-07,   W: 3.618143e-07,   Local Coninuity: 5.256943e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 103  , U: 7.580532e-07,   V: 7.580532e-07,   W: 3.573341e-07,   Local Coninuity: 5.472494e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 104  , U: 5.628138e-07,   V: 5.628138e-07,   W: 3.769547e-07,   Local Coninuity: 5.601064e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 105  , U: 4.182567e-07,   V: 4.182567e-07,   W: 4.043121e-07,   Local Coninuity: 5.598991e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 106  , U: 4.112130e-07,   V: 4.112130e-07,   W: 4.161332e-07,   Local Coninuity: 5.191611e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 107  , U: 4.954562e-07,   V: 4.954562e-07,   W: 3.939084e-07,   Local Coninuity: 4.423048e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 108  , U: 5.904110e-07,   V: 5.904110e-07,   W: 3.380358e-07,   Local Coninuity: 3.559273e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 109  , U: 6.369012e-07,   V: 6.369012e-07,   W: 2.635563e-07,   Local Coninuity: 2.948269e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 110  , U: 6.220420e-07,   V: 6.220420e-07,   W: 2.031729e-07,   Local Coninuity: 2.819209e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 111  , U: 5.679404e-07,   V: 5.679404e-07,   W: 1.804583e-07,   Local Coninuity: 3.090373e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 112  , U: 4.743003e-07,   V: 4.743003e-07,   W: 1.903993e-07,   Local Coninuity: 3.350510e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 113  , U: 3.562442e-07,   V: 3.562442e-07,   W: 2.170412e-07,   Local Coninuity: 3.570627e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 114  , U: 2.636028e-07,   V: 2.636028e-07,   W: 2.434072e-07,   Local Coninuity: 3.620705e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 115  , U: 2.508584e-07,   V: 2.508584e-07,   W: 2.514524e-07,   Local Coninuity: 3.373134e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 116  , U: 3.180275e-07,   V: 3.180275e-07,   W: 2.368154e-07,   Local Coninuity: 2.877714e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 117  , U: 3.815169e-07,   V: 3.815169e-07,   W: 2.035671e-07,   Local Coninuity: 2.283406e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 118  , U: 4.060950e-07,   V: 4.060950e-07,   W: 1.597031e-07,   Local Coninuity: 1.792492e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 119  , U: 3.912280e-07,   V: 3.912280e-07,   W: 1.152572e-07,   Local Coninuity: 1.626984e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 120  , U: 3.522281e-07,   V: 3.522281e-07,   W: 9.132533e-08,   Local Coninuity: 1.804754e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 121  , U: 2.904848e-07,   V: 2.904848e-07,   W: 9.461683e-08,   Local Coninuity: 2.014074e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 122  , U: 2.120954e-07,   V: 2.120954e-07,   W: 1.139734e-07,   Local Coninuity: 2.200270e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 123  , U: 1.438039e-07,   V: 1.438039e-07,   W: 1.354615e-07,   Local Coninuity: 2.237149e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 124  , U: 1.458529e-07,   V: 1.458529e-07,   W: 1.439276e-07,   Local Coninuity: 2.067849e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 125  , U: 1.999487e-07,   V: 1.999487e-07,   W: 1.374700e-07,   Local Coninuity: 1.731125e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 126  , U: 2.381772e-07,   V: 2.381772e-07,   W: 1.187575e-07,   Local Coninuity: 1.326679e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 127  , U: 2.509530e-07,   V: 2.509530e-07,   W: 9.291540e-08,   Local Coninuity: 1.005509e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 128  , U: 2.397913e-07,   V: 2.397913e-07,   W: 6.630780e-08,   Local Coninuity: 9.187713e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 129  , U: 2.151165e-07,   V: 2.151165e-07,   W: 5.064439e-08,   Local Coninuity: 1.052967e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 130  , U: 1.771770e-07,   V: 1.771770e-07,   W: 5.455408e-08,   Local Coninuity: 1.217458e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 131  , U: 1.298998e-07,   V: 1.298998e-07,   W: 6.862839e-08,   Local Coninuity: 1.358720e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 132  , U: 9.102412e-08,   V: 9.102412e-08,   W: 8.054550e-08,   Local Coninuity: 1.388775e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 133  , U: 9.060245e-08,   V: 9.060245e-08,   W: 8.478120e-08,   Local Coninuity: 1.285078e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 134  , U: 1.253398e-07,   V: 1.253398e-07,   W: 8.073253e-08,   Local Coninuity: 1.074175e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 135  , U: 1.478492e-07,   V: 1.478492e-07,   W: 6.985584e-08,   Local Coninuity: 8.142069e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 136  , U: 1.544474e-07,   V: 1.544474e-07,   W: 5.497722e-08,   Local Coninuity: 5.946785e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 137  , U: 1.463168e-07,   V: 1.463168e-07,   W: 3.945207e-08,   Local Coninuity: 5.222369e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 138  , U: 1.302276e-07,   V: 1.302276e-07,   W: 2.901454e-08,   Local Coninuity: 6.087886e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 139  , U: 1.067007e-07,   V: 1.067007e-07,   W: 2.890961e-08,   Local Coninuity: 7.251632e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 140  , U: 7.737640e-08,   V: 7.737640e-08,   W: 3.746310e-08,   Local Coninuity: 8.212546e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 141  , U: 5.265272e-08,   V: 5.265272e-08,   W: 4.534855e-08,   Local Coninuity: 8.407375e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 142  , U: 5.502022e-08,   V: 5.502022e-08,   W: 4.839534e-08,   Local Coninuity: 7.751479e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 143  , U: 7.679723e-08,   V: 7.679723e-08,   W: 4.642401e-08,   Local Coninuity: 6.415674e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 144  , U: 8.997044e-08,   V: 8.997044e-08,   W: 4.030411e-08,   Local Coninuity: 4.755065e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 145  , U: 9.332448e-08,   V: 9.332448e-08,   W: 3.172299e-08,   Local Coninuity: 3.355122e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 146  , U: 8.786778e-08,   V: 8.786778e-08,   W: 2.275058e-08,   Local Coninuity: 2.928277e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 147  , U: 7.796384e-08,   V: 7.796384e-08,   W: 1.673697e-08,   Local Coninuity: 3.514403e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 148  , U: 6.381517e-08,   V: 6.381517e-08,   W: 1.697080e-08,   Local Coninuity: 4.316520e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 149  , U: 4.628489e-08,   V: 4.628489e-08,   W: 2.214662e-08,   Local Coninuity: 4.948192e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 150  , U: 3.209063e-08,   V: 3.209063e-08,   W: 2.638029e-08,   Local Coninuity: 5.078886e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 151  , U: 3.352827e-08,   V: 3.352827e-08,   W: 2.797289e-08,   Local Coninuity: 4.682442e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 152  , U: 4.669929e-08,   V: 4.669929e-08,   W: 2.677803e-08,   Local Coninuity: 3.866490e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 153  , U: 5.437094e-08,   V: 5.437094e-08,   W: 2.327284e-08,   Local Coninuity: 2.838589e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 154  , U: 5.605558e-08,   V: 5.605558e-08,   W: 1.839057e-08,   Local Coninuity: 1.942766e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 155  , U: 5.245909e-08,   V: 5.245909e-08,   W: 1.328106e-08,   Local Coninuity: 1.640850e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 156  , U: 4.631281e-08,   V: 4.631281e-08,   W: 9.779826e-09,   Local Coninuity: 2.010848e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 157  , U: 3.781258e-08,   V: 3.781258e-08,   W: 9.311510e-09,   Local Coninuity: 2.539266e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 158  , U: 2.726591e-08,   V: 2.726591e-08,   W: 1.221951e-08,   Local Coninuity: 2.937824e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 159  , U: 1.873739e-08,   V: 1.873739e-08,   W: 1.480315e-08,   Local Coninuity: 3.019035e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 160  , U: 2.016767e-08,   V: 2.016767e-08,   W: 1.581757e-08,   Local Coninuity: 2.777966e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 161  , U: 2.798946e-08,   V: 2.798946e-08,   W: 1.521080e-08,   Local Coninuity: 2.280483e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 162  , U: 3.242949e-08,   V: 3.242949e-08,   W: 1.325734e-08,   Local Coninuity: 1.648823e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 163  , U: 3.325573e-08,   V: 3.325573e-08,   W: 1.048479e-08,   Local Coninuity: 1.093017e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 164  , U: 3.096659e-08,   V: 3.096659e-08,   W: 7.583423e-09,   Local Coninuity: 9.103960e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 165  , U: 2.726653e-08,   V: 2.726653e-08,   W: 5.615210e-09,   Local Coninuity: 1.148394e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 166  , U: 2.223938e-08,   V: 2.223938e-08,   W: 5.408521e-09,   Local Coninuity: 1.489703e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 167  , U: 1.601211e-08,   V: 1.601211e-08,   W: 7.077894e-09,   Local Coninuity: 1.736659e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 168  , U: 1.110057e-08,   V: 1.110057e-08,   W: 8.461085e-09,   Local Coninuity: 1.787245e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 169  , U: 1.203698e-08,   V: 1.203698e-08,   W: 8.997553e-09,   Local Coninuity: 1.643730e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 170  , U: 1.665432e-08,   V: 1.665432e-08,   W: 8.636300e-09,   Local Coninuity: 1.346093e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 171  , U: 1.920940e-08,   V: 1.920940e-08,   W: 7.531993e-09,   Local Coninuity: 9.651003e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 172  , U: 1.960376e-08,   V: 1.960376e-08,   W: 5.973286e-09,   Local Coninuity: 6.223664e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 173  , U: 1.816659e-08,   V: 1.816659e-08,   W: 4.345909e-09,   Local Coninuity: 5.027233e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 174  , U: 1.594047e-08,   V: 1.594047e-08,   W: 3.240444e-09,   Local Coninuity: 6.511002e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 175  , U: 1.298151e-08,   V: 1.298151e-08,   W: 3.013517e-09,   Local Coninuity: 8.655635e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 176  , U: 9.312158e-09,   V: 9.312158e-09,   W: 3.907767e-09,   Local Coninuity: 1.015092e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 177  , U: 6.450114e-09,   V: 6.450114e-09,   W: 4.711447e-09,   Local Coninuity: 1.045461e-07,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 178  , U: 7.120224e-09,   V: 7.120224e-09,   W: 5.031355e-09,   Local Coninuity: 9.602137e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 179  , U: 9.806811e-09,   V: 9.806811e-09,   W: 4.841862e-09,   Local Coninuity: 7.831724e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 180  , U: 1.126730e-08,   V: 1.126730e-08,   W: 4.232074e-09,   Local Coninuity: 5.551730e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 181  , U: 1.144697e-08,   V: 1.144697e-08,   W: 3.359020e-09,   Local Coninuity: 3.475022e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 182  , U: 1.056144e-08,   V: 1.056144e-08,   W: 2.449515e-09,   Local Coninuity: 2.755809e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 183  , U: 9.246163e-09,   V: 9.246163e-09,   W: 1.839277e-09,   Local Coninuity: 3.685993e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 184  , U: 7.520778e-09,   V: 7.520778e-09,   W: 1.730801e-09,   Local Coninuity: 5.012527e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 185  , U: 5.382596e-09,   V: 5.382596e-09,   W: 2.227334e-09,   Local Coninuity: 5.906197e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 186  , U: 3.742587e-09,   V: 3.742587e-09,   W: 2.653156e-09,   Local Coninuity: 6.087092e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 187  , U: 4.177945e-09,   V: 4.177945e-09,   W: 2.820156e-09,   Local Coninuity: 5.586217e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 188  , U: 5.736185e-09,   V: 5.736185e-09,   W: 2.707569e-09,   Local Coninuity: 4.544966e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 189  , U: 6.565492e-09,   V: 6.565492e-09,   W: 2.366814e-09,   Local Coninuity: 3.197209e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 190  , U: 6.641934e-09,   V: 6.641934e-09,   W: 1.882132e-09,   Local Coninuity: 1.948612e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 191  , U: 6.102082e-09,   V: 6.102082e-09,   W: 1.379458e-09,   Local Coninuity: 1.500368e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 192  , U: 5.328247e-09,   V: 5.328247e-09,   W: 1.044956e-09,   Local Coninuity: 2.072027e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 193  , U: 4.327489e-09,   V: 4.327489e-09,   W: 9.689456e-10,   Local Coninuity: 2.878343e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 194  , U: 3.088508e-09,   V: 3.088508e-09,   W: 1.224941e-09,   Local Coninuity: 3.404367e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 195  , U: 2.153142e-09,   V: 2.153142e-09,   W: 1.463262e-09,   Local Coninuity: 3.509465e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 196  , U: 2.434584e-09,   V: 2.434584e-09,   W: 1.557765e-09,   Local Coninuity: 3.216471e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 197  , U: 3.327461e-09,   V: 3.327461e-09,   W: 1.496801e-09,   Local Coninuity: 2.608006e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 198  , U: 3.794790e-09,   V: 3.794790e-09,   W: 1.310150e-09,   Local Coninuity: 1.817497e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 199  , U: 3.823121e-09,   V: 3.823121e-09,   W: 1.042391e-09,   Local Coninuity: 1.076071e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 1 iterations
-iteration: 200  , U: 3.497831e-09,   V: 3.497831e-09,   W: 7.660179e-10,   Local Coninuity: 8.111538e-09,   Global Mass Flux: 0.000000e+00
-*** SOLUTION CONVERGED ***
-
-
-[CAMIRA_ Profiling:                           4.92s] [nCalls    1] (100.00%)
-[    Untimed:                                 0.00s] [nCalls    1] (  0.01%)
-[    Pre processing:                          0.03s] [nCalls    1] (  0.60%)
-[    Solver Loop:                             4.89s] [nCalls    1] ( 99.40%)
-[        Untimed:                             0.04s] [nCalls    1] (  0.78%)
-[        Multigrid Cycling:                   3.55s] [nCalls  200] ( 72.07%)
-[            Untimed:                         0.24s] [nCalls  200] (  4.89%)
-[            Setting Ghost Cells:             0.07s] [nCalls 1200] (  1.38%)
-[            Sweeping:                        2.21s] [nCalls 1200] ( 44.85%)
-[            Updating Coefficients:           1.03s] [nCalls  200] ( 20.96%)
-[        Residuals and Logging:               1.31s] [nCalls  200] ( 26.54%)
-[            Untimed:                         0.28s] [nCalls  200] (  5.69%)
-[            Updating Coefficients:           1.03s] [nCalls  200] ( 20.85%)
-
-
-
-================= Now running case ================= 
-Advection Scheme:      upwind
-Mesh:                  80x80x80
-Reading input file 'manufactured-taylor-green.inp' ... Success.
-
-Generating mesh ... Success.
-Number of cells        : 512000
-Min. cell growth ratios: (1, 1, 1)
-Max. cell growth ratios: (1, 1, 1)
-Min. cell aspect ratio : 1
-Max. cell aspect ratio : 1
-
-Convergence Residuals:
-iteration: 0    , U: 4.071416e+06,   V: 4.071416e+06,   W: 7.961016e+06,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
-  Level 1, relative residuals: 9.356946e-07, 9.356946e-07, 6.083724e-07, 6.311141e-06,  after 100 iterations.
- Level 0, performed 2 iterations
-  Level 1, relative residuals: 1.773919e-07, 1.773919e-07, 8.286471e-08, 1.987899e-01,  after 100 iterations.
- Level 0, performed 3 iterations
-  Level 1, relative residuals: 2.753963e-08, 2.753963e-08, 1.574180e-08, 2.147109e-05,  after 100 iterations.
- Level 0, performed 3 iterations
-iteration: 1    , U: 8.667030e-06,   V: 8.667030e-06,   W: 6.346993e-06,   Local Coninuity: 1.833768e-04,   Global Mass Flux: 0.000000e+00
- Level 0, performed 2 iterations
-  Level 1, relative residuals: 3.132213e-09, 3.132213e-09, 1.658360e-09, 2.539597e-06,  after 100 iterations.
- Level 0, performed 3 iterations
-  Level 1, relative residuals: 3.995914e-10, 3.995914e-10, 2.647346e-10, 4.386070e-07,  after 100 iterations.
- Level 0, performed 3 iterations
-iteration: 2    , U: 8.966800e-08,   V: 8.966800e-08,   W: 6.167900e-08,   Local Coninuity: 1.588672e-06,   Global Mass Flux: 0.000000e+00
- Level 0, performed 2 iterations
-  Level 1, relative residuals: 6.284158e-11, 6.284158e-11, 3.937771e-11, 6.522177e-08,  after 100 iterations.
- Level 0, performed 3 iterations
-  Level 1, relative residuals: 7.492694e-12, 7.492695e-12, 5.966089e-12, 1.106924e-08,  after 100 iterations.
- Level 0, performed 3 iterations
-iteration: 3    , U: 1.395933e-09,   V: 1.395933e-09,   W: 9.418458e-10,   Local Coninuity: 2.490743e-08,   Global Mass Flux: 0.000000e+00
- Level 0, performed 2 iterations
-  Level 1, relative residuals: 1.283933e-12, 1.283933e-12, 8.822314e-13, 1.540104e-09,  after 100 iterations.
- Level 0, performed 3 iterations
-  Level 1, relative residuals: 1.810301e-13, 1.810301e-13, 1.491844e-13, 2.806631e-10,  after 100 iterations.
- Level 0, performed 3 iterations
-iteration: 4    , U: 2.797894e-11,   V: 2.797894e-11,   W: 1.784084e-11,   Local Coninuity: 4.819526e-10,   Global Mass Flux: 0.000000e+00
-*** SOLUTION CONVERGED ***
-
-
-[CAMIRA_ Profiling:                          24.39s] [nCalls    1] (100.00%)
-[    Untimed:                                 0.00s] [nCalls    1] (  0.00%)
-[    Pre processing:                          0.19s] [nCalls    1] (  0.80%)
-[    Solver Loop:                            24.20s] [nCalls    1] ( 99.20%)
-[        Untimed:                             0.26s] [nCalls    1] (  1.08%)
-[        Multigrid Cycling:                  23.70s] [nCalls    4] ( 97.18%)
-[            Untimed:                         2.33s] [nCalls    4] (  9.54%)
-[            Setting Ghost Cells:             0.37s] [nCalls 5592] (  1.50%)
-[            Sweeping:                       13.68s] [nCalls 5592] ( 56.08%)
-[            Updating Coefficients:           7.33s] [nCalls  948] ( 30.06%)
-[        Residuals and Logging:               0.23s] [nCalls    4] (  0.94%)
-[            Untimed:                         0.04s] [nCalls    4] (  0.18%)
-[            Updating Coefficients:           0.18s] [nCalls    4] (  0.76%)
-
-
-
-================= Now running case ================= 
 Advection Scheme:      QUICK
 Mesh:                  20x20x20
 Reading input file 'manufactured-taylor-green.inp' ... Success.
@@ -676,161 +14,227 @@ Min. cell aspect ratio : 1
 Max. cell aspect ratio : 1
 
 Convergence Residuals:
-iteration: 0    , U: 6.366447e+04,   V: 6.366447e+04,   W: 1.244530e+05,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
+iteration: 0    , U: 4.042930e+04,   V: 4.042930e+04,   W: 7.839255e+04,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 1    , U: 6.725542e-02,   V: 6.725542e-02,   W: 7.247432e-02,   Local Coninuity: 5.815688e-02,   Global Mass Flux: 0.000000e+00
+iteration: 1    , U: 4.503279e-02,   V: 4.503279e-02,   W: 4.789888e-02,   Local Coninuity: 3.694281e-02,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 2    , U: 2.829349e-02,   V: 2.829349e-02,   W: 3.007616e-02,   Local Coninuity: 3.727505e-02,   Global Mass Flux: 0.000000e+00
+iteration: 2    , U: 1.008808e-02,   V: 1.008808e-02,   W: 1.093694e-02,   Local Coninuity: 1.207836e-02,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 3    , U: 1.585702e-02,   V: 1.585702e-02,   W: 1.573280e-02,   Local Coninuity: 2.835580e-02,   Global Mass Flux: 0.000000e+00
+iteration: 3    , U: 2.821362e-03,   V: 2.821362e-03,   W: 2.900241e-03,   Local Coninuity: 4.024002e-03,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 4    , U: 9.594181e-03,   V: 9.594181e-03,   W: 9.201717e-03,   Local Coninuity: 1.535259e-02,   Global Mass Flux: 0.000000e+00
+iteration: 4    , U: 1.026789e-03,   V: 1.026789e-03,   W: 8.866491e-04,   Local Coninuity: 1.831293e-03,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 5    , U: 5.835456e-03,   V: 5.835456e-03,   W: 5.437147e-03,   Local Coninuity: 9.339569e-03,   Global Mass Flux: 0.000000e+00
+iteration: 5    , U: 5.757938e-04,   V: 5.757938e-04,   W: 3.497703e-04,   Local Coninuity: 8.008956e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 6    , U: 3.759531e-03,   V: 3.759531e-03,   W: 3.445932e-03,   Local Coninuity: 6.442922e-03,   Global Mass Flux: 0.000000e+00
+iteration: 6    , U: 2.442845e-04,   V: 2.442845e-04,   W: 1.422830e-04,   Local Coninuity: 3.940724e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 7    , U: 2.401852e-03,   V: 2.401852e-03,   W: 2.271251e-03,   Local Coninuity: 4.498948e-03,   Global Mass Flux: 0.000000e+00
+iteration: 7    , U: 1.476382e-04,   V: 1.476382e-04,   W: 9.125845e-05,   Local Coninuity: 2.653554e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 8    , U: 1.586080e-03,   V: 1.586080e-03,   W: 1.515184e-03,   Local Coninuity: 3.143290e-03,   Global Mass Flux: 0.000000e+00
+iteration: 8    , U: 1.043987e-04,   V: 1.043987e-04,   W: 7.724233e-05,   Local Coninuity: 1.354719e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 9    , U: 1.021493e-03,   V: 1.021493e-03,   W: 9.964628e-04,   Local Coninuity: 1.919738e-03,   Global Mass Flux: 0.000000e+00
+iteration: 9    , U: 5.965654e-05,   V: 5.965654e-05,   W: 5.280404e-05,   Local Coninuity: 8.268837e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 10   , U: 6.649723e-04,   V: 6.649723e-04,   W: 6.548837e-04,   Local Coninuity: 1.241530e-03,   Global Mass Flux: 0.000000e+00
+iteration: 10   , U: 4.015265e-05,   V: 4.015265e-05,   W: 3.209009e-05,   Local Coninuity: 1.000569e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 11   , U: 4.548513e-04,   V: 4.548513e-04,   W: 4.394345e-04,   Local Coninuity: 9.938301e-04,   Global Mass Flux: 0.000000e+00
+iteration: 11   , U: 3.687085e-05,   V: 3.687085e-05,   W: 1.975946e-05,   Local Coninuity: 9.723608e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 12   , U: 3.196969e-04,   V: 3.196969e-04,   W: 2.977902e-04,   Local Coninuity: 7.828643e-04,   Global Mass Flux: 0.000000e+00
+iteration: 12   , U: 3.520917e-05,   V: 3.520917e-05,   W: 2.684905e-05,   Local Coninuity: 7.258523e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 13   , U: 2.203509e-04,   V: 2.203509e-04,   W: 2.029084e-04,   Local Coninuity: 5.143487e-04,   Global Mass Flux: 0.000000e+00
+iteration: 13   , U: 2.466383e-05,   V: 2.466383e-05,   W: 2.704446e-05,   Local Coninuity: 3.740499e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 14   , U: 1.425482e-04,   V: 1.425482e-04,   W: 1.363128e-04,   Local Coninuity: 2.556232e-04,   Global Mass Flux: 0.000000e+00
+iteration: 14   , U: 1.289828e-05,   V: 1.289828e-05,   W: 1.999868e-05,   Local Coninuity: 2.366502e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 15   , U: 9.575031e-05,   V: 9.575031e-05,   W: 9.322861e-05,   Local Coninuity: 2.231008e-04,   Global Mass Flux: 0.000000e+00
+iteration: 15   , U: 1.105823e-05,   V: 1.105823e-05,   W: 1.290337e-05,   Local Coninuity: 3.348001e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 16   , U: 7.866045e-05,   V: 7.866045e-05,   W: 6.815835e-05,   Local Coninuity: 2.867024e-04,   Global Mass Flux: 0.000000e+00
+iteration: 16   , U: 1.455356e-05,   V: 1.455356e-05,   W: 7.549751e-06,   Local Coninuity: 3.669073e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 17   , U: 6.285173e-05,   V: 6.285173e-05,   W: 5.040011e-05,   Local Coninuity: 2.676182e-04,   Global Mass Flux: 0.000000e+00
+iteration: 17   , U: 1.342831e-05,   V: 1.342831e-05,   W: 1.005840e-05,   Local Coninuity: 2.892279e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 18   , U: 4.460819e-05,   V: 4.460819e-05,   W: 3.957550e-05,   Local Coninuity: 1.831554e-04,   Global Mass Flux: 0.000000e+00
+iteration: 18   , U: 8.530306e-06,   V: 8.530306e-06,   W: 1.069553e-05,   Local Coninuity: 1.662487e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 19   , U: 2.673191e-05,   V: 2.673191e-05,   W: 3.069180e-05,   Local Coninuity: 8.474490e-05,   Global Mass Flux: 0.000000e+00
+iteration: 19   , U: 4.434880e-06,   V: 4.434880e-06,   W: 8.201732e-06,   Local Coninuity: 1.066705e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 20   , U: 1.652910e-05,   V: 1.652910e-05,   W: 2.113986e-05,   Local Coninuity: 6.070289e-05,   Global Mass Flux: 0.000000e+00
+iteration: 20   , U: 5.396267e-06,   V: 5.396267e-06,   W: 5.420198e-06,   Local Coninuity: 1.275167e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 21   , U: 1.653327e-05,   V: 1.653327e-05,   W: 1.432126e-05,   Local Coninuity: 9.193217e-05,   Global Mass Flux: 0.000000e+00
+iteration: 21   , U: 6.344363e-06,   V: 6.344363e-06,   W: 3.095537e-06,   Local Coninuity: 1.394416e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 22   , U: 1.683154e-05,   V: 1.683154e-05,   W: 1.121132e-05,   Local Coninuity: 9.628201e-05,   Global Mass Flux: 0.000000e+00
+iteration: 22   , U: 5.395996e-06,   V: 5.395996e-06,   W: 3.716602e-06,   Local Coninuity: 1.169713e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 23   , U: 1.316658e-05,   V: 1.316658e-05,   W: 1.248394e-05,   Local Coninuity: 7.179871e-05,   Global Mass Flux: 0.000000e+00
+iteration: 23   , U: 3.253739e-06,   V: 3.253739e-06,   W: 4.132209e-06,   Local Coninuity: 7.365691e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 24   , U: 7.835411e-06,   V: 7.835411e-06,   W: 1.183206e-05,   Local Coninuity: 3.914211e-05,   Global Mass Flux: 0.000000e+00
+iteration: 24   , U: 2.058747e-06,   V: 2.058747e-06,   W: 3.303417e-06,   Local Coninuity: 4.848502e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 25   , U: 6.022082e-06,   V: 6.022082e-06,   W: 8.715504e-06,   Local Coninuity: 2.883086e-05,   Global Mass Flux: 0.000000e+00
+iteration: 25   , U: 2.549495e-06,   V: 2.549495e-06,   W: 2.204226e-06,   Local Coninuity: 4.821476e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 26   , U: 7.036626e-06,   V: 7.036626e-06,   W: 5.510656e-06,   Local Coninuity: 3.506701e-05,   Global Mass Flux: 0.000000e+00
+iteration: 26   , U: 2.687375e-06,   V: 2.687375e-06,   W: 1.248154e-06,   Local Coninuity: 5.216124e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 27   , U: 7.051375e-06,   V: 7.051375e-06,   W: 3.515152e-06,   Local Coninuity: 3.715591e-05,   Global Mass Flux: 0.000000e+00
+iteration: 27   , U: 2.190672e-06,   V: 2.190672e-06,   W: 1.344827e-06,   Local Coninuity: 4.622579e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 28   , U: 5.237464e-06,   V: 5.237464e-06,   W: 4.577796e-06,   Local Coninuity: 2.959311e-05,   Global Mass Flux: 0.000000e+00
+iteration: 28   , U: 1.303419e-06,   V: 1.303419e-06,   W: 1.557792e-06,   Local Coninuity: 3.155110e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 29   , U: 2.936923e-06,   V: 2.936923e-06,   W: 4.573847e-06,   Local Coninuity: 1.769363e-05,   Global Mass Flux: 0.000000e+00
+iteration: 29   , U: 9.736657e-07,   V: 9.736657e-07,   W: 1.298720e-06,   Local Coninuity: 2.136666e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 30   , U: 2.817259e-06,   V: 2.817259e-06,   W: 3.494106e-06,   Local Coninuity: 1.216804e-05,   Global Mass Flux: 0.000000e+00
+iteration: 30   , U: 1.128545e-06,   V: 1.128545e-06,   W: 8.774605e-07,   Local Coninuity: 1.835448e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 31   , U: 3.098574e-06,   V: 3.098574e-06,   W: 2.210938e-06,   Local Coninuity: 1.273532e-05,   Global Mass Flux: 0.000000e+00
+iteration: 31   , U: 1.109621e-06,   V: 1.109621e-06,   W: 4.966356e-07,   Local Coninuity: 1.923992e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 32   , U: 2.945599e-06,   V: 2.945599e-06,   W: 1.308779e-06,   Local Coninuity: 1.384562e-05,   Global Mass Flux: 0.000000e+00
+iteration: 32   , U: 8.849033e-07,   V: 8.849033e-07,   W: 4.806794e-07,   Local Coninuity: 1.782756e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 33   , U: 2.170988e-06,   V: 2.170988e-06,   W: 1.645358e-06,   Local Coninuity: 1.176541e-05,   Global Mass Flux: 0.000000e+00
+iteration: 33   , U: 5.292208e-07,   V: 5.292208e-07,   W: 5.765305e-07,   Local Coninuity: 1.303224e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 34   , U: 1.262105e-06,   V: 1.262105e-06,   W: 1.722294e-06,   Local Coninuity: 7.798643e-06,   Global Mass Flux: 0.000000e+00
+iteration: 34   , U: 4.219561e-07,   V: 4.219561e-07,   W: 5.000572e-07,   Local Coninuity: 9.115338e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 35   , U: 1.288225e-06,   V: 1.288225e-06,   W: 1.372491e-06,   Local Coninuity: 5.348158e-06,   Global Mass Flux: 0.000000e+00
+iteration: 35   , U: 4.747142e-07,   V: 4.747142e-07,   W: 3.434911e-07,   Local Coninuity: 7.043880e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 36   , U: 1.336270e-06,   V: 1.336270e-06,   W: 8.795280e-07,   Local Coninuity: 4.760551e-06,   Global Mass Flux: 0.000000e+00
+iteration: 36   , U: 4.477851e-07,   V: 4.477851e-07,   W: 1.948536e-07,   Local Coninuity: 7.010822e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 37   , U: 1.210848e-06,   V: 1.210848e-06,   W: 5.071115e-07,   Local Coninuity: 5.089139e-06,   Global Mass Flux: 0.000000e+00
+iteration: 37   , U: 3.526901e-07,   V: 3.526901e-07,   W: 1.701959e-07,   Local Coninuity: 6.726527e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 38   , U: 8.874815e-07,   V: 8.874815e-07,   W: 5.819575e-07,   Local Coninuity: 4.562101e-06,   Global Mass Flux: 0.000000e+00
+iteration: 38   , U: 2.132051e-07,   V: 2.132051e-07,   W: 2.101178e-07,   Local Coninuity: 5.213340e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 39   , U: 5.193978e-07,   V: 5.193978e-07,   W: 6.378881e-07,   Local Coninuity: 3.260204e-06,   Global Mass Flux: 0.000000e+00
+iteration: 39   , U: 1.711846e-07,   V: 1.711846e-07,   W: 1.890280e-07,   Local Coninuity: 3.767607e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 40   , U: 5.383270e-07,   V: 5.383270e-07,   W: 5.274745e-07,   Local Coninuity: 2.250852e-06,   Global Mass Flux: 0.000000e+00
+iteration: 40   , U: 1.920480e-07,   V: 1.920480e-07,   W: 1.323773e-07,   Local Coninuity: 2.719902e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 41   , U: 5.484721e-07,   V: 5.484721e-07,   W: 3.427080e-07,   Local Coninuity: 1.775534e-06,   Global Mass Flux: 0.000000e+00
+iteration: 41   , U: 1.771039e-07,   V: 1.771039e-07,   W: 7.546534e-08,   Local Coninuity: 2.535707e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 42   , U: 4.836188e-07,   V: 4.836188e-07,   W: 1.950276e-07,   Local Coninuity: 1.837130e-06,   Global Mass Flux: 0.000000e+00
+iteration: 42   , U: 1.384938e-07,   V: 1.384938e-07,   W: 6.009956e-08,   Local Coninuity: 2.489850e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 43   , U: 3.561588e-07,   V: 3.561588e-07,   W: 2.042351e-07,   Local Coninuity: 1.724498e-06,   Global Mass Flux: 0.000000e+00
+iteration: 43   , U: 8.482620e-08,   V: 8.482620e-08,   W: 7.561546e-08,   Local Coninuity: 2.028738e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 44   , U: 2.101054e-07,   V: 2.101054e-07,   W: 2.323371e-07,   Local Coninuity: 1.312820e-06,   Global Mass Flux: 0.000000e+00
+iteration: 44   , U: 6.637301e-08,   V: 6.637301e-08,   W: 7.036040e-08,   Local Coninuity: 1.514891e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 45   , U: 2.135619e-07,   V: 2.135619e-07,   W: 1.990870e-07,   Local Coninuity: 9.270074e-07,   Global Mass Flux: 0.000000e+00
+iteration: 45   , U: 7.539590e-08,   V: 7.539590e-08,   W: 5.032782e-08,   Local Coninuity: 1.052808e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 46   , U: 2.185857e-07,   V: 2.185857e-07,   W: 1.318710e-07,   Local Coninuity: 6.704812e-07,   Global Mass Flux: 0.000000e+00
+iteration: 46   , U: 6.883613e-08,   V: 6.883613e-08,   W: 2.885623e-08,   Local Coninuity: 9.145282e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 47   , U: 1.896967e-07,   V: 1.896967e-07,   W: 7.449870e-08,   Local Coninuity: 6.574132e-07,   Global Mass Flux: 0.000000e+00
+iteration: 47   , U: 5.358530e-08,   V: 5.358530e-08,   W: 2.129333e-08,   Local Coninuity: 9.067516e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 48   , U: 1.404101e-07,   V: 1.404101e-07,   W: 7.098166e-08,   Local Coninuity: 6.378206e-07,   Global Mass Flux: 0.000000e+00
+iteration: 48   , U: 3.330985e-08,   V: 3.330985e-08,   W: 2.694485e-08,   Local Coninuity: 7.712605e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 49   , U: 8.327749e-08,   V: 8.327749e-08,   W: 8.350111e-08,   Local Coninuity: 5.116833e-07,   Global Mass Flux: 0.000000e+00
+iteration: 49   , U: 2.499901e-08,   V: 2.499901e-08,   W: 2.584476e-08,   Local Coninuity: 5.946790e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 50   , U: 8.130977e-08,   V: 8.130977e-08,   W: 7.397752e-08,   Local Coninuity: 3.715802e-07,   Global Mass Flux: 0.000000e+00
+iteration: 50   , U: 2.888578e-08,   V: 2.888578e-08,   W: 1.890491e-08,   Local Coninuity: 4.068832e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 51   , U: 8.477401e-08,   V: 8.477401e-08,   W: 5.006110e-08,   Local Coninuity: 2.544918e-07,   Global Mass Flux: 0.000000e+00
+iteration: 51   , U: 2.635172e-08,   V: 2.635172e-08,   W: 1.092155e-08,   Local Coninuity: 3.299241e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 52   , U: 7.314928e-08,   V: 7.314928e-08,   W: 2.818854e-08,   Local Coninuity: 2.337086e-07,   Global Mass Flux: 0.000000e+00
+iteration: 52   , U: 2.045992e-08,   V: 2.045992e-08,   W: 7.576603e-09,   Local Coninuity: 3.258621e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 53   , U: 5.439685e-08,   V: 5.439685e-08,   W: 2.461745e-08,   Local Coninuity: 2.317294e-07,   Global Mass Flux: 0.000000e+00
+iteration: 53   , U: 1.291939e-08,   V: 1.291939e-08,   W: 9.529070e-09,   Local Coninuity: 2.875284e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 54   , U: 3.256014e-08,   V: 3.256014e-08,   W: 2.968723e-08,   Local Coninuity: 1.944351e-07,   Global Mass Flux: 0.000000e+00
+iteration: 54   , U: 9.250275e-09,   V: 9.250275e-09,   W: 9.387826e-09,   Local Coninuity: 2.286904e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 55   , U: 3.003548e-08,   V: 3.003548e-08,   W: 2.712659e-08,   Local Coninuity: 1.456337e-07,   Global Mass Flux: 0.000000e+00
+iteration: 55   , U: 1.084247e-08,   V: 1.084247e-08,   W: 7.022926e-09,   Local Coninuity: 1.564202e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 56   , U: 3.217713e-08,   V: 3.217713e-08,   W: 1.877872e-08,   Local Coninuity: 9.699361e-08,   Global Mass Flux: 0.000000e+00
+iteration: 56   , U: 9.952958e-09,   V: 9.952958e-09,   W: 4.094862e-09,   Local Coninuity: 1.192945e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 57   , U: 2.782215e-08,   V: 2.782215e-08,   W: 1.058217e-08,   Local Coninuity: 8.293324e-08,   Global Mass Flux: 0.000000e+00
+iteration: 57   , U: 7.720584e-09,   V: 7.720584e-09,   W: 2.700016e-09,   Local Coninuity: 1.159760e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 58   , U: 2.076380e-08,   V: 2.076380e-08,   W: 8.524033e-09,   Local Coninuity: 8.297167e-08,   Global Mass Flux: 0.000000e+00
+iteration: 58   , U: 4.952368e-09,   V: 4.952368e-09,   W: 3.350378e-09,   Local Coninuity: 1.054721e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 59   , U: 1.257342e-08,   V: 1.257342e-08,   W: 1.046622e-08,   Local Coninuity: 7.233826e-08,   Global Mass Flux: 0.000000e+00
+iteration: 59   , U: 3.388160e-09,   V: 3.388160e-09,   W: 3.379030e-09,   Local Coninuity: 8.640447e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 60   , U: 1.083708e-08,   V: 1.083708e-08,   W: 9.836099e-09,   Local Coninuity: 5.592211e-08,   Global Mass Flux: 0.000000e+00
+iteration: 60   , U: 3.999981e-09,   V: 3.999981e-09,   W: 2.583079e-09,   Local Coninuity: 5.965195e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 61   , U: 1.199063e-08,   V: 1.199063e-08,   W: 6.967117e-09,   Local Coninuity: 3.692272e-08,   Global Mass Flux: 0.000000e+00
+iteration: 61   , U: 3.713856e-09,   V: 3.713856e-09,   W: 1.522626e-09,   Local Coninuity: 4.327406e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 62   , U: 1.044946e-08,   V: 1.044946e-08,   W: 3.938787e-09,   Local Coninuity: 2.950418e-08,   Global Mass Flux: 0.000000e+00
+iteration: 62   , U: 2.884277e-09,   V: 2.884277e-09,   W: 9.632229e-10,   Local Coninuity: 4.099846e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 63   , U: 7.820148e-09,   V: 7.820148e-09,   W: 2.963866e-09,   Local Coninuity: 2.938635e-08,   Global Mass Flux: 0.000000e+00
+iteration: 63   , U: 1.877495e-09,   V: 1.877495e-09,   W: 1.172812e-09,   Local Coninuity: 3.818343e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 64   , U: 4.802301e-09,   V: 4.802301e-09,   W: 3.665063e-09,   Local Coninuity: 2.646021e-08,   Global Mass Flux: 0.000000e+00
+iteration: 64   , U: 1.234616e-09,   V: 1.234616e-09,   W: 1.207412e-09,   Local Coninuity: 3.215340e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 65   , U: 3.852966e-09,   V: 3.852966e-09,   W: 3.533369e-09,   Local Coninuity: 2.110308e-08,   Global Mass Flux: 0.000000e+00
+iteration: 65   , U: 1.454434e-09,   V: 1.454434e-09,   W: 9.423423e-10,   Local Coninuity: 2.254846e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 66   , U: 4.399823e-09,   V: 4.399823e-09,   W: 2.559579e-09,   Local Coninuity: 1.399348e-08,   Global Mass Flux: 0.000000e+00
+iteration: 66   , U: 1.371016e-09,   V: 1.371016e-09,   W: 5.618409e-10,   Local Coninuity: 1.574146e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 67   , U: 3.881390e-09,   V: 3.881390e-09,   W: 1.456414e-09,   Local Coninuity: 1.053596e-08,   Global Mass Flux: 0.000000e+00
+iteration: 67   , U: 1.067962e-09,   V: 1.067962e-09,   W: 3.437019e-10,   Local Coninuity: 1.442538e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 68   , U: 2.912880e-09,   V: 2.912880e-09,   W: 1.034523e-09,   Local Coninuity: 1.032090e-08,   Global Mass Flux: 0.000000e+00
+iteration: 68   , U: 7.044430e-10,   V: 7.044430e-10,   W: 4.094670e-10,   Local Coninuity: 1.367892e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 69   , U: 1.815209e-09,   V: 1.815209e-09,   W: 1.277275e-09,   Local Coninuity: 9.544423e-09,   Global Mass Flux: 0.000000e+00
+iteration: 69   , U: 4.484388e-10,   V: 4.484388e-10,   W: 4.289889e-10,   Local Coninuity: 1.181032e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 70   , U: 5.224798e-10,   V: 5.224798e-10,   W: 3.412144e-10,   Local Coninuity: 8.439390e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 71   , U: 5.012847e-10,   V: 5.012847e-10,   W: 2.058757e-10,   Local Coninuity: 5.736532e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 72   , U: 3.923827e-10,   V: 3.923827e-10,   W: 1.225952e-10,   Local Coninuity: 5.066007e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 73   , U: 2.618366e-10,   V: 2.618366e-10,   W: 1.427600e-10,   Local Coninuity: 4.860312e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 74   , U: 1.624609e-10,   V: 1.624609e-10,   W: 1.517844e-10,   Local Coninuity: 4.291141e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 75   , U: 1.858263e-10,   V: 1.858263e-10,   W: 1.228096e-10,   Local Coninuity: 3.128627e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 76   , U: 1.817849e-10,   V: 1.817849e-10,   W: 7.498045e-11,   Local Coninuity: 2.091687e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 77   , U: 1.432175e-10,   V: 1.432175e-10,   W: 4.369210e-11,   Local Coninuity: 1.779413e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 78   , U: 9.650204e-11,   V: 9.650204e-11,   W: 4.976203e-11,   Local Coninuity: 1.716287e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 79   , U: 5.876512e-11,   V: 5.876512e-11,   W: 5.353973e-11,   Local Coninuity: 1.545072e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 80   , U: 6.556488e-11,   V: 6.556488e-11,   W: 4.399007e-11,   Local Coninuity: 1.149911e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 81   , U: 6.545100e-11,   V: 6.545100e-11,   W: 2.716260e-11,   Local Coninuity: 7.622526e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 82   , U: 5.198507e-11,   V: 5.198507e-11,   W: 1.555462e-11,   Local Coninuity: 6.260791e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 83   , U: 3.530635e-11,   V: 3.530635e-11,   W: 1.735683e-11,   Local Coninuity: 6.035984e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 84   , U: 2.122292e-11,   V: 2.122292e-11,   W: 1.885193e-11,   Local Coninuity: 5.522016e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 85   , U: 2.298939e-11,   V: 2.298939e-11,   W: 1.569802e-11,   Local Coninuity: 4.193371e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 86   , U: 2.342792e-11,   V: 2.342792e-11,   W: 9.794695e-12,   Local Coninuity: 2.773492e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 87   , U: 1.877758e-11,   V: 1.877758e-11,   W: 5.535454e-12,   Local Coninuity: 2.207049e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 88   , U: 1.283780e-11,   V: 1.283780e-11,   W: 6.062657e-12,   Local Coninuity: 2.117060e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 89   , U: 7.656712e-12,   V: 7.656708e-12,   W: 6.633633e-12,   Local Coninuity: 1.962236e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 90   , U: 8.024412e-12,   V: 8.024413e-12,   W: 5.586929e-12,   Local Coninuity: 1.518621e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 91   , U: 8.345239e-12,   V: 8.345239e-12,   W: 3.518948e-12,   Local Coninuity: 1.006966e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 92   , U: 6.754741e-12,   V: 6.754739e-12,   W: 1.968383e-12,   Local Coninuity: 7.796986e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 93   , U: 4.643676e-12,   V: 4.643678e-12,   W: 2.122068e-12,   Local Coninuity: 7.416487e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 94   , U: 2.757890e-12,   V: 2.757894e-12,   W: 2.334593e-12,   Local Coninuity: 6.942951e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 95   , U: 2.792890e-12,   V: 2.792890e-12,   W: 1.984976e-12,   Local Coninuity: 5.468107e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 96   , U: 2.961578e-12,   V: 2.961575e-12,   W: 1.260685e-12,   Local Coninuity: 3.646501e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 97   , U: 2.421531e-12,   V: 2.421529e-12,   W: 6.998639e-13,   Local Coninuity: 2.761711e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 98   , U: 1.672521e-12,   V: 1.672521e-12,   W: 7.446969e-13,   Local Coninuity: 2.598382e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 99   , U: 9.913933e-13,   V: 9.913906e-13,   W: 8.224240e-13,   Local Coninuity: 2.449335e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 100  , U: 9.707244e-13,   V: 9.707246e-13,   W: 7.046695e-13,   Local Coninuity: 1.959819e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 101  , U: 1.048265e-12,   V: 1.048266e-12,   W: 4.507256e-13,   Local Coninuity: 1.316934e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 102  , U: 8.656529e-13,   V: 8.656518e-13,   W: 2.488268e-13,   Local Coninuity: 9.807891e-13,   Global Mass Flux: 0.000000e+00
 *** SOLUTION CONVERGED ***
 
 
-[CAMIRA_ Profiling:                           0.27s] [nCalls   1] (100.00%)
-[    Untimed:                                 0.00s] [nCalls   1] (  0.10%)
-[    Pre processing:                          0.00s] [nCalls   1] (  1.54%)
-[    Solver Loop:                             0.27s] [nCalls   1] ( 98.37%)
-[        Untimed:                             0.01s] [nCalls   1] (  1.89%)
-[        Multigrid Cycling:                   0.17s] [nCalls  69] ( 62.57%)
-[            Untimed:                         0.01s] [nCalls  69] (  3.59%)
-[            Setting Ghost Cells:             0.01s] [nCalls 414] (  2.97%)
-[            Sweeping:                        0.07s] [nCalls 414] ( 26.53%)
-[            Updating Coefficients:           0.08s] [nCalls  69] ( 29.48%)
-[        Residuals and Logging:               0.09s] [nCalls  69] ( 33.90%)
-[            Untimed:                         0.01s] [nCalls  69] (  4.01%)
-[            Updating Coefficients:           0.08s] [nCalls  69] ( 29.88%)
+[CAMIRA_ Profiling:                           0.29s] [nCalls   1] (100.00%)
+[    Untimed:                                 0.00s] [nCalls   1] (  0.08%)
+[    Pre processing:                          0.00s] [nCalls   1] (  1.23%)
+[    Solver Loop:                             0.29s] [nCalls   1] ( 98.69%)
+[        Untimed:                             0.00s] [nCalls   1] (  1.14%)
+[        Multigrid Cycling:                   0.18s] [nCalls 102] ( 61.68%)
+[            Untimed:                         0.01s] [nCalls 102] (  2.84%)
+[            Setting Ghost Cells:             0.01s] [nCalls 612] (  5.10%)
+[            Sweeping:                        0.06s] [nCalls 612] ( 21.46%)
+[            Updating Coefficients:           0.09s] [nCalls 102] ( 32.29%)
+[        Residuals and Logging:               0.10s] [nCalls 102] ( 35.86%)
+[            Untimed:                         0.01s] [nCalls 102] (  3.88%)
+[            Updating Coefficients:           0.09s] [nCalls 102] ( 31.98%)
 
 
 
@@ -847,423 +251,653 @@ Min. cell aspect ratio : 1
 Max. cell aspect ratio : 1
 
 Convergence Residuals:
-iteration: 0    , U: 5.089736e+05,   V: 5.089736e+05,   W: 9.952291e+05,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
+iteration: 0    , U: 3.179272e+05,   V: 3.179272e+05,   W: 6.162441e+05,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 1    , U: 7.650219e-02,   V: 7.650219e-02,   W: 8.452457e-02,   Local Coninuity: 3.276172e-02,   Global Mass Flux: 0.000000e+00
+iteration: 1    , U: 7.344520e-02,   V: 7.344520e-02,   W: 7.916010e-02,   Local Coninuity: 3.754105e-02,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 2    , U: 3.733312e-02,   V: 3.733312e-02,   W: 4.061071e-02,   Local Coninuity: 3.379210e-02,   Global Mass Flux: 0.000000e+00
+iteration: 2    , U: 3.105870e-02,   V: 3.105870e-02,   W: 3.257046e-02,   Local Coninuity: 2.537705e-02,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 3    , U: 2.392273e-02,   V: 2.392273e-02,   W: 2.620017e-02,   Local Coninuity: 2.649242e-02,   Global Mass Flux: 0.000000e+00
+iteration: 3    , U: 1.665993e-02,   V: 1.665993e-02,   W: 1.774550e-02,   Local Coninuity: 1.859516e-02,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 4    , U: 1.673513e-02,   V: 1.673513e-02,   W: 1.857228e-02,   Local Coninuity: 2.202957e-02,   Global Mass Flux: 0.000000e+00
+iteration: 4    , U: 1.002400e-02,   V: 1.002400e-02,   W: 1.083520e-02,   Local Coninuity: 1.146350e-02,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 5    , U: 1.265143e-02,   V: 1.265143e-02,   W: 1.383526e-02,   Local Coninuity: 2.286276e-02,   Global Mass Flux: 0.000000e+00
+iteration: 5    , U: 6.048267e-03,   V: 6.048267e-03,   W: 6.936649e-03,   Local Coninuity: 8.269355e-03,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 6    , U: 1.031254e-02,   V: 1.031254e-02,   W: 1.089059e-02,   Local Coninuity: 2.130652e-02,   Global Mass Flux: 0.000000e+00
+iteration: 6    , U: 4.063694e-03,   V: 4.063694e-03,   W: 4.578460e-03,   Local Coninuity: 5.709730e-03,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 7    , U: 8.555182e-03,   V: 8.555182e-03,   W: 8.788533e-03,   Local Coninuity: 1.671590e-02,   Global Mass Flux: 0.000000e+00
+iteration: 7    , U: 2.763650e-03,   V: 2.763650e-03,   W: 3.035936e-03,   Local Coninuity: 4.351503e-03,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 8    , U: 7.143178e-03,   V: 7.143178e-03,   W: 7.115162e-03,   Local Coninuity: 1.297293e-02,   Global Mass Flux: 0.000000e+00
+iteration: 8    , U: 1.932348e-03,   V: 1.932348e-03,   W: 2.062816e-03,   Local Coninuity: 3.177858e-03,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 9    , U: 6.015766e-03,   V: 6.015766e-03,   W: 5.830830e-03,   Local Coninuity: 1.080253e-02,   Global Mass Flux: 0.000000e+00
+iteration: 9    , U: 1.370849e-03,   V: 1.370849e-03,   W: 1.423435e-03,   Local Coninuity: 2.188969e-03,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 10   , U: 5.134166e-03,   V: 5.134166e-03,   W: 4.892051e-03,   Local Coninuity: 1.004897e-02,   Global Mass Flux: 0.000000e+00
+iteration: 10   , U: 9.547099e-04,   V: 9.547099e-04,   W: 9.618273e-04,   Local Coninuity: 1.321707e-03,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 11   , U: 4.416126e-03,   V: 4.416126e-03,   W: 4.238685e-03,   Local Coninuity: 9.261898e-03,   Global Mass Flux: 0.000000e+00
+iteration: 11   , U: 6.691456e-04,   V: 6.691456e-04,   W: 6.597113e-04,   Local Coninuity: 1.031963e-03,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 12   , U: 3.734384e-03,   V: 3.734384e-03,   W: 3.690443e-03,   Local Coninuity: 7.881112e-03,   Global Mass Flux: 0.000000e+00
+iteration: 12   , U: 4.759014e-04,   V: 4.759014e-04,   W: 4.777296e-04,   Local Coninuity: 1.028174e-03,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 13   , U: 3.127690e-03,   V: 3.127690e-03,   W: 3.213757e-03,   Local Coninuity: 6.707627e-03,   Global Mass Flux: 0.000000e+00
+iteration: 13   , U: 3.524681e-04,   V: 3.524681e-04,   W: 3.527587e-04,   Local Coninuity: 9.247254e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 14   , U: 2.672992e-03,   V: 2.672992e-03,   W: 2.815785e-03,   Local Coninuity: 6.185400e-03,   Global Mass Flux: 0.000000e+00
+iteration: 14   , U: 2.820714e-04,   V: 2.820714e-04,   W: 2.586483e-04,   Local Coninuity: 6.868600e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 15   , U: 2.344996e-03,   V: 2.344996e-03,   W: 2.490930e-03,   Local Coninuity: 5.868782e-03,   Global Mass Flux: 0.000000e+00
+iteration: 15   , U: 2.243002e-04,   V: 2.243002e-04,   W: 1.862433e-04,   Local Coninuity: 4.111060e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 16   , U: 2.059519e-03,   V: 2.059519e-03,   W: 2.199262e-03,   Local Coninuity: 5.155222e-03,   Global Mass Flux: 0.000000e+00
+iteration: 16   , U: 1.664644e-04,   V: 1.664644e-04,   W: 1.303739e-04,   Local Coninuity: 2.370205e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 17   , U: 1.808691e-03,   V: 1.808691e-03,   W: 1.930793e-03,   Local Coninuity: 4.353427e-03,   Global Mass Flux: 0.000000e+00
+iteration: 17   , U: 1.228641e-04,   V: 1.228641e-04,   W: 9.424655e-05,   Local Coninuity: 2.676503e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 18   , U: 1.614400e-03,   V: 1.614400e-03,   W: 1.696190e-03,   Local Coninuity: 3.955837e-03,   Global Mass Flux: 0.000000e+00
+iteration: 18   , U: 9.812549e-05,   V: 9.812549e-05,   W: 7.028173e-05,   Local Coninuity: 3.154879e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 19   , U: 1.455207e-03,   V: 1.455207e-03,   W: 1.496326e-03,   Local Coninuity: 3.714783e-03,   Global Mass Flux: 0.000000e+00
+iteration: 19   , U: 8.571464e-05,   V: 8.571464e-05,   W: 5.185471e-05,   Local Coninuity: 2.972427e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 20   , U: 1.304995e-03,   V: 1.304995e-03,   W: 1.325022e-03,   Local Coninuity: 3.300138e-03,   Global Mass Flux: 0.000000e+00
+iteration: 20   , U: 7.877320e-05,   V: 7.877320e-05,   W: 3.940092e-05,   Local Coninuity: 2.321350e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 21   , U: 1.161245e-03,   V: 1.161245e-03,   W: 1.174462e-03,   Local Coninuity: 2.799195e-03,   Global Mass Flux: 0.000000e+00
+iteration: 21   , U: 6.880555e-05,   V: 6.880555e-05,   W: 3.157920e-05,   Local Coninuity: 1.632939e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 22   , U: 1.030225e-03,   V: 1.030225e-03,   W: 1.041262e-03,   Local Coninuity: 2.418370e-03,   Global Mass Flux: 0.000000e+00
+iteration: 22   , U: 5.693580e-05,   V: 5.693580e-05,   W: 2.473231e-05,   Local Coninuity: 1.439108e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 23   , U: 9.177512e-04,   V: 9.177512e-04,   W: 9.262453e-04,   Local Coninuity: 2.198865e-03,   Global Mass Flux: 0.000000e+00
+iteration: 23   , U: 4.856468e-05,   V: 4.856468e-05,   W: 1.978267e-05,   Local Coninuity: 1.416393e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 24   , U: 8.246888e-04,   V: 8.246888e-04,   W: 8.303719e-04,   Local Coninuity: 2.052958e-03,   Global Mass Flux: 0.000000e+00
+iteration: 24   , U: 4.506210e-05,   V: 4.506210e-05,   W: 1.629840e-05,   Local Coninuity: 1.301442e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 25   , U: 7.382873e-04,   V: 7.382873e-04,   W: 7.468719e-04,   Local Coninuity: 1.839927e-03,   Global Mass Flux: 0.000000e+00
+iteration: 25   , U: 4.319537e-05,   V: 4.319537e-05,   W: 1.470627e-05,   Local Coninuity: 1.002211e-04,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 26   , U: 6.568332e-04,   V: 6.568332e-04,   W: 6.692197e-04,   Local Coninuity: 1.583090e-03,   Global Mass Flux: 0.000000e+00
+iteration: 26   , U: 3.847579e-05,   V: 3.847579e-05,   W: 1.330537e-05,   Local Coninuity: 7.040819e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 27   , U: 5.859690e-04,   V: 5.859690e-04,   W: 5.982751e-04,   Local Coninuity: 1.424419e-03,   Global Mass Flux: 0.000000e+00
+iteration: 27   , U: 3.250953e-05,   V: 3.250953e-05,   W: 1.202174e-05,   Local Coninuity: 6.480313e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 28   , U: 5.291901e-04,   V: 5.291901e-04,   W: 5.374092e-04,   Local Coninuity: 1.364495e-03,   Global Mass Flux: 0.000000e+00
+iteration: 28   , U: 2.525629e-05,   V: 2.525629e-05,   W: 1.011592e-05,   Local Coninuity: 7.674243e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 29   , U: 4.809523e-04,   V: 4.809523e-04,   W: 4.840589e-04,   Local Coninuity: 1.303648e-03,   Global Mass Flux: 0.000000e+00
+iteration: 29   , U: 1.924075e-05,   V: 1.924075e-05,   W: 8.387911e-06,   Local Coninuity: 9.141727e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 30   , U: 4.354264e-04,   V: 4.354264e-04,   W: 4.351682e-04,   Local Coninuity: 1.192082e-03,   Global Mass Flux: 0.000000e+00
+iteration: 30   , U: 1.657154e-05,   V: 1.657154e-05,   W: 7.035411e-06,   Local Coninuity: 9.145296e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 31   , U: 3.923420e-04,   V: 3.923420e-04,   W: 3.902072e-04,   Local Coninuity: 1.066293e-03,   Global Mass Flux: 0.000000e+00
+iteration: 31   , U: 1.907468e-05,   V: 1.907468e-05,   W: 6.564491e-06,   Local Coninuity: 7.769574e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 32   , U: 3.524233e-04,   V: 3.524233e-04,   W: 3.499734e-04,   Local Coninuity: 9.564455e-04,   Global Mass Flux: 0.000000e+00
+iteration: 32   , U: 2.144960e-05,   V: 2.144960e-05,   W: 6.546746e-06,   Local Coninuity: 5.487129e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 33   , U: 3.157689e-04,   V: 3.157689e-04,   W: 3.141948e-04,   Local Coninuity: 8.434015e-04,   Global Mass Flux: 0.000000e+00
+iteration: 33   , U: 2.092796e-05,   V: 2.092796e-05,   W: 6.398874e-06,   Local Coninuity: 2.985971e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 34   , U: 2.819484e-04,   V: 2.819484e-04,   W: 2.817316e-04,   Local Coninuity: 7.169146e-04,   Global Mass Flux: 0.000000e+00
+iteration: 34   , U: 1.801379e-05,   V: 1.801379e-05,   W: 6.085880e-06,   Local Coninuity: 1.527700e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 35   , U: 2.509857e-04,   V: 2.509857e-04,   W: 2.521728e-04,   Local Coninuity: 6.070750e-04,   Global Mass Flux: 0.000000e+00
+iteration: 35   , U: 1.490094e-05,   V: 1.490094e-05,   W: 5.750475e-06,   Local Coninuity: 2.435124e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 36   , U: 2.246948e-04,   V: 2.246948e-04,   W: 2.262982e-04,   Local Coninuity: 5.564088e-04,   Global Mass Flux: 0.000000e+00
+iteration: 36   , U: 1.185817e-05,   V: 1.185817e-05,   W: 5.625410e-06,   Local Coninuity: 3.851379e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 37   , U: 2.040072e-04,   V: 2.040072e-04,   W: 2.043672e-04,   Local Coninuity: 5.400952e-04,   Global Mass Flux: 0.000000e+00
+iteration: 37   , U: 8.670624e-06,   V: 8.670624e-06,   W: 5.121266e-06,   Local Coninuity: 4.647561e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 38   , U: 1.855896e-04,   V: 1.855896e-04,   W: 1.846420e-04,   Local Coninuity: 5.106291e-04,   Global Mass Flux: 0.000000e+00
+iteration: 38   , U: 7.234896e-06,   V: 7.234896e-06,   W: 4.225663e-06,   Local Coninuity: 4.723667e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 39   , U: 1.679413e-04,   V: 1.679413e-04,   W: 1.664465e-04,   Local Coninuity: 4.616450e-04,   Global Mass Flux: 0.000000e+00
+iteration: 39   , U: 8.755178e-06,   V: 8.755178e-06,   W: 3.360139e-06,   Local Coninuity: 4.184467e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 40   , U: 1.513546e-04,   V: 1.513546e-04,   W: 1.496239e-04,   Local Coninuity: 4.056250e-04,   Global Mass Flux: 0.000000e+00
+iteration: 40   , U: 1.043642e-05,   V: 1.043642e-05,   W: 3.059245e-06,   Local Coninuity: 3.263216e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 41   , U: 1.365978e-04,   V: 1.365978e-04,   W: 1.344604e-04,   Local Coninuity: 3.547739e-04,   Global Mass Flux: 0.000000e+00
+iteration: 41   , U: 1.093544e-05,   V: 1.093544e-05,   W: 3.317919e-06,   Local Coninuity: 2.213419e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 42   , U: 1.233126e-04,   V: 1.233126e-04,   W: 1.210264e-04,   Local Coninuity: 3.092009e-04,   Global Mass Flux: 0.000000e+00
+iteration: 42   , U: 1.021625e-05,   V: 1.021625e-05,   W: 3.641589e-06,   Local Coninuity: 1.356395e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 43   , U: 1.111896e-04,   V: 1.111896e-04,   W: 1.090583e-04,   Local Coninuity: 2.704673e-04,   Global Mass Flux: 0.000000e+00
+iteration: 43   , U: 8.893343e-06,   V: 8.893343e-06,   W: 3.757418e-06,   Local Coninuity: 1.244412e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 44   , U: 1.007222e-04,   V: 1.007222e-04,   W: 9.845182e-05,   Local Coninuity: 2.558945e-04,   Global Mass Flux: 0.000000e+00
+iteration: 44   , U: 7.293237e-06,   V: 7.293237e-06,   W: 3.699642e-06,   Local Coninuity: 1.722636e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 45   , U: 9.180393e-05,   V: 9.180393e-05,   W: 8.907615e-05,   Local Coninuity: 2.545186e-04,   Global Mass Flux: 0.000000e+00
+iteration: 45   , U: 5.467227e-06,   V: 5.467227e-06,   W: 3.485229e-06,   Local Coninuity: 2.223233e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 46   , U: 8.360151e-05,   V: 8.360151e-05,   W: 8.058342e-05,   Local Coninuity: 2.499088e-04,   Global Mass Flux: 0.000000e+00
+iteration: 46   , U: 4.045409e-06,   V: 4.045409e-06,   W: 2.983602e-06,   Local Coninuity: 2.456655e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 47   , U: 7.581542e-05,   V: 7.581542e-05,   W: 7.285492e-05,   Local Coninuity: 2.366596e-04,   Global Mass Flux: 0.000000e+00
+iteration: 47   , U: 4.141332e-06,   V: 4.141332e-06,   W: 2.324520e-06,   Local Coninuity: 2.442546e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 48   , U: 6.841675e-05,   V: 6.841675e-05,   W: 6.574803e-05,   Local Coninuity: 2.154483e-04,   Global Mass Flux: 0.000000e+00
+iteration: 48   , U: 5.441017e-06,   V: 5.441017e-06,   W: 1.736854e-06,   Local Coninuity: 2.190495e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 49   , U: 6.150112e-05,   V: 6.150112e-05,   W: 5.918415e-05,   Local Coninuity: 1.893153e-04,   Global Mass Flux: 0.000000e+00
+iteration: 49   , U: 6.269507e-06,   V: 6.269507e-06,   W: 1.604202e-06,   Local Coninuity: 1.737234e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 50   , U: 5.512489e-05,   V: 5.512489e-05,   W: 5.316198e-05,   Local Coninuity: 1.612223e-04,   Global Mass Flux: 0.000000e+00
+iteration: 50   , U: 6.276685e-06,   V: 6.276685e-06,   W: 1.970180e-06,   Local Coninuity: 1.199244e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 51   , U: 4.921424e-05,   V: 4.921424e-05,   W: 4.772580e-05,   Local Coninuity: 1.338062e-04,   Global Mass Flux: 0.000000e+00
+iteration: 51   , U: 5.621287e-06,   V: 5.621287e-06,   W: 2.269751e-06,   Local Coninuity: 8.249666e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 52   , U: 4.389849e-05,   V: 4.389849e-05,   W: 4.276872e-05,   Local Coninuity: 1.108788e-04,   Global Mass Flux: 0.000000e+00
+iteration: 52   , U: 4.702593e-06,   V: 4.702593e-06,   W: 2.387037e-06,   Local Coninuity: 8.414925e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 53   , U: 3.945027e-05,   V: 3.945027e-05,   W: 3.837087e-05,   Local Coninuity: 9.910170e-05,   Global Mass Flux: 0.000000e+00
+iteration: 53   , U: 3.628744e-06,   V: 3.628744e-06,   W: 2.359632e-06,   Local Coninuity: 1.112988e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 54   , U: 3.599368e-05,   V: 3.599368e-05,   W: 3.470038e-05,   Local Coninuity: 9.925854e-05,   Global Mass Flux: 0.000000e+00
+iteration: 54   , U: 2.581520e-06,   V: 2.581520e-06,   W: 2.204044e-06,   Local Coninuity: 1.354658e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 55   , U: 3.310569e-05,   V: 3.310569e-05,   W: 3.158997e-05,   Local Coninuity: 1.034077e-04,   Global Mass Flux: 0.000000e+00
+iteration: 55   , U: 2.085503e-06,   V: 2.085503e-06,   W: 1.863689e-06,   Local Coninuity: 1.468314e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 56   , U: 3.045147e-05,   V: 3.045147e-05,   W: 2.878979e-05,   Local Coninuity: 1.036967e-04,   Global Mass Flux: 0.000000e+00
+iteration: 56   , U: 2.865379e-06,   V: 2.865379e-06,   W: 1.406216e-06,   Local Coninuity: 1.415781e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 57   , U: 2.788879e-05,   V: 2.788879e-05,   W: 2.618973e-05,   Local Coninuity: 9.850852e-05,   Global Mass Flux: 0.000000e+00
+iteration: 57   , U: 3.613531e-06,   V: 3.613531e-06,   W: 9.950277e-07,   Local Coninuity: 1.217685e-05,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 58   , U: 2.536595e-05,   V: 2.536595e-05,   W: 2.374764e-05,   Local Coninuity: 8.855307e-05,   Global Mass Flux: 0.000000e+00
+iteration: 58   , U: 3.868401e-06,   V: 3.868401e-06,   W: 9.218574e-07,   Local Coninuity: 9.341278e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 59   , U: 2.288773e-05,   V: 2.288773e-05,   W: 2.144934e-05,   Local Coninuity: 7.550316e-05,   Global Mass Flux: 0.000000e+00
+iteration: 59   , U: 3.657017e-06,   V: 3.657017e-06,   W: 1.215888e-06,   Local Coninuity: 6.760862e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 60   , U: 2.052308e-05,   V: 2.052308e-05,   W: 1.929173e-05,   Local Coninuity: 6.225893e-05,   Global Mass Flux: 0.000000e+00
+iteration: 60   , U: 3.150300e-06,   V: 3.150300e-06,   W: 1.434926e-06,   Local Coninuity: 5.447174e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 61   , U: 1.843651e-05,   V: 1.843651e-05,   W: 1.730271e-05,   Local Coninuity: 5.524228e-05,   Global Mass Flux: 0.000000e+00
+iteration: 61   , U: 2.493901e-06,   V: 2.493901e-06,   W: 1.510185e-06,   Local Coninuity: 6.063008e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 62   , U: 1.671629e-05,   V: 1.671629e-05,   W: 1.569898e-05,   Local Coninuity: 5.546440e-05,   Global Mass Flux: 0.000000e+00
+iteration: 62   , U: 1.792076e-06,   V: 1.792076e-06,   W: 1.512381e-06,   Local Coninuity: 7.579689e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 63   , U: 1.530504e-05,   V: 1.530504e-05,   W: 1.423659e-05,   Local Coninuity: 5.690302e-05,   Global Mass Flux: 0.000000e+00
+iteration: 63   , U: 1.258191e-06,   V: 1.258191e-06,   W: 1.389901e-06,   Local Coninuity: 8.532083e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 64   , U: 1.405910e-05,   V: 1.405910e-05,   W: 1.288846e-05,   Local Coninuity: 5.718687e-05,   Global Mass Flux: 0.000000e+00
+iteration: 64   , U: 1.442676e-06,   V: 1.442676e-06,   W: 1.151459e-06,   Local Coninuity: 8.638378e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 65   , U: 1.284170e-05,   V: 1.284170e-05,   W: 1.164877e-05,   Local Coninuity: 5.519429e-05,   Global Mass Flux: 0.000000e+00
+iteration: 65   , U: 2.023656e-06,   V: 2.023656e-06,   W: 8.449851e-07,   Local Coninuity: 7.927921e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 66   , U: 1.163411e-05,   V: 1.163411e-05,   W: 1.054867e-05,   Local Coninuity: 5.141255e-05,   Global Mass Flux: 0.000000e+00
+iteration: 66   , U: 2.344128e-06,   V: 2.344128e-06,   W: 5.803738e-07,   Local Coninuity: 6.591819e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 67   , U: 1.045764e-05,   V: 1.045764e-05,   W: 9.583099e-06,   Local Coninuity: 4.619324e-05,   Global Mass Flux: 0.000000e+00
+iteration: 67   , U: 2.366049e-06,   V: 2.366049e-06,   W: 5.476645e-07,   Local Coninuity: 5.137003e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 68   , U: 9.300116e-06,   V: 9.300116e-06,   W: 8.689341e-06,   Local Coninuity: 3.936399e-05,   Global Mass Flux: 0.000000e+00
+iteration: 68   , U: 2.152096e-06,   V: 2.152096e-06,   W: 7.542860e-07,   Local Coninuity: 4.173394e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 69   , U: 8.243882e-06,   V: 8.243882e-06,   W: 7.839275e-06,   Local Coninuity: 3.236638e-05,   Global Mass Flux: 0.000000e+00
+iteration: 69   , U: 1.784261e-06,   V: 1.784261e-06,   W: 8.945772e-07,   Local Coninuity: 3.804160e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 70   , U: 7.475388e-06,   V: 7.475388e-06,   W: 7.065150e-06,   Local Coninuity: 2.867003e-05,   Global Mass Flux: 0.000000e+00
+iteration: 70   , U: 1.343438e-06,   V: 1.343438e-06,   W: 9.525944e-07,   Local Coninuity: 4.383836e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 71   , U: 6.920012e-06,   V: 6.920012e-06,   W: 6.370939e-06,   Local Coninuity: 2.694102e-05,   Global Mass Flux: 0.000000e+00
+iteration: 71   , U: 9.200204e-07,   V: 9.200204e-07,   W: 9.501101e-07,   Local Coninuity: 5.013974e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 72   , U: 6.479224e-06,   V: 6.479224e-06,   W: 5.738883e-06,   Local Coninuity: 2.632948e-05,   Global Mass Flux: 0.000000e+00
+iteration: 72   , U: 7.468398e-07,   V: 7.468398e-07,   W: 8.612194e-07,   Local Coninuity: 5.234281e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 73   , U: 6.111236e-06,   V: 6.111236e-06,   W: 5.200388e-06,   Local Coninuity: 2.687740e-05,   Global Mass Flux: 0.000000e+00
+iteration: 73   , U: 1.081465e-06,   V: 1.081465e-06,   W: 7.041093e-07,   Local Coninuity: 5.048830e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 74   , U: 5.757914e-06,   V: 5.757914e-06,   W: 4.748721e-06,   Local Coninuity: 2.743034e-05,   Global Mass Flux: 0.000000e+00
+iteration: 74   , U: 1.381731e-06,   V: 1.381731e-06,   W: 5.107171e-07,   Local Coninuity: 4.460366e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 75   , U: 5.388359e-06,   V: 5.388359e-06,   W: 4.366669e-06,   Local Coninuity: 2.729863e-05,   Global Mass Flux: 0.000000e+00
+iteration: 75   , U: 1.500317e-06,   V: 1.500317e-06,   W: 3.472897e-07,   Local Coninuity: 3.651817e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 76   , U: 4.921806e-06,   V: 4.921806e-06,   W: 4.040575e-06,   Local Coninuity: 2.575572e-05,   Global Mass Flux: 0.000000e+00
+iteration: 76   , U: 1.446907e-06,   V: 1.446907e-06,   W: 3.330166e-07,   Local Coninuity: 3.001552e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 77   , U: 4.373643e-06,   V: 4.373643e-06,   W: 3.745545e-06,   Local Coninuity: 2.314224e-05,   Global Mass Flux: 0.000000e+00
+iteration: 77   , U: 1.274128e-06,   V: 1.274128e-06,   W: 4.645202e-07,   Local Coninuity: 2.664356e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 78   , U: 3.845371e-06,   V: 3.845371e-06,   W: 3.447130e-06,   Local Coninuity: 2.104206e-05,   Global Mass Flux: 0.000000e+00
+iteration: 78   , U: 1.016514e-06,   V: 1.016514e-06,   W: 5.513159e-07,   Local Coninuity: 2.662679e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 79   , U: 3.447103e-06,   V: 3.447103e-06,   W: 3.164775e-06,   Local Coninuity: 2.021024e-05,   Global Mass Flux: 0.000000e+00
+iteration: 79   , U: 7.296614e-07,   V: 7.296614e-07,   W: 5.938295e-07,   Local Coninuity: 3.025507e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 80   , U: 3.184824e-06,   V: 3.184824e-06,   W: 2.868883e-06,   Local Coninuity: 1.903398e-05,   Global Mass Flux: 0.000000e+00
+iteration: 80   , U: 4.987676e-07,   V: 4.987676e-07,   W: 5.883563e-07,   Local Coninuity: 3.236708e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 81   , U: 3.035380e-06,   V: 3.035380e-06,   W: 2.559477e-06,   Local Coninuity: 1.772817e-05,   Global Mass Flux: 0.000000e+00
+iteration: 81   , U: 5.330749e-07,   V: 5.330749e-07,   W: 5.281335e-07,   Local Coninuity: 3.192517e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 82   , U: 2.926190e-06,   V: 2.926190e-06,   W: 2.265999e-06,   Local Coninuity: 1.659452e-05,   Global Mass Flux: 0.000000e+00
+iteration: 82   , U: 7.695941e-07,   V: 7.695941e-07,   W: 4.273854e-07,   Local Coninuity: 2.946961e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 83   , U: 2.759442e-06,   V: 2.759442e-06,   W: 2.014906e-06,   Local Coninuity: 1.582564e-05,   Global Mass Flux: 0.000000e+00
+iteration: 83   , U: 9.140067e-07,   V: 9.140067e-07,   W: 3.078139e-07,   Local Coninuity: 2.515198e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 84   , U: 2.522095e-06,   V: 2.522095e-06,   W: 1.830556e-06,   Local Coninuity: 1.558948e-05,   Global Mass Flux: 0.000000e+00
+iteration: 84   , U: 9.446255e-07,   V: 9.446255e-07,   W: 2.072841e-07,   Local Coninuity: 2.057158e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 85   , U: 2.205413e-06,   V: 2.205413e-06,   W: 1.703380e-06,   Local Coninuity: 1.498710e-05,   Global Mass Flux: 0.000000e+00
+iteration: 85   , U: 8.810095e-07,   V: 8.810095e-07,   W: 2.030842e-07,   Local Coninuity: 1.803633e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 86   , U: 1.860338e-06,   V: 1.860338e-06,   W: 1.602503e-06,   Local Coninuity: 1.383998e-05,   Global Mass Flux: 0.000000e+00
+iteration: 86   , U: 7.542807e-07,   V: 7.542807e-07,   W: 2.834078e-07,   Local Coninuity: 1.718117e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 87   , U: 1.627743e-06,   V: 1.627743e-06,   W: 1.511221e-06,   Local Coninuity: 1.298650e-05,   Global Mass Flux: 0.000000e+00
+iteration: 87   , U: 5.821013e-07,   V: 5.821013e-07,   W: 3.373849e-07,   Local Coninuity: 1.827365e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 88   , U: 1.529322e-06,   V: 1.529322e-06,   W: 1.416759e-06,   Local Coninuity: 1.205882e-05,   Global Mass Flux: 0.000000e+00
+iteration: 88   , U: 4.013619e-07,   V: 4.013619e-07,   W: 3.653917e-07,   Local Coninuity: 2.012951e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 89   , U: 1.516636e-06,   V: 1.516636e-06,   W: 1.287590e-06,   Local Coninuity: 1.061510e-05,   Global Mass Flux: 0.000000e+00
+iteration: 89   , U: 2.941691e-07,   V: 2.941691e-07,   W: 3.597116e-07,   Local Coninuity: 2.051525e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 90   , U: 1.556851e-06,   V: 1.556851e-06,   W: 1.130984e-06,   Local Coninuity: 9.270888e-06,   Global Mass Flux: 0.000000e+00
+iteration: 90   , U: 3.910421e-07,   V: 3.910421e-07,   W: 3.203754e-07,   Local Coninuity: 1.934198e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 91   , U: 1.598402e-06,   V: 1.598402e-06,   W: 9.863966e-07,   Local Coninuity: 8.618129e-06,   Global Mass Flux: 0.000000e+00
+iteration: 91   , U: 5.238006e-07,   V: 5.238006e-07,   W: 2.572105e-07,   Local Coninuity: 1.713710e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 92   , U: 1.570230e-06,   V: 1.570230e-06,   W: 8.762510e-07,   Local Coninuity: 8.600581e-06,   Global Mass Flux: 0.000000e+00
+iteration: 92   , U: 5.900385e-07,   V: 5.900385e-07,   W: 1.840138e-07,   Local Coninuity: 1.418418e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 93   , U: 1.473289e-06,   V: 1.473289e-06,   W: 8.135636e-07,   Local Coninuity: 8.996711e-06,   Global Mass Flux: 0.000000e+00
+iteration: 93   , U: 5.875037e-07,   V: 5.875037e-07,   W: 1.236602e-07,   Local Coninuity: 1.177649e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 94   , U: 1.294326e-06,   V: 1.294326e-06,   W: 7.939534e-07,   Local Coninuity: 9.111692e-06,   Global Mass Flux: 0.000000e+00
+iteration: 94   , U: 5.348908e-07,   V: 5.348908e-07,   W: 1.238376e-07,   Local Coninuity: 1.099773e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 95   , U: 1.073835e-06,   V: 1.073835e-06,   W: 7.957860e-07,   Local Coninuity: 9.005481e-06,   Global Mass Flux: 0.000000e+00
+iteration: 95   , U: 4.464002e-07,   V: 4.464002e-07,   W: 1.715832e-07,   Local Coninuity: 1.109065e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 96   , U: 8.905581e-07,   V: 8.905581e-07,   W: 7.974333e-07,   Local Coninuity: 8.926179e-06,   Global Mass Flux: 0.000000e+00
+iteration: 96   , U: 3.340811e-07,   V: 3.340811e-07,   W: 2.048004e-07,   Local Coninuity: 1.217831e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 97   , U: 8.113332e-07,   V: 8.113332e-07,   W: 7.767785e-07,   Local Coninuity: 8.426345e-06,   Global Mass Flux: 0.000000e+00
+iteration: 97   , U: 2.256947e-07,   V: 2.256947e-07,   W: 2.223687e-07,   Local Coninuity: 1.304074e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 98   , U: 8.472629e-07,   V: 8.472629e-07,   W: 7.127297e-07,   Local Coninuity: 7.452331e-06,   Global Mass Flux: 0.000000e+00
+iteration: 98   , U: 1.884781e-07,   V: 1.884781e-07,   W: 2.176026e-07,   Local Coninuity: 1.280628e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 99   , U: 9.376566e-07,   V: 9.376566e-07,   W: 6.108467e-07,   Local Coninuity: 6.321497e-06,   Global Mass Flux: 0.000000e+00
+iteration: 99   , U: 2.736795e-07,   V: 2.736795e-07,   W: 1.924845e-07,   Local Coninuity: 1.162282e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 100  , U: 1.004538e-06,   V: 1.004538e-06,   W: 4.996417e-07,   Local Coninuity: 5.380348e-06,   Global Mass Flux: 0.000000e+00
+iteration: 100  , U: 3.451967e-07,   V: 3.451967e-07,   W: 1.535152e-07,   Local Coninuity: 9.913259e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 101  , U: 9.907232e-07,   V: 9.907232e-07,   W: 4.098763e-07,   Local Coninuity: 5.013338e-06,   Global Mass Flux: 0.000000e+00
+iteration: 101  , U: 3.738574e-07,   V: 3.738574e-07,   W: 1.091388e-07,   Local Coninuity: 7.990207e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 102  , U: 9.074136e-07,   V: 9.074136e-07,   W: 3.653732e-07,   Local Coninuity: 5.264958e-06,   Global Mass Flux: 0.000000e+00
+iteration: 102  , U: 3.618674e-07,   V: 3.618674e-07,   W: 7.340386e-08,   Local Coninuity: 6.822646e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 103  , U: 7.579227e-07,   V: 7.579227e-07,   W: 3.603728e-07,   Local Coninuity: 5.479237e-06,   Global Mass Flux: 0.000000e+00
+iteration: 103  , U: 3.233312e-07,   V: 3.233312e-07,   W: 7.524351e-08,   Local Coninuity: 6.731503e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 104  , U: 5.630789e-07,   V: 5.630789e-07,   W: 3.790946e-07,   Local Coninuity: 5.606884e-06,   Global Mass Flux: 0.000000e+00
+iteration: 104  , U: 2.637727e-07,   V: 2.637727e-07,   W: 1.030830e-07,   Local Coninuity: 7.130112e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 105  , U: 4.202390e-07,   V: 4.202390e-07,   W: 4.054919e-07,   Local Coninuity: 5.603969e-06,   Global Mass Flux: 0.000000e+00
+iteration: 105  , U: 1.919124e-07,   V: 1.919124e-07,   W: 1.237121e-07,   Local Coninuity: 7.936593e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 106  , U: 4.134741e-07,   V: 4.134741e-07,   W: 4.165383e-07,   Local Coninuity: 5.195372e-06,   Global Mass Flux: 0.000000e+00
+iteration: 106  , U: 1.299182e-07,   V: 1.299182e-07,   W: 1.339948e-07,   Local Coninuity: 8.288942e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 107  , U: 4.965849e-07,   V: 4.965849e-07,   W: 3.939647e-07,   Local Coninuity: 4.425481e-06,   Global Mass Flux: 0.000000e+00
+iteration: 107  , U: 1.278016e-07,   V: 1.278016e-07,   W: 1.303750e-07,   Local Coninuity: 7.897475e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 108  , U: 5.907323e-07,   V: 5.907323e-07,   W: 3.380005e-07,   Local Coninuity: 3.561168e-06,   Global Mass Flux: 0.000000e+00
+iteration: 108  , U: 1.842542e-07,   V: 1.842542e-07,   W: 1.146184e-07,   Local Coninuity: 6.932670e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 109  , U: 6.370715e-07,   V: 6.370715e-07,   W: 2.636974e-07,   Local Coninuity: 2.951336e-06,   Global Mass Flux: 0.000000e+00
+iteration: 109  , U: 2.222233e-07,   V: 2.222233e-07,   W: 9.090483e-08,   Local Coninuity: 5.709674e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 110  , U: 6.221460e-07,   V: 6.221460e-07,   W: 2.043192e-07,   Local Coninuity: 2.823754e-06,   Global Mass Flux: 0.000000e+00
+iteration: 110  , U: 2.334204e-07,   V: 2.334204e-07,   W: 6.430601e-08,   Local Coninuity: 4.501182e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 111  , U: 5.680049e-07,   V: 5.680049e-07,   W: 1.819323e-07,   Local Coninuity: 3.095223e-06,   Global Mass Flux: 0.000000e+00
+iteration: 111  , U: 2.210069e-07,   V: 2.210069e-07,   W: 4.359374e-08,   Local Coninuity: 3.976013e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 112  , U: 4.743199e-07,   V: 4.743199e-07,   W: 1.916998e-07,   Local Coninuity: 3.355144e-06,   Global Mass Flux: 0.000000e+00
+iteration: 112  , U: 1.943527e-07,   V: 1.943527e-07,   W: 4.534969e-08,   Local Coninuity: 4.118402e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 113  , U: 3.564413e-07,   V: 3.564413e-07,   W: 2.178997e-07,   Local Coninuity: 3.575221e-06,   Global Mass Flux: 0.000000e+00
+iteration: 113  , U: 1.555005e-07,   V: 1.555005e-07,   W: 6.157364e-08,   Local Coninuity: 4.551164e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 114  , U: 2.643924e-07,   V: 2.643924e-07,   W: 2.439051e-07,   Local Coninuity: 3.624945e-06,   Global Mass Flux: 0.000000e+00
+iteration: 114  , U: 1.103791e-07,   V: 1.103791e-07,   W: 7.419340e-08,   Local Coninuity: 5.069704e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 115  , U: 2.518121e-07,   V: 2.518121e-07,   W: 2.517487e-07,   Local Coninuity: 3.376826e-06,   Global Mass Flux: 0.000000e+00
+iteration: 115  , U: 7.628386e-08,   V: 7.628386e-08,   W: 7.999382e-08,   Local Coninuity: 5.182372e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 116  , U: 3.184224e-07,   V: 3.184224e-07,   W: 2.369607e-07,   Local Coninuity: 2.880835e-06,   Global Mass Flux: 0.000000e+00
+iteration: 116  , U: 8.672459e-08,   V: 8.672459e-08,   W: 7.741282e-08,   Local Coninuity: 4.814836e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 117  , U: 3.817740e-07,   V: 3.817740e-07,   W: 2.036016e-07,   Local Coninuity: 2.286208e-06,   Global Mass Flux: 0.000000e+00
+iteration: 117  , U: 1.204557e-07,   V: 1.204557e-07,   W: 6.767638e-08,   Local Coninuity: 4.104132e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 118  , U: 4.062917e-07,   V: 4.062917e-07,   W: 1.597077e-07,   Local Coninuity: 1.795026e-06,   Global Mass Flux: 0.000000e+00
+iteration: 118  , U: 1.403786e-07,   V: 1.403786e-07,   W: 5.342662e-08,   Local Coninuity: 3.272382e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 119  , U: 3.913586e-07,   V: 3.913586e-07,   W: 1.153930e-07,   Local Coninuity: 1.629854e-06,   Global Mass Flux: 0.000000e+00
+iteration: 119  , U: 1.438471e-07,   V: 1.438471e-07,   W: 3.764286e-08,   Local Coninuity: 2.533358e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 120  , U: 3.522946e-07,   V: 3.522946e-07,   W: 9.182615e-08,   Local Coninuity: 1.807819e-06,   Global Mass Flux: 0.000000e+00
+iteration: 120  , U: 1.338373e-07,   V: 1.338373e-07,   W: 2.579610e-08,   Local Coninuity: 2.326546e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 121  , U: 2.904661e-07,   V: 2.904661e-07,   W: 9.510673e-08,   Local Coninuity: 2.017044e-06,   Global Mass Flux: 0.000000e+00
+iteration: 121  , U: 1.160778e-07,   V: 1.160778e-07,   W: 2.712841e-08,   Local Coninuity: 2.516266e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 122  , U: 2.120213e-07,   V: 2.120213e-07,   W: 1.142354e-07,   Local Coninuity: 2.203158e-06,   Global Mass Flux: 0.000000e+00
+iteration: 122  , U: 9.132338e-08,   V: 9.132338e-08,   W: 3.654260e-08,   Local Coninuity: 2.874890e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 123  , U: 1.438581e-07,   V: 1.438581e-07,   W: 1.355830e-07,   Local Coninuity: 2.239602e-06,   Global Mass Flux: 0.000000e+00
+iteration: 123  , U: 6.354150e-08,   V: 6.354150e-08,   W: 4.413222e-08,   Local Coninuity: 3.183826e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 124  , U: 1.462261e-07,   V: 1.462261e-07,   W: 1.440164e-07,   Local Coninuity: 2.069666e-06,   Global Mass Flux: 0.000000e+00
+iteration: 124  , U: 4.551960e-08,   V: 4.551960e-08,   W: 4.734247e-08,   Local Coninuity: 3.195945e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 125  , U: 2.001507e-07,   V: 2.001507e-07,   W: 1.375184e-07,   Local Coninuity: 1.732261e-06,   Global Mass Flux: 0.000000e+00
+iteration: 125  , U: 5.754232e-08,   V: 5.754232e-08,   W: 4.558696e-08,   Local Coninuity: 2.906440e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 126  , U: 2.383504e-07,   V: 2.383504e-07,   W: 1.187655e-07,   Local Coninuity: 1.327434e-06,   Global Mass Flux: 0.000000e+00
+iteration: 126  , U: 7.698654e-08,   V: 7.698654e-08,   W: 3.964617e-08,   Local Coninuity: 2.413454e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 127  , U: 2.510829e-07,   V: 2.510829e-07,   W: 9.289368e-08,   Local Coninuity: 1.006442e-06,   Global Mass Flux: 0.000000e+00
+iteration: 127  , U: 8.730650e-08,   V: 8.730650e-08,   W: 3.116783e-08,   Local Coninuity: 1.866332e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 128  , U: 2.398801e-07,   V: 2.398801e-07,   W: 6.629424e-08,   Local Coninuity: 9.204668e-07,   Global Mass Flux: 0.000000e+00
+iteration: 128  , U: 8.764530e-08,   V: 8.764530e-08,   W: 2.188972e-08,   Local Coninuity: 1.424298e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 129  , U: 2.151756e-07,   V: 2.151756e-07,   W: 5.081697e-08,   Local Coninuity: 1.054997e-06,   Global Mass Flux: 0.000000e+00
+iteration: 129  , U: 8.041082e-08,   V: 8.041082e-08,   W: 1.520694e-08,   Local Coninuity: 1.361531e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 130  , U: 1.771871e-07,   V: 1.771871e-07,   W: 5.479565e-08,   Local Coninuity: 1.219581e-06,   Global Mass Flux: 0.000000e+00
+iteration: 130  , U: 6.889868e-08,   V: 6.889868e-08,   W: 1.610152e-08,   Local Coninuity: 1.533145e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 131  , U: 1.298904e-07,   V: 1.298904e-07,   W: 6.880203e-08,   Local Coninuity: 1.360819e-06,   Global Mass Flux: 0.000000e+00
+iteration: 131  , U: 5.340068e-08,   V: 5.340068e-08,   W: 2.157772e-08,   Local Coninuity: 1.794850e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 132  , U: 9.110610e-08,   V: 9.110610e-08,   W: 8.067207e-08,   Local Coninuity: 1.390620e-06,   Global Mass Flux: 0.000000e+00
+iteration: 132  , U: 3.662903e-08,   V: 3.662903e-08,   W: 2.605054e-08,   Local Coninuity: 1.970341e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 133  , U: 9.080656e-08,   V: 9.080656e-08,   W: 8.486716e-08,   Local Coninuity: 1.286548e-06,   Global Mass Flux: 0.000000e+00
+iteration: 133  , U: 2.749423e-08,   V: 2.749423e-08,   W: 2.779882e-08,   Local Coninuity: 1.947441e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 134  , U: 1.254967e-07,   V: 1.254967e-07,   W: 8.078324e-08,   Local Coninuity: 1.075251e-06,   Global Mass Flux: 0.000000e+00
+iteration: 134  , U: 3.728524e-08,   V: 3.728524e-08,   W: 2.664005e-08,   Local Coninuity: 1.738603e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 135  , U: 1.479860e-07,   V: 1.479860e-07,   W: 6.987553e-08,   Local Coninuity: 8.150313e-07,   Global Mass Flux: 0.000000e+00
+iteration: 135  , U: 4.832024e-08,   V: 4.832024e-08,   W: 2.305423e-08,   Local Coninuity: 1.409997e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 136  , U: 1.545547e-07,   V: 1.545547e-07,   W: 5.497759e-08,   Local Coninuity: 5.954270e-07,   Global Mass Flux: 0.000000e+00
+iteration: 136  , U: 5.358831e-08,   V: 5.358831e-08,   W: 1.805178e-08,   Local Coninuity: 1.058883e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 137  , U: 1.463920e-07,   V: 1.463920e-07,   W: 3.944725e-08,   Local Coninuity: 5.233222e-07,   Global Mass Flux: 0.000000e+00
+iteration: 137  , U: 5.286745e-08,   V: 5.286745e-08,   W: 1.264280e-08,   Local Coninuity: 7.995511e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 138  , U: 1.302755e-07,   V: 1.302755e-07,   W: 2.904627e-08,   Local Coninuity: 6.101053e-07,   Global Mass Flux: 0.000000e+00
+iteration: 138  , U: 4.795493e-08,   V: 4.795493e-08,   W: 8.909867e-09,   Local Coninuity: 7.966170e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 139  , U: 1.067095e-07,   V: 1.067095e-07,   W: 2.899559e-08,   Local Coninuity: 7.265645e-07,   Global Mass Flux: 0.000000e+00
+iteration: 139  , U: 4.064647e-08,   V: 4.064647e-08,   W: 9.497346e-09,   Local Coninuity: 9.316175e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 140  , U: 7.735474e-08,   V: 7.735474e-08,   W: 3.752692e-08,   Local Coninuity: 8.226144e-07,   Global Mass Flux: 0.000000e+00
+iteration: 140  , U: 3.106600e-08,   V: 3.106600e-08,   W: 1.269958e-08,   Local Coninuity: 1.107857e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 141  , U: 5.264888e-08,   V: 5.264888e-08,   W: 4.540597e-08,   Local Coninuity: 8.418905e-07,   Global Mass Flux: 0.000000e+00
+iteration: 141  , U: 2.112465e-08,   V: 2.112465e-08,   W: 1.527097e-08,   Local Coninuity: 1.204530e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 142  , U: 5.513083e-08,   V: 5.513083e-08,   W: 4.844057e-08,   Local Coninuity: 7.760031e-07,   Global Mass Flux: 0.000000e+00
+iteration: 142  , U: 1.674048e-08,   V: 1.674048e-08,   W: 1.620654e-08,   Local Coninuity: 1.174538e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 143  , U: 7.690368e-08,   V: 7.690368e-08,   W: 4.645310e-08,   Local Coninuity: 6.420973e-07,   Global Mass Flux: 0.000000e+00
+iteration: 143  , U: 2.367700e-08,   V: 2.367700e-08,   W: 1.545500e-08,   Local Coninuity: 1.031606e-07,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 144  , U: 9.006305e-08,   V: 9.006305e-08,   W: 4.031534e-08,   Local Coninuity: 4.758148e-07,   Global Mass Flux: 0.000000e+00
+iteration: 144  , U: 2.988043e-08,   V: 2.988043e-08,   W: 1.331130e-08,   Local Coninuity: 8.186461e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 145  , U: 9.339673e-08,   V: 9.339673e-08,   W: 3.172039e-08,   Local Coninuity: 3.358243e-07,   Global Mass Flux: 0.000000e+00
+iteration: 145  , U: 3.252280e-08,   V: 3.252280e-08,   W: 1.038165e-08,   Local Coninuity: 5.976343e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 146  , U: 8.791934e-08,   V: 8.791934e-08,   W: 2.274232e-08,   Local Coninuity: 2.934904e-07,   Global Mass Flux: 0.000000e+00
+iteration: 146  , U: 3.160785e-08,   V: 3.160785e-08,   W: 7.254498e-09,   Local Coninuity: 4.480684e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 147  , U: 7.799992e-08,   V: 7.799992e-08,   W: 1.674421e-08,   Local Coninuity: 3.523073e-07,   Global Mass Flux: 0.000000e+00
+iteration: 147  , U: 2.839803e-08,   V: 2.839803e-08,   W: 5.192856e-09,   Local Coninuity: 4.655530e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 148  , U: 6.382666e-08,   V: 6.382666e-08,   W: 1.702611e-08,   Local Coninuity: 4.326053e-07,   Global Mass Flux: 0.000000e+00
+iteration: 148  , U: 2.384339e-08,   V: 2.384339e-08,   W: 5.572747e-09,   Local Coninuity: 5.642446e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 149  , U: 4.627897e-08,   V: 4.627897e-08,   W: 2.220212e-08,   Local Coninuity: 4.957465e-07,   Global Mass Flux: 0.000000e+00
+iteration: 149  , U: 1.798109e-08,   V: 1.798109e-08,   W: 7.438548e-09,   Local Coninuity: 6.764003e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 150  , U: 3.210535e-08,   V: 3.210535e-08,   W: 2.642692e-08,   Local Coninuity: 5.086854e-07,   Global Mass Flux: 0.000000e+00
+iteration: 150  , U: 1.217824e-08,   V: 1.217824e-08,   W: 8.891830e-09,   Local Coninuity: 7.284243e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 151  , U: 3.360118e-08,   V: 3.360118e-08,   W: 2.800837e-08,   Local Coninuity: 4.688513e-07,   Global Mass Flux: 0.000000e+00
+iteration: 151  , U: 1.028616e-08,   V: 1.028616e-08,   W: 9.383478e-09,   Local Coninuity: 7.018178e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 152  , U: 4.677458e-08,   V: 4.677458e-08,   W: 2.680106e-08,   Local Coninuity: 3.870505e-07,   Global Mass Flux: 0.000000e+00
+iteration: 152  , U: 1.478725e-08,   V: 1.478725e-08,   W: 8.903152e-09,   Local Coninuity: 6.074038e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 153  , U: 5.443672e-08,   V: 5.443672e-08,   W: 2.328354e-08,   Local Coninuity: 2.841117e-07,   Global Mass Flux: 0.000000e+00
+iteration: 153  , U: 1.824736e-08,   V: 1.824736e-08,   W: 7.632937e-09,   Local Coninuity: 4.723256e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 154  , U: 5.610788e-08,   V: 5.610788e-08,   W: 1.839237e-08,   Local Coninuity: 1.944976e-07,   Global Mass Flux: 0.000000e+00
+iteration: 154  , U: 1.954266e-08,   V: 1.954266e-08,   W: 5.928650e-09,   Local Coninuity: 3.354166e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 155  , U: 5.249676e-08,   V: 5.249676e-08,   W: 1.327900e-08,   Local Coninuity: 1.644987e-07,   Global Mass Flux: 0.000000e+00
+iteration: 155  , U: 1.874398e-08,   V: 1.874398e-08,   W: 4.134977e-09,   Local Coninuity: 2.505792e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 156  , U: 4.633904e-08,   V: 4.633904e-08,   W: 9.782867e-09,   Local Coninuity: 2.016388e-07,   Global Mass Flux: 0.000000e+00
+iteration: 156  , U: 1.670324e-08,   V: 1.670324e-08,   W: 3.007830e-09,   Local Coninuity: 2.715116e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 157  , U: 3.782161e-08,   V: 3.782161e-08,   W: 9.332365e-09,   Local Coninuity: 2.545431e-07,   Global Mass Flux: 0.000000e+00
+iteration: 157  , U: 1.390800e-08,   V: 1.390800e-08,   W: 3.257100e-09,   Local Coninuity: 3.401776e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 158  , U: 2.726094e-08,   V: 2.726094e-08,   W: 1.224540e-08,   Local Coninuity: 2.943760e-07,   Global Mass Flux: 0.000000e+00
+iteration: 158  , U: 1.035277e-08,   V: 1.035277e-08,   W: 4.334425e-09,   Local Coninuity: 4.089140e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 159  , U: 1.873936e-08,   V: 1.873936e-08,   W: 1.482810e-08,   Local Coninuity: 3.024055e-07,   Global Mass Flux: 0.000000e+00
+iteration: 159  , U: 7.005354e-09,   V: 7.005354e-09,   W: 5.144772e-09,   Local Coninuity: 4.363468e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 160  , U: 2.021497e-08,   V: 2.021497e-08,   W: 1.583817e-08,   Local Coninuity: 2.781665e-07,   Global Mass Flux: 0.000000e+00
+iteration: 160  , U: 6.325741e-09,   V: 6.325741e-09,   W: 5.397191e-09,   Local Coninuity: 4.158568e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 161  , U: 2.803934e-08,   V: 2.803934e-08,   W: 1.522483e-08,   Local Coninuity: 2.282721e-07,   Global Mass Flux: 0.000000e+00
+iteration: 161  , U: 9.107634e-09,   V: 9.107634e-09,   W: 5.093792e-09,   Local Coninuity: 3.550747e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 162  , U: 3.247300e-08,   V: 3.247300e-08,   W: 1.326410e-08,   Local Coninuity: 1.649947e-07,   Global Mass Flux: 0.000000e+00
+iteration: 162  , U: 1.102350e-08,   V: 1.102350e-08,   W: 4.347307e-09,   Local Coninuity: 2.708502e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 163  , U: 3.329032e-08,   V: 3.329032e-08,   W: 1.048570e-08,   Local Coninuity: 1.093992e-07,   Global Mass Flux: 0.000000e+00
+iteration: 163  , U: 1.163867e-08,   V: 1.163867e-08,   W: 3.361963e-09,   Local Coninuity: 1.871747e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 164  , U: 3.099172e-08,   V: 3.099172e-08,   W: 7.581403e-09,   Local Coninuity: 9.129280e-08,   Global Mass Flux: 0.000000e+00
+iteration: 164  , U: 1.103208e-08,   V: 1.103208e-08,   W: 2.342585e-09,   Local Coninuity: 1.398710e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 165  , U: 2.728479e-08,   V: 2.728479e-08,   W: 5.616080e-09,   Local Coninuity: 1.151984e-07,   Global Mass Flux: 0.000000e+00
+iteration: 165  , U: 9.761671e-09,   V: 9.761671e-09,   W: 1.732737e-09,   Local Coninuity: 1.581089e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 166  , U: 2.224662e-08,   V: 2.224662e-08,   W: 5.423916e-09,   Local Coninuity: 1.493744e-07,   Global Mass Flux: 0.000000e+00
+iteration: 166  , U: 8.065478e-09,   V: 8.065478e-09,   W: 1.893690e-09,   Local Coninuity: 2.039782e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 167  , U: 1.601067e-08,   V: 1.601067e-08,   W: 7.097682e-09,   Local Coninuity: 1.740544e-07,   Global Mass Flux: 0.000000e+00
+iteration: 167  , U: 5.928825e-09,   V: 5.928825e-09,   W: 2.511556e-09,   Local Coninuity: 2.449599e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 168  , U: 1.110553e-08,   V: 1.110553e-08,   W: 8.479034e-09,   Local Coninuity: 1.790545e-07,   Global Mass Flux: 0.000000e+00
+iteration: 168  , U: 4.022115e-09,   V: 4.022115e-09,   W: 2.958114e-09,   Local Coninuity: 2.591171e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 169  , U: 1.206847e-08,   V: 1.206847e-08,   W: 9.012000e-09,   Local Coninuity: 1.646184e-07,   Global Mass Flux: 0.000000e+00
+iteration: 169  , U: 3.880968e-09,   V: 3.880968e-09,   W: 3.084259e-09,   Local Coninuity: 2.444758e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 170  , U: 1.668770e-08,   V: 1.668770e-08,   W: 8.646127e-09,   Local Coninuity: 1.347611e-07,   Global Mass Flux: 0.000000e+00
+iteration: 170  , U: 5.543235e-09,   V: 5.543235e-09,   W: 2.894536e-09,   Local Coninuity: 2.061154e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 171  , U: 1.923857e-08,   V: 1.923857e-08,   W: 7.537092e-09,   Local Coninuity: 9.658801e-08,   Global Mass Flux: 0.000000e+00
+iteration: 171  , U: 6.596197e-09,   V: 6.596197e-09,   W: 2.459207e-09,   Local Coninuity: 1.543436e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 172  , U: 1.962712e-08,   V: 1.962712e-08,   W: 5.974670e-09,   Local Coninuity: 6.229792e-08,   Global Mass Flux: 0.000000e+00
+iteration: 172  , U: 6.874868e-09,   V: 6.874868e-09,   W: 1.892879e-09,   Local Coninuity: 1.038017e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 173  , U: 1.818364e-08,   V: 1.818364e-08,   W: 4.345565e-09,   Local Coninuity: 5.042636e-08,   Global Mass Flux: 0.000000e+00
+iteration: 173  , U: 6.447132e-09,   V: 6.447132e-09,   W: 1.318792e-09,   Local Coninuity: 7.791670e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 174  , U: 1.595288e-08,   V: 1.595288e-08,   W: 3.241348e-09,   Local Coninuity: 6.533703e-08,   Global Mass Flux: 0.000000e+00
+iteration: 174  , U: 5.669056e-09,   V: 5.669056e-09,   W: 9.919678e-10,   Local Coninuity: 9.196854e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 175  , U: 1.298668e-08,   V: 1.298668e-08,   W: 3.020061e-09,   Local Coninuity: 8.681230e-08,   Global Mass Flux: 0.000000e+00
+iteration: 175  , U: 4.649823e-09,   V: 4.649823e-09,   W: 1.095985e-09,   Local Coninuity: 1.216052e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 176  , U: 9.311426e-09,   V: 9.311426e-09,   W: 3.917993e-09,   Local Coninuity: 1.017533e-07,   Global Mass Flux: 0.000000e+00
+iteration: 176  , U: 3.376762e-09,   V: 3.376762e-09,   W: 1.447786e-09,   Local Coninuity: 1.455422e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 177  , U: 6.452527e-09,   V: 6.452527e-09,   W: 4.721574e-09,   Local Coninuity: 1.047519e-07,   Global Mass Flux: 0.000000e+00
+iteration: 177  , U: 2.303878e-09,   V: 2.303878e-09,   W: 1.690821e-09,   Local Coninuity: 1.526637e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 178  , U: 7.140564e-09,   V: 7.140564e-09,   W: 5.039876e-09,   Local Coninuity: 9.617164e-08,   Global Mass Flux: 0.000000e+00
+iteration: 178  , U: 2.367508e-09,   V: 2.367508e-09,   W: 1.751500e-09,   Local Coninuity: 1.426764e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 179  , U: 9.828373e-09,   V: 9.828373e-09,   W: 4.847859e-09,   Local Coninuity: 7.840549e-08,   Global Mass Flux: 0.000000e+00
+iteration: 179  , U: 3.339237e-09,   V: 3.339237e-09,   W: 1.633795e-09,   Local Coninuity: 1.188469e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 180  , U: 1.128613e-08,   V: 1.128613e-08,   W: 4.235273e-09,   Local Coninuity: 5.555502e-08,   Global Mass Flux: 0.000000e+00
+iteration: 180  , U: 3.913253e-09,   V: 3.913253e-09,   W: 1.381514e-09,   Local Coninuity: 8.740427e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 181  , U: 1.146204e-08,   V: 1.146204e-08,   W: 3.359879e-09,   Local Coninuity: 3.477712e-08,   Global Mass Flux: 0.000000e+00
+iteration: 181  , U: 4.030304e-09,   V: 4.030304e-09,   W: 1.058025e-09,   Local Coninuity: 5.719261e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 182  , U: 1.057248e-08,   V: 1.057248e-08,   W: 2.449227e-09,   Local Coninuity: 2.765132e-08,   Global Mass Flux: 0.000000e+00
+iteration: 182  , U: 3.742527e-09,   V: 3.742527e-09,   W: 7.377288e-10,   Local Coninuity: 4.328494e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 183  , U: 9.254387e-09,   V: 9.254387e-09,   W: 1.839705e-09,   Local Coninuity: 3.700388e-08,   Global Mass Flux: 0.000000e+00
+iteration: 183  , U: 3.272514e-09,   V: 3.272514e-09,   W: 5.647329e-10,   Local Coninuity: 5.345910e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 184  , U: 7.524387e-09,   V: 7.524387e-09,   W: 1.735484e-09,   Local Coninuity: 5.028819e-08,   Global Mass Flux: 0.000000e+00
+iteration: 184  , U: 2.664652e-09,   V: 2.664652e-09,   W: 6.325953e-10,   Local Coninuity: 7.208065e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 185  , U: 5.382516e-09,   V: 5.382516e-09,   W: 2.234464e-09,   Local Coninuity: 5.921711e-08,   Global Mass Flux: 0.000000e+00
+iteration: 185  , U: 1.913067e-09,   V: 1.913067e-09,   W: 8.301396e-10,   Local Coninuity: 8.581231e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 186  , U: 3.744785e-09,   V: 3.744785e-09,   W: 2.659916e-09,   Local Coninuity: 6.100186e-08,   Global Mass Flux: 0.000000e+00
+iteration: 186  , U: 1.316927e-09,   V: 1.316927e-09,   W: 9.607693e-10,   Local Coninuity: 8.927736e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 187  , U: 4.191119e-09,   V: 4.191119e-09,   W: 2.825758e-09,   Local Coninuity: 5.595802e-08,   Global Mass Flux: 0.000000e+00
+iteration: 187  , U: 1.434663e-09,   V: 1.434663e-09,   W: 9.882860e-10,   Local Coninuity: 8.267859e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 188  , U: 5.750102e-09,   V: 5.750102e-09,   W: 2.711490e-09,   Local Coninuity: 4.550625e-08,   Global Mass Flux: 0.000000e+00
+iteration: 188  , U: 1.993301e-09,   V: 1.993301e-09,   W: 9.158980e-10,   Local Coninuity: 6.806907e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 189  , U: 6.577663e-09,   V: 6.577663e-09,   W: 2.368990e-09,   Local Coninuity: 3.199590e-08,   Global Mass Flux: 0.000000e+00
+iteration: 189  , U: 2.303379e-09,   V: 2.303379e-09,   W: 7.705333e-10,   Local Coninuity: 4.917294e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 190  , U: 6.651699e-09,   V: 6.651699e-09,   W: 1.882857e-09,   Local Coninuity: 1.950116e-08,   Global Mass Flux: 0.000000e+00
+iteration: 190  , U: 2.345908e-09,   V: 2.345908e-09,   W: 5.868685e-10,   Local Coninuity: 3.128873e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 191  , U: 6.109263e-09,   V: 6.109263e-09,   W: 1.379516e-09,   Local Coninuity: 1.505998e-08,   Global Mass Flux: 0.000000e+00
+iteration: 191  , U: 2.158566e-09,   V: 2.158566e-09,   W: 4.098352e-10,   Local Coninuity: 2.399636e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 192  , U: 5.333630e-09,   V: 5.333630e-09,   W: 1.045363e-09,   Local Coninuity: 2.080951e-08,   Global Mass Flux: 0.000000e+00
+iteration: 192  , U: 1.877880e-09,   V: 1.877880e-09,   W: 3.196013e-10,   Local Coninuity: 3.106017e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 193  , U: 4.329913e-09,   V: 4.329913e-09,   W: 9.711818e-10,   Local Coninuity: 2.888451e-08,   Global Mass Flux: 0.000000e+00
+iteration: 193  , U: 1.517576e-09,   V: 1.517576e-09,   W: 3.644798e-10,   Local Coninuity: 4.248280e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 194  , U: 3.088582e-09,   V: 3.088582e-09,   W: 1.228782e-09,   Local Coninuity: 3.413945e-08,   Global Mass Flux: 0.000000e+00
+iteration: 194  , U: 1.077939e-09,   V: 1.077939e-09,   W: 4.736840e-10,   Local Coninuity: 5.024116e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 195  , U: 2.154574e-09,   V: 2.154574e-09,   W: 1.467138e-09,   Local Coninuity: 3.517503e-08,   Global Mass Flux: 0.000000e+00
+iteration: 195  , U: 7.505170e-10,   V: 7.505170e-10,   W: 5.428887e-10,   Local Coninuity: 5.184772e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 196  , U: 2.442926e-09,   V: 2.442926e-09,   W: 1.561058e-09,   Local Coninuity: 3.222289e-08,   Global Mass Flux: 0.000000e+00
+iteration: 196  , U: 8.630861e-10,   V: 8.630861e-10,   W: 5.540998e-10,   Local Coninuity: 4.758929e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 197  , U: 3.336247e-09,   V: 3.336247e-09,   W: 1.499168e-09,   Local Coninuity: 2.611326e-08,   Global Mass Flux: 0.000000e+00
+iteration: 197  , U: 1.180152e-09,   V: 1.180152e-09,   W: 5.099006e-10,   Local Coninuity: 3.873042e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 198  , U: 3.802467e-09,   V: 3.802467e-09,   W: 1.311496e-09,   Local Coninuity: 1.818668e-08,   Global Mass Flux: 0.000000e+00
+iteration: 198  , U: 1.345948e-09,   V: 1.345948e-09,   W: 4.265935e-10,   Local Coninuity: 2.747965e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 199  , U: 3.829273e-09,   V: 3.829273e-09,   W: 1.042843e-09,   Local Coninuity: 1.076670e-08,   Global Mass Flux: 0.000000e+00
+iteration: 199  , U: 1.356224e-09,   V: 1.356224e-09,   W: 3.229450e-10,   Local Coninuity: 1.698942e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 1 iterations
-iteration: 200  , U: 3.502367e-09,   V: 3.502367e-09,   W: 7.660556e-10,   Local Coninuity: 8.145429e-09,   Global Mass Flux: 0.000000e+00
+iteration: 200  , U: 1.237279e-09,   V: 1.237279e-09,   W: 2.261035e-10,   Local Coninuity: 1.328842e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 201  , U: 1.071377e-09,   V: 1.071377e-09,   W: 1.799981e-10,   Local Coninuity: 1.803851e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 202  , U: 8.588741e-10,   V: 8.588741e-10,   W: 2.092938e-10,   Local Coninuity: 2.489481e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 203  , U: 6.039918e-10,   V: 6.039918e-10,   W: 2.688797e-10,   Local Coninuity: 2.921909e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 204  , U: 4.267793e-10,   V: 4.267793e-10,   W: 3.049714e-10,   Local Coninuity: 2.990987e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 205  , U: 5.155971e-10,   V: 5.155971e-10,   W: 3.086204e-10,   Local Coninuity: 2.720985e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 206  , U: 6.935063e-10,   V: 6.935063e-10,   W: 2.818495e-10,   Local Coninuity: 2.188899e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 207  , U: 7.811010e-10,   V: 7.811010e-10,   W: 2.343411e-10,   Local Coninuity: 1.524677e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 208  , U: 7.789507e-10,   V: 7.789507e-10,   W: 1.761889e-10,   Local Coninuity: 9.148666e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 209  , U: 7.048952e-10,   V: 7.048952e-10,   W: 1.238214e-10,   Local Coninuity: 7.352012e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 210  , U: 6.077440e-10,   V: 6.077440e-10,   W: 1.010154e-10,   Local Coninuity: 1.047909e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 211  , U: 4.829944e-10,   V: 4.829944e-10,   W: 1.198068e-10,   Local Coninuity: 1.450782e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 212  , U: 3.365224e-10,   V: 3.365224e-10,   W: 1.519016e-10,   Local Coninuity: 1.688667e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 213  , U: 2.420936e-10,   V: 2.420936e-10,   W: 1.703405e-10,   Local Coninuity: 1.714383e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 214  , U: 3.059463e-10,   V: 3.059463e-10,   W: 1.707448e-10,   Local Coninuity: 1.545623e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 215  , U: 4.047232e-10,   V: 4.047232e-10,   W: 1.546419e-10,   Local Coninuity: 1.228697e-09,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 216  , U: 4.503505e-10,   V: 4.503505e-10,   W: 1.276611e-10,   Local Coninuity: 8.396062e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 217  , U: 4.445288e-10,   V: 4.445288e-10,   W: 9.524813e-11,   Local Coninuity: 4.882810e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 218  , U: 3.991837e-10,   V: 3.991837e-10,   W: 6.729795e-11,   Local Coninuity: 4.069848e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 219  , U: 3.427700e-10,   V: 3.427700e-10,   W: 5.649486e-11,   Local Coninuity: 6.081206e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 220  , U: 2.698290e-10,   V: 2.698290e-10,   W: 6.830793e-11,   Local Coninuity: 8.408608e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 221  , U: 1.864331e-10,   V: 1.864331e-10,   W: 8.537565e-11,   Local Coninuity: 9.700211e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 222  , U: 1.371143e-10,   V: 1.371143e-10,   W: 9.457230e-11,   Local Coninuity: 9.764264e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 223  , U: 1.803923e-10,   V: 1.803923e-10,   W: 9.379347e-11,   Local Coninuity: 8.721766e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 224  , U: 2.346632e-10,   V: 2.346632e-10,   W: 8.417903e-11,   Local Coninuity: 6.848142e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 225  , U: 2.580219e-10,   V: 2.580219e-10,   W: 6.891543e-11,   Local Coninuity: 4.585533e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 226  , U: 2.520816e-10,   V: 2.520816e-10,   W: 5.098052e-11,   Local Coninuity: 2.580604e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 227  , U: 2.247308e-10,   V: 2.247308e-10,   W: 3.628175e-11,   Local Coninuity: 2.257160e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 228  , U: 1.921444e-10,   V: 1.921444e-10,   W: 3.147846e-11,   Local Coninuity: 3.525512e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 229  , U: 1.496997e-10,   V: 1.496997e-10,   W: 3.881242e-11,   Local Coninuity: 4.848680e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 230  , U: 1.026660e-10,   V: 1.026660e-10,   W: 4.776357e-11,   Local Coninuity: 5.539678e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 231  , U: 7.758767e-11,   V: 7.758767e-11,   W: 5.219531e-11,   Local Coninuity: 5.526761e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 232  , U: 1.057265e-10,   V: 1.057265e-10,   W: 5.114677e-11,   Local Coninuity: 4.888892e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 233  , U: 1.352274e-10,   V: 1.352274e-10,   W: 4.543245e-11,   Local Coninuity: 3.788757e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 234  , U: 1.469256e-10,   V: 1.469256e-10,   W: 3.683720e-11,   Local Coninuity: 2.482125e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 235  , U: 1.420477e-10,   V: 1.420477e-10,   W: 2.700204e-11,   Local Coninuity: 1.349761e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 236  , U: 1.257785e-10,   V: 1.257785e-10,   W: 1.940467e-11,   Local Coninuity: 1.258036e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 237  , U: 1.070343e-10,   V: 1.070343e-10,   W: 1.748983e-11,   Local Coninuity: 2.040734e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 238  , U: 8.244839e-11,   V: 8.244839e-11,   W: 2.196776e-11,   Local Coninuity: 2.781845e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 239  , U: 5.620884e-11,   V: 5.620884e-11,   W: 2.658604e-11,   Local Coninuity: 3.145492e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 240  , U: 4.397040e-11,   V: 4.397040e-11,   W: 2.862208e-11,   Local Coninuity: 3.108620e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 241  , U: 6.161662e-11,   V: 6.161662e-11,   W: 2.767229e-11,   Local Coninuity: 2.721514e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 242  , U: 7.746775e-11,   V: 7.746775e-11,   W: 2.428968e-11,   Local Coninuity: 2.079610e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 243  , U: 8.315939e-11,   V: 8.315939e-11,   W: 1.947259e-11,   Local Coninuity: 1.330113e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 244  , U: 7.953364e-11,   V: 7.953364e-11,   W: 1.413330e-11,   Local Coninuity: 6.983215e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 245  , U: 6.997948e-11,   V: 6.997948e-11,   W: 1.029495e-11,   Local Coninuity: 7.065081e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 246  , U: 5.923023e-11,   V: 5.923023e-11,   W: 9.735141e-12,   Local Coninuity: 1.179838e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 247  , U: 4.505455e-11,   V: 4.505455e-11,   W: 1.239410e-11,   Local Coninuity: 1.588434e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 248  , U: 3.057665e-11,   V: 3.057665e-11,   W: 1.472671e-11,   Local Coninuity: 1.775984e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 249  , U: 2.504471e-11,   V: 2.504471e-11,   W: 1.559283e-11,   Local Coninuity: 1.737529e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 250  , U: 3.571884e-11,   V: 3.571884e-11,   W: 1.484895e-11,   Local Coninuity: 1.504222e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 251  , U: 4.412555e-11,   V: 4.412555e-11,   W: 1.285243e-11,   Local Coninuity: 1.131951e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 252  , U: 4.678421e-11,   V: 4.678421e-11,   W: 1.016447e-11,   Local Coninuity: 7.047909e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 253  , U: 4.424197e-11,   V: 4.424197e-11,   W: 7.299919e-12,   Local Coninuity: 3.574816e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 254  , U: 3.870429e-11,   V: 3.870429e-11,   W: 5.418308e-12,   Local Coninuity: 4.006712e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 255  , U: 3.254480e-11,   V: 3.254480e-11,   W: 5.449280e-12,   Local Coninuity: 6.809590e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 256  , U: 2.441876e-11,   V: 2.441876e-11,   W: 6.966563e-12,   Local Coninuity: 9.027298e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 257  , U: 1.652494e-11,   V: 1.652494e-11,   W: 8.114474e-12,   Local Coninuity: 9.971183e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 258  , U: 1.435179e-11,   V: 1.435179e-11,   W: 8.433399e-12,   Local Coninuity: 9.648639e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 259  , U: 2.060143e-11,   V: 2.060143e-11,   W: 7.894999e-12,   Local Coninuity: 8.251252e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 260  , U: 2.499417e-11,   V: 2.499417e-11,   W: 6.721101e-12,   Local Coninuity: 6.105233e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 261  , U: 2.615993e-11,   V: 2.615993e-11,   W: 5.228609e-12,   Local Coninuity: 3.685770e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 262  , U: 2.444530e-11,   V: 2.444530e-11,   W: 3.713887e-12,   Local Coninuity: 1.815256e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 263  , U: 2.127842e-11,   V: 2.127842e-11,   W: 2.835369e-12,   Local Coninuity: 2.299913e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 264  , U: 1.774456e-11,   V: 1.774456e-11,   W: 3.068456e-12,   Local Coninuity: 3.922756e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 265  , U: 1.311964e-11,   V: 1.311964e-11,   W: 3.904067e-12,   Local Coninuity: 5.107345e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 266  , U: 8.874750e-12,   V: 8.874750e-12,   W: 4.448525e-12,   Local Coninuity: 5.566771e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 267  , U: 8.267905e-12,   V: 8.267905e-12,   W: 4.527509e-12,   Local Coninuity: 5.322265e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 268  , U: 1.182510e-11,   V: 1.182510e-11,   W: 4.156130e-12,   Local Coninuity: 4.490229e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 269  , U: 1.408062e-11,   V: 1.408062e-11,   W: 3.467540e-12,   Local Coninuity: 3.260335e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 270  , U: 1.453689e-11,   V: 1.453689e-11,   W: 2.644315e-12,   Local Coninuity: 1.898197e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 271  , U: 1.341311e-11,   V: 1.341311e-11,   W: 1.858332e-12,   Local Coninuity: 9.191251e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 272  , U: 1.162671e-11,   V: 1.162671e-11,   W: 1.485368e-12,   Local Coninuity: 1.337813e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 273  , U: 9.595366e-12,   V: 9.595367e-12,   W: 1.736503e-12,   Local Coninuity: 2.254627e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 274  , U: 6.983402e-12,   V: 6.983402e-12,   W: 2.180659e-12,   Local Coninuity: 2.876680e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 275  , U: 4.743146e-12,   V: 4.743147e-12,   W: 2.425470e-12,   Local Coninuity: 3.090156e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 276  , U: 4.788775e-12,   V: 4.788775e-12,   W: 2.410992e-12,   Local Coninuity: 2.915402e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 277  , U: 6.756185e-12,   V: 6.756186e-12,   W: 2.164342e-12,   Local Coninuity: 2.422519e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 278  , U: 7.890104e-12,   V: 7.890103e-12,   W: 1.760959e-12,   Local Coninuity: 1.721892e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 279  , U: 8.026246e-12,   V: 8.026244e-12,   W: 1.310920e-12,   Local Coninuity: 9.596460e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 280  , U: 7.306985e-12,   V: 7.306984e-12,   W: 9.135632e-13,   Local Coninuity: 4.693942e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 281  , U: 6.311844e-12,   V: 6.311844e-12,   W: 7.835140e-13,   Local Coninuity: 7.862826e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 282  , U: 5.142592e-12,   V: 5.142592e-12,   W: 9.883072e-13,   Local Coninuity: 1.292934e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 283  , U: 3.678983e-12,   V: 3.678982e-12,   W: 1.214882e-12,   Local Coninuity: 1.613277e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 284  , U: 2.526042e-12,   V: 2.526042e-12,   W: 1.315395e-12,   Local Coninuity: 1.705482e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 285  , U: 2.783483e-12,   V: 2.783482e-12,   W: 1.273496e-12,   Local Coninuity: 1.585342e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 286  , U: 3.843003e-12,   V: 3.843003e-12,   W: 1.113558e-12,   Local Coninuity: 1.294781e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 287  , U: 4.398075e-12,   V: 4.398075e-12,   W: 8.782840e-13,   Local Coninuity: 8.982193e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 288  , U: 4.401932e-12,   V: 4.401931e-12,   W: 6.352897e-13,   Local Coninuity: 4.743745e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 289  , U: 3.951623e-12,   V: 3.951623e-12,   W: 4.435870e-13,   Local Coninuity: 2.465951e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 290  , U: 3.401623e-12,   V: 3.401622e-12,   W: 4.234249e-13,   Local Coninuity: 4.658243e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 291  , U: 2.728410e-12,   V: 2.728410e-12,   W: 5.650766e-13,   Local Coninuity: 7.397224e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 292  , U: 1.917012e-12,   V: 1.917012e-12,   W: 6.748253e-13,   Local Coninuity: 9.008862e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 293  , U: 1.345098e-12,   V: 1.345099e-12,   W: 7.091582e-13,   Local Coninuity: 9.357207e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 294  , U: 1.620964e-12,   V: 1.620965e-12,   W: 6.670724e-13,   Local Coninuity: 8.554135e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 295  , U: 2.176907e-12,   V: 2.176908e-12,   W: 5.653729e-13,   Local Coninuity: 6.852432e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 296  , U: 2.438458e-12,   V: 2.438458e-12,   W: 4.292924e-13,   Local Coninuity: 4.617662e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 297  , U: 2.397237e-12,   V: 2.397237e-12,   W: 3.005994e-13,   Local Coninuity: 2.281070e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 298  , U: 2.122037e-12,   V: 2.122037e-12,   W: 2.162549e-13,   Local Coninuity: 1.364437e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 299  , U: 1.818579e-12,   V: 1.818580e-12,   W: 2.411061e-13,   Local Coninuity: 2.778337e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 300  , U: 1.431021e-12,   V: 1.431022e-12,   W: 3.244993e-13,   Local Coninuity: 4.222849e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 301  , U: 9.879430e-13,   V: 9.879433e-13,   W: 3.740379e-13,   Local Coninuity: 5.009937e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 302  , U: 7.197955e-13,   V: 7.197953e-13,   W: 3.801707e-13,   Local Coninuity: 5.103171e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 303  , U: 9.443702e-13,   V: 9.443699e-13,   W: 3.466145e-13,   Local Coninuity: 4.578627e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 304  , U: 1.228919e-12,   V: 1.228918e-12,   W: 2.833760e-13,   Local Coninuity: 3.590514e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 305  , U: 1.344471e-12,   V: 1.344471e-12,   W: 2.054347e-13,   Local Coninuity: 2.332465e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 306  , U: 1.295811e-12,   V: 1.295810e-12,   W: 1.400499e-13,   Local Coninuity: 1.062224e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 307  , U: 1.132634e-12,   V: 1.132634e-12,   W: 1.126691e-13,   Local Coninuity: 8.032353e-13,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 308  , U: 9.632416e-13,   V: 9.632420e-13,   W: 1.443110e-13,   Local Coninuity: 1.662439e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 309  , U: 7.408383e-13,   V: 7.408392e-13,   W: 1.869956e-13,   Local Coninuity: 2.405571e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 310  , U: 5.043613e-13,   V: 5.043612e-13,   W: 2.069128e-13,   Local Coninuity: 2.774909e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 311  , U: 3.918796e-13,   V: 3.918792e-13,   W: 2.027824e-13,   Local Coninuity: 2.766519e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 312  , U: 5.500995e-13,   V: 5.501003e-13,   W: 1.787928e-13,   Local Coninuity: 2.432140e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 313  , U: 6.913822e-13,   V: 6.913827e-13,   W: 1.406477e-13,   Local Coninuity: 1.859908e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 314  , U: 7.370624e-13,   V: 7.370632e-13,   W: 9.715631e-14,   Local Coninuity: 1.153029e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 1 iterations
+iteration: 315  , U: 6.949233e-13,   V: 6.949225e-13,   W: 6.802320e-14,   Local Coninuity: 4.813635e-13,   Global Mass Flux: 0.000000e+00
 *** SOLUTION CONVERGED ***
 
 
-[CAMIRA_ Profiling:                           6.50s] [nCalls    1] (100.00%)
-[    Untimed:                                 0.00s] [nCalls    1] (  0.01%)
-[    Pre processing:                          0.03s] [nCalls    1] (  0.53%)
-[    Solver Loop:                             6.47s] [nCalls    1] ( 99.46%)
-[        Untimed:                             0.04s] [nCalls    1] (  0.63%)
-[        Multigrid Cycling:                   4.48s] [nCalls  200] ( 68.88%)
-[            Untimed:                         0.24s] [nCalls  200] (  3.70%)
-[            Setting Ghost Cells:             0.07s] [nCalls 1200] (  1.00%)
-[            Sweeping:                        2.53s] [nCalls 1200] ( 38.90%)
-[            Updating Coefficients:           1.64s] [nCalls  200] ( 25.28%)
-[        Residuals and Logging:               1.95s] [nCalls  200] ( 29.95%)
-[            Untimed:                         0.29s] [nCalls  200] (  4.46%)
-[            Updating Coefficients:           1.66s] [nCalls  200] ( 25.49%)
+[CAMIRA_ Profiling:                           7.02s] [nCalls    1] (100.00%)
+[    Untimed:                                 0.00s] [nCalls    1] (  0.00%)
+[    Pre processing:                          0.02s] [nCalls    1] (  0.25%)
+[    Solver Loop:                             7.00s] [nCalls    1] ( 99.75%)
+[        Untimed:                             0.02s] [nCalls    1] (  0.28%)
+[        Multigrid Cycling:                   4.45s] [nCalls  315] ( 63.33%)
+[            Untimed:                         0.23s] [nCalls  315] (  3.21%)
+[            Setting Ghost Cells:             0.16s] [nCalls 1890] (  2.29%)
+[            Sweeping:                        1.80s] [nCalls 1890] ( 25.61%)
+[            Updating Coefficients:           2.26s] [nCalls  315] ( 32.22%)
+[        Residuals and Logging:               2.54s] [nCalls  315] ( 36.14%)
+[            Untimed:                         0.27s] [nCalls  315] (  3.84%)
+[            Updating Coefficients:           2.27s] [nCalls  315] ( 32.30%)
 
 
 
@@ -1280,45 +914,296 @@ Min. cell aspect ratio : 1
 Max. cell aspect ratio : 1
 
 Convergence Residuals:
-iteration: 0    , U: 4.071416e+06,   V: 4.071416e+06,   W: 7.961016e+06,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
-  Level 1, relative residuals: 9.376566e-07, 9.376566e-07, 6.108467e-07, 6.321497e-06,  after 100 iterations.
+iteration: 0    , U: 2.530848e+06,   V: 2.530848e+06,   W: 4.905300e+06,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
+  Level 1, relative residuals: 2.736795e-07, 2.736795e-07, 1.924845e-07, 1.162282e-06,  after 100 iterations.
  Level 0, performed 2 iterations
-  Level 1, relative residuals: 1.775498e-07, 1.775498e-07, 8.299264e-08, 1.988634e-01,  after 100 iterations.
+  Level 1, relative residuals: 1.338700e-08, 1.338700e-08, 8.068395e-09, 5.520958e-02,  after 100 iterations.
  Level 0, performed 3 iterations
-  Level 1, relative residuals: 2.758150e-08, 2.758150e-08, 1.575882e-08, 2.150031e-05,  after 100 iterations.
+  Level 1, relative residuals: 1.266834e-09, 1.266834e-09, 1.078109e-09, 6.876023e-06,  after 100 iterations.
  Level 0, performed 3 iterations
-iteration: 1    , U: 8.665096e-06,   V: 8.665096e-06,   W: 6.341403e-06,   Local Coninuity: 1.833243e-04,   Global Mass Flux: 0.000000e+00
+iteration: 1    , U: 1.070783e-06,   V: 1.070783e-06,   W: 3.948333e-07,   Local Coninuity: 7.894207e-06,   Global Mass Flux: 0.000000e+00
  Level 0, performed 2 iterations
-  Level 1, relative residuals: 3.137198e-09, 3.137198e-09, 1.660432e-09, 2.542455e-06,  after 100 iterations.
+  Level 1, relative residuals: 2.400658e-10, 2.400658e-10, 1.704128e-10, 1.113094e-06,  after 100 iterations.
  Level 0, performed 3 iterations
-  Level 1, relative residuals: 4.000566e-10, 4.000566e-10, 2.649942e-10, 4.389165e-07,  after 100 iterations.
+  Level 1, relative residuals: 2.874223e-11, 2.874223e-11, 2.943545e-11, 1.718782e-07,  after 100 iterations.
  Level 0, performed 3 iterations
-iteration: 2    , U: 8.955640e-08,   V: 8.955640e-08,   W: 6.154470e-08,   Local Coninuity: 1.586115e-06,   Global Mass Flux: 0.000000e+00
+iteration: 2    , U: 1.246971e-08,   V: 1.246971e-08,   W: 5.170234e-09,   Local Coninuity: 8.113636e-08,   Global Mass Flux: 0.000000e+00
  Level 0, performed 2 iterations
-  Level 1, relative residuals: 6.285464e-11, 6.285464e-11, 3.937939e-11, 6.521437e-08,  after 100 iterations.
+  Level 1, relative residuals: 4.113051e-12, 4.113051e-12, 3.190990e-12, 2.042216e-08,  after 100 iterations.
  Level 0, performed 3 iterations
-  Level 1, relative residuals: 7.492032e-12, 7.492033e-12, 5.965347e-12, 1.106232e-08,  after 100 iterations.
+  Level 1, relative residuals: 4.780327e-13, 4.780332e-13, 5.396511e-13, 3.002364e-09,  after 100 iterations.
  Level 0, performed 3 iterations
-iteration: 3    , U: 1.392177e-09,   V: 1.392177e-09,   W: 9.391434e-10,   Local Coninuity: 2.484210e-08,   Global Mass Flux: 0.000000e+00
+iteration: 3    , U: 2.391880e-10,   V: 2.391880e-10,   W: 1.279945e-10,   Local Coninuity: 1.687855e-09,   Global Mass Flux: 0.000000e+00
  Level 0, performed 2 iterations
-  Level 1, relative residuals: 1.282392e-12, 1.282392e-12, 8.812248e-13, 1.537982e-09,  after 100 iterations.
+  Level 1, relative residuals: 6.563255e-14, 6.563265e-14, 5.425562e-14, 3.743096e-10,  after 100 iterations.
  Level 0, performed 3 iterations
-  Level 1, relative residuals: 1.806504e-13, 1.806505e-13, 1.489161e-13, 2.799807e-10,  after 100 iterations.
+  Level 1, relative residuals: 4.096958e-14, 4.096933e-14, 3.766469e-14, 9.167726e-11,  after 80 iterations.
  Level 0, performed 3 iterations
-iteration: 4    , U: 2.791995e-11,   V: 2.791995e-11,   W: 1.781687e-11,   Local Coninuity: 4.812731e-10,   Global Mass Flux: 0.000000e+00
+iteration: 4    , U: 5.577037e-12,   V: 5.577037e-12,   W: 3.274819e-12,   Local Coninuity: 3.974483e-11,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 2 iterations
+  Level 1, relative residuals: 3.465318e-14, 3.465404e-14, 1.101238e-14, 8.590458e-11,  after 62 iterations.
+ Level 0, performed 3 iterations
+  Level 1, relative residuals: 5.863524e-14, 5.863477e-14, 1.305539e-14, 7.781421e-11,  after 37 iterations.
+ Level 0, performed 3 iterations
+iteration: 5    , U: 1.462097e-13,   V: 1.462093e-13,   W: 8.649805e-14,   Local Coninuity: 1.029619e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 2 iterations
+  Level 1, relative residuals: 2.809446e-14, 2.809356e-14, 9.170149e-15, 9.517022e-11,  after 17 iterations.
+ Level 0, performed 3 iterations
+  Level 1, relative residuals: 3.756102e-14, 3.756082e-14, 1.141299e-14, 9.010068e-11,  after 7 iterations.
+ Level 0, performed 3 iterations
+iteration: 6    , U: 1.613345e-14,   V: 1.613305e-14,   W: 6.153371e-15,   Local Coninuity: 7.093332e-14,   Global Mass Flux: 0.000000e+00
 *** SOLUTION CONVERGED ***
 
 
-[CAMIRA_ Profiling:                          27.30s] [nCalls    1] (100.00%)
+[CAMIRA_ Profiling:                          21.68s] [nCalls    1] (100.00%)
 [    Untimed:                                 0.00s] [nCalls    1] (  0.00%)
-[    Pre processing:                          0.21s] [nCalls    1] (  0.77%)
-[    Solver Loop:                            27.09s] [nCalls    1] ( 99.23%)
-[        Untimed:                             0.28s] [nCalls    1] (  1.03%)
-[        Multigrid Cycling:                  26.51s] [nCalls    4] ( 97.13%)
-[            Untimed:                         2.32s] [nCalls    4] (  8.49%)
-[            Setting Ghost Cells:             0.42s] [nCalls 5592] (  1.53%)
-[            Sweeping:                       14.20s] [nCalls 5592] ( 52.02%)
-[            Updating Coefficients:           9.58s] [nCalls  948] ( 35.10%)
-[        Residuals and Logging:               0.29s] [nCalls    4] (  1.06%)
-[            Untimed:                         0.04s] [nCalls    4] (  0.16%)
-[            Updating Coefficients:           0.25s] [nCalls    4] (  0.91%)
+[    Pre processing:                          0.15s] [nCalls    1] (  0.67%)
+[    Solver Loop:                            21.54s] [nCalls    1] ( 99.33%)
+[        Untimed:                             0.16s] [nCalls    1] (  0.74%)
+[        Multigrid Cycling:                  20.99s] [nCalls    6] ( 96.82%)
+[            Untimed:                         1.68s] [nCalls    6] (  7.76%)
+[            Setting Ghost Cells:             0.61s] [nCalls 6276] (  2.83%)
+[            Sweeping:                        7.89s] [nCalls 6276] ( 36.38%)
+[            Updating Coefficients:          10.81s] [nCalls 1075] ( 49.85%)
+[        Residuals and Logging:               0.38s] [nCalls    6] (  1.77%)
+[            Untimed:                         0.03s] [nCalls    6] (  0.16%)
+[            Updating Coefficients:           0.35s] [nCalls    6] (  1.61%)
+
+
+
+================= Now running case ================= 
+Advection Scheme:      QUICK
+Mesh:                  160x160x160
+Reading input file 'manufactured-taylor-green.inp' ... Success.
+
+Generating mesh ... Success.
+Number of cells        : 4096000
+Min. cell growth ratios: (1, 1, 1)
+Max. cell growth ratios: (1, 1, 1)
+Min. cell aspect ratio : 1
+Max. cell aspect ratio : 1
+
+Convergence Residuals:
+iteration: 0    , U: 2.022667e+07,   V: 2.022667e+07,   W: 3.919207e+07,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
+   Level 2, relative residuals: 2.736795e-07, 2.736795e-07, 1.924845e-07, 1.162282e-06,  after 100 iterations.
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 1.338700e-08, 1.338700e-08, 8.068395e-09, 5.520958e-02,  after 100 iterations.
+  Level 1, performed 2 iterations
+ Level 0, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 5.045417e-09, 5.045417e-09, 3.443837e-09, 2.097843e-05,  after 100 iterations.
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 9.461098e-10, 9.461098e-10, 8.687510e-10, 4.741890e-06,  after 100 iterations.
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 1.121903e-10, 1.121903e-10, 1.138595e-10, 7.517577e-07,  after 100 iterations.
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+iteration: 1    , U: 2.278876e-07,   V: 2.278876e-07,   W: 8.042607e-08,   Local Coninuity: 3.041570e-06,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 7.717084e-11, 7.717084e-11, 4.982199e-11, 3.185164e-07,  after 100 iterations.
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 8.678790e-12, 8.678790e-12, 8.389000e-12, 4.939925e-08,  after 100 iterations.
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 7.612935e-12, 7.612935e-12, 5.507117e-12, 3.303381e-08,  after 100 iterations.
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+iteration: 2    , U: 2.393877e-09,   V: 2.393877e-09,   W: 9.771801e-10,   Local Coninuity: 3.110468e-08,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 1.944541e-12, 1.944540e-12, 1.204461e-12, 7.237855e-09,  after 100 iterations.
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 1.863577e-13, 1.863578e-13, 1.988674e-13, 1.177894e-09,  after 100 iterations.
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 1.205779e-13, 1.205783e-13, 9.563528e-14, 5.972052e-10,  after 100 iterations.
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+iteration: 3    , U: 3.363525e-11,   V: 3.363525e-11,   W: 1.701724e-11,   Local Coninuity: 4.523330e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 3.910947e-14, 3.910889e-14, 2.495161e-14, 1.476399e-10,  after 100 iterations.
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 5.096675e-14, 5.096691e-14, 1.040217e-14, 9.819638e-11,  after 69 iterations.
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 3.413359e-14, 3.413418e-14, 1.712402e-14, 8.894988e-11,  after 66 iterations.
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+iteration: 4    , U: 5.897763e-13,   V: 5.897766e-13,   W: 3.420288e-13,   Local Coninuity: 8.051388e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 3.070738e-14, 3.070689e-14, 2.171338e-14, 9.348819e-11,  after 38 iterations.
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 4.013760e-14, 4.013735e-14, 1.172919e-14, 8.426545e-11,  after 19 iterations.
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+  Level 1, performed 2 iterations
+   Level 2, relative residuals: 3.516166e-14, 3.516130e-14, 1.412717e-14, 9.601818e-11,  after 13 iterations.
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+iteration: 5    , U: 1.226126e-14,   V: 1.226130e-14,   W: 7.629237e-15,   Local Coninuity: 1.875213e-13,   Global Mass Flux: 0.000000e+00
+*** SOLUTION CONVERGED ***
+
+
+[CAMIRA_ Profiling:                          74.85s] [nCalls    1] (100.00%)
+[    Untimed:                                 0.00s] [nCalls    1] (  0.00%)
+[    Pre processing:                          1.11s] [nCalls    1] (  1.49%)
+[    Solver Loop:                            73.74s] [nCalls    1] ( 98.51%)
+[        Untimed:                             1.50s] [nCalls    1] (  2.00%)
+[        Multigrid Cycling:                  69.64s] [nCalls    5] ( 93.04%)
+[            Untimed:                         5.85s] [nCalls    5] (  7.82%)
+[            Setting Ghost Cells:             1.27s] [nCalls 8964] (  1.70%)
+[            Sweeping:                       25.00s] [nCalls 8964] ( 33.41%)
+[            Updating Coefficients:          37.51s] [nCalls 1551] ( 50.11%)
+[        Residuals and Logging:               2.60s] [nCalls    5] (  3.47%)
+[            Untimed:                         0.33s] [nCalls    5] (  0.44%)
+[            Updating Coefficients:           2.27s] [nCalls    5] (  3.03%)
+
+
+
+================= Now running case ================= 
+Advection Scheme:      QUICK
+Mesh:                  320x320x320
+Reading input file 'manufactured-taylor-green.inp' ... Success.
+
+Generating mesh ... Success.
+Number of cells        : 32768000
+Min. cell growth ratios: (1, 1, 1)
+Max. cell growth ratios: (1, 1, 1)
+Min. cell aspect ratio : 1
+Max. cell aspect ratio : 1
+
+Convergence Residuals:
+iteration: 0    , U: 1.617800e+08,   V: 1.617800e+08,   W: 3.134599e+08,   Local Coninuity: 0.000000e+00,   Global Mass Flux: 0.000000e+00
+    Level 3, relative residuals: 2.736795e-07, 2.736795e-07, 1.924845e-07, 1.162282e-06,  after 100 iterations.
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 1.338700e-08, 1.338700e-08, 8.068395e-09, 5.520958e-02,  after 100 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 5.045417e-09, 5.045417e-09, 3.443837e-09, 2.097843e-05,  after 100 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+ Level 0, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 2.389166e-09, 2.389166e-09, 1.780407e-09, 1.009089e-05,  after 100 iterations.
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 5.077981e-10, 5.077981e-10, 5.022351e-10, 2.708811e-06,  after 100 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 1.705854e-10, 1.705854e-10, 1.432821e-10, 8.369191e-07,  after 100 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 8.419214e-11, 8.419213e-11, 7.871528e-11, 4.513061e-07,  after 100 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+iteration: 1    , U: 6.272815e-08,   V: 6.272815e-08,   W: 3.030015e-08,   Local Coninuity: 1.910270e-06,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 5.186255e-11, 5.186255e-11, 3.392103e-11, 2.125187e-07,  after 100 iterations.
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 6.340386e-12, 6.340387e-12, 6.554169e-12, 3.552684e-08,  after 100 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 3.466476e-12, 3.466476e-12, 2.599779e-12, 1.475089e-08,  after 100 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 2.102404e-12, 2.102404e-12, 1.594352e-12, 9.850853e-09,  after 100 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+iteration: 2    , U: 4.810610e-10,   V: 4.810610e-10,   W: 2.841606e-10,   Local Coninuity: 1.621606e-08,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 6.563649e-13, 6.563647e-13, 4.028879e-13, 2.645137e-09,  after 100 iterations.
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 6.018984e-14, 6.019051e-14, 7.790395e-14, 3.841961e-10,  after 100 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 2.748609e-14, 2.748653e-14, 3.211347e-14, 9.181252e-11,  after 97 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 5.438525e-14, 5.438571e-14, 3.052396e-14, 8.906964e-11,  after 79 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+iteration: 3    , U: 4.632157e-12,   V: 4.632157e-12,   W: 3.115053e-12,   Local Coninuity: 1.590732e-10,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 2.032074e-14, 2.032086e-14, 3.094448e-14, 9.144906e-11,  after 60 iterations.
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 6.030412e-14, 6.030388e-14, 1.116428e-14, 9.133365e-11,  after 37 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 5.155618e-14, 5.155513e-14, 2.548025e-14, 7.872596e-11,  after 29 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 3.707034e-14, 3.707047e-14, 2.157666e-14, 9.262191e-11,  after 19 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+iteration: 4    , U: 6.707170e-14,   V: 6.707172e-14,   W: 4.554609e-14,   Local Coninuity: 2.141068e-12,   Global Mass Flux: 0.000000e+00
+ Level 0, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 4.094319e-14, 4.094347e-14, 2.328658e-14, 9.986637e-11,  after 13 iterations.
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 3.206489e-14, 3.206360e-14, 1.928436e-14, 9.093545e-11,  after 5 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 2.136906e-14, 2.136906e-14, 1.522186e-14, 8.590914e-11,  after 5 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+  Level 1, performed 2 iterations
+   Level 2, performed 2 iterations
+    Level 3, relative residuals: 3.249041e-14, 3.249844e-14, 1.617979e-14, 7.746101e-11,  after 7 iterations.
+   Level 2, performed 2 iterations
+  Level 1, performed 2 iterations
+ Level 0, performed 3 iterations
+iteration: 5    , U: 3.341887e-15,   V: 3.342315e-15,   W: 2.381763e-15,   Local Coninuity: 1.101126e-13,   Global Mass Flux: 0.000000e+00
+*** SOLUTION CONVERGED ***
+
+
+[CAMIRA_ Profiling:                         479.65s] [nCalls     1] (100.00%)
+[    Untimed:                                 0.00s] [nCalls     1] (  0.00%)
+[    Pre processing:                          8.70s] [nCalls     1] (  1.81%)
+[    Solver Loop:                           470.96s] [nCalls     1] ( 98.19%)
+[        Untimed:                            12.53s] [nCalls     1] (  2.61%)
+[        Multigrid Cycling:                 436.97s] [nCalls     5] ( 91.10%)
+[            Untimed:                        38.05s] [nCalls     5] (  7.93%)
+[            Setting Ghost Cells:             3.46s] [nCalls 10878] (  0.72%)
+[            Sweeping:                      152.61s] [nCalls 10878] ( 31.82%)
+[            Updating Coefficients:         242.85s] [nCalls  1919] ( 50.63%)
+[        Residuals and Logging:              21.46s] [nCalls     5] (  4.47%)
+[            Untimed:                         2.76s] [nCalls     5] (  0.58%)
+[            Updating Coefficients:          18.69s] [nCalls     5] (  3.90%)

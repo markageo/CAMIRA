@@ -41,9 +41,9 @@ logFileName="solver_terminal.log"
 > $logFileName
 
 # Mesh and advection schemes to use
-# nCells=(20 40 80 160 320)
-nCells=(20 40 80)
-advectionSchemes=("upwind" "QUICK")
+nCells=(20 40 80 160 320)
+# nCells=(20 40 80)
+advectionSchemes=("QUICK")
 nCoarseLevels=(0 0 1 2 3)
 
 # Mesh name strings
