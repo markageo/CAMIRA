@@ -1,0 +1,35 @@
+// konkuk
+// Mesh file
+
+
+domainLowerBounds = (-1.5  , -1.3, -0.75)
+domainUpperBounds = (3.5  ,  1.3, 0.75)
+
+Grid x {
+    Segment {
+        bounds     = (-1.5, 3.5)
+        nCells     = 250
+        biasFactor = 1
+    }
+}
+
+
+Grid y {
+    Segment {
+        bounds     = (-1.3, 1.3)
+        nCells     = 130
+        biasFactor = 1
+    }
+}
+
+
+
+
+Grid z {
+    Segment {
+        bounds     = (-0.75, 0.75)
+        nCells     = 75
+        biasFactor = 1
+    }
+}
+
