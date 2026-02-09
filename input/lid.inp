@@ -16,7 +16,7 @@ Mesh {
     Grid x {
         Segment {
             bounds     = (0, 1)
-            nCells     = 150
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -24,7 +24,7 @@ Mesh {
     Grid y {
         Segment {
             bounds     = (0, 1)
-            nCells     = 150
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -32,7 +32,7 @@ Mesh {
     Grid z {
         Segment {
             bounds     = (0, 1)
-            nCells     = 150
+            nCells     = 50
             biasFactor = 1
         }
     }
@@ -153,6 +153,7 @@ Parallel {
 
 Output {
 
+    outputFormatType        = BINARY
     residualHistoryFilename = "../output/residual_history.csv"
     profilingFilename       = "../output/profiling.dat"
     fieldOutputFilename     = "../output/fields.vtk"

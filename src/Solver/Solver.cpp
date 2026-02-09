@@ -392,7 +392,7 @@ void SolveSteady( const InputData &inputData,
         yPlusLogFilePtr = std::make_unique<YPlusLogFile>( inputData.yPlusCalculatorFilename );
 
     // Fields and residuals logging
-    FieldWriter fieldWriter( fields, fvCoeffs, mask, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
+    FieldWriter fieldWriter( fields, fvCoeffs, mask, mesh, bcData, axisTransformation, inputData );
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 
@@ -540,7 +540,7 @@ void SolveTransient( const InputData &inputData,
         yPlusLogFilePtr = std::make_unique<YPlusLogFile>( inputData.yPlusCalculatorFilename );
 
     // Fields and residuals logging
-    FieldWriter fieldWriter( fields, fvCoeffs, mask, mesh, bcData, axisTransformation, inputData.fieldOutputFilename );
+    FieldWriter fieldWriter( fields, fvCoeffs, mask, mesh, bcData, axisTransformation, inputData );
     ResidualLogFile residualsLogFile( inputData.residualHistoryFilename, axisTransformation );
     ConsoleLog consoleLog( axisTransformation );
 

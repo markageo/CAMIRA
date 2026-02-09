@@ -1066,6 +1066,22 @@ namespace
     {
         const pt::ptree &outputTree = tree.get_child( "Output" );
 
+        // Specifying field output format is optional, default to Binary
+        inputData.outputFormatType = InputData::OutputFormatType::BINARY;
+        boost::optional<std::string> outputFormatTypeOptional = outputTree.get_optional<std::string>( "outputFormatType" );
+        if ( outputFormatTypeOptional ) {
+            std::string outputFormatType = outputFormatTypeOptional.get();
+            std::transform( outputFormatType.begin(), outputFormatType.end(), outputFormatType.begin(), ::tolower );
+            if ( outputFormatType == "binary" ) {
+                inputData.outputFormatType = InputData::OutputFormatType::BINARY;
+            } else if ( outputFormatType  == "ascii") {
+                inputData.outputFormatType = InputData::OutputFormatType::ASCII;
+            } else {
+                throw std::runtime_error(  "'" + outputFormatType + "' is not a valid output format type!" );
+            }
+        }
+
+
         // Residual history filename
         inputData.residualHistoryFilename = outputTree.get<std::string>( "residualHistoryFilename" );
         IOTOOLS::PrependRelativePath( inputData.residualHistoryFilename, inputData.inputFileDirectory );

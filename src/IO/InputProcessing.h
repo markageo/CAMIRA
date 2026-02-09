@@ -109,7 +109,9 @@ struct InputData
     FieldData< FieldBoundaryConditions > boundaryConditions;
 
     // Initial conditions
-    enum class InitialConditionTypes { uniform, vtkFile };
+    enum class InitialConditionTypes { 
+        uniform, vtkFile
+    };
     InitialConditionTypes initialConditionType;
     std::string initialConditionsFieldFilename;
     FieldData<floatType> constantInitialConditions;
@@ -157,6 +159,10 @@ struct InputData
     ParallelSettings parallelSettings;
 
     // Ouput
+    enum class OutputFormatType {
+        BINARY, ASCII
+    };
+    OutputFormatType outputFormatType;
     std::string residualHistoryFilename;
     std::string fieldOutputFilename;
     std::string profilingFilename;

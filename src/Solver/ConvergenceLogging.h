@@ -9,6 +9,7 @@
 #include "../FiniteVolume/FiniteVolume.h"
 #include "../DerivedQuantities/DerivedQuantities.h"
 #include "../IO/VTKWriter.h"
+#include "../IO/InputProcessing.h"
 
 #include <fstream>
 #include <iomanip>
@@ -300,7 +301,7 @@ class ConsoleLog
 
 
 
-// Postprocesses the fields and writes to file
+// Postprocesses the solution fields and writes to file
 class FieldWriter
 {
     public:
@@ -310,18 +311,29 @@ class FieldWriter
                      const Mesh &mesh,
                      const BoundaryConditionData &bcData,
                      const AxisTransformationMap &axisTransformation,
-                     const std::string &baseFilename ) :
+                     const InputData &inputData ) :
             m_fields( fields ),
             m_nuTurb( fvCoeffs.nuTurb ),
             m_mask( mask ),
             m_axisTransformation( axisTransformation ),
             m_transformedMesh( mesh ),
             m_transformedBcData( bcData ),
-            m_baseFilename( IOTOOLS::RemoveFileExtension( baseFilename, ".vtk" ) )
+            m_baseFilename( IOTOOLS::RemoveFileExtension( inputData.fieldOutputFilename, ".vtk" ) )
             {
                 // Only needs to be transformed once
                 TransformMeshToUserCoordinates( m_transformedMesh, m_axisTransformation );
                 TransformBCDataToUserCoordinates( m_transformedBcData, m_axisTransformation );
+
+                switch ( inputData.outputFormatType ) {
+                    case InputData::OutputFormatType::BINARY:
+                        m_writeMode = VTK::WriteModes::BINARY;
+                        break;
+
+                    case InputData::OutputFormatType::ASCII:
+                        m_writeMode = VTK::WriteModes::ASCII;
+                        break;
+                }
+
             };
 
             void WriteDataIteration( intType iterationNumber )
@@ -361,6 +373,7 @@ class FieldWriter
         BoundaryConditionData m_transformedBcData;
         std::unique_ptr< VTK::VTKWriter<floatType> > m_vtkWriter;
         const std::string m_baseFilename;
+        VTK::WriteModes m_writeMode;
 
         void SetWriter()
         {
@@ -368,7 +381,7 @@ class FieldWriter
             VTK::VTKWriterConfig config( m_transformedMesh.cellFaces[X].size(), 
                                          m_transformedMesh.cellFaces[Y].size(), 
                                          m_transformedMesh.cellFaces[Z].size() );
-                config.SetWriteMode(VTK::WriteModes::BINARY);
+                config.SetWriteMode( m_writeMode );
                 
             VTK::gridVectorType<CAMIRA::floatType> gridVector = { m_transformedMesh.cellFaces[X].data(), 
                                                                   m_transformedMesh.cellFaces[Y].data(), 
@@ -412,7 +425,7 @@ class FieldWriter
 };
 
 
-// Postprocesses the fields and writes to file
+// Postprocesses the residual fields and writes to file. Mainly used for debugging.
 class ResidualFieldWriter
 {
     public:
