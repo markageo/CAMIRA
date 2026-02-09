@@ -456,10 +456,7 @@ Mesh CreateMesh( const InputData &inputData,
 {
     using enum Axis::ENUMDATA;
 
-    std::cout << "Generating mesh ... ";
     Mesh mesh(inputData);
-    std::cout << "Success."
-              << "\n";
 
     // Calculate the total number of cells
     intType nCells = mesh.nCells[X] * mesh.nCells[Y] * mesh.nCells[Z];
@@ -474,6 +471,7 @@ Mesh CreateMesh( const InputData &inputData,
     auto [minAspectRatio, maxAspectRatio] = MinMaxCellAspectRatio( mesh );
 
     // Output this information to console
+    std::cout << "Mesh generated: \n";
     std::cout << "Number of cells        : " << nCells << "\n"
 
               << "Min. cell growth ratios: " << "(" << minMaxCellGrowthRatios[atm.UserAxis(X)].first << ", " 

@@ -350,6 +350,8 @@ void SolveSteady( const InputData &inputData,
 {
     using enum Axis::ENUMDATA;
     TIC("Pre processing")
+    std::cout << "Setting up solver data and pre-processing ... \n\n" << std::flush;
+
     // Extract from input data
     const intType maxOuterIterations = inputData.schemes.maxOuterIterations;
     const FieldData<floatType> maxOuterResiduals = inputData.schemes.maxOuterResiduals;
@@ -366,6 +368,7 @@ void SolveSteady( const InputData &inputData,
     auto &ibData   = mgLevels[0].ibData;
     auto &mask     = mgLevels[0].ibData.mask;
 
+    std::cout << "Grid level set up complete, performing remaining solver pre-processing. \n\n" << std::flush;
 
     // Initialise residuals
     FieldData<floatType> residualsOuter, residualsScaleFactor;
@@ -406,6 +409,8 @@ void SolveSteady( const InputData &inputData,
     NormaliseResiduals( residualsOuter, residualsScaleFactor );
     massFluxResidual = BoundaryMassFluxResidual( mgLevels[0].faceFluxes, 
                                                  mgLevels[0].mesh);
+    
+    std::cout << "Pre-processing complete. Starting solve.\n\n" << std::flush;
     TOC()
 
     TIC("Solver Loop")

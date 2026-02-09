@@ -30,12 +30,15 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels,
             mgLevels[level].mesh = CreateMesh( inputData, axisTransformation );
             mgLevels[level].isFinestLevel   = true;
             mgLevels[level].isCoarsestLevel = false;
+            std::cout << "Setting up grid level " << level << " ..." << std::flush;
         } else if ( MeshCanBeCoarsened( mgLevels[level-1].mesh ) ) {
+            std::cout << "Setting up grid level " << level << " ..." << std::flush;
             mgLevels.emplace_back();
             mgLevels[level].mesh = CoarsenMesh( mgLevels[level-1].mesh, inputData.schemes.faceInterpolationScheme );
             mgLevels[level].isCoarsestLevel = false;
             mgLevels[level].isFinestLevel   = false;
         } else {
+            std::cout << "Can no longer coarsen mesh! Using " << level - 1 << " coarse levels. \n";
             break;
         }
         GridLevelData<MI> &mgl = mgLevels[level];
@@ -152,7 +155,9 @@ void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels,
                 break;
         }
 
+        std::cout << " Complete. " << std::endl;
     }
+    std::cout << std::endl;
     mgLevels.back().isCoarsestLevel = true;
     mgLevels.shrink_to_fit();
 }
