@@ -1,8 +1,8 @@
-#ifndef FV_TOOLS
-#define FV_TOOLS
+#ifndef CAMIRA_FV_TOOLS
+#define CAMIRA_FV_TOOLS
 
 #include "Types.h"
-#include "../FiniteVolume/Mesh.h"
+#include "Mesh/Mesh.h"
 
 
 namespace CAMIRA 
@@ -73,4 +73,4 @@ namespace FVT
 
 }   // end namespace CAMIRA
 
-#endif // FV_TOOLS
+#endif // CAMIRA_FV_TOOLS

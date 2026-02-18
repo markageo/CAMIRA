@@ -1,5 +1,5 @@
-#ifndef TYPES
-#define TYPES
+#ifndef CAMIRA_TYPES
+#define CAMIRA_TYPES
 
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <Eigen/Dense>
@@ -161,10 +161,6 @@ enum class MomentumInterpolation {
 
 enum class AdvectionSchemes {
     Upwind, Central, SOU, QUICK
-};
-
-enum class FaceInterpolationSchemes {
-    WeightedLinear, Average
 };
 
 enum class TimeSchemes {
@@ -420,4 +416,4 @@ inline void SetAndCopyTensorParallel( FieldData<T> &fieldDataCopy,
 
 }   // end namespace CAMIRA
 
-#endif // TYPES
+#endif // CAMIRA_TYPES

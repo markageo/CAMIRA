@@ -1,5 +1,5 @@
-#ifndef FV_LOOKUPS
-#define FV_LOOKUPS
+#ifndef CAMIRA_FV_LOOKUPS
+#define CAMIRA_FV_LOOKUPS
 
 #include "Types.h"
 
@@ -80,4 +80,4 @@ namespace LUT
 
 }   // end namespace CAMIRA
 
-#endif // FV_LOOKUPS
+#endif // CAMIRA_FV_LOOKUPS

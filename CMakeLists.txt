@@ -110,6 +110,10 @@ else()
 endif()
 
 
+# Compile the Plume dispersion application
+option ( CAMIRA_COMPILE_PLUME "Compile the plume dispersion application." off )
+
+
 # Add libraries
 include_directories(SYSTEM libraries)	#  SYSTEM to suppress warnings
 
@@ -134,9 +138,14 @@ set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
 add_subdirectory(src)
 
 # Link time optimisation
-if( supported )
+if ( supported )
     message(STATUS "IPO / LTO enabled")
-    set_property(TARGET camira PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    set_property(TARGET camira-flow PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+	
+	if ( CAMIRA_COMPILE_PLUME )
+		set_property(TARGET camira-plume PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+	endif()
+	
 else()
     message(STATUS "IPO / LTO not supported: <${error}>")
 endif()
