@@ -1,6 +1,6 @@
 #include "TurbulenceModelData.h"
 #include "TurbulenceModels.h"
-#include "../../Core/Geometry/Geometry.h"
+#include "Core/Geometry/Geometry.h"
 
 #include <memory>
 

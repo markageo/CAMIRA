@@ -1,7 +1,7 @@
 #ifndef CAMIRA_BOUNDARY_CONDITION_DATA   
 #define CAMIRA_BOUNDARY_CONDITION_DATA
 
-#include "../../Core/Types.h"
+#include "Core/Types.h"
 
 #include <memory>
 

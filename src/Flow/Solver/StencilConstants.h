@@ -3,10 +3,10 @@
 
 #include "StaggerIndexing.h"
 
-#include "../../Core/Types.h"
-#include "../../Core/Macros.h"
-#include "../../Core/FVTools.h"
-#include "../FiniteVolume/FiniteVolume.h"
+#include "Core/Types.h"
+#include "Core/Macros.h"
+#include "Core/FVTools.h"
+#include "Flow/FiniteVolume/FiniteVolume.h"
 
 namespace CAMIRA
 {

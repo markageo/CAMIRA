@@ -1,10 +1,10 @@
 #ifndef CAMIRA_SOLVER
 #define CAMIRA_SOLVER
 
-#include "../../Core/Types.h"
-#include "../InputProcessing/InputProcessing.h"
-#include "../FiniteVolume/FiniteVolume.h"
-#include "../CoordinateTransformations/AxisTransformationFunctions.h"
+#include "Core/Types.h"
+#include "Flow/InputProcessing/InputProcessing.h"
+#include "Flow/FiniteVolume/FiniteVolume.h"
+#include "Flow/CoordinateTransformations/AxisTransformationFunctions.h"
 
 namespace CAMIRA
 {

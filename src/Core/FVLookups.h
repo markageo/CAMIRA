@@ -1,7 +1,7 @@
 #ifndef CAMIRA_FV_LOOKUPS
 #define CAMIRA_FV_LOOKUPS
 
-#include "Types.h"
+#include "Core/Types.h"
 
 
 namespace CAMIRA 

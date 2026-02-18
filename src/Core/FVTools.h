@@ -1,8 +1,8 @@
 #ifndef CAMIRA_FV_TOOLS
 #define CAMIRA_FV_TOOLS
 
-#include "Types.h"
-#include "Mesh/Mesh.h"
+#include "Core/Types.h"
+#include "Core/Mesh/Mesh.h"
 
 
 namespace CAMIRA 

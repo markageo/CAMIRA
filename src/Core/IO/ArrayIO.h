@@ -1,7 +1,7 @@
 #ifndef CAMIRA_ARRAY_IO
 #define CAMIRA_ARRAY_IO
 
-#include "../Types.h"
+#include "Core/Types.h"
 #include <unsupported/Eigen/CXX11/Tensor>
 
 #include <fstream>

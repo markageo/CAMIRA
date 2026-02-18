@@ -1,12 +1,12 @@
 #ifndef CAMIRA_TURBULENCE_MODELS
 #define CAMIRA_TURBULENCE_MODELS
 
-#include "../../Core/Types.h"
-#include "../../Core/Mesh/Mesh.h"
-#include "../../Core/AxisTransformationMap/AxisTransformationMap.h"
-#include "../../Core/Geometry/Geometry.h"
-#include "../ImmersedBoundary/ImmersedBoundary.h"
-#include "../FiniteVolume/BoundaryConditionData.h"
+#include "Core/Types.h"
+#include "Core/Mesh/Mesh.h"
+#include "Core/AxisTransformationMap/AxisTransformationMap.h"
+#include "Core/Geometry/Geometry.h"
+#include "Flow/ImmersedBoundary/ImmersedBoundary.h"
+#include "Flow/FiniteVolume/BoundaryConditionData.h"
 
 
 #include <memory>

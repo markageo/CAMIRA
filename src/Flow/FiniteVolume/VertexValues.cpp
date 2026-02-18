@@ -1,5 +1,5 @@
 #include "FiniteVolume.h"
-#include "../../Core/FVLookups.h"
+#include "Core/FVLookups.h"
 
 namespace CAMIRA
 {

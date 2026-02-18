@@ -3,13 +3,13 @@
 
 #include "StaggerIndexing.h"
 
-#include "../../Core/Types.h"
-#include "../../Core/Macros.h"
-#include "../../Core/FVTools.h"
-#include "../../Core/FVLookups.h"
-#include "../InputProcessing/InputProcessing.h"
-#include "../CoordinateTransformations/AxisTransformationFunctions.h"
-#include "../FiniteVolume/FiniteVolume.h"
+#include "Core/Types.h"
+#include "Core/Macros.h"
+#include "Core/FVTools.h"
+#include "Core/FVLookups.h"
+#include "Flow/InputProcessing/InputProcessing.h"
+#include "Flow/CoordinateTransformations/AxisTransformationFunctions.h"
+#include "Flow/FiniteVolume/FiniteVolume.h"
 
 
 namespace CAMIRA

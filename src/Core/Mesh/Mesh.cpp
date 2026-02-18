@@ -1,5 +1,5 @@
 #include "Mesh.h"
-#include "../FVLookups.h"
+#include "Core/FVLookups.h"
 
 #include <cmath>
 #include <utility>

@@ -1,15 +1,15 @@
 #ifndef CAMIRA_SOLVER_LOGGING
 #define CAMIRA_SOLVER_LOGGING
 
-#include "../../Core/Types.h"
-#include "../../Core/FVTools.h"
-#include "../../Core/Macros.h"
-#include "../../Core/IO/VTKWriter.h"
-#include "../../Core/IO/IOTools.h"
-#include "../CoordinateTransformations/AxisTransformationFunctions.h"
-#include "../FiniteVolume/FiniteVolume.h"
-#include "../DerivedQuantities/DerivedQuantities.h"
-#include "../InputProcessing/InputProcessing.h"
+#include "Core/Types.h"
+#include "Core/FVTools.h"
+#include "Core/Macros.h"
+#include "Core/IO/VTKWriter.h"
+#include "Core/IO/IOTools.h"
+#include "Flow/CoordinateTransformations/AxisTransformationFunctions.h"
+#include "Flow/FiniteVolume/FiniteVolume.h"
+#include "Flow/DerivedQuantities/DerivedQuantities.h"
+#include "Flow/InputProcessing/InputProcessing.h"
 
 #include <fstream>
 #include <iomanip>

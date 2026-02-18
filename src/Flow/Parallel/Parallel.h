@@ -1,7 +1,7 @@
 #ifndef CAMIRA_PARALLEL 
 #define CAMIRA_PARALLEL
 
-#include "../../Core/Types.h"
+#include "Core/Types.h"
 #include <vector>
 
 namespace CAMIRA

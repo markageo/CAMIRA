@@ -3,9 +3,9 @@
 
 
 #include "FiniteVolume.h"
-#include "../../Core/Macros.h"
-#include "../../Core/FVTools.h"
-#include "../../Core/FVLookups.h"
+#include "Core/Macros.h"
+#include "Core/FVTools.h"
+#include "Core/FVLookups.h"
 
 #include <utility>
 

@@ -2,7 +2,7 @@
 #define CAMIRA_FACE_INTERPOLATED_VELOCITY
 
 #include "FiniteVolume.h"
-#include "../../Core/FVTools.h"
+#include "Core/FVTools.h"
 #include <sys/cdefs.h>
 
 namespace CAMIRA {

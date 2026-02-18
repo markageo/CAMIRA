@@ -5,15 +5,15 @@
 #include "TriadSolver.h"
 #include "StencilConstants.h"
 #include "ResidualFunctions.h"
-#include "../FiniteVolume/GhostCells.h"
 
-#include "../../Core/Types.h"
-#include "../../Core/FVTools.h"
-#include "../../Core/FVLookups.h"
-#include "../../Core/ArrayIndexConversions.h"
-#include "../InputProcessing/InputProcessing.h"
-#include "../FiniteVolume/FiniteVolume.h"
-#include "../Parallel/Parallel.h"
+#include "Core/Types.h"
+#include "Core/FVTools.h"
+#include "Core/FVLookups.h"
+#include "Core/ArrayIndexConversions.h"
+#include "Flow/InputProcessing/InputProcessing.h"
+#include "Flow/FiniteVolume/FiniteVolume.h"
+#include "Flow/FiniteVolume/GhostCells.h"
+#include "Flow/Parallel/Parallel.h"
 
 #include <omp.h>
 

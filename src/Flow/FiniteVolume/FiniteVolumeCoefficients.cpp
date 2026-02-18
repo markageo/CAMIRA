@@ -1,11 +1,11 @@
 #include "FiniteVolume.h"
 #include "FaceInterpolatedVelocity.h"
 
-#include "../../Core/Macros.h"
-#include "../../Core/FVTools.h"
-#include "../../Core/FVLookups.h"
-#include "../Parallel/Parallel.h"
-#include "../TurbulenceModels/TurbulenceModels.h"
+#include "Core/Macros.h"
+#include "Core/FVTools.h"
+#include "Core/FVLookups.h"
+#include "Flow/Parallel/Parallel.h"
+#include "Flow/TurbulenceModels/TurbulenceModels.h"
 
 #include <algorithm>
 #include <iostream>

@@ -1,6 +1,6 @@
 #include "Geometry.h"
 
-#include "../FVLookups.h"
+#include "Core/FVLookups.h"
 
 #include <Eigen/Dense>
 

@@ -1,8 +1,8 @@
 #include "Multigrid.h"
 
-#include "../../Core/Mesh//Mesh.h"
-#include "../../Core/FVTools.h"
-#include "../ImmersedBoundary/ImmersedBoundary.h"
+#include "Core/Mesh//Mesh.h"
+#include "Core/FVTools.h"
+#include "Flow/ImmersedBoundary/ImmersedBoundary.h"
 
 namespace CAMIRA
 {

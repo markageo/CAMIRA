@@ -14,6 +14,8 @@ endif()
 target_link_libraries(libs PRIVATE warning_flags)
 target_link_libraries(libs PUBLIC compiler_flags)
 
+include_directories( "${CMAKE_CURRENT_SOURCE_DIR}" )
+
 add_subdirectory(Core)
 
 add_subdirectory(Flow)

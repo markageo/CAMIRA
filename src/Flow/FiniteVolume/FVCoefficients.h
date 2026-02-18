@@ -1,8 +1,8 @@
 #ifndef CAMIRA_FVCOEFFICIENTS  
 #define CAMIRA_FVCOEFFICIENTS
 
-#include "../../Core/Types.h"
-#include "../TurbulenceModels/TurbulenceModels.h"
+#include "Core/Types.h"
+#include "Flow/TurbulenceModels/TurbulenceModels.h"
 #include <memory>
 
 namespace CAMIRA

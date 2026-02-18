@@ -1,10 +1,10 @@
 #ifndef CAMIRA_DERIVED_QUANTITIES
 #define CAMIRA_DERIVED_QUANTITIES
 
-#include "../../Core/Types.h"
-#include "../../Core/Mesh/Mesh.h"
-#include "../ImmersedBoundary/ImmersedBoundary.h"
-#include "../FiniteVolume/BoundaryConditionData.h"
+#include "Core/Types.h"
+#include "Core/Mesh/Mesh.h"
+#include "Flow/ImmersedBoundary/ImmersedBoundary.h"
+#include "Flow/FiniteVolume/BoundaryConditionData.h"
 
 namespace CAMIRA
 {

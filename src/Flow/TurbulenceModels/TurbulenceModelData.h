@@ -2,12 +2,11 @@
 #define CAMIRA_TURBULENCE_MODEL_DATA
 
 #include "TurbulenceModels.h"
-#include "../../Core/Types.h"
-#include "../../Core/Mesh/Mesh.h"
-#include "../InputProcessing/InputProcessing.h"
-
-#include "../FiniteVolume/BoundaryConditionData.h"
-#include "../ImmersedBoundary/ImmersedBoundary.h"
+#include "Core/Types.h"
+#include "Core/Mesh/Mesh.h"
+#include "Flow/InputProcessing/InputProcessing.h"
+#include "Flow/FiniteVolume/BoundaryConditionData.h"
+#include "Flow/ImmersedBoundary/ImmersedBoundary.h"
 
 #include <memory>
 

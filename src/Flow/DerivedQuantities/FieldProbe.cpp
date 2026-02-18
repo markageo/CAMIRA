@@ -1,7 +1,7 @@
 #include "DerivedQuantities.h"
-#include "../../Core/FVTools.h"
-#include "../../Core/Types.h"
-#include "../FiniteVolume/FiniteVolume.h"
+#include "Core/FVTools.h"
+#include "Core/Types.h"
+#include "Flow/FiniteVolume/FiniteVolume.h"
 
 
 namespace CAMIRA

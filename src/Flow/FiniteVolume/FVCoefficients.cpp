@@ -1,6 +1,6 @@
 #include "FVCoefficients.h"
-#include "../../Core/FVTools.h"
-#include "../../Core/FVLookups.h"
+#include "Core/FVTools.h"
+#include "Core/FVLookups.h"
 
 
 namespace CAMIRA

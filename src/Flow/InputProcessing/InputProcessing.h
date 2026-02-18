@@ -1,9 +1,9 @@
 #ifndef INPUT_PROCESSING
 #define INPUT_PROCESSING
 
-#include "../../Core/Types.h"
-#include "../../Core/Mesh/Mesh.h"
-#include "../../Core/Geometry/Geometry.h"
+#include "Core/Types.h"
+#include "Core/Mesh/Mesh.h"
+#include "Core/Geometry/Geometry.h"
 #include "boost/property_tree/ptree.hpp"
 #include <vector>
 #include <utility>

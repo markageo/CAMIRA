@@ -1,11 +1,11 @@
 #ifndef CAMIRA_RESIDUAL_FUNCTIONS
 #define CAMIRA_RESIDUAL_FUNCTIONS
 
-#include "../../Core/Macros.h"
-#include "../../Core/Types.h"
-#include "../../Core/FVTools.h"
-#include "../FiniteVolume/FiniteVolume.h"
-#include "../DerivedQuantities/DerivedQuantities.h"
+#include "Core/Macros.h"
+#include "Core/Types.h"
+#include "Core/FVTools.h"
+#include "Flow/FiniteVolume/FiniteVolume.h"
+#include "Flow/DerivedQuantities/DerivedQuantities.h"
 
 
 #include <cmath>

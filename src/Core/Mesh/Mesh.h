@@ -1,8 +1,8 @@
 #ifndef CAMIRA_MESH  
 #define CAMIRA_MESH
 
-#include "../Types.h"
-#include "../AxisTransformationMap/AxisTransformationMap.h"
+#include "Core/Types.h"
+#include "Core/AxisTransformationMap/AxisTransformationMap.h"
 
 namespace CAMIRA
 {

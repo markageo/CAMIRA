@@ -1,8 +1,8 @@
 #ifndef CAMIRA_GEOMETRY
 #define CAMIRA_GEOMETRY
 
-#include "../Types.h"
-#include "../AxisTransformationMap/AxisTransformationMap.h"
+#include "Core/Types.h"
+#include "Core/AxisTransformationMap/AxisTransformationMap.h"
 
 #include <CGAL/Simple_cartesian.h>
 #include <CGAL/Polyhedron_3.h>

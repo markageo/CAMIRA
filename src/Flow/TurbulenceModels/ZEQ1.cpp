@@ -1,10 +1,10 @@
 #include "TurbulenceModels.h"
 
-#include "../../Core/Types.h"
-#include "../../Core/FVTools.h"
-#include "../../Core/Geometry/Geometry.h"
-#include "../../Core/Mesh/Mesh.h"
-#include "../FiniteVolume/FiniteVolume.h"
+#include "Core/Types.h"
+#include "Core/FVTools.h"
+#include "Core/Geometry/Geometry.h"
+#include "Core/Mesh/Mesh.h"
+#include "Flow/FiniteVolume/FiniteVolume.h"
 #include "TurbulenceModelTools.h"
 
 // Qian, Y. (2004). Development of an Algebraic Turbulence Model for Airflow and Contaminant Simulations around a Building 

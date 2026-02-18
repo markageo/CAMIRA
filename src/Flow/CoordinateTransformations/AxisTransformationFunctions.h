@@ -1,11 +1,11 @@
 #ifndef AXIS_TRANSFORMATION_FUNCTIONS
 #define AXIS_TRANSFORMATION_FUNCTIONS
 
-#include "../../Core/AxisTransformationMap/AxisTransformationMap.h"
-#include "../../Core/Types.h"
-#include "../../Core/Mesh/Mesh.h"
-#include "../InputProcessing/InputProcessing.h"
-#include "../FiniteVolume/BoundaryConditionData.h"
+#include "Core/AxisTransformationMap/AxisTransformationMap.h"
+#include "Core/Types.h"
+#include "Core/Mesh/Mesh.h"
+#include "Flow/InputProcessing/InputProcessing.h"
+#include "Flow/FiniteVolume/BoundaryConditionData.h"
 
 // The problem is remapped so that the plane sweeping direction is always in the z direction and
 // the line sweeping direction is always in the y direction (in the code). This is more memory

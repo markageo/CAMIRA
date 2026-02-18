@@ -1,7 +1,7 @@
 #ifndef CAMIRA_VTK_READER
 #define CAMIRA_VTK_READER
 
-#include "../Types.h"
+#include "Core/Types.h"
 
 #include <string>
 

@@ -1,14 +1,14 @@
 #ifndef CAMIRA_MULTIGRID
 #define CAMIRA_MULTIGRID
 
-#include "../../Core/Types.h"
-#include "../../Core/Mesh/Mesh.h"
-#include "../FiniteVolume/FiniteVolume.h"
-#include "../ImmersedBoundary/ImmersedBoundary.h"
-#include "../TurbulenceModels/TurbulenceModelData.h"
-#include "../InputProcessing/InputProcessing.h"
-#include "../Solver/LinearSolver.h"
-#include "../CoordinateTransformations/AxisTransformationFunctions.h"
+#include "Core/Types.h"
+#include "Core/Mesh/Mesh.h"
+#include "Flow/FiniteVolume/FiniteVolume.h"
+#include "Flow/ImmersedBoundary/ImmersedBoundary.h"
+#include "Flow/TurbulenceModels/TurbulenceModelData.h"
+#include "Flow/InputProcessing/InputProcessing.h"
+#include "Flow/Solver/LinearSolver.h"
+#include "Flow/CoordinateTransformations/AxisTransformationFunctions.h"
 
 #include<memory>
 

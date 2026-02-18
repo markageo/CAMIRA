@@ -1,7 +1,7 @@
 #ifndef CAMIRA_AXIS_TRANSFORMATION_MAP
 #define CAMIRA_AXIS_TRANSFORMATION_MAP
 
-#include "../Types.h"
+#include "Core/Types.h"
 
 namespace CAMIRA
 {

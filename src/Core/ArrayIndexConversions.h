@@ -1,7 +1,7 @@
 #ifndef CAMIRA_ARRAY_INDEX_CONVERSIONS
 #define CAMIRA_ARRAY_INDEX_CONVERSIONS
 
-#include "Types.h"
+#include "Core/Types.h"
 #include <utility>
 
 namespace CAMIRA

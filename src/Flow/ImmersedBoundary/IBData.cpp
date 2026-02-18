@@ -1,10 +1,10 @@
 #include "ImmersedBoundary.h"
-#include "../../Core/FVLookups.h"
-#include "../../Core/FVTools.h"
-#include "../../Core/Macros.h"
-#include "../../Core/IO/ArrayIO.h"
-#include "../../Core/IO/IOTools.h"
-#include "../CoordinateTransformations/AxisTransformationFunctions.h"
+#include "Core/FVLookups.h"
+#include "Core/FVTools.h"
+#include "Core/Macros.h"
+#include "Core/IO/ArrayIO.h"
+#include "Core/IO/IOTools.h"
+#include "Flow/CoordinateTransformations/AxisTransformationFunctions.h"
 
 #include <vector>
 #include <utility>

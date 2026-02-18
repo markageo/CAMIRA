@@ -1,8 +1,8 @@
 #include "DerivedQuantities.h"
-#include "../../Core/FVTools.h"
-#include "../../Core/FVLookups.h"
-#include "../../Core/Geometry/Geometry.h"
-#include "../ImmersedBoundary/ImmersedBoundary.h"
+#include "Core/FVTools.h"
+#include "Core/FVLookups.h"
+#include "Core/Geometry/Geometry.h"
+#include "Flow/ImmersedBoundary/ImmersedBoundary.h"
 
 #include <algorithm>
 #include <numeric>

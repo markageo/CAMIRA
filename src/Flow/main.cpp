@@ -4,18 +4,18 @@
    Mark George
 \*---------------------------------------------------------------------------*/
 
-#include "../Core/Types.h"
-#include "../Core/Macros.h"
-#include "../Core/FVTools.h"
-#include "../Core/Geometry/Geometry.h"
-#include "../Core/IO/ArrayIO.h"
-#include "../Core/IO/VTKWriter.h"
-#include "ImmersedBoundary/ImmersedBoundary.h"
-#include "InputProcessing/InputProcessing.h"
-#include "CoordinateTransformations/AxisTransformationFunctions.h"
-#include "FiniteVolume/FiniteVolume.h"
-#include "Parallel/Parallel.h"
-#include "Solver/Solver.h"
+#include "Core/Types.h"
+#include "Core/Macros.h"
+#include "Core/FVTools.h"
+#include "Core/Geometry/Geometry.h"
+#include "Core/IO/ArrayIO.h"
+#include "Core/IO/VTKWriter.h"
+#include "Flow/ImmersedBoundary/ImmersedBoundary.h"
+#include "Flow/InputProcessing/InputProcessing.h"
+#include "Flow/CoordinateTransformations/AxisTransformationFunctions.h"
+#include "Flow/FiniteVolume/FiniteVolume.h"
+#include "Flow/Parallel/Parallel.h"
+#include "Flow/Solver/Solver.h"
 
 #include <fstream>
 #include <iostream>

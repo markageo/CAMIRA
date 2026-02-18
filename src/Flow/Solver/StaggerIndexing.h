@@ -1,8 +1,8 @@
 #ifndef CAMIRA_STAGGER_INDEXING
 #define CAMIRA_STAGGER_INDEXING
 
-#include "../../Core/Types.h"
-#include "../../Core/FVLookups.h"
+#include "Core/Types.h"
+#include "Core/FVLookups.h"
 #include <type_traits>
 
 namespace CAMIRA

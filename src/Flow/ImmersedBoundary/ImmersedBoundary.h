@@ -1,10 +1,10 @@
 #ifndef CAMIRA_IMMERSED_BOUNDARY
 #define CAMIRA_IMMERSED_BOUNDARY
 
-#include "../../Core/Types.h"
-#include "../../Core/Geometry/Geometry.h"
-#include "../../Core/Mesh/Mesh.h"
-#include "../CoordinateTransformations/AxisTransformationFunctions.h"
+#include "Core/Types.h"
+#include "Core/Geometry/Geometry.h"
+#include "Core/Mesh/Mesh.h"
+#include "Flow/CoordinateTransformations/AxisTransformationFunctions.h"
 
 #include <vector>
 

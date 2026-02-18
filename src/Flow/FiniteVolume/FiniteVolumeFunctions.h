@@ -2,12 +2,12 @@
 #define CAMIRA_FINITE_VOLUME_FUNCTIONS
 
 #include "FVCoefficients.h"
-#include "../../Core/Mesh/Mesh.h"
-#include "../../Core/Types.h"
-#include "../InputProcessing/InputProcessing.h"
-#include "../ImmersedBoundary/ImmersedBoundary.h"
-#include "../TurbulenceModels/TurbulenceModelData.h"
-#include "../CoordinateTransformations/AxisTransformationFunctions.h"
+#include "Core/Mesh/Mesh.h"
+#include "Core/Types.h"
+#include "Flow/InputProcessing/InputProcessing.h"
+#include "Flow/ImmersedBoundary/ImmersedBoundary.h"
+#include "Flow/TurbulenceModels/TurbulenceModelData.h"
+#include "Flow/CoordinateTransformations/AxisTransformationFunctions.h"
 
 namespace CAMIRA
 {

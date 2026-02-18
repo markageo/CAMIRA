@@ -1,5 +1,5 @@
 #include "Parallel.h"
-#include "../../Core/ArrayIndexConversions.h"
+#include "Core/ArrayIndexConversions.h"
 
 namespace CAMIRA
 {

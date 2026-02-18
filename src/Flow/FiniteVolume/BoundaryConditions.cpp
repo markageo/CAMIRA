@@ -1,10 +1,10 @@
 #include "FiniteVolumeFunctions.h"
 
-#include "../../Core/FVTools.h"
-#include "../../Core/FVLookups.h"
-#include "../../Core/IO/VTKReader.h"
-#include "../InputProcessing/InputProcessing.h"
-#include "../CoordinateTransformations/AxisTransformationFunctions.h"
+#include "Core/FVTools.h"
+#include "Core/FVLookups.h"
+#include "Core/IO/VTKReader.h"
+#include "Flow/InputProcessing/InputProcessing.h"
+#include "Flow/CoordinateTransformations/AxisTransformationFunctions.h"
 
 
 #include <cmath>
