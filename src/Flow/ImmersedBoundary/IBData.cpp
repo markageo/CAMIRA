@@ -28,6 +28,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 namespace 
 {
 
@@ -485,5 +490,6 @@ void WriteGeometryToFile( const InputData &inputData,
 }
 
 
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA

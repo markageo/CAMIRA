@@ -13,6 +13,10 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
 
 struct TurbulenceModelData
 {
@@ -27,6 +31,8 @@ void SetTurbulenceModelData( TurbulenceModelData &,
                              const IBData &,
                              const BoundaryConditionData & );
 
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA
 

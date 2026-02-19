@@ -7,6 +7,11 @@
 
 namespace CAMIRA
 {
+    
+using namespace CORE;
+
+namespace FLOW
+{
 
 template< Axis::ENUMDATA field, 
           TransportCoefficients::ENUMDATA staggeredCoeff >
@@ -142,6 +147,8 @@ class StaggerIndexing
 
 };
 
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA
 

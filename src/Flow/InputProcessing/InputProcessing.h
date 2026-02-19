@@ -14,6 +14,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 
 // -------------------------------------- Definition in InputProcessing.cpp -------------------------------------- //
 
@@ -172,6 +177,8 @@ InputData InputDataFromCommandLine(int, char const **);
 std::tuple< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > ReadSweepDirections( const std::string & );
 
 
-} // end namespace CAMIRA
+}   // end namespace FLOW
+
+}   // end namespace CAMIRA
 
 #endif  // INPUT_PROCESSING

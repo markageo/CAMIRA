@@ -13,7 +13,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
 using namespace FVT;
+
+namespace FLOW
+{
 
 
 // Calculated as the L1 norm of the difference between two arrays.
@@ -368,6 +372,9 @@ inline bool ResidualsDiverged( const FieldData<floatType> &residuals )
 
     return false;
 }
+
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA
 

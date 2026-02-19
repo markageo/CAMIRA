@@ -7,6 +7,9 @@
 namespace CAMIRA 
 {
 
+namespace CORE
+{
+
 // Lookup Tables
 namespace LUT
 {
@@ -77,6 +80,7 @@ namespace LUT
  
 }   // end namespace LUT
 
+}   // end namespace CORE
 
 }   // end namespace CAMIRA
 

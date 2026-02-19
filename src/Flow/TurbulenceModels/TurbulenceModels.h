@@ -14,6 +14,10 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
 
 struct TurbulenceModelInterface
 {
@@ -136,6 +140,8 @@ struct TurbulenceModel< TurbulenceModels::ZEQ4 > : public TurbulenceModelInterfa
         Tensor3D m_velocityDeformationRate;                           // Stored at cell centers, has ghost cells
 };
 
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA
 

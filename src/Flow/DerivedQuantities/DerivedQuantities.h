@@ -9,6 +9,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 // Calculate values and gradients between points using linear interpolation
 class FieldProbe
 {
@@ -90,7 +95,7 @@ class YPlusCalculator
         std::vector< WallCellData > m_wallCells;
 };
 
-
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA
 

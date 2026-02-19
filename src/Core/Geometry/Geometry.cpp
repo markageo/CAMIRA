@@ -32,6 +32,9 @@
 namespace CAMIRA
 {
 
+namespace CORE
+{
+
 namespace 
 {
 
@@ -475,4 +478,6 @@ fVector3 NearestPoint( const Tree &tree,
 }
 
 
-}
+}   // end namespace CORE
+
+}   // end namespace CAMIRA

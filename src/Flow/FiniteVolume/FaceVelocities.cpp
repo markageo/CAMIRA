@@ -8,7 +8,10 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
 using namespace FVT;
+namespace FLOW
+{
 
 namespace
 {
@@ -309,6 +312,6 @@ void SetIBFaceFluxes( EnumVector<Axis, Tensor3D> &faceFluxes,
 
 
 
+}   // end namespace FLOW
 
-
-} // end namespace CAMIRA
+}   // end namespace CAMIRA

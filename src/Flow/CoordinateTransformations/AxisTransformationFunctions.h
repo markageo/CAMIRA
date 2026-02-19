@@ -14,8 +14,8 @@
 namespace CAMIRA
 {
 
-// Return a transformation map from a plane and line sweeping direction
-AxisTransformationMap CreateAxisTransformation( BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA ); 
+namespace FLOW
+{
 
 // Transform user input data so that sweeping is consistent with solver
 void TransformUserInputData( InputData &, const AxisTransformationMap & );
@@ -31,6 +31,8 @@ void TransformVectorFieldToUserCoordinates( EnumVector<Axis, Tensor3D> &, const 
 void TransformBCDataToUserCoordinates( BoundaryConditionData &, const AxisTransformationMap & );
 
 
-} // end namespace CAMIRA
+}   // end namespace FLOW
+
+}   // end namespace CAMIRA
  
 #endif  // AXIS_TRANSFORMATION_FUNCTIONS

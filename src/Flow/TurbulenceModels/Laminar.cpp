@@ -3,6 +3,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 void TurbulenceModel<TurbulenceModels::Laminar>::SetTurbulenceModelData( [[ maybe_unused ]] const InputData &inputData,
                                                                          [[ maybe_unused ]] const AxisTransformationMap &axisTransformation,
                                                                          [[ maybe_unused ]] const Mesh &mesh,
@@ -18,5 +23,7 @@ void TurbulenceModel<TurbulenceModels::Laminar>::SetTurbulenceViscosityField( Te
 {
     nuTurbulent.setZero();
 }
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA

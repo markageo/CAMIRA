@@ -8,7 +8,8 @@
 namespace CAMIRA
 {
 
-
+namespace CORE
+{
 namespace
 {
 
@@ -530,5 +531,6 @@ Mesh CoarsenMesh( const Mesh &fineMesh )
     return coarseMesh;
 }
 
+}   // end namepsace CORE
 
 }   // end namespace CAMIRA

@@ -13,6 +13,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 #ifdef CAMIRA_HAS_VTK_LIB
 void SetInitialConditionFromVTKFile( FieldData<Tensor3D> &fields
                                      const std::string &filename,
@@ -81,5 +86,7 @@ void InitialiseFields( FieldData<Tensor3D> &fields,
     #endif
 }
 
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA

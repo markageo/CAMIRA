@@ -25,6 +25,10 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
 
 // Rate of strain tensor squared, calculated at cell centers
 inline void CalculateVelocityDeformationRate( Tensor3D &S,
@@ -327,6 +331,7 @@ inline floatType GetVerticalHeight( const Mesh &mesh,
 }
 
 
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA
 

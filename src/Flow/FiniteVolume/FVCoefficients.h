@@ -8,6 +8,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 // -------------------------------------- Definition in FiniteVolumeStructures.cpp -------------------------------------- //
 
 
@@ -90,7 +95,8 @@ public:
 };
 
 
+}   // end namespace FLOW
 
-} // end namespace CAMIRA
+}   // end namespace CAMIRA
 
 #endif // CAMIRA_FVCOEFFICIENTS

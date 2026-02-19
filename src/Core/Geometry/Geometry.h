@@ -14,6 +14,9 @@
 namespace CAMIRA
 {
 
+namespace CORE
+{
+
 using CGAL_Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;    // This uses doubles, but is needed for correct distance queries
 using Polyhedron = CGAL::Polyhedron_3< CGAL_Kernel >;
 using Tree = CGAL::AABB_tree< CGAL::AABB_traits<CGAL_Kernel, CGAL::AABB_face_graph_triangle_primitive<Polyhedron>> >;
@@ -73,7 +76,10 @@ fVector3 NearestPoint( const Tree &,
                        const floatType, 
                        const floatType );
 
-}
+                       
+}   // end namespace CORE
+
+}   // end namespace CAMIRA
 
 
 #endif  // CAMIRA_GEOMETRY

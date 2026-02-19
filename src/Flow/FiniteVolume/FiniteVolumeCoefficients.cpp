@@ -16,8 +16,12 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
 using namespace FVT;
  
+namespace FLOW
+{
+
 namespace
 {
 
@@ -2146,5 +2150,7 @@ void UpdateFVCoefficients( FVCoefficients &fvCoeffs,
     AddIBSourceTerms(fvCoeffs, faceFluxes, ibData, fields, mesh);
 }
 
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA

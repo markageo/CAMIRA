@@ -6,6 +6,10 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
 
 namespace
 {
@@ -145,5 +149,6 @@ FVCoefficients::FVCoefficients( const iArray3 &dims,
 };
 
 
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA

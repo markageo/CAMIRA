@@ -7,6 +7,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 
 FieldProbe::FieldProbe( const Mesh &mesh,
             const fArray3 &probePoint ) :
@@ -146,6 +151,8 @@ const fArray3& FieldProbe::Coordinates() const
 floatType FieldProbe::Coordinate( const intType axis ) const
 { return m_probePoint( axis ); }
 
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA
 

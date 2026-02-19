@@ -22,6 +22,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 // Set the output precision based on code precision
 #ifdef CAMIRA_DOUBLE_PRECISION
     #define CAMIRA_FILE_WRITE_PRECISION 15
@@ -496,6 +501,8 @@ class ResidualFieldWriter
 
 };
 
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA
 

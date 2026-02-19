@@ -4,6 +4,10 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
 
 namespace 
 {
@@ -489,6 +493,6 @@ FieldData<Tensor3D> GetVertexFields( const FieldData<Tensor3D> &fields,
 }
 
 
+}   // end namespace FLOW
 
-
-} // end namespace CAMIRA
+}   // end namespace CAMIRA

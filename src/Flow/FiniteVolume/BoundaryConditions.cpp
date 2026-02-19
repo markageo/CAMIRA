@@ -13,6 +13,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 namespace
 {
 
@@ -192,6 +197,6 @@ void SetBoundaryConditionData( BoundaryConditionData &bcData,
 
 }
 
-
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA

@@ -7,6 +7,10 @@
 
 namespace CAMIRA {
 
+using namespace CORE;
+
+namespace FLOW
+{
 
 template< AdvectionSchemes advectionScheme,
           intType          advectionDirection,  // +1 for flux in positive direciton, -1 for flux in negative direciton
@@ -125,7 +129,9 @@ inline floatType FaceInterpolatedVelocity( const Tensor3D &U,
 }
 
 
-}
+}   // end namespace FLOW
+
+}   // end namepsace CAMIRA
 
 
 #endif  // CAMIRA_FACE_INTERPOLATED_VELOCITY

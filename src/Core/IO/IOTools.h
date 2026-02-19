@@ -7,6 +7,9 @@
 namespace CAMIRA 
 {
 
+namespace CORE
+{
+
 namespace IOTOOLS
 {
 
@@ -68,6 +71,8 @@ namespace IOTOOLS
 
 
 }   // end namespace IOTOOLS
+
+}   // end namespace CORE
 
 }   // end namespace CAMIRA
 

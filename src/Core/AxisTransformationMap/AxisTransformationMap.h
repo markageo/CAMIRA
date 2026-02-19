@@ -6,6 +6,9 @@
 namespace CAMIRA
 {
 
+namespace CORE
+{
+
 // Structure for storing axis transformation, is just a one-to-one map
 class AxisTransformationMap
 {
@@ -63,6 +66,13 @@ class AxisTransformationMap
         EnumVector<Axis, A> m_userAxis;    // User axis -> code axis
 };
 
-} // end namespace CAMIRA
+
+// Return a transformation map from a plane and line sweeping direction
+AxisTransformationMap CreateAxisTransformation( BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA ); 
+
+
+}   // end namespace CORE
+
+}   // end namespace CAMIRA
  
 #endif  // CAMIRA_AXIS_TRANSFORMATION_MAP

@@ -27,42 +27,38 @@ int main(int argc, char const *argv[])
                                          Input Processing
     \*-------------------------------------------------------------------------------------*/
 
-    CAMIRA::InputData inputData = CAMIRA::InputDataFromCommandLine(argc, argv);
+    CAMIRA::FLOW::InputData inputData = CAMIRA::FLOW::InputDataFromCommandLine(argc, argv);
 
-    CAMIRA::AxisTransformationMap axisTransformation = CreateAxisTransformation( inputData.smootherSettings.planeSweepDirection,
-                                                                                 inputData.smootherSettings.lineSweepDirection );
+    CAMIRA::CORE::AxisTransformationMap axisTransformation = CAMIRA::CORE::CreateAxisTransformation( inputData.smootherSettings.planeSweepDirection,
+                                                                                                     inputData.smootherSettings.lineSweepDirection );
 
-    CAMIRA::TransformUserInputData(inputData, axisTransformation);
+    CAMIRA::FLOW::TransformUserInputData(inputData, axisTransformation);
 
     /*-------------------------------------------------------------------------------------*\
                                               Solve
     \*-------------------------------------------------------------------------------------*/
 
-    // std::cout << "Press enter to begin solve.";
-    // std::cin.ignore();
-    // std::cout << std::endl;
-
     omp_set_num_threads( inputData.parallelSettings.numberOfThreads );
 
     switch ( inputData.schemes.momentumInterpolation ) {
 
-        using MI = CAMIRA::MomentumInterpolation;
+        using MI = CAMIRA::CORE::MomentumInterpolation;
 
         case ( MI::Implicit ):
 
             if ( inputData.transient ) {
-                CAMIRA::SolveTransient< MI::Implicit >(inputData, axisTransformation);
+                CAMIRA::FLOW::SolveTransient< MI::Implicit >(inputData, axisTransformation);
             } else {
-                CAMIRA::SolveSteady< MI::Implicit >(inputData, axisTransformation);
+                CAMIRA::FLOW::SolveSteady< MI::Implicit >(inputData, axisTransformation);
             }
             break;
 
         case ( MI::SemiExplicit ):
 
             if ( inputData.transient ) {
-                CAMIRA::SolveTransient< MI::SemiExplicit >(inputData, axisTransformation);
+                CAMIRA::FLOW::SolveTransient< MI::SemiExplicit >(inputData, axisTransformation);
             } else {
-                CAMIRA::SolveSteady< MI::SemiExplicit >(inputData, axisTransformation);
+                CAMIRA::FLOW::SolveSteady< MI::SemiExplicit >(inputData, axisTransformation);
             }
 
             break;

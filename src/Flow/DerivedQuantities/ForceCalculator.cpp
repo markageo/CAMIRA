@@ -4,6 +4,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 ForceCalculator::ForceCalculator( const IBData &ibData, 
                                   const Mesh &mesh, 
                                   const FieldData<Tensor3D> &fields,
@@ -85,7 +90,7 @@ floatType ForceCalculator::GetAdvectiveIntegralForce( const Axis::ENUMDATA force
 }
 
 
-
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA
 

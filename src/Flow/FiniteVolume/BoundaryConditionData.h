@@ -8,6 +8,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 // -------------------------------------- Definition in FiniteVolumeStructures.cpp -------------------------------------- //
 
 // Structure to store all domain boundary condition information
@@ -23,7 +28,8 @@ struct BoundaryConditionData {
 };
 
 
+}   // end namespace FLOW
 
-} // end namespace CAMIRA
+}   // end namespace CAMIRA
 
 #endif // CAMIRA_BOUNDARY_CONDITION_DATA

@@ -15,6 +15,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 template < TransportCoefficients::ENUMDATA Ustag,
            TransportCoefficients::ENUMDATA Vstag,
            TransportCoefficients::ENUMDATA Wstag, 
@@ -612,6 +617,9 @@ private:
     const FieldData<floatType> m_relaxation;
 
 };
+
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA    
 

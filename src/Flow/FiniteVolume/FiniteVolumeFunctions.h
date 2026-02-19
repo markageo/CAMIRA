@@ -12,6 +12,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 // -------------------------------------- Definition in InitialConditions.cpp -------------------------------------- //
 
 // Allocate and initialise the fields
@@ -73,7 +78,8 @@ FieldData<Tensor3D> GetVertexFields( const FieldData<Tensor3D> &,
                                      const Tensor3D & );
 
 
+}   // end namespace FLOW
 
-} // end namespace CAMIRA
+}   // end namespace CAMIRA
 
 #endif // CAMIRA_FINITE_VOLUME_FUNCTIONS

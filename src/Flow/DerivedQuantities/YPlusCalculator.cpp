@@ -11,6 +11,10 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
 
 namespace 
 {
@@ -274,5 +278,7 @@ void YPlusCalculator::Update()
     averageYPlus = std::accumulate( m_wallCells.begin(), m_wallCells.end(), 0.0f, add ) / static_cast<floatType>( m_wallCells.size() );
 }
 
+
+}   // end namepsace FLOW
 
 }   // end namespace CAMIRA

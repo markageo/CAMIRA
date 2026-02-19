@@ -7,6 +7,9 @@
 namespace CAMIRA
 {
 
+namespace CORE
+{
+
 // Stores data for a segment of the mesh that would come from use input
 struct MeshSegment {
     floatType startCoordinate;
@@ -51,7 +54,8 @@ bool MeshCanBeCoarsened( const Mesh & );
 // Coarsens mesh by agglomorating cells
 Mesh CoarsenMesh( const Mesh & ); 
 
+}   // end namepsace CORE
 
-} // end namespace CAMIRA
+}   // end namespace CAMIRA
 
 #endif // CAMIRA_MESH

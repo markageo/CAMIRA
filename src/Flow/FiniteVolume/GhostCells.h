@@ -12,7 +12,11 @@
 namespace CAMIRA
 {
  
+using namespace CORE;
 using namespace FVT;
+
+namespace FLOW
+{
 
 
 // Set the ghost cells for all fields to give correct boundary condition
@@ -92,6 +96,7 @@ inline void SetGhostCells( FieldData<Tensor3D> &fields,
 }
 
 
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA
 

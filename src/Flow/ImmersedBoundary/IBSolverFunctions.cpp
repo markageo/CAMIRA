@@ -6,6 +6,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 namespace 
 {
 
@@ -175,5 +180,7 @@ void MaskFields( FieldData<Tensor3D> &fields,
     } );
 }
 
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA

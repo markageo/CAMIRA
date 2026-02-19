@@ -13,6 +13,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 using namespace FVT;
 
 template <TransportCoefficients::ENUMDATA Wstag, 
@@ -111,6 +116,9 @@ private:
         m_planeConstants = CalculatePlaneConstants<Wstag, MI >(k, m_fvCoeffs, m_fields);
     }
 };
+
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA    
 

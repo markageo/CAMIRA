@@ -22,6 +22,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 using namespace FVT;
 
 // Linear solver interface class
@@ -612,6 +617,8 @@ private:
 
 };
 
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA    
 

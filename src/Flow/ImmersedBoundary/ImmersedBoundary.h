@@ -10,6 +10,11 @@
 
 namespace CAMIRA {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 enum CellType {
     Solid    = 0,
     Fluid    = 1 
@@ -91,6 +96,8 @@ void UpdateIBData( IBData &, const FieldData<Tensor3D> & );
 void MaskFields( FieldData<Tensor3D> &, const Tensor3D & );
 
 
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA
 

@@ -7,6 +7,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 template< MomentumInterpolation MI >
 void SetMGLevels( std::vector< GridLevelData<MI > > &mgLevels, 
                   const InputData &inputData,
@@ -529,5 +534,6 @@ template void CalculateCoarseGridRightHandSide<MomentumInterpolation::SemiExplic
 
 
 
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA

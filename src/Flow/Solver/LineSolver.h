@@ -16,6 +16,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 using namespace FVT;
 
 template < TransportCoefficients::ENUMDATA Vstag,
@@ -122,6 +127,9 @@ private:
     }
 
 };
+
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA    
 

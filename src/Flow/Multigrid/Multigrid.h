@@ -16,6 +16,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 enum class MultigridEquation {
     NoTauCorrection,
     TauCorrection
@@ -93,6 +98,9 @@ void CalculateCoarseGridRightHandSide( FieldData<Tensor3D> &,
                                        const FieldData<Tensor3D> &,
                                        const Tensor3D & );
 
-}
+                                       
+}   // end namespace FLOW
+
+}   // end namespace CAMIRA
 
 #endif  // CAMIRA_MULTIGRID

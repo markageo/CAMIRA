@@ -7,6 +7,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 void SetTurbulenceModelData( TurbulenceModelData &turbModelData, 
                              const InputData &inputData, 
                              const AxisTransformationMap &axisTransformation,
@@ -45,5 +50,7 @@ void SetTurbulenceModelData( TurbulenceModelData &turbModelData,
     turbModelData.turbModel->SetTurbulenceModelData( inputData, axisTransformation, mesh, ibData, bcData );
 }
 
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA

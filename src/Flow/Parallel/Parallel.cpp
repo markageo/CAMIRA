@@ -4,6 +4,10 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
 
 namespace 
 {
@@ -227,6 +231,6 @@ std::vector< std::vector<intType> > CreateReverse3DColorSet( const iArray3 &nCel
 }
 
 
+}   // end namespace FLOW
 
-
-} // end namespace CAMIRA
+}   // end namespace CAMIRA

@@ -27,81 +27,8 @@
 #define VECTOR_DELIMITER_CHAR   ','
 #define MULTI_DELIMITER_CHAR    ','
 
+
 namespace pt = boost::property_tree;
-
-
-// Read command line input for input file name
-CAMIRA::InputData CAMIRA::InputDataFromCommandLine(int argc, char const *argv[])
-{
-    // InputData object to return
-    CAMIRA::InputData inputData;
-
-    // Input file from first command line argument
-    std::string inputFilename;
-    if (argc == 1) {
-        std::cout << "Please enter input file name: "
-                  << "\n";
-        std::cin >> inputFilename;
-        std::cout << "\n";
-        std::cin.ignore();
-
-    }
-    else if (argc == 2) {
-        inputFilename = argv[1];
-
-    }
-    else {
-        throw std::invalid_argument("Invalid command line options.");
-
-    }
-
-    // User input data
-    std::string inputFileRetryChoice;
-    while (true)
-    {
-        try
-        {
-            std::cout << "Reading input file '" + inputFilename + "' ... ";
-            inputData = CAMIRA::ReadInputData(inputFilename);
-            std::cout << "Success."
-                      << "\n\n";
-            break;
-        } 
-        catch (std::runtime_error &e) 
-        {
-            std::cout << "Failed. \n"
-                      << e.what()
-                      << "\n\n";
-
-            std::cout << "Would you like to try again? (y/n)"
-                      << "\n";
-            std::cin >> inputFileRetryChoice;
-            if (inputFileRetryChoice != "y")
-                exit(-1);
-            std::cout << "\n";
-
-            std::cout << "Please enter input file name: "
-                      << "\n";
-            std::cin >> inputFilename;
-            std::cout << "\n";
-            std::cin.ignore();
-        }
-    }
-    
-    return inputData;
-}
-
-
-// InputData constructor
-CAMIRA::InputData::InputData() :
-    meshSegments(),
-    boundaryConditions()
-    {
-        smootherSettings.planeSweepDirection = CAMIRA::BoundaryPatches::zPositive;
-        smootherSettings.lineSweepDirection = CAMIRA::BoundaryPatches::yPositive;
-    };
-
-
 
 /*-------------------------------------------------------------------------------------*\
                                       Translators
@@ -170,10 +97,16 @@ namespace boost { namespace property_tree {
 
 
 
-namespace
+
+namespace CAMIRA
 {
 
-    using namespace CAMIRA;
+using namespace CORE;
+namespace FLOW
+{
+
+namespace
+{
 
     /*-------------------------------------------------------------------------------------*\
                                                Model
@@ -708,9 +641,9 @@ namespace
     \*-------------------------------------------------------------------------------------*/
 
 
-    CAMIRA::BoundaryPatches::ENUMDATA String2BoundaryPatch(const std::string &bpString)
+    BoundaryPatches::ENUMDATA String2BoundaryPatch(const std::string &bpString)
     {
-        using BP = CAMIRA::BoundaryPatches::ENUMDATA;
+        using BP = BoundaryPatches::ENUMDATA;
         if        ( bpString == "+x" ) {
             return BP::xPositive;
 
@@ -1112,8 +1045,20 @@ namespace
 }   // end anonymous namepsace
 
 
+
+// InputData constructor
+InputData::InputData() :
+    meshSegments(),
+    boundaryConditions()
+    {
+        smootherSettings.planeSweepDirection = BoundaryPatches::zPositive;
+        smootherSettings.lineSweepDirection = BoundaryPatches::yPositive;
+    };
+
+
+
 // Parse input file and read into InputData structure
-CAMIRA::InputData CAMIRA::ReadInputData(const std::string &inputFilename) 
+InputData ReadInputData(const std::string &inputFilename) 
 {
     pt::ptree tree = INP::ParseFile(inputFilename);
 
@@ -1132,8 +1077,73 @@ CAMIRA::InputData CAMIRA::ReadInputData(const std::string &inputFilename)
     return inputData;
 }
 
+
+
+// Read command line input for input file name
+InputData InputDataFromCommandLine(int argc, char const *argv[])
+{
+    // InputData object to return
+    InputData inputData;
+
+    // Input file from first command line argument
+    std::string inputFilename;
+    if (argc == 1) {
+        std::cout << "Please enter input file name: "
+                  << "\n";
+        std::cin >> inputFilename;
+        std::cout << "\n";
+        std::cin.ignore();
+
+    }
+    else if (argc == 2) {
+        inputFilename = argv[1];
+
+    }
+    else {
+        throw std::invalid_argument("Invalid command line options.");
+
+    }
+
+    // User input data
+    std::string inputFileRetryChoice;
+    while (true)
+    {
+        try
+        {
+            std::cout << "Reading input file '" + inputFilename + "' ... ";
+            inputData = ReadInputData(inputFilename);
+            std::cout << "Success."
+                      << "\n\n";
+            break;
+        } 
+        catch (std::runtime_error &e) 
+        {
+            std::cout << "Failed. \n"
+                      << e.what()
+                      << "\n\n";
+
+            std::cout << "Would you like to try again? (y/n)"
+                      << "\n";
+            std::cin >> inputFileRetryChoice;
+            if (inputFileRetryChoice != "y")
+                exit(-1);
+            std::cout << "\n";
+
+            std::cout << "Please enter input file name: "
+                      << "\n";
+            std::cin >> inputFilename;
+            std::cout << "\n";
+            std::cin.ignore();
+        }
+    }
+    
+    return inputData;
+}
+
+
+
 // Parse input file and just read sweep directions
-std::tuple< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > CAMIRA::ReadSweepDirections( const std::string &inputFilename )
+std::tuple< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > ReadSweepDirections( const std::string &inputFilename )
 {
     pt::ptree tree = INP::ParseFile(inputFilename);
     const pt::ptree &smootherTree = tree.get_child("Solver").get_child("Smoother");
@@ -1148,3 +1158,8 @@ std::tuple< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > CAMIRA::ReadS
 
     return { planeSweepDirection, lineSweepDirection };
 }
+
+
+}   // end namespace CORE
+
+}   // end namespace CAMIRA

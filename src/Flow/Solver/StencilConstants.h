@@ -11,6 +11,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 // Precalculate parts of stencil that are constant along a plane
 template <TransportCoefficients::ENUMDATA Wstag, 
           MomentumInterpolation MI >
@@ -177,6 +182,8 @@ FieldData<Tensor1D> CalculateLineConstants( const intType j,
     return lineConstants;
 }
 
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA    
 

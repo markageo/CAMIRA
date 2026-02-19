@@ -8,6 +8,9 @@
 namespace CAMIRA 
 {
 
+namespace CORE
+{
+
 // Number of ghost cells in solution field
 constexpr intType nGhost = 2;
 
@@ -54,9 +57,9 @@ namespace FVT
     arrayType RemoveGhostCells( const arrayType &array, 
                                 const intType nGhostCells)
     {
-        static_assert(std::is_same<arrayType, CAMIRA::Tensor1D   >::value ||
-                      std::is_same<arrayType, CAMIRA::Tensor2D   >::value ||
-                      std::is_same<arrayType, CAMIRA::Tensor3D   >::value,
+        static_assert(std::is_same<arrayType, CAMIRA::CORE::Tensor1D   >::value ||
+                      std::is_same<arrayType, CAMIRA::CORE::Tensor2D   >::value ||
+                      std::is_same<arrayType, CAMIRA::CORE::Tensor3D   >::value,
                       "Template parameter must be a Tensor.");
 
         Eigen::array< Eigen::Index, arrayType::NumDimensions > offsets, extents;
@@ -70,6 +73,8 @@ namespace FVT
 
 
 }   // end namespace FVT
+
+}   // end namespace CORE
 
 }   // end namespace CAMIRA
 

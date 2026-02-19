@@ -5,6 +5,10 @@
 namespace CAMIRA 
 {
 
+using namespace CORE;
+namespace FLOW
+{
+
 
 /*-------------------------------------------------------------------------------------*\
                                     Helper Functions
@@ -33,67 +37,6 @@ namespace
 
 namespace 
 {
-
-    Eigen::Matrix<CAMIRA::intType, 3, 1> Axis2Vector(const CAMIRA::BoundaryPatches::ENUMDATA axis)
-    {
-        using BP = CAMIRA::BoundaryPatches::ENUMDATA;
-        switch (axis)
-        {
-            case (BP::xPositive):
-                return {1, 0, 0};
-                
-            case (BP::xNegative):
-                return {-1, 0, 0};
-
-            case (BP::yPositive):
-                return {0, 1, 0};
-
-            case (BP::yNegative):
-                return {0, -1, 0};
-
-            case (BP::zPositive):
-                return {0, 0, 1};
-
-            case (BP::zNegative):
-                return {0, 0, -1};
-
-            default:
-                // throw ERROR - invalud axis enum
-                return {0, 0, 0};
-        }
-    }
-
-
-
-    CAMIRA::BoundaryPatches::ENUMDATA Vector2Axis(const Eigen::Matrix<CAMIRA::intType, 3, 1> &vector)
-    {
-        using BP = CAMIRA::BoundaryPatches::ENUMDATA;
-        if        ( ( vector.array() ==  Axis2Vector(BP::xPositive).array() ).all() ) {
-            return BP::xPositive;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::xNegative).array() ).all() ) {
-            return BP::xNegative;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::yPositive).array() ).all() ) {
-            return BP::yPositive;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::yNegative).array() ).all() ) {
-            return BP::yNegative;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::zPositive).array() ).all() ) {
-            return BP::zPositive;
-
-        } else if ( ( vector.array() ==  Axis2Vector(BP::zNegative).array() ).all() ) {
-            return BP::zNegative;
-
-        } else {
-            // throw ERROR - invalid unit vector
-            return BP::xPositive;
-        }
-    }
-
-
-
     // Transform user FieldData struct to code coordinates. Only transforms the momentum equations part.
     template< typename T >
     void TransformFieldDataToCode( FieldData<T> &fieldData,
@@ -316,48 +259,6 @@ namespace
     }
 
 }   // end anonymous namespace
-
-
-
-
-// Sets the axis transformation map based on the sweeping directions
-AxisTransformationMap CreateAxisTransformation( BoundaryPatches::ENUMDATA planeSweepDirection,
-                                                BoundaryPatches::ENUMDATA lineSweepDirection ) 
-{
-    using BP = CAMIRA::BoundaryPatches::ENUMDATA;
-    using directionVector = Eigen::Matrix<CAMIRA::intType, 3, 1>;
-
-    AxisTransformationMap axisTransformation;
-
-    // User input for plane sweep direction
-    directionVector planeSweepVector = Axis2Vector( planeSweepDirection );
-
-    // User input for line sweep direction
-    directionVector lineSweepVector = Axis2Vector( lineSweepDirection );
-
-    // Plane and line sweep direction must be orthogonal
-    if ( abs( planeSweepVector.dot( lineSweepVector ) ) == 1 ) {
-        // throw ERROR - plane and line sweep directions cannot be the same
-    }
-
-    // Point sweep direction, chosen to make right handed coordinate system
-    directionVector pointSweepVector = lineSweepVector.cross( planeSweepVector );
-    BP pointSweepDirection = Vector2Axis( pointSweepVector );
-
-    // Update the axisTransformation map
-    axisTransformation.Set( BP::xPositive, pointSweepDirection);
-    axisTransformation.Set( BP::xNegative, Vector2Axis( -pointSweepVector ));
-
-    axisTransformation.Set( BP::yPositive, lineSweepDirection);
-    axisTransformation.Set( BP::yNegative, Vector2Axis( -lineSweepVector ));
-
-    axisTransformation.Set( BP::zPositive, planeSweepDirection);
-    axisTransformation.Set( BP::zNegative, Vector2Axis( -planeSweepVector ));
-
-    return axisTransformation;
-}
-
-
 
 
 void TransformUserInputData( InputData &inputData,
@@ -625,5 +526,6 @@ void TransformFieldToCodeCoordinates( FieldData<Tensor3D> &fieldData,
 
 }
 
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA

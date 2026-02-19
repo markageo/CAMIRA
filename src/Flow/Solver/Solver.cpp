@@ -18,6 +18,11 @@
 
 namespace CAMIRA
 {
+    
+using namespace CORE;
+
+namespace FLOW
+{
 
 namespace
 {
@@ -640,5 +645,6 @@ template void SolveTransient<MomentumInterpolation::Implicit    >( const InputDa
 template void SolveTransient<MomentumInterpolation::SemiExplicit>( const InputData &, const AxisTransformationMap &);
 
 
+}   // end namespace FLOW
 
-} // end namespace CAMIRA
+}   // end namespace CAMIRA

@@ -16,6 +16,11 @@
 namespace CAMIRA
 {
 
+using namespace CORE;
+
+namespace FLOW
+{
+
 void TurbulenceModel<TurbulenceModels::ZEQ4>::SetTurbulenceModelData( const InputData &inputData,
                                                                       const AxisTransformationMap &axisTransformation,
                                                                       const Mesh &mesh,
@@ -97,5 +102,7 @@ void TurbulenceModel<TurbulenceModels::ZEQ4>::SetTurbulenceViscosityField( Tenso
 
 
 }
+
+}   // end namespace FLOW
 
 }   // end namespace CAMIRA
