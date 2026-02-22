@@ -1,9 +1,10 @@
-#ifndef INPUT_PROCESSING
-#define INPUT_PROCESSING
+#ifndef CAMIRA_FLOW_INPUT_PROCESSING
+#define CAMIRA_FLOW_INPUT_PROCESSING
 
 #include "Core/Types.h"
 #include "Core/Mesh/Mesh.h"
 #include "Core/Geometry/Geometry.h"
+#include "Flow/ConfigEnums.h"
 #include "boost/property_tree/ptree.hpp"
 #include <vector>
 #include <utility>
@@ -85,7 +86,7 @@ struct InputData
     };
 
     struct BoundaryConditionInputData {
-        BoundaryConditions::ENUMDATA type;
+        BoundaryConditions type;
         floatType uniformValue;    
         Profile1D profile1D;
         bool hasUniformValue = false,
@@ -181,4 +182,4 @@ std::tuple< BoundaryPatches::ENUMDATA, BoundaryPatches::ENUMDATA > ReadSweepDire
 
 }   // end namespace CAMIRA
 
-#endif  // INPUT_PROCESSING
+#endif  // CAMIRA_FLOW_INPUT_PROCESSING

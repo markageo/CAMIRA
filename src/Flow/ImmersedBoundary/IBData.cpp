@@ -4,6 +4,7 @@
 #include "Core/Macros.h"
 #include "Core/IO/ArrayIO.h"
 #include "Core/IO/IOTools.h"
+#include "Flow/ConfigEnums.h"
 #include "Flow/CoordinateTransformations/AxisTransformationFunctions.h"
 
 #include <vector>
@@ -190,7 +191,7 @@ void AddIBDataForDirection( IBCell &ibCell,
             break;
         }
         
-        case CAMIRA::GeometryBoundaryTreatment::Staircase:
+        case GeometryBoundaryTreatment::Staircase:
         {   
             // Distance to the nearest cell face, approximates the immersed boundary to be on the cell face
             // i.e. staircase approximation

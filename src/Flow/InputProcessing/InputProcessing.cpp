@@ -523,7 +523,7 @@ namespace
                                                                    const BoundaryPatches::ENUMDATA boundaryPatch,
                                                                    const std::string &inputFileDirectory )
     {
-        using BC = BoundaryConditions::ENUMDATA;
+        using BC = BoundaryConditions;
 
         // Get the boundary condition string from the tree string
         std::string boundaryString = boundaryPatchTree.get<std::string>( fieldString );

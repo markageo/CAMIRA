@@ -164,7 +164,7 @@ void BoundaryFaceVelocities( EnumVector<Axis, Tensor3D> &faceVelocities,
                             const BoundaryPatches::ENUMDATA boundaryPatch,
                             const Axis::ENUMDATA velocityComponent )
 {
-    using BC = BoundaryConditions::ENUMDATA;
+    using BC = BoundaryConditions;
     
     Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
     

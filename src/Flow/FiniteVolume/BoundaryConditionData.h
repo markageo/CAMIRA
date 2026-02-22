@@ -18,7 +18,7 @@ namespace FLOW
 // Structure to store all domain boundary condition information
 struct BoundaryConditionData {
     struct Patch {
-        BoundaryConditions::ENUMDATA type;
+        BoundaryConditions type;
         Tensor2D value;
     };
     using Patches = EnumVector< BoundaryPatches, Patch >;

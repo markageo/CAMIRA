@@ -111,7 +111,7 @@ endif()
 
 
 # Compile the Plume dispersion application
-option ( CAMIRA_COMPILE_PLUME "Compile the plume dispersion application." off )
+option ( CAMIRA_COMPILE_PLUME "Compile the plume dispersion application." on )
 
 
 # Add libraries

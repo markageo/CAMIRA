@@ -4,6 +4,7 @@
 #include "Core/Macros.h"
 #include "Core/FVTools.h"
 #include "Core/FVLookups.h"
+#include "Flow/ConfigEnums.h"
 #include "Flow/Parallel/Parallel.h"
 #include "Flow/TurbulenceModels/TurbulenceModels.h"
 

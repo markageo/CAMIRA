@@ -10,6 +10,12 @@ add_subdirectory(CoordinateTransformations)
 add_subdirectory(Parallel)
 add_subdirectory(TurbulenceModels)
 
+target_sources( libs 
+    PRIVATE 
+    PRIVATE 
+        Multigrid.h
+)
+
 # Main solver executable
 add_executable(camira-flow main.cpp)
 target_link_libraries(camira-flow PUBLIC libs)

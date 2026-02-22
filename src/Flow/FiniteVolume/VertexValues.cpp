@@ -249,7 +249,7 @@ namespace
                            const BoundaryConditionData::Patches &boundaryConditions,
                            Tensor2D (*CellPlaneToVertexPlaneFunc)(const Tensor2D &, const Tensor1D &, const Tensor1D &, const Tensor2D & ) )
     {
-        using BC = BoundaryConditions::ENUMDATA;
+        using BC = BoundaryConditions;
 
         
         EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {

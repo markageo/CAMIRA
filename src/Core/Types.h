@@ -63,20 +63,6 @@ struct Axis
     const static int count =  3;
 };
 
-
-struct BoundaryConditions 
-{
-    enum ENUMDATA 
-    {
-        zeroGradient,
-        fixed,
-        extrapolated,
-        periodic
-    };
-    const static int count = 4;
-};
-
-
 struct BoundaryPatches 
 {   
     enum ENUMDATA
@@ -114,28 +100,13 @@ struct TransportCoefficients
 };
 
 
-struct Fields
-{
-    enum ENUMDATA
-    {
-        U, 
-        V, 
-        W, 
-        P
-    };
-    const static int count = 3;
-};
-
-
 // For looping through enum and applying lambda to each element
 template<typename enumStruct, typename L>
 inline void EnumFor( L&& f )
 {
     static_assert(std::is_same<enumStruct, Axis                 >::value ||
-                  std::is_same<enumStruct, BoundaryConditions   >::value ||
                   std::is_same<enumStruct, BoundaryPatches      >::value ||
-                  std::is_same<enumStruct, TransportCoefficients>::value ||
-                  std::is_same<enumStruct, Fields               >::value   );
+                  std::is_same<enumStruct, TransportCoefficients>::value   );
 
     typename enumStruct::ENUMDATA enumName;
     for (int i = 0; i != enumStruct::count; i++) {
@@ -145,39 +116,6 @@ inline void EnumFor( L&& f )
 }
 
 
-
-// ---------------------------------------------------- Solver Parameters -------------------------------------------------- //
-
-// Solver settings
-enum class Smoothers {
-    nestedLineSymmetricSerial, domainSymmetricSerial, domainSymmetricParallel
-};
-
-enum class GeometryBoundaryTreatment {
-    Staircase, DirectionalImmersedBoundary
-};
-
-enum class MomentumInterpolation {
-    Implicit, SemiExplicit
-};
-
-enum class AdvectionSchemes {
-    Upwind, Central, SOU, QUICK
-};
-
-enum class TimeSchemes {
-    Steady, BackwardsEuler, BackwardsThreeLevel
-};
-
-enum class TurbulenceModels {
-    Null, Laminar, PrandtlZeroEquation, ZEQ0, ZEQ1, ZEQ2, ZEQ3, ZEQ4
-};
-
-enum class MultigridCycleType {
-    V, F, W
-};
-
-
 // ---------------------------------------------------- EnumVector Class -------------------------------------------------- //
 
 // Simple wrapper for c-style array that is safe to use in device code
@@ -185,10 +123,8 @@ template <typename enumStruct, typename T>
 struct EnumVector
 {
     static_assert(std::is_same<enumStruct, CAMIRA::CORE::Axis                 >::value ||
-                  std::is_same<enumStruct, CAMIRA::CORE::BoundaryConditions   >::value ||
                   std::is_same<enumStruct, CAMIRA::CORE::BoundaryPatches      >::value ||
-                  std::is_same<enumStruct, CAMIRA::CORE::TransportCoefficients>::value || 
-                  std::is_same<enumStruct, CAMIRA::CORE::Fields               >::value,
+                  std::is_same<enumStruct, CAMIRA::CORE::TransportCoefficients>::value,
                   "Template parameter must be struct containing ENUMDATA type.");
 
     T m_data[enumStruct::count];

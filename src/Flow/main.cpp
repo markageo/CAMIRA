@@ -16,6 +16,7 @@
 #include "Flow/FiniteVolume/FiniteVolume.h"
 #include "Flow/Parallel/Parallel.h"
 #include "Flow/Solver/Solver.h"
+#include "Flow/ConfigEnums.h"
 
 #include <fstream>
 #include <iostream>
@@ -42,7 +43,7 @@ int main(int argc, char const *argv[])
 
     switch ( inputData.schemes.momentumInterpolation ) {
 
-        using MI = CAMIRA::CORE::MomentumInterpolation;
+        using MI = CAMIRA::FLOW::MomentumInterpolation;
 
         case ( MI::Implicit ):
 
