@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/camira",
+            "program": "${workspaceFolder}/camira-plume",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

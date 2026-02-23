@@ -1,0 +1,74 @@
+// Lid plume model 
+
+Model {
+    timeStepSize = 1
+    numberOfTimeSteps = 100
+    initialParticlesPerUnitMass = 10
+}
+
+VelocityField {
+    velocityFieldFilename = "windfield.vtk"
+}
+
+
+Sources
+{
+    ContinuousReleasePoint {
+        location = (0, 0, 0)
+        massFlowRate = 1
+    }
+
+    InstantaneousReleasePoint {
+        location = (0, 0, 0)
+        totalMass = 1
+    }
+}
+
+
+BoundaryConditions
+{
+    // Wall
+    +x {
+        phi = outflow
+    }
+
+    // Wall
+    -x {
+        phi = reflection
+    }
+
+    // Driven
+    +y {
+        phi = reflection
+    }
+
+    // Wall
+    -y {
+        phi = reflection
+    }
+
+    // Wall
+    +z {
+        phi = reflection
+    }
+
+    // Wall
+    -z {
+        phi = reflection
+    }
+}
+
+
+
+Parallel {
+    numberOfThreads = 4
+}
+
+Output {
+
+    outputFormatType        = BINARY
+    profilingFilename       = "plume-output/profiling.dat"
+    fieldOutputFilename     = "plume-output/fields.vtk"
+    fieldWriteInterval      = 0
+
+}

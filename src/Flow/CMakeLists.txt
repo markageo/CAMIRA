@@ -12,8 +12,7 @@ add_subdirectory(TurbulenceModels)
 
 target_sources( libs 
     PRIVATE 
-    PRIVATE 
-        Multigrid.h
+        ConfigEnums.h
 )
 
 # Main solver executable

@@ -1,5 +1,5 @@
-#ifndef CAMIRA_SOLVER
-#define CAMIRA_SOLVER
+#ifndef CAMIRA_FLOW_SOLVER
+#define CAMIRA_FLOW_SOLVER
 
 #include "Core/Types.h"
 #include "Flow/InputProcessing/InputProcessing.h"
@@ -23,4 +23,4 @@ namespace FLOW
 }   // end namespace CAMIRA    
 
 
-#endif // CAMIRA_SOLVER
+#endif // CAMIRA_FLOW_SOLVER
