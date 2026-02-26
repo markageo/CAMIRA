@@ -9,7 +9,7 @@
 namespace VTK
 {
     
-using namespace CAMIRA;
+using namespace CAMIRA::CORE;
 
 struct FieldFileData {
     EnumVector<Axis, Tensor1D> cellFaces;

@@ -42,7 +42,7 @@ namespace
     {
         const pt::ptree &modelTree = tree.get_child("Model");
 
-        inputData.numberOfTimeSteps            = modelTree.get<floatType>("numberOfTimeSteps");
+        inputData.numberOfTimeSteps            = modelTree.get<intType>("numberOfTimeSteps");
         inputData.initialParticlesPerUnitMass  = modelTree.get<floatType>("initialParticlesPerUnitMass");
         inputData.timeStepSize                 = modelTree.get<floatType>("timeStepSize");
     }

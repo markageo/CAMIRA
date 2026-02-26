@@ -37,10 +37,11 @@ struct InputData
     std::string stlGeometryFilename;
 
     // Model
-    floatType numberOfTimeSteps;
+    intType numberOfTimeSteps;
     floatType initialParticlesPerUnitMass;
     floatType timeStepSize;
 
+    
     // Sources
     struct ContinuousReleasePointData {
         fArray3 location;
@@ -53,6 +54,7 @@ struct InputData
         floatType totalMass;
     };
     std::vector<InstantaneousReleasePointData> instantaneousReleasePoints;
+
 
     // Boundary conditions
     struct BoundaryConditionInputData {

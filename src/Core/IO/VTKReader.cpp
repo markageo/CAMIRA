@@ -16,9 +16,9 @@ namespace
 {
 
 // Copy cell face data from vtkRectilinearGrid into Eigen Tensors
-inline CAMIRA::EnumVector<CAMIRA::Axis, CAMIRA::Tensor1D> GetCellFaces( vtkRectilinearGrid *vtkGrid )
+inline CAMIRA::CORE::EnumVector<CAMIRA::CORE::Axis, CAMIRA::CORE::Tensor1D> GetCellFaces( vtkRectilinearGrid *vtkGrid )
 {
-    using namespace CAMIRA;
+    using namespace CAMIRA::CORE;
 
     int nFaces[3];
     vtkGrid->GetDimensions( nFaces );
@@ -37,12 +37,14 @@ inline CAMIRA::EnumVector<CAMIRA::Axis, CAMIRA::Tensor1D> GetCellFaces( vtkRecti
 
 
 
-CAMIRA::EnumVector<CAMIRA::Axis, CAMIRA::Tensor3D> GetVectorFieldFromVTKArray( vtkDataArray *dataArray,
-                                                                     const int nCells[3] )
+CAMIRA::CORE::EnumVector<CAMIRA::CORE::Axis, CAMIRA::CORE::Tensor3D> GetVectorFieldFromVTKArray( vtkDataArray *dataArray,
+                                                                                                 const int nCells[3] )
 {
-    using namespace CAMIRA;
+    using namespace CAMIRA::CORE;
 
-    EnumVector<Axis, Tensor3D> vectorField( Tensor3D( nCells[0], nCells[1], nCells[2] ) );
+    EnumVector<Axis, Tensor3D> vectorField( { Tensor3D( nCells[0], nCells[1], nCells[2] ),
+                                              Tensor3D( nCells[0], nCells[1], nCells[2] ),
+                                              Tensor3D( nCells[0], nCells[1], nCells[2] ) } );
     intType nCellsTotal = static_cast<intType>( nCells[0] ) 
                         * static_cast<intType>( nCells[1] ) 
                         * static_cast<intType>( nCells[2] );
@@ -65,10 +67,10 @@ CAMIRA::EnumVector<CAMIRA::Axis, CAMIRA::Tensor3D> GetVectorFieldFromVTKArray( v
 
 
 
-CAMIRA::Tensor3D GetScalarFieldFromVTKArray( vtkDataArray *dataArray,
-                                         const int nCells[3] )
+CAMIRA::CORE::Tensor3D GetScalarFieldFromVTKArray( vtkDataArray *dataArray,
+                                                   const int nCells[3] )
 {
-    using namespace CAMIRA;
+    using namespace CAMIRA::CORE;
 
     Tensor3D scalarField( nCells[0], nCells[1], nCells[2] );
     intType nCellsTotal = static_cast<intType>( nCells[0] ) 
@@ -87,10 +89,10 @@ CAMIRA::Tensor3D GetScalarFieldFromVTKArray( vtkDataArray *dataArray,
 
 
 // Copy vertex fields from vtkRectilinearGrid into Eigen Tensors
-inline CAMIRA::FieldData<CAMIRA::Tensor3D> GetFieldData( vtkDataSetAttributes *vtkDataSet,
-                                                   const int nPoints[3] )
+inline CAMIRA::CORE::FieldData<CAMIRA::CORE::Tensor3D> GetFieldData( vtkDataSetAttributes *vtkDataSet,
+                                                                     const int nPoints[3] )
 {
-    using namespace CAMIRA;
+    using namespace CAMIRA::CORE;
     
     FieldData<Tensor3D> fieldData( Tensor3D( nPoints[0], nPoints[1], nPoints[2] ) );
 
@@ -116,9 +118,9 @@ inline CAMIRA::FieldData<CAMIRA::Tensor3D> GetFieldData( vtkDataSetAttributes *v
 
 
 // Copy cell fields from vtkRectilinearGrid into Eigen Tensors
-inline CAMIRA::FieldData<CAMIRA::Tensor3D> GetCellFields( vtkRectilinearGrid *vtkGrid )
+inline CAMIRA::CORE::FieldData<CAMIRA::CORE::Tensor3D> GetCellFields( vtkRectilinearGrid *vtkGrid )
 {
-    using namespace CAMIRA;
+    using namespace CAMIRA::CORE;
 
     int nCells[3];
     vtkGrid->GetCellDims( nCells );
@@ -131,9 +133,9 @@ inline CAMIRA::FieldData<CAMIRA::Tensor3D> GetCellFields( vtkRectilinearGrid *vt
 
 
 // Copy vertex fields from vtkRectilinearGrid into Eigen Tensors
-inline CAMIRA::FieldData<CAMIRA::Tensor3D> GetVertexFields( vtkRectilinearGrid *vtkGrid )
+inline CAMIRA::CORE::FieldData<CAMIRA::CORE::Tensor3D> GetVertexFields( vtkRectilinearGrid *vtkGrid )
 {
-    using namespace CAMIRA;
+    using namespace CAMIRA::CORE;
 
     int nPoints[3];
     vtkGrid->GetDimensions( nPoints );
@@ -148,7 +150,7 @@ inline CAMIRA::FieldData<CAMIRA::Tensor3D> GetVertexFields( vtkRectilinearGrid *
 
 FieldFileData ReadVTKFields( const std::string &filename )
 {
-    using namespace CAMIRA;
+    using namespace CAMIRA::CORE;
     
     FieldFileData fieldFileData;
 
@@ -163,12 +165,12 @@ FieldFileData ReadVTKFields( const std::string &filename )
     // Make sure the data type in the file is the same type as the code
     if ( vtkGrid->GetScalarType() == VTK_DOUBLE ) {
 
-        if ( !std::is_same<CAMIRA::floatType, double>::value )
+        if ( !std::is_same<floatType, double>::value )
             throw std::runtime_error( "Type mismatch. VTK files to be read must be in double precision" );
 
     } else if ( vtkGrid->GetScalarType() == VTK_FLOAT ) {
 
-        if ( !std::is_same<CAMIRA::floatType, float>::value )
+        if ( !std::is_same<floatType, float>::value )
             throw std::runtime_error( "Type mismatch. VTK files to be read must be in single precision" );
 
     }

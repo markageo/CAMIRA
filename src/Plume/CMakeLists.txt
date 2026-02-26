@@ -1,5 +1,8 @@
 # Source subdirectories
 add_subdirectory(InputProcessing)
+add_subdirectory(Particle)
+add_subdirectory(Sources)
+add_subdirectory(Solver)
 
 target_sources( libs 
     PRIVATE 

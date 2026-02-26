@@ -19,15 +19,14 @@ namespace FLOW
 {
 
 #ifdef CAMIRA_HAS_VTK_LIB
-void SetInitialConditionFromVTKFile( FieldData<Tensor3D> &fields
+void SetInitialConditionFromVTKFile( FieldData<Tensor3D> &fields,
                                      const std::string &filename,
                                      const Mesh &mesh,
-                                     const AxisTransformationMap &axisTransformation,
-                                     const InputData &inputData )
+                                     const AxisTransformationMap &axisTransformation )
 {
     VTK::FieldFileData fieldFileData = VTK::ReadVTKFields( filename );
     
-    Mesh inputMesh( fieldFileData.cellFaces, inputData );
+    Mesh inputMesh( fieldFileData.cellFaces );
     TransformMeshToCodeCoordinates( inputMesh, axisTransformation);
     TransformFieldToCodeCoordinates( fieldFileData.cellFields, axisTransformation);
 
@@ -45,8 +44,6 @@ void SetInitialConditionFromVTKFile( FieldData<Tensor3D> &fields
     ForAllFieldData( [&] (intType f) {
         fields[f].slice( offsets, extents ) = fieldFileData.cellFields[f];
     } );
-    
-    return fields;
 }
 #endif
 
@@ -78,7 +75,7 @@ void InitialiseFields( FieldData<Tensor3D> &fields,
                 break;
 
             case InputData::InitialConditionTypes::vtkFile:
-                SetInitialConditionFromVTKFile( fields, inputData.initialConditionsFieldFilename, mesh, axisTransformation, inputData );
+                SetInitialConditionFromVTKFile( fields, inputData.initialConditionsFieldFilename, mesh, axisTransformation );
                 break;
         }
     #else

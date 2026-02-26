@@ -81,22 +81,32 @@ elseif ( CAMIRA_PARALLEL_COLOURING_STRATEGY STREQUAL "planes" )
 
 endif()
 
+# Compile the Plume dispersion application
+option ( CAMIRA_COMPILE_PLUME "Compile the plume dispersion application. Requires VTK library." on )
 
-# Allow the ability to read fields in (for example to read in an initial condition), this requires VTk library
-option ( CAMIRA_HAS_VTK_LIB "Allow extra features which require VTK library to be installed.")
+# Compile option for using VTK library, which is optional if only flow application is used
+option ( CAMIRA_HAS_VTK_LIB "Some features in camira-flow require VTK library to be installed." on )
+
+# Enforce that plume requires vtk to be used
+if ( CAMIRA_COMPILE_PLUME AND NOT CAMIRA_HAS_VTK_LIB )
+	message( FATAL_ERROR "Compiling the dispersion application (CAMIRA_COMPILE_PLUME) requires VTK library (CAMIRA_HAS_VTK_LIB)." )
+endif()
+
+
+# Allow the ability to read fields in (for example to read in an initial condition), this requires VTK library
 if ( CAMIRA_HAS_VTK_LIB )
 
 	find_package( VTK COMPONENTS 
-				  CommonCore
-				  CommonExecutionModel
-				  IOXMLParser
-				  CommonDataModel
-				  CommonMisc
-				  CommonSystem
-				  IOCore
-				  vtksys
-				  IOLegacy
-				  )
+				CommonCore
+				CommonExecutionModel
+				IOXMLParser
+				CommonDataModel
+				CommonMisc
+				CommonSystem
+				IOCore
+				vtksys
+				IOLegacy
+				)
 
 	if ( ${VTK_FOUND} )
 		message( STATUS "VTK library found successfully." )
@@ -109,9 +119,6 @@ else()
 	message( STATUS "VTK library will not be used. Some features will be limited." )
 endif()
 
-
-# Compile the Plume dispersion application
-option ( CAMIRA_COMPILE_PLUME "Compile the plume dispersion application." on )
 
 
 # Add libraries
