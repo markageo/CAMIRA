@@ -6,6 +6,7 @@
 #include "Core/Mesh/Mesh.h"
 #include "Plume/Particle/Particle.h"
 #include "Plume/Sources/Sources.h"
+#include "Plume/Solver/Lagrangian.h"
 
 #include <iostream>
 #include <memory>
@@ -55,8 +56,8 @@ void SolvePlume( const InputData &inputData )
 
     // Read and store windfield
     VTK::FieldFileData fieldFileData = VTK::ReadVTKFields( inputData.velocityFieldFilename );
-    Mesh velocityFieldMesh( fieldFileData.cellFaces );
-    EnumVector<Axis, Tensor3D> velocityField = fieldFileData.cellFields.U;
+    Mesh mesh( fieldFileData.cellFaces );
+    EnumVector<Axis, Tensor3D> velocityField = fieldFileData.vertexFields.U;
 
     // Read and store geometry
 
@@ -77,6 +78,7 @@ void SolvePlume( const InputData &inputData )
         AddContinuousReleasePointParticles( particles, inputData );
 
         // Update particle positions
+        UpdateParticles( particles, mesh, velocityField, inputData );
 
 
         // Output

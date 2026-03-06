@@ -13,14 +13,9 @@ VelocityField {
 
 Sources
 {
-    ContinuousReleasePoint {
-        location = (0, 0, 0)
-        massFlowRate = 1
-    }
-
     InstantaneousReleasePoint {
-        location = (0, 0, 0)
-        totalMass = 1
+        location = (0.5, 0.5, 0.5)
+        totalMass = 0.5
     }
 }
 

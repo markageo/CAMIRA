@@ -13,8 +13,11 @@ namespace PLUME
 
 // Struct to hold particle data
 struct Particle {
-    fArray3 position;
-    floatType mass;
+    fVector3 position = {0, 0, 0};
+    floatType mass = 0;
+    TensorIndex3D positionIndex = {0, 0, 0};    // Of nearest vertex point in the lo direction
+    fVector3 velocity = {0, 0, 0};
+    bool active = true;
 };
 
 
