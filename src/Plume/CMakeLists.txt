@@ -3,6 +3,7 @@ add_subdirectory(InputProcessing)
 add_subdirectory(Particle)
 add_subdirectory(Sources)
 add_subdirectory(Solver)
+add_subdirectory(Concentration)
 
 target_sources( libs 
     PRIVATE 

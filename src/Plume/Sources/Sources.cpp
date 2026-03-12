@@ -17,7 +17,8 @@ void AddParticle( std::vector<Particle> &particles,
                   const InputData &inputData,
                   const intType nParticles,
                   const floatType initialMassRemaining,
-                  const fArray3 &releaseLocation )
+                  const fArray3 &releaseLocation,
+                  const Mesh &mesh )
 {
     floatType massRemaining = initialMassRemaining;
     floatType massPerParticle = 1.0f / inputData.initialParticlesPerUnitMass;
@@ -27,6 +28,8 @@ void AddParticle( std::vector<Particle> &particles,
                                                               : massRemaining; 
 
         particles.emplace_back( releaseLocation, mass );
+
+        UpdateParticlePositionIndexBinarySearch( particles.back(), mesh );
 
         massRemaining -= inputData.initialParticlesPerUnitMass;
     }
@@ -39,6 +42,7 @@ void AddParticle( std::vector<Particle> &particles,
 
 
 void AddInstantaneousReleasePointParticles( std::vector<Particle> &particles,
+                                            const Mesh &mesh,
                                             const InputData &inputData )
 {
 
@@ -48,7 +52,7 @@ void AddInstantaneousReleasePointParticles( std::vector<Particle> &particles,
         intType nParticles = static_cast<intType>( std::ceil( release.totalMass * inputData.initialParticlesPerUnitMass ) );
         floatType massRemaining = release.totalMass;
 
-        AddParticle( particles, inputData, nParticles, massRemaining, release.location );
+        AddParticle( particles, inputData, nParticles, massRemaining, release.location, mesh );
     }
 
 }
@@ -56,6 +60,7 @@ void AddInstantaneousReleasePointParticles( std::vector<Particle> &particles,
 
 
 void AddContinuousReleasePointParticles( std::vector<Particle> &particles,
+                                         const Mesh &mesh,
                                          const InputData &inputData)
 {
 
@@ -65,7 +70,7 @@ void AddContinuousReleasePointParticles( std::vector<Particle> &particles,
         intType nParticles = static_cast<intType>( std::ceil( release.massFlowRate * inputData.timeStepSize * inputData.initialParticlesPerUnitMass ) );
         floatType massRemaining = release.massFlowRate * inputData.timeStepSize;
 
-        AddParticle( particles, inputData, nParticles, massRemaining, release.location );
+        AddParticle( particles, inputData, nParticles, massRemaining, release.location, mesh );
     }
 
 }

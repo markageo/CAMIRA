@@ -6,7 +6,8 @@
 #include "Core/Mesh/Mesh.h"
 #include "Plume/Particle/Particle.h"
 #include "Plume/Sources/Sources.h"
-#include "Plume/Solver/Lagrangian.h"
+#include "Plume/Solver/ParticleDynamics.h"
+#include "Plume/Concentration/Concentration.h"
 
 #include <iostream>
 #include <memory>
@@ -61,13 +62,20 @@ void SolvePlume( const InputData &inputData )
 
     // Read and store geometry
 
+
+    // Place to store the concentration field
+    Tensor3D concentrationField( mesh.nCells(0), mesh.nCells(1), mesh.nCells(2) );
+    concentrationField.setZero();
+
     // Allocate particles
     intType particlesNeeded = CalculateNumberOfParticlesNeeded( inputData );
     std::vector< Particle > particles;
     particles.reserve( particlesNeeded );
 
     // Add instantaneous release particles
-    AddInstantaneousReleasePointParticles( particles, inputData );
+    AddInstantaneousReleasePointParticles( particles, mesh, inputData );
+
+    bool writeFields = ( inputData.fieldWriteInterval > 0 );
 
     // Step through time
     floatType currentTime = 0;
@@ -75,13 +83,20 @@ void SolvePlume( const InputData &inputData )
         currentTime += inputData.timeStepSize;
 
         // Add continuous release particles
-        AddContinuousReleasePointParticles( particles, inputData );
+        AddContinuousReleasePointParticles( particles, mesh, inputData );
 
         // Update particle positions
         UpdateParticles( particles, mesh, velocityField, inputData );
 
-
         // Output
+        if ( writeFields && (timeStep % inputData.fieldWriteInterval) == 0 ) {
+            for ( auto &particle : particles ) {
+                UpdateParticlePositionIndexBinarySearch( particle, mesh );
+            }
+            UpdateConcentrationField( concentrationField, particles, mesh );
+        } 
+        
+
 
     }
 
