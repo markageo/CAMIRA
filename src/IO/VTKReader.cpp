@@ -74,9 +74,12 @@ CAMIRA::Tensor3D GetScalarFieldFromVTKArray( vtkDataArray *dataArray,
     intType nCellsTotal = static_cast<intType>( nCells[0] ) 
                         * static_cast<intType>( nCells[1] ) 
                         * static_cast<intType>( nCells[2] );
-    floatType *vtkArrayPointer = static_cast< floatType* >( dataArray->GetVoidPointer(0) );
+    
+    for ( intType i = 0; i != nCellsTotal; i++ ) {
 
-    std::memcpy( scalarField.data(), vtkArrayPointer, nCellsTotal * sizeof( floatType ) );
+        scalarField.data()[i] = dataArray->GetComponent( i, 0 );
+
+    }
 
     return scalarField;
 }
@@ -151,6 +154,9 @@ FieldFileData ReadVTKFields( const std::string &filename )
 
     vtkNew< vtkRectilinearGridReader > vtkGridReader;
     vtkGridReader->SetFileName( filename.c_str() );
+    vtkGridReader->ReadAllScalarsOn();
+    vtkGridReader->ReadAllVectorsOn();
+    vtkGridReader->ReadAllFieldsOn();
     vtkGridReader->Update();
     vtkRectilinearGrid* vtkGrid = vtkGridReader->GetOutput();
     
