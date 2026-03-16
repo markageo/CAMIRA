@@ -31,8 +31,8 @@ inline void UpdateParticlePositionIndexLinearSearch( Particle &particle,
         
         while ( true ) {
 
-            bool found = particle.position(axis) >= mesh.cellFaces[axis]( particle.positionIndex[axis] )
-                      && particle.position(axis) <= mesh.cellFaces[axis]( particle.positionIndex[axis] + 1 );
+            bool found = ( particle.position(axis) >= mesh.cellFaces[axis]( particle.positionIndex[axis] )     )
+                      && ( particle.position(axis) <= mesh.cellFaces[axis]( particle.positionIndex[axis] + 1 ) );
 
             if ( found )
                 break;
@@ -68,7 +68,9 @@ inline void UpdateParticlePositionIndexBinarySearch( Particle &particle,
                 hiBound = index;
             } else if ( mesh.cellFaces[axis](index) < particle.position(axis) ) {
                 loBound = index;
-            } else if ( hiBound == loBound + 1 ) {
+            } 
+            
+            if ( hiBound == loBound + 1 ) {
                 break;
             }
 
