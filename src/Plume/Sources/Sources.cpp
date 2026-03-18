@@ -31,7 +31,7 @@ void AddParticle( std::vector<Particle> &particles,
 
         UpdateParticlePositionIndexBinarySearch( particles.back(), mesh );
 
-        massRemaining -= inputData.initialParticlesPerUnitMass;
+        massRemaining -= massPerParticle;
     }
 
 }

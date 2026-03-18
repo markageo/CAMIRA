@@ -25,9 +25,11 @@ void UpdateConcentrationField( Tensor3D &concentrationField,
 
     for ( const auto &particle : particles ) {
 
-        const intType i = particle.positionIndex[X],
-                      j = particle.positionIndex[Y],
-                      k = particle.positionIndex[Z];
+        // Weighting is by cell center, we have cell face index for the face immediately to the lo side of the particle
+        // Need to find index of cell center immediately to the lo side
+        const intType i = ( particle.position(X) > mesh.cellCenters[X]( particle.positionIndex[X] ) ) ? particle.positionIndex[X] : particle.positionIndex[X] - 1,
+                      j = ( particle.position(Y) > mesh.cellCenters[Y]( particle.positionIndex[Y] ) ) ? particle.positionIndex[Y] : particle.positionIndex[Y] - 1,
+                      k = ( particle.position(Z) > mesh.cellCenters[Z]( particle.positionIndex[Z] ) ) ? particle.positionIndex[Z] : particle.positionIndex[Z] - 1;
 
         // Weighting factors by distance to cell center
         const floatType wx = ( mesh.cellCenters[X]( i+1 ) - particle.position(X) ) * mesh.cellCenterDiffInv[X]( i+1 ),  

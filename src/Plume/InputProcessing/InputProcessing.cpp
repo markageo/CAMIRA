@@ -58,6 +58,7 @@ namespace
         const pt::ptree &velocityFieldTree = tree.get_child("VelocityField");
 
         inputData.velocityFieldFilename  = velocityFieldTree.get<std::string>("velocityFieldFilename");
+        IOTOOLS::PrependRelativePath( inputData.velocityFieldFilename, inputData.inputFileDirectory );
     }
 
 

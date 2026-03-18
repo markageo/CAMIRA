@@ -63,7 +63,7 @@ void StepParticle( Particle &particle,
     // Check where it is out of bounds
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
-        floatType hiBounds = mesh.cellFaces[axis]( mesh.nFacesNormal[axis][axis] ),
+        floatType hiBounds = mesh.cellFaces[axis]( mesh.nFacesNormal[axis][axis]-1 ),
                   loBounds = mesh.cellFaces[axis]( 0 );
 
         BoundaryPatches::ENUMDATA boundaryPatch;
@@ -76,6 +76,7 @@ void StepParticle( Particle &particle,
             boundaryPatch = LUT::NegativePatch[axis];
             exitedBounds = true;
         }
+
 
         if ( exitedBounds ) {
 
@@ -130,7 +131,8 @@ inline void UpdateParticles( std::vector<Particle> &particles,
         std::remove_if( particles.begin(), 
                         particles.end(), 
                         [] (const Particle &p) { return !p.active; } 
-                      ) 
+                      ),
+        particles.end()
                     );
 
 }

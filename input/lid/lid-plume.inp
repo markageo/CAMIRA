@@ -1,13 +1,13 @@
 // Lid plume model 
 
 Model {
-    timeStepSize = 1
-    numberOfTimeSteps = 100
+    timeStepSize = 0.1
+    numberOfTimeSteps = 10
     initialParticlesPerUnitMass = 10
 }
 
 VelocityField {
-    velocityFieldFilename = "windfield.vtk"
+    velocityFieldFilename = "flow-output/fields_iter3.vtk"
 }
 
 
@@ -24,7 +24,7 @@ BoundaryConditions
 {
     // Wall
     +x {
-        phi = outflow
+        phi = reflection
     }
 
     // Wall
@@ -64,6 +64,6 @@ Output {
     outputFormatType        = BINARY
     profilingFilename       = "plume-output/profiling.dat"
     fieldOutputFilename     = "plume-output/fields.vtk"
-    fieldWriteInterval      = 0
+    fieldWriteInterval      = 1
 
 }

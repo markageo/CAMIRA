@@ -3,4 +3,5 @@ target_sources( libs
         Solver.cpp 
     PRIVATE 
         ParticleDynamics.h
-        Solver.h )
+        Solver.h
+        Logging.h )

@@ -8,6 +8,7 @@
 #include "Plume/Sources/Sources.h"
 #include "Plume/Solver/ParticleDynamics.h"
 #include "Plume/Concentration/Concentration.h"
+#include "Plume/Solver/Logging.h"
 
 #include <iostream>
 #include <memory>
@@ -61,6 +62,7 @@ void SolvePlume( const InputData &inputData )
     EnumVector<Axis, Tensor3D> velocityField = fieldFileData.vertexFields.U;
 
     // Read and store geometry
+    // TODO
 
 
     // Place to store the concentration field
@@ -72,32 +74,44 @@ void SolvePlume( const InputData &inputData )
     std::vector< Particle > particles;
     particles.reserve( particlesNeeded );
 
+    // Logging objects
+    ConcentrationFieldWriter concentrationFieldWriter( concentrationField, mesh, inputData );
+
     // Add instantaneous release particles
     AddInstantaneousReleasePointParticles( particles, mesh, inputData );
 
     bool writeFields = ( inputData.fieldWriteInterval > 0 );
 
+    // Write the initial condition
+    UpdateConcentrationField( concentrationField, particles, mesh );
+    concentrationFieldWriter.WriteData( 0.0f, 0 );
+
     // Step through time
+    std::cout << "Starting time loop " << std::endl;
     floatType currentTime = 0;
-    for ( intType timeStep = 1; timeStep != inputData.numberOfTimeSteps; timeStep++ ) {
+    for ( intType timeStep = 1; timeStep <= inputData.numberOfTimeSteps; timeStep++ ) {
         currentTime += inputData.timeStepSize;
+
+        std::cout << "Timestep: " << timeStep << "\n"
+                  << "Number of particles: " << particles.size() << "\n";
 
         // Add continuous release particles
         AddContinuousReleasePointParticles( particles, mesh, inputData );
-
+        
         // Update particle positions
         UpdateParticles( particles, mesh, velocityField, inputData );
 
         // Output
         if ( writeFields && (timeStep % inputData.fieldWriteInterval) == 0 ) {
             for ( auto &particle : particles ) {
-                UpdateParticlePositionIndexBinarySearch( particle, mesh );
+                UpdateParticlePositionIndexLinearSearch( particle, mesh );
             }
             UpdateConcentrationField( concentrationField, particles, mesh );
+            concentrationFieldWriter.WriteData( currentTime, timeStep );
+            std::cout << "(Concentration field written to file)" << "\n";
         } 
         
-
-
+        std::cout << std::endl;
     }
 
 }
