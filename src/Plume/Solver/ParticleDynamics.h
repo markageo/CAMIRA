@@ -11,6 +11,7 @@
 #include <vector>
 #include <algorithm>
 #include <cmath>
+#include <random>
 
 namespace CAMIRA
 {
@@ -43,9 +44,19 @@ void UpdateParticleVelocity( Particle &particle,
 
 
 fVector3 GetParticleStep( const fVector3 &velocity,
-                          const floatType &timeStep )
+                          const InputData &inputData )
 {
-    return timeStep * velocity;
+    static std::random_device rd{};
+    static std::mt19937 gen{rd()};
+    static std::normal_distribution d{0.0f, 1.0f};
+
+    fVector3 advection = inputData.timeStepSize * velocity;
+
+    fVector3 eta = { d(gen), d(gen), d(gen) };
+    fVector3 molecularDiffusion = sqrt( 2.0f * inputData.diffusionCoeff * inputData.timeStepSize ) * eta;
+
+    return advection + molecularDiffusion;
+
 }
 
 
@@ -119,7 +130,7 @@ inline void UpdateParticles( std::vector<Particle> &particles,
 
         UpdateParticleVelocity( particle, mesh, velocityField );
 
-        fVector3 delta = GetParticleStep( particle.velocity, inputData.timeStepSize );
+        fVector3 delta = GetParticleStep( particle.velocity, inputData );
 
         StepParticle( particle, delta, mesh, inputData.boundaryConditions );
 

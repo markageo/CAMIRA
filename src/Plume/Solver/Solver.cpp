@@ -93,7 +93,8 @@ void SolvePlume( const InputData &inputData )
         currentTime += inputData.timeStepSize;
 
         std::cout << "Timestep: " << timeStep << "\n"
-                  << "Number of particles: " << particles.size() << "\n";
+                  << "Number of particles: " << particles.size() << "\n"
+                  << std::flush;
 
         // Add continuous release particles
         AddContinuousReleasePointParticles( particles, mesh, inputData );

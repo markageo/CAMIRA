@@ -37,6 +37,7 @@ struct InputData
     std::string stlGeometryFilename;
 
     // Model
+    floatType diffusionCoeff;
     intType numberOfTimeSteps;
     floatType initialParticlesPerUnitMass;
     floatType timeStepSize;

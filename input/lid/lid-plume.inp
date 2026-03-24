@@ -1,9 +1,10 @@
 // Lid plume model 
 
 Model {
+    D = 1e-4
     timeStepSize = 0.1
-    numberOfTimeSteps = 10
-    initialParticlesPerUnitMass = 10
+    numberOfTimeSteps = 500
+    initialParticlesPerUnitMass = 1e5
 }
 
 VelocityField {
@@ -15,7 +16,7 @@ Sources
 {
     InstantaneousReleasePoint {
         location = (0.5, 0.5, 0.5)
-        totalMass = 0.5
+        totalMass = 1
     }
 }
 
@@ -64,6 +65,6 @@ Output {
     outputFormatType        = BINARY
     profilingFilename       = "plume-output/profiling.dat"
     fieldOutputFilename     = "plume-output/fields.vtk"
-    fieldWriteInterval      = 1
+    fieldWriteInterval      = 5
 
 }

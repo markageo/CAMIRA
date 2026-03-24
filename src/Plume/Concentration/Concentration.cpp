@@ -1,5 +1,5 @@
 #include "Concentration.h"
-
+#include <algorithm>
 
 namespace CAMIRA
 {
@@ -27,44 +27,64 @@ void UpdateConcentrationField( Tensor3D &concentrationField,
 
         // Weighting is by cell center, we have cell face index for the face immediately to the lo side of the particle
         // Need to find index of cell center immediately to the lo side
-        const intType i = ( particle.position(X) > mesh.cellCenters[X]( particle.positionIndex[X] ) ) ? particle.positionIndex[X] : particle.positionIndex[X] - 1,
-                      j = ( particle.position(Y) > mesh.cellCenters[Y]( particle.positionIndex[Y] ) ) ? particle.positionIndex[Y] : particle.positionIndex[Y] - 1,
-                      k = ( particle.position(Z) > mesh.cellCenters[Z]( particle.positionIndex[Z] ) ) ? particle.positionIndex[Z] : particle.positionIndex[Z] - 1;
+        const intType i = ( particle.position(X) > mesh.cellCenters[X]( particle.positionIndex[X] ) ) ? particle.positionIndex[X] : std::max( static_cast<intType>(0), particle.positionIndex[X] - 1 ),
+                      j = ( particle.position(Y) > mesh.cellCenters[Y]( particle.positionIndex[Y] ) ) ? particle.positionIndex[Y] : std::max( static_cast<intType>(0), particle.positionIndex[Y] - 1 ),
+                      k = ( particle.position(Z) > mesh.cellCenters[Z]( particle.positionIndex[Z] ) ) ? particle.positionIndex[Z] : std::max( static_cast<intType>(0), particle.positionIndex[Z] - 1 );
+
+        // These are values that are used if at domain boundary, will get overwritten if not.
+        intType ip1 = i,
+                jp1 = j,
+                kp1 = k;
+
+        floatType wx = 0.5f,
+                  wy = 0.5f,  
+                  wz = 0.5f;  
 
         // Weighting factors by distance to cell center
-        const floatType wx = ( mesh.cellCenters[X]( i+1 ) - particle.position(X) ) * mesh.cellCenterDiffInv[X]( i+1 ),  
-                        wy = ( mesh.cellCenters[Y]( j+1 ) - particle.position(Y) ) * mesh.cellCenterDiffInv[Y]( j+1 ),  
-                        wz = ( mesh.cellCenters[Z]( k+1 ) - particle.position(Z) ) * mesh.cellCenterDiffInv[Z]( k+1 );  
+        if ( i > 0 && i < mesh.nCells[X]-1 ) {
+            ip1 = i+1;
+            wx = ( mesh.cellCenters[X]( ip1 ) - particle.position(X) ) * mesh.cellCenterDiffInv[X]( ip1 );
+        } 
+
+        if ( j > 0 && j < mesh.nCells[Y]-1 ) {
+            jp1 = j+1;
+            wy = ( mesh.cellCenters[Y]( jp1 ) - particle.position(Y) ) * mesh.cellCenterDiffInv[Y]( jp1 );
+        }
+
+        if ( k > 0 && k < mesh.nCells[Z]-1 ) {
+            kp1 = k+1;
+            wz = ( mesh.cellCenters[Z]( kp1 ) - particle.position(Z) ) * mesh.cellCenterDiffInv[Z]( kp1 );
+        }
 
         // Add concentrations
         concentrationField(i  , j  , k  ) += wx * wy * wz * particle.mass 
                                            / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](k) );
 
-        concentrationField(i+1, j  , k  ) += ( 1.0f - wx ) * wy * wz * particle.mass
-                                           / ( mesh.cellLengths[X](i+1) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](k) );
+        concentrationField(ip1, j  , k  ) += ( 1.0f - wx ) * wy * wz * particle.mass
+                                           / ( mesh.cellLengths[X](ip1) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](k) );
 
 
-        concentrationField(i  , j+1, k  ) += wx * ( 1.0f - wy ) * wz * particle.mass
-                                           / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](j+1) * mesh.cellLengths[Z](k) );
+        concentrationField(i  , jp1, k  ) += wx * ( 1.0f - wy ) * wz * particle.mass
+                                           / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](jp1) * mesh.cellLengths[Z](k) );
 
-        concentrationField(i  , j  , k+1) += wx * wy * ( 1.0f - wz ) * particle.mass
-                                           / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](k+1) );
-
-
-        concentrationField(i+1, j  , k+1) += ( 1.0f - wx ) * wy * ( 1.0f - wz ) * particle.mass
-                                           / ( mesh.cellLengths[X](i+1) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](k+1) );
+        concentrationField(i  , j  , kp1) += wx * wy * ( 1.0f - wz ) * particle.mass
+                                           / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](kp1) );
 
 
-        concentrationField(i+1, j+1, k  ) += ( 1.0f - wx ) * ( 1.0f - wy ) * wz * particle.mass
-                                           / ( mesh.cellLengths[X](i+1) * mesh.cellLengths[Y](j+1) * mesh.cellLengths[Z](k) );
+        concentrationField(ip1, j  , kp1) += ( 1.0f - wx ) * wy * ( 1.0f - wz ) * particle.mass
+                                           / ( mesh.cellLengths[X](ip1) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](kp1) );
 
 
-        concentrationField(i  , j+1, k+1) += wx * ( 1.0f - wy ) * ( 1.0f - wz ) * particle.mass
-                                           / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](j+1) * mesh.cellLengths[Z](k+1) );
+        concentrationField(ip1, jp1, k  ) += ( 1.0f - wx ) * ( 1.0f - wy ) * wz * particle.mass
+                                           / ( mesh.cellLengths[X](ip1) * mesh.cellLengths[Y](jp1) * mesh.cellLengths[Z](k) );
 
 
-        concentrationField(i+1, j+1, k+1) += ( 1.0f - wx ) * ( 1.0f - wy ) * ( 1.0f - wz ) * particle.mass
-                                           / ( mesh.cellLengths[X](i+1) * mesh.cellLengths[Y](j+1) * mesh.cellLengths[Z](k+1) );
+        concentrationField(i  , jp1, kp1) += wx * ( 1.0f - wy ) * ( 1.0f - wz ) * particle.mass
+                                           / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](jp1) * mesh.cellLengths[Z](kp1) );
+
+
+        concentrationField(ip1, jp1, kp1) += ( 1.0f - wx ) * ( 1.0f - wy ) * ( 1.0f - wz ) * particle.mass
+                                           / ( mesh.cellLengths[X](ip1) * mesh.cellLengths[Y](jp1) * mesh.cellLengths[Z](kp1) );
 
     }
 
