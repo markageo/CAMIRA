@@ -125,9 +125,9 @@ void StepParticle( Particle &particle,
 
 
 inline void UpdateParticles( std::vector<Particle> &particles,
-                      const Mesh &mesh, 
-                      const EnumVector<Axis, Tensor3D> &velocityField,
-                      const InputData &inputData )
+                             const Mesh &mesh, 
+                             const EnumVector<Axis, Tensor3D> &velocityField,
+                             const InputData &inputData )
 {
 
     for ( Particle &particle : particles ) {
@@ -149,6 +149,24 @@ inline void UpdateParticles( std::vector<Particle> &particles,
                       ),
         particles.end()
                     );
+
+}
+
+
+inline void SplitParticles( std::vector<Particle> &particles )
+{
+
+    const intType initialNumberOfParticles = particles.size();
+
+    for ( intType i = 0; i != initialNumberOfParticles; i++ ) {
+
+        // Half the mass of the particle
+        particles[i].mass /= 2.0f;
+
+        // Copy the particle to the end
+        particles.push_back( particles[i] );
+
+    }
 
 }
 

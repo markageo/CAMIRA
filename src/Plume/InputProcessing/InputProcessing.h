@@ -41,6 +41,8 @@ struct InputData
     intType numberOfTimeSteps;
     floatType initialParticlesPerUnitMass;
     floatType timeStepSize;
+    intType particleSplitTimeStepInterval;
+    intType maxNumberOfParticleSplits;
 
     
     // Sources

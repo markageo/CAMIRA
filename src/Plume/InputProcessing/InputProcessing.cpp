@@ -42,10 +42,12 @@ namespace
     {
         const pt::ptree &modelTree = tree.get_child("Model");
 
-        inputData.diffusionCoeff               = modelTree.get<floatType>("D");
-        inputData.numberOfTimeSteps            = modelTree.get<intType>("numberOfTimeSteps");
-        inputData.initialParticlesPerUnitMass  = modelTree.get<floatType>("initialParticlesPerUnitMass");
-        inputData.timeStepSize                 = modelTree.get<floatType>("timeStepSize");
+        inputData.diffusionCoeff                = modelTree.get<floatType>("D");
+        inputData.numberOfTimeSteps             = modelTree.get<intType>("numberOfTimeSteps");
+        inputData.particleSplitTimeStepInterval = modelTree.get<intType>("particleSplitTimeStepInterval");
+        inputData.maxNumberOfParticleSplits     = modelTree.get<intType>("maxNumberOfParticleSplits");
+        inputData.initialParticlesPerUnitMass   = modelTree.get<floatType>("initialParticlesPerUnitMass");
+        inputData.timeStepSize                  = modelTree.get<floatType>("timeStepSize");
     }
 
 

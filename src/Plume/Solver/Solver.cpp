@@ -27,7 +27,7 @@ namespace
 
     // Calculates the total number of particles needed throughout the simulation, accounting for different souces so that memory can be 
     // allocated for them at the start
-    // TODO: should account for particle splitting when this is added
+    // This is an estimate as it doesn't account for particles potentially leaving the domain
     intType CalculateNumberOfParticlesNeeded( const InputData &inputData )
     {
         intType nParticles = 0;
@@ -73,6 +73,8 @@ void SolvePlume( const InputData &inputData )
     intType particlesNeeded = CalculateNumberOfParticlesNeeded( inputData );
     std::vector< Particle > particles;
     particles.reserve( particlesNeeded );
+    bool splitParticles = ( inputData.particleSplitTimeStepInterval > 0 );
+    intType numberOfParticleSplits = 0;
 
     // Logging objects
     ConcentrationFieldWriter concentrationFieldWriter( concentrationField, mesh, inputData );
@@ -95,6 +97,15 @@ void SolvePlume( const InputData &inputData )
         std::cout << "Timestep: " << timeStep << "\n"
                   << "Number of particles: " << particles.size() << "\n"
                   << std::flush;
+
+        // Split particles 
+        bool splitParticlesThisIteration = splitParticles
+                                        && ( numberOfParticleSplits < inputData.maxNumberOfParticleSplits )
+                                        && ( timeStep % inputData.particleSplitTimeStepInterval == 0 );
+        if ( splitParticlesThisIteration ) {
+            numberOfParticleSplits++;
+            SplitParticles( particles );
+        }
 
         // Add continuous release particles
         AddContinuousReleasePointParticles( particles, mesh, inputData );
