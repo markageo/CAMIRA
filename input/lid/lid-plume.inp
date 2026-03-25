@@ -3,7 +3,7 @@
 Model {
     D = 1e-4
     timeStepSize = 0.1
-    numberOfTimeSteps = 500
+    numberOfTimeSteps = 1000
     initialParticlesPerUnitMass = 1e5
 }
 
@@ -65,6 +65,6 @@ Output {
     outputFormatType        = BINARY
     profilingFilename       = "plume-output/profiling.dat"
     fieldOutputFilename     = "plume-output/fields.vtk"
-    fieldWriteInterval      = 5
+    fieldWriteInterval      = 2
 
 }

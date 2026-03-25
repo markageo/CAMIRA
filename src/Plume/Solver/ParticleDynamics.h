@@ -97,9 +97,13 @@ void StepParticle( Particle &particle,
                     particle.active = false;
                     break;
 
-                case BoundaryConditions::reflection:
-                    newPosition(axis) = particle.position(axis) - delta(axis);  // Can be improved
+                case BoundaryConditions::reflection:    
+                {
+                    floatType wallPosition = ( newPosition(axis) >= hiBounds ) ? hiBounds 
+                                                                               : loBounds;
+                    newPosition(axis) = 2.0f * wallPosition - newPosition(axis);
                     break;
+                }
 
                 case BoundaryConditions::periodic:
                     newPosition(axis) = signum( delta(axis) ) * ( loBounds - hiBounds ) + particle.position(axis) + delta(axis); 
