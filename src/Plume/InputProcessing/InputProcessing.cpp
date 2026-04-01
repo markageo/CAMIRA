@@ -52,7 +52,7 @@ namespace
 
 
     /*-------------------------------------------------------------------------------------*\
-                                            VelocityField
+                                          Velocity Field
     \*-------------------------------------------------------------------------------------*/
 
     void ReadVelocityField( InputData &inputData, 
@@ -62,6 +62,21 @@ namespace
 
         inputData.velocityFieldFilename  = velocityFieldTree.get<std::string>("velocityFieldFilename");
         IOTOOLS::PrependRelativePath( inputData.velocityFieldFilename, inputData.inputFileDirectory );
+    }
+
+
+
+    /*-------------------------------------------------------------------------------------*\
+                                             Geometry
+    \*-------------------------------------------------------------------------------------*/
+
+    void ReadSolidGeometry( InputData &inputData, 
+                            const pt::ptree &tree )
+    {
+        const pt::ptree &solidGeometryTree = tree.get_child("SolidGeometry");
+
+        inputData.stlGeometryFilename  = solidGeometryTree.get<std::string>("filename");
+        IOTOOLS::PrependRelativePath( inputData.stlGeometryFilename, inputData.inputFileDirectory );
     }
 
 
@@ -332,6 +347,7 @@ InputData ReadInputData(const std::string &inputFilename)
 
     ReadModel(inputData, tree);
     ReadVelocityField(inputData, tree);
+    ReadSolidGeometry(inputData, tree);
     ReadSources(inputData, tree);
     ReadBoundaryConditions(inputData, tree);
     ReadParallel(inputData, tree);

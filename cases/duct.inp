@@ -1,0 +1,172 @@
+// 3D duct flow
+
+Model {
+    nu   = 0.001
+}
+
+Mesh {
+
+    domainLowerBounds = (0, 0, 0)
+    domainUpperBounds = (3, 1, 1)
+
+    Grid x {
+        Segment {
+            bounds     = (0, 3)
+            nCells     = 1000
+            biasFactor = 1
+        }
+    }
+
+    Grid y {
+        Segment {
+            bounds     = (0, 0.5)
+            nCells     = 10
+            biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (0.5, 1)
+            nCells     = 10
+            biasFactor = 1
+        }
+    }
+
+    Grid z {
+        Segment {
+            bounds     = (0, 0.5)
+            nCells     = 10
+            biasFactor = 1
+        }
+
+        Segment {
+            bounds     = (0.5, 1)
+            nCells     = 10
+            biasFactor = 1
+        }
+    }
+}
+
+
+
+InitialConditions
+{
+    u = 0
+    v = 0
+    w = 0
+    p = 0
+}
+
+
+BoundaryConditions
+{
+    // Outflow
+    +x {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform, 0
+    }
+
+    // Inflow
+    -x {
+        u = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    //Wall
+    +y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    +z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+}
+
+
+Solver {
+
+    Schemes {
+
+        linearisation           = Picard
+        momentumInterpolation   = implicit
+        advectionScheme         = upwind
+        advectionBlendingFactor = 1
+        faceInterpolationScheme = weightedLinear
+
+        maxOuterIterations = 100
+        maxContinuityOuterResidual = 1e-5
+        maxMomentumOuterResiduals   = (1e-5, 1e-5, 1e-5)
+
+    }
+    
+    Smoother {
+
+        type = domainSymmetricParallel
+        maxIterations = 5
+        maxResiduals = 0
+
+        planeSweepDirection = +z
+        lineSweepDirection = +y
+
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
+
+    }
+
+    Multigrid {
+        cycle = F
+        maxCoarseLevels = 3
+
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
+        fineGridIterations   = 2
+
+        maxCoarseGridIterations = 500
+        maxCoarseGridResiduals  = 1e-6
+        
+    }
+
+}
+
+
+Output {
+
+    residualHistoryFilename = "../output/residual_history.csv"
+    profilingFilename       = "../output/profiling.dat"
+    fieldOutputFilename     = "../output/fields.vtk"
+    fieldWriteInterval      = 1
+
+    Monitors {
+        Probe {
+            filename = "../output/probe1.csv"
+            location = (1, 0.5, 0.5)
+        }
+    }
+
+}

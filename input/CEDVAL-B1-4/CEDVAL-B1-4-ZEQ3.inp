@@ -1,8 +1,0 @@
-// CEDVAL B1-4
-// ZEQ3 model data
-
-model                        = ZEQ3
-heightAxis                   = z
-averageBuildingHeight        = 0.06
-inflowVelocityBuildingHeight = 3.66
-roughnessLength              = 0.0004

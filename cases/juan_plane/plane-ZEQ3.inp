@@ -1,0 +1,8 @@
+// konkuk
+// ZEQ3 model data
+
+model                        = ZEQ3
+heightAxis                   = z
+averageBuildingHeight        = 80
+inflowVelocityBuildingHeight = 1
+roughnessLength              = 0.004

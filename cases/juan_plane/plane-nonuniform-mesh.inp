@@ -1,0 +1,70 @@
+// Mesh file
+
+
+domainLowerBounds = (-1.5  , -0.61, -0.46)
+domainUpperBounds = (3.5  ,  0.61, 0.46)
+
+Grid x {
+    Segment {
+        bounds     = (-1.5, -0.1)
+        nCells     = 100
+        biasFactor = -3
+    }
+
+    Segment {
+        bounds     = (-0.1, 0.5)
+        nCells     = 75
+        biasFactor = 1
+    }
+
+    Segment {
+        bounds     = (0.5, 3.5)
+        nCells     = 150
+        biasFactor = 5
+    }
+}
+
+
+Grid y {
+    Segment {
+        bounds     = (-0.61, -0.35)
+        nCells     = 22
+        biasFactor = -2
+    }
+
+    Segment {
+        bounds     = (-0.35, 0.35)
+        nCells     = 88
+        biasFactor = 1
+    }
+
+    Segment {
+        bounds     = (0.35, 0.61)
+        nCells     = 22
+        biasFactor = 2
+    }
+}
+
+
+
+
+Grid z {
+    Segment {
+        bounds     = (-0.46, -0.1)
+        nCells     = 24
+        biasFactor = -2.5
+    }
+
+    Segment {
+        bounds     = (-0.1, 0.06)
+        nCells     = 20
+        biasFactor = 1
+    }
+
+    Segment {
+        bounds     = (0.06, 0.46)
+        nCells     = 28
+        biasFactor = 2.5
+    }
+}
+

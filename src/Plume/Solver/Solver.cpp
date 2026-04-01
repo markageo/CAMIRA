@@ -4,6 +4,7 @@
 #include "Core/Macros.h"
 #include "Core/IO/VTKReader.h"
 #include "Core/Mesh/Mesh.h"
+#include "Core/Geometry/Geometry.h"
 #include "Plume/Particle/Particle.h"
 #include "Plume/Sources/Sources.h"
 #include "Plume/Solver/ParticleDynamics.h"
@@ -59,11 +60,11 @@ void SolvePlume( const InputData &inputData )
     // Read and store windfield
     VTK::FieldFileData fieldFileData = VTK::ReadVTKFields( inputData.velocityFieldFilename );
     Mesh mesh( fieldFileData.cellFaces );
-    EnumVector<Axis, Tensor3D> velocityField = fieldFileData.vertexFields.U;
+    EnumVector<Axis, Tensor3D> &velocityField = fieldFileData.vertexFields.U;
 
     // Read and store geometry
-    // TODO
-
+    Polyhedron P = MakeGeometry( inputData.stlGeometryFilename );
+    Tree tree = MakeAABBTree( P );
 
     // Place to store the concentration field
     Tensor3D concentrationField( mesh.nCells(0), mesh.nCells(1), mesh.nCells(2) );
@@ -111,7 +112,7 @@ void SolvePlume( const InputData &inputData )
         AddContinuousReleasePointParticles( particles, mesh, inputData );
         
         // Update particle positions
-        UpdateParticles( particles, mesh, velocityField, inputData );
+        UpdateParticles( particles, mesh, velocityField, tree, inputData );
 
         // Output
         if ( writeFields && (timeStep % inputData.fieldWriteInterval) == 0 ) {

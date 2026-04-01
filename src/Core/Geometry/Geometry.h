@@ -49,6 +49,10 @@ struct GeometryData {
 Polyhedron MakeGeometry( const GeometryData &,
                          const AxisTransformationMap & );
 
+
+Polyhedron MakeGeometry( const std::string & );
+
+
 std::vector<Polyhedron> SeparatePolyhedron( const Polyhedron & );
 
 Tree MakeAABBTree( const Polyhedron & );
@@ -59,6 +63,19 @@ bool PointInside( const Tree &,
                   const floatType, 
                   const floatType );
 
+
+bool SegmentIntersects( const Tree &,
+                        const fVector3 &,
+                        const fVector3 & );
+
+struct IntersectionData {
+    fVector3 point;
+    fVector3 normal;
+};
+
+IntersectionData SegmentIntersectionAndNormal( const Tree &, 
+                                               const fVector3 &,
+                                               const fVector3 & );
 
 floatType NearestRayIntersection( const Tree &,
                                   const fVector3 &,

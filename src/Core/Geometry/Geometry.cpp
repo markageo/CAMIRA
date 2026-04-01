@@ -17,6 +17,7 @@
 #include <CGAL/Surface_mesh.h>
 #include <CGAL/Polygon_mesh_processing/connected_components.h>
 #include <CGAL/Aff_transformation_3.h>
+#include <CGAL/Kernel/global_functions.h>
 
 #include <boost/property_map/property_map.hpp>
 
@@ -367,6 +368,18 @@ Polyhedron MakeGeometry( const GeometryData &geometryData,
 }
 
 
+Polyhedron MakeGeometry( const std::string &filename )
+{
+    Polyhedron P;
+    bool success = CGAL::IO::read_STL( filename, P );
+    if ( !success ) {
+        throw std::runtime_error( "Failed reading STL geometry file '" + filename + "'." );
+    }
+
+    return P;
+}
+
+
 
 /*-------------------------------------------------------------------------------------*\
                                General Geometry Functions
@@ -417,6 +430,76 @@ bool PointInside( const Tree &tree,
     
     // Determine the side and return true if inside!
     return inside_tester( Point( xq, yq, zq ) ) == CGAL::ON_BOUNDED_SIDE;
+}
+
+
+
+// Check if a finite segment intersects a solid 
+bool SegmentIntersects( const Tree &tree,
+                        const fVector3 &startPoint,
+                        const fVector3 &endPoint )
+{
+    using Point            = Polyhedron::Point_3;
+    using Segment          = CGAL_Kernel::Segment_3;    
+
+    const Point p0( startPoint(0), startPoint(1), startPoint(2) ),
+                p1( endPoint(0), endPoint(1), endPoint(2) );
+
+    const Segment seg( p0, p1 );
+    
+    return tree.do_intersect( seg );
+}
+
+
+
+// Determines the intersection point of a finite segment and the outward normal direction of the triangle
+IntersectionData SegmentIntersectionAndNormal( const Tree &tree, 
+                                               const fVector3 &startPoint,
+                                               const fVector3 &rayDirection )
+{
+    IntersectionData intersectionData;
+
+    using Point            = Polyhedron::Point_3;
+    using Vector           = CGAL_Kernel::Vector_3;
+    using Ray              = CGAL_Kernel::Ray_3;    
+    using Ray_intersection = boost::optional<Tree::Intersection_and_primitive_id<Ray>::Type>;
+
+    const Vector rayOrientation( rayDirection(0), rayDirection(1), rayDirection(2) );
+    const Point  rayOrigin( startPoint(0), startPoint(1), startPoint(2) );
+    const Ray    ray( rayOrigin, rayOrientation );
+    
+    Ray_intersection intersection = tree.first_intersection( ray );
+
+    if ( !intersection ) {
+        intersectionData.point  = {-1.0f, -1.0f, -1.0f};
+        intersectionData.normal = {-1.0f, -1.0f, -1.0f};
+        return intersectionData;    
+    }
+
+    // Intersection point
+    Point intersectionPoint = *( boost::get<Point>( &(intersection->first) ) ); 
+
+    // Moght be good idea to clamp the distance by the ray direction, this shouldn't need to be done in theory if SegmentIntersects is being used beforehand
+
+    // Normal vector from the triangle that was intersected
+    auto face = intersection->second;
+    auto h = face->halfedge();
+    Point p0 = h->vertex()->point();
+    Point p1 = h->next()->vertex()->point();
+    Point p2 = h->next()->next()->vertex()->point();
+
+    auto normalVector = CGAL::cross_product(p1 - p0, p2 - p0);
+    normalVector = normalVector / std::sqrt(normalVector.squared_length());
+
+    // Orient the normal to be outward pointing, i.e. point in the direction the ray came from
+    if (normalVector * rayOrientation > 0)
+            normalVector = - normalVector;
+
+    // Convert to fVector3 to return
+    intersectionData.point  = { intersectionPoint.x(), intersectionPoint.y(), intersectionPoint.z() };
+    intersectionData.normal = { normalVector.x(), normalVector.y(), normalVector.z() };
+
+    return intersectionData;
 }
 
 

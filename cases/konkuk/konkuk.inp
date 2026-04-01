@@ -1,0 +1,146 @@
+// CEDVAL B1-5 primary input file
+
+Model {
+    nu   = 1.57e-5
+    transient = no
+    TurbulenceModel {
+        #include "konkuk-ZEQ3.inp"
+    }
+}
+
+Mesh {
+    #include "konkuk-nonuniform-mesh.inp"
+}
+
+
+InitialConditions
+{    
+    type = uniform
+    u = 1
+    v = 0
+    w = 0
+    p = 0
+}
+
+
+BoundaryConditions
+{
+    // Outflow
+    +x {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform, 0
+    }
+
+    // Inflow
+    -x {
+        u = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Symmetry
+    +y {
+        u = zeroGradient
+        v = uniform, 0
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    // Symmetry
+    -y {
+        u = zeroGradient
+        v = uniform, 0
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    // Symmetry
+    +z {
+        u = zeroGradient
+        v = zeroGradient
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+}
+
+
+SolidGeometry {
+    boundaryTreatment = directionalImmersedBoundary
+    
+    FromFile {
+        type = STL
+        filename = "konkukWrapDecimate.stl"
+        rotation = (0, 0, 0)
+    }
+}
+
+
+Solver {
+
+    Schemes {
+
+        linearisation           = Picard
+        momentumInterpolation   = implicit
+        advectionScheme         = upwind
+        advectionBlendingFactor = 1.0
+        faceInterpolationScheme = weightedLinear
+
+        maxOuterIterations = 10
+        maxContinuityOuterResidual = 1e-5
+        maxMomentumOuterResiduals  = (1e-5, 1e-5, 1e-5)
+
+    }
+    
+    Smoother {
+
+        type = domainSymmetricParallel
+        maxIterations = 2
+        maxResiduals = 1e-5
+
+        planeSweepDirection = +z
+        lineSweepDirection = +y
+
+        eddyViscosityRelaxation = 1
+        momentumRelaxation      = (0.9, 0.9, 0.9)
+        pressureRelaxation      = 1
+
+    }
+
+    Multigrid {
+        cycle = F
+        maxCoarseLevels = 2
+
+        preSmoothingIterations = 2
+        postSmoothingIterations = 2
+        fineGridIterations   = 3
+
+        maxCoarseGridIterations = 100
+        maxCoarseGridResiduals  = 1e-8
+        
+    }
+
+}
+
+Parallel {
+    numberOfThreads = 8
+}
+
+Output {
+
+    residualHistoryFilename = "residual_history.csv"
+    profilingFilename       = "profiling.dat"
+    fieldOutputFilename     = "fields.vtk"
+    geometryOutputFilename  = "geometry.stl"
+    fieldWriteInterval      = 0
+}

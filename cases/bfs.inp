@@ -1,0 +1,159 @@
+// Backwards facing step with no inflow region
+
+Model {
+    nu        = 0.025
+    transient = no
+}
+
+Mesh {
+    domainLowerBounds = (0, 0, 0)
+    domainUpperBounds = (6, 3, 1)
+
+    Grid x {
+        Segment {
+            bounds     = (0, 6)
+            nCells     = 192
+            biasFactor = 1
+        }
+    }
+
+    Grid y {
+        Segment {
+            bounds     = (0, 3)
+            nCells     = 96
+            biasFactor = 1
+        }
+    }
+
+    Grid z {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 32
+            biasFactor = 1
+        }
+    }
+}
+
+
+
+InitialConditions
+{
+    type = uniform
+    u = 1
+    v = 0
+    w = 0
+    p = 0
+}
+
+
+BoundaryConditions
+{
+    // Outflow
+    +x {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform, 0
+    }
+
+    // Inflow
+    -x {
+        u = profile1D, "bfs_inflow.prof"
+        //u = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Symmetry
+    +y {
+        u = zeroGradient
+        v = uniform, 0
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    // Wall
+    -y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    +z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+}
+
+
+Solver {
+
+    Schemes {
+
+        linearisation           = Picard
+        momentumInterpolation   = semiExplicit
+        advectionScheme         = QUICK
+        advectionBlendingFactor = 1
+        faceInterpolationScheme = weightedLinear
+
+        maxOuterIterations = 100
+        maxContinuityOuterResidual = 1e-10
+        maxMomentumOuterResiduals   = (1e-10, 1e-10, 1e-10)
+
+    }
+    
+    Smoother {
+
+        type = domainSymmetricParallel
+        maxIterations = 4
+        maxResiduals = 1e-3
+
+        planeSweepDirection = +z
+        lineSweepDirection = +y
+
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
+
+    }
+
+    Multigrid {
+        cycle = F
+        maxCoarseLevels = 3
+
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
+        fineGridIterations   = 2
+
+        maxCoarseGridIterations = 500
+        maxCoarseGridResiduals  = 1e-6
+        
+    }
+
+}
+
+
+
+Parallel {
+    numberOfThreads = 3
+}
+
+Output {
+
+    residualHistoryFilename = "../output/residual_history.csv"
+    profilingFilename       = "../output/profiling.dat"
+    fieldOutputFilename     = "../output/fields.vtk"
+    fieldWriteInterval      = 2
+}

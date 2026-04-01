@@ -1,0 +1,169 @@
+// 3D sphere in lid driven cavity
+
+Model {
+    nu   = 0.005
+    transient = no
+    TurbulenceModel {
+        model = laminar
+    }
+}
+
+Mesh {
+
+    domainLowerBounds = (0, 0, 0)
+    domainUpperBounds = (1, 1, 1)
+
+    Grid x {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 100
+            biasFactor = 1
+        }
+    }
+
+    Grid y {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 100
+            biasFactor = 1
+        }
+    }
+
+    Grid z {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 100
+            biasFactor = 1
+        }
+    }
+}
+
+InitialConditions
+{
+    type  = uniform
+    u = 0
+    v = 0
+    w = 0
+    p = 0
+}
+
+
+BoundaryConditions
+{
+    // Wall
+    +x {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -x {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Driven
+    +y {
+        u = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    +z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+}
+
+
+SolidGeometry {
+    boundaryTreatment = directionalImmersedBoundary
+    Sphere {
+        centerPosition = (0.5, 0.5, 0.5)
+        diameter       = 0.25
+    }
+}
+
+Solver {
+
+    Schemes {
+
+        linearisation           = Picard
+        momentumInterpolation   = implicit
+        advectionScheme         = QUICK
+        advectionBlendingFactor = 1
+        faceInterpolationScheme = weightedLinear
+
+        maxOuterIterations = 10
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+    }
+    
+    Smoother {
+
+        type = nestedLineSymmetricSerial
+        maxIterations = 3
+        maxResiduals = 1e-3
+
+        planeSweepDirection = +y
+        lineSweepDirection = +x
+
+        eddyViscosityRelaxation = 1
+        momentumRelaxation = (0.98, 0.98, 0.98)
+        pressureRelaxation = 1
+
+    }
+
+    Multigrid {
+        cycle = F
+        maxCoarseLevels = 2
+
+        preSmoothingIterations = 2
+        postSmoothingIterations = 2
+        fineGridIterations   = 2
+
+        maxCoarseGridIterations = 150
+        maxCoarseGridResiduals  = 1e-12
+        
+    }
+
+}
+
+Parallel {
+    numberOfThreads = 4
+}
+
+
+Output {
+
+    outputFormatType        = BINARY
+    geometryOutputFilename  = "flow-output/geometry.stl"
+    residualHistoryFilename = "flow-output/residual_history.csv"
+    profilingFilename       = "flow-output/profiling.dat"
+    fieldOutputFilename     = "flow-output/fields.vtk"
+    fieldWriteInterval      = 0
+}

@@ -1,0 +1,183 @@
+// Flow over multiple blocks
+// Re ~ 20, uniform grid
+
+Model {
+    nu   = 0.05
+}
+
+Mesh {
+
+    domainLowerBounds = (0, 0, 0)
+    domainUpperBounds = (12, 4, 4)
+
+    Grid x {
+        Segment {
+            bounds     = (0, 12)
+            nCells     = 300
+            biasFactor = 1
+        }
+    }
+
+    Grid y {
+        Segment {
+            bounds     = (0, 4)
+            nCells     = 100
+            biasFactor = 1
+        }
+    }
+
+    Grid z {
+        Segment {
+            bounds     = (0, 4)
+            nCells     = 100
+            biasFactor = 1
+        }
+    }
+}
+
+
+InitialConditions
+{
+    u = 1
+    v = 0
+    w = 0
+    p = 0
+}
+
+
+BoundaryConditions
+{
+    // Outflow
+    +x {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform, 0
+    }
+
+    // Inflow
+    -x {
+        u = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Symmetry
+    +y {
+        u = zeroGradient
+        v = uniform, 0
+        w = zeroGradient
+        p = zeroGradient
+    }
+
+    // Wall
+    -y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    +z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+}
+
+
+SolidGeometry {
+    boundaryTreatment = directionalImmersedBoundary
+    Block {
+        centerPosition = (1.5, 0.5, 2)
+        dimensions     = (1, 1, 1)
+        rotation       = (0, 45, 0)
+    }
+
+    Block {
+        centerPosition = (4, 0.25, 1.5)
+        dimensions     = (0.5, 0.5, 0.5)
+        rotation       = (0, 0, 0)
+    }
+
+    Block {
+        centerPosition = (6, 0.75, 2.5)
+        dimensions     = (0.5, 1.5, 0.5)
+        rotation       = (0, 0, 0)
+    }
+}
+
+
+Solver {
+
+    Schemes {
+
+        linearisation           = Picard
+        momentumInterpolation   = implicit
+        advectionScheme         = upwind
+        advectionBlendingFactor = 1.0
+        faceInterpolationScheme = weightedLinear
+        
+        maxOuterIterations = 100
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+
+    }
+    
+    Smoother {
+
+        type = domainSymmetricParallel
+        maxIterations = 2
+        maxResiduals = 1e-3
+
+        planeSweepDirection = +z
+        lineSweepDirection = +y
+
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
+
+    }
+
+    Multigrid {
+        cycle = F
+        maxCoarseLevels = 3
+
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
+        fineGridIterations   = 2
+
+        maxCoarseGridIterations = 500
+        maxCoarseGridResiduals  = 1e-6
+        
+    }
+
+}
+
+
+Output {
+
+    residualHistoryFilename = "../output/residual_history.csv"
+    profilingFilename       = "../output/profiling.dat"
+    fieldOutputFilename     = "../output/fields.vtk"
+    geometryOutputFilename  = "../output/geometry.stl"
+    fieldWriteInterval      = 0
+
+    Monitors {
+        Probe {
+            filename = "../output/probe1.csv"
+            location = (1, 0.5, 0.5)
+        }
+    }
+
+}

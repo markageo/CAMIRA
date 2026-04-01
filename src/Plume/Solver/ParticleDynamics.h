@@ -4,6 +4,7 @@
 #include "Core/Types.h"
 #include "Core/FVLookups.h"
 #include "Core/Mesh/Mesh.h"
+#include "Core/Geometry/Geometry.h"
 #include "Plume/Particle/Particle.h"
 #include "Plume/InputProcessing/InputProcessing.h"
 #include "Plume/ConfigEnums.h"
@@ -64,6 +65,7 @@ fVector3 GetParticleStep( const fVector3 &velocity,
 void StepParticle( Particle &particle,
                    const fVector3 &delta,
                    const Mesh &mesh, 
+                   const Tree &tree,
                    const EnumVector<BoundaryPatches, InputData::BoundaryConditionInputData> &boundaryConditions )
 {
     using enum Axis::ENUMDATA;
@@ -71,7 +73,7 @@ void StepParticle( Particle &particle,
     // New position
     fVector3 newPosition = particle.position + delta;
 
-    // Check where it is out of bounds
+    // Domain boundary intersection
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
 
         floatType hiBounds = mesh.cellFaces[axis]( mesh.nFacesNormal[axis][axis]-1 ),
@@ -99,8 +101,8 @@ void StepParticle( Particle &particle,
 
                 case BoundaryConditions::reflection:    
                 {
-                    floatType wallPosition = ( newPosition(axis) >= hiBounds ) ? hiBounds 
-                                                                               : loBounds;
+                    const floatType wallPosition = ( newPosition(axis) >= hiBounds ) ? hiBounds 
+                                                                                     : loBounds;
                     newPosition(axis) = 2.0f * wallPosition - newPosition(axis);
                     break;
                 }
@@ -113,6 +115,18 @@ void StepParticle( Particle &particle,
         }
 
     } );
+
+
+    // Solid geometry intersection
+    if ( SegmentIntersects( tree, particle.position, newPosition ) ) {
+
+        const auto intersectionData = SegmentIntersectionAndNormal( tree, particle.position, delta );
+        const fVector3 intersectionPoint = intersectionData.point;
+        const fVector3 normalVector = intersectionData.normal; 
+
+        newPosition = newPosition - 2.0f * ( normalVector.dot( newPosition - intersectionPoint ) ) * normalVector;
+
+    }
 
     particle.position = newPosition;
 
@@ -127,6 +141,7 @@ void StepParticle( Particle &particle,
 inline void UpdateParticles( std::vector<Particle> &particles,
                              const Mesh &mesh, 
                              const EnumVector<Axis, Tensor3D> &velocityField,
+                             const Tree &tree,
                              const InputData &inputData )
 {
 
@@ -136,7 +151,7 @@ inline void UpdateParticles( std::vector<Particle> &particles,
 
         fVector3 delta = GetParticleStep( particle.velocity, inputData );
 
-        StepParticle( particle, delta, mesh, inputData.boundaryConditions );
+        StepParticle( particle, delta, mesh, tree, inputData.boundaryConditions );
 
     }
 

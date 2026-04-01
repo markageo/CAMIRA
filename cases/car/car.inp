@@ -1,0 +1,153 @@
+// Flow over a car
+
+Model {
+    nu   = 1.5e-5
+    transient = no
+    TurbulenceModel {
+        //model = laminar
+        #include "car-ZEQ3.inp"
+    }
+}
+
+Mesh {
+    #include "car-mesh.inp"
+}
+
+
+InitialConditions
+{    
+    type = uniform
+    u = 1
+    v = 0
+    w = 0
+    p = 0
+}
+
+
+BoundaryConditions
+{
+    // Outflow
+    +x {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform, 0
+    }
+
+    // Inflow
+    -x {
+        u = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    +y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Symmetry
+    +z {
+        u = zeroGradient
+        v = zeroGradient
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+}
+
+
+SolidGeometry {
+    boundaryTreatment = directionalImmersedBoundary
+    FromFile {
+        type = STL
+        filename = "car-geometry.stl"
+        rotation = (0, 0, 0)
+    }
+}
+
+
+Solver {
+
+    Schemes {
+
+        linearisation           = Picard
+        momentumInterpolation   = implicit
+        advectionScheme         = upwind
+        advectionBlendingFactor = 1.0
+        faceInterpolationScheme = weightedLinear
+
+        maxOuterIterations = 10
+        maxContinuityOuterResidual = 1e-6
+        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+
+    }
+    
+    Smoother {
+
+        type = domainSymmetricParallel
+        maxIterations = 3
+        maxResiduals = 1e-5
+
+        planeSweepDirection = +z
+        lineSweepDirection = +y
+
+        eddyViscosityRelaxation = 1
+        momentumRelaxation      = (0.8, 0.8, 0.8)
+        pressureRelaxation      = 1
+
+    }
+
+    Multigrid {
+        cycle = F
+        maxCoarseLevels = 2
+
+        preSmoothingIterations = 2
+        postSmoothingIterations = 2
+        fineGridIterations   = 3
+
+        maxCoarseGridIterations = 150
+        maxCoarseGridResiduals  = 1e-10
+        
+    }
+
+}
+
+Parallel {
+    numberOfThreads = 8
+}
+
+Output {
+
+    residualHistoryFilename = "../../output/residual_history.csv"
+    profilingFilename       = "../../output/profiling.dat"
+    fieldOutputFilename     = "../../output/fields.vtk"
+    geometryOutputFilename  = "../../output/geometry.stl"
+    fieldWriteInterval      = 1
+
+    Monitors {
+        ForceCalculator {
+            filename = "../../output/forces.csv"
+        }
+    }
+
+}

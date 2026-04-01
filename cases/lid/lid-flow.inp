@@ -1,0 +1,162 @@
+// Lid driven cavity
+
+Model {
+    nu              = 0.05
+    transient       = no
+    TurbulenceModel {
+        model = laminar
+    }
+}
+
+Mesh {
+
+    domainLowerBounds = (0, 0, 0)
+    domainUpperBounds = (1, 1, 1)
+
+    Grid x {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 100
+            biasFactor = 1
+        }
+    }
+
+    Grid y {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 100
+            biasFactor = 1
+        }
+    }
+
+    Grid z {
+        Segment {
+            bounds     = (0, 1)
+            nCells     = 100
+            biasFactor = 1
+        }
+    }
+}
+
+
+InitialConditions
+{
+    type = uniform
+    u = 0
+    v = 0
+    w = 0
+    p = 0
+}
+
+
+BoundaryConditions
+{
+    // Wall
+    +x {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -x {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Driven
+    +y {
+        u = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    +z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+}
+
+
+Solver {
+
+    Schemes {
+
+        linearisation           = Picard
+        momentumInterpolation   = implicit
+        advectionScheme         = upwind
+        advectionBlendingFactor = 1.0
+        faceInterpolationScheme = weightedLinear
+        
+        maxOuterIterations = 10000
+        maxContinuityOuterResidual = 1e-8
+        maxMomentumOuterResiduals  = (1e-8, 1e-8, 1e-8)
+
+    }
+    
+    Smoother {
+
+        type = domainSymmetricParallel
+        maxIterations = 3
+        maxResiduals = 0
+
+        planeSweepDirection = +z
+        lineSweepDirection = +y
+
+        eddyViscosityRelaxation = 1
+        momentumRelaxation = (1, 1, 1)
+        pressureRelaxation = 1
+
+    }
+
+    Multigrid {
+        cycle = F
+        maxCoarseLevels = 4
+
+        preSmoothingIterations = 2
+        postSmoothingIterations = 2
+        fineGridIterations   = 3
+
+        maxCoarseGridIterations = 100
+        maxCoarseGridResiduals  = 1e-10
+
+    }
+
+}
+
+Parallel {
+    numberOfThreads = 4
+}
+
+Output {
+
+    outputFormatType        = BINARY
+    residualHistoryFilename = "flow-output/residual_history.csv"
+    profilingFilename       = "flow-output/profiling.dat"
+    fieldOutputFilename     = "flow-output/fields.vtk"
+    fieldWriteInterval      = 0
+
+}
