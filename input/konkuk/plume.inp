@@ -1,0 +1,78 @@
+// Potential input file structure for plume model
+
+Model {
+}
+
+// Mesh can be inferred from input flow field
+FlowField {
+    filename = "flowfield.vtk"
+}
+
+// Must be consistent with input flow field
+SolidGeometry {
+    FromFile {
+        type = STL
+        filename = "geometry.stl"
+    }
+}
+
+InitialConditions {    
+    phi = 0
+}
+
+Sources {
+
+}
+
+
+BoundaryConditions
+{
+    // Outflow
+    +x {
+        phi = zeroGradient
+    }
+
+    // Inflow
+    -x {
+        phi = zeroGradient
+    }
+
+    // Symmetry
+    +y {
+        phi = zeroGradient
+    }
+
+    // Symmetry
+    -y {
+        phi = zeroGradient
+    }
+
+    // Symmetry
+    +z {
+        phi = zeroGradient
+    }
+
+    // Wall
+    -z {
+        phi = zeroGradient
+    }
+}
+
+
+
+Solver {
+
+    // Settings for Lagrangian dispersion model go here
+
+}
+
+Parallel {
+    numberOfThreads = 8
+}
+
+Output {
+
+    profilingFilename       = "profiling.dat"
+    fieldOutputFilename     = "fields.vtk"
+    fieldWriteInterval      = 0
+}

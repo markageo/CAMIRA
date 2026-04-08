@@ -419,7 +419,7 @@ class FieldWriter
             TransformScalarFieldToUserCoordinates( m_transformedMask, m_axisTransformation );    
     
             // Calculate the vertex fields
-            m_transformedVertexFields = GetVertexFields(m_transformedFields, m_transformedMesh, m_transformedBcData);
+            m_transformedVertexFields = GetVertexFields(m_transformedFields, m_transformedMesh, m_transformedBcData, m_transformedMask);
         }
 
 };

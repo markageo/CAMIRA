@@ -67,7 +67,10 @@ void UpdateFVCoefficients( FVCoefficients &,
 // ---------------------------------------- Definition in VertexValues.cpp -------------------------------------- //
 
 
-FieldData<Tensor3D> GetVertexFields( const FieldData<Tensor3D> &, const Mesh &, const BoundaryConditionData & );
+FieldData<Tensor3D> GetVertexFields( const FieldData<Tensor3D> &, 
+                                     const Mesh &, 
+                                     const BoundaryConditionData &, 
+                                     const Tensor3D & );
 
 
 
