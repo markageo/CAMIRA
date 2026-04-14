@@ -65,6 +65,7 @@ Below is a list of publications related to the development of this project.
 ## Roadmap
 
 CAMIRA is a work in progress. Here are some upcoming features:
+* Addition of lagranaian particle dispersion model for plume tracking.
 * Inclusion of wall models for turbulence models.
 * Addition of more sophisticated turbulence models, beyond the zero-equation models present. 
 * Support for GPU and CPU parallelism through the [RAJA Portability Suite](https://github.com/LLNL/RAJA).
@@ -86,4 +87,4 @@ My PhD Supervisors [Steven Armfield](https://www.sydney.edu.au/engineering/about
 License
 -----------
 
-Distributed under the project_license. See `LICENSE.txt` for more information.
+Distributed under the GNU GPLv3 license. See `LICENSE.txt` for more information.
