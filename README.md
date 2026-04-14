@@ -45,7 +45,7 @@ After building the project, an executable called `camira` will be created. This 
 
 Where `inputFile.inp` is the input file used to run the code. All solver settings are controlled through this single input file. 
 
-A manual exists which describes how to create an input file and all the available options. This can be found in the `manual` directory of the [repository](https://github.com/mgeo2280/camira.git). 
+A manual exists which describes how to create an input file and all the available options. This can be found in the `manual` directory of the [repository](https://github.com/markageo/camira.git). 
 
 ## Publications
 
@@ -65,6 +65,7 @@ Below is a list of publications related to the development of this project.
 ## Roadmap
 
 CAMIRA is a work in progress. Here are some upcoming features:
+* Addition of lagranaian particle dispersion model for plume tracking.
 * Inclusion of wall models for turbulence models.
 * Addition of more sophisticated turbulence models, beyond the zero-equation models present. 
 * Support for GPU and CPU parallelism through the [RAJA Portability Suite](https://github.com/LLNL/RAJA).
@@ -83,7 +84,7 @@ Mark George - **markgeorge0311@hotmail.com**
 My PhD Supervisors [Steven Armfield](https://www.sydney.edu.au/engineering/about/our-people/academic-staff/steven-armfield.html) and [Nicholas Williamson](https://www.sydney.edu.au/engineering/about/our-people/academic-staff/nicholas-williamson.html). Also [DMTC](https://dmtc.com.au/) and [DSTG Australia](https://www.dst.defence.gov.au/) for supporting the project.
 
 
-License
+<!-- License
 -----------
 
-Distributed under the project_license. See `LICENSE.txt` for more information.
+Distributed under the GNU GPLv3 license. See `LICENSE.txt` for more information. -->
