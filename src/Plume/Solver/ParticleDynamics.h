@@ -47,6 +47,7 @@ void UpdateParticleVelocity( Particle &particle,
 fVector3 GetParticleStep( const fVector3 &velocity,
                           const InputData &inputData )
 {
+    // Need to be sure these static variables are thread safe!
     static std::random_device rd{};
     static std::mt19937 gen{rd()};
     static std::normal_distribution d{0.0f, 1.0f};
@@ -58,6 +59,30 @@ fVector3 GetParticleStep( const fVector3 &velocity,
 
     return advection + molecularDiffusion;
 
+}
+
+
+
+fVector3 RecursiveReflection( const Tree &tree,
+                              const fVector3 oldPosition,
+                              const fVector3 newPosition )
+{
+    const fVector3 currentDelta = newPosition - oldPosition;
+    const auto intersectionData = SegmentIntersectionAndNormal( tree, oldPosition, currentDelta );
+    const fVector3 intersectionPoint = intersectionData.point;
+    const fVector3 normalVector = intersectionData.normal; 
+
+    fVector3 reflectedPosition = newPosition - 2.0f * ( normalVector.dot( newPosition - intersectionPoint )  ) * normalVector;
+
+    // Shift the intersection point along delta to prevent an unintended intersection from initial intersection point
+    const floatType shiftScale = 1e-8;
+    const fVector3 shiftedIntersectionPoint = intersectionPoint + shiftScale * (reflectedPosition - intersectionPoint);
+
+    if ( SegmentIntersects( tree, shiftedIntersectionPoint, reflectedPosition ) ) {
+        reflectedPosition = RecursiveReflection( tree, shiftedIntersectionPoint, reflectedPosition );
+    }
+
+    return reflectedPosition;
 }
 
 
@@ -117,15 +142,9 @@ void StepParticle( Particle &particle,
     } );
 
 
-    // Solid geometry intersection
+    // Solid geometry intersection and reflection 
     if ( SegmentIntersects( tree, particle.position, newPosition ) ) {
-
-        const auto intersectionData = SegmentIntersectionAndNormal( tree, particle.position, delta );
-        const fVector3 intersectionPoint = intersectionData.point;
-        const fVector3 normalVector = intersectionData.normal; 
-
-        newPosition = newPosition - 2.0f * ( normalVector.dot( newPosition - intersectionPoint ) ) * normalVector;
-
+        newPosition = RecursiveReflection( tree, particle.position, newPosition );
     }
 
     particle.position = newPosition;
