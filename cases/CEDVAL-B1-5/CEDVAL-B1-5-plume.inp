@@ -1,10 +1,10 @@
 // CEDVAL B1-5 plume dispersion input file
 
 Model {
-    D = 1e-4
-    timeStepSize = 0.01
+    D = 1e-3
+    timeStepSize = 0.001
     numberOfTimeSteps = 1000
-    initialParticlesPerUnitMass = 1e5
+    initialParticlesPerUnitMass = 1e4
     particleSplitTimeStepInterval = 0
     maxNumberOfParticleSplits = 100
 }

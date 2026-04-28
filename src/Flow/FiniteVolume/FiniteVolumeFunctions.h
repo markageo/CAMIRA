@@ -71,11 +71,15 @@ void UpdateFVCoefficients( FVCoefficients &,
 
 // ---------------------------------------- Definition in VertexValues.cpp -------------------------------------- //
 
+                                     
+Tensor3D InterpolateToVertex( const Tensor3D &,
+                              const Mesh & );
 
-FieldData<Tensor3D> GetVertexFields( const FieldData<Tensor3D> &, 
-                                     const Mesh &, 
-                                     const BoundaryConditionData &, 
-                                     const Tensor3D & );
+
+
+Tensor3D InterpolateToVertexWithMasking( const Tensor3D &,
+                                         const Mesh &, 
+                                         const Tensor3D & );
 
 
 }   // end namespace FLOW

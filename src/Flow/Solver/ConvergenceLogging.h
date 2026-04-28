@@ -374,6 +374,7 @@ class FieldWriter
         Tensor3D m_transformedNuTurb;
         Tensor3D m_transformedMask;
         FieldData<Tensor3D> m_transformedVertexFields;
+        Tensor3D m_transformedVertexNuTurb;
         Mesh m_transformedMesh;
         BoundaryConditionData m_transformedBcData;
         std::unique_ptr< VTK::VTKWriter<floatType> > m_vtkWriter;
@@ -394,6 +395,7 @@ class FieldWriter
 
             VTK::scalarCollectionType<floatType> scalarMap = { {"GeometryMask" , VTK::GridTypes::CELL_DATA , m_transformedMask.data()},
                                                                {"EddyViscosity", VTK::GridTypes::CELL_DATA , m_transformedNuTurb.data()},
+                                                               {"EddyViscosity", VTK::GridTypes::POINT_DATA, m_transformedVertexNuTurb.data()},
                                                                {"Pressure"     , VTK::GridTypes::CELL_DATA , m_transformedFields.P.data()},
                                                                {"Pressure"     , VTK::GridTypes::POINT_DATA, m_transformedVertexFields.P.data()}};
 
@@ -410,12 +412,10 @@ class FieldWriter
 
         void TransformData()
         {
-            // Remove ghost cells
-            ForAllFieldData([&](intType f) { 
-                m_transformedFields[f] = FVT::RemoveGhostCells( m_fields[f], nGhost ); 
-            });
-            m_transformedNuTurb = FVT::RemoveGhostCells( m_nuTurb, nGhost ); 
-            m_transformedMask   = FVT::RemoveGhostCells( m_mask, nGhost );
+            // Reassign
+            m_transformedFields  = m_fields;
+            m_transformedNuTurb  = m_nuTurb;
+            m_transformedMask    = m_mask;
 
             // Transform to user coordinates
             TransformVectorFieldToUserCoordinates( m_transformedFields.U, m_axisTransformation );
@@ -424,7 +424,18 @@ class FieldWriter
             TransformScalarFieldToUserCoordinates( m_transformedMask, m_axisTransformation );    
     
             // Calculate the vertex fields
-            m_transformedVertexFields = GetVertexFields(m_transformedFields, m_transformedMesh, m_transformedBcData, m_transformedMask);
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                m_transformedVertexFields.U[axis] = InterpolateToVertex( m_transformedFields.U[axis], m_transformedMesh );
+            } );
+            m_transformedVertexFields.P = InterpolateToVertexWithMasking( m_transformedFields.P, m_transformedMesh, m_transformedMask );
+            m_transformedVertexNuTurb   = InterpolateToVertex( m_transformedNuTurb, m_transformedMesh );
+
+            // Remove ghost cells last since they are needed for vertex calculation
+            ForAllFieldData([&](intType f) { 
+                m_transformedFields[f] = FVT::RemoveGhostCells( m_transformedFields[f], nGhost ); 
+            });
+            m_transformedNuTurb = FVT::RemoveGhostCells( m_transformedNuTurb, nGhost ); 
+            m_transformedMask   = FVT::RemoveGhostCells( m_transformedMask, nGhost );
         }
 
 };

@@ -1,5 +1,6 @@
 #include "FiniteVolume.h"
 #include "Core/FVLookups.h"
+#include "Core/FVTools.h"
 
 namespace CAMIRA
 {
@@ -17,20 +18,21 @@ namespace
                                     const Mesh &mesh )
     {
         using enum Axis::ENUMDATA;
+        using FVT::G;
 
-        for ( intType k = 1; k != vertexField.dimension(2)-1; k++ ) {
-            for ( intType j = 1; j != vertexField.dimension(1)-1; j++ ) {
-                for ( intType i = 1; i != vertexField.dimension(0)-1; i++ ) {
+        for ( intType k = 0; k != vertexField.dimension(2); k++ ) {
+            for ( intType j = 0; j != vertexField.dimension(1); j++ ) {
+                for ( intType i = 0; i != vertexField.dimension(0); i++ ) {
 
-                    // Points to interpolation from
-                    floatType c000 = field( i-1, j-1, k-1 ),
-                              c100 = field( i  , j-1, k-1 ),
-                              c010 = field( i-1, j  , k-1 ),
-                              c001 = field( i-1, j-1, k   ),
-                              c101 = field( i  , j-1, k   ),
-                              c011 = field( i-1, j  , k   ),
-                              c110 = field( i  , j  , k-1 ),
-                              c111 = field( i  , j  , k   );
+                    // Points to interpolate from
+                    floatType c000 = field( G(i-1, j-1, k-1) ),
+                              c100 = field( G(i  , j-1, k-1) ),
+                              c010 = field( G(i-1, j  , k-1) ),
+                              c001 = field( G(i-1, j-1, k  ) ),
+                              c101 = field( G(i  , j-1, k  ) ),
+                              c011 = field( G(i-1, j  , k  ) ),
+                              c110 = field( G(i  , j  , k-1) ),
+                              c111 = field( G(i  , j  , k  ) );
 
                     // Linear interpolation in z direction
                     floatType lambdaZ = mesh.interpFactors[Z](k);
@@ -83,30 +85,31 @@ namespace
                                                const Mesh &mesh )
     {
         using enum Axis::ENUMDATA;
+        using FVT::G;
 
-        for ( intType k = 1; k != vertexField.dimension(2)-1; k++ ) {
-            for ( intType j = 1; j != vertexField.dimension(1)-1; j++ ) {
-                for ( intType i = 1; i != vertexField.dimension(0)-1; i++ ) {
+        for ( intType k = 0; k != vertexField.dimension(2); k++ ) {
+            for ( intType j = 0; j != vertexField.dimension(1); j++ ) {
+                for ( intType i = 0; i != vertexField.dimension(0); i++ ) {
 
                     // Points to interpolate from
-                    floatType c000 = field( i-1, j-1, k-1 ),
-                              c100 = field( i  , j-1, k-1 ),
-                              c010 = field( i-1, j  , k-1 ),
-                              c001 = field( i-1, j-1, k   ),
-                              c101 = field( i  , j-1, k   ),
-                              c011 = field( i-1, j  , k   ),
-                              c110 = field( i  , j  , k-1 ),
-                              c111 = field( i  , j  , k   );
+                    floatType c000 = field( G(i-1, j-1, k-1) ),
+                              c100 = field( G(i  , j-1, k-1) ),
+                              c010 = field( G(i-1, j  , k-1) ),
+                              c001 = field( G(i-1, j-1, k  ) ),
+                              c101 = field( G(i  , j-1, k  ) ),
+                              c011 = field( G(i-1, j  , k  ) ),
+                              c110 = field( G(i  , j  , k-1) ),
+                              c111 = field( G(i  , j  , k  ) );
 
                     // Mask values for the corresponding cells
-                    floatType m000 = mask( i-1, j-1, k-1 ),
-                              m100 = mask( i  , j-1, k-1 ),
-                              m010 = mask( i-1, j  , k-1 ),
-                              m001 = mask( i-1, j-1, k   ),
-                              m101 = mask( i  , j-1, k   ),
-                              m011 = mask( i-1, j  , k   ),
-                              m110 = mask( i  , j  , k-1 ),
-                              m111 = mask( i  , j  , k   );
+                    floatType m000 = mask( G(i-1, j-1, k-1) ),
+                              m100 = mask( G(i  , j-1, k-1) ),
+                              m010 = mask( G(i-1, j  , k-1) ),
+                              m001 = mask( G(i-1, j-1, k  ) ),
+                              m101 = mask( G(i  , j-1, k  ) ),
+                              m011 = mask( G(i-1, j  , k  ) ),
+                              m110 = mask( G(i  , j  , k-1) ),
+                              m111 = mask( G(i  , j  , k  ) );
 
                     // Linear interpolation in z direction
                     floatType lambdaZ = mesh.interpFactors[Z](k);
@@ -151,170 +154,6 @@ namespace
             }
         }
 
-    }
-
-
-
-    Tensor2D CellPlaneToVertexPlane( const Tensor2D &cellPlane, 
-                                     const Tensor1D &interpFactors0,
-                                     const Tensor1D &interpFactors1,
-                   [[maybe_unused]]  const Tensor2D &maskPlane )
-    {
-        Tensor2D vertexPlane( cellPlane.dimension(0)+1, cellPlane.dimension(1)+1 );
-
-        for ( intType j = 1; j != vertexPlane.dimension(1)-1; j++ ) {
-            for ( intType i = 1; i != vertexPlane.dimension(0)-1; i++ ) {
-
-                // Points to interpolation from
-                floatType c00 = cellPlane( i-1, j-1 ),
-                          c10 = cellPlane( i  , j-1 ),
-                          c01 = cellPlane( i-1, j   ),
-                          c11 = cellPlane( i  , j   );
-
-                // Linear interpolation in j direction
-                floatType lambdaY = interpFactors1(j);
-                floatType c0 = ( 1-lambdaY ) * c00  +  lambdaY * c01,
-                          c1 = ( 1-lambdaY ) * c10  +  lambdaY * c11;
-
-                // Linear interpolation in i direction
-                floatType lambdaX = interpFactors0(i);
-                floatType c = ( 1-lambdaX ) * c0  +  lambdaX * c1;
-
-                vertexPlane(i, j) = c;
-
-            }
-        }
-
-        return vertexPlane;
-    }
-
-
-
-    Tensor2D CellPlaneToVertexPlaneWithMasking( const Tensor2D &cellPlane, 
-                                                const Tensor1D &interpFactors0,
-                                                const Tensor1D &interpFactors1,
-                                                const Tensor2D &maskPlane )
-    {
-        Tensor2D vertexPlane( cellPlane.dimension(0)+1, cellPlane.dimension(1)+1 );
-
-        for ( intType j = 1; j != vertexPlane.dimension(1)-1; j++ ) {
-            for ( intType i = 1; i != vertexPlane.dimension(0)-1; i++ ) {
-
-                // Points to interpolate from
-                floatType c00 = cellPlane( i-1, j-1 ),
-                          c10 = cellPlane( i  , j-1 ),
-                          c01 = cellPlane( i-1, j   ),
-                          c11 = cellPlane( i  , j   );
-
-                // Mask values for corresponding cells
-                floatType m00 = maskPlane( i-1, j-1 ),
-                          m10 = maskPlane( i  , j-1 ),
-                          m01 = maskPlane( i-1, j   ),
-                          m11 = maskPlane( i  , j   );
-
-                // Linear interpolation in j direction
-                floatType lambdaY = interpFactors1(j);
-
-                floatType lambdaY0 = MaskInterpFactor( lambdaY, m00, m01 ),
-                          lambdaY1 = MaskInterpFactor( lambdaY, m10, m11 );
-
-                floatType c0 = ( 1-lambdaY0 ) * c00  +  lambdaY0 * c01,
-                          c1 = ( 1-lambdaY1 ) * c10  +  lambdaY1 * c11;
-
-                floatType m0 = m00 + m01 > 0.0f,
-                          m1 = m10 + m11 > 0.0f;
-
-                // Linear interpolation in i direction
-                floatType lambdaX = interpFactors0(i);
-
-                lambdaX = MaskInterpFactor( lambdaX, m0, m1 );
-
-                floatType c = ( 1-lambdaX ) * c0  +  lambdaX * c1;
-
-                vertexPlane(i, j) = c;
-
-            }
-        }
-
-        return vertexPlane;
-    }
-
-
-
-    // Set the face values of the cell verticies using the boundary conditions. Corners/edges will be incorrect, these will be set individually later
-    void SetBoundaryFaces( Tensor3D &vertexField,
-                           const Tensor3D &field,
-                           const Tensor3D &mask,
-                           const Mesh &mesh,
-                           const BoundaryConditionData::Patches &boundaryConditions,
-                           Tensor2D (*CellPlaneToVertexPlaneFunc)(const Tensor2D &, const Tensor1D &, const Tensor1D &, const Tensor2D & ) )
-    {
-        using BC = BoundaryConditions;
-
-        
-        EnumFor<BoundaryPatches>( [&] (BoundaryPatches::ENUMDATA boundaryPatch) {
-            Axis::ENUMDATA axis = LUT::BoundaryPatchAxis[ boundaryPatch ];
-
-            intType faceEndIndex;
-            if ( boundaryPatch == LUT::PositivePatch[ axis ] ) {
-                faceEndIndex = mesh.nCells(axis);
-            } else {
-                faceEndIndex = 0;
-            }
-
-
-            Axis::ENUMDATA axis1 = LUT::LoOrthogonalAxis[ axis ];
-            Axis::ENUMDATA axis2 = LUT::HiOrthogonalAxis[ axis ];
-            switch ( boundaryConditions[boundaryPatch].type ) {
-                case BC::zeroGradient: 
-                {
-                    intType k = ( boundaryPatch == LUT::PositivePatch[ axis ] ) ? mesh.nCells(axis)-1 : 0;
-                    vertexField.chip(faceEndIndex, axis) = CellPlaneToVertexPlaneFunc( field.chip(k, axis), mesh.interpFactors[axis1], mesh.interpFactors[axis2], mask.chip(k, axis) );
-                    break;
-                }
-
-                case BC::fixed: 
-                {
-                    intType k = ( boundaryPatch == LUT::PositivePatch[ axis ] ) ? mesh.nCells(axis)-1 : 0;
-                    vertexField.chip(faceEndIndex, axis) = CellPlaneToVertexPlaneFunc( boundaryConditions[boundaryPatch].value, mesh.interpFactors[axis1], mesh.interpFactors[axis2], mask.chip(k, axis)  );
-                    break;
-                }
-                    
-                case BC::extrapolated: 
-                {
-                    intType k_p = ( boundaryPatch == LUT::PositivePatch[ axis ] ) ? mesh.nCells(axis)-1 : 0;
-                    Tensor2D offBoundary_p = CellPlaneToVertexPlaneFunc( field.chip(k_p, axis), mesh.interpFactors[axis1], mesh.interpFactors[axis2], mask.chip(k_p, axis)  );
-
-                    intType k_a = ( boundaryPatch == LUT::PositivePatch[ axis ] ) ? k_p-1 : k_p+1;
-                    Tensor2D offBoundary_a = CellPlaneToVertexPlaneFunc( field.chip(k_a, axis), mesh.interpFactors[axis1], mesh.interpFactors[axis2], mask.chip(k_p, axis)  );
-
-                    floatType extrapFactor_p = mesh.extrapFactors[boundaryPatch].p;
-                    floatType extrapFactor_a = mesh.extrapFactors[boundaryPatch].a;
-
-                    vertexField.chip(faceEndIndex, axis) = offBoundary_p * offBoundary_p.constant( extrapFactor_p )
-                                                         + offBoundary_a * offBoundary_a.constant( extrapFactor_a );
-                    break;
-                }
-
-                case BC::periodic:
-                {
-                    intType loCellIndex = 0;
-                    Tensor2D loCellVertexPlane = CellPlaneToVertexPlaneFunc( field.chip(loCellIndex, axis), mesh.interpFactors[axis1], mesh.interpFactors[axis2], mask.chip(loCellIndex, axis)  );
-
-                    intType hiCellIndex = mesh.nCells(axis) - 1;
-                    Tensor2D hiCellVertexPlane = CellPlaneToVertexPlaneFunc( field.chip(hiCellIndex, axis), mesh.interpFactors[axis1], mesh.interpFactors[axis2], mask.chip(hiCellIndex, axis)  );
-
-                    floatType interpFactor = mesh.cellLengths[axis]( loCellIndex ) / ( mesh.cellLengths[axis]( loCellIndex ) + mesh.cellLengths[axis]( hiCellIndex ) );
-
-                    vertexField.chip(faceEndIndex, axis) = loCellVertexPlane * loCellVertexPlane.constant( 1 - interpFactor )
-                                                         + hiCellVertexPlane * hiCellVertexPlane.constant( interpFactor );
-                    break;
-                }
-                    
-            }
-
-
-        } );
     }
 
 
@@ -435,18 +274,13 @@ namespace
 
 
 
-// Assumes ghost cells have been removed
 Tensor3D InterpolateToVertex( const Tensor3D &field,
-                              const Mesh &mesh, 
-                              const Tensor3D &mask,
-                              const BoundaryConditionData::Patches &boundaryConditions )
+                              const Mesh &mesh )
 {
-    Tensor3D vertexField( field.dimension(0)+1, field.dimension(1)+1, field.dimension(2)+1 );
+    Tensor3D vertexField( mesh.nFacesNormal[0][0], mesh.nFacesNormal[1][1], mesh.nFacesNormal[2][2] );
     vertexField.setZero();
 
     InterpolateInteriorPoints( vertexField, field, mesh );
-
-    SetBoundaryFaces( vertexField, field, mask, mesh, boundaryConditions, CellPlaneToVertexPlane );
 
     WeightedAverageEdges( vertexField, mesh );
 
@@ -459,15 +293,12 @@ Tensor3D InterpolateToVertex( const Tensor3D &field,
 
 Tensor3D InterpolateToVertexWithMasking( const Tensor3D &field,
                                          const Mesh &mesh, 
-                                         const Tensor3D &mask,
-                                         const BoundaryConditionData::Patches &boundaryConditions )
+                                         const Tensor3D &mask )
 {
-    Tensor3D vertexField( field.dimension(0)+1, field.dimension(1)+1, field.dimension(2)+1 );
+    Tensor3D vertexField( mesh.nFacesNormal[0][0], mesh.nFacesNormal[1][1], mesh.nFacesNormal[2][2] );
     vertexField.setZero();
 
     InterpolateInteriorPointsWithMasking( vertexField, field, mask, mesh );
-
-    SetBoundaryFaces( vertexField, field, mask, mesh, boundaryConditions, CellPlaneToVertexPlaneWithMasking );
 
     WeightedAverageEdges( vertexField, mesh );
 
@@ -476,21 +307,6 @@ Tensor3D InterpolateToVertexWithMasking( const Tensor3D &field,
     return vertexField;
 }
 
-
-
-FieldData<Tensor3D> GetVertexFields( const FieldData<Tensor3D> &fields, 
-                                     const Mesh &mesh,
-                                     const BoundaryConditionData &bcData,
-                                     const Tensor3D &mask )
-{
-    FieldData<Tensor3D> vertexFields;
-    EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-        vertexFields.U[axis] = InterpolateToVertex( fields.U[axis], mesh, mask, bcData.fields.U[axis] );
-    } );
-    vertexFields.P = InterpolateToVertexWithMasking( fields.P, mesh, mask, bcData.fields.P );
-
-    return vertexFields;
-}
 
 
 }   // end namespace FLOW
