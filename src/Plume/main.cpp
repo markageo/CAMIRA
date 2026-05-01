@@ -42,6 +42,13 @@ int main(int argc, char const *argv[])
     \*-------------------------------------------------------------------------------------*/
 
     
+    // Display profiling info to terminal and write to file
+    #ifdef CAMIRA_PROFILING
+        std::cout << PROF::prof;
+
+        std::ofstream profilingFilestream( inputData.profilingFilename );
+        profilingFilestream << PROF::prof;
+    #endif
 
 
     return 0;

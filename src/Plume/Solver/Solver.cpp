@@ -57,6 +57,9 @@ namespace
 void SolvePlume( const InputData &inputData )
 {
 
+    TIC("Pre processing")
+    std::cout << "Setting up solver data and pre-processing ... \n\n" << std::flush;
+
     // Read and store windfield
     VTK::FieldFileData fieldFileData = VTK::ReadVTKFields( inputData.velocityFieldFilename );
     Mesh mesh( fieldFileData.cellFaces );
@@ -90,7 +93,11 @@ void SolvePlume( const InputData &inputData )
     UpdateConcentrationField( concentrationField, particles, mesh );
     concentrationFieldWriter.WriteData( 0.0f, 0 );
 
+    std::cout << "Pre-processing complete. Starting solve.\n\n" << std::flush;
+    TOC()
+
     // Step through time
+    TIC("Solver Loop")
     std::cout << "Starting time loop " << std::endl;
     floatType currentTime = 0;
     for ( intType timeStep = 1; timeStep <= inputData.numberOfTimeSteps; timeStep++ ) {
@@ -101,6 +108,7 @@ void SolvePlume( const InputData &inputData )
                   << std::flush;
 
         // Split particles 
+        TIC("Particle Splitting")
         bool splitParticlesThisIteration = splitParticles
                                         && ( numberOfParticleSplits < inputData.maxNumberOfParticleSplits )
                                         && ( timeStep % inputData.particleSplitTimeStepInterval == 0 );
@@ -108,15 +116,23 @@ void SolvePlume( const InputData &inputData )
             numberOfParticleSplits++;
             SplitParticles( particles );
         }
+        TOC()
 
         // Add continuous release particles
+        TIC("Add Continuous Release")
         AddContinuousReleasePointParticles( particles, mesh, inputData );
+        TOC()
         
         // Update particle positions
+        TIC("Particle Update")
         UpdateParticles( particles, mesh, velocityField, nuTurbField, tree, inputData );
+        TOC()
 
         // Output
-        if ( writeFields && (timeStep % inputData.fieldWriteInterval) == 0 ) {
+        TIC("Field Output")
+        bool outputThisIteration = ( writeFields && (timeStep % inputData.fieldWriteInterval) == 0 )
+                                || ( timeStep == inputData.numberOfTimeSteps );
+        if ( outputThisIteration ) {
             for ( auto &particle : particles ) {
                 UpdateParticlePositionIndexLinearSearch( particle, mesh );
             }
@@ -124,9 +140,11 @@ void SolvePlume( const InputData &inputData )
             concentrationFieldWriter.WriteData( currentTime, timeStep );
             std::cout << "(Concentration field written to file)" << "\n";
         } 
-        
+        TOC()
+
         std::cout << std::endl;
     }
+    TOC()
 
 }
 
