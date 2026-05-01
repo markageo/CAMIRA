@@ -162,25 +162,38 @@ inline void UpdateParticles( std::vector<Particle> &particles,
 
     for ( Particle &particle : particles ) {
 
+        TIC("Update Particle Index")
         UpdateParticlePositionIndexLinearSearch( particle, mesh );
+        TOC()
 
+        TIC("Interpolate Local Velocity")
         fVector3 localVelocity;
         EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
             localVelocity[axis] = GetFieldQuantityTrilinearInterp( particle, mesh, velocityField[axis] );
         } );
+        TOC()
 
-        const floatType turbulentDiffusivity = GetFieldQuantityTrilinearInterp( particle, mesh, nuTurbField );
+        TIC("Interpolate Local Turbulent Diffusivity")
+        const floatType turbulentDiffusivity = GetFieldQuantityTrilinearInterp( particle, mesh, nuTurbField ) / inputData.turbulentSchmidtNumber;
+        TOC()
 
-        const fVector3 gradTurbulentDiffisivity = GetFieldQuantityGradient( particle, mesh, nuTurbField );
+        TIC("Caclculate Local Turbulent Diffusivity Gradient")
+        const fVector3 gradTurbulentDiffisivity = GetFieldQuantityGradient( particle, mesh, nuTurbField ) / inputData.turbulentSchmidtNumber;
+        TOC()
 
+        TIC("Get Particle Step")
         const fVector3 delta = GetParticleStep( localVelocity, turbulentDiffusivity, gradTurbulentDiffisivity, inputData );
+        TOC()
 
+        TIC("Step Particle")
         StepParticle( particle, delta, mesh, tree, inputData.boundaryConditions );
+        TOC()
 
     }
 
     // Remove any inactive particles
     // This might not be the most efficient since it preserves order, and we don't need that
+    TIC("Particle Removal")
     particles.erase( 
         std::remove_if( particles.begin(), 
                         particles.end(), 
@@ -188,6 +201,7 @@ inline void UpdateParticles( std::vector<Particle> &particles,
                       ),
         particles.end()
                     );
+    TOC()
 
 }
 
