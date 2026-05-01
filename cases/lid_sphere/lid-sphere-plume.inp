@@ -2,8 +2,9 @@
 
 Model {
     D = 5e-4
+    turbulentSchmidtNumber = 0.7
     timeStepSize = 0.01
-    numberOfTimeSteps = 2500
+    numberOfTimeSteps = 1000
     initialParticlesPerUnitMass = 1e5
     particleSplitTimeStepInterval = 0
     maxNumberOfParticleSplits = 100
@@ -71,6 +72,6 @@ Output {
     outputFormatType        = BINARY
     profilingFilename       = "plume-output/profiling.dat"
     fieldOutputFilename     = "plume-output/fields.vtk"
-    fieldWriteInterval      = 0
+    fieldWriteInterval      = 1
 
 }

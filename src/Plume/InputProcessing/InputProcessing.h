@@ -38,6 +38,7 @@ struct InputData
 
     // Model
     floatType diffusionCoeff;
+    floatType turbulentSchmidtNumber;
     intType numberOfTimeSteps;
     floatType initialParticlesPerUnitMass;
     floatType timeStepSize;

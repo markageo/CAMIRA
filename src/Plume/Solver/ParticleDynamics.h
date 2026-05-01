@@ -34,17 +34,9 @@ floatType signum( floatType f) {
 
 
 
-void UpdateParticleVelocity( Particle &particle,
-                             const Mesh &mesh,
-                             const EnumVector<Axis, Tensor3D> &velocityField )
-{
-    UpdateParticlePositionIndexLinearSearch( particle, mesh );
-    UpdateParticleVelocityTrilinearInterp( particle, mesh, velocityField );
-}
-
-
-
 fVector3 GetParticleStep( const fVector3 &velocity,
+                          const floatType turbulentDiffusivity,
+                          const fVector3 &gradTurbulentDiffusivity,
                           const InputData &inputData )
 {
     // Need to be sure these static variables are thread safe!
@@ -52,13 +44,16 @@ fVector3 GetParticleStep( const fVector3 &velocity,
     static std::mt19937 gen{rd()};
     static std::normal_distribution d{0.0f, 1.0f};
 
-    fVector3 advection = inputData.timeStepSize * velocity;
+    const fVector3 advection = inputData.timeStepSize * velocity;
 
-    fVector3 eta = { d(gen), d(gen), d(gen) };
-    fVector3 molecularDiffusion = sqrt( 2.0f * inputData.diffusionCoeff * inputData.timeStepSize ) * eta;
+    const fVector3 eta = { d(gen), d(gen), d(gen) };
 
-    return advection + molecularDiffusion;
+    const fVector3 molecularDiffusion = sqrt( 2.0f * inputData.diffusionCoeff * inputData.timeStepSize ) * eta;
 
+    const fVector3 turbulentDiffusion = gradTurbulentDiffusivity * inputData.timeStepSize
+                                      + sqrt( 2.0f * turbulentDiffusivity * inputData.timeStepSize ) * eta;
+
+    return advection + molecularDiffusion + turbulentDiffusion;
 }
 
 
@@ -160,15 +155,25 @@ void StepParticle( Particle &particle,
 inline void UpdateParticles( std::vector<Particle> &particles,
                              const Mesh &mesh, 
                              const EnumVector<Axis, Tensor3D> &velocityField,
+                             const Tensor3D &nuTurbField,
                              const Tree &tree,
                              const InputData &inputData )
 {
 
     for ( Particle &particle : particles ) {
 
-        UpdateParticleVelocity( particle, mesh, velocityField );
+        UpdateParticlePositionIndexLinearSearch( particle, mesh );
 
-        fVector3 delta = GetParticleStep( particle.velocity, inputData );
+        fVector3 localVelocity;
+        EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
+            localVelocity[axis] = GetFieldQuantityTrilinearInterp( particle, mesh, velocityField[axis] );
+        } );
+
+        const floatType turbulentDiffusivity = GetFieldQuantityTrilinearInterp( particle, mesh, nuTurbField );
+
+        const fVector3 gradTurbulentDiffisivity = GetFieldQuantityGradient( particle, mesh, nuTurbField );
+
+        const fVector3 delta = GetParticleStep( localVelocity, turbulentDiffusivity, gradTurbulentDiffisivity, inputData );
 
         StepParticle( particle, delta, mesh, tree, inputData.boundaryConditions );
 

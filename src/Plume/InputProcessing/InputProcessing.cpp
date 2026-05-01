@@ -43,6 +43,7 @@ namespace
         const pt::ptree &modelTree = tree.get_child("Model");
 
         inputData.diffusionCoeff                = modelTree.get<floatType>("D");
+        inputData.turbulentSchmidtNumber        = modelTree.get<floatType>("turbulentSchmidtNumber");
         inputData.numberOfTimeSteps             = modelTree.get<intType>("numberOfTimeSteps");
         inputData.particleSplitTimeStepInterval = modelTree.get<intType>("particleSplitTimeStepInterval");
         inputData.maxNumberOfParticleSplits     = modelTree.get<intType>("maxNumberOfParticleSplits");

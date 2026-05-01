@@ -2,6 +2,7 @@
 
 Model {
     D = 1e-3
+    turbulentSchmidtNumber = 0.7
     timeStepSize = 0.001
     numberOfTimeSteps = 1000
     initialParticlesPerUnitMass = 1e4

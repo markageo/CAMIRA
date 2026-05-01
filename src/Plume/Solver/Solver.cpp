@@ -61,6 +61,7 @@ void SolvePlume( const InputData &inputData )
     VTK::FieldFileData fieldFileData = VTK::ReadVTKFields( inputData.velocityFieldFilename );
     Mesh mesh( fieldFileData.cellFaces );
     EnumVector<Axis, Tensor3D> &velocityField = fieldFileData.vertexFields.U;
+    Tensor3D &nuTurbField = fieldFileData.vertexNuTurb;
 
     // Read and store geometry
     Polyhedron P = MakeGeometry( inputData.stlGeometryFilename );
@@ -112,7 +113,7 @@ void SolvePlume( const InputData &inputData )
         AddContinuousReleasePointParticles( particles, mesh, inputData );
         
         // Update particle positions
-        UpdateParticles( particles, mesh, velocityField, tree, inputData );
+        UpdateParticles( particles, mesh, velocityField, nuTurbField, tree, inputData );
 
         // Output
         if ( writeFields && (timeStep % inputData.fieldWriteInterval) == 0 ) {

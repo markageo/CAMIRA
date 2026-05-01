@@ -15,6 +15,8 @@ struct FieldFileData {
     EnumVector<Axis, Tensor1D> cellFaces;
     FieldData<Tensor3D> cellFields;
     FieldData<Tensor3D> vertexFields;
+    Tensor3D cellNuTurb;
+    Tensor3D vertexNuTurb;
 };
 
 

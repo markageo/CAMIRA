@@ -103,12 +103,10 @@ inline CAMIRA::CORE::FieldData<CAMIRA::CORE::Tensor3D> GetFieldData( vtkDataSetA
             continue;
         }
             
-
         if ( strcmp(vtkDataSet->GetArrayName(i), "Pressure")  ) {
             fieldData.P = GetScalarFieldFromVTKArray( vtkDataSet->GetArray("Pressure"), nPoints );
             continue;
         }
-            
 
     }
 
@@ -117,31 +115,53 @@ inline CAMIRA::CORE::FieldData<CAMIRA::CORE::Tensor3D> GetFieldData( vtkDataSetA
 
 
 
+inline CAMIRA::CORE::Tensor3D GetNuTurbData( vtkDataSetAttributes *vtkDataSet,
+                                             const int nPoints[3] )
+{
+    using namespace CAMIRA::CORE;
+    
+    Tensor3D tensorData( Tensor3D( nPoints[0], nPoints[1], nPoints[2] ) );
+
+    for ( int i = 0; i < vtkDataSet->GetNumberOfArrays(); i++ ) {
+            
+        if ( strcmp(vtkDataSet->GetArrayName(i), "EddyViscosity")  ) {
+            tensorData = GetScalarFieldFromVTKArray( vtkDataSet->GetArray("EddyViscosity"), nPoints );
+            continue;
+        }
+
+    }
+
+    return tensorData;
+}
+
+
+
 // Copy cell fields from vtkRectilinearGrid into Eigen Tensors
-inline CAMIRA::CORE::FieldData<CAMIRA::CORE::Tensor3D> GetCellFields( vtkRectilinearGrid *vtkGrid )
+inline void FillCellFields( FieldFileData &fieldFileData,
+                            vtkRectilinearGrid *vtkGrid )
 {
     using namespace CAMIRA::CORE;
 
     int nCells[3];
     vtkGrid->GetCellDims( nCells );
     vtkCellData *cellData  = vtkGrid->GetCellData();
-    FieldData<Tensor3D> cellFields = GetFieldData( cellData, nCells );
-
-    return cellFields;
+    fieldFileData.cellFields = GetFieldData( cellData, nCells );
+    fieldFileData.cellNuTurb = GetNuTurbData( cellData, nCells );
 }
 
 
 
 // Copy vertex fields from vtkRectilinearGrid into Eigen Tensors
-inline CAMIRA::CORE::FieldData<CAMIRA::CORE::Tensor3D> GetVertexFields( vtkRectilinearGrid *vtkGrid )
+inline void FillVertexFields( FieldFileData &fieldFileData,
+                              vtkRectilinearGrid *vtkGrid )
 {
     using namespace CAMIRA::CORE;
 
     int nPoints[3];
     vtkGrid->GetDimensions( nPoints );
     vtkPointData *pointData = vtkGrid->GetPointData();
-    FieldData<Tensor3D> vertexFields = GetFieldData( pointData, nPoints );
-    return vertexFields;
+    fieldFileData.vertexFields = GetFieldData( pointData, nPoints );
+    fieldFileData.vertexNuTurb = GetNuTurbData( pointData, nPoints );
 }
 
 
@@ -176,8 +196,8 @@ FieldFileData ReadVTKFields( const std::string &filename )
     }
 
     fieldFileData.cellFaces    = GetCellFaces( vtkGrid );
-    fieldFileData.cellFields   = GetCellFields( vtkGrid );
-    fieldFileData.vertexFields = GetVertexFields( vtkGrid );
+    FillCellFields( fieldFileData, vtkGrid );
+    FillVertexFields( fieldFileData, vtkGrid );
 
     return fieldFileData;
 }
