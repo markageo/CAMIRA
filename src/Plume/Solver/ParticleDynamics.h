@@ -33,25 +33,38 @@ floatType signum( floatType f) {
 }
 
 
+class StochasticVariableEta {
+
+    public:
+        
+        StochasticVariableEta() : rd(), gen(rd()), d(0.0f, 1.0f) {};
+
+        floatType operator()() 
+        { return d(gen); }
+
+    private:
+        std::random_device rd;
+        std::mt19937 gen;
+        std::normal_distribution<floatType> d;
+};
+
+
 
 fVector3 GetParticleStep( const fVector3 &velocity,
                           const floatType turbulentDiffusivity,
                           const fVector3 &gradTurbulentDiffusivity,
-                          const InputData &inputData )
+                          const InputData &inputData,
+                          StochasticVariableEta &eta )
 {
-    // Need to be sure these static variables are thread safe!
-    static std::random_device rd{};
-    static std::mt19937 gen{rd()};
-    static std::normal_distribution d{0.0f, 1.0f};
 
     const fVector3 advection = inputData.timeStepSize * velocity;
 
-    const fVector3 eta = { d(gen), d(gen), d(gen) };
+    fVector3 etaVec = { eta(), eta(), eta() };
 
-    const fVector3 molecularDiffusion = sqrt( 2.0f * inputData.diffusionCoeff * inputData.timeStepSize ) * eta;
+    const fVector3 molecularDiffusion = sqrt( 2.0f * inputData.diffusionCoeff * inputData.timeStepSize ) * etaVec;
 
     const fVector3 turbulentDiffusion = gradTurbulentDiffusivity * inputData.timeStepSize
-                                      + sqrt( 2.0f * turbulentDiffusivity * inputData.timeStepSize ) * eta;
+                                      + sqrt( 2.0f * turbulentDiffusivity * inputData.timeStepSize ) * etaVec;
 
     return advection + molecularDiffusion + turbulentDiffusion;
 }
@@ -160,6 +173,8 @@ inline void UpdateParticles( std::vector<Particle> &particles,
                              const InputData &inputData )
 {
 
+    StochasticVariableEta eta;
+
     for ( Particle &particle : particles ) {
 
         TIC("Update Particle Index")
@@ -182,7 +197,7 @@ inline void UpdateParticles( std::vector<Particle> &particles,
         TOC()
 
         TIC("Get Particle Step")
-        const fVector3 delta = GetParticleStep( localVelocity, turbulentDiffusivity, gradTurbulentDiffisivity, inputData );
+        const fVector3 delta = GetParticleStep( localVelocity, turbulentDiffusivity, gradTurbulentDiffisivity, inputData, eta );
         TOC()
 
         TIC("Step Particle")
