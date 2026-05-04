@@ -5,7 +5,7 @@
 #include "Core/IO/VTKReader.h"
 #include "Core/Mesh/Mesh.h"
 #include "Core/Geometry/Geometry.h"
-#include "Plume/Particle/Particle.h"
+#include "Plume/Particles/Particles.h"
 #include "Plume/Sources/Sources.h"
 #include "Plume/Solver/ParticleDynamics.h"
 #include "Plume/Concentration/Concentration.h"
@@ -87,8 +87,8 @@ void SolvePlume( const InputData &inputData )
 
     // Allocate particles
     intType particlesNeeded = CalculateNumberOfParticlesNeeded( inputData );
-    std::vector< Particle > particles;
-    particles.reserve( particlesNeeded );
+    Particles particles;
+    particles.Reserve( particlesNeeded );
     bool splitParticles = ( inputData.particleSplitTimeStepInterval > 0 );
     intType numberOfParticleSplits = 0;
 
@@ -115,7 +115,7 @@ void SolvePlume( const InputData &inputData )
         currentTime += inputData.timeStepSize;
 
         std::cout << "Timestep: " << timeStep << "\n"
-                  << "Number of particles: " << particles.size() << "\n"
+                  << "Number of particles: " << particles.N << "\n"
                   << std::flush;
 
         // Split particles 
@@ -158,8 +158,8 @@ void SolvePlume( const InputData &inputData )
 
         if ( updateConcentrationFieldThisIteration ) {
             #pragma omp parallel for
-            for ( auto &particle : particles ) {
-                UpdateParticlePositionIndexLinearSearch( particle, mesh );
+            for ( intType idx = 0; idx != particles.N; idx++ ) {
+                UpdateParticlePositionIndexLinearSearch( particles, idx, mesh );
             }
             UpdateConcentrationField( concentrationField, particles, mesh );
         }

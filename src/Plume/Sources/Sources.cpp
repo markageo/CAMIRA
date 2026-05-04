@@ -13,7 +13,7 @@ namespace
 {
 
 
-void AddParticle( std::vector<Particle> &particles,
+void AddParticle( Particles &particles,
                   const InputData &inputData,
                   const intType nParticles,
                   const floatType initialMassRemaining,
@@ -27,11 +27,13 @@ void AddParticle( std::vector<Particle> &particles,
         floatType mass = ( massRemaining >= massPerParticle ) ? massPerParticle
                                                               : massRemaining; 
 
-        particles.emplace_back();
-        particles.back().position = releaseLocation;
-        particles.back().mass     = mass;
+        particles.AddParticleBack();
+        particles.x.back()    = releaseLocation(0);
+        particles.y.back()    = releaseLocation(1);
+        particles.z.back()    = releaseLocation(2);
+        particles.mass.back() = mass;
 
-        UpdateParticlePositionIndexBinarySearch( particles.back(), mesh );
+        UpdateParticlePositionIndexBinarySearch( particles, particles.N-1, mesh );
 
         massRemaining -= massPerParticle;
     }
@@ -43,7 +45,7 @@ void AddParticle( std::vector<Particle> &particles,
 
 
 
-void AddInstantaneousReleasePointParticles( std::vector<Particle> &particles,
+void AddInstantaneousReleasePointParticles( Particles &particles,
                                             const Mesh &mesh,
                                             const InputData &inputData )
 {
@@ -61,7 +63,7 @@ void AddInstantaneousReleasePointParticles( std::vector<Particle> &particles,
 
 
 
-void AddContinuousReleasePointParticles( std::vector<Particle> &particles,
+void AddContinuousReleasePointParticles( Particles &particles,
                                          const Mesh &mesh,
                                          const InputData &inputData)
 {

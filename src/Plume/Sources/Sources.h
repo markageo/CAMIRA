@@ -4,7 +4,7 @@
 #include "Core/Types.h"
 #include "Core/Mesh/Mesh.h"
 #include "Plume/InputProcessing/InputProcessing.h"
-#include "Plume/Particle/Particle.h"
+#include "Plume/Particles/Particles.h"
 
 namespace CAMIRA
 {
@@ -14,13 +14,13 @@ using namespace CORE;
 namespace PLUME
 {
 
-void AddInstantaneousReleasePointParticles( std::vector<Particle> &,
+void AddInstantaneousReleasePointParticles( Particles &,
                                             const Mesh &,
                                             const InputData & );
 
 
 
-void AddContinuousReleasePointParticles( std::vector<Particle> &,
+void AddContinuousReleasePointParticles( Particles &,
                                          const Mesh &,
                                          const InputData & );
 

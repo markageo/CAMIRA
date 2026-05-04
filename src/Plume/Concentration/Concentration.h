@@ -3,7 +3,7 @@
 
 #include "Core/Types.h"
 #include "Core/Mesh/Mesh.h"
-#include "Plume/Particle/Particle.h"
+#include "Plume/Particles/Particles.h"
 #include "Plume/ConfigEnums.h"
 
 
@@ -22,7 +22,7 @@ namespace PLUME
 {
 
 void UpdateConcentrationField( Tensor3D &,
-                               const std::vector<Particle> &,
+                               const Particles &,
                                const Mesh & );
 
 

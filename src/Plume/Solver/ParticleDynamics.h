@@ -5,7 +5,7 @@
 #include "Core/FVLookups.h"
 #include "Core/Mesh/Mesh.h"
 #include "Core/Geometry/Geometry.h"
-#include "Plume/Particle/Particle.h"
+#include "Plume/Particles/Particles.h"
 #include "Plume/InputProcessing/InputProcessing.h"
 #include "Plume/ConfigEnums.h"
 
@@ -53,10 +53,10 @@ class StochasticVariableEta {
 
 
 inline fVector3 GetParticleStep( const fVector3 &velocity,
-                          const floatType turbulentDiffusivity,
-                          const fVector3 &gradTurbulentDiffusivity,
-                          const InputData &inputData,
-                          StochasticVariableEta &eta )
+                                 const floatType turbulentDiffusivity,
+                                 const fVector3 &gradTurbulentDiffusivity,
+                                 const InputData &inputData,
+                                 StochasticVariableEta &eta )
 {
 
     const fVector3 advection = inputData.timeStepSize * velocity;
@@ -97,7 +97,8 @@ fVector3 RecursiveReflection( const Tree &tree,
 
 
 
-inline void StepParticle( Particle &particle,
+void StepParticle( Particles &particles,
+                   const intType idx,
                    const fVector3 &delta,
                    const Mesh &mesh, 
                    const Tree &tree,
@@ -105,8 +106,8 @@ inline void StepParticle( Particle &particle,
 {
     using enum Axis::ENUMDATA;
 
-    // New position
-    fVector3 newPosition = particle.position + delta;
+    const fVector3 oldPosition = { particles.x[idx], particles.y[idx], particles.z[idx] };
+    fVector3 newPosition = oldPosition + delta;
 
     // Domain boundary intersection
     EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
@@ -131,7 +132,7 @@ inline void StepParticle( Particle &particle,
             switch ( boundaryConditions[ boundaryPatch ].type ) {
 
                 case BoundaryConditions::outflow:
-                    particle.active = false;
+                    particles.active[idx] = false;
                     break;
 
                 case BoundaryConditions::reflection:    
@@ -143,7 +144,7 @@ inline void StepParticle( Particle &particle,
                 }
 
                 case BoundaryConditions::periodic:
-                    newPosition(axis) = signum( delta(axis) ) * ( loBounds - hiBounds ) + particle.position(axis) + delta(axis); 
+                    newPosition(axis) = signum( delta(axis) ) * ( loBounds - hiBounds ) + oldPosition(axis) + delta(axis); 
                     break;
             }
 
@@ -154,14 +155,14 @@ inline void StepParticle( Particle &particle,
 
     // Solid geometry intersection and reflection 
     if ( !tree.empty() ) {
-        if ( SegmentIntersects( tree, particle.position, newPosition ) ) {
-            newPosition = RecursiveReflection( tree, particle.position, newPosition );
+        if ( SegmentIntersects( tree, oldPosition, newPosition ) ) {
+            newPosition = RecursiveReflection( tree, oldPosition, newPosition );
         }
     }
     
-
-    particle.position = newPosition;
-
+    particles.x[idx] = newPosition(0);
+    particles.y[idx] = newPosition(1);
+    particles.z[idx] = newPosition(2);
 }
 
 
@@ -169,8 +170,8 @@ inline void StepParticle( Particle &particle,
 }   // end anonymous namespace
 
 
-__attribute__((flatten)) 
-inline void UpdateParticles( std::vector<Particle> &particles,
+
+inline void UpdateParticles( Particles &particles,
                              const Mesh &mesh, 
                              const EnumVector<Axis, Tensor3D> &velocityField,
                              const Tensor3D &nuTurbField,
@@ -181,59 +182,49 @@ inline void UpdateParticles( std::vector<Particle> &particles,
     #pragma omp parallel 
     {
 
-    StochasticVariableEta eta;  // Should be local to each thread
+    StochasticVariableEta eta;
 
     #pragma omp for
-    for ( Particle &particle : particles ) {
+    for ( intType idx = 0; idx != particles.N; idx++ ) {
 
-        UpdateParticlePositionIndexLinearSearch( particle, mesh );
+        UpdateParticlePositionIndexLinearSearch( particles, idx, mesh );
 
         fVector3 localVelocity;
         EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
-            localVelocity[axis] = GetFieldQuantityTrilinearInterp( particle, mesh, velocityField[axis] );
+            localVelocity[axis] = GetFieldQuantityTrilinearInterp( particles, idx, mesh, velocityField[axis] );
         } );
 
-        const floatType turbulentDiffusivity = GetFieldQuantityTrilinearInterp( particle, mesh, nuTurbField ) / inputData.turbulentSchmidtNumber;
- 
-        const fVector3 gradTurbulentDiffisivity = GetFieldQuantityGradient( particle, mesh, nuTurbField ) / inputData.turbulentSchmidtNumber;
+        const floatType turbulentDiffusivity = GetFieldQuantityTrilinearInterp( particles, idx, mesh, nuTurbField ) / inputData.turbulentSchmidtNumber;
+
+        const fVector3 gradTurbulentDiffisivity = GetFieldQuantityGradient( particles, idx, mesh, nuTurbField ) / inputData.turbulentSchmidtNumber;
 
         const fVector3 delta = GetParticleStep( localVelocity, turbulentDiffusivity, gradTurbulentDiffisivity, inputData, eta );
 
-        StepParticle( particle, delta, mesh, tree, inputData.boundaryConditions );
+        StepParticle( particles, idx, delta, mesh, tree, inputData.boundaryConditions );
 
     }
 
     }   // end omp parallel region
 
 
-
     // Remove any inactive particles
-    // This might not be the most efficient since it preserves order, and we don't need that
-    TIC("Particle Removal")
-    particles.erase( 
-        std::remove_if( particles.begin(), 
-                        particles.end(), 
-                        [] (const Particle &p) { return !p.active; } 
-                      ),
-        particles.end()
-                    );
-    TOC()
+    particles.RemoveInactiveParticles();
 
 }
 
 
-inline void SplitParticles( std::vector<Particle> &particles )
+inline void SplitParticles( Particles &particles )
 {
 
-    const intType initialNumberOfParticles = particles.size();
+    const intType initialNumberOfParticles = particles.N;
 
-    for ( intType i = 0; i != initialNumberOfParticles; i++ ) {
+    for ( intType idx = 0; idx != initialNumberOfParticles; idx++ ) {
 
         // Half the mass of the particle
-        particles[i].mass /= 2.0f;
+        particles.mass[idx] /= 2.0f;
 
         // Copy the particle to the end
-        particles.push_back( particles[i] );
+        particles.AddIdenticalParticleBack( idx );
 
     }
 

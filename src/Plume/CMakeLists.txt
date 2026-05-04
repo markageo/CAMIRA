@@ -1,6 +1,6 @@
 # Source subdirectories
 add_subdirectory(InputProcessing)
-add_subdirectory(Particle)
+add_subdirectory(Particles)
 add_subdirectory(Sources)
 add_subdirectory(Solver)
 add_subdirectory(Concentration)
