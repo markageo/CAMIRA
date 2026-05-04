@@ -21,7 +21,7 @@ struct Particles {
     intType N;
     std::vector<floatType> x, y, z;
     std::vector<floatType> mass;
-    std::vector<intType> i, j, k;   //index of nearest vertex point in the lo direction
+    std::vector<intType> i, j, k;   // index of nearest vertex point in the lo direction
     std::vector<bool> active;
 
     Particles() : N(0) {};
@@ -81,7 +81,7 @@ struct Particles {
     void RemoveInactiveParticles()
     {
 
-        // This does no preserve order
+        // This does not preserve order
         for ( intType p = 0; p < N; /* NULL */ ) {
 
             if ( !active[p] ) {
