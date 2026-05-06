@@ -133,6 +133,8 @@ void SolvePlume( const InputData &inputData )
         bool outputThisIteration = ( writeFields && (timeStep % inputData.fieldWriteInterval) == 0 )
                                 || ( timeStep == inputData.numberOfTimeSteps );
         if ( outputThisIteration ) {
+
+            #pragma omp parallel for
             for ( auto &particle : particles ) {
                 UpdateParticlePositionIndexLinearSearch( particle, mesh );
             }

@@ -27,7 +27,9 @@ void AddParticle( std::vector<Particle> &particles,
         floatType mass = ( massRemaining >= massPerParticle ) ? massPerParticle
                                                               : massRemaining; 
 
-        particles.emplace_back( releaseLocation, mass );
+        particles.emplace_back();
+        particles.back().position = releaseLocation;
+        particles.back().mass     = mass;
 
         UpdateParticlePositionIndexBinarySearch( particles.back(), mesh );
 

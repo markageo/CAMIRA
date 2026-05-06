@@ -26,11 +26,13 @@ namespace PLUME
 namespace 
 {
 
-floatType signum( floatType f) {
+
+inline floatType signum( floatType f) {
     if ( f > 0.0f ) return  1.0f;
     if ( f < 0.0f ) return -1.0f;
     return 0.0f;
 }
+
 
 
 class StochasticVariableEta {
@@ -50,7 +52,7 @@ class StochasticVariableEta {
 
 
 
-fVector3 GetParticleStep( const fVector3 &velocity,
+inline fVector3 GetParticleStep( const fVector3 &velocity,
                           const floatType turbulentDiffusivity,
                           const fVector3 &gradTurbulentDiffusivity,
                           const InputData &inputData,
@@ -95,7 +97,7 @@ fVector3 RecursiveReflection( const Tree &tree,
 
 
 
-void StepParticle( Particle &particle,
+inline void StepParticle( Particle &particle,
                    const fVector3 &delta,
                    const Mesh &mesh, 
                    const Tree &tree,
@@ -164,7 +166,7 @@ void StepParticle( Particle &particle,
 }   // end anonymous namespace
 
 
-
+__attribute__((flatten)) 
 inline void UpdateParticles( std::vector<Particle> &particles,
                              const Mesh &mesh, 
                              const EnumVector<Axis, Tensor3D> &velocityField,
@@ -173,38 +175,34 @@ inline void UpdateParticles( std::vector<Particle> &particles,
                              const InputData &inputData )
 {
 
-    StochasticVariableEta eta;
+    #pragma omp parallel 
+    {
 
+    StochasticVariableEta eta;  // Should be local to each thread
+
+    #pragma omp for
     for ( Particle &particle : particles ) {
 
-        TIC("Update Particle Index")
         UpdateParticlePositionIndexLinearSearch( particle, mesh );
-        TOC()
 
-        TIC("Interpolate Local Velocity")
         fVector3 localVelocity;
         EnumFor<Axis>( [&] ( Axis::ENUMDATA axis ) {
             localVelocity[axis] = GetFieldQuantityTrilinearInterp( particle, mesh, velocityField[axis] );
         } );
-        TOC()
 
-        TIC("Interpolate Local Turbulent Diffusivity")
         const floatType turbulentDiffusivity = GetFieldQuantityTrilinearInterp( particle, mesh, nuTurbField ) / inputData.turbulentSchmidtNumber;
-        TOC()
-
-        TIC("Caclculate Local Turbulent Diffusivity Gradient")
+ 
         const fVector3 gradTurbulentDiffisivity = GetFieldQuantityGradient( particle, mesh, nuTurbField ) / inputData.turbulentSchmidtNumber;
-        TOC()
 
-        TIC("Get Particle Step")
         const fVector3 delta = GetParticleStep( localVelocity, turbulentDiffusivity, gradTurbulentDiffisivity, inputData, eta );
-        TOC()
 
-        TIC("Step Particle")
         StepParticle( particle, delta, mesh, tree, inputData.boundaryConditions );
-        TOC()
 
     }
+
+    }   // end omp parallel region
+
+
 
     // Remove any inactive particles
     // This might not be the most efficient since it preserves order, and we don't need that

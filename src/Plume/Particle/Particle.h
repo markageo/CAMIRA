@@ -15,10 +15,11 @@ namespace PLUME
 // Struct to hold particle data
 struct Particle {
     fVector3 position = {0, 0, 0};
-    floatType mass = 0;
     TensorIndex3D positionIndex = {0, 0, 0};    // Of nearest vertex point in the lo direction
+    floatType mass = 0;
     bool active = true;
 };
+
 
 
 
@@ -47,6 +48,7 @@ inline void UpdateParticlePositionIndexLinearSearch( Particle &particle,
     } );
     
 }
+
 
 
 inline void UpdateParticlePositionIndexBinarySearch( Particle &particle,
@@ -80,7 +82,7 @@ inline void UpdateParticlePositionIndexBinarySearch( Particle &particle,
 
 
 
-inline floatType GetFieldQuantityTrilinearInterp( Particle &particle, 
+inline floatType GetFieldQuantityTrilinearInterp( const Particle &particle, 
                                                   const Mesh &mesh,
                                                   const Tensor3D &field )
 {
@@ -130,9 +132,9 @@ inline floatType GetFieldQuantityTrilinearInterp( Particle &particle,
 
 
 
-inline fVector3 GetFieldQuantityGradient( Particle &particle, 
-                                         const Mesh &mesh,
-                                         const Tensor3D &field )
+inline fVector3 GetFieldQuantityGradient( const Particle &particle, 
+                                          const Mesh &mesh,
+                                          const Tensor3D &field )
 {
     using enum Axis::ENUMDATA;
 

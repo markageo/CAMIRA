@@ -1,5 +1,6 @@
 #include "Concentration.h"
 #include <algorithm>
+#include <omp.h>
 
 namespace CAMIRA
 {
@@ -9,10 +10,6 @@ using namespace CORE;
 namespace PLUME
 {
 
-namespace
-{
-}   // end anonymous namespace
-
 
 void UpdateConcentrationField( Tensor3D &concentrationField,
                                const std::vector<Particle> &particles,
@@ -21,8 +18,9 @@ void UpdateConcentrationField( Tensor3D &concentrationField,
     using enum Axis::ENUMDATA;
 
     // We will add concentration to each cell cumulatively
-    concentrationField.setZero();
+    SetTensorZeroParallel( concentrationField );
 
+    #pragma omp parallel for
     for ( const auto &particle : particles ) {
 
         // Weighting is by cell center, we have cell face index for the face immediately to the lo side of the particle
@@ -56,35 +54,56 @@ void UpdateConcentrationField( Tensor3D &concentrationField,
             wz = ( mesh.cellCenters[Z]( kp1 ) - particle.position(Z) ) * mesh.cellCenterDiffInv[Z]( kp1 );
         }
 
+        // Calculate concentrations
+        const floatType c000 = wx * wy * wz * particle.mass 
+                             / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](k) ),
+                        
+                        c100 = ( 1.0f - wx ) * wy * wz * particle.mass
+                             / ( mesh.cellLengths[X](ip1) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](k) ),
+
+                        c010 = wx * ( 1.0f - wy ) * wz * particle.mass
+                             / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](jp1) * mesh.cellLengths[Z](k) ),
+
+                        c001 = wx * wy * ( 1.0f - wz ) * particle.mass
+                             / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](kp1) ),
+
+                        c101 = ( 1.0f - wx ) * wy * ( 1.0f - wz ) * particle.mass
+                             / ( mesh.cellLengths[X](ip1) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](kp1) ),
+
+                        c110 = ( 1.0f - wx ) * ( 1.0f - wy ) * wz * particle.mass
+                             / ( mesh.cellLengths[X](ip1) * mesh.cellLengths[Y](jp1) * mesh.cellLengths[Z](k) ),
+
+                        c011 = wx * ( 1.0f - wy ) * ( 1.0f - wz ) * particle.mass
+                             / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](jp1) * mesh.cellLengths[Z](kp1) ),
+
+                        c111 = ( 1.0f - wx ) * ( 1.0f - wy ) * ( 1.0f - wz ) * particle.mass
+                             / ( mesh.cellLengths[X](ip1) * mesh.cellLengths[Y](jp1) * mesh.cellLengths[Z](kp1) );
+        
+
         // Add concentrations
-        concentrationField(i  , j  , k  ) += wx * wy * wz * particle.mass 
-                                           / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](k) );
+        #pragma omp atomic
+        concentrationField(i  , j  , k  ) += c000;
 
-        concentrationField(ip1, j  , k  ) += ( 1.0f - wx ) * wy * wz * particle.mass
-                                           / ( mesh.cellLengths[X](ip1) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](k) );
+        #pragma omp atomic
+        concentrationField(ip1, j  , k  ) += c100;
 
+        #pragma omp atomic
+        concentrationField(i  , jp1, k  ) += c010;
 
-        concentrationField(i  , jp1, k  ) += wx * ( 1.0f - wy ) * wz * particle.mass
-                                           / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](jp1) * mesh.cellLengths[Z](k) );
+        #pragma omp atomic
+        concentrationField(i  , j  , kp1) += c001;
 
-        concentrationField(i  , j  , kp1) += wx * wy * ( 1.0f - wz ) * particle.mass
-                                           / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](kp1) );
+        #pragma omp atomic
+        concentrationField(ip1, j  , kp1) += c101;
 
+        #pragma omp atomic
+        concentrationField(ip1, jp1, k  ) += c110;
 
-        concentrationField(ip1, j  , kp1) += ( 1.0f - wx ) * wy * ( 1.0f - wz ) * particle.mass
-                                           / ( mesh.cellLengths[X](ip1) * mesh.cellLengths[Y](j) * mesh.cellLengths[Z](kp1) );
+        #pragma omp atomic
+        concentrationField(i  , jp1, kp1) += c011;
 
-
-        concentrationField(ip1, jp1, k  ) += ( 1.0f - wx ) * ( 1.0f - wy ) * wz * particle.mass
-                                           / ( mesh.cellLengths[X](ip1) * mesh.cellLengths[Y](jp1) * mesh.cellLengths[Z](k) );
-
-
-        concentrationField(i  , jp1, kp1) += wx * ( 1.0f - wy ) * ( 1.0f - wz ) * particle.mass
-                                           / ( mesh.cellLengths[X](i) * mesh.cellLengths[Y](jp1) * mesh.cellLengths[Z](kp1) );
-
-
-        concentrationField(ip1, jp1, kp1) += ( 1.0f - wx ) * ( 1.0f - wy ) * ( 1.0f - wz ) * particle.mass
-                                           / ( mesh.cellLengths[X](ip1) * mesh.cellLengths[Y](jp1) * mesh.cellLengths[Z](kp1) );
+        #pragma omp atomic
+        concentrationField(ip1, jp1, kp1) += c111;
 
     }
 
