@@ -239,32 +239,36 @@ namespace
                                             Output
     \*-------------------------------------------------------------------------------------*/
 
-    void ReadMonitors( InputData &inputData,
-                       const pt::ptree &outputTree )
+    void ReadTimeAveragedConcentration( InputData &inputData,
+                                        const pt::ptree &outputTree )
     {
 
-        // It's ok if there is no monitors tree
-        boost::optional<const pt::ptree &> monitorsTreeOptional = outputTree.get_child_optional( "Monitors" );
-        if ( !monitorsTreeOptional )
-            return;
+        for (auto &timeAveragedConcentration : outputTree ) {
 
-        const pt::ptree &monitorsTree = monitorsTreeOptional.get();
+            if ( timeAveragedConcentration.first == "TimeAveragedConcentration" ) {
 
-        for (auto monitor : monitorsTree) {
+                inputData.timeAveragedConcentrationFieldData.emplace_back();
 
-            if ( monitor.first == "Probe" ) {
-                InputData::ProbeData tempProbeData;
-                std::vector<floatType> tempLocation = monitor.second.get< std::vector<floatType> >( "location" ); 
-                tempProbeData.filename              = monitor.second.get<std::string>( "filename" );
-                IOTOOLS::PrependRelativePath( tempProbeData.filename, inputData.inputFileDirectory );
-                EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
-                    tempProbeData.location(axis) = tempLocation[axis];
-                } );
+                inputData.timeAveragedConcentrationFieldData.back().startTimeStep    = timeAveragedConcentration.second.get<intType>( "startTimeStep" );
+                inputData.timeAveragedConcentrationFieldData.back().endTimeStep      = timeAveragedConcentration.second.get<intType>( "endTimeStep" );
+                inputData.timeAveragedConcentrationFieldData.back().timeStepInterval = timeAveragedConcentration.second.get<intType>( "timeStepInterval" );
+                inputData.timeAveragedConcentrationFieldData.back().filename         = timeAveragedConcentration.second.get<std::string>( "filename" );
+                IOTOOLS::PrependRelativePath( inputData.timeAveragedConcentrationFieldData.back().filename, inputData.inputFileDirectory );
 
-                inputData.probes.push_back( tempProbeData );
+                // Make sure the values are valid
+                const intType startTimeStep    = inputData.timeAveragedConcentrationFieldData.back().startTimeStep,
+                              endTimeStep      = inputData.timeAveragedConcentrationFieldData.back().endTimeStep,
+                              timeStepInterval = inputData.timeAveragedConcentrationFieldData.back().timeStepInterval;
 
-            } else {
-                throw std::runtime_error(  "'" + monitor.first + "' is not a valid Monitors child name" );
+                if ( startTimeStep >= endTimeStep )
+                    throw std::runtime_error("endTimeStep must be greater than startTimeStep in TimeAveragedConcentration calculator!");
+
+                if ( timeStepInterval < 1 )
+                    throw std::runtime_error("timeStepInterval must be greater than zero in TimeAveragedConcentration calculator!");
+
+                if ( (endTimeStep - startTimeStep ) % timeStepInterval != 0 )
+                    throw std::runtime_error("timeStepInterval must divide into integration period (= endTimeStep - startTimeStep) in TimeAveragedConcentration calculator!");
+
             }
             
         }
@@ -288,8 +292,8 @@ namespace
     void VerifyOutputFiles( InputData &inputData ) 
     {
         VerifyWriteDirectory( inputData.fieldOutputFilename );
-        for ( const auto &probe : inputData.probes ) {
-            VerifyWriteDirectory( probe.filename );
+        for ( const auto &timeAveragedConcentrationFieldData : inputData.timeAveragedConcentrationFieldData ) {
+            VerifyWriteDirectory( timeAveragedConcentrationFieldData.filename );
         }
     }
 
@@ -326,8 +330,8 @@ namespace
         // Write interval for fields
         inputData.fieldWriteInterval = outputTree.get<intType>( "fieldWriteInterval" );
 
-        // Monitors
-        ReadMonitors( inputData, outputTree );
+        // Time averaged concentration fields
+        ReadTimeAveragedConcentration( inputData, outputTree );
 
         // Verify the output filenames
         VerifyOutputFiles( inputData ); 

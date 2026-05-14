@@ -80,11 +80,11 @@ struct InputData
     std::string profilingFilename;
     intType fieldWriteInterval;
 
-    struct ProbeData {
+    struct TimeAveragedConcentrationFieldData {
+        intType startTimeStep, endTimeStep, timeStepInterval;
         std::string filename;
-        fArray3 location;
     };
-    std::vector< ProbeData > probes;
+    std::vector< TimeAveragedConcentrationFieldData > timeAveragedConcentrationFieldData;
 };
 
 

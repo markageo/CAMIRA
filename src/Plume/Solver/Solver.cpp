@@ -70,9 +70,16 @@ void SolvePlume( const InputData &inputData )
     Polyhedron P = MakeGeometry( inputData.stlGeometryFilename );
     Tree tree = MakeAABBTree( P );
 
-    // Place to store the concentration field
+    // Place to store the current concentration field
     Tensor3D concentrationField( mesh.nCells(0), mesh.nCells(1), mesh.nCells(2) );
-    concentrationField.setZero();
+    SetTensorZeroParallel( concentrationField );
+
+    // Time averaged concentration fields
+    std::vector<Tensor3D> timeAveragedConcentrationFields( inputData.timeAveragedConcentrationFieldData.size() );   // HAVE NOT ALLOCATED dimensions
+    for ( auto &field : timeAveragedConcentrationFields ) {
+        field = Tensor3D( mesh.nCells(0), mesh.nCells(1), mesh.nCells(2) );
+        SetTensorZeroParallel( field );
+    }
 
     // Allocate particles
     intType particlesNeeded = CalculateNumberOfParticlesNeeded( inputData );
@@ -82,7 +89,7 @@ void SolvePlume( const InputData &inputData )
     intType numberOfParticleSplits = 0;
 
     // Logging objects
-    ConcentrationFieldWriter concentrationFieldWriter( concentrationField, mesh, inputData );
+    ConcentrationFieldWriter concentrationFieldWriter( mesh, inputData );
 
     // Add instantaneous release particles
     AddInstantaneousReleasePointParticles( particles, mesh, inputData );
@@ -91,7 +98,7 @@ void SolvePlume( const InputData &inputData )
 
     // Write the initial condition
     UpdateConcentrationField( concentrationField, particles, mesh );
-    concentrationFieldWriter.WriteData( 0.0f, 0 );
+    concentrationFieldWriter.WriteInstantaneousField( concentrationField, 0.0f, 0 );
 
     std::cout << "Pre-processing complete. Starting solve.\n\n" << std::flush;
     TOC()
@@ -128,23 +135,62 @@ void SolvePlume( const InputData &inputData )
         UpdateParticles( particles, mesh, velocityField, nuTurbField, tree, inputData );
         TOC()
 
-        // Output
-        TIC("Field Output")
+        // Concentration field, only update this iteration if it will be used
         bool outputThisIteration = ( writeFields && (timeStep % inputData.fieldWriteInterval) == 0 )
                                 || ( timeStep == inputData.numberOfTimeSteps );
-        if ( outputThisIteration ) {
+        bool updateConcentrationFieldThisIteration = outputThisIteration;
+        if ( !updateConcentrationFieldThisIteration ) {
+            for ( const auto &data : inputData.timeAveragedConcentrationFieldData ) {
+                if ( timeStep > data.endTimeStep )
+                    continue;
 
+                if ( (timeStep - data.startTimeStep) % data.timeStepInterval == 0 )
+                    updateConcentrationFieldThisIteration = true;
+            }
+        }
+
+        if ( updateConcentrationFieldThisIteration ) {
             #pragma omp parallel for
             for ( auto &particle : particles ) {
                 UpdateParticlePositionIndexLinearSearch( particle, mesh );
             }
             UpdateConcentrationField( concentrationField, particles, mesh );
-            concentrationFieldWriter.WriteData( currentTime, timeStep );
+        }
+
+        // Instantanious concentration field output
+        TIC("Field Output")
+        if ( outputThisIteration ) {
+            concentrationFieldWriter.WriteInstantaneousField( concentrationField, currentTime, timeStep );
             std::cout << "(Concentration field written to file)" << "\n";
         } 
         TOC()
 
+        // Time averaged concentrations
+        TIC("Time Averaged Concentration Fields")
+        for ( size_t i = 0; i != timeAveragedConcentrationFields.size(); i++ ) {
+
+            const auto data = inputData.timeAveragedConcentrationFieldData[i];
+
+            if ( (timeStep - data.startTimeStep) % data.timeStepInterval != 0 )
+                continue;
+
+            timeAveragedConcentrationFields[i] += concentrationField * concentrationField.constant( static_cast<floatType>(data.timeStepInterval) * inputData.timeStepSize );
+
+        }
+        TOC()
+
         std::cout << std::endl;
+    }
+
+    // Finish average calculation and write to file
+    for ( size_t i = 0; i != timeAveragedConcentrationFields.size(); i++ ) {
+        
+        const auto data = inputData.timeAveragedConcentrationFieldData[i];
+
+        timeAveragedConcentrationFields[i] /= timeAveragedConcentrationFields[i].constant( static_cast<floatType>( data.endTimeStep - data.startTimeStep + 1 ) * inputData.timeStepSize );
+
+        concentrationFieldWriter.WriteTimeAveragedField( timeAveragedConcentrationFields[i], data.filename, data.startTimeStep, data.endTimeStep, inputData.timeStepSize );
+
     }
     TOC()
 

@@ -38,12 +38,10 @@ namespace PLUME
 class ConcentrationFieldWriter
 {
     public:
-        ConcentrationFieldWriter( const Tensor3D &concentrationField, 
-                                  const Mesh &mesh,
+        ConcentrationFieldWriter( const Mesh &mesh,
                                   const InputData &inputData ) :
-            m_concentrationField( concentrationField ),
             m_mesh( mesh ),
-            m_baseFilename( IOTOOLS::RemoveFileExtension( inputData.fieldOutputFilename, ".vtk" ) )
+            m_instantaneousFieldBaseFilename( IOTOOLS::RemoveFileExtension( inputData.fieldOutputFilename, ".vtk" ) )
             {
 
                 switch ( inputData.outputFormatType ) {
@@ -58,29 +56,55 @@ class ConcentrationFieldWriter
 
             };
 
-            void WriteData( floatType currentTime, 
-                            intType timeStep )
+            void WriteInstantaneousField( const Tensor3D &field,
+                                          floatType currentTime, 
+                                          intType timeStep )
             { 
-                SetWriter();
+                SetWriter( field );
 
                 std::ostringstream oss;
                 oss << std::fixed << std::setprecision(3) << currentTime;
                 const std::string currentTimeString = oss.str();
 
-                const std::string message  = "CFD solution at time " + currentTimeString + ", timestep = " + std::to_string(timeStep);
-                const std::string filename = m_baseFilename  + "_timeStep" + std::to_string(timeStep) + ".vtk";
+                const std::string message  = "Concentration field at time " + currentTimeString + ", timestep = " + std::to_string(timeStep);
+                const std::string filename = m_instantaneousFieldBaseFilename  + "_timeStep" + std::to_string(timeStep) + ".vtk";
+                m_vtkWriter->WriteData( filename, message ); 
+            }
+
+
+            void WriteTimeAveragedField( const Tensor3D &field,
+                                        const std::string &filename,
+                                        const intType startTimeStep,
+                                        const intType endTimeStep,
+                                        const floatType timeStepSize )
+            {
+                SetWriter( field );
+
+                const floatType startTime = static_cast<floatType>(startTimeStep) * timeStepSize,
+                                endTime   = static_cast<floatType>(endTimeStep)   * timeStepSize;
+
+                std::ostringstream oss;
+                oss << std::fixed << std::setprecision(3) << startTime;
+                const std::string startTimeString = oss.str();
+
+                oss.str();
+                oss << std::fixed << std::setprecision(3) << endTime;
+                const std::string endTimeString = oss.str();
+
+                const std::string message  = "Time averaged concentration field between times " 
+                                           + startTimeString + "(" + std::to_string(startTimeStep) + ") and " 
+                                           + endTimeString   + "(" + std::to_string(endTimeStep)   + ")";
                 m_vtkWriter->WriteData( filename, message ); 
             }
 
 
     private:
-        const Tensor3D &m_concentrationField;
         const Mesh &m_mesh;
         std::unique_ptr< VTK::VTKWriter<floatType> > m_vtkWriter;
-        const std::string m_baseFilename;
+        const std::string m_instantaneousFieldBaseFilename;
         VTK::WriteModes m_writeMode;
 
-        void SetWriter()
+        void SetWriter( const Tensor3D &field )
         {
             using enum Axis::ENUMDATA;
             VTK::VTKWriterConfig config( m_mesh.cellFaces[X].size(), 
@@ -92,7 +116,7 @@ class ConcentrationFieldWriter
                                                                   m_mesh.cellFaces[Y].data(), 
                                                                   m_mesh.cellFaces[Z].data() };
 
-            VTK::scalarCollectionType<floatType> scalarMap = { {"Concentration" , VTK::GridTypes::CELL_DATA , m_concentrationField.data()} };
+            VTK::scalarCollectionType<floatType> scalarMap = { {"Concentration" , VTK::GridTypes::CELL_DATA , field.data()} };
 
             VTK::vectorCollectionType<floatType> vectorMap = { };
         
