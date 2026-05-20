@@ -67,15 +67,18 @@ void SolvePlume( const InputData &inputData )
     Tensor3D &nuTurbField = fieldFileData.vertexNuTurb;
 
     // Read and store geometry
-    Polyhedron P = MakeGeometry( inputData.stlGeometryFilename );
-    Tree tree = MakeAABBTree( P );
+    Tree tree;
+    if( inputData.hasSolidGeometry ) {
+        Polyhedron P = MakeGeometry( inputData.stlGeometryFilename );
+        tree = MakeAABBTree( P );
+    }
 
     // Place to store the current concentration field
     Tensor3D concentrationField( mesh.nCells(0), mesh.nCells(1), mesh.nCells(2) );
     SetTensorZeroParallel( concentrationField );
 
     // Time averaged concentration fields
-    std::vector<Tensor3D> timeAveragedConcentrationFields( inputData.timeAveragedConcentrationFieldData.size() );   // HAVE NOT ALLOCATED dimensions
+    std::vector<Tensor3D> timeAveragedConcentrationFields( inputData.timeAveragedConcentrationFieldData.size() );  
     for ( auto &field : timeAveragedConcentrationFields ) {
         field = Tensor3D( mesh.nCells(0), mesh.nCells(1), mesh.nCells(2) );
         SetTensorZeroParallel( field );

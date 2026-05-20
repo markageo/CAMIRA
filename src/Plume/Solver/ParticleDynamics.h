@@ -153,9 +153,12 @@ inline void StepParticle( Particle &particle,
 
 
     // Solid geometry intersection and reflection 
-    if ( SegmentIntersects( tree, particle.position, newPosition ) ) {
-        newPosition = RecursiveReflection( tree, particle.position, newPosition );
+    if ( !tree.empty() ) {
+        if ( SegmentIntersects( tree, particle.position, newPosition ) ) {
+            newPosition = RecursiveReflection( tree, particle.position, newPosition );
+        }
     }
+    
 
     particle.position = newPosition;
 

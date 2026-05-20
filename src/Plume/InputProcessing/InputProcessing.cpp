@@ -74,7 +74,15 @@ namespace
     void ReadSolidGeometry( InputData &inputData, 
                             const pt::ptree &tree )
     {
-        const pt::ptree &solidGeometryTree = tree.get_child("SolidGeometry");
+
+        boost::optional<const pt::ptree &> solidGeometryTreeOptional = tree.get_child_optional( "SolidGeometry" );
+        if ( !solidGeometryTreeOptional ) {
+            inputData.hasSolidGeometry = false;
+            return;
+        }
+        inputData.hasSolidGeometry = true;
+        
+        const pt::ptree &solidGeometryTree = solidGeometryTreeOptional.get();
 
         inputData.stlGeometryFilename  = solidGeometryTree.get<std::string>("filename");
         IOTOOLS::PrependRelativePath( inputData.stlGeometryFilename, inputData.inputFileDirectory );

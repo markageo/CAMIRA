@@ -34,6 +34,7 @@ struct InputData
     std::string velocityFieldFilename;
 
     // File directory of geometry
+    bool hasSolidGeometry;
     std::string stlGeometryFilename;
 
     // Model
