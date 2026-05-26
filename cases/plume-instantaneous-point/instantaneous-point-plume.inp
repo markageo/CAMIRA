@@ -1,29 +1,24 @@
-// CEDVAL B1-5 plume dispersion input file
+// Instantaneous release point at center of domain plume input file
 
 Model {
-    D = 1e-5
-    turbulentSchmidtNumber = 0.7
-    timeStepSize = 0.1
-    numberOfTimeSteps = 600
-    initialParticlesPerUnitMass = 1e5
+    D = 1e-3
+    turbulentSchmidtNumber = 1
+    timeStepSize = 0.05
+    numberOfTimeSteps = 1200
+    initialParticlesPerUnitMass = 1e6
     particleSplitTimeStepInterval = 0
     maxNumberOfParticleSplits = 100
 }
 
 VelocityField {
-    velocityFieldFilename = "flow-output/fields_iter4.vtk"
+    velocityFieldFilename = "flow-output/uniform100_field.vtk"
 }
-
-SolidGeometry {
-    filename = flow-output/geometry.stl"
-}
-
 
 Sources
 {
-    ContinuousReleasePoint {
-        location = (-0.07, -0.13, 0.015)
-        massFlowRate = 1
+    InstantaneousReleasePoint {
+        location = (0, 0, 0)
+        totalMass = 1
     }
 }
 
@@ -35,29 +30,29 @@ BoundaryConditions
         phi = outflow
     }
 
-    // Inflow
+    // Outflow
     -x {
         phi = outflow
     }
 
-    // Wall
+    // Outflow
     +y {
-        phi = reflection
+        phi = outflow
     }
 
-    // Wall
+    // Outflow
     -y {
-        phi = reflection
+        phi = outflow
     }
 
-    // Symmetry
+    // Outflow
     +z {
         phi = outflow
     }
 
-    // Wall
+    // Outflow
     -z {
-        phi = reflection
+        phi = outflow
     }
 }
 
@@ -72,7 +67,7 @@ Output {
     outputFormatType        = BINARY
     profilingFilename       = "plume-output/profiling.dat"
     fieldOutputFilename     = "plume-output/fields.vtk"
-    fieldWriteInterval      = 5
+    fieldWriteInterval      = 1
 
     TimeAveragedConcentration {
         startTimeStep    = 100

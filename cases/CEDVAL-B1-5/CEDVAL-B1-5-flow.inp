@@ -97,8 +97,8 @@ Solver {
         faceInterpolationScheme = weightedLinear
 
         maxOuterIterations = 1000
-        maxContinuityOuterResidual = 1e-6
-        maxMomentumOuterResiduals  = (1e-6, 1e-6, 1e-6)
+        maxContinuityOuterResidual = 1e-4
+        maxMomentumOuterResiduals  = (1e-4, 1e-4, 1e-4)
 
     }
     

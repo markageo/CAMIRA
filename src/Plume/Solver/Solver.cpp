@@ -148,6 +148,9 @@ void SolvePlume( const InputData &inputData )
                 if ( timeStep > data.endTimeStep )
                     continue;
 
+                if ( timeStep < data.startTimeStep )
+                    continue;
+
                 if ( (timeStep - data.startTimeStep) % data.timeStepInterval == 0 )
                     updateConcentrationFieldThisIteration = true;
             }
