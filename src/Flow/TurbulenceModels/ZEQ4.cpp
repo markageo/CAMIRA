@@ -40,8 +40,11 @@ void TurbulenceModel<TurbulenceModels::ZEQ4>::SetTurbulenceModelData( const Inpu
     m_alpha                   = 0.22;
 
     // Length scale, distance to nearest wall
-    Polyhedron geometry = MakeGeometry( inputData.geometryData, axisTransformation );
-    Tree tree = MakeAABBTree( geometry );
+    Polyhedron P; 
+    MakePolyhedron( P, inputData.geometryData, axisTransformation );
+    Tree tree;
+    MakeAABBTree( tree, P );
+    
     NearestWallDistance( m_wallDistance, mesh, tree, bcData );
 
     m_velocityDeformationRate = Tensor3D( mesh.nCells[X] + 2*nGhost, mesh.nCells[Y] + 2*nGhost, mesh.nCells[Z] + 2*nGhost );

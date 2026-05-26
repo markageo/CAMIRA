@@ -342,7 +342,6 @@ void AddSTLFiles( std::vector< Polyhedron > &geometryPolyhedra,
 }
 
 
-
 }   // end anonymous namespace
 
 
@@ -351,32 +350,28 @@ void AddSTLFiles( std::vector< Polyhedron > &geometryPolyhedra,
 \*-------------------------------------------------------------------------------------*/
 
 
-Polyhedron MakeGeometry( const GeometryData &geometryData,
-                         const AxisTransformationMap &axisTransformation )
+void MakePolyhedron( Polyhedron &P,
+                     const GeometryData &geometryData,
+                     const AxisTransformationMap &axisTransformation )
 {
     std::vector< Polyhedron > geometryPolyhedra;
     AddBlocks( geometryPolyhedra, geometryData.solidBlocks );
     AddSpheres( geometryPolyhedra, geometryData.solidSpheres );
     AddSTLFiles( geometryPolyhedra, geometryData.stlGeometries, axisTransformation );
 
-    Polyhedron P;
     for ( Polyhedron & polyhedron : geometryPolyhedra ) {
         CGAL::Polygon_mesh_processing::corefine_and_compute_union( polyhedron, P, P );
     }
-
-    return P;
 }
 
 
-Polyhedron MakeGeometry( const std::string &filename )
+void MakePolyhedron( Polyhedron &P,
+                     const std::string &filename )
 {
-    Polyhedron P;
     bool success = CGAL::IO::read_STL( filename, P );
     if ( !success ) {
         throw std::runtime_error( "Failed reading STL geometry file '" + filename + "'." );
     }
-
-    return P;
 }
 
 
@@ -386,12 +381,12 @@ Polyhedron MakeGeometry( const std::string &filename )
 \*-------------------------------------------------------------------------------------*/
 
 
-Tree MakeAABBTree( const Polyhedron &polyhedron )
+void MakeAABBTree( Tree &tree,
+                   const Polyhedron &polyhedron )
 {
-    // Construct AABB tree with a KdTree
-    Tree tree(faces(polyhedron).first, faces(polyhedron).second, polyhedron);
+    tree.insert(faces(polyhedron).first, faces(polyhedron).second, polyhedron);
     tree.accelerate_distance_queries();
-    return tree;
+    tree.build();
 }
 
 

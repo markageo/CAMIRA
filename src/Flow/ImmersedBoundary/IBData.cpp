@@ -451,16 +451,18 @@ void SetImmersedBoundaryData( IBData &ibData,
     if ( !inputData.hasIBGeometry )
         return;
 
-    Polyhedron geometry = MakeGeometry( inputData.geometryData, axisTransformation );
+    Polyhedron P;
+    MakePolyhedron( P, inputData.geometryData, axisTransformation );
 
     // Separate the geometry into connected components
-    std::vector<Polyhedron> polyVector = SeparatePolyhedron( geometry );
+    std::vector<Polyhedron> polyVector = SeparatePolyhedron( P );
 
     // Set the IBcells for each one
     // ibData.ibCells.clear();
     for ( const Polyhedron &poly : polyVector ) {
 
-        Tree tree = MakeAABBTree( poly );
+        Tree tree;
+        MakeAABBTree( tree, poly );
 
         // Local mask for just this component
         Tensor3D localMask = CreateCellMask( tree, mesh );
@@ -484,7 +486,8 @@ void WriteGeometryToFile( const InputData &inputData,
 {
     InputData inputDataUserCoordinates( inputData );
     TransformUserInputData( inputDataUserCoordinates, axisTransformation.Inverse() );
-    Polyhedron PUserCoordinates = MakeGeometry( inputDataUserCoordinates.geometryData, axisTransformation.Identity() );
+    Polyhedron PUserCoordinates;
+    MakePolyhedron( PUserCoordinates, inputDataUserCoordinates.geometryData, axisTransformation.Identity() );
 
     std::ofstream out(  IOTOOLS::RemoveFileExtension( inputData.geometryOutputFilename, ".stl" ) + ".stl" );
     CGAL::IO::write_STL( out, PUserCoordinates );

@@ -46,16 +46,19 @@ struct GeometryData {
 };
 
 
-Polyhedron MakeGeometry( const GeometryData &,
-                         const AxisTransformationMap & );
+void MakePolyhedron( Polyhedron &, 
+                     const GeometryData &,
+                     const AxisTransformationMap & );
 
 
-Polyhedron MakeGeometry( const std::string & );
+void MakePolyhedron( Polyhedron &,
+                     const std::string & );
 
 
 std::vector<Polyhedron> SeparatePolyhedron( const Polyhedron & );
 
-Tree MakeAABBTree( const Polyhedron & );
+void MakeAABBTree( Tree &,
+                   const Polyhedron & );
 
 
 bool PointInside( const Tree &, 

@@ -115,8 +115,11 @@ YPlusCalculator::YPlusCalculator( const InputData &inputData,
     using enum Axis::ENUMDATA;
     using FVT::G;
 
-    Polyhedron P = MakeGeometry( inputData.geometryData, axisTransformation );
-    Tree tree = MakeAABBTree( P );
+    Polyhedron P;
+    MakePolyhedron( P, inputData.geometryData, axisTransformation );
+
+    Tree tree;
+    MakeAABBTree( tree, P );
 
     floatType inf = std::numeric_limits<floatType>::infinity();
 

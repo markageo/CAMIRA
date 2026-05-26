@@ -31,8 +31,11 @@ void TurbulenceModel<TurbulenceModels::ZEQ0>::SetTurbulenceModelData( const Inpu
     m_proportionalityConstant = 0.03874;
 
     // Length scale, distance to nearest wall
-    Polyhedron geometry = MakeGeometry( inputData.geometryData, axisTransformation );
-    Tree tree = MakeAABBTree( geometry );
+    Polyhedron P; 
+    MakePolyhedron( P, inputData.geometryData, axisTransformation );
+    Tree tree;
+    MakeAABBTree( tree, P );
+    
     NearestWallDistance( m_wallDistance, mesh, tree, bcData );
 }
 

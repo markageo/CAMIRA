@@ -67,10 +67,11 @@ void SolvePlume( const InputData &inputData )
     Tensor3D &nuTurbField = fieldFileData.vertexNuTurb;
 
     // Read and store geometry
+    Polyhedron P;
     Tree tree;
     if( inputData.hasSolidGeometry ) {
-        Polyhedron P = MakeGeometry( inputData.stlGeometryFilename );
-        tree = MakeAABBTree( P );
+        MakePolyhedron( P, inputData.stlGeometryFilename );
+        MakeAABBTree( tree, P );
     }
 
     // Place to store the current concentration field
