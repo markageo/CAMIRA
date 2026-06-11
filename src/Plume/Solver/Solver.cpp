@@ -178,6 +178,12 @@ void SolvePlume( const InputData &inputData )
 
             const auto data = inputData.timeAveragedConcentrationFieldData[i];
 
+            if ( timeStep > data.endTimeStep )
+                continue;
+
+            if ( timeStep < data.startTimeStep )
+                continue;
+
             if ( (timeStep - data.startTimeStep) % data.timeStepInterval != 0 )
                 continue;
 
