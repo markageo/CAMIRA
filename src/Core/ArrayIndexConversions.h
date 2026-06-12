@@ -1,12 +1,14 @@
 #ifndef CAMIRA_ARRAY_INDEX_CONVERSIONS
 #define CAMIRA_ARRAY_INDEX_CONVERSIONS
 
-#include "Types.h"
+#include "Core/Types.h"
 #include <utility>
 
 namespace CAMIRA
 {
 
+namespace CORE
+{
 
 // Convert list of subscript array indices into linear index
 template< int ndims,
@@ -97,6 +99,7 @@ inline constexpr Eigen::array<Eigen::Index, ndims> Ind2Sub( const Eigen::Array<i
 
 }
 
+}   // end namespace CORE
 
 }   // end namespace CAMIRA
 

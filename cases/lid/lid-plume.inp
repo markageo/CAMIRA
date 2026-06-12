@@ -1,0 +1,72 @@
+// Lid plume model 
+
+Model {
+    D = 5e-4
+    timeStepSize = 0.1
+    numberOfTimeSteps = 1000
+    initialParticlesPerUnitMass = 1e5
+    particleSplitTimeStepInterval = 250
+    maxNumberOfParticleSplits = 100
+}
+
+VelocityField {
+    velocityFieldFilename = "flow-output/fields_iter3.vtk"
+}
+
+
+Sources
+{
+    InstantaneousReleasePoint {
+        location = (0.5, 0.5, 0.5)
+        totalMass = 1
+    }
+}
+
+
+BoundaryConditions
+{
+    // Wall
+    +x {
+        phi = reflection
+    }
+
+    // Wall
+    -x {
+        phi = reflection
+    }
+
+    // Driven
+    +y {
+        phi = reflection
+    }
+
+    // Wall
+    -y {
+        phi = reflection
+    }
+
+    // Wall
+    +z {
+        phi = reflection
+    }
+
+    // Wall
+    -z {
+        phi = reflection
+    }
+}
+
+
+
+Parallel {
+    numberOfThreads = 4
+}
+
+Output {
+
+    outputFormatType        = BINARY
+    profilingFilename       = "plume-output/profiling.dat"
+    fieldOutputFilename     = "plume-output/fields.vtk"
+    fieldWriteInterval      = 1
+
+}

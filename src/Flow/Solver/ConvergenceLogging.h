@@ -1,0 +1,521 @@
+#ifndef CAMIRA_SOLVER_LOGGING
+#define CAMIRA_SOLVER_LOGGING
+
+#include "Core/Types.h"
+#include "Core/FVTools.h"
+#include "Core/Macros.h"
+#include "Core/IO/VTKWriter.h"
+#include "Core/IO/IOTools.h"
+#include "Flow/CoordinateTransformations/AxisTransformationFunctions.h"
+#include "Flow/FiniteVolume/FiniteVolume.h"
+#include "Flow/DerivedQuantities/DerivedQuantities.h"
+#include "Flow/InputProcessing/InputProcessing.h"
+
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <iomanip>
+#include <memory>
+
+namespace CAMIRA
+{
+
+using namespace CORE;
+
+namespace FLOW
+{
+
+// Set the output precision based on code precision
+#ifdef CAMIRA_DOUBLE_PRECISION
+    #define CAMIRA_FILE_WRITE_PRECISION 15
+#else
+    #define CAMIRA_FILE_WRITE_PRECISION 7;
+#endif
+
+class ConvergenceFile
+{
+
+    public:
+        ConvergenceFile( const std::string &filename, 
+                         const int precision = CAMIRA_FILE_WRITE_PRECISION, 
+                         const int columnWidth = 14 ) :
+            m_fileStream( filename ),
+            m_precision( precision ),
+            m_columnWidth( columnWidth )
+        {           
+            if ( columnWidth < precision + 8 )
+                m_columnWidth = precision + 8; 
+
+            if ( !m_fileStream ) {
+                std::cout << "Convergence Log File ERROR: Could not open/create file! Convergence history will not be written. \n" << std::endl;
+    }
+
+            m_fileStream << std::setprecision( m_precision ) << std::scientific;
+        }
+
+        template <class ...Args> 
+        void WriteLine( Args... args )
+        {
+            const int nArgs = sizeof...(args);
+            int i = 0;
+        
+            // Fold expression to loop through args. This is needed since each arg can have a different type
+            ( [&] {
+
+                i++;
+                m_fileStream << std::left << std::setw( m_columnWidth ) << args;
+                if ( i != nArgs )
+                    m_fileStream << ", ";
+
+            } (), ... );
+
+            m_fileStream << std::endl;  // flush to write immediately to file
+        }
+
+        void WriteCommentLine( const std::string &comment )
+        {
+            m_fileStream << "# " << comment << "\n";
+        }
+
+    private:
+        std::ofstream m_fileStream;
+        int m_precision;
+        int m_columnWidth;
+};
+
+
+
+
+
+class ResidualLogFile
+{
+
+    public:
+        ResidualLogFile( const std::string &filename, 
+                         const AxisTransformationMap &axisTransformation,
+                         const int precision = CAMIRA_FILE_WRITE_PRECISION ) :
+            m_AT( axisTransformation ),
+            m_convergenceFile( filename, precision )
+        {            
+            // Comment description of file
+            m_convergenceFile.WriteCommentLine( "Residuals convergence history" );
+
+            // Write header
+            m_convergenceFile.WriteLine( "Iteration", 
+                                          "U_residual", 
+                                          "V_residual",
+                                          "W_residual",
+                                          "P_residual", 
+                                          "Global_mass_residual");
+            
+        }
+
+        void WriteData( const FieldData<floatType> &residuals, 
+                        const floatType massFluxResidual, 
+                        const intType nIterations )
+        {
+            using enum Axis::ENUMDATA;
+
+            m_convergenceFile.WriteLine( nIterations,
+                                         residuals.U[ m_AT.CodeAxis(X) ], 
+                                         residuals.U[ m_AT.CodeAxis(Y) ],
+                                         residuals.U[ m_AT.CodeAxis(Z) ], 
+                                         residuals.P                    , 
+                                         massFluxResidual );
+        }
+
+
+    private:
+        AxisTransformationMap m_AT;
+        ConvergenceFile m_convergenceFile;
+};
+
+
+
+
+
+class ProbeLogFile
+{
+
+    public:
+        ProbeLogFile( const std::string &filename, 
+                      const AxisTransformationMap &axisTransformation,
+                      const FieldProbe &fieldProbe,
+                      const int precision = CAMIRA_FILE_WRITE_PRECISION ) :
+            m_AT( axisTransformation ),
+            m_convergenceFile( filename, precision )
+        {            
+            using enum Axis::ENUMDATA;
+
+            // Comment description of file
+            std::string fileDescription = "Field probe at coordinates: (" 
+                                        + std::to_string( fieldProbe.Coordinate( m_AT.CodeAxis(X) ) ) + ", "
+                                        + std::to_string( fieldProbe.Coordinate( m_AT.CodeAxis(Y) ) ) + ", "
+                                        + std::to_string( fieldProbe.Coordinate( m_AT.CodeAxis(Z) ) ) + ").";
+            m_convergenceFile.WriteCommentLine( fileDescription );
+
+            // Write header
+            m_convergenceFile.WriteLine( "Iteration", 
+                                         "X_velocity", 
+                                         "Y_velocity",
+                                         "Z_velocity",
+                                         "Pressure");
+            
+        }
+
+        void WriteData( const FieldData<floatType> &probeValues,  
+                        const intType nIterations )
+        {
+            using enum Axis::ENUMDATA;
+
+            m_convergenceFile.WriteLine( nIterations,
+                                         probeValues.U[ m_AT.CodeAxis(X) ], 
+                                         probeValues.U[ m_AT.CodeAxis(Y) ],
+                                         probeValues.U[ m_AT.CodeAxis(Z) ], 
+                                         probeValues.P );
+        }
+
+
+    private:
+        AxisTransformationMap m_AT;
+        ConvergenceFile m_convergenceFile;
+};
+
+
+
+
+
+class ForceLogFile
+{
+
+    public:
+        ForceLogFile( const std::string &filename, 
+                      const AxisTransformationMap &axisTransformation,
+                      const int precision = CAMIRA_FILE_WRITE_PRECISION ) :
+            m_AT( axisTransformation ),
+            m_convergenceFile( filename, precision )
+        {            
+            using enum Axis::ENUMDATA;
+
+            // Comment description of file
+            std::string fileDescription = "Force calculator on IB solid geometry.";
+            m_convergenceFile.WriteCommentLine( fileDescription );
+
+            // Write header
+            m_convergenceFile.WriteLine( "Iteration", 
+                                         "X_force", 
+                                         "Y_force",
+                                         "Z_force");
+            
+        }
+
+        void WriteData( const fVector3 &forces,  
+                        const intType nIterations )
+        {
+            using enum Axis::ENUMDATA;
+
+            m_convergenceFile.WriteLine( nIterations,
+                                         forces( m_AT.CodeAxis(X) ), 
+                                         forces( m_AT.CodeAxis(Y) ),
+                                         forces( m_AT.CodeAxis(Z) ) );
+        }
+
+    private:
+        AxisTransformationMap m_AT;
+        ConvergenceFile m_convergenceFile;
+};
+
+
+
+
+class YPlusLogFile
+{
+
+    public:
+        YPlusLogFile( const std::string &filename, 
+                      const int precision = CAMIRA_FILE_WRITE_PRECISION ) :
+            m_convergenceFile( filename, precision )
+        {            
+            // Comment description of file
+            std::string fileDescription = "Boundary cell y+ logging";
+            m_convergenceFile.WriteCommentLine( fileDescription );
+
+            // Write header
+            m_convergenceFile.WriteLine( "Iteration", 
+                                         "Min", 
+                                         "Max",
+                                         "Average");
+        }
+
+        void WriteData( const floatType min,
+                        const floatType max,
+                        const floatType average,  
+                        const intType nIterations )
+        {
+            m_convergenceFile.WriteLine( nIterations,
+                                         min, 
+                                         max, 
+                                         average );
+        }
+
+
+    private:
+        ConvergenceFile m_convergenceFile;
+};
+
+
+
+
+class ConsoleLog
+{
+
+    public:
+        ConsoleLog( const AxisTransformationMap &axisTransformation,
+                    const int precision = 6 ) :
+            m_AT( axisTransformation ),
+            m_precision( precision )
+        {            
+            std::cout << std::setprecision( m_precision ) << std::scientific;
+        }
+
+        void WriteHeader()
+        {
+            std::cout << "Convergence Residuals:" << "\n";
+        }
+
+        void WriteResiduals( const FieldData<floatType> &residuals, 
+                             const floatType massFluxResidual,
+                             const intType nIterations )
+        {
+            using enum Axis::ENUMDATA;
+            std::cout << "iteration: " << std::left << std::setw(5) << nIterations << ", "
+                      << "U: " << residuals.U[ m_AT.CodeAxis(X) ] << ",   "
+                      << "V: " << residuals.U[ m_AT.CodeAxis(Y) ] << ",   "
+                      << "W: " << residuals.U[ m_AT.CodeAxis(Z) ] << ",   "
+                      << "Local Coninuity: " << residuals.P             << ",   "
+                      << "Global Mass Flux: " << massFluxResidual << "\n";
+        }
+
+
+    private:
+        AxisTransformationMap m_AT;
+        int m_precision;
+};
+
+
+
+// Postprocesses the solution fields and writes to file
+class FieldWriter
+{
+    public:
+        FieldWriter( const FieldData<Tensor3D> &fields, 
+                     const FVCoefficients &fvCoeffs,
+                     const Tensor3D &mask,
+                     const Mesh &mesh,
+                     const BoundaryConditionData &bcData,
+                     const AxisTransformationMap &axisTransformation,
+                     const InputData &inputData ) :
+            m_fields( fields ),
+            m_nuTurb( fvCoeffs.nuTurb ),
+            m_mask( mask ),
+            m_axisTransformation( axisTransformation ),
+            m_transformedMesh( mesh ),
+            m_transformedBcData( bcData ),
+            m_baseFilename( IOTOOLS::RemoveFileExtension( inputData.fieldOutputFilename, ".vtk" ) )
+            {
+                // Only needs to be transformed once
+                TransformMeshToUserCoordinates( m_transformedMesh, m_axisTransformation );
+                TransformBCDataToUserCoordinates( m_transformedBcData, m_axisTransformation );
+
+                switch ( inputData.outputFormatType ) {
+                    case InputData::OutputFormatType::BINARY:
+                        m_writeMode = VTK::WriteModes::BINARY;
+                        break;
+
+                    case InputData::OutputFormatType::ASCII:
+                        m_writeMode = VTK::WriteModes::ASCII;
+                        break;
+                }
+
+            };
+
+            void WriteDataIteration( intType iterationNumber )
+            { 
+                TransformData();
+                SetWriter();
+                const std::string message  = "CFD solution at iteration " + std::to_string( iterationNumber );
+                const std::string filename = m_baseFilename  + "_iter" + std::to_string( iterationNumber ) + ".vtk";
+                m_vtkWriter->WriteData( filename, message ); 
+            }
+
+            void WriteDataTime( floatType currentTime )
+            { 
+                TransformData();
+                SetWriter();
+
+                std::ostringstream oss;
+                oss << std::fixed << std::setprecision(3) << currentTime;
+                const std::string currentTimeString = oss.str();
+
+                const std::string message  = "CFD solution at time " + currentTimeString;
+                const std::string filename = m_baseFilename  + "_t" + currentTimeString + ".vtk";
+                m_vtkWriter->WriteData( filename, message ); 
+            }
+
+
+    private:
+        const FieldData<Tensor3D> &m_fields;
+        const Tensor3D &m_nuTurb;
+        const Tensor3D &m_mask;
+        const AxisTransformationMap &m_axisTransformation;
+        FieldData<Tensor3D> m_transformedFields;
+        Tensor3D m_transformedNuTurb;
+        Tensor3D m_transformedMask;
+        FieldData<Tensor3D> m_transformedVertexFields;
+        Tensor3D m_transformedVertexNuTurb;
+        Mesh m_transformedMesh;
+        BoundaryConditionData m_transformedBcData;
+        std::unique_ptr< VTK::VTKWriter<floatType> > m_vtkWriter;
+        const std::string m_baseFilename;
+        VTK::WriteModes m_writeMode;
+
+        void SetWriter()
+        {
+            using enum Axis::ENUMDATA;
+            VTK::VTKWriterConfig config( m_transformedMesh.cellFaces[X].size(), 
+                                         m_transformedMesh.cellFaces[Y].size(), 
+                                         m_transformedMesh.cellFaces[Z].size() );
+                config.SetWriteMode( m_writeMode );
+                
+            VTK::gridVectorType<CAMIRA::floatType> gridVector = { m_transformedMesh.cellFaces[X].data(), 
+                                                                  m_transformedMesh.cellFaces[Y].data(), 
+                                                                  m_transformedMesh.cellFaces[Z].data() };
+
+            VTK::scalarCollectionType<floatType> scalarMap = { {"GeometryMask" , VTK::GridTypes::CELL_DATA , m_transformedMask.data()},
+                                                               {"EddyViscosity", VTK::GridTypes::CELL_DATA , m_transformedNuTurb.data()},
+                                                               {"EddyViscosity", VTK::GridTypes::POINT_DATA, m_transformedVertexNuTurb.data()},
+                                                               {"Pressure"     , VTK::GridTypes::CELL_DATA , m_transformedFields.P.data()},
+                                                               {"Pressure"     , VTK::GridTypes::POINT_DATA, m_transformedVertexFields.P.data()}};
+
+            VTK::vectorCollectionType<floatType> vectorMap = { {"Velocity", VTK::GridTypes::CELL_DATA, { m_transformedFields.U[X].data(), 
+                                                                                                         m_transformedFields.U[Y].data(), 
+                                                                                                         m_transformedFields.U[Z].data()}},
+                                                               {"Velocity", VTK::GridTypes::POINT_DATA, { m_transformedVertexFields.U[X].data(), 
+                                                                                                          m_transformedVertexFields.U[Y].data(), 
+                                                                                                          m_transformedVertexFields.U[Z].data()}} };
+        
+            m_vtkWriter = std::make_unique<VTK::VTKWriter<floatType>>(gridVector, scalarMap, vectorMap, config);
+        }
+
+
+        void TransformData()
+        {
+            // Reassign
+            m_transformedFields  = m_fields;
+            m_transformedNuTurb  = m_nuTurb;
+            m_transformedMask    = m_mask;
+
+            // Transform to user coordinates
+            TransformVectorFieldToUserCoordinates( m_transformedFields.U, m_axisTransformation );
+            TransformScalarFieldToUserCoordinates( m_transformedFields.P, m_axisTransformation );
+            TransformScalarFieldToUserCoordinates( m_transformedNuTurb, m_axisTransformation );
+            TransformScalarFieldToUserCoordinates( m_transformedMask, m_axisTransformation );    
+    
+            // Calculate the vertex fields
+            EnumFor<Axis>( [&] (Axis::ENUMDATA axis) {
+                m_transformedVertexFields.U[axis] = InterpolateToVertex( m_transformedFields.U[axis], m_transformedMesh );
+            } );
+            m_transformedVertexFields.P = InterpolateToVertexWithMasking( m_transformedFields.P, m_transformedMesh, m_transformedMask );
+            m_transformedVertexNuTurb   = InterpolateToVertex( m_transformedNuTurb, m_transformedMesh );
+
+            // Remove ghost cells last since they are needed for vertex calculation
+            ForAllFieldData([&](intType f) { 
+                m_transformedFields[f] = FVT::RemoveGhostCells( m_transformedFields[f], nGhost ); 
+            });
+            m_transformedNuTurb = FVT::RemoveGhostCells( m_transformedNuTurb, nGhost ); 
+            m_transformedMask   = FVT::RemoveGhostCells( m_transformedMask, nGhost );
+        }
+
+};
+
+
+// Postprocesses the residual fields and writes to file. Mainly used for debugging.
+class ResidualFieldWriter
+{
+    public:
+        ResidualFieldWriter( const FieldData<Tensor3D> &fields, 
+                             const Mesh &mesh,
+                             const AxisTransformationMap &axisTransformation,
+                             const std::string &baseFilename ) :
+            m_fields( fields ),
+            m_axisTransformation( axisTransformation ),
+            m_transformedMesh( mesh ),
+            m_baseFilename(  IOTOOLS::RemoveFileExtension( baseFilename, ".vtk" ) )
+            {
+                // Only needs to be transformed once
+                TransformMeshToUserCoordinates( m_transformedMesh, m_axisTransformation );
+            };
+
+            void WriteData( intType iterationNumber )
+            { 
+                TransformData();
+                SetWriter();
+                std::string message = "CFD residuals at iteration " + std::to_string( iterationNumber );
+                m_vtkWriter->WriteData( AppendFilename( iterationNumber ), message ); 
+            }
+
+
+    private:
+        const FieldData<Tensor3D> &m_fields;
+        const AxisTransformationMap &m_axisTransformation;
+        FieldData<Tensor3D> m_transformedFields;
+        Mesh m_transformedMesh;
+        std::unique_ptr< VTK::VTKWriter<floatType> > m_vtkWriter;
+        const std::string m_baseFilename;
+
+        std::string AppendFilename( intType iterationNumber )
+        { return m_baseFilename  + "_iter" + std::to_string(iterationNumber) + ".vtk"; }
+
+        void SetWriter()
+        {
+            using enum Axis::ENUMDATA;
+            VTK::VTKWriterConfig config( m_transformedMesh.cellFaces[X].size(), 
+                                         m_transformedMesh.cellFaces[Y].size(), 
+                                         m_transformedMesh.cellFaces[Z].size() );
+                config.SetWriteMode(VTK::WriteModes::BINARY);
+                
+            VTK::gridVectorType<CAMIRA::floatType> gridVector = { m_transformedMesh.cellFaces[X].data(), 
+                                                               m_transformedMesh.cellFaces[Y].data(), 
+                                                               m_transformedMesh.cellFaces[Z].data() };
+
+            VTK::scalarCollectionType<floatType> scalarMap = { {"Pressure", VTK::GridTypes::CELL_DATA, m_transformedFields.P.data()} };
+
+            VTK::vectorCollectionType<floatType> vectorMap = { {"Velocity", VTK::GridTypes::CELL_DATA, { m_transformedFields.U[X].data(), 
+                                                                                                         m_transformedFields.U[Y].data(), 
+                                                                                                         m_transformedFields.U[Z].data()}} };
+        
+            m_vtkWriter = std::make_unique<VTK::VTKWriter<floatType>>(gridVector, scalarMap, vectorMap, config);
+        }
+
+
+        void TransformData()
+        {
+            m_transformedFields = m_fields;
+            ForAllFieldData([&](intType f) { 
+                m_transformedFields[f] = FVT::RemoveGhostCells(m_fields[f], nGhost); 
+            });
+            TransformVectorFieldToUserCoordinates( m_transformedFields.U, m_axisTransformation );
+            TransformScalarFieldToUserCoordinates( m_transformedFields.P, m_axisTransformation );
+        }
+
+};
+
+
+}   // end namespace FLOW
+
+}   // end namespace CAMIRA
+
+
+#endif // CAMIRA_SOLVER_LOGGING

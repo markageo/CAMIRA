@@ -1,0 +1,79 @@
+// Instantaneous release point at center of domain plume input file
+
+Model {
+    D = 1e-2
+    turbulentSchmidtNumber = 1
+    timeStepSize = 0.1
+    numberOfTimeSteps = 1200
+    initialParticlesPerUnitMass = 1e5
+    particleSplitTimeStepInterval = 0
+    maxNumberOfParticleSplits = 100
+}
+
+VelocityField {
+    velocityFieldFilename = "flow-output/uniform_field.vtk"
+}
+
+Sources
+{
+    ContinuousReleasePoint {
+        location = (0, 0, 0)
+        massFlowRate = 1
+    }
+}
+
+
+BoundaryConditions
+{
+    // Outflow
+    +x {
+        phi = outflow
+    }
+
+    // Outflow
+    -x {
+        phi = outflow
+    }
+
+    // Outflow
+    +y {
+        phi = outflow
+    }
+
+    // Outflow
+    -y {
+        phi = outflow
+    }
+
+    // Outflow
+    +z {
+        phi = outflow
+    }
+
+    // Outflow
+    -z {
+        phi = outflow
+    }
+}
+
+
+
+Parallel {
+    numberOfThreads = 8
+}
+
+Output {
+
+    outputFormatType        = BINARY
+    profilingFilename       = "plume-output/profiling.dat"
+    fieldOutputFilename     = "plume-output/fields.vtk"
+    fieldWriteInterval      = 0
+
+    TimeAveragedConcentration {
+        startTimeStep    = 200
+        endTimeStep      = 1200
+        timeStepInterval = 1
+        filename         = "plume-output/average_concentration.vtk"
+    }
+
+}

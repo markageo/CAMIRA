@@ -1,0 +1,35 @@
+#ifndef CAMIRA_BOUNDARY_CONDITION_DATA   
+#define CAMIRA_BOUNDARY_CONDITION_DATA
+
+#include "Core/Types.h"
+
+#include <memory>
+
+namespace CAMIRA
+{
+
+using namespace CORE;
+
+namespace FLOW
+{
+
+// -------------------------------------- Definition in FiniteVolumeStructures.cpp -------------------------------------- //
+
+// Structure to store all domain boundary condition information
+struct BoundaryConditionData {
+    struct Patch {
+        BoundaryConditions type;
+        Tensor2D value;
+    };
+    using Patches = EnumVector< BoundaryPatches, Patch >;
+    FieldData< Patches > fields; 
+    EnumVector< BoundaryPatches, bool > isWall;
+    bool pressureFieldIsFloating;
+};
+
+
+}   // end namespace FLOW
+
+}   // end namespace CAMIRA
+
+#endif // CAMIRA_BOUNDARY_CONDITION_DATA

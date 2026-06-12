@@ -1,10 +1,13 @@
-#ifndef FV_LOOKUPS
-#define FV_LOOKUPS
+#ifndef CAMIRA_FV_LOOKUPS
+#define CAMIRA_FV_LOOKUPS
 
-#include "Types.h"
+#include "Core/Types.h"
 
 
 namespace CAMIRA 
+{
+
+namespace CORE
 {
 
 // Lookup Tables
@@ -77,7 +80,8 @@ namespace LUT
  
 }   // end namespace LUT
 
+}   // end namespace CORE
 
 }   // end namespace CAMIRA
 
-#endif // FV_LOOKUPS
+#endif // CAMIRA_FV_LOOKUPS

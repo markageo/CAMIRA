@@ -1,18 +1,4 @@
-# Add libraries
 add_library(libs "")
-
-# Source subdirectories
-add_subdirectory(ImmersedBoundary)
-add_subdirectory(DerivedQuantities)
-add_subdirectory(FiniteVolume)
-add_subdirectory(Multigrid)
-add_subdirectory(Geometry)
-add_subdirectory(IO)
-add_subdirectory(Solver)
-add_subdirectory(Core)
-add_subdirectory(CoordinateTransformations)
-add_subdirectory(Parallel)
-add_subdirectory(TurbulenceModels)
 
 # Link libraries
 target_link_libraries(libs PUBLIC eigen)
@@ -28,8 +14,15 @@ endif()
 target_link_libraries(libs PRIVATE warning_flags)
 target_link_libraries(libs PUBLIC compiler_flags)
 
-# Main solver executable
-add_executable(camira main.cpp)
-target_link_libraries(camira PUBLIC libs)
+include_directories( "${CMAKE_CURRENT_SOURCE_DIR}" )
+
+add_subdirectory(Core)
+
+add_subdirectory(Flow)
+
+if ( CAMIRA_COMPILE_PLUME )
+	add_subdirectory(Plume)
+endif()
+
 
 

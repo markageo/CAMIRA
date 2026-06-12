@@ -2,9 +2,13 @@
 <!-- # <img src="images/logo.png?raw=true" width="128" valign="middle" alt="RAJA"/> -->
 
 # CAMIRA
-CAMIRA (**C**oupled **A**lgorithm for **M**ultigrid **I**mmersed Boundary **R**eynolds **A**veraged Navier-Stokes, also an Aboriginal name for the word "windy") is a highly efficiency solver for the incompressible steady-state Reynolds-Averaged Navier-Stokes equations. The code and the methods used were developed as part of my PhD. 
+CAMIRA (**C**oupled **A**lgorithm for **M**ultigrid **I**mmersed Boundary **R**eynolds **A**veraged Navier-Stokes, also an Aboriginal name for the word "windy") is a highly efficient solver for the incompressible steady-state Reynolds-Averaged Navier-Stokes equations. It also contains solver for calculating the unsteady concentration of a passive scalar in the flow field. The code and the methods used were developed as part of my PhD. 
 
-CAMIRA uses a fully coupled matrix free smoother with Full Approximation Scheme (FAS) multigrid to solve the equations on a rectillinear collocated finite volume grid. Complex geometries are accounted for using a mass conservative directional immersed boundary method. Details on these numerical methods can be found in the various [publications](#publications) that are part of this work. CAMIRA can run in parallel on shared memory CPUs using OpenMP.
+CAMIRA contains two applications: 
+* CAMIRA-FLOW, which is a fully coupled matrix free smoother with Full Approximation Scheme (FAS) multigrid to solve the equations on a rectillinear collocated finite volume grid. Complex geometries are accounted for using a mass conservative directional immersed boundary method. Details on these numerical methods can be found in the various [publications](#publications) that are part of this work.
+* CAMIRA-PLUME, which uses Lagrangian Particle dispersion to calculate the concentration of a passive scalar in the resulting flow field given by CAMIRA-FLOW.
+
+CAMIRA can run in parallel on shared memory CPUs using OpenMP.
 
 
 ## Getting Started
@@ -41,11 +45,12 @@ Which will create an executable called `camira`. See [Usage](#usage) below for i
 
 After building the project, an executable called `camira` will be created. This can then be executed with an input file as:
 
-    ./camira inputFile.inp
+    ./camira-flow flowInputFile.inp
+    ./camira-plume plumeInputFile.inp
 
-Where `inputFile.inp` is the input file used to run the code. All solver settings are controlled through this single input file. 
+Where `flowInputFile.inp` and `plumeInputFile.inp` are the input files required by the flow and plume solvers respectively. All solver settings are controlled within these input files. 
 
-A manual exists which describes how to create an input file and all the available options. This can be found in the `manual` directory of the [repository](https://github.com/markageo/camira.git). 
+<!-- A manual exists which describes how to create an input file and all the available options. This can be found in the `manual` directory of the [repository](https://github.com/markageo/camira.git).  -->
 
 ## Publications
 
@@ -56,19 +61,18 @@ Below is a list of publications related to the development of this project.
 
 * [George, M. A., Williamson, N., & Armfield, S. W. (2025). Mass-conserving ghost cell immersed boundary method with multigrid for coupled Navier-Stokes solvers. Journal of Computational Physics, 114276.](https://www.sciencedirect.com/science/article/pii/S0021999125005595)
 
-* [George, M., Williamson, N., & Armfield, S. W. Coupled FAS Multigrid for the Incompressible Navier-Stokes Equations on Collocated Grids. Available at SSRN 5460400 (Under review in Computers & Fluids).](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5460400)
+* [George, M. A., Williamson, N., & Armfield, S. W. (2026). Coupled FAS multigrid for the incompressible Navier–Stokes equations on collocated grids. Computers & Fluids, 314, 107106.](https://www.sciencedirect.com/science/article/pii/S0045793026001489)
 
 
-* [George, M. A., (2026) A Rapid Steady Solver for the Navier-Stokes Equations, Ph.D. thesis, The University of Sydney]()
+* [George, M. A., (2026) A Rapid Steady Solver for the Navier-Stokes Equations, Ph.D. thesis, The University of Sydney](https://ses.library.usyd.edu.au/handle/2123/35334)
 
 
 ## Roadmap
 
-CAMIRA is a work in progress. Here are some upcoming features:
-* Addition of lagranaian particle dispersion model for plume tracking.
+CAMIRA is a work in progress. Here are some features we would like to see appear in future:
 * Inclusion of wall models for turbulence models.
 * Addition of more sophisticated turbulence models, beyond the zero-equation models present. 
-* Support for GPU and CPU parallelism through the [RAJA Portability Suite](https://github.com/LLNL/RAJA).
+* Support for GPU parallelism, in both the flow and plume solvers.
 
 
 ## Contact
@@ -84,7 +88,3 @@ Mark George - **markgeorge0311@hotmail.com**
 My PhD Supervisors [Steven Armfield](https://www.sydney.edu.au/engineering/about/our-people/academic-staff/steven-armfield.html) and [Nicholas Williamson](https://www.sydney.edu.au/engineering/about/our-people/academic-staff/nicholas-williamson.html). Also [DMTC](https://dmtc.com.au/) and [DSTG Australia](https://www.dst.defence.gov.au/) for supporting the project.
 
 
-<!-- License
------------
-
-Distributed under the GNU GPLv3 license. See `LICENSE.txt` for more information. -->

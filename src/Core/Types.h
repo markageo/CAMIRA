@@ -1,5 +1,5 @@
-#ifndef TYPES
-#define TYPES
+#ifndef CAMIRA_TYPES
+#define CAMIRA_TYPES
 
 #include <unsupported/Eigen/CXX11/Tensor>
 #include <Eigen/Dense>
@@ -16,6 +16,8 @@
 namespace CAMIRA 
 {
 
+namespace CORE
+{
 
 // ----------------------------------------------------- Type Aliases ----------------------------------------------------- //
 
@@ -61,20 +63,6 @@ struct Axis
     const static int count =  3;
 };
 
-
-struct BoundaryConditions 
-{
-    enum ENUMDATA 
-    {
-        zeroGradient,
-        fixed,
-        extrapolated,
-        periodic
-    };
-    const static int count = 4;
-};
-
-
 struct BoundaryPatches 
 {   
     enum ENUMDATA
@@ -112,28 +100,13 @@ struct TransportCoefficients
 };
 
 
-struct Fields
-{
-    enum ENUMDATA
-    {
-        U, 
-        V, 
-        W, 
-        P
-    };
-    const static int count = 3;
-};
-
-
 // For looping through enum and applying lambda to each element
 template<typename enumStruct, typename L>
 inline void EnumFor( L&& f )
 {
     static_assert(std::is_same<enumStruct, Axis                 >::value ||
-                  std::is_same<enumStruct, BoundaryConditions   >::value ||
                   std::is_same<enumStruct, BoundaryPatches      >::value ||
-                  std::is_same<enumStruct, TransportCoefficients>::value ||
-                  std::is_same<enumStruct, Fields               >::value   );
+                  std::is_same<enumStruct, TransportCoefficients>::value   );
 
     typename enumStruct::ENUMDATA enumName;
     for (int i = 0; i != enumStruct::count; i++) {
@@ -143,54 +116,15 @@ inline void EnumFor( L&& f )
 }
 
 
-
-// ---------------------------------------------------- Solver Parameters -------------------------------------------------- //
-
-// Solver settings
-enum class Smoothers {
-    nestedLineSymmetricSerial, domainSymmetricSerial, domainSymmetricParallel
-};
-
-enum class GeometryBoundaryTreatment {
-    Staircase, DirectionalImmersedBoundary
-};
-
-enum class MomentumInterpolation {
-    Implicit, SemiExplicit
-};
-
-enum class AdvectionSchemes {
-    Upwind, Central, SOU, QUICK
-};
-
-enum class FaceInterpolationSchemes {
-    WeightedLinear, Average
-};
-
-enum class TimeSchemes {
-    Steady, BackwardsEuler, BackwardsThreeLevel
-};
-
-enum class TurbulenceModels {
-    Null, Laminar, PrandtlZeroEquation, ZEQ0, ZEQ1, ZEQ2, ZEQ3, ZEQ4
-};
-
-enum class MultigridCycleType {
-    V, F, W
-};
-
-
 // ---------------------------------------------------- EnumVector Class -------------------------------------------------- //
 
 // Simple wrapper for c-style array that is safe to use in device code
 template <typename enumStruct, typename T>
 struct EnumVector
 {
-    static_assert(std::is_same<enumStruct, CAMIRA::Axis                 >::value ||
-                  std::is_same<enumStruct, CAMIRA::BoundaryConditions   >::value ||
-                  std::is_same<enumStruct, CAMIRA::BoundaryPatches      >::value ||
-                  std::is_same<enumStruct, CAMIRA::TransportCoefficients>::value || 
-                  std::is_same<enumStruct, CAMIRA::Fields               >::value,
+    static_assert(std::is_same<enumStruct, CAMIRA::CORE::Axis                 >::value ||
+                  std::is_same<enumStruct, CAMIRA::CORE::BoundaryPatches      >::value ||
+                  std::is_same<enumStruct, CAMIRA::CORE::TransportCoefficients>::value,
                   "Template parameter must be struct containing ENUMDATA type.");
 
     T m_data[enumStruct::count];
@@ -210,13 +144,13 @@ struct EnumVector
     // Only allowed when the object is holding axis data since the enum values should not change and are fairly standard
     constexpr T &operator[](const size_t idx)
     { 
-        static_assert( std::is_same<enumStruct, CAMIRA::Axis>::value, "EnumVector indexed with integral value only allowed for Axis enums" );
+        static_assert( std::is_same<enumStruct, CAMIRA::CORE::Axis>::value, "EnumVector indexed with integral value only allowed for Axis enums" );
         return m_data[idx]; 
     }
 
     constexpr const T &operator[](const size_t idx) const 
     { 
-        static_assert( std::is_same<enumStruct, CAMIRA::Axis>::value, "EnumVector indexed with integral value only allowed for Axis enums" );
+        static_assert( std::is_same<enumStruct, CAMIRA::CORE::Axis>::value, "EnumVector indexed with integral value only allowed for Axis enums" );
         return m_data[idx]; 
     }
 
@@ -416,8 +350,8 @@ inline void SetAndCopyTensorParallel( FieldData<T> &fieldDataCopy,
     CopyTensorParallel( fieldDataCopy, fieldData );
 }
 
-
+}   // end namespace CORE
 
 }   // end namespace CAMIRA
 
-#endif // TYPES
+#endif // CAMIRA_TYPES

@@ -81,22 +81,32 @@ elseif ( CAMIRA_PARALLEL_COLOURING_STRATEGY STREQUAL "planes" )
 
 endif()
 
+# Compile the Plume dispersion application
+option ( CAMIRA_COMPILE_PLUME "Compile the plume dispersion application. Requires VTK library." on )
 
-# Allow the ability to read fields in (for example to read in an initial condition), this requires VTk library
-option ( CAMIRA_HAS_VTK_LIB "Allow extra features which require VTK library to be installed.")
+# Compile option for using VTK library, which is optional if only flow application is used
+option ( CAMIRA_HAS_VTK_LIB "Some features in camira-flow require VTK library to be installed." on )
+
+# Enforce that plume requires vtk to be used
+if ( CAMIRA_COMPILE_PLUME AND NOT CAMIRA_HAS_VTK_LIB )
+	message( FATAL_ERROR "Compiling the dispersion application (CAMIRA_COMPILE_PLUME) requires VTK library (CAMIRA_HAS_VTK_LIB)." )
+endif()
+
+
+# Allow the ability to read fields in (for example to read in an initial condition), this requires VTK library
 if ( CAMIRA_HAS_VTK_LIB )
 
 	find_package( VTK COMPONENTS 
-				  CommonCore
-				  CommonExecutionModel
-				  IOXMLParser
-				  CommonDataModel
-				  CommonMisc
-				  CommonSystem
-				  IOCore
-				  vtksys
-				  IOLegacy
-				  )
+				CommonCore
+				CommonExecutionModel
+				IOXMLParser
+				CommonDataModel
+				CommonMisc
+				CommonSystem
+				IOCore
+				vtksys
+				IOLegacy
+				)
 
 	if ( ${VTK_FOUND} )
 		message( STATUS "VTK library found successfully." )
@@ -108,6 +118,7 @@ if ( CAMIRA_HAS_VTK_LIB )
 else()
 	message( STATUS "VTK library will not be used. Some features will be limited." )
 endif()
+
 
 
 # Add libraries
@@ -134,9 +145,14 @@ set(CGAL_DO_NOT_WARN_ABOUT_CMAKE_BUILD_TYPE TRUE)
 add_subdirectory(src)
 
 # Link time optimisation
-if( supported )
+if ( supported )
     message(STATUS "IPO / LTO enabled")
-    set_property(TARGET camira PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    set_property(TARGET camira-flow PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+	
+	if ( CAMIRA_COMPILE_PLUME )
+		set_property(TARGET camira-plume PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+	endif()
+	
 else()
     message(STATUS "IPO / LTO not supported: <${error}>")
 endif()
