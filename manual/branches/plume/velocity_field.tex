@@ -1,0 +1,21 @@
+\section{Velocity Field}
+
+Specification of the velocity field used to advect particles. CAMIRA-PLUME reads a pre-computed velocity field from a legacy VTK file, typically produced by a prior CAMIRA-FLOW simulation. It will use the mesh from this file for the final concentration fields in the Eulerian frame.
+
+\begin{lstlisting}[language=C++]
+VelocityField {
+    <velocity field parameters>
+}
+\end{lstlisting}
+
+\subsection*{Parameters}
+
+velocityFieldFilename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Path to the legacy VTK (\lstinline!.vtk!) file containing the velocity field. The mesh in this file must match the mesh on which particles are being dispersed.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: String
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!velocityFieldFilename = "path/flow_fields.vtk"!
+\end{itemize}

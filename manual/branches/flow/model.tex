@@ -1,0 +1,260 @@
+\section{Model}
+
+All physical modelling parameters.
+
+\begin{lstlisting}[language=C++]
+Model {
+    <model parameters>
+    
+    TurbulenceModel {
+        <TurbulenceModel parameters>
+    }
+
+}
+\end{lstlisting}
+
+\subsection*{Parameters}
+
+nu
+\vspace{\the\parameterListSpacing}
+\begin{itemize}[noitemsep,topsep=0pt]
+    \item {\bf Description}: Constant fluid kinematic viscosity
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!nu = 1.43e-5!
+\end{itemize}
+
+
+transient
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Whether or not the simulation is transient. This dictates if a discrete transient term is included in the equations.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: boolean
+    \item {\bf Options}: \lstinline!yes!, \lstinline!no!
+    \item {\bf Example}: \lstinline!transient = yes!
+\end{itemize}
+
+\subsection*{\lstinline!TurbulenceModel! parameters }
+Turbulence model parameters only need to be specified if \lstinline!transient = no!.
+
+model
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Type of turbulence model to use.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Word option.
+    \item {\bf Options}: 
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{|l|l|}
+            \hline
+            laminar     & Solves the laminar steady equations. \\ \hline
+            PrandtlZeroEquation     & Prandtl's mixing length model. \\ \hline
+            ZEQ0     & \begin{tabular}[c]{@{}l@{}} Chen, Q., \& Xu, W. (1998). A zero-equation turbulence model for indoor\\  airflow simulation. Energy and buildings, 28(2), 137-144. \end{tabular}  \\ \hline
+            ZEQ1     & \begin{tabular}[c]{@{}l@{}} ``ZEQ1" from Liu, J., Heidarinejad, M., Pitchurov, G., Zhang, L., \\ \& Srebric, J. (2018). An extensive comparison of modified zero-equation,\\ standard $k-\varepsilon$,  and LES models in predicting urban airflow. Sustainable cities \\ and society, 40, 28-43. \end{tabular} \\ \hline
+            ZEQ2     & \begin{tabular}[c]{@{}l@{}} ``ZEQ2" from Liu, J., Heidarinejad, M., Pitchurov, G., Zhang, L., \\ \& Srebric, J. (2018). An extensive comparison of modified zero-equation,\\ standard $k-\varepsilon$,  and LES models in predicting urban airflow. Sustainable cities \\ and society, 40, 28-43. \end{tabular}  \\ \hline
+            ZEQ3     & \begin{tabular}[c]{@{}l@{}} ``ZEQ3" from Liu, J., Heidarinejad, M., Pitchurov, G., Zhang, L., \\ \& Srebric, J. (2018). An extensive comparison of modified zero-equation,\\ standard $k-\varepsilon$,  and LES models in predicting urban airflow. Sustainable cities \\ and society, 40, 28-43. \end{tabular}  \\ \hline
+            ZEQ4     & \begin{tabular}[c]{@{}l@{}} ``ZEQ4" from Liu, J., Heidarinejad, M., Pitchurov, G., Zhang, L., \\ \& Srebric, J. (2018). An extensive comparison of modified zero-equation,\\ standard $k-\varepsilon$,  and LES models in predicting urban airflow. Sustainable cities \\ and society, 40, 28-43. \end{tabular}  \\ \hline
+            \end{tabular}
+        \end{table}. 
+    \item {\bf Example}: \lstinline!model  = ZEQ3!
+\end{itemize}
+
+
+Each turbulence model in the table above requires additional parameters that are specified in the same tree, these are given below.
+
+\newpage
+\subsection*{\lstinline!laminar!}
+No additional parameters required.
+
+
+
+\newpage
+\subsection*{\lstinline!PrandtlZeroEquation!}
+No additional parameters required.
+
+
+
+\newpage
+\subsection*{\lstinline!ZEQ0!}
+No additional parameters required.
+
+
+\newpage
+\subsection*{\lstinline!ZEQ1!}
+inflowReBuildingHeight
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Inflow Reynolds number at average building height. Velocity at average building height is used.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!inflowReBuildingHeight = 183442.2!
+\end{itemize}
+
+
+inflowTurbIntensityBuildingHeight
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Inflow turbulence intensity at average building height. Given as a fraction.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!inflowTurbIntensityBuildingHeight = 0.1!
+\end{itemize}
+
+
+
+\newpage
+\subsection*{\lstinline!ZEQ2!}
+averageBuildingHeight
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Average building height of geometry.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!averageBuildingHeight = 2.2!
+\end{itemize}
+
+inflowVelocityBuildingHeight
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Inflow velocity at average building height.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!inflowVelocityBuildingHeight = 5.56!
+\end{itemize}
+
+inflowTKEBuildingHeight
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Inflow turbulent kinetic at average building height.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!inflowTKEBuildingHeight = 5.56!
+\end{itemize}
+
+inflowIntegralTimescaleBuildingHeight
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Inflow integral timescale at average building height.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!inflowIntegralTimescaleBuildingHeight = 1.5!
+\end{itemize}
+
+roughnessLength
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Roughness length $z_0$ of boundary layer.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!roughnessLenght = 0.004!
+\end{itemize}
+
+heightAxis
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Axis which vertical height is measured along.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Named option
+    \item {\bf Options}: \lstinline!x!, \lstinline!y!, or \lstinline!z!
+    \item {\bf Example}: \lstinline!heightAxis = z!
+\end{itemize}
+
+
+\newpage
+\subsection*{\lstinline!ZEQ3!}
+averageBuildingHeight
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Average building height of geometry.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!averageBuildingHeight = 2.2!
+\end{itemize}
+
+inflowVelocityBuildingHeight
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Inflow velocity at average building height.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!inflowVelocityBuildingHeight = 5.56!
+\end{itemize}
+
+
+roughnessLength
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Roughness length $z_0$ of boundary layer.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!roughnessLenght = 0.004!
+\end{itemize}
+
+heightAxis
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Axis which vertical height is measured along.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Named option
+    \item {\bf Options}: \lstinline!x!, \lstinline!y!, or \lstinline!z!
+    \item {\bf Example}: \lstinline!heightAxis = z!
+\end{itemize}
+
+
+\newpage
+\subsection*{\lstinline!ZEQ4!}
+averageBuildingHeight
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Average building height of geometry.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!averageBuildingHeight = 2.2!
+\end{itemize}
+
+
+averageBuildingWidth
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Average building width of geometry.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!averageBuildingWidth = 1.3!
+\end{itemize}
+
+referenceHeight
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Reference height as defined by Liu et al.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!referenceHeight = 100!
+\end{itemize}
+
+
+heightAxis
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Axis which vertical height is measured along.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Named option
+    \item {\bf Options}: \lstinline!x!, \lstinline!y!, or \lstinline!z!
+    \item {\bf Example}: \lstinline!heightAxis = z!
+\end{itemize}
+

@@ -1,0 +1,65 @@
+\section{Boundary Conditions}
+Specification of domain boundary conditions. A separate boundary condition parameter block should be specified for each domain boundary.
+
+\begin{lstlisting}[language=C++]
+BoundaryConditions {
+    +x {
+        <boundary condition parameters>
+    }
+    
+    -x {
+        <boundary condition parameters>
+    }
+    
+    +y {
+        <boundary condition parameters>
+    }
+    
+    -y {
+        <boundary condition parameters>
+    }
+    
+    +z {
+        <boundary condition parameters>
+    }
+    
+    -z {
+        <boundary condition parameters>
+    }
+}
+\end{lstlisting}
+
+\subsection*{Parameters}
+The following must be specified for each field \lstinline!u!, \lstinline!v!, \lstinline!w!, \lstinline!p!. Below is an example for the \lstinline!u! field:
+
+u
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: The boundary condition applied to this field.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Named option.
+    \item {\bf Options}: 
+
+        \begin{table}[H]
+        \centering
+        \begin{tabular}{|l|l|}
+        \hline
+        uniform, VAL              & Fixed uniform value of value VAL, where VAL is a real number \\ \hline
+        zeroGradient              & Zero normal gradient. \\ \hline
+        extrapolated              & \begin{tabular}[c]{@{}l@{}}Field value is extrapolated from interior using \\ linear extrapolation in the normal direction.\end{tabular} \\ \hline
+        profile1D, ``path/filename.csv" & \begin{tabular}[c]{@{}l@{}}1D profile that is constant in the other dimension. Profile \\ is specified from a .csv file, see below for format details. \end{tabular} \\ \hline
+        periodic              & \begin{tabular}[c]{@{}l@{}}Periodic boundary condition. Must be applied to both opposing \\ faces on the same axis simultaneously. \end{tabular} \\ \hline
+        \end{tabular}
+        \end{table}
+    \item {\bf Example}: \lstinline!u  = uniform, 0!
+\end{itemize}
+
+profile1D file format:
+\begin{lstlisting}[language=C++]
+y     , value
+0.2   , 0.0
+0.4999, 0.0
+0.5001, 1
+3.0   , 1
+\end{lstlisting}
+The first column specifies the coordinate location of each value. Its header value should be the axis that the profile is defined along, either  \lstinline!x!,  \lstinline!y!, or \lstinline!z!. The second column is the value that the field will take, the header name must be \lstinline!value!. Values are interpolated linearly between each value. If the domain bounds extend beyond the data specified in the file, then the last value specified in the respective direction in the profile data is used. For example in the file above, at location 4, a value of 1 will be set, and at location 0.2, a value of 0.2 will be set.

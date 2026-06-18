@@ -1,0 +1,293 @@
+\section{Solver}
+Specification of solver settings.
+
+\begin{lstlisting}[language=C++]
+Solver {
+    Schemes {
+        <scheme parameters>
+    }
+
+    Smoother {
+        <linear solver parameters>
+    }
+
+    Multigrid {
+        <multigrid parameters>
+    }
+}
+\end{lstlisting}
+
+
+\subsection*{ \lstinline!Schemes! parameters }
+
+momentumInterpolation
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Treatment of Momentum Weighted Interpolation (MWI) used for face fluxes in continuity equation.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Word option.
+    \item {\bf Options}: 
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{|l|l|}
+            \hline
+            implicit     & All terms are treated implicitly. This is the most robust, but results in a larger stencil. \\ \hline
+            semiExplicit & \begin{tabular}[c]{@{}l@{}} Compact gradient part of MWI is treated implicitly, while sparse gradient part is \\ treated explicitly. This uses a smaller stencil and results in smaller memory usage, \\ but less robustness in the solver. \end{tabular} \\ \hline
+            \end{tabular}
+        \end{table}. 
+    \item {\bf Example}: \lstinline!linearsation  = Picard!
+\end{itemize}
+
+advectionScheme
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Advection scheme. First order upwind is done implicitly, with higher order schemes being applied through deferred correction.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Word option.
+    \item {\bf Options}: \lstinline!upwind! (first order upwind), \lstinline!central! (second order central), \lstinline!SOU! (Second Order Upwind), \lstinline!QUICK! (Quadratic Upwind Interpolation for Convective Kinematics).
+    \item {\bf Example}: \lstinline!advectionScheme = QUICK!
+\end{itemize}
+
+advectionBlendingFactor
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Linear blending factor $\beta$ between first order upwind and higher order scheme. The blending factor is applied using the following formula
+    \begin{equation*}
+        F = F_{\text{upwind}}^{\text{implicit}} + \beta ( F_{\text{higher order scheme}}^{\text{explicit}} - F_{\text{upwind}}^{\text{explicit}}).
+    \end{equation*}
+    where $F$ is the advective flux.
+    \item {\bf Required/Optional}: Optional, default value is 1.
+    \item {\bf Type}: Real number.
+    \item {\bf Constraints}: Should be between 0 and 1.
+    \item {\bf Example}: \lstinline!advectionBlendingFactor = 0.75!
+\end{itemize}
+
+maxOuterIterations
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Maximum number of outer iterations before solver terminates.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Integer.
+    \item {\bf Constraints}: $\geq 0$.
+    \item {\bf Example}: \lstinline!maxOuterIterations = 500!
+\end{itemize}
+
+maxContinuityOuterResidual
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Maximum residual tolerance on outer iterations for continuity equation before solver stops.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Real number.
+    \item {\bf Constraints}: $ \geq 0$.
+    \item {\bf Example}: \lstinline!maxContinuityOuterResidual = 1e-6!
+\end{itemize}
+
+maxMomentumOuterResiduals
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Maximum residual tolerance on outer iterations for momentum equations before solver stops.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Vector of 3 real numbers. One for each momentum equation.
+    \item {\bf Constraints}: $ \geq 0$.
+    \item {\bf Example}: \lstinline!maxMomentumOuterResiduals = (1e-6, 1e-6, 1e-6)!
+\end{itemize}
+
+
+
+The following parameters are only required if the option \lstinline!transient = yes! option is set. In this case, the options above regards outer iterations refer to the iterations that are performed within each timestep to solve the implicit set of non-linear equations.
+
+timeScheme
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: The type of discretisation used from discretising the unsteady term.
+    \item {\bf Required/Optional}: Required when \lstinline!transient = yes!.
+    \item {\bf Type}: Word option.
+    \item {\bf Options}:
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{|l|l|}
+            \hline
+            backwardsEuler     & First order backwards in time. \\ \hline
+            backwardsThreeLevel & \begin{tabular}[c]{@{}l@{}} Second order backwards-in-time scheme. Requires storage of the \\ two previous timesteps. \end{tabular} \\ \hline
+            \end{tabular}
+        \end{table}. 
+    \item {\bf Example}: \lstinline!timeScheme = backwardsThreeLevel!
+\end{itemize}
+
+timeStepSize
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Size of the timestep.
+    \item {\bf Required/Optional}: Required when \lstinline!transient = yes!.
+    \item {\bf Type}: Real number.
+    \item {\bf Constraints}: $ \geq 0$.
+    \item {\bf Example}: \lstinline!timeStepSize = 0.01!
+\end{itemize}
+
+
+numberOfTimesteps
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Number of timesteps to solve.
+    \item {\bf Required/Optional}: Required when \lstinline!transient = yes!.
+    \item {\bf Type}: Integer.
+    \item {\bf Constraints}: $ \geq 0$.
+    \item {\bf Example}: \lstinline!numberOfTimesteps = 150!
+\end{itemize}
+
+
+\subsection*{ \lstinline!Smoother! parameters }
+
+type
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Type of smoother used for linearised equations.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Word option.
+    \item {\bf Options}:
+        \begin{table}[H]
+            \centering
+            \begin{tabular}{|l|l|}
+            \hline
+            nestedLineSymmetricSerial     & \begin{tabular}[c]{@{}l@{}} The domain is updated in serial by sweeping planes back and forth. These \\ planes are updated by sweeping lines back and forth, which themselves are \\ updated by sweeping points back and forth. \end{tabular}  \\ \hline
+            domainSymmetricSerial & \begin{tabular}[c]{@{}l@{}} A single forward and backward sweep in serial is done through the domain \\ to update each point. \end{tabular} \\ \hline
+            domainSymmetricParallel & \begin{tabular}[c]{@{}l@{}} A single parallel forward and backward sweep is done through the domain to \\ update each point. 3 Colour order is used to parallelise. \end{tabular} \\ \hline
+            \end{tabular}
+        \end{table}. 
+    \item {\bf Example}: \lstinline!type = nestedLineSymmetric!
+\end{itemize}
+
+maxIterations
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Maximum number of linear (inner) iterations to perform on linear equations, i.e. number of iterations to perform within each outer iteration.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Integer.
+    \item {\bf Constraints}: $ \geq 0$.
+    \item {\bf Example}: \lstinline!maxIterations = 3!
+\end{itemize}
+
+maxResiduals
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Maximum residuals on all linearised equations before stopping inner iterations.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Real number.
+    \item {\bf Constraints}: $ \geq 0$.
+    \item {\bf Example}: \lstinline!maxResiduals = 1e-3!
+\end{itemize}
+
+
+planeSweepDirection \& lineSweepDirection
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Plane and line sweeping direction for solution update.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Word option.
+    \item {\bf Options}: \lstinline!+x!, \lstinline!-x!, \lstinline!+y!, \lstinline!-y!, \lstinline!+z!, \lstinline!-z!.
+    \item {\bf Constraints}: Plane and line sweeping directions cannot be along the same axis.
+    \item {\bf Example}: \lstinline!planeSweepingDirection = +z!,  \lstinline!lineSweepingDirection = -y! (must be on seperate lines)
+\end{itemize}
+
+momentumRelaxation
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Explicit relaxation applied at the outer iterations to the momentum equations.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Vector of 3 real numbers. One for each momentum equation.
+    \item {\bf Constraints}: none.
+    \item {\bf Example}: \lstinline!momentumRelaxation = (0.7, 0.7, 0.7)!
+\end{itemize}
+
+pressureRelaxation
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Explicit relaxation applied at the outer iterations to the pressure update.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Real number.
+    \item {\bf Constraints}: none.
+    \item {\bf Example}: \lstinline!pressureRelaxation = 0.7!
+\end{itemize}
+
+eddyViscosityRelaxation
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Explicit relaxation applied at the outer iterations to the eddy viscosity field.
+    \item {\bf Required/Optional}: Required when a turbulence model other than \lstinline!laminar! is used.
+    \item {\bf Type}: Real number.
+    \item {\bf Constraints}: none.
+    \item {\bf Example}: \lstinline!eddyViscosityRelaxation = 0.7!
+\end{itemize}
+
+
+\subsection*{ \lstinline!Multigrid! parameters }
+
+cycle
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Type of multigrid cycle to use. FMG initialisation is always used.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Word option.
+    \item {\bf Options}: \lstinline!V!, \lstinline!F!, \lstinline!W!
+    \item {\bf Example}: \lstinline!cycle = W!
+\end{itemize}
+
+maxCoarseLevels
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Maximum number of coarsened grid levels to use. A value of zero means the problem is solved on a single grid. 
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Integer.
+    \item {\bf Constraints}: $\geq 0$
+    \item {\bf Example}: \lstinline!maxCoarseLevels = 3!
+\end{itemize}
+
+preSmoothingIterations
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Number of smoothing iterations (outer iterations) to perform before restriction at each grid level. 
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Integer.
+    \item {\bf Constraints}: $\geq 0$
+    \item {\bf Example}: \lstinline!preSmoothingIterations = 3!
+\end{itemize}
+
+postSmoothingIterations
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Number of smoothing iterations (outer iterations) to perform after fine grid correction at each grid level. 
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Integer.
+    \item {\bf Constraints}: $\geq 0$
+    \item {\bf Example}: \lstinline!postSmoothingIterations = 3!
+\end{itemize}
+
+fineGridIterations
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Number of smoothing iterations (outer iterations) to perform on the finest grid. 
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Integer.
+    \item {\bf Constraints}: $\geq 0$
+    \item {\bf Example}: \lstinline!fineGridIterations = 3!
+\end{itemize}
+
+maxCoarseGridIterations
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Maximum number of outer iterations to perform when solving the coarsest grid. 
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Integer.
+    \item {\bf Constraints}: $\geq 0$
+    \item {\bf Example}: \lstinline!maxCoarseGridIterations = 3!
+\end{itemize}
+
+maxCoarseGridResiduals
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Maximum residuals for all quantities for coarse grid solver. 
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Real number.
+    \item {\bf Constraints}: $\geq 0$
+    \item {\bf Example}: \lstinline!maxCoarseGridResiduals = 1e-5!
+\end{itemize}

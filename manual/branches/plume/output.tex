@@ -1,0 +1,103 @@
+\section{Output}
+
+Specification of solver output. The \lstinline!TimeAveragedConcentration! sub-block is optional and multiple instances can be specified.
+
+\begin{lstlisting}[language=C++]
+Output {
+    <output parameters>
+
+    TimeAveragedConcentration {
+        <time-averaged concentration parameters>
+    }
+
+    TimeAveragedConcentration {
+        <time-averaged concentration parameters>
+    }
+}
+\end{lstlisting}
+
+\subsection*{Parameters}
+
+outputFormatType
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: The encoding format for field output files. Profiling and monitoring data are always written in ASCII regardless of this setting.
+    \item {\bf Required/Optional}: Optional. Defaults to \lstinline!BINARY!.
+    \item {\bf Type}: Word option.
+    \item {\bf Options}: \lstinline!BINARY!, \lstinline!ASCII!.
+    \item {\bf Example}: \lstinline!outputFormatType = BINARY!
+\end{itemize}
+
+profilingFilename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Filename for the file to which solver profiling information will be written.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: String
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!profilingFilename = "path/profiling.dat"!
+\end{itemize}
+
+fieldOutputFilename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Filename for the legacy VTK file to which instantaneous particle concentration field data will be written.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: String
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!fieldOutputFilename = "path/concentration.vtk"!
+\end{itemize}
+
+fieldWriteInterval
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: How often to write the instantaneous concentration field to file, in timesteps. A value of 1 writes every timestep, 2 writes every second timestep, and so on. Specifying 0 means the field is only written at the end of the simulation.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Integer.
+    \item {\bf Constraints}: Must be $\geq 0$.
+    \item {\bf Example}: \lstinline!fieldWriteInterval = 10!
+\end{itemize}
+
+
+\subsection*{\lstinline!TimeAveragedConcentration! parameters}
+Computes and writes a time-averaged concentration field by averaging the instantaneous field over a specified range of timesteps. Multiple \lstinline!TimeAveragedConcentration! blocks can be specified to produce averages over different time windows.
+
+filename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Filename for the legacy VTK file to which the time-averaged concentration field will be written.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: String.
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!filename = "path/time_avg_concentration.vtk"!
+\end{itemize}
+
+startTimeStep
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: The timestep at which the time-averaging window begins (inclusive).
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Integer.
+    \item {\bf Constraints}: Must be $\geq 0$ and less than \lstinline!endTimeStep!.
+    \item {\bf Example}: \lstinline!startTimeStep = 1000!
+\end{itemize}
+
+endTimeStep
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: The timestep at which the time-averaging window ends (inclusive).
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Integer.
+    \item {\bf Constraints}: Must be greater than \lstinline!startTimeStep!.
+    \item {\bf Example}: \lstinline!endTimeStep = 5000!
+\end{itemize}
+
+timeStepInterval
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Interval in timesteps at which samples are taken within the averaging window. Must divide exactly into the total window length $(\mathtt{endTimeStep} - \mathtt{startTimeStep})$.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Integer.
+    \item {\bf Constraints}: Must be $\geq 1$ and must divide evenly into $(\mathtt{endTimeStep} - \mathtt{startTimeStep})$.
+    \item {\bf Example}: \lstinline!timeStepInterval = 10!
+\end{itemize}

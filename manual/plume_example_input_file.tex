@@ -1,0 +1,90 @@
+\section{Example Input File}
+\begin{lstlisting}[language=C++]
+// Example CAMIRA-PLUME input file
+
+Model {
+    D                            = 1.5e-5
+    turbulentSchmidtNumber       = 0.7
+    numberOfTimeSteps            = 5000
+    timeStepSize                 = 0.05
+    particleSplitTimeStepInterval = 50
+    maxNumberOfParticleSplits    = 4
+    initialParticlesPerUnitMass  = 100
+}
+
+VelocityField {
+    velocityFieldFilename = "../../flow/output/fields.vtk"
+}
+
+SolidGeometry {
+    filename = "geometry.stl"
+}
+
+Sources {
+    ContinuousReleasePoint {
+        location     = (10, 0, 15)
+        massFlowRate = 0.01
+    }
+
+    InstantaneousReleasePoint {
+        location  = (-5, 0, 10)
+        totalMass = 1.0
+    }
+}
+
+BoundaryConditions {
+    // Outflow
+    +x {
+        phi = outflow
+    }
+
+    // Inflow
+    -x {
+        phi = outflow
+    }
+
+    // Lateral
+    +y {
+        phi = outflow
+    }
+
+    -y {
+        phi = outflow
+    }
+
+    // Top
+    +z {
+        phi = outflow
+    }
+
+    // Ground
+    -z {
+        phi = reflection
+    }
+}
+
+Parallel {
+    numberOfThreads = 8
+}
+
+Output {
+    outputFormatType    = BINARY
+    profilingFilename   = "../../output/profiling.dat"
+    fieldOutputFilename = "../../output/concentration.vtk"
+    fieldWriteInterval  = 50
+
+    TimeAveragedConcentration {
+        filename         = "../../output/time_avg_full.vtk"
+        startTimeStep    = 1000
+        endTimeStep      = 5000
+        timeStepInterval = 10
+    }
+
+    TimeAveragedConcentration {
+        filename         = "../../output/time_avg_late.vtk"
+        startTimeStep    = 3000
+        endTimeStep      = 5000
+        timeStepInterval = 10
+    }
+}
+\end{lstlisting}

@@ -1,0 +1,223 @@
+\section{Example Input File}
+\begin{lstlisting}[language=C++]
+// Example input file
+
+Model {
+    nu   = 1.57e-5
+    transient = no
+    TurbulenceModel {
+        model                        = ZEQ3
+        heightAxis                   = z
+        averageBuildingHeight        = 100
+        inflowVelocityBuildingHeight = 1
+        roughnessLength              = 0.0004
+    }
+}
+
+Mesh {
+    domainLowerBounds = (-500  , -350, 0)
+    domainUpperBounds = (1000   , 350, 400)
+    
+    Grid x {
+        Segment {
+            bounds     = (-500, -50)
+            nCells     = 45
+            biasFactor = -3.5
+        }
+    
+        Segment {
+            bounds     = (-50, 50)
+            nCells     = 25
+            biasFactor = 1
+        }
+    
+        Segment {
+            bounds     = (50, 1000)
+            nCells     = 95
+            biasFactor = 4.5
+        }
+    }
+    
+    
+    Grid y {
+        Segment {
+            bounds     = (-350, -50)
+            nCells     = 30
+            biasFactor = -3.5
+        }
+    
+        Segment {
+            bounds     = (-50, 50)
+            nCells     = 25
+            biasFactor = 1
+        }
+    
+        Segment {
+            bounds     = (50, 350)
+            nCells     = 30
+            biasFactor = 3.5
+        }
+    }
+    
+    
+    Grid z {
+        Segment {
+            bounds     = (0, 100)
+            nCells     = 25
+            biasFactor = 1
+        }
+    
+        Segment {
+            bounds     = (100, 400)
+            nCells     = 35
+            biasFactor = 4.75
+        }
+    }
+}
+
+
+InitialConditions
+{    
+    type = uniform
+    u = 1
+    v = 0
+    w = 0
+    p = 0
+}
+
+
+BoundaryConditions
+{
+    // Outflow
+    +x {
+        u = zeroGradient
+        v = zeroGradient
+        w = zeroGradient
+        p = uniform, 0
+    }
+
+    // Inflow
+    -x {
+        u = uniform, 1
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    +y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -y {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Symmetry
+    +z {
+        u = zeroGradient
+        v = zeroGradient
+        w = uniform, 0
+        p = zeroGradient
+    }
+
+    // Wall
+    -z {
+        u = uniform, 0
+        v = uniform, 0
+        w = uniform, 0
+        p = zeroGradient
+    }
+}
+
+
+SolidGeometry {
+    boundaryTreatment = directionalImmersedBoundary
+    FromFile {
+        type = STL
+        filename = "geometry.stl"
+        rotation = (0, 0, -10)
+    }
+    
+}
+
+
+Solver {
+
+    Schemes {
+
+        linearisation           = Picard
+        momentumInterpolation   = implicit
+        advectionScheme         = upwind
+        advectionBlendingFactor = 1.0
+        faceInterpolationScheme = weightedLinear
+
+        maxOuterIterations = 11
+        maxContinuityOuterResidual = 1e-12
+        maxMomentumOuterResiduals  = (1e-12, 1e-12, 1e-12)
+
+    }
+    
+    Smoother {
+
+        type = domainSymmetricParallel
+        maxIterations = 3
+        maxResiduals = 1e-5
+
+        planeSweepDirection = +z
+        lineSweepDirection = +x
+
+        eddyViscosityRelaxation = 1
+        momentumRelaxation      = (0.85, 0.85, 0.85)
+        pressureRelaxation      = 1
+
+    }
+
+    Multigrid {
+        cycle = F
+        maxCoarseLevels = 3
+
+        preSmoothingIterations = 3
+        postSmoothingIterations = 3
+        fineGridIterations   = 3
+
+        maxCoarseGridIterations = 50
+        maxCoarseGridResiduals  = 1e-10
+        
+    }
+
+}
+
+Parallel {
+    numberOfThreads = 8
+}
+
+Output {
+
+    outputFormatType        = BINARY
+    residualHistoryFilename = "../../output/residual_history.csv"
+    profilingFilename       = "../../output/profiling.dat"
+    fieldOutputFilename     = "../../output/fields.vtk"
+    geometryOutputFilename  = "../../output/geometry.stl"
+    fieldWriteInterval      = 0
+
+    Monitors {
+        ForceCalculator {
+            filename = "../../output/forces.csv"
+        }
+
+        yPlus {
+            filename = "../../output/yPlus.csv"
+        }
+    }
+
+}
+
+\end{lstlisting}

@@ -50,7 +50,7 @@ After building the project, an executable called `camira` will be created. This 
 
 Where `flowInputFile.inp` and `plumeInputFile.inp` are the input files required by the flow and plume solvers respectively. All solver settings are controlled within these input files. 
 
-<!-- A manual exists which describes how to create an input file and all the available options. This can be found in the `manual` directory of the [repository](https://github.com/markageo/camira.git).  -->
+A manual exists which describes the input file structure all the available options. This can be found in the `manual` directory of the [repository](https://github.com/markageo/camira.git). 
 
 ## Publications
 

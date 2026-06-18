@@ -1,0 +1,137 @@
+\section{Output}
+Specification of solver output. Specification of the Monitors block (and Probes within) is optional.
+
+\begin{lstlisting}[language=C++]
+Output {
+    <output paramters>
+    
+    Monitors {
+        Probe {
+            <probe parameters>
+        }
+
+        ForceCalculator {
+            <probe parameters>
+        }
+
+        yPlus {
+            <probe parameters>
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection*{Parameters}
+
+outputFormatType
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: The format/encoding to use for output files. This only affects fields, profiling, residual, and monitoring data will be in ASCII.
+    \item {\bf Required/Optional}: Optional
+    \item {\bf Type}: Word option.
+    \item {\bf Options}: \lstinline!BINARY!, \lstinline!ASCII!. 
+    \item {\bf Example}: \lstinline!linearsation  = BINARY!
+\end{itemize}
+
+residualHistoryFilename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Filename for file which residual history will be written to. Written in .csv format.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: String
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!residualHistoryFilename = "path/residual\_history.csv"!
+\end{itemize}
+
+profilingFilename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Filename for file which solver profiling information will be written to.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: String
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!profilingFilename = "path/profiling.dat"!
+\end{itemize}
+
+fieldOutputFilename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Filename for file which solution field data will be written to in legacy VTK format.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: String
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!fieldOutputFilename = "path/fields.vtk"!
+\end{itemize}
+
+geometryOutputFilename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Filename for file which .stl file containing solid geometry is written to.
+    \item {\bf Required/Optional}: Optional. Not specifying this parameter will mean that geometry is not output to file.
+    \item {\bf Type}: String
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!geometryOutputFilename = "path/geometry.stl"!
+\end{itemize}
+
+fieldWriteInterval
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: How often to write field data to file in iterations. 1 means every iteration, 2 means every second iteration. Specifying 0 will mean field is only written at the end of the solution.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Integer.
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!fieldWriteInterval = 2!
+\end{itemize}
+
+
+\subsection*{Probe Parameters}
+Specifying a probe is optional, and multiple probes can be specified. A probe simply records the value of all the fields at the given location. The value is obtained through trilinear interpolation from the surrounding cells.
+
+filename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Filename for file which which probe data is written to in .csv format.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: String.
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!filename = "path/probe.csv"!
+\end{itemize}
+
+location
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Location of the probe to sample data from.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: Vector of 3 real numbers.
+    \item {\bf Constraints}: Must be within domain bounds.
+    \item {\bf Example}: \lstinline!location = (1, 0.5, 0.5)!
+\end{itemize}
+
+
+
+\subsection*{ForceCalculator Parameters}
+Specifying a ForceCalculator is optional. The ForceCalculator calculates the total force that the fluid exerts on all solid objects, excluding domain boundaries. If multiple solids are specified, the total force is calculated i.e. the forces all summed up.
+
+filename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Filename for file which which force data is written to in .csv format.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: String.
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!filename = "path/forces.csv"!
+\end{itemize}
+
+
+\subsection*{yPlusCalculator Parameters}
+Specifying a yPlusCalculator is optional. The yPlus calculator calculates the minimum, maximum, and average $y+$ value of all the cells that border a solid, including immersed boundaries.
+
+filename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Filename for file which which yPlus data is written to in .csv format.
+    \item {\bf Required/Optional}: Required.
+    \item {\bf Type}: String.
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!filename = "path/yPlus.csv"!
+\end{itemize}

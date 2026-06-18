@@ -1,0 +1,81 @@
+\section{Model}
+
+Physical modelling parameters and time-stepping configuration for the Lagrangian particle dispersion simulation.
+
+\begin{lstlisting}[language=C++]
+Model {
+    <model parameters>
+}
+\end{lstlisting}
+
+\subsection*{Parameters}
+
+D
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Molecular diffusion coefficient $D$ of the scalar quantity being dispersed.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $\geq 0$
+    \item {\bf Example}: \lstinline!D = 1.5e-5!
+\end{itemize}
+
+turbulentSchmidtNumber
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Turbulent Schmidt number $Sc_t$, used to relate the turbulent eddy diffusivity to the eddy viscosity from the flow field. The turbulent eddy diffusivity is computed as $D_t = \nu_t / Sc_t$.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $> 0$
+    \item {\bf Example}: \lstinline!turbulentSchmidtNumber = 0.7!
+\end{itemize}
+
+numberOfTimeSteps
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Total number of timesteps to simulate.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Integer
+    \item {\bf Constraints}: Must be $> 0$
+    \item {\bf Example}: \lstinline!numberOfTimeSteps = 5000!
+\end{itemize}
+
+timeStepSize
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Size of each timestep $\Delta t$.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $> 0$
+    \item {\bf Example}: \lstinline!timeStepSize = 0.05!
+\end{itemize}
+
+particleSplitTimeStepInterval
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Interval in timesteps at which particle splitting is performed. Particle splitting subdivides particles to maintain numerical accuracy as the plume disperses.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Integer
+    \item {\bf Constraints}: Must be $> 0$
+    \item {\bf Example}: \lstinline!particleSplitTimeStepInterval = 50!
+\end{itemize}
+
+maxNumberOfParticleSplits
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Maximum number of times any individual particle may be split over the course of the simulation.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Integer
+    \item {\bf Constraints}: Must be $\geq 0$. A value of 0 disables splitting entirely.
+    \item {\bf Example}: \lstinline!maxNumberOfParticleSplits = 4!
+\end{itemize}
+
+initialParticlesPerUnitMass
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Number of computational particles used to represent one unit of released mass at the time of emission. Controls the initial resolution of the particle representation.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $> 0$
+    \item {\bf Example}: \lstinline!initialParticlesPerUnitMass = 100!
+\end{itemize}

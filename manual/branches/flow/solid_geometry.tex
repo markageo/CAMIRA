@@ -1,0 +1,128 @@
+\section{Solid Geometry}
+Specification of solid geometries within the domain to be treated through the immersed boundary method. This block and sub-blocks are optional. Multiple sub-blocks (geometry objects) can be specified and the union of them will be used. Geometries can be specified to be outside the domain bounds, only parts of the geometry within the domain bounds will contribute to calculations.
+
+\begin{lstlisting}[language=C++]
+SolidGeometry {
+    boundaryTreatment = <boundary treatment>
+
+    Sphere {
+        <sphere parameters>
+    }
+
+    Block {
+        <block parameters>
+    }
+
+    FromFile {
+        <geometry file parameters>
+    }
+}
+\end{lstlisting}
+
+boundaryTreatment
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: The method for treating solid boundaries specified by the geometries given.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Named option.
+    \item {\bf Options}: 
+    \begin{table}[H]
+        \centering
+        \begin{tabular}{|l|l|}
+        \hline
+        staircase              & \begin{tabular}[c]{@{}l@{}} Uses staircase approximation for solid boundaries. \\ This still uses the immersed boundary method mechanics, but sets \\ distances so that it is mathematically equivalent to a \\ staircase approximation. \end{tabular} \\ \hline
+        directionalImmersedBoundary              & Uses mass conservative direction immersed boundary method. \\ \hline
+        \end{tabular}
+        \end{table}
+        
+    \item {\bf Example}: \lstinline!boundaryTreatment  = directionalImmersedBoundary!
+\end{itemize}
+
+
+\subsection*{ \lstinline!Sphere! parameters }
+
+centerPosition
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: The coordinate location in the domain of the center of the sphere.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Vector of 3 real numbers.
+    \item {\bf Constraints}: None. 
+    \item {\bf Example}: \lstinline!centerPosition  = (1, 2.5, 4)!
+\end{itemize}
+
+diameter
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Diameter of the sphere.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!diameter  = 1.3!
+\end{itemize}
+
+
+\subsection*{\lstinline!Block! parameters }
+
+centerPosition
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: The coordinate location in the domain of the centroid of the block.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Vector of 3 real numbers.
+    \item {\bf Constraints}: None. 
+    \item {\bf Example}: \lstinline!centerPosition  = (1, 2.5, 4)!
+\end{itemize}
+
+dimensions
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Dimensions in each coordinate direction (before rotation) of the block.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Vector of 3 real numbers
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!dimensions = (1, 2.5, 4)!
+\end{itemize}
+
+rotation
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Rotation of the block in each coordinate axis, performed in the order \lstinline!x!, \lstinline!y! \lstinline!z!.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Vector of 3 real numbers
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!rotation = (35, 25, 90)!
+\end{itemize}
+
+\subsection*{ \lstinline!FromFile! parameters }
+
+type
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: The file format used to specify the geometry.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Word option.
+    \item {\bf Options}: \lstinline!STL!
+    \item {\bf Example}: \lstinline!type = STL!
+\end{itemize}
+
+filename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Filename for geometry file.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: String.
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!filename = "path/filename.stl"!
+\end{itemize}
+
+
+rotation
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Rotation of the geometry in each coordinate axis, performed in the order \lstinline!x!, \lstinline!y! \lstinline!z! about the origin in the local coordinates of geometry that is read in.
+    \item {\bf Required/Optional}: Optional. Defaults to no rotation, i.e.\ \lstinline!(0, 0, 0)!.
+    \item {\bf Type}: Vector of 3 real numbers
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!rotation = (35, 25, 90)!
+\end{itemize}

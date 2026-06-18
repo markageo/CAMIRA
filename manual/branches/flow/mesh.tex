@@ -1,0 +1,74 @@
+\section{Mesh}
+Specification of rectilinear finite volume mesh. Any number of segments can be specified within each grid coordinate direction.
+
+\begin{lstlisting}[language=C++]
+Mesh {
+    domainLowerBounds = ...
+    domainUpperBounds = ...
+    Grid x {
+        Segment {
+            <segment parameters>
+        }
+        Segment {
+            <segment parameters>
+        }
+    }
+
+    Grid y {
+        Segment {
+            <segment parameters>
+        }
+    }
+
+    Grid z {
+        Segment {
+            <segment parameters>
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection*{Parameters}
+
+domainLowerBounds \& domainUpperBounds
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Lower and upper coordinate bounds of domain. This dictates the dimensions of the domain. Coordinates can be negative.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Vector of 3 real numbers
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!domainLowerBounds = (3, 4, 5.5)!
+\end{itemize}
+
+
+\subsection*{Segment Parameters}
+
+bounds
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Start and end coordinates for the mesh segment
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Vector of 2 real numbers
+    \item {\bf Constraints}: Bounds must be continuous between each segment and agree with overall domain dimensions.
+    \item {\bf Example}: \lstinline!bounds = (0, 2.5)!
+\end{itemize}
+
+nCells
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Number of cells in the mesh segment
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Integer
+    \item {\bf Constraints}: Must be $>0$
+    \item {\bf Example}: \lstinline!nCells = 100!
+\end{itemize}
+
+biasFactor
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Ratio of largest to smallest cell in the segment. A bias factor $>1$ means the mesh is growing in the positive coordinate direction. If a negative value is used, the direction of growth is reversed.
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: None
+    \item {\bf Example}: \lstinline!biasFactor = 6.5!
+\end{itemize}

@@ -1,0 +1,21 @@
+\section{Solid Geometry}
+
+Specification of solid geometry within the domain, used for particle--wall collision handling. This block is optional. If omitted, no solid surfaces are present and all boundary interactions are governed solely by the domain boundary conditions.
+
+\begin{lstlisting}[language=C++]
+SolidGeometry {
+    <solid geometry parameters>
+}
+\end{lstlisting}
+
+\subsection*{Parameters}
+
+filename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Path to an STL file describing the solid geometry.
+    \item {\bf Required/Optional}: Required if \lstinline!SolidGeometry! block is present.
+    \item {\bf Type}: String
+    \item {\bf Constraints}: None.
+    \item {\bf Example}: \lstinline!filename = "path/geometry.stl"!
+\end{itemize}

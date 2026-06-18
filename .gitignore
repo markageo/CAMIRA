@@ -1,3 +1,4 @@
+# Compile executables
 camira-flow
 camira-plume
 
@@ -6,13 +7,45 @@ build
 .cache
 .vscode
 
-.cache
-.vscode
-
+# Possible solver output
 *.vtk
 *.dbg
 *.csv
 *.dat
 
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.idx
+*.ind
+*.ilg
+*.glo
+*.gls
+*.glg
+*.ist
+*.synctex.gz
+*.synctex(busy)
+_minted-*/
+*.pyg
+*.nlo
+*.nls
+*.dvi
+*.ps
+
+# Ignore pdfs except the manual
+*.pdf
+!camira-manual.pdf
+
 perf.data
 perf.data.old
+

@@ -1,0 +1,38 @@
+\section*{Input File Syntax and Structure}
+All solver setup and configuration is done through the input file, which is passed to the solver executable. The basic input file structure is given below.
+
+\begin{lstlisting}[language=C++]
+// A comment
+
+#include "OtherInputSettings.inp"
+
+Section {
+    parameter1 = 6.63e-34
+    parameter2 = 137
+
+    SubSection {
+        configuration = someOption
+        subparameter1 = "filename.csv"
+        subparameter2 = 1
+    }
+}
+\end{lstlisting}
+
+The \lstinline[language=C++]!#include! directive on line 3 allows the input file to be split up into multiple files. The directive essentially copy and pastes the contents of the included file at the location of the directive. 
+
+Some essential syntax rules:
+\begin{itemize}
+    \item Everything is case sensitive.
+
+    \item Scientific notation i.e. \lstinline[language=C++]!5.67e-8! can only be used for parameters which are floating point numbers.
+
+    \item The file structure is completely free-form, meaning braces can be put anywhere, and indenting is ignored. However, there must be a new line after a parameter is specified with an ``\lstinline[language=C++]!=!".
+
+    \item Input file options can be put in any order, as long as they follow the correct tree structure.
+
+    \item White space is ignored, except inside double quotes e.g. \lstinline[language=C++]!"white space not ignored here"!.
+\end{itemize}
+
+The rest of this documents gives all the required and optional solver parameters that the input file requires. An example of a complete input file is given at the end of this document.
+
+

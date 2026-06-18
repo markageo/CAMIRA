@@ -1,0 +1,54 @@
+\section{Boundary Conditions}
+
+Specification of domain boundary conditions for the particle concentration field $\phi$. A boundary condition must be specified for each of the six domain faces.
+
+\begin{lstlisting}[language=C++]
+BoundaryConditions {
+    +x {
+        <boundary condition parameters>
+    }
+
+    -x {
+        <boundary condition parameters>
+    }
+
+    +y {
+        <boundary condition parameters>
+    }
+
+    -y {
+        <boundary condition parameters>
+    }
+
+    +z {
+        <boundary condition parameters>
+    }
+
+    -z {
+        <boundary condition parameters>
+    }
+}
+\end{lstlisting}
+
+\subsection*{Parameters}
+The following parameter must be specified for the concentration field \lstinline!phi! within each boundary patch block.
+
+phi
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: The boundary condition applied to the particle concentration field at this face.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Named option.
+    \item {\bf Options}:
+
+        \begin{table}[H]
+        \centering
+        \begin{tabular}{|l|l|}
+        \hline
+        outflow    & \begin{tabular}[c]{@{}l@{}}Particles that reach this boundary are removed from the \\ simulation. Suitable for outflow and open boundaries. \end{tabular} \\ \hline
+        reflection & \begin{tabular}[c]{@{}l@{}}Particles that reach this boundary are reflected (specular reflection) \\ back into the domain. Suitable for solid walls and symmetry planes. \end{tabular} \\ \hline
+        periodic   & \begin{tabular}[c]{@{}l@{}}Particles that exit through this boundary re-enter through \\ the opposing face on the same axis. Must be applied to \\ both opposing faces simultaneously. \end{tabular} \\ \hline
+        \end{tabular}
+        \end{table}
+    \item {\bf Example}: \lstinline!phi = outflow!
+\end{itemize}

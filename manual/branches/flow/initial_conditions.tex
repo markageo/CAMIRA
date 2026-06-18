@@ -1,0 +1,47 @@
+\section{Initial Conditions}
+Specification of initial condition.
+
+\begin{lstlisting}[language=C++]
+InitialConditions {
+    type = ...
+    <initial condition parameters>
+}
+\end{lstlisting}
+
+\subsection*{Parameters}
+
+type
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: How the initial condition will be specified
+    \item {\bf Required/Optional}: required
+    \item {\bf Type}: Named option
+    \item {\bf Options}: \lstinline!uniform!, \lstinline!vtkFile!
+    \item {\bf Example}: \lstinline!type  = uniform!
+\end{itemize}
+
+
+\subsection*{Parameters (\lstinline!type = uniform!) }
+The following must be specified for each field \lstinline!u!, \lstinline!v!, \lstinline!w!, \lstinline!p! on a separate line. Below is an example for the \lstinline!u! field:
+
+u
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: The (constant) initial condition value
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: None
+    \item {\bf Example}: \lstinline!u  = 2.5!
+\end{itemize}
+
+\subsection*{Parameters (\lstinline!type = vtkFile!)}
+
+filename
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Name and path of the legacy VTK (.vtk file extension) file to read the initial condition from. The initial condition must use the same mesh that is used in the solver. 
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: String
+    \item {\bf Example}: \lstinline!filename  = "initial/condition.vtk"!
+\end{itemize}
+

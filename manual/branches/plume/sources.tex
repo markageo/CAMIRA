@@ -1,0 +1,63 @@
+\section{Sources}
+
+Specification of particle release sources. Any number of sources can be specified, and multiple source types can be combined in the same simulation.
+
+\begin{lstlisting}[language=C++]
+Sources {
+    ContinuousReleasePoint {
+        <continuous release parameters>
+    }
+
+    InstantaneousReleasePoint {
+        <instantaneous release parameters>
+    }
+}
+\end{lstlisting}
+
+
+\subsection*{\lstinline!ContinuousReleasePoint! parameters}
+A continuous release point emits particles at a steady mass flow rate for the duration of the simulation. Multiple \lstinline!ContinuousReleasePoint! blocks can be specified.
+
+location
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Coordinate location of the release point.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Vector of 3 real numbers
+    \item {\bf Constraints}: Should be within the domain bounds.
+    \item {\bf Example}: \lstinline!location = (10, 0, 15)!
+\end{itemize}
+
+massFlowRate
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Mass flow rate at which the scalar quantity is released.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $> 0$
+    \item {\bf Example}: \lstinline!massFlowRate = 0.01!
+\end{itemize}
+
+
+\subsection*{\lstinline!InstantaneousReleasePoint! parameters}
+An instantaneous release point emits a fixed total mass of particles at a single point at the start of the simulation ($t = 0$). Multiple \lstinline!InstantaneousReleasePoint! blocks can be specified.
+
+location
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Coordinate location of the release point.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Vector of 3 real numbers
+    \item {\bf Constraints}: Should be within the domain bounds.
+    \item {\bf Example}: \lstinline!location = (10, 0, 15)!
+\end{itemize}
+
+totalMass
+\vspace{\the\parameterListSpacing}
+\begin{itemize}
+    \item {\bf Description}: Total mass of scalar quantity released instantaneously.
+    \item {\bf Required/Optional}: Required
+    \item {\bf Type}: Real number
+    \item {\bf Constraints}: Must be $> 0$
+    \item {\bf Example}: \lstinline!totalMass = 1.0!
+\end{itemize}
