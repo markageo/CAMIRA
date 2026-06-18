@@ -2,7 +2,10 @@
 
 Model {
     nu        = 0.025
-    transient = no
+    transient       = no
+    TurbulenceModel {
+        model = laminar
+    }
 }
 
 Mesh {
@@ -124,6 +127,7 @@ Solver {
         planeSweepDirection = +z
         lineSweepDirection = +y
 
+        eddyViscosityRelaxation = 1
         momentumRelaxation = (1, 1, 1)
         pressureRelaxation = 1
 
@@ -147,13 +151,13 @@ Solver {
 
 
 Parallel {
-    numberOfThreads = 3
+    numberOfThreads = 4
 }
 
 Output {
 
-    residualHistoryFilename = "../output/residual_history.csv"
-    profilingFilename       = "../output/profiling.dat"
-    fieldOutputFilename     = "../output/fields.vtk"
+    residualHistoryFilename = "output/residual_history.csv"
+    profilingFilename       = "output/profiling.dat"
+    fieldOutputFilename     = "output/fields.vtk"
     fieldWriteInterval      = 2
 }
