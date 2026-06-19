@@ -43,7 +43,7 @@ numberOfTimeSteps
 timeStepSize
 \vspace{\the\parameterListSpacing}
 \begin{itemize}
-    \item {\bf Description}: Size of each timestep $\Delta t$.
+    \item {\bf Description}: Size of each timestep $\Delta t$. The total simulation time then becomes numberOfTimeSteps $\times \Delta t$ .
     \item {\bf Required/Optional}: Required
     \item {\bf Type}: Real number
     \item {\bf Constraints}: Must be $> 0$
@@ -53,7 +53,9 @@ timeStepSize
 particleSplitTimeStepInterval
 \vspace{\the\parameterListSpacing}
 \begin{itemize}
-    \item {\bf Description}: Interval in timesteps at which particle splitting is performed. Particle splitting subdivides particles to maintain numerical accuracy as the plume disperses.
+    \item {\bf Description}: Interval in timesteps at which particle splitting is performed. At each time interval, 
+        particles are split into two, which each split particle getting half the mass of the parent. 
+        Particle splitting subdivides particles to maintain numerical accuracy as the plume disperses.
     \item {\bf Required/Optional}: Required
     \item {\bf Type}: Integer
     \item {\bf Constraints}: Must be $> 0$
@@ -63,7 +65,7 @@ particleSplitTimeStepInterval
 maxNumberOfParticleSplits
 \vspace{\the\parameterListSpacing}
 \begin{itemize}
-    \item {\bf Description}: Maximum number of times any individual particle may be split over the course of the simulation.
+    \item {\bf Description}: Maximum number of times partile splitting is performed.
     \item {\bf Required/Optional}: Required
     \item {\bf Type}: Integer
     \item {\bf Constraints}: Must be $\geq 0$. A value of 0 disables splitting entirely.
