@@ -98,12 +98,12 @@ inline CAMIRA::CORE::FieldData<CAMIRA::CORE::Tensor3D> GetFieldData( vtkDataSetA
 
     for ( int i = 0; i < vtkDataSet->GetNumberOfArrays(); i++ ) {
 
-        if ( strcmp(vtkDataSet->GetArrayName(i), "Velocity") ){
+        if ( strcmp(vtkDataSet->GetArrayName(i), "Velocity") == 0 ){
             fieldData.U = GetVectorFieldFromVTKArray( vtkDataSet->GetArray("Velocity"), nPoints );
             continue;
         }
             
-        if ( strcmp(vtkDataSet->GetArrayName(i), "Pressure")  ) {
+        if ( strcmp(vtkDataSet->GetArrayName(i), "Pressure") == 0 ) {
             fieldData.P = GetScalarFieldFromVTKArray( vtkDataSet->GetArray("Pressure"), nPoints );
             continue;
         }
@@ -124,7 +124,7 @@ inline CAMIRA::CORE::Tensor3D GetNuTurbData( vtkDataSetAttributes *vtkDataSet,
 
     for ( int i = 0; i < vtkDataSet->GetNumberOfArrays(); i++ ) {
             
-        if ( strcmp(vtkDataSet->GetArrayName(i), "EddyViscosity")  ) {
+        if ( strcmp(vtkDataSet->GetArrayName(i), "EddyViscosity") == 0  ) {
             tensorData = GetScalarFieldFromVTKArray( vtkDataSet->GetArray("EddyViscosity"), nPoints );
             continue;
         }
