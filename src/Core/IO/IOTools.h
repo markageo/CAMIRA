@@ -25,12 +25,14 @@ namespace IOTOOLS
     }
 
 
+
     // Return string with no whitespace
     inline std::string RemoveWhitespace( std::string str )
     {
         str.erase(remove_if(str.begin(), str.end(), isspace), str.end());
         return str;
     }
+
 
 
     // Return relative path to given filename (LINUX FILESYSTEMS ONLY)
@@ -40,6 +42,7 @@ namespace IOTOOLS
         for ( /* NULL */ ; *stringIterator != '/' && stringIterator != filename.begin(); stringIterator--) {};
         return std::string( filename.begin(), stringIterator );
     }
+
 
 
     // Remove file extension
@@ -57,6 +60,8 @@ namespace IOTOOLS
         return filename;
     }
 
+
+
     // If a path is not an absolute path, add the given directory to it
     inline void PrependRelativePath( std::string &pathString,
                                      const std::string &directoryToPrependString )
@@ -69,6 +74,18 @@ namespace IOTOOLS
         }
     }
 
+
+
+    // Check if parent path exists, if not, create the path
+    inline void CreatePathIfDoesNotExist( const std::string &fileDir ) 
+    {
+        std::filesystem::path filepath = std::string(fileDir);
+        if ( filepath.parent_path().empty() ) { // The user can specify the exectuable path
+            return;
+        }
+
+        std::filesystem::create_directory( filepath.parent_path() );    // Will throw an error 
+    }
 
 }   // end namespace IOTOOLS
 

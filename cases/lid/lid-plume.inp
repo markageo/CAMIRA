@@ -2,8 +2,9 @@
 
 Model {
     D = 5e-4
+    turbulentSchmidtNumber = 0.7
     timeStepSize = 0.1
-    numberOfTimeSteps = 1000
+    numberOfTimeSteps = 100
     initialParticlesPerUnitMass = 1e5
     particleSplitTimeStepInterval = 250
     maxNumberOfParticleSplits = 100

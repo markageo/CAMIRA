@@ -888,27 +888,17 @@ namespace
     }
 
 
-    void VerifyWriteDirectory( const std::string &fileDir ) 
-    {
-        std::filesystem::path filepath = std::string(fileDir);
-        if ( filepath.parent_path().empty() ) { // The user can specify the exectuable path
-            return;
-        }
-
-        bool filePathExists = std::filesystem::exists(filepath.parent_path());
-        if ( !filePathExists ) {
-            throw std::runtime_error("Cannot find or access directory '" + std::string(filepath.parent_path()) + "'. Please Make sure it exists.");
-        }
-    }
-
-
     void VerifyOutputFiles( InputData &inputData ) 
     {
-        VerifyWriteDirectory( inputData.fieldOutputFilename );
-        VerifyWriteDirectory( inputData.residualHistoryFilename );
+        IOTOOLS::CreatePathIfDoesNotExist( inputData.fieldOutputFilename );
+        IOTOOLS::CreatePathIfDoesNotExist( inputData.residualHistoryFilename );
+        IOTOOLS::CreatePathIfDoesNotExist( inputData.profilingFilename );
+        IOTOOLS::CreatePathIfDoesNotExist( inputData.geometryOutputFilename );
         for ( const auto &probe : inputData.probes ) {
-            VerifyWriteDirectory( probe.filename );
+            IOTOOLS::CreatePathIfDoesNotExist( probe.filename );
         }
+        IOTOOLS::CreatePathIfDoesNotExist( inputData.forceCalculatorFilename );
+        IOTOOLS::CreatePathIfDoesNotExist( inputData.yPlusCalculatorFilename );
     }
 
 
