@@ -166,21 +166,19 @@ void UpdateCoordinateIndexBinarySearch( intType &index,
     intType loBound = 0,
             hiBound = coords.size() - 1;
 
-    while ( loBound <= hiBound ) {
+    while ( hiBound - loBound > 1 ) {
 
-        index = loBound + static_cast<intType>( std::floor( static_cast<floatType>( hiBound - loBound ) / 2.0f ) );
+        index = loBound + ( hiBound - loBound ) / 2.0f ;
 
-        if        ( coords(index) > x ) {
-            hiBound = index;
-        } else if ( coords(index) < x ) {
+        if ( coords(index) <= x ) {
             loBound = index;
-        } 
-        
-        if ( hiBound == loBound + 1 ) {
-            break;
+        } else {
+            hiBound = index;
         }
-
+        
     }
+
+    index = loBound;
 }
 
 }   // end namespace anonymous
